@@ -262,10 +262,10 @@ class ConnectionManager {
     public connectToRoomSocket(
         roomUrl: string,
         name: string,
-        characterLayers: string[],
+        characterTextureIds: string[],
         position: PositionInterface,
         viewport: ViewportInterface,
-        companion: string | null,
+        companionTextureId: string | null,
         availabilityStatus: AvailabilityStatus,
         lastCommandId?: string
     ): Promise<OnConnectInterface> {
@@ -274,10 +274,10 @@ class ConnectionManager {
                 this.authToken,
                 roomUrl,
                 name,
-                characterLayers,
+                characterTextureIds,
                 position,
                 viewport,
-                companion,
+                companionTextureId,
                 availabilityStatus,
                 lastCommandId
             );
@@ -341,20 +341,20 @@ class ConnectionManager {
                         "connectToRoomSocket => catch => ew Promise[OnConnectInterface] reconnectingTimeout => setTimeout",
                         roomUrl,
                         name,
-                        characterLayers,
+                        characterTextureIds,
                         position,
                         viewport,
-                        companion,
+                        companionTextureId,
                         availabilityStatus,
                         lastCommandId
                     );
                     void this.connectToRoomSocket(
                         roomUrl,
                         name,
-                        characterLayers,
+                        characterTextureIds,
                         position,
                         viewport,
-                        companion,
+                        companionTextureId,
                         availabilityStatus,
                         lastCommandId
                     ).then((connection) => resolve(connection));
@@ -385,7 +385,7 @@ class ConnectionManager {
         this.authToken = authToken;
 
         if (visitCardUrl) {
-            gameManager.setVisitCardurl(visitCardUrl);
+            gameManager.setVisitCardUrl(visitCardUrl);
         }
 
         const opidWokaNamePolicy = this.currentRoom?.opidWokaNamePolicy;
@@ -413,14 +413,14 @@ class ConnectionManager {
         }
 
         if (textures) {
-            const layers: string[] = [];
+            const textureIds: string[] = [];
             for (const texture of textures) {
                 if (texture !== undefined) {
-                    layers.push(texture.id);
+                    textureIds.push(texture.id);
                 }
             }
-            if (layers.length > 0) {
-                gameManager.setCharacterLayers(layers);
+            if (textureIds.length > 0) {
+                gameManager.setCharacterTextureIds(textureIds);
             }
         }
 

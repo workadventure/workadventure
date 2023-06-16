@@ -1,11 +1,11 @@
 import {
-    CharacterLayerMessage,
+    CharacterTextureMessage,
     ItemEventMessage,
     PointMessage,
     PositionMessage,
     PositionMessage_Direction,
 } from "@workadventure/messages";
-import { CharacterLayer } from "../../Model/Websocket/CharacterLayer";
+import { CharacterTexture } from "./CharacterTexture";
 import { ItemEventMessageInterface } from "../../Model/Websocket/ItemEventMessage";
 import { PositionInterface } from "../../Model/PositionInterface";
 import { PointInterface } from "./PointInterface";
@@ -87,21 +87,21 @@ export class ProtobufUtils {
         };
     }
 
-    public static toCharacterLayerMessages(characterLayers: CharacterLayer[]): CharacterLayerMessage[] {
-        return characterLayers.map(function (characterLayer): CharacterLayerMessage {
+    public static toCharacterTextureMessages(characterTextures: CharacterTexture[]): CharacterTextureMessage[] {
+        return characterTextures.map(function (characterTexture): CharacterTextureMessage {
             return {
-                name: characterLayer.name,
-                url: characterLayer.url ?? "", // TODO: make characterLayer URL nullable
+                id: characterTexture.id,
+                url: characterTexture.url ?? "", // TODO: make characterLayer URL nullable
                 layer: "", // TODO: make characterLayer layer nullable
             };
         });
     }
 
-    public static toCharacterLayerObjects(characterLayers: CharacterLayerMessage[]): CharacterLayer[] {
-        return characterLayers.map(function (characterLayer): CharacterLayer {
-            const url = characterLayer.url;
+    public static toCharacterLayerObjects(characterLayers: CharacterTextureMessage[]): CharacterTexture[] {
+        return characterLayers.map(function (characterTexture): CharacterTexture {
+            const url = characterTexture.url;
             return {
-                name: characterLayer.name,
+                id: characterTexture.id,
                 url: url ? url : undefined,
             };
         });

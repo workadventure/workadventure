@@ -1,13 +1,13 @@
 import type { AvailabilityStatus } from "@workadventure/messages";
-import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
+import type { ResourceDescriptionInterface } from "../Entity/PlayerTextures";
 
 export interface PlayerInterface {
     userId: number;
     userJid: string;
     name: string;
-    characterLayers: BodyResourceDescriptionInterface[];
+    characterTextureIds: ResourceDescriptionInterface[];
     visitCardUrl: string | null;
-    companion: string | null;
+    companionTextureId: string | null;
     userUuid: string;
     availabilityStatus: AvailabilityStatus;
     color?: string | null;

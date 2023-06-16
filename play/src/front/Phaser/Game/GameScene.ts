@@ -31,7 +31,7 @@ import { iframeListener } from "../../Api/IframeListener";
 import { DEBUG_MODE, ENABLE_MAP_EDITOR, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
-import { TextureError } from "../../Exception/TextureError";
+import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
@@ -95,7 +95,7 @@ import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import type { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
-import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
+import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -159,6 +159,8 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import { CompanionTextureError } from "../../Exception/CompanionTextureError";
+import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -235,8 +237,8 @@ export class GameScene extends DirtyScene {
     public userInputManager!: UserInputManager;
     private isReconnecting: boolean | undefined = undefined;
     private playerName!: string;
-    private characterLayers!: string[];
-    private companion!: string | null;
+    private characterTextureIds!: string[];
+    private companionTextureId!: string | null;
     private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
@@ -606,8 +608,8 @@ export class GameScene extends DirtyScene {
             throw new Error("playerName is not set");
         }
         this.playerName = playerName;
-        this.characterLayers = gameManager.getCharacterLayers();
-        this.companion = gameManager.getCompanion();
+        this.characterTextureIds = gameManager.getCharacterTextureIds();
+        this.companionTextureId = gameManager.getCompanionTextureId();
 
         this.Map = this.add.tilemap(this.mapUrlFile);
         const mapDirUrl = this.mapUrlFile.substring(0, this.mapUrlFile.lastIndexOf("/"));
@@ -888,7 +890,7 @@ export class GameScene extends DirtyScene {
             .connectToRoomSocket(
                 this.roomUrl,
                 this.playerName,
-                this.characterLayers,
+                this.characterTextureIds,
                 {
                     ...this.startPositionCalculator.startPosition,
                 },
@@ -898,7 +900,7 @@ export class GameScene extends DirtyScene {
                     right: camera.scrollX + camera.width,
                     bottom: camera.scrollY + camera.height,
                 },
-                this.companion,
+                this.companionTextureId,
                 get(availabilityStatusStore),
                 this.getGameMap().getLastCommandId()
             )
@@ -2487,7 +2489,7 @@ ${escapedMessage}
         }
     }
 
-    // The promise that will resolve to the current player texture. This will be available only after connection is established.
+    // The promise that will resolve to the current player textures. This will be available only after connection is established.
     private currentPlayerTexturesResolve!: (value: string[]) => void;
     private currentPlayerTexturesReject!: (reason: unknown) => void;
     private currentPlayerTexturesPromise: CancelablePromise<string[]> = new CancelablePromise((resolve, reject) => {
@@ -2506,8 +2508,7 @@ ${escapedMessage}
                 this.currentPlayerTexturesPromise,
                 PositionMessage_Direction.DOWN,
                 false,
-                this.companion,
-                this.companionLoadingManager?.lazyLoadById(this.companion)
+                this.companionLoadingManager?.lazyLoadById(this.companionTextureId)
             );
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(0x365dff);
@@ -2518,11 +2519,15 @@ ${escapedMessage}
             this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
                 this.connection?.emitEmoteEvent(emoteKey);
             });
-        } catch (err) {
-            if (err instanceof TextureError) {
+        } catch (error) {
+            if (error instanceof CharacterTextureError) {
+                console.warn("Error while loading current player character texture", error.message);
                 gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
+            } else if (error instanceof CompanionTextureError) {
+                console.warn("Error while loading current player companion texture", error.message);
+                gameManager.leaveGame(SelectCompanionSceneName, new SelectCompanionScene());
             }
-            throw err;
+            throw error;
         }
 
         //create collision
@@ -2691,21 +2696,34 @@ ${escapedMessage}
             return;
         }
 
-        const texturesPromise = lazyLoadPlayerCharacterTextures(this.superLoad, addPlayerData.characterLayers);
-        const player = new RemotePlayer(
-            addPlayerData.userId,
-            addPlayerData.userUuid,
-            this,
-            addPlayerData.position.x,
-            addPlayerData.position.y,
-            addPlayerData.name,
-            texturesPromise,
-            addPlayerData.position.direction,
-            addPlayerData.position.moving,
-            addPlayerData.visitCardUrl,
-            addPlayerData.companion,
-            this.companionLoadingManager?.lazyLoadById(addPlayerData.companion)
-        );
+        let player: RemotePlayer;
+
+        try {
+            const texturesPromise = lazyLoadPlayerCharacterTextures(this.superLoad, addPlayerData.characterTextureIds);
+            player = new RemotePlayer(
+                addPlayerData.userId,
+                addPlayerData.userUuid,
+                this,
+                addPlayerData.position.x,
+                addPlayerData.position.y,
+                addPlayerData.name,
+                texturesPromise,
+                addPlayerData.position.direction,
+                addPlayerData.position.moving,
+                addPlayerData.visitCardUrl,
+                this.companionLoadingManager?.lazyLoadById(addPlayerData.companionTextureId)
+            );
+        } catch (error) {
+            if (error instanceof CharacterTextureError) {
+                console.warn("Error while loading remote player character texture", error.message);
+                gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
+            } else if (error instanceof CompanionTextureError) {
+                console.warn("Error while loading remote player companion texture", error.message);
+                gameManager.leaveGame(SelectCompanionSceneName, new SelectCompanionScene());
+            }
+            throw error;
+        }
+
         if (addPlayerData.outlineColor !== undefined) {
             player.setApiOutlineColor(addPlayerData.outlineColor);
         }

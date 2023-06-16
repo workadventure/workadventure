@@ -36,11 +36,10 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         direction: PositionMessage_Direction,
         moving: boolean,
         visitCardUrl: string | null,
-        companion: string | null,
         companionTexturePromise?: CancelablePromise<string>,
         activationRadius?: number
     ) {
-        super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companion, companionTexturePromise);
+        super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companionTexturePromise);
 
         //set data
         this.userId = userId;

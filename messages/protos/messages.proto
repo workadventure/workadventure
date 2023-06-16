@@ -41,9 +41,9 @@ message ViewportMessage {
   int32 bottom = 4;
 }
 
-message CharacterLayerMessage {
+message CharacterTextureMessage {
   string url = 1;
-  string name = 2;
+  string id = 2;
   string layer = 3;
 }
 
@@ -52,8 +52,9 @@ message ApplicationMessage {
   string script = 2;
 }
 
-message CompanionMessage {
-  string name = 1;
+message CompanionTextureMessage {
+  string url = 1;
+  string id = 2;
 }
 
 /*********** CLIENT TO SERVER MESSAGES *************/
@@ -413,9 +414,9 @@ message UserJoinedMessage {
   int32 userId = 1;
   string userJid = 2;
   string name = 3;
-  repeated CharacterLayerMessage characterLayers = 4;
+  repeated CharacterTextureMessage characterTextures = 4;
   PositionMessage position = 5;
-  CompanionMessage companion = 6;
+  CompanionTextureMessage companionTexture = 6;
   string visitCardUrl = 7;
   string userUuid = 8;
   uint32 outlineColor = 9;
@@ -470,7 +471,7 @@ message RoomJoinedMessage {
   repeated VariableMessage variable = 6;
   string userRoomToken = 7;
   // We send the current skin of the current player.
-  repeated CharacterLayerMessage characterLayer = 8;
+  repeated CharacterTextureMessage characterTextures = 8;
   bool activatedInviteUser = 9;
   repeated VariableMessage playerVariable = 10;
   repeated ApplicationMessage applications = 11;
@@ -530,12 +531,19 @@ message RefreshRoomMessage{
 
 message WorldFullMessage{
 }
+
 message TokenExpiredMessage{
 }
-message InvalidTextureMessage{
+
+message InvalidCharacterTextureMessage{
+  string message = 1;
 }
 
-message WorldConnexionMessage{
+message InvalidCompanionTextureMessage{
+  string message = 1;
+}
+
+message WorldConnectionMessage{
   string message = 2;
 }
 
@@ -590,18 +598,19 @@ message ServerToClientMessage {
     WorldFullWarningMessage worldFullWarningMessage = 15;
     WorldFullMessage worldFullMessage = 16;
     RefreshRoomMessage refreshRoomMessage = 17;
-    WorldConnexionMessage worldConnexionMessage = 18;
+    WorldConnectionMessage worldConnectionMessage = 18;
     //EmoteEventMessage emoteEventMessage = 19;
     TokenExpiredMessage tokenExpiredMessage = 20;
     FollowRequestMessage followRequestMessage = 21;
     FollowConfirmationMessage followConfirmationMessage = 22;
     FollowAbortMessage followAbortMessage = 23;
-    InvalidTextureMessage invalidTextureMessage = 24;
+    InvalidCharacterTextureMessage invalidCharacterTextureMessage = 24;
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     AnswerMessage answerMessage = 28;
     XmppSettingsMessage xmppSettingsMessage = 29;
     MoveToPositionMessage moveToPositionMessage = 31;
+    InvalidCompanionTextureMessage invalidCompanionTextureMessage = 32;
   }
 }
 
@@ -611,12 +620,12 @@ message ServerToClientMessage {
 message JoinRoomMessage {
   PositionMessage positionMessage = 1;
   string name = 2;
-  repeated CharacterLayerMessage characterLayer = 3;
+  repeated CharacterTextureMessage characterTextures = 3;
   string userUuid = 4;
   string roomId = 5;
   repeated string tag = 6;
   string IPAddress = 7;
-  CompanionMessage companion = 8;
+  CompanionTextureMessage companionTexture = 8;
   google.protobuf.StringValue visitCardUrl = 9;
   string userRoomToken = 10;
   AvailabilityStatus availabilityStatus = 11;
@@ -632,10 +641,10 @@ message UserJoinedZoneMessage {
   int32 userId = 1;
   string userJid = 2;
   string name = 3;
-  repeated CharacterLayerMessage characterLayers = 4;
+  repeated CharacterTextureMessage characterTextures = 4;
   PositionMessage position = 5;
   Zone fromZone = 6;
-  CompanionMessage companion = 7;
+  CompanionTextureMessage companionTexture = 7;
   string visitCardUrl = 8;
   string userUuid = 9;
   uint32 outlineColor = 10;
@@ -921,7 +930,7 @@ message SpaceUser{
   string name = 2; // used
   string playUri = 3;
   string color = 4; // TO DELETE
-  repeated CharacterLayerMessage characterLayers = 5;
+  repeated CharacterTextureMessage characterTextures = 5;
   bool isLogged = 6;
   int32 availabilityStatus = 7;
   google.protobuf.StringValue roomName = 8;
@@ -940,7 +949,7 @@ message PartialSpaceUser{
   google.protobuf.StringValue name = 2;
   google.protobuf.StringValue playUri = 3;
   google.protobuf.StringValue color = 4;
-  repeated CharacterLayerMessage characterLayers = 5;
+  repeated CharacterTextureMessage characterTextures = 5;
   google.protobuf.BoolValue isLogged = 6;
   google.protobuf.Int32Value availabilityStatus = 7;
   google.protobuf.StringValue roomName = 8;

@@ -11,7 +11,7 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { inCowebsiteZone } from "../Stores/MediaStore";
 import { LayoutMode } from "./LayoutManager";
-import type { CoWebsite } from "./CoWebsite/CoWesbite";
+import type { CoWebsite } from "./CoWebsite/CoWebsite";
 import { HtmlUtils } from "./HtmlUtils";
 
 export enum iframeStates {

@@ -6,6 +6,7 @@ import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
 import { CompanionResourceDescriptionInterface, CompanionTextures } from "./CompanionTextures";
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
+import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 
 export function companionListMetakey() {
     return "companion-list" + gameManager.currentStartedRoom.href;
@@ -56,8 +57,7 @@ export class CompanionTexturesLoadingManager {
                     .flatMap((collection) => collection.textures)
                     .find((t) => t.id === textureId);
                 if (!texture) {
-                    console.error(`Companion texture ${textureId} not found`);
-                    return reject(`Companion texture '${textureId}' not found!`);
+                    throw new CompanionTextureError(`Companion texture '${textureId}' not found!`);
                 }
 
                 this.loadByTexture(texture, resolve);

@@ -5,7 +5,7 @@ import { get } from "svelte/store";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { loadAllDefaultModels } from "../Entity/PlayerTexturesLoadingManager";
 import { Loader } from "../Components/Loader";
-import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
+import type { ResourceDescriptionInterface } from "../Entity/PlayerTextures";
 import { PlayerTextures } from "../Entity/PlayerTextures";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
@@ -32,7 +32,7 @@ export const SelectCharacterSceneName = "SelectCharacterScene";
 
 export class SelectCharacterScene extends AbstractCharacterScene {
     protected selectedWoka: Phaser.GameObjects.Sprite | null = null; // null if we are selecting the "customize" option
-    protected playerModels!: BodyResourceDescriptionInterface[];
+    protected playerModels!: ResourceDescriptionInterface[];
 
     private charactersDraggableGrid!: DraggableGrid;
     private collectionKeys!: string[];
@@ -151,7 +151,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
         analyticsClient.validationWoka("SelectWoka");
 
-        gameManager.setCharacterLayers([this.selectedWoka.texture.key]);
+        gameManager.setCharacterTextureIds([this.selectedWoka.texture.key]);
         this.selectedWoka = null;
         this.scene.stop(SelectCharacterSceneName);
         gameManager.tryResumingGame(EnableCameraSceneName);

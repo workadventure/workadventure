@@ -8,7 +8,7 @@ import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
-import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
+import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { bbbFactory } from "../../WebRtc/BBBFactory";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../Enum/EnvironmentVariable";

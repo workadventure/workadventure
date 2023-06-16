@@ -1,7 +1,7 @@
 import CancelablePromise from "cancelable-promise";
 import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { PlayerTexturesKey } from "./PlayerTextures";
-import type { BodyResourceDescriptionInterface, PlayerTextures } from "./PlayerTextures";
+import type { ResourceDescriptionInterface, PlayerTextures } from "./PlayerTextures";
 import Texture = Phaser.Textures.Texture;
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 
@@ -13,10 +13,10 @@ export interface FrameConfig {
 export const loadAllLayers = (
     load: LoaderPlugin,
     playerTextures: PlayerTextures
-): BodyResourceDescriptionInterface[][] => {
-    const returnArray: BodyResourceDescriptionInterface[][] = [];
+): ResourceDescriptionInterface[][] => {
+    const returnArray: ResourceDescriptionInterface[][] = [];
     playerTextures.getLayers().forEach((layer) => {
-        const layerArray: BodyResourceDescriptionInterface[] = [];
+        const layerArray: ResourceDescriptionInterface[] = [];
         Object.values(layer).forEach((textureDescriptor) => {
             layerArray.push(textureDescriptor);
             load.spritesheet(textureDescriptor.id, textureDescriptor.img, { frameWidth: 32, frameHeight: 32 });
@@ -28,9 +28,9 @@ export const loadAllLayers = (
 export const loadAllDefaultModels = (
     load: LoaderPlugin,
     playerTextures: PlayerTextures
-): BodyResourceDescriptionInterface[] => {
+): ResourceDescriptionInterface[] => {
     const returnArray = Object.values(playerTextures.getTexturesResources(PlayerTexturesKey.Woka));
-    returnArray.forEach((playerResource: BodyResourceDescriptionInterface) => {
+    returnArray.forEach((playerResource: ResourceDescriptionInterface) => {
         load.spritesheet(playerResource.id, playerResource.img, { frameWidth: 32, frameHeight: 32 });
     });
     return returnArray;
@@ -38,7 +38,7 @@ export const loadAllDefaultModels = (
 
 export const loadWokaTexture = (
     superLoaderPlugin: SuperLoaderPlugin,
-    texture: BodyResourceDescriptionInterface
+    texture: ResourceDescriptionInterface
 ): CancelablePromise<Texture> => {
     return superLoaderPlugin.spritesheet(texture.id, texture.img, {
         frameWidth: 32,
@@ -48,7 +48,7 @@ export const loadWokaTexture = (
 
 export const lazyLoadPlayerCharacterTextures = (
     superLoaderPlugin: SuperLoaderPlugin,
-    textures: BodyResourceDescriptionInterface[]
+    textures: ResourceDescriptionInterface[]
 ): CancelablePromise<string[]> => {
     const promisesList: CancelablePromise<Texture>[] = [];
     for (const texture of textures) {

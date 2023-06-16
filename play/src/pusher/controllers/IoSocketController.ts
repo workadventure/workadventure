@@ -5,7 +5,7 @@ import {
     apiVersionHash,
     AvailabilityStatus,
     ClientToServerMessage,
-    CompanionMessage,
+    CompanionTextureMessage,
     ErrorApiData,
     MucRoomDefinition,
     ServerToClientMessage as ServerToClientMessageTsProto,
@@ -57,15 +57,14 @@ type UpgradeData = {
     userIdentifier: string;
     roomId: string;
     name: string;
-    companion?: CompanionMessage;
+    companionTexture?: CompanionTextureMessage;
     availabilityStatus: AvailabilityStatus;
     lastCommandId?: string;
-    characterLayers: WokaDetail[];
     messages: unknown[];
     tags: string[];
     visitCardUrl: string | null;
     userRoomToken?: string;
-    textures: WokaDetail[];
+    characterTextures: WokaDetail[];
     jabberId?: string;
     jabberPassword?: string | null;
     applications?: ApplicationDefinitionInterface[] | null;
@@ -85,7 +84,7 @@ type UpgradeData = {
 
 type UpgradeFailedInvalidData = {
     rejected: true;
-    reason: "tokenInvalid" | "textureInvalid" | "invalidVersion" | null;
+    reason: "tokenInvalid" | "invalidVersion" | null;
     message: string;
     status: number;
     roomId: string;
@@ -273,14 +272,14 @@ export class IoSocketController {
                             roomId: z.string(),
                             token: z.string().optional(),
                             name: z.string(),
-                            characterLayers: z.union([z.string(), z.string().array()]),
+                            characterTextureIds: z.union([z.string(), z.string().array()]),
                             x: z.coerce.number(),
                             y: z.coerce.number(),
                             top: z.coerce.number(),
                             bottom: z.coerce.number(),
                             left: z.coerce.number(),
                             right: z.coerce.number(),
-                            companion: z.string().optional(),
+                            companionTextureId: z.string().optional(),
                             availabilityStatus: z.coerce.number(),
                             lastCommandId: z.string().optional(),
                             version: z.string(),
@@ -343,14 +342,14 @@ export class IoSocketController {
                             );
                         }
 
-                        const companion: CompanionMessage | undefined = query.companion
+                        const companion: CompanionTextureMessage | undefined = query.companionTextureId
                             ? {
-                                  name: query.companion,
+                                  name: query.companionTextureId,
                               }
                             : undefined;
 
                         const characterLayers: string[] =
-                            typeof query.characterLayers === "string" ? [query.characterLayers] : query.characterLayers;
+                            typeof query.characterTextureIds === "string" ? [query.characterTextureIds] : query.characterTextureIds;
 
                         const tokenData = token ? jwtTokenManager.verifyJWTToken(token) : null;
 
@@ -381,7 +380,7 @@ export class IoSocketController {
                             canEdit: false,
                         };
 
-                        let characterLayerObjs: WokaDetail[];
+                        let characterTextures: WokaDetail[];
 
                         try {
                             try {
@@ -390,7 +389,8 @@ export class IoSocketController {
                                     tokenData?.accessToken,
                                     roomId,
                                     IPAddress,
-                                    characterLayers,
+                                    characterTextureIds,
+                                    companionTexture,
                                     locale
                                 );
                             } catch (err) {
@@ -449,9 +449,8 @@ export class IoSocketController {
                             }
                             memberTags = userData.tags;
                             memberVisitCardUrl = userData.visitCardUrl;
-                            memberTextures = userData.textures;
+                            characterTextures = userData.textures;
                             memberUserRoomToken = userData.userRoomToken;
-                            characterLayerObjs = memberTextures;
                         } catch (e) {
                             console.log(
                                 "access not granted for user " + (userIdentifier || "anonymous") + " and room " + roomId
@@ -503,11 +502,10 @@ export class IoSocketController {
                             companion,
                             availabilityStatus,
                             lastCommandId,
-                            characterLayers: characterLayerObjs,
+                            characterTextures,
                             tags: memberTags,
                             visitCardUrl: memberVisitCardUrl,
                             userRoomToken: memberUserRoomToken,
-                            textures: memberTextures,
                             jabberId: userData.jabberId,
                             jabberPassword: userData.jabberPassword,
                             mucRooms: userData.mucRooms || undefined,
@@ -543,7 +541,7 @@ export class IoSocketController {
                                 screenSharing: false,
                                 microphoneState: false,
                                 megaphoneState: false,
-                                characterLayers: characterLayerObjs.map((characterLayer) => ({
+                                characterLayers: characterTextures.map((characterLayer) => ({
                                     url: characterLayer.url ?? "",
                                     name: characterLayer.id,
                                     layer: characterLayer.layer ?? "",
@@ -622,8 +620,6 @@ export class IoSocketController {
                         //FIX ME to use status code
                         if (ws.reason === tokenInvalidException) {
                             socketManager.emitTokenExpiredMessage(ws);
-                        } else if (ws.reason === "textureInvalid") {
-                            socketManager.emitInvalidTextureMessage(ws);
                         } else if (ws.reason === "error") {
                             socketManager.emitErrorScreenMessage(ws, ws.error);
                         } else {

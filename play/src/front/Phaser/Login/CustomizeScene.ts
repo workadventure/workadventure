@@ -15,7 +15,7 @@ import type { WokaBodyPartSlotConfig } from "../Components/CustomizeWoka/WokaBod
 import { WokaBodyPartSlot } from "../Components/CustomizeWoka/WokaBodyPartSlot";
 import { Button } from "../Components/Ui/Button";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
-import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
+import type { ResourceDescriptionInterface } from "../Entity/PlayerTextures";
 import { Loader } from "../Components/Loader";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { gameManager } from "../Game/GameManager";
@@ -36,14 +36,14 @@ export class CustomizeScene extends AbstractCharacterScene {
     private bodyPartsDraggableGridLeftShadow!: Phaser.GameObjects.Image;
     private bodyPartsDraggableGridRightShadow!: Phaser.GameObjects.Image;
     private bodyPartsDraggableGrid!: DraggableGrid;
-    private bodyPartsButtons!: Record<CustomWokaBodyPart, IconButton>;
+    private bodyPartsButtons!: Record<WokaBodyPart, IconButton>;
 
     private randomizeButton!: Button;
     private finishButton!: Button;
 
-    private selectedLayers: number[] = [0, 0, 0, 0, 0, 0];
-    private layers: BodyResourceDescriptionInterface[][] = [];
-    private selectedBodyPartType?: CustomWokaBodyPart;
+    private selectedTextures: number[] = [0, 0, 0, 0, 0, 0];
+    private layers: ResourceDescriptionInterface[][] = [];
+    private selectedBodyPartType?: WokaBodyPart;
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
 
@@ -112,7 +112,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     public create(): void {
         super.create();
 
-        this.selectedLayers = [0, 0, 0, 0, 0, 0];
+        this.selectedTextures = [0, 0, 0, 0, 0, 0];
         this.tryLoadLastUsedWokaLayers();
         waScaleManager.zoomModifier = 1;
         this.createSlotBackgroundTextures();
@@ -180,12 +180,12 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private tryLoadLastUsedWokaLayers(): void {
         try {
-            const savedWokaLayers = gameManager.getCharacterLayers();
-            if (savedWokaLayers && savedWokaLayers.length !== 0) {
-                for (let i = 0; i < savedWokaLayers.length; i += 1) {
-                    const index = this.layers[i].findIndex((item) => item.id === gameManager.getCharacterLayers()[i]);
+            const savedWokaTextureIds = gameManager.getCharacterTextureIds();
+            if (savedWokaTextureIds && savedWokaTextureIds.length !== 0) {
+                for (let i = 0; i < savedWokaTextureIds.length; i += 1) {
+                    const index = this.textures[i].findIndex((item) => item.id === gameManager.getCharacterTextureIds()[i]);
                     // set first item as default if not found
-                    this.selectedLayers[i] = index !== -1 ? index : 0;
+                    this.selectedTextures[i] = index !== -1 ? index : 0;
                 }
             }
         } catch {
@@ -704,7 +704,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         if (this.selectedBodyPartType === undefined) {
             return;
         }
-        this.selectedLayers[CustomWokaBodyPartOrder[this.selectedBodyPartType]] = index;
+        this.selectedTextures[WokaBodyPartOrder[this.selectedBodyPartType]] = index;
     }
 
     private populateGrid(): void {
@@ -712,7 +712,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             return;
         }
 
-        const bodyPartsLayer = this.layers[CustomWokaBodyPartOrder[this.selectedBodyPartType]];
+        const bodyPartsLayer = this.layers[WokaBodyPartOrder[this.selectedBodyPartType]];
 
         this.clearGrid();
         for (let i = 0; i < bodyPartsLayer.length; i += 1) {
@@ -736,11 +736,11 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private deselectAllButtons(): void {
-        for (const bodyPart in CustomWokaBodyPart) {
-            if (this.bodyPartsButtons[bodyPart as CustomWokaBodyPart] === undefined) {
+        for (const bodyPart in WokaBodyPart) {
+            if (this.bodyPartsButtons[bodyPart as WokaBodyPart] === undefined) {
                 continue;
             }
-            this.bodyPartsButtons[bodyPart as CustomWokaBodyPart].select(false);
+            this.bodyPartsButtons[bodyPart as WokaBodyPart].select(false);
         }
     }
 

@@ -209,7 +209,7 @@ export class SocketManager implements ZoneEventListener {
     async handleJoinRoom(client: ExSocketInterface): Promise<void> {
         const viewport = client.viewport;
         try {
-            const joinRoomMessage: JoinRoomMessage = {
+            const joinRoomMessage = {
                 userUuid: client.userUuid,
                 userJid: client.userJid,
                 IPAddress: client.IPAddress,
@@ -219,15 +219,15 @@ export class SocketManager implements ZoneEventListener {
                 positionMessage: ProtobufUtils.toPositionMessage(client.position),
                 tag: client.tags,
                 isLogged: client.isLogged,
-                companion: client.companion,
+                companionTexture: client.companion,
                 activatedInviteUser: client.activatedInviteUser != undefined ? client.activatedInviteUser : true,
                 canEdit: client.canEdit,
-                characterLayer: [],
+                characterTextures: [],
                 applications: [],
                 visitCardUrl: client.visitCardUrl ?? "", // TODO: turn this into an optional field
                 userRoomToken: client.userRoomToken ?? "", // TODO: turn this into an optional field
                 lastCommandId: client.lastCommandId ?? "", // TODO: turn this into an optional field
-            };
+            } satisfies JoinRoomMessage;
 
             if (client.applications != undefined) {
                 for (const applicationValue of client.applications) {
@@ -825,8 +825,8 @@ export class SocketManager implements ZoneEventListener {
         client.send(
             ServerToClientMessage.encode({
                 message: {
-                    $case: "worldConnexionMessage",
-                    worldConnexionMessage: {
+                    $case: "worldConnectionMessage",
+                    worldConnectionMessage: {
                         message,
                     },
                 },
