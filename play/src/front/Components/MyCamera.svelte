@@ -32,11 +32,11 @@
         }
     });
 
+    let cameraContainer: HTMLDivElement;
+
     onDestroy(() => {
         unsubscribeLocalStreamStore();
     });
-
-    let cameraContainer: HTMLDivElement;
 
     onMount(() => {
         cameraContainer.addEventListener("transitionend", () => {
