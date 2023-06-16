@@ -1,4 +1,4 @@
-import { Command, GameMap, UpdateEntityCommand, WAMEntityData } from "@workadventure/map-editor";
+import { GameMap, UpdateEntityCommand, WAMEntityData } from "@workadventure/map-editor";
 import { EntitiesManager } from "../../../GameMap/EntitiesManager";
 import { Entity } from "../../../../ECS/Entity";
 import { GameScene } from "../../../GameScene";
@@ -45,7 +45,7 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
         }
     }
 
-    public getUndoCommand(): Command & FrontCommandInterface {
+    public getUndoCommand(): UpdateEntityFrontCommand {
         return new UpdateEntityFrontCommand(
             this.gameMap,
             this.entityId,
@@ -57,6 +57,6 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
         );
     }
     public emitEvent(roomConnection: RoomConnection): void {
-        roomConnection.emitMapEditorModifyEntity(this.id, this.entityId, this.newConfig);
+        roomConnection.emitMapEditorModifyEntity(this.commandId, this.entityId, this.newConfig);
     }
 }

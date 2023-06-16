@@ -127,7 +127,7 @@ export class MapEditorModeManager {
                     this.currentCommandIndex += 1;
                 }
 
-                this.scene.getGameMap().updateLastCommandIdProperty(command.id);
+                this.scene.getGameMap().updateLastCommandIdProperty(command.commandId);
                 return;
                 //return true;
             } catch (error) {
@@ -262,7 +262,7 @@ export class MapEditorModeManager {
         connection.editMapCommandMessageStream.subscribe((editMapCommandMessage) => {
             (async () => {
                 if (this.pendingCommands.length > 0) {
-                    if (this.pendingCommands[0].id === editMapCommandMessage.id) {
+                    if (this.pendingCommands[0].commandId === editMapCommandMessage.id) {
                         this.pendingCommands.shift();
                         return;
                     }
@@ -282,7 +282,9 @@ export class MapEditorModeManager {
             if (command) {
                 //await command.getUndoCommand();
                 // also remove from local history of commands as this is invalid
-                const index = this.localCommandsHistory.findIndex((localCommand) => localCommand.id === command.id);
+                const index = this.localCommandsHistory.findIndex(
+                    (localCommand) => localCommand.commandId === command.commandId
+                );
                 if (index !== -1) {
                     this.localCommandsHistory.splice(index, 1);
                     this.currentCommandIndex -= 1;

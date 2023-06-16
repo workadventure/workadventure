@@ -1,11 +1,12 @@
-import { Command, DeleteEntityCommand, GameMap, WAMEntityData } from "@workadventure/map-editor";
+import { DeleteEntityCommand, GameMap, WAMEntityData } from "@workadventure/map-editor";
 import { EntitiesManager } from "../../../GameMap/EntitiesManager";
 import { FrontCommandInterface } from "../FrontCommandInterface";
 import { RoomConnection } from "../../../../../Connexion/RoomConnection";
+import { VoidFrontCommand } from "../VoidFrontCommand";
 import { CreateEntityFrontCommand } from "./CreateEntityFrontCommand";
 
 export class DeleteEntityFrontCommand extends DeleteEntityCommand implements FrontCommandInterface {
-    private entityData: WAMEntityData;
+    private entityData: WAMEntityData | undefined;
 
     constructor(
         gameMap: GameMap,
@@ -14,23 +15,26 @@ export class DeleteEntityFrontCommand extends DeleteEntityCommand implements Fro
         private entitiesManager: EntitiesManager
     ) {
         super(gameMap, entityId, commandId);
-        const entityData = gameMap.getGameMapEntities()?.getEntity(entityId);
+    }
+
+    public execute(): Promise<void> {
+        const entityData = this.gameMap.getGameMapEntities()?.getEntity(this.entityId);
         if (!entityData) {
             throw new Error("Trying to delete a non existing Entity!");
         }
         this.entityData = structuredClone(entityData);
-    }
-
-    public execute(): Promise<void> {
         this.entitiesManager.deleteEntity(this.entityId);
         return super.execute();
     }
 
-    public getUndoCommand(): Command & CreateEntityFrontCommand {
+    public getUndoCommand(): CreateEntityFrontCommand | VoidFrontCommand {
+        if (!this.entityData) {
+            return new VoidFrontCommand();
+        }
         return new CreateEntityFrontCommand(this.gameMap, undefined, this.entityData, undefined, this.entitiesManager);
     }
 
     public emitEvent(roomConnection: RoomConnection): void {
-        roomConnection.emitMapEditorDeleteEntity(this.id, this.entityId);
+        roomConnection.emitMapEditorDeleteEntity(this.commandId, this.entityId);
     }
 }

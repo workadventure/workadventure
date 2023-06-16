@@ -24,6 +24,6 @@ export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implem
     }
 
     public emitEvent(roomConnection: RoomConnection): void {
-        roomConnection.emitUpdateWAMSettingMessage(this.id, this.updateWAMSettingsMessage);
+        roomConnection.emitUpdateWAMSettingMessage(this.commandId, this.updateWAMSettingsMessage);
     }
 }

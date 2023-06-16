@@ -184,9 +184,7 @@ export class GameMapFrontWrapper {
             // OTHERWISE, delete commands might pass FIRST!
         }
 
-        return Promise.all(addEntityPromises).then(() => {
-            this.initializedPromise.resolve();
-        });
+        return Promise.allSettled(addEntityPromises).then(() => this.initializedPromise.resolve());
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {
