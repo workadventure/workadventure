@@ -26,6 +26,6 @@ export class UpdateAreaFrontCommand extends UpdateAreaCommand implements FrontCo
     }
 
     public emitEvent(roomConnection: RoomConnection): void {
-        roomConnection.emitMapEditorModifyArea(this.id, this.newConfig);
+        roomConnection.emitMapEditorModifyArea(this.commandId, this.newConfig);
     }
 }
