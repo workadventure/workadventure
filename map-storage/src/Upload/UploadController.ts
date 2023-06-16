@@ -46,7 +46,6 @@ export class UploadController {
         this.getDownload();
         this.move();
         this.copy();
-        this.deleteDirectory();
         this.deleteFile();
         this.getMaps();
         this.patch();
@@ -562,35 +561,6 @@ export class UploadController {
         });
     }
 
-    private deleteDirectory() {
-        this.app.delete("/delete", passportAuthenticator, (req, res, next) => {
-            (async () => {
-                const directoryRaw = req.query.directory;
-                const directory = z.string().optional().parse(directoryRaw) || "./";
-
-                if (directory.includes("..")) {
-                    // Attempt to override filesystem. That' a hack!
-                    res.status(400).send("Invalid directory");
-                    return;
-                }
-
-                const virtualDirectory = mapPath(directory, req);
-
-                // TODO: Also send a refresh here to purge map-storage
-
-                await this.fileSystem.deleteFiles(virtualDirectory);
-
-                await this.mapListService.generateCacheFile(req.hostname);
-
-                res.sendStatus(204);
-            })().catch((e) => {
-                console.error(e);
-                Sentry.captureException(e);
-                next(e);
-            });
-        });
-    }
-
     private deleteFile() {
         this.app.delete("/*", passportAuthenticator, (req, res, next) => {
             (async () => {
@@ -607,12 +577,15 @@ export class UploadController {
                 await this.fileSystem.deleteFiles(virtualPath);
 
                 if (filePath.endsWith(".wam")) {
+                    // FIXME: We should call the refresh for all WAM files deleted (in subdirectories too)
                     uploadDetector.refresh(this.getFullUrlFromRequest(req)).catch((err) => {
                         console.error(err);
                         Sentry.captureException(err);
                     });
-                    await this.mapListService.deleteWAMFileInCache(req.hostname, filePath);
+                    //await this.mapListService.deleteWAMFileInCache(req.hostname, filePath);
                 }
+
+                await this.mapListService.generateCacheFile(req.hostname);
 
                 res.sendStatus(204);
             })().catch((e) => {
