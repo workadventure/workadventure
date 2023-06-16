@@ -19,7 +19,7 @@
             {$requestedCameraState ? $LL.megaphone.modal.yourCamera() : ""}
             {$requestedCameraState && $requestedMicrophoneState ? $LL.megaphone.modal.and() : ""}
             {$requestedMicrophoneState ? $LL.megaphone.modal.yourMicrophone() : ""}
-            {$LL.megaphone.modal.toAll()}
+            {$LL.megaphone.modal.toAll()}.
         {/if}
     </p>
     <div class="tw-flex tw-flex-wrap tw-items-center tw-justify-between">
