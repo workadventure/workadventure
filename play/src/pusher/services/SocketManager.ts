@@ -1162,6 +1162,7 @@ export class SocketManager implements ZoneEventListener {
                 );
             })
             .catch((error) => {
+                // If the error is a 999 error, it means that this is Linkedin that return this error code because the website is not embeddable and is not reachable by axios
                 if (isAxiosError(error) && error.response?.status === 999) {
                     client.send(
                         ServerToClientMessage.encode({
