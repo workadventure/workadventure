@@ -11,7 +11,7 @@
 </script>
 
 <div class="megaphone-confirm tw-py-2 tw-px-4 tw-w-60 tw-bg-dark-purple/95 tw-rounded-lg tw-absolute">
-    <p class="tw-text-white tw-text-justify tw-text-sm">
+    <p class="tw-text-white tw-text-sm">
         {#if !$requestedCameraState && !$requestedMicrophoneState}
             {$LL.warning.megaphoneNeeds()}
         {:else}
