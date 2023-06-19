@@ -3,8 +3,8 @@ import { ErrorApiData, RegisterData } from "@workadventure/messages";
 import { isAxiosError } from "axios";
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
-import type { AuthTokenData } from "../services/JWTTokenManager";
-import { jwtTokenManager } from "../services/JWTTokenManager";
+import { JsonWebTokenError } from "jsonwebtoken";
+import { AuthTokenData, jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
 import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
 import { adminService } from "../services/AdminService";
@@ -247,6 +247,12 @@ export class AuthenticateController extends BaseHttpController {
                 });
                 return;
             } catch (err) {
+                if (err instanceof JsonWebTokenError) {
+                    res.status(401);
+                    res.send("Invalid token");
+                    return;
+                }
+
                 if (isAxiosError(err)) {
                     const errorType = ErrorApiData.safeParse(err?.response?.data);
                     if (errorType.success) {

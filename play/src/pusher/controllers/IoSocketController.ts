@@ -15,7 +15,7 @@ import {
     SpaceFilterMessage,
     SpaceUser,
 } from "@workadventure/messages";
-import Jwt from "jsonwebtoken";
+import Jwt, { JsonWebTokenError } from "jsonwebtoken";
 import { v4 as uuid } from "uuid";
 import { JID } from "stanza";
 import * as Sentry from "@sentry/node";
@@ -40,7 +40,6 @@ import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessa
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
-import { InvalidTokenError } from "./InvalidTokenError";
 
 type WebSocket = HyperExpress.compressors.WebSocket;
 
@@ -590,7 +589,7 @@ export class IoSocketController {
                         );
                     } catch (e) {
                         if (e instanceof Error) {
-                            if (!(e instanceof InvalidTokenError)) {
+                            if (!(e instanceof JsonWebTokenError)) {
                                 Sentry.captureException(e);
                                 console.error(e);
                             }
@@ -601,7 +600,7 @@ export class IoSocketController {
                             res.upgrade(
                                 {
                                     rejected: true,
-                                    reason: e instanceof InvalidTokenError ? tokenInvalidException : null,
+                                    reason: e instanceof JsonWebTokenError ? tokenInvalidException : null,
                                     status: 401,
                                     message: e.message,
                                     roomId,

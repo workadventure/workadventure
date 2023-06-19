@@ -1,5 +1,6 @@
 import type { AvailabilityStatus } from "@workadventure/messages";
 import { isRegisterData } from "@workadventure/messages";
+import { isAxiosError } from "axios";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { subMenusStore, userIsConnected, warningContainerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
@@ -204,7 +205,12 @@ class ConnectionManager {
                     await this.checkAuthUserConnexion(this.authToken);
                     analyticsClient.loggedWithSso();
                 } catch (err) {
-                    console.error(err);
+                    if (isAxiosError(err) && err.response?.status === 401) {
+                        console.warn("Token expired, trying to login anonymously");
+                    } else {
+                        console.error(err);
+                    }
+
                     // if the user must be connected to the current room or if the pusher error is not openid provider access error
                     if (this._currentRoom.authenticationMandatory) {
                         const redirect = this.loadOpenIDScreen();
@@ -212,6 +218,8 @@ class ConnectionManager {
                             throw new Error("Unable to redirect on login page.");
                         }
                         return redirect;
+                    } else {
+                        await this.anonymousLogin();
                     }
                 }
             }
