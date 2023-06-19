@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { ArrowLeftIcon, RefreshCwIcon, SmileIcon, SendIcon } from "svelte-feather-icons";
+    import { ArrowLeftIcon, RefreshCwIcon, SmileIcon, SendIcon, PlusIcon } from "svelte-feather-icons";
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import { Unsubscriber } from "svelte/store";
     import { EmojiButton } from "@joeattardi/emoji-button";
@@ -141,15 +141,55 @@
         return previousMsg.authorName === authorName && minutesBetween < 2;
     }
 
-    onDestroy(() => {
-        subscribers.forEach((subscriber) => subscriber());
-    });
-
     let emojiOpened = false;
     function openEmoji() {
         picker.showPicker(emojiContainer);
         emojiOpened = true;
     }
+
+    let applicationMenuIsOpenned = false;
+    function toggleApplicationMenu() {
+        applicationMenuIsOpenned = !applicationMenuIsOpenned;
+    }
+
+    interface Application{
+        name: string;
+        icon: string;
+    }
+    const applications: Application[] = [
+        {
+            name: 'kalxoon',
+            icon: './static/images/applications/klaxoon.svg',
+        },
+        {
+            name: 'Youtube',
+            icon: './static/images/applications/youtube.svg',
+        },
+        {
+            name: 'Google Doc',
+            icon: './static/images/applications/google-docs.svg',
+        },
+        {
+            name: 'Google Sheet',
+            icon: './static/images/applications/google-sheets.svg',
+        },
+        {
+            name: 'Google Slide',
+            icon: './static/images/applications/google-slides.svg',
+        },
+        {
+            name: 'Google Form',
+            icon: './static/images/applications/google-forms.svg',
+        },
+    ];
+
+    function addNewApp(app: Application){
+        console.log('add new app', app);
+    }
+
+    onDestroy(() => {
+        subscribers.forEach((subscriber) => subscriber());
+    });
 </script>
 
 <!-- thread -->
@@ -375,6 +415,21 @@
         <div class="emote-menu-container">
             <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
         </div>
+        {#if applicationMenuIsOpenned}
+            <div class="wa-dropdown-menu">
+                {#each applications as app}
+                    <span
+                        class="wa-dropdown-item user-tag"
+                        on:keydown
+                        on:keyup
+                        on:click|stopPropagation|preventDefault={() => addNewApp(app)}
+                    >
+                        <img src={app.icon} alt={`App ${app.name} iniated in the chat`} width="20px"/>
+                        {app.name}
+                    </span>
+                {/each}
+            </div>
+        {/if}
 
         <form on:submit|preventDefault={saveMessage}>
             <div class="tw-w-full tw-px-2 tw-pb-2">
@@ -406,6 +461,15 @@
                             on:click|stopPropagation={saveMessage}
                         >
                             <SendIcon size="17" />
+                        </button>
+                        <button
+                            id="application"
+                            class={`tw-bg-transparent tw-p-0 tw-m-0 tw-inline-flex tw-justify-center tw-items-center ${
+                                applicationMenuIsOpenned ? "tw-text-light-blue" : ""
+                            }`}
+                            on:click|stopPropagation={toggleApplicationMenu}
+                        >
+                            <PlusIcon size="17" />
                         </button>
                     </div>
                 </div>
@@ -461,5 +525,13 @@
     }
     form [contenteditable="true"] {
         padding-right: 4rem;
+    }
+    .wa-dropdown-menu{
+        margin: 0 0 0 10px;
+        position: relative;
+        width: 94%;
+        max-height: 50vh;
+        overflow-y: auto;
+        overflow-x: hidden;
     }
 </style>

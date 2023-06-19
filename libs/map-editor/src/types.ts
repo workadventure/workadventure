@@ -56,7 +56,14 @@ export const PlayAudioPropertyData = PropertyBase.extend({
 });
 
 export const OpenWebsitePropertyData = PropertyBase.extend({
-    type: z.literal("openWebsite"),
+    type: z.union([
+        z.literal("openWebsite"),
+        z.literal("openYoutube"),
+        z.literal("openKlaxoon"),
+        z.literal("openGoogleDocs"),
+        z.literal("openGoogleSheets"),
+        z.literal("openGoogleSlides"),
+        z.literal("openGoogleForms")]),
     link: z.string().default("https://workadventu.re"),
     newTab: z.boolean().optional().default(false),
     closable: z.boolean().optional(),
@@ -222,7 +229,7 @@ export type CollectionUrl = z.infer<typeof CollectionUrl>;
 export type EntityData = z.infer<typeof EntityData>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
-export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite";
+export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite" | "openYoutube" | "openKlaxoon" | "openGoogleDocs" | "openGoogleSheets" | "openGoogleSlides" | "openGoogleForms";
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
 export type AreaDataProperty = z.infer<typeof AreaDataProperty>;

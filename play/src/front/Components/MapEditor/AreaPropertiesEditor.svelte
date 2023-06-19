@@ -12,6 +12,7 @@
     import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
     import SpeakerMegaphonePropertyEditor from "./PropertyEditor/SpeakerMegaphonePropertyEditor.svelte";
     import ListenerMegaphonePropertyEditor from "./PropertyEditor/ListenerMegaphonePropertyEditor.svelte";
+    import YoutubePropertyEditorcopy from "./PropertyEditor/Application/YoutubePropertyEditor copy.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -86,6 +87,24 @@
                     speakerZoneName: "",
                     chatEnabled: false,
                 };
+            case "openYoutube":
+                return {
+                    id,
+                    type,
+                    link: "https://workadventu.re",
+                    newTab: false,
+                    hideButtonLabel: true,
+                };
+            case "openKlaxoon":
+                return {
+                    id,
+                    type,
+                    link: "https://workadventu.re",
+                    newTab: false,
+                    hideButtonLabel: true,
+                };
+            default:
+                throw new Error(`Unknown property type ${type}`);
         }
     }
 
@@ -213,6 +232,60 @@
                 onAddProperty("openWebsite");
             }}
         />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.linkProperties.label()}
+            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            img={"resources/icons/applications/icon_youtube.svg"}
+            style="z-index: 1;"
+            on:click={() => {
+                onAddProperty("openYoutube");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.linkProperties.label()}
+            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            img={"resources/icons/applications/icon_klaxoon.svg"}
+            style="z-index: 1;"
+            on:click={() => {
+                onAddProperty("openKlaxoon");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.linkProperties.label()}
+            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            img={"resources/icons/applications/icon_google_docs.svg"}
+            style="z-index: 1;"
+            on:click={() => {
+                onAddProperty("openGoogleDocs");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.linkProperties.label()}
+            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            img={"resources/icons/applications/icon_google_forms.svg"}
+            style="z-index: 1;"
+            on:click={() => {
+                onAddProperty("openGoogleForms");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.linkProperties.label()}
+            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            img={"resources/icons/applications/icon_google_sheets.svg"}
+            style="z-index: 1;"
+            on:click={() => {
+                onAddProperty("openGoogleSheets");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.linkProperties.label()}
+            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            img={"resources/icons/applications/icon_google_sheets.svg"}
+            style="z-index: 1;"
+            on:click={() => {
+                onAddProperty("openGoogleSlides");
+            }}
+        />
     </div>
     <div class="area-name-container" style="display: none;">
         <label for="objectName">Area name</label>
@@ -270,6 +343,14 @@
                     />
                 {:else if property.type === "listenerMegaphone"}
                     <ListenerMegaphonePropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                        on:change={() => onUpdateProperty(property)}
+                    />
+                {:else if property.type === "openYoutube"}
+                    <YoutubePropertyEditorcopy
                         {property}
                         on:close={() => {
                             onDeleteProperty(property.id);

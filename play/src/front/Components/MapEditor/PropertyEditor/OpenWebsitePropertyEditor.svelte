@@ -8,6 +8,7 @@
 
     export let property: OpenWebsitePropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
+    export let icon = "resources/icons/icon_link.png";
     let optionAdvancedActivated = false;
     let embeddable = true;
     let embeddableLoading = false;
@@ -36,7 +37,8 @@
     }
 
     function onValueChange() {
-        dispatch("change");
+        console.log('onValueChange', property.link);
+        dispatch("change", property.link);
     }
 
     function checkEmbeddableWebsite() {
@@ -78,17 +80,22 @@
                 onValueChange();
             });
     }
+
+    function onKeyPressed(){
+        dispatch('change', property.link);
+    }
 </script>
 
 <PropertyEditorBase
     on:close={() => {
         dispatch("close");
     }}
+    on:keypress={onKeyPressed}
 >
     <span slot="header" class="tw-flex tw-justify-center tw-items-center">
         <img
             class="tw-w-6 tw-mr-1"
-            src="resources/icons/icon_link.png"
+            src={icon}
             alt={$LL.mapEditor.properties.linkProperties.description()}
         />
         {$LL.mapEditor.properties.linkProperties.label()}
@@ -116,6 +123,7 @@
                 type="text"
                 placeholder={$LL.mapEditor.properties.linkProperties.linkPlaceholder()}
                 bind:value={property.link}
+                on:keypress={onKeyPressed}
                 on:change={onValueChange}
                 on:blur={checkEmbeddableWebsite}
                 disabled={embeddableLoading}

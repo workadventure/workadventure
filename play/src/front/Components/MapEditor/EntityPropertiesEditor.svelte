@@ -6,10 +6,13 @@
     import visioSvg from "../images/visio-white.svg";
     import audioSvg from "../images/audio-white.svg";
     import webSvg from "../images/web-white.svg";
+    import youtubeSvg from "../images/applications/icon_youtube.svg";
+    import klaxoonSvg from "../images/applications/icon_klaxoon.svg";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
     import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
+    import YoutubePropertyEditorcopy from "./PropertyEditor/Application/YoutubePropertyEditor copy.svelte";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
@@ -68,6 +71,24 @@
                     buttonLabel: "Play audio",
                     audioLink: "",
                 };
+            case "openYoutube":
+                return {
+                    id,
+                    type,
+                    link: "https://youtu.be/mylink",
+                    newTab: false,
+                    hideButtonLabel: true,
+                };
+            case "openKlaxoon":
+                return {
+                    id,
+                    type,
+                    link: "https://workadventu.re",
+                    newTab: false,
+                    hideButtonLabel: true,
+                };
+            default:
+                throw new Error(`Unknown property type ${type}`);
         }
     }
 
@@ -93,7 +114,7 @@
     <div class="header-container">
         <h2>Editing: {$mapEditorSelectedEntityStore.getPrefab().name}</h2>
     </div>
-    <div class="properties-buttons tw-flex tw-flex-row">
+    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.jitsiProperties.label()}
             descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
@@ -122,6 +143,26 @@
             }}
         />
     </div>
+    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.linkProperties.label()}
+            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            img={youtubeSvg}
+            style="z-index: 3;"
+            on:click={() => {
+                onAddProperty("openYoutube");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.linkProperties.label()}
+            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            img={klaxoonSvg}
+            style="z-index: 3;"
+            on:click={() => {
+                onAddProperty("openKlaxoon");
+            }}
+        />
+    </div>
     <div class="entity-name-container">
         <label for="objectName">Object name</label>
         <input id="objectName" type="text" placeholder="Value" bind:value={entityName} on:change={onUpdateName} />
@@ -147,6 +188,14 @@
                     />
                 {:else if property.type === "openWebsite"}
                     <OpenWebsitePropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                        on:change={() => onUpdateProperty(property)}
+                    />
+                {:else if property.type === "openYoutube"}
+                    <YoutubePropertyEditorcopy
                         {property}
                         on:close={() => {
                             onDeleteProperty(property.id);
