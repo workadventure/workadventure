@@ -17,6 +17,8 @@ import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 import type { GameScene } from "../GameScene";
 import { Entity } from "../../ECS/Entity";
 import { ITiledPlace } from "../GameMapPropertiesListener";
+import { EntitiesManager } from "./EntitiesManager";
+import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 
 export type DynamicArea = {
     name: string;
@@ -26,8 +28,6 @@ export type DynamicArea = {
     height: number;
     properties: { [key: string]: unknown };
 };
-import { EntitiesManager } from "./EntitiesManager";
-import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 
 export type LayerChangeCallback = (
     layersChangedByAction: Array<ITiledMapLayer>,
@@ -75,7 +75,7 @@ export class GameMapFrontWrapper {
 
     public readonly phaserMap: Phaser.Tilemaps.Tilemap;
     public readonly phaserLayers: TilemapLayer[] = [];
-    public readonly tiledAreas: ITiledMapObject[] = [];
+    //public readonly tiledAreas: ITiledMapObject[] = [];
     /**
      * Areas that we can do CRUD operations on via scripting API
      */
@@ -159,7 +159,19 @@ export class GameMapFrontWrapper {
         this.gameMap.tiledObjects
             .filter((object) => ["zone", "area"].includes(object.class ?? ""))
             .forEach((tiledArea: ITiledMapObject) => {
-                this.tiledAreas.push(tiledArea);
+                if (tiledArea.width === undefined || tiledArea.height === undefined) {
+                    console.warn("Areas must be square objects. Object " + tiledArea.name + " is not square.");
+                    return;
+                }
+                this.dynamicAreas.set(tiledArea.name, {
+                    name: tiledArea.name,
+                    width: tiledArea.width,
+                    height: tiledArea.height,
+                    x: tiledArea.x,
+                    y: tiledArea.y,
+                    properties: this.mapTiledPropertiesToDynamicAreaProperties(tiledArea.properties ?? []),
+                });
+                //this.tiledAreas.push(tiledArea);
             });
 
         this.collisionGrid = [];
@@ -315,9 +327,9 @@ export class GameMapFrontWrapper {
         this.oldPosition = this.position;
         this.position = { x, y };
         const areasChanged = this.gameMap.getGameMapAreas()?.triggerAreasChange(this.oldPosition, this.position);
-        const tiledAreasChanged = this.triggerTiledAreasChange(this.oldPosition, this.position);
+        //const tiledAreasChanged = this.triggerTiledAreasChange(this.oldPosition, this.position);
         const dynamicAreasChanged = this.triggerDynamicAreasChange(this.oldPosition, this.position);
-        if (areasChanged || tiledAreasChanged || dynamicAreasChanged) {
+        if (areasChanged /*|| tiledAreasChanged*/ || dynamicAreasChanged) {
             this.triggerAllProperties();
         }
 
@@ -748,9 +760,9 @@ export class GameMapFrontWrapper {
         return this.gameMap.flatLayers;
     }
 
-    public getTiledAreas(): ITiledMapObject[] {
+    /*public getTiledAreas(): ITiledMapObject[] {
         return this.tiledAreas;
-    }
+    }*/
 
     public getExitUrls(): Array<string> {
         return this.gameMap.exitUrls;
@@ -827,6 +839,16 @@ export class GameMapFrontWrapper {
                 properties.push({ name: key, type: "bool", value: property });
                 continue;
             }
+        }
+        return properties;
+    }
+
+    private mapTiledPropertiesToDynamicAreaProperties(tiledProperties: ITiledMapProperty[]): {
+        [key: string]: unknown;
+    } {
+        const properties: { [key: string]: unknown } = {};
+        for (const tiledProperty of tiledProperties) {
+            properties[tiledProperty.name] = tiledProperty.value;
         }
         return properties;
     }
@@ -987,7 +1009,7 @@ export class GameMapFrontWrapper {
         }
 
         // CHECK FOR TILED AREAS PROPERTIES
-        if (this.position) {
+        /*if (this.position) {
             const tiledAreasOnPosition = this.getTiledAreasOnPosition(this.position);
             for (const tiledArea of tiledAreasOnPosition) {
                 if (tiledArea.properties) {
@@ -999,7 +1021,7 @@ export class GameMapFrontWrapper {
                     }
                 }
             }
-        }
+        }*/
 
         // CHECK FOR ENTITIES PROPERTIES
         if (this.entitiesManager) {
@@ -1089,7 +1111,7 @@ export class GameMapFrontWrapper {
         }
     }
 
-    private triggerTiledAreasChange(
+    /*private triggerTiledAreasChange(
         oldPosition: { x: number; y: number } | undefined,
         position: { x: number; y: number } | undefined
     ): boolean {
@@ -1124,9 +1146,9 @@ export class GameMapFrontWrapper {
             areasChange = true;
         }
         return areasChange;
-    }
+    }*/
 
-    private getTiledAreasOnPosition(position: { x: number; y: number }, offsetY = 16): ITiledMapObject[] {
+    /*private getTiledAreasOnPosition(position: { x: number; y: number }, offsetY = 16): ITiledMapObject[] {
         const overlappedTiledAreas: ITiledMapObject[] = [];
         for (const tiledArea of this.tiledAreas) {
             if (
@@ -1139,7 +1161,7 @@ export class GameMapFrontWrapper {
             }
         }
         return overlappedTiledAreas;
-    }
+    }*/
 
     private triggerDynamicAreasChange(
         oldPosition: { x: number; y: number } | undefined,
