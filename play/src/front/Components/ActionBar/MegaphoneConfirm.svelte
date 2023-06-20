@@ -23,13 +23,13 @@
         {/if}
     </p>
     <div class="tw-flex tw-flex-wrap tw-items-center tw-justify-between">
-        <button type="button" class="dark"> Cancel </button>
+        <button type="button" class="dark">{$LL.megaphone.modal.cancel()}</button>
         <button
             type="button"
             class="light {!$requestedCameraState && !$requestedMicrophoneState ? 'disabled' : ''}"
             on:click={start}
         >
-            Confirm
+            {$LL.megaphone.modal.confirm()}
         </button>
     </div>
 </div>
