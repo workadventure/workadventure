@@ -143,6 +143,7 @@ export class BroadcastService {
     }
 
     private async connect() {
+        console.log(JITSI_DOMAIN, JITSI_XMPP_DOMAIN, JITSI_MUC_DOMAIN);
         if (!JITSI_DOMAIN || !JITSI_XMPP_DOMAIN || !JITSI_MUC_DOMAIN) {
             throw new Error("Cannot use Jitsi with a no domain defined, please check your environment variables");
         }
