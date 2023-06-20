@@ -54,6 +54,7 @@
         subtype?: OpenWebsiteTypePropertiesKeys
     ): EntityDataProperty {
         const id = crypto.randomUUID();
+        let link: string;
         switch (type) {
             case "jitsiRoomProperty":
                 return {
@@ -64,7 +65,6 @@
                     buttonLabel: "Connect to Jitsi",
                 };
             case "openWebsite":
-                let link = "https://workadventu.re";
                 switch (subtype) {
                     case "youtube":
                         link = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
@@ -72,12 +72,14 @@
                     case "klaxoon":
                         link = "https://klaxoon.com/";
                         break;
+                    default:
+                        link = "https://workadventu.re";
                 }
                 return {
                     id,
                     type,
                     buttonLabel: "Open Website",
-                    link: link,
+                    link,
                     newTab: false,
                     application: subtype ?? "website",
                 };

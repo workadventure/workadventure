@@ -2,11 +2,11 @@
     import { createEventDispatcher, onMount } from "svelte";
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
     import { AlertTriangleIcon } from "svelte-feather-icons";
+    import axios from "axios";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import youtubeSvg from "../../images/applications/icon_youtube.svg";
-    import axios from "axios";
+    import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenWebsitePropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
@@ -21,7 +21,7 @@
     const dispatch = createEventDispatcher();
 
     onMount(() => {
-        checkEmbeddableWebsite();
+        checkWebsiteProperty();
     });
 
     function onTriggerValueChange() {
@@ -43,15 +43,15 @@
         dispatch("change", property.link);
     }
 
-    async function checkEmbeddableWebsite() {
+    function checkWebsiteProperty(): void {
         // if the link is not a website, we don't need to check if it is embeddable
         embeddableLoading = true;
         error = "";
+        let promiseWebsiteProperty: Promise<void> | undefined;
         if (property.application == "youtube") {
-            await axios
+            promiseWebsiteProperty = axios
                 .get(`https://www.youtube.com/oembed?url=${property.link}&format:json`)
                 .then((res) => {
-                    console.log(res);
                     const html = res.data.html;
                     const div = document.createElement("div");
                     div.insertAdjacentHTML("beforeend", html);
@@ -66,15 +66,24 @@
                     error = e.response?.data?.message ?? $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
                     console.info("Error to check embeddable website", e);
                     property.link = oldValue;
-                })
-                .finally(() => {
-                    embeddableLoading = false;
-                    oldValue = property.link;
-                    onValueChange();
                 });
         }
 
         // check if the link is embeddable
+        if (promiseWebsiteProperty) {
+            promiseWebsiteProperty.finally(() => {
+                embeddableLoading = false;
+                oldValue = property.link;
+                onValueChange();
+
+                checkEmbeddableLink();
+            });
+        } else {
+            checkEmbeddableLink();
+        }
+    }
+
+    function checkEmbeddableLink(): void {
         gameManager
             .getCurrentGameScene()
             .connection?.queryEmbeddableWebsite(property.link)
@@ -157,7 +166,7 @@
                 bind:value={property.link}
                 on:keypress={onKeyPressed}
                 on:change={onValueChange}
-                on:blur={checkEmbeddableWebsite}
+                on:blur={checkWebsiteProperty}
                 disabled={embeddableLoading}
             />
             {#if !embeddable && error}

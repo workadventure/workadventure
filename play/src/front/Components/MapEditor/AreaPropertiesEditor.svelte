@@ -39,6 +39,7 @@
         subtype?: OpenWebsiteTypePropertiesKeys
     ): AreaDataProperty {
         const id = crypto.randomUUID();
+        let link: string;
         switch (type) {
             case "start":
                 return {
@@ -67,7 +68,6 @@
                     roomName: "JITSI ROOM",
                 };
             case "openWebsite":
-                let link = "https://workadventu.re";
                 switch (subtype) {
                     case "youtube":
                         link = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
@@ -75,11 +75,14 @@
                     case "klaxoon":
                         link = "https://klaxoon.com/";
                         break;
+                    default:
+                        link = "https://workadventu.re";
+                        break;
                 }
                 return {
                     id,
                     type,
-                    link: link,
+                    link,
                     newTab: false,
                     hideButtonLabel: true,
                     application: subtype ?? "website",
