@@ -1,6 +1,11 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
-    import { EntityDataProperties, EntityDataPropertiesKeys, EntityDataProperty } from "@workadventure/map-editor";
+    import {
+        EntityDataProperties,
+        EntityDataPropertiesKeys,
+        EntityDataProperty,
+        OpenWebsiteTypePropertiesKeys,
+    } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
     import visioSvg from "../images/visio-white.svg";
@@ -12,7 +17,6 @@
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
     import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
-    import YoutubePropertyEditorcopy from "./PropertyEditor/Application/YoutubePropertyEditor copy.svelte";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
@@ -25,9 +29,9 @@
         }
     });
 
-    function onAddProperty(type: EntityDataPropertiesKeys) {
+    function onAddProperty(type: EntityDataPropertiesKeys, subtype?: OpenWebsiteTypePropertiesKeys) {
         if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.addProperty(getPropertyFromType(type));
+            $mapEditorSelectedEntityStore.addProperty(getPropertyFromType(type, subtype));
             // refresh properties
             properties = $mapEditorSelectedEntityStore?.getProperties();
         }
@@ -45,7 +49,10 @@
         }
     }
 
-    function getPropertyFromType(type: EntityDataPropertiesKeys): EntityDataProperty {
+    function getPropertyFromType(
+        type: EntityDataPropertiesKeys,
+        subtype?: OpenWebsiteTypePropertiesKeys
+    ): EntityDataProperty {
         const id = crypto.randomUUID();
         switch (type) {
             case "jitsiRoomProperty":
@@ -57,12 +64,22 @@
                     buttonLabel: "Connect to Jitsi",
                 };
             case "openWebsite":
+                let link = "https://workadventu.re";
+                switch (subtype) {
+                    case "youtube":
+                        link = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
+                        break;
+                    case "klaxoon":
+                        link = "https://klaxoon.com/";
+                        break;
+                }
                 return {
                     id,
                     type,
                     buttonLabel: "Open Website",
-                    link: "https://workadventu.re",
+                    link: link,
                     newTab: false,
+                    application: subtype ?? "website",
                 };
             case "playAudio":
                 return {
@@ -70,22 +87,6 @@
                     type,
                     buttonLabel: "Play audio",
                     audioLink: "",
-                };
-            case "openYoutube":
-                return {
-                    id,
-                    type,
-                    link: "https://youtu.be/mylink",
-                    newTab: false,
-                    hideButtonLabel: true,
-                };
-            case "openKlaxoon":
-                return {
-                    id,
-                    type,
-                    link: "https://workadventu.re",
-                    newTab: false,
-                    hideButtonLabel: true,
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);
@@ -150,7 +151,7 @@
             img={youtubeSvg}
             style="z-index: 3;"
             on:click={() => {
-                onAddProperty("openYoutube");
+                onAddProperty("openWebsite", "youtube");
             }}
         />
         <AddPropertyButton
@@ -159,7 +160,7 @@
             img={klaxoonSvg}
             style="z-index: 3;"
             on:click={() => {
-                onAddProperty("openKlaxoon");
+                onAddProperty("openWebsite", "klaxoon");
             }}
         />
     </div>
@@ -188,14 +189,6 @@
                     />
                 {:else if property.type === "openWebsite"}
                     <OpenWebsitePropertyEditor
-                        {property}
-                        on:close={() => {
-                            onDeleteProperty(property.id);
-                        }}
-                        on:change={() => onUpdateProperty(property)}
-                    />
-                {:else if property.type === "openYoutube"}
-                    <YoutubePropertyEditorcopy
                         {property}
                         on:close={() => {
                             onDeleteProperty(property.id);

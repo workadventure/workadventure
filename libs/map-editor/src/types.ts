@@ -56,14 +56,7 @@ export const PlayAudioPropertyData = PropertyBase.extend({
 });
 
 export const OpenWebsitePropertyData = PropertyBase.extend({
-    type: z.union([
-        z.literal("openWebsite"),
-        z.literal("openYoutube"),
-        z.literal("openKlaxoon"),
-        z.literal("openGoogleDocs"),
-        z.literal("openGoogleSheets"),
-        z.literal("openGoogleSlides"),
-        z.literal("openGoogleForms")]),
+    type: z.literal("openWebsite"),
     link: z.string().default("https://workadventu.re"),
     newTab: z.boolean().optional().default(false),
     closable: z.boolean().optional(),
@@ -76,6 +69,15 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
         .default("fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture")
         .optional(),
     position: z.number().optional(),
+    application: z.union([
+        z.literal("website"),
+        z.literal("youtube"),
+        z.literal("klaxoon"),
+        z.literal("googleDocs"),
+        z.literal("googleSheets"),
+        z.literal("googleSlides"),
+        z.literal("googleForms")
+    ]).default("website"),
 });
 
 export const SpeakerMegaphonePropertyData = PropertyBase.extend({
@@ -229,7 +231,8 @@ export type CollectionUrl = z.infer<typeof CollectionUrl>;
 export type EntityData = z.infer<typeof EntityData>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
-export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite" | "openYoutube" | "openKlaxoon" | "openGoogleDocs" | "openGoogleSheets" | "openGoogleSlides" | "openGoogleForms";
+export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite";
+export type OpenWebsiteTypePropertiesKeys = "website" | "youtube" | "klaxoon" | "googleDocs" | "googleSheets" | "googleSlides" | "googleForms";
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
 export type AreaDataProperty = z.infer<typeof AreaDataProperty>;

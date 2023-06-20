@@ -5,6 +5,8 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
+    import youtubeSvg from "../../images/applications/icon_youtube.svg";
+    import axios from "axios";
 
     export let property: OpenWebsitePropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
@@ -37,13 +39,42 @@
     }
 
     function onValueChange() {
-        console.log('onValueChange', property.link);
+        console.log("onValueChange", property.link);
         dispatch("change", property.link);
     }
 
-    function checkEmbeddableWebsite() {
+    async function checkEmbeddableWebsite() {
+        // if the link is not a website, we don't need to check if it is embeddable
         embeddableLoading = true;
         error = "";
+        if (property.application == "youtube") {
+            await axios
+                .get(`https://www.youtube.com/oembed?url=${property.link}&format:json`)
+                .then((res) => {
+                    console.log(res);
+                    const html = res.data.html;
+                    const div = document.createElement("div");
+                    div.insertAdjacentHTML("beforeend", html);
+                    const iframe: HTMLIFrameElement = div.firstChild as HTMLIFrameElement;
+                    property.link = iframe.src;
+                    embeddable = true;
+                    optionAdvancedActivated = false;
+                    property.newTab = oldNewTabValue;
+                })
+                .catch((e) => {
+                    embeddable = false;
+                    error = e.response?.data?.message ?? $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                    console.info("Error to check embeddable website", e);
+                    property.link = oldValue;
+                })
+                .finally(() => {
+                    embeddableLoading = false;
+                    oldValue = property.link;
+                    onValueChange();
+                });
+        }
+
+        // check if the link is embeddable
         gameManager
             .getCurrentGameScene()
             .connection?.queryEmbeddableWebsite(property.link)
@@ -81,8 +112,8 @@
             });
     }
 
-    function onKeyPressed(){
-        dispatch('change', property.link);
+    function onKeyPressed() {
+        dispatch("change", property.link);
     }
 </script>
 
@@ -93,12 +124,13 @@
     on:keypress={onKeyPressed}
 >
     <span slot="header" class="tw-flex tw-justify-center tw-items-center">
-        <img
-            class="tw-w-6 tw-mr-1"
-            src={icon}
-            alt={$LL.mapEditor.properties.linkProperties.description()}
-        />
-        {$LL.mapEditor.properties.linkProperties.label()}
+        {#if property.application === "youtube"}
+            <img class="tw-w-6 tw-mr-1" src={youtubeSvg} alt={$LL.mapEditor.properties.linkProperties.description()} />
+            {$LL.mapEditor.properties.linkProperties.label()}
+        {:else}
+            <img class="tw-w-6 tw-mr-1" src={icon} alt={$LL.mapEditor.properties.linkProperties.description()} />
+            {$LL.mapEditor.properties.linkProperties.label()}
+        {/if}
     </span>
     <span slot="content">
         <div>
