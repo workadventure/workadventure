@@ -237,14 +237,19 @@ export class AuthenticateController extends BaseHttpController {
                     return;
                 }
 
-                const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
-                res.json({
-                    username: authTokenData?.username,
-                    authToken: token,
-                    locale: authTokenData?.locale,
-                    ...resUserData,
-                    ...resCheckTokenAuth,
-                });
+                try {
+                    const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
+                    res.json({
+                        username: authTokenData?.username,
+                        authToken: token,
+                        locale: authTokenData?.locale,
+                        ...resUserData,
+                        ...resCheckTokenAuth,
+                    });
+                } catch (err) {
+                    console.warn("Error while checking token auth", err);
+                    throw new JsonWebTokenError("Invalid token");
+                }
                 return;
             } catch (err) {
                 if (err instanceof JsonWebTokenError) {
