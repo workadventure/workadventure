@@ -181,6 +181,8 @@ const mouseInCameraTriggerArea = readable(false, function start(set) {
 
 export const cameraNoEnergySavingStore = writable<boolean>(false);
 
+export const streamingMegaphoneStore = writable<boolean>(false);
+
 /**
  * A store that contains "true" if the webcam should be stopped for energy efficiency reason - i.e. we are not moving and not in a conversation.
  */
@@ -191,6 +193,7 @@ export const cameraEnergySavingStore = derived(
         enabledWebCam10secondsAgoStore,
         mouseInCameraTriggerArea,
         cameraNoEnergySavingStore,
+        streamingMegaphoneStore,
     ],
     ([
         $userMoved5SecondsAgoStore,
@@ -198,13 +201,15 @@ export const cameraEnergySavingStore = derived(
         $enabledWebCam10secondsAgoStore,
         $mouseInBottomRight,
         $cameraNoEnergySavingStore,
+        $streamingMegaphoneStore,
     ]) => {
         return (
             !$mouseInBottomRight &&
             !$userMoved5SecondsAgoStore &&
             $peerStore.size === 0 &&
             !$enabledWebCam10secondsAgoStore &&
-            !$cameraNoEnergySavingStore
+            !$cameraNoEnergySavingStore &&
+            !$streamingMegaphoneStore
         );
     }
 );
