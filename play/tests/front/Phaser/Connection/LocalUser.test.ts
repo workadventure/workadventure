@@ -6,7 +6,11 @@ window.env = {
 };
 
 import { describe, expect, it } from "vitest";
-import { areCharacterLayersValid, isUserNameValid, maxUserNameLength } from "../../../../src/front/Connexion/LocalUser";
+import {
+    areCharacterTexturesValid,
+    isUserNameValid,
+    maxUserNameLength,
+} from "../../../../src/front/Connection/LocalUser";
 
 describe("isUserNameValid()", () => {
     it("should validate name with letters", () => {
@@ -37,19 +41,19 @@ describe("isUserNameValid()", () => {
     });
 });
 
-describe("areCharacterLayersValid()", () => {
+describe("areCharacterTextureValid()", () => {
     it("should validate default textures array", () => {
-        expect(areCharacterLayersValid(["male1", "male2"])).toBe(true);
+        expect(areCharacterTexturesValid(["male1", "male2"])).toBe(true);
     });
 
     it("should not validate an empty array", () => {
-        expect(areCharacterLayersValid([])).toBe(false);
+        expect(areCharacterTexturesValid([])).toBe(false);
     });
     it("should not validate space only strings", () => {
-        expect(areCharacterLayersValid([" ", "male1"])).toBe(false);
+        expect(areCharacterTexturesValid([" ", "male1"])).toBe(false);
     });
 
     it("should not validate empty strings", () => {
-        expect(areCharacterLayersValid(["", "male1"])).toBe(false);
+        expect(areCharacterTexturesValid(["", "male1"])).toBe(false);
     });
 });

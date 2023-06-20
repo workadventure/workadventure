@@ -64,14 +64,14 @@ export const wokaPartNames = [
 
 export const WokaDetail = z.object({
   id: extendApi(z.string(), {
-    description: "The unique identifier of the Woka.",
+    description: "The unique identifier of the Woka texture.",
     example: "03395306-5dee-4b16-a034-36f2c5f2324a",
   }),
-  url: extendApi(z.optional(z.string()), {
+  url: extendApi(z.string(), {
     description: "The URL of the image of the woka.",
     example: "http://example.com/resources/characters/pipoya/male.png",
   }),
-  layer: extendApi(z.optional(z.string()), {
+  layer: extendApi(z.string(), {
     description: "The layer of where the woka will be rendered.",
   }),
 });

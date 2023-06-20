@@ -2,8 +2,8 @@ import { writable } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { Color } from "@workadventure/shared-utils";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
-import type { RoomConnection } from "../Connexion/RoomConnection";
-import { localUserStore } from "../Connexion/LocalUserStore";
+import type { RoomConnection } from "../Connection/RoomConnection";
+import { localUserStore } from "../Connection/LocalUserStore";
 
 let idCount = 0;
 
@@ -27,9 +27,9 @@ function createPlayersStore() {
                         userId: message.userId,
                         userJid: message.userJid,
                         name: message.name,
-                        characterLayers: message.characterLayers,
+                        characterTextures: message.characterTextures,
                         visitCardUrl: message.visitCardUrl,
-                        companion: message.companion,
+                        companionTexture: message.companionTexture,
                         userUuid: message.userUuid,
                         availabilityStatus: message.availabilityStatus,
                         color: Color.getColorByString(message.name),
@@ -69,9 +69,8 @@ function createPlayersStore() {
                     userId: newUserId,
                     userJid: "fake",
                     name,
-                    characterLayers: [],
+                    characterTextures: [],
                     visitCardUrl: null,
-                    companion: null,
                     availabilityStatus: AvailabilityStatus.ONLINE,
                     userUuid: "dummy",
                     color: Color.getColorByString(name),

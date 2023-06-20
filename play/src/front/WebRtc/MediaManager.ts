@@ -13,7 +13,7 @@ import {
 } from "../Stores/MyMediaStore";
 import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
-import { localUserStore } from "../Connexion/LocalUserStore";
+import { localUserStore } from "../Connection/LocalUserStore";
 import { LL } from "../../i18n/i18n-svelte";
 import { localeDetector } from "../../i18n/locales";
 

@@ -1,7 +1,7 @@
 import { Command, DeleteEntityCommand, GameMap, WAMEntityData } from "@workadventure/map-editor";
 import { EntitiesManager } from "../../../GameMap/EntitiesManager";
 import { FrontCommandInterface } from "../FrontCommandInterface";
-import { RoomConnection } from "../../../../../Connexion/RoomConnection";
+import { RoomConnection } from "../../../../../Connection/RoomConnection";
 import { CreateEntityFrontCommand } from "./CreateEntityFrontCommand";
 
 export class DeleteEntityFrontCommand extends DeleteEntityCommand implements FrontCommandInterface {

@@ -13,7 +13,7 @@
     import { loginSceneVisibleStore } from "../../Stores/LoginSceneStore";
     import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
     import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
-    import { connectionManager } from "../../Connexion/ConnectionManager";
+    import { connectionManager } from "../../Connection/ConnectionManager";
     import { EnableCameraScene, EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import { enableCameraSceneVisibilityStore } from "../../Stores/MediaStore";
     import btnProfileSubMenuCamera from "../images/btn-menu-profile-camera.svg";

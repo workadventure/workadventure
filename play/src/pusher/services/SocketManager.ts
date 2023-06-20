@@ -6,7 +6,6 @@ import {
     AdminRoomMessage,
     BanMessage,
     BanUserByUuidMessage,
-    CharacterLayerMessage,
     EmoteEventMessage,
     ErrorApiData,
     ErrorMessage,
@@ -219,34 +218,15 @@ export class SocketManager implements ZoneEventListener {
                 positionMessage: ProtobufUtils.toPositionMessage(client.position),
                 tag: client.tags,
                 isLogged: client.isLogged,
-                companion: client.companion,
+                companionTexture: client.companion,
                 activatedInviteUser: client.activatedInviteUser != undefined ? client.activatedInviteUser : true,
                 canEdit: client.canEdit,
-                characterLayer: [],
-                applications: [],
+                characterTextures: client.characterTextures,
+                applications: client.applications ? client.applications : [],
                 visitCardUrl: client.visitCardUrl ?? "", // TODO: turn this into an optional field
                 userRoomToken: client.userRoomToken ?? "", // TODO: turn this into an optional field
                 lastCommandId: client.lastCommandId ?? "", // TODO: turn this into an optional field
             };
-
-            if (client.applications != undefined) {
-                for (const applicationValue of client.applications) {
-                    joinRoomMessage.applications.push({
-                        name: applicationValue.name,
-                        script: applicationValue.script,
-                    });
-                }
-            }
-
-            for (const characterLayer of client.characterLayers) {
-                const characterLayerMessage: CharacterLayerMessage = {
-                    name: characterLayer.id,
-                    url: characterLayer.url ?? "", // FIXME: turn this into an optional field
-                    layer: characterLayer.layer ?? "", // FIXME: turn this into an optional field
-                };
-
-                joinRoomMessage.characterLayer.push(characterLayerMessage);
-            }
 
             debug("Calling joinRoom '" + client.roomId + "'");
             const apiClient = await apiClientRepository.getClient(client.roomId);
@@ -807,13 +787,15 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitInvalidTextureMessage(client: compressors.WebSocket): void {
+    public emitInvalidCharacterTextureMessage(client: compressors.WebSocket): void {
         if (!client.disconnecting) {
             client.send(
                 ServerToClientMessage.encode({
                     message: {
-                        $case: "invalidTextureMessage",
-                        invalidTextureMessage: {},
+                        $case: "invalidCharacterTextureMessage",
+                        invalidCharacterTextureMessage: {
+                            message: "Invalid character textures",
+                        },
                     },
                 }).finish(),
                 true
@@ -821,12 +803,28 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitConnexionErrorMessage(client: compressors.WebSocket, message: string): void {
+    public emitInvalidCompanionTextureMessage(client: compressors.WebSocket): void {
+        if (!client.disconnecting) {
+            client.send(
+                ServerToClientMessage.encode({
+                    message: {
+                        $case: "invalidCompanionTextureMessage",
+                        invalidCompanionTextureMessage: {
+                            message: "Invalid companion texture",
+                        },
+                    },
+                }).finish(),
+                true
+            );
+        }
+    }
+
+    public emitConnectionErrorMessage(client: compressors.WebSocket, message: string): void {
         client.send(
             ServerToClientMessage.encode({
                 message: {
-                    $case: "worldConnexionMessage",
-                    worldConnexionMessage: {
+                    $case: "worldConnectionMessage",
+                    worldConnectionMessage: {
                         message,
                     },
                 },

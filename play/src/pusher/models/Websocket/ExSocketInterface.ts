@@ -4,7 +4,7 @@ import type {
     WokaDetail,
     MucRoomDefinition,
     ApplicationDefinitionInterface,
-    CompanionMessage,
+    CompanionTextureMessage,
     SubMessage,
     BatchMessage,
     PusherToBackMessage,
@@ -33,17 +33,16 @@ export interface BackSpaceConnection extends BackSpaceConnection_ {
 export interface ExSocketInterface extends compressors.WebSocket, Identificable, CustomJsonReplacerInterface {
     token: string;
     roomId: string;
-    //userId: number;   // A temporary (autoincremented) identifier for this user
     userUuid: string; // A unique identifier for this user
     userIdentifier: string;
     userJid: string;
     isLogged: boolean;
     IPAddress: string; // IP address
     name: string;
-    characterLayers: WokaDetail[];
+    characterTextures: WokaDetail[];
     position: PointInterface;
     viewport: ViewportInterface;
-    companion?: CompanionMessage;
+    companionTexture?: CompanionTextureMessage;
     availabilityStatus: AvailabilityStatus;
     lastCommandId?: string;
     /**

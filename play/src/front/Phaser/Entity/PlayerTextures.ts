@@ -2,28 +2,14 @@
 
 import type { WokaList, WokaPartType } from "@workadventure/messages";
 
-export interface BodyResourceDescriptionListInterface {
-    [key: string]: BodyResourceDescriptionInterface;
+export interface WokaTextureDescriptionListInterface {
+    [key: string]: WokaTextureDescriptionInterface;
 }
 
-export interface BodyResourceDescriptionInterface {
+export interface WokaTextureDescriptionInterface {
     id: string;
-    img: string;
-    level?: number;
+    url: string;
 }
-
-/**
- * Temporary object to map layers to the old "level" concept.
- */
-export const mapLayerToLevel = {
-    woka: -1,
-    body: 0,
-    eyes: 1,
-    hair: 2,
-    clothes: 3,
-    hat: 4,
-    accessory: 5,
-};
 
 export enum PlayerTexturesKey {
     Accessory = "accessory",
@@ -36,22 +22,22 @@ export enum PlayerTexturesKey {
 }
 
 export class PlayerTextures {
-    private wokaResources: BodyResourceDescriptionListInterface = {};
-    private colorResources: BodyResourceDescriptionListInterface = {};
-    private eyesResources: BodyResourceDescriptionListInterface = {};
-    private hairResources: BodyResourceDescriptionListInterface = {};
-    private clothesResources: BodyResourceDescriptionListInterface = {};
-    private hatsResources: BodyResourceDescriptionListInterface = {};
-    private accessoriesResources: BodyResourceDescriptionListInterface = {};
-    private layers: BodyResourceDescriptionListInterface[] = [];
+    private wokaResources: WokaTextureDescriptionListInterface = {};
+    private colorResources: WokaTextureDescriptionListInterface = {};
+    private eyesResources: WokaTextureDescriptionListInterface = {};
+    private hairResources: WokaTextureDescriptionListInterface = {};
+    private clothesResources: WokaTextureDescriptionListInterface = {};
+    private hatsResources: WokaTextureDescriptionListInterface = {};
+    private accessoriesResources: WokaTextureDescriptionListInterface = {};
+    private layers: WokaTextureDescriptionListInterface[] = [];
 
-    wokaCollections = new Map<string, BodyResourceDescriptionInterface[]>();
+    wokaCollections = new Map<string, WokaTextureDescriptionInterface[]>();
 
     public loadPlayerTexturesMetadata(metadata: WokaList): void {
         this.mapTexturesMetadataIntoResources(metadata);
     }
 
-    public getTexturesResources(key: PlayerTexturesKey): BodyResourceDescriptionListInterface {
+    public getTexturesResources(key: PlayerTexturesKey): WokaTextureDescriptionListInterface {
         switch (key) {
             case PlayerTexturesKey.Accessory:
                 return this.accessoriesResources;
@@ -70,7 +56,7 @@ export class PlayerTextures {
         }
     }
 
-    public getLayers(): BodyResourceDescriptionListInterface[] {
+    public getLayers(): WokaTextureDescriptionListInterface[] {
         return this.layers;
     }
 
@@ -78,7 +64,7 @@ export class PlayerTextures {
         return Array.from(this.wokaCollections.keys());
     }
 
-    public getWokaCollectionTextures(key: string): BodyResourceDescriptionInterface[] {
+    public getWokaCollectionTextures(key: string): WokaTextureDescriptionInterface[] {
         return this.wokaCollections.get(key) ?? [];
     }
 
@@ -103,14 +89,14 @@ export class PlayerTextures {
         this.mapWokaCollections(metadata.woka);
     }
 
-    private getMappedResources(category: WokaPartType): BodyResourceDescriptionListInterface {
-        const resources: BodyResourceDescriptionListInterface = {};
+    private getMappedResources(category: WokaPartType): WokaTextureDescriptionListInterface {
+        const resources: WokaTextureDescriptionListInterface = {};
         if (!category) {
             return {};
         }
         for (const collection of category.collections) {
             for (const texture of collection.textures) {
-                resources[texture.id] = { id: texture.id, img: texture.url };
+                resources[texture.id] = { id: texture.id, url: texture.url };
             }
         }
         return resources;
@@ -121,15 +107,11 @@ export class PlayerTextures {
             return;
         }
         for (const collection of category.collections) {
-            const textures: BodyResourceDescriptionInterface[] = [];
+            const textures: WokaTextureDescriptionInterface[] = [];
             for (const texture of collection.textures) {
-                textures.push({ id: texture.id, img: texture.url });
+                textures.push({ id: texture.id, url: texture.url });
             }
             this.wokaCollections.set(collection.name, textures);
         }
     }
 }
-
-export const OBJECTS: BodyResourceDescriptionInterface[] = [
-    { id: "teleportation", img: "resources/objects/teleportation.png" },
-];

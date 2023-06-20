@@ -6,16 +6,16 @@ import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
-import { localUserStore } from "../../Connexion/LocalUserStore";
+import { localUserStore } from "../../Connection/LocalUserStore";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
-import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
+import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { bbbFactory } from "../../WebRtc/BBBFactory";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../Enum/EnvironmentVariable";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
 import { iframeListener } from "../../Api/IframeListener";
-import { Room } from "../../Connexion/Room";
+import { Room } from "../../Connection/Room";
 import { LL } from "../../../i18n/i18n-svelte";
 import {
     inJitsiStore,
@@ -28,7 +28,7 @@ import {
 } from "../../Stores/MediaStore";
 import { urlManager } from "../../Url/UrlManager";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
-import { connectionManager } from "../../Connexion/ConnectionManager";
+import { connectionManager } from "../../Connection/ConnectionManager";
 import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";

@@ -9,13 +9,13 @@ import {
 } from "../Stores/MenuStore";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
-import type { MessageUserJoined } from "../Connexion/ConnexionModels";
-import { localUserStore } from "../Connexion/LocalUserStore";
+import type { MessageUserJoined } from "../Connection/ConnexionModels";
+import { localUserStore } from "../Connection/LocalUserStore";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { bannerStore, requestVisitCardsStore } from "../Stores/GameStore";
 import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
-import { connectionManager } from "../Connexion/ConnectionManager";
+import { connectionManager } from "../Connection/ConnectionManager";
 import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
 import type { OpenPopupEvent } from "./Events/OpenPopupEvent";
 import type { OpenTabEvent } from "./Events/OpenTabEvent";

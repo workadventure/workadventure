@@ -1,9 +1,9 @@
 <script lang="ts">
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
+    import { AdminMessageEventTypes } from "../../Connection/AdminMessagesService";
     import uploadFile from "../images/music-file.svg";
-    import type { PlayGlobalMessageInterface } from "../../Connexion/ConnexionModels";
+    import type { PlayGlobalMessageInterface } from "../../Connection/ConnexionModels";
     import { LL } from "../../../i18n/i18n-svelte";
 
     interface EventTargetFiles extends EventTarget {

@@ -1,7 +1,6 @@
 import Jwt from "jsonwebtoken";
 import z from "zod";
 import { ADMIN_SOCKETS_TOKEN, SECRET_KEY } from "../enums/EnvironmentVariable";
-import { InvalidTokenError } from "../controllers/InvalidTokenError";
 
 export const AuthTokenData = z.object({
     identifier: z.string(), //will be a email if logged in or an uuid if anonymous
@@ -33,16 +32,7 @@ export class JWTTokenManager {
     }
 
     public verifyJWTToken(token: string, ignoreExpiration = false): AuthTokenData {
-        try {
-            return AuthTokenData.parse(Jwt.verify(token, SECRET_KEY, { ignoreExpiration }));
-        } catch (e) {
-            if (e instanceof Error) {
-                // FIXME: we are loosing the stacktrace here.
-                throw new InvalidTokenError(e.message);
-            } else {
-                throw e;
-            }
-        }
+        return AuthTokenData.parse(Jwt.verify(token, SECRET_KEY, { ignoreExpiration }));
     }
 }
 

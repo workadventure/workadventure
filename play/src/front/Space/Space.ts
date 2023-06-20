@@ -3,7 +3,7 @@ import { MapStore } from "@workadventure/store-utils";
 import debug from "debug";
 import { Subscription } from "rxjs";
 import { Readable } from "svelte/store";
-import { RoomConnection } from "../Connexion/RoomConnection";
+import { RoomConnection } from "../Connection/RoomConnection";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
 
 export interface SpaceUserExtended extends SpaceUser {
@@ -48,8 +48,8 @@ export class Space {
                         if (partialUser.color !== undefined) {
                             user.color = partialUser.color;
                         }
-                        if (partialUser.characterLayers !== undefined) {
-                            user.characterLayers = partialUser.characterLayers;
+                        if (partialUser.characterTextures !== undefined) {
+                            user.characterTextures = partialUser.characterTextures;
                         }
                         if (partialUser.isLogged !== undefined) {
                             user.isLogged = partialUser.isLogged;
@@ -118,7 +118,7 @@ export class Space {
             wokaPromise: undefined,
             getWokaBase64(): Promise<string> {
                 if (this.wokaPromise === undefined) {
-                    this.wokaPromise = CharacterLayerManager.wokaBase64(user.characterLayers);
+                    this.wokaPromise = CharacterLayerManager.wokaBase64(user.characterTextures);
                 }
                 return this.wokaPromise;
             },
