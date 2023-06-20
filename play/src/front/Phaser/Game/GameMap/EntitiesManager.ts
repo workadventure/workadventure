@@ -87,7 +87,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         entityId: string,
         data: WAMEntityData,
         imagePathPrefix?: string,
-        interactive?: boolean
+        interactive?: boolean,
+        withGridUpdate?: boolean
     ): Promise<Entity> {
         const prefab = await this.scene
             .getEntitiesCollectionsManager()
@@ -118,7 +119,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
         const colGrid = entity.getCollisionGrid();
         if (colGrid) {
-            this.gameMapFrontWrapper.modifyToCollisionsLayer(entity.x, entity.y, "0", colGrid);
+            this.gameMapFrontWrapper.modifyToCollisionsLayer(entity.x, entity.y, "0", colGrid, withGridUpdate);
         }
 
         this.entities.set(entityId, entity);
