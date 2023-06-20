@@ -255,8 +255,7 @@ export class MetaTagsBuilder {
             }
             return mapDetails.metatags ?? undefined;
         } catch (e) {
-            Sentry.captureException(`Error on getting map details ${e}`);
-            console.error(`Error on getting map details ${e}`);
+            console.warn(`Error on getting map details ${e}`);
             return undefined;
         }
     }
