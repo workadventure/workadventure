@@ -94,6 +94,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             .getEntitiesCollectionsManager()
             .getEntityPrefab(data.prefabRef.collectionName, data.prefabRef.id);
         if (prefab === undefined) {
+            console.warn(`Could not find entity ${data.prefabRef.id} in collection ${data.prefabRef.collectionName}`);
             throw new Error(
                 `Could not find entity ${data.prefabRef.id} in collection ${data.prefabRef.collectionName}`
             );

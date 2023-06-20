@@ -1,4 +1,4 @@
-import { Command, CreateEntityCommand, GameMap, WAMEntityData } from "@workadventure/map-editor";
+import { CreateEntityCommand, GameMap, WAMEntityData } from "@workadventure/map-editor";
 import { EntitiesManager } from "../../../GameMap/EntitiesManager";
 import { FrontCommandInterface } from "../FrontCommandInterface";
 import { RoomConnection } from "../../../../../Connection/RoomConnection";
@@ -22,11 +22,11 @@ export class CreateEntityFrontCommand extends CreateEntityCommand implements Fro
         return returnVal;
     }
 
-    public getUndoCommand(): Command & DeleteEntityFrontCommand {
+    public getUndoCommand(): DeleteEntityFrontCommand {
         return new DeleteEntityFrontCommand(this.gameMap, this.entityId, undefined, this.entitiesManager);
     }
 
     public emitEvent(roomConnection: RoomConnection): void {
-        roomConnection.emitMapEditorCreateEntity(this.id, this.entityId, this.entityData);
+        roomConnection.emitMapEditorCreateEntity(this.commandId, this.entityId, this.entityData);
     }
 }
