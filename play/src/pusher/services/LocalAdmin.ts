@@ -54,7 +54,7 @@ class LocalAdmin implements AdminInterface {
             tags: [],
             messages: [],
             visitCardUrl: null,
-            textures: (await localWokaService.fetchWokaDetails(characterTextureIds)) ?? [],
+            characterTextures: (await localWokaService.fetchWokaDetails(characterTextureIds)) ?? [],
             companionTexture: companionTextureId
                 ? await localCompanionService.fetchCompanionDetails(companionTextureId)
                 : undefined,

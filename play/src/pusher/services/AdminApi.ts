@@ -9,6 +9,7 @@ import {
     isApplicationDefinitionInterface,
     isCapabilities,
     Capabilities,
+    CompanionDetail,
 } from "@workadventure/messages";
 import type { MapDetailsData, RoomRedirect, AdminApiData } from "@workadventure/messages";
 import { z } from "zod";
@@ -50,10 +51,10 @@ export const isFetchMemberDataByUuidResponse = z.object({
         description: "URL of the visitCard of the user fetched.",
         example: "https://mycompany.com/contact/me",
     }),
-    textures: extendApi(z.array(WokaDetail), {
+    characterTextures: extendApi(z.array(WokaDetail), {
         description: "This data represents the textures (WOKA) that will be available to users.",
     }),
-    companionTexture: extendApi(z.object({ id: z.string(), url: z.string() }).optional(), {
+    companionTexture: extendApi(CompanionDetail.optional().nullable(), {
         description: "This data represents the companion texture that will be use.",
     }),
     messages: extendApi(z.array(z.unknown()), {
@@ -325,6 +326,10 @@ class AdminApi implements AdminInterface {
          *        items:
          *          type: string
          *        example: ["male1"]
+         *      - name: "companionTextureId"
+         *        in: "query"
+         *        type: "string"
+         *        example: "dog1"
          *     responses:
          *       200:
          *         description: The details of the member
@@ -350,6 +355,7 @@ class AdminApi implements AdminInterface {
                 playUri,
                 ipAddress,
                 characterTextureIds,
+                companionTextureId,
                 accessToken,
                 isLogged: accessToken ? "1" : "0", // deprecated, use accessToken instead
             },
