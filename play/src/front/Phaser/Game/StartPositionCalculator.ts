@@ -37,19 +37,14 @@ export class StartPositionCalculator {
             }
         }
 
-        for (const tiledArea of this.gameMapFrontWrapper.getTiledAreas()) {
-            if (tiledArea.name === "start") {
-                names.push(tiledArea.name);
+        for (const dynamicArea of this.gameMapFrontWrapper.dynamicAreas.values()) {
+            if (dynamicArea.name === "start") {
+                names.push(dynamicArea.name);
                 continue;
             }
-            const properties = tiledArea.properties;
-            if (properties) {
-                for (const property of properties) {
-                    if (property.name === GameMapProperties.START && property.value === true) {
-                        names.push(tiledArea.name);
-                        break;
-                    }
-                }
+            const properties = dynamicArea.properties;
+            if (properties && properties[GameMapProperties.START] === true) {
+                names.push(dynamicArea.name);
             }
         }
 
@@ -105,14 +100,14 @@ export class StartPositionCalculator {
     }
 
     private initPositionFromTiledArea(startPositionName: string, needStartProperty = false): boolean {
-        const tiledAreas = this.gameMapFrontWrapper.getTiledAreas();
-        for (const tiledArea of tiledAreas) {
-            if (!tiledArea || tiledArea.name !== startPositionName) {
+        const tiledAreas = this.gameMapFrontWrapper.dynamicAreas;
+        for (const [name, tiledArea] of tiledAreas.entries()) {
+            if (!tiledArea || name !== startPositionName) {
                 continue;
             }
             const properties = tiledArea.properties;
             if (needStartProperty && properties) {
-                if (!properties.find((property) => property.name === "start")) {
+                if (!properties["start"]) {
                     return false;
                 }
             }
