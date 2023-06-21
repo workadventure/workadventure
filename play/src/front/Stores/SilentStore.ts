@@ -7,7 +7,7 @@ export function createSilentStore() {
     let others = false;
 
     const updateSilent = () => {
-        set(area ?? others);
+        set(area || others);
     };
 
     return {

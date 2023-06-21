@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import { CoWebsite } from "../WebRtc/CoWebsite/CoWesbite";
+import { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { Streamable } from "./StreamableCollectionStore";
 
 export type EmbedScreen =

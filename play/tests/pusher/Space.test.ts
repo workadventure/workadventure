@@ -56,7 +56,7 @@ describe("Space", () => {
             microphoneState: false,
             screenSharing: false,
             megaphoneState: false,
-            characterLayers: [],
+            characterTextures: [],
             tags: [],
         });
         space.addUser(spaceUser);
@@ -82,7 +82,7 @@ describe("Space", () => {
             microphoneState: true,
             screenSharing: true,
             megaphoneState: true,
-            characterLayers: [],
+            characterTextures: [],
             tags: [],
             visitCardUrl: "test",
         });
@@ -167,7 +167,7 @@ describe("Space", () => {
             microphoneState: false,
             screenSharing: false,
             megaphoneState: false,
-            characterLayers: [],
+            characterTextures: [],
             tags: [],
         });
         space.addUser(spaceUser);

@@ -13,18 +13,18 @@
     } from "../../Stores/ChatStore";
     import { enableUserInputsStore } from "../../Stores/UserInputStore";
     import { iframeListener } from "../../Api/IframeListener";
-    import { localUserStore } from "../../Connexion/LocalUserStore";
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { CHAT_URL } from "../../Enum/EnvironmentVariable";
     import { locale } from "../../../i18n/i18n-svelte";
-    import { AdminMessageEventTypes, adminMessagesService } from "../../Connexion/AdminMessagesService";
+    import { AdminMessageEventTypes, adminMessagesService } from "../../Connection/AdminMessagesService";
     import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
     import { availabilityStatusStore } from "../../Stores/MediaStore";
     import { peerStore } from "../../Stores/PeerStore";
-    import { connectionManager } from "../../Connexion/ConnectionManager";
+    import { connectionManager } from "../../Connection/ConnectionManager";
     import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
     import { Locales } from "../../../i18n/i18n-types";
+    import { localUserStore } from "../../Connection/LocalUserStore";
 
     let chatIframe: HTMLIFrameElement;
     let searchElement: HTMLInputElement;

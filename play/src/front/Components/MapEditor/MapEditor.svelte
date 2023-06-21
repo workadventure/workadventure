@@ -9,7 +9,7 @@
 </script>
 
 <MapEditorSideBar />
-<div class="map-editor tw-bg-dark-blue/95">
+<div class={`map-editor tw-bg-dark-blue/95 ${$mapEditorSelectedToolStore}`}>
     {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
         <ConfigureMyRoom />
     {:else}
@@ -34,6 +34,12 @@
 
         pointer-events: auto;
         color: whitesmoke;
+
+        &.WAMSettingsEditor {
+            width: 80% !important;
+            left: 10%;
+            height: 0 !important;
+        }
 
         .sidebar {
             position: relative !important;

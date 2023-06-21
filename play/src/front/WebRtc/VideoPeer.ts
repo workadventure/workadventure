@@ -3,7 +3,7 @@ import type { Subscription } from "rxjs";
 import type { Readable, Writable, Unsubscriber } from "svelte/store";
 import { readable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
-import type { RoomConnection } from "../Connexion/RoomConnection";
+import type { RoomConnection } from "../Connection/RoomConnection";
 import { localStreamStore, obtainedMediaConstraintStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
 import {

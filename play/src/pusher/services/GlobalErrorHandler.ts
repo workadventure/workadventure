@@ -16,14 +16,13 @@ export function globalErrorHandler(request: Request, response: Response, error: 
             }
         }
 
-        console.error("ERROR: " + error.message + url);
-        Sentry.captureException("ERROR: " + error.message + url);
+        console.error(error.message + url);
         console.error(error.stack);
-        Sentry.captureException(error.stack);
     } else if (typeof error === "string") {
         console.error(error);
-        Sentry.captureException(error);
     }
+
+    Sentry.captureException(error);
 
     if (isAxiosError(error) && error.response) {
         response.status(error.response.status);

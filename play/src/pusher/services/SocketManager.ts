@@ -6,7 +6,6 @@ import {
     AdminRoomMessage,
     BanMessage,
     BanUserByUuidMessage,
-    CharacterLayerMessage,
     EmoteEventMessage,
     ErrorApiData,
     ErrorMessage,
@@ -34,6 +33,7 @@ import {
     QueryMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
+import axios, { isAxiosError } from "axios";
 import { PusherRoom } from "../models/PusherRoom";
 import type { ExSocketInterface, BackSpaceConnection } from "../models/Websocket/ExSocketInterface";
 
@@ -218,34 +218,15 @@ export class SocketManager implements ZoneEventListener {
                 positionMessage: ProtobufUtils.toPositionMessage(client.position),
                 tag: client.tags,
                 isLogged: client.isLogged,
-                companion: client.companion,
+                companionTexture: client.companion,
                 activatedInviteUser: client.activatedInviteUser != undefined ? client.activatedInviteUser : true,
                 canEdit: client.canEdit,
-                characterLayer: [],
-                applications: [],
+                characterTextures: client.characterTextures,
+                applications: client.applications ? client.applications : [],
                 visitCardUrl: client.visitCardUrl ?? "", // TODO: turn this into an optional field
                 userRoomToken: client.userRoomToken ?? "", // TODO: turn this into an optional field
                 lastCommandId: client.lastCommandId ?? "", // TODO: turn this into an optional field
             };
-
-            if (client.applications != undefined) {
-                for (const applicationValue of client.applications) {
-                    joinRoomMessage.applications.push({
-                        name: applicationValue.name,
-                        script: applicationValue.script,
-                    });
-                }
-            }
-
-            for (const characterLayer of client.characterLayers) {
-                const characterLayerMessage: CharacterLayerMessage = {
-                    name: characterLayer.id,
-                    url: characterLayer.url ?? "", // FIXME: turn this into an optional field
-                    layer: characterLayer.layer ?? "", // FIXME: turn this into an optional field
-                };
-
-                joinRoomMessage.characterLayer.push(characterLayerMessage);
-            }
 
             debug("Calling joinRoom '" + client.roomId + "'");
             const apiClient = await apiClientRepository.getClient(client.roomId);
@@ -618,7 +599,7 @@ export class SocketManager implements ZoneEventListener {
 
     leaveSpaces(socket: ExSocketInterface) {
         socket.spacesFilters = new Map<string, SpaceFilterMessage[]>();
-        socket.spaces.forEach((space) => {
+        (socket.spaces ?? []).forEach((space) => {
             space.removeClientWatcher(socket);
             space.removeUser(socket.spaceUser.id);
             this.deleteSpaceIfEmpty(space);
@@ -806,13 +787,15 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitInvalidTextureMessage(client: compressors.WebSocket): void {
+    public emitInvalidCharacterTextureMessage(client: compressors.WebSocket): void {
         if (!client.disconnecting) {
             client.send(
                 ServerToClientMessage.encode({
                     message: {
-                        $case: "invalidTextureMessage",
-                        invalidTextureMessage: {},
+                        $case: "invalidCharacterTextureMessage",
+                        invalidCharacterTextureMessage: {
+                            message: "Invalid character textures",
+                        },
                     },
                 }).finish(),
                 true
@@ -820,12 +803,28 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitConnexionErrorMessage(client: compressors.WebSocket, message: string): void {
+    public emitInvalidCompanionTextureMessage(client: compressors.WebSocket): void {
+        if (!client.disconnecting) {
+            client.send(
+                ServerToClientMessage.encode({
+                    message: {
+                        $case: "invalidCompanionTextureMessage",
+                        invalidCompanionTextureMessage: {
+                            message: "Invalid companion texture",
+                        },
+                    },
+                }).finish(),
+                true
+            );
+        }
+    }
+
+    public emitConnectionErrorMessage(client: compressors.WebSocket, message: string): void {
         client.send(
             ServerToClientMessage.encode({
                 message: {
-                    $case: "worldConnexionMessage",
-                    worldConnexionMessage: {
+                    $case: "worldConnectionMessage",
+                    worldConnectionMessage: {
                         message,
                     },
                 },
@@ -1129,6 +1128,83 @@ export class SocketManager implements ZoneEventListener {
             client.spaces = client.spaces.filter((space) => space.name !== spaceName);
             this.deleteSpaceIfEmpty(space);
         }
+    }
+
+    async handleEmbeddableWebsiteQuery(client: ExSocketInterface, queryMessage: QueryMessage) {
+        if (queryMessage.query?.$case !== "embeddableWebsiteQuery") {
+            return;
+        }
+
+        const url = queryMessage.query.embeddableWebsiteQuery.url;
+        await axios
+            .head(url, { timeout: 5_000 })
+            .then((response) => {
+                client.send(
+                    ServerToClientMessage.encode({
+                        message: {
+                            $case: "answerMessage",
+                            answerMessage: {
+                                id: queryMessage.id,
+                                answer: {
+                                    $case: "embeddableWebsiteAnswer",
+                                    embeddableWebsiteAnswer: {
+                                        url,
+                                        state: true,
+                                        embeddable: !response.headers["x-frame-options"],
+                                    },
+                                },
+                            },
+                        },
+                    }).finish(),
+                    true
+                );
+            })
+            .catch((error) => {
+                // If the error is a 999 error, it means that this is Linkedin that return this error code because the website is not embeddable and is not reachable by axios
+                if (isAxiosError(error) && error.response?.status === 999) {
+                    client.send(
+                        ServerToClientMessage.encode({
+                            message: {
+                                $case: "answerMessage",
+                                answerMessage: {
+                                    id: queryMessage.id,
+                                    answer: {
+                                        $case: "embeddableWebsiteAnswer",
+                                        embeddableWebsiteAnswer: {
+                                            url,
+                                            state: true,
+                                            embeddable: false,
+                                        },
+                                    },
+                                },
+                            },
+                        }).finish(),
+                        true
+                    );
+                } else {
+                    debug(`SocketManager => embeddableUrl : ${url} ${error}`);
+                    client.send(
+                        ServerToClientMessage.encode({
+                            message: {
+                                $case: "answerMessage",
+                                answerMessage: {
+                                    id: queryMessage.id,
+                                    answer: {
+                                        $case: "embeddableWebsiteAnswer",
+                                        embeddableWebsiteAnswer: {
+                                            url,
+                                            state: false,
+                                            embeddable: false,
+                                            message: "URL is not reachable",
+                                        },
+                                    },
+                                },
+                            },
+                        }).finish(),
+                        true
+                    );
+                }
+            });
     }
 }
 

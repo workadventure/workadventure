@@ -18,6 +18,7 @@
         requestedCameraDeviceIdStore,
         usedCameraDeviceIdStore,
         usedMicrophoneDeviceIdStore,
+        streamingMegaphoneStore,
     } from "../../Stores/MediaStore";
     import cameraImg from "../images/camera.png";
     import cameraOffImg from "../images/camera-off.png";
@@ -82,7 +83,6 @@
     import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
-    import { localUserStore } from "../../Connexion/LocalUserStore";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
     import {
         megaphoneCanBeUsedStore,
@@ -90,17 +90,13 @@
         requestedMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
+    import { localUserStore } from "../../Connection/LocalUserStore";
+    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
     let cameraActive = false;
     let microphoneActive = false;
-
-    let microphoneButton: HTMLButtonElement;
-    let cameraButton: HTMLButtonElement;
-
-    // eslint-disable-next-line no-undef
-    let megaphoneWarningTimeOut: NodeJS.Timeout | undefined = undefined;
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -172,30 +168,17 @@
     }
 
     function toggleMegaphone() {
-        if (!$requestedMegaphoneStore && !$requestedCameraState && !$requestedMicrophoneState) {
-            if (cameraButton) {
-                cameraButton.firstElementChild?.classList.add("tw-animate-shaking");
-                setTimeout(() => cameraButton.firstElementChild?.classList.remove("tw-animate-shaking"), 600);
-            }
-            if (microphoneButton) {
-                microphoneButton.firstElementChild?.classList.add("tw-animate-shaking");
-                setTimeout(() => microphoneButton.firstElementChild?.classList.remove("tw-animate-shaking"), 600);
-            }
-            if (megaphoneWarningTimeOut) {
-                clearTimeout(megaphoneWarningTimeOut);
-                megaphoneWarningTimeOut = undefined;
-            }
-            layoutManagerActionStore.addAction({
-                uuid: "megaphoneNeedCameraOrMicrophone",
-                type: "warning",
-                message: $LL.warning.megaphoneNeeds(),
-                callback: () => layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"),
-                userInputManager: this.userInputManager,
-            });
-            setTimeout(() => layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"), 10_000);
+        if ($streamingMegaphoneStore) {
+            streamingMegaphoneStore.set(false);
             return;
         }
-        $requestedMegaphoneStore = !$requestedMegaphoneStore;
+        if ($requestedMegaphoneStore) {
+            analyticsClient.stopMegaphone();
+            requestedMegaphoneStore.set(false);
+            return;
+        }
+
+        streamingMegaphoneStore.set(true);
     }
 
     function toggleMapEditorMode() {
@@ -535,7 +518,6 @@
                             <button
                                 class="tooltiptext sm:tw-w-56 md:tw-w-96"
                                 class:border-top-light={$requestedCameraState}
-                                bind:this={cameraButton}
                             >
                                 {#if $requestedCameraState && !$silentStore}
                                     <img
@@ -601,7 +583,7 @@
                         >
                             <Tooltip text={$LL.actionbar.microphone()} />
 
-                            <button class:border-top-light={$requestedMicrophoneState} bind:this={microphoneButton}>
+                            <button class:border-top-light={$requestedMicrophoneState}>
                                 {#if $requestedMicrophoneState && !$silentStore}
                                     <img
                                         draggable="false"
@@ -726,13 +708,20 @@
                 </div>
                 {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
                     <div on:click={toggleMegaphone} class="bottom-action-button tw-relative">
-                        <Tooltip
-                            text={$megaphoneEnabledStore
-                                ? $LL.actionbar.disableMegaphone()
-                                : $LL.actionbar.enableMegaphone()}
-                        />
+                        {#if $streamingMegaphoneStore}
+                            <MegaphoneConfirm />
+                        {:else}
+                            <Tooltip
+                                text={$megaphoneEnabledStore
+                                    ? $LL.actionbar.disableMegaphone()
+                                    : $LL.actionbar.enableMegaphone()}
+                            />
+                        {/if}
 
-                        <button class:border-top-orange={$megaphoneEnabledStore} id="megaphone">
+                        <button
+                            class:border-top-orange={$megaphoneEnabledStore || $streamingMegaphoneStore}
+                            id="megaphone"
+                        >
                             <img draggable="false" src={megaphoneImg} style="padding: 2px" alt="Toggle megaphone" />
                         </button>
                         {#if $megaphoneEnabledStore}

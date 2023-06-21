@@ -53,11 +53,13 @@ export const isFetchMemberDataByUuidResponse = z.object({
     textures: extendApi(z.array(WokaDetail), {
         description: "This data represents the textures (WOKA) that will be available to users.",
     }),
+    companionTexture: extendApi(z.object({ id: z.string(), url: z.string() }).optional(), {
+        description: "This data represents the companion texture that will be use.",
+    }),
     messages: extendApi(z.array(z.unknown()), {
         description:
             "Sets messages that will be displayed when the user logs in to the WA room. These messages are used for ban or ban warning.",
     }),
-
     anonymous: extendApi(z.boolean().optional(), {
         description: "Defines whether it is possible to login as anonymous on a WorkAdventure room.",
         example: false,
@@ -275,7 +277,8 @@ class AdminApi implements AdminInterface {
         accessToken: string | undefined,
         playUri: string,
         ipAddress: string,
-        characterLayers: string[],
+        characterTextureIds: string[],
+        companionTextureId?: string,
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
         /**
@@ -316,7 +319,7 @@ class AdminApi implements AdminInterface {
          *        required: true
          *        type: "string"
          *        example: "127.0.0.1"
-         *      - name: "characterLayers"
+         *      - name: "characterTextureIds"
          *        in: "query"
          *        type: "array"
          *        items:
@@ -346,7 +349,7 @@ class AdminApi implements AdminInterface {
                 userIdentifier,
                 playUri,
                 ipAddress,
-                characterLayers,
+                characterTextureIds,
                 accessToken,
                 isLogged: accessToken ? "1" : "0", // deprecated, use accessToken instead
             },

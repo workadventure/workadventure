@@ -1,8 +1,8 @@
-import { CompanionCollectionList } from "@workadventure/messages";
+import { CompanionTextureCollection } from "@workadventure/messages";
 
 /**
  * Services that can retrieve the list of companions
  */
 export interface CompanionServiceInterface {
-    getCompanionList(roomUrl: string, token: string): Promise<CompanionCollectionList | undefined>;
+    getCompanionList(roomUrl: string, token: string): Promise<CompanionTextureCollection[] | undefined>;
 }

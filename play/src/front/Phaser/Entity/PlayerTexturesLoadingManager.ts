@@ -1,7 +1,7 @@
 import CancelablePromise from "cancelable-promise";
 import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { PlayerTexturesKey } from "./PlayerTextures";
-import type { BodyResourceDescriptionInterface, PlayerTextures } from "./PlayerTextures";
+import type { WokaTextureDescriptionInterface, PlayerTextures } from "./PlayerTextures";
 import Texture = Phaser.Textures.Texture;
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 
@@ -13,13 +13,13 @@ export interface FrameConfig {
 export const loadAllLayers = (
     load: LoaderPlugin,
     playerTextures: PlayerTextures
-): BodyResourceDescriptionInterface[][] => {
-    const returnArray: BodyResourceDescriptionInterface[][] = [];
+): WokaTextureDescriptionInterface[][] => {
+    const returnArray: WokaTextureDescriptionInterface[][] = [];
     playerTextures.getLayers().forEach((layer) => {
-        const layerArray: BodyResourceDescriptionInterface[] = [];
+        const layerArray: WokaTextureDescriptionInterface[] = [];
         Object.values(layer).forEach((textureDescriptor) => {
             layerArray.push(textureDescriptor);
-            load.spritesheet(textureDescriptor.id, textureDescriptor.img, { frameWidth: 32, frameHeight: 32 });
+            load.spritesheet(textureDescriptor.id, textureDescriptor.url, { frameWidth: 32, frameHeight: 32 });
         });
         returnArray.push(layerArray);
     });
@@ -28,19 +28,19 @@ export const loadAllLayers = (
 export const loadAllDefaultModels = (
     load: LoaderPlugin,
     playerTextures: PlayerTextures
-): BodyResourceDescriptionInterface[] => {
+): WokaTextureDescriptionInterface[] => {
     const returnArray = Object.values(playerTextures.getTexturesResources(PlayerTexturesKey.Woka));
-    returnArray.forEach((playerResource: BodyResourceDescriptionInterface) => {
-        load.spritesheet(playerResource.id, playerResource.img, { frameWidth: 32, frameHeight: 32 });
+    returnArray.forEach((playerResource: WokaTextureDescriptionInterface) => {
+        load.spritesheet(playerResource.id, playerResource.url, { frameWidth: 32, frameHeight: 32 });
     });
     return returnArray;
 };
 
 export const loadWokaTexture = (
     superLoaderPlugin: SuperLoaderPlugin,
-    texture: BodyResourceDescriptionInterface
+    texture: WokaTextureDescriptionInterface
 ): CancelablePromise<Texture> => {
-    return superLoaderPlugin.spritesheet(texture.id, texture.img, {
+    return superLoaderPlugin.spritesheet(texture.id, texture.url, {
         frameWidth: 32,
         frameHeight: 32,
     });
@@ -48,12 +48,12 @@ export const loadWokaTexture = (
 
 export const lazyLoadPlayerCharacterTextures = (
     superLoaderPlugin: SuperLoaderPlugin,
-    textures: BodyResourceDescriptionInterface[]
+    textures: WokaTextureDescriptionInterface[]
 ): CancelablePromise<string[]> => {
     const promisesList: CancelablePromise<Texture>[] = [];
     for (const texture of textures) {
         promisesList.push(
-            superLoaderPlugin.spritesheet(texture.id, texture.img, {
+            superLoaderPlugin.spritesheet(texture.id, texture.url, {
                 frameWidth: 32,
                 frameHeight: 32,
             })

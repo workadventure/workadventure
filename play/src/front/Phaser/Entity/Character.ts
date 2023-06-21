@@ -14,7 +14,7 @@ import { TexturesHelper } from "../Helpers/TexturesHelper";
 import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
 import type { GameScene } from "../Game/GameScene";
 import { Companion } from "../Companion/Companion";
-import { TextureError } from "../../Exception/TextureError";
+import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
@@ -66,7 +66,6 @@ export abstract class Character extends Container implements OutlineableInterfac
         moving: boolean,
         frame: string | number,
         isClickable: boolean,
-        companion: string | null,
         companionTexturePromise?: CancelablePromise<string>,
         userId?: string | null
     ) {
@@ -97,11 +96,11 @@ export abstract class Character extends Container implements OutlineableInterfac
                 return lazyLoadPlayerCharacterTextures(scene.superLoad, [
                     {
                         id: "color_22",
-                        img: "resources/customisation/character_color/character_color21.png",
+                        url: "resources/customisation/character_color/character_color21.png",
                     },
                     {
                         id: "eyes_23",
-                        img: "resources/customisation/character_eyes/character_eyes23.png",
+                        url: "resources/customisation/character_eyes/character_eyes23.png",
                     },
                 ])
                     .then((textures) => {
@@ -122,6 +121,11 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.texturePromise = undefined;
             });
 
+        if (typeof companionTexturePromise !== "undefined") {
+            this.addCompanion(companionTexturePromise);
+        }
+
+        // Todo: Replace the font family with a better one
         this.playerNameText = new Text(scene, 0, playerNameY, name, {
             fontFamily: '"Press Start 2P"',
             fontSize: "8px",
@@ -168,10 +172,6 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.getBody().setSize(16, 16); //edit the hitbox to better match the character model
         this.getBody().setOffset(0, 8);
         this.setDepth(0);
-
-        if (typeof companion === "string") {
-            this.addCompanion(companion, companionTexturePromise);
-        }
     }
 
     public setClickable(clickable = true): void {
@@ -265,20 +265,18 @@ export abstract class Character extends Container implements OutlineableInterfac
         return this.statusDot.availabilityStatus;
     }
 
-    public addCompanion(id: string, texturePromise?: CancelablePromise<string>): void {
-        if (typeof texturePromise !== "undefined") {
-            this.companion = new Companion(this.scene, this.x, this.y, id, texturePromise);
-        }
+    public addCompanion(texturePromise: CancelablePromise<string>): void {
+        this.companion = new Companion(this.scene, this.x, this.y, texturePromise);
     }
 
     private addTextures(textures: string[], frame?: string | number): void {
         if (textures.length < 1) {
-            throw new TextureError("no texture given");
+            throw new CharacterTextureError("No texture given");
         }
 
         for (const texture of textures) {
             if (this.scene && !this.scene.textures.exists(texture)) {
-                throw new TextureError("texture not found");
+                throw new CharacterTextureError(`Texture "${texture}" not found`);
             }
             const sprite = new Sprite(this.scene, 0, 0, texture, frame);
             this.add(sprite);

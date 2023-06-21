@@ -2,7 +2,8 @@ import { ServerDuplexStream } from "@grpc/grpc-js";
 import {
     ApplicationMessage,
     AvailabilityStatus,
-    CompanionMessage,
+    CharacterTextureMessage,
+    CompanionTextureMessage,
     PusherToBackMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
@@ -14,7 +15,6 @@ import * as Sentry from "@sentry/node";
 import { Zone } from "../Model/Zone";
 import { Movable } from "../Model/Movable";
 import { PositionNotifier } from "../Model/PositionNotifier";
-import { CharacterLayer } from "../Model/Websocket/CharacterLayer";
 import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
 import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository";
 import { PointInterface } from "./Websocket/PointInterface";
@@ -44,10 +44,10 @@ export class User implements Movable, CustomJsonReplacerInterface {
         public readonly tags: string[],
         public readonly visitCardUrl: string | null,
         public readonly name: string,
-        public readonly characterLayers: CharacterLayer[],
+        public readonly characterTextures: CharacterTextureMessage[],
         private readonly variables: PlayerVariables,
         private readonly brothersFinder: BrothersFinder,
-        public readonly companion?: CompanionMessage,
+        public readonly companionTexture?: CompanionTextureMessage,
         private outlineColor?: number,
         private voiceIndicatorShown?: boolean,
         public readonly activatedInviteUser?: boolean,
@@ -71,11 +71,11 @@ export class User implements Movable, CustomJsonReplacerInterface {
         tags: string[],
         visitCardUrl: string | null,
         name: string,
-        characterLayers: CharacterLayer[],
+        characterTextures: CharacterTextureMessage[],
         roomUrl: string,
         roomGroup: string | undefined,
         brothersFinder: BrothersFinder,
-        companion?: CompanionMessage,
+        companionTexture?: CompanionTextureMessage,
         outlineColor?: number,
         voiceIndicatorShown?: boolean,
         activatedInviteUser?: boolean,
@@ -98,10 +98,10 @@ export class User implements Movable, CustomJsonReplacerInterface {
             tags,
             visitCardUrl,
             name,
-            characterLayers,
+            characterTextures,
             variables,
             brothersFinder,
-            companion,
+            companionTexture,
             outlineColor,
             voiceIndicatorShown,
             activatedInviteUser,

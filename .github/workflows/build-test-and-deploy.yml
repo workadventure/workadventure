@@ -28,7 +28,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -38,7 +38,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: thecodingmachine/workadventure-play
 
@@ -60,7 +60,7 @@ jobs:
             "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
             "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
             "SENTRY_PROJECT=play"
-            "SENTRY_ENVIRONMENT=testing"
+            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF == 'master' && 'staging' || 'testing' }}"
             "SENTRY_RELEASE=${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}"
 
       - name: Build test image
@@ -88,7 +88,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: play
-          SENTRY_ENVIRONMENT: testing
+          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF == 'master' && 'staging' || 'testing' }}
           SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         run: |
           docker run --rm \
@@ -97,6 +97,7 @@ jobs:
             -e SENTRY_ORG \
             -e SENTRY_PROJECT \
             -e SENTRY_RELEASE \
+            -e SENTRY_ENVIRONMENT \
             thecodingmachine/workadventure-play:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} \
             /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
 
@@ -126,7 +127,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -136,7 +137,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: thecodingmachine/workadventure-chat
 
@@ -158,7 +159,7 @@ jobs:
             "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
             "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
             "SENTRY_PROJECT=chat"
-            "SENTRY_ENVIRONMENT=testing"
+            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF == 'master' && 'staging' || 'testing' }}"
             "SENTRY_RELEASE=${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}"
 
       - name: Build test image
@@ -201,7 +202,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -211,7 +212,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: thecodingmachine/workadventure-back
 
@@ -261,7 +262,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: back
-          SENTRY_ENVIRONMENT: testing
+          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF == 'master' && 'staging' || 'testing' }}
           SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         run: |
             docker run --rm \
@@ -270,6 +271,7 @@ jobs:
               -e SENTRY_ORG \
               -e SENTRY_PROJECT \
               -e SENTRY_RELEASE \
+              -e SENTRY_ENVIRONMENT \
               thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} \
               /bin/sh -c 'npm install --dev && npm run push-sentry-sourcemaps'
 
@@ -295,7 +297,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -305,7 +307,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: thecodingmachine/workadventure-uploader
 
@@ -359,7 +361,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -369,7 +371,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: thecodingmachine/workadventure-maps
 
@@ -426,7 +428,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -436,7 +438,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: thecodingmachine/workadventure-map-storage
 
@@ -480,7 +482,7 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: map-storage
-          SENTRY_ENVIRONMENT: testing
+          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF == 'master' && 'staging' || 'testing' }}
           SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         run: |
           docker run --rm \
@@ -489,6 +491,7 @@ jobs:
             -e SENTRY_ORG \
             -e SENTRY_PROJECT \
             -e SENTRY_RELEASE \
+            -e SENTRY_ENVIRONMENT \
             thecodingmachine/workadventure-map-storage:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} \
             /bin/sh -c 'cd /usr/src && npm ci -w map-storage && cd /usr/src/map-storage && npm run push-sentry-sourcemaps'
 
@@ -517,7 +520,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -527,7 +530,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: thecodingmachine/workadventure-ejabberd
 
