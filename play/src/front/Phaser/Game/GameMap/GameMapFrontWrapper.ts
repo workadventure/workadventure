@@ -170,6 +170,12 @@ export class GameMapFrontWrapper {
                     console.warn("Areas must be square objects. Object " + tiledArea.name + " is not square.");
                     return;
                 }
+                // In case an area already exists with the same name, we rename it to avoid conflicts
+                if (this.dynamicAreas.get(tiledArea.name)) {
+                    console.warn("There are several '" + tiledArea.name + "' areas existing in your Tiled map.");
+                    tiledArea.name = "unnamed_tiled_area_" + nbUnnamedTileArea;
+                    nbUnnamedTileArea++;
+                }
                 this.dynamicAreas.set(tiledArea.name, {
                     name: tiledArea.name,
                     width: tiledArea.width,
