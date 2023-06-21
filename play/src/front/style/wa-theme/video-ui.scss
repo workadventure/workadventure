@@ -171,6 +171,10 @@
     @apply tw-flex media-box-camera-on-size;
 }
 
+.my-webcam-container{
+    @apply tw-max-h-36;
+}
+
 /* MOZAIC MODE */
 
 #mozaic-layout {
