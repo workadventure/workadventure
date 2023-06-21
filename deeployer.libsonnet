@@ -111,6 +111,9 @@
           "LOGROCKET_ID": env.LOGROCKET_ID,
           "ROOM_API_PORT": "50051",
           "DEBUG": "*",
+          "JITSI_DOMAIN": "coremeet.workadventu.re",
+          "JITSI_XMPP_DOMAIN": "prosody.workadventu.re",
+          "JITSI_MUC_DOMAIN": "muc.prosody.workadventu.re",
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,
