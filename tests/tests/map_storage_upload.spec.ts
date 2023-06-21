@@ -317,7 +317,7 @@ test.describe('Map-storage Upload API', () => {
         await expect(maps["maps"]["map.wam"]).toBeDefined();
         await expect(Object.keys(maps["maps"])).toHaveLength(1);
 
-        const deleteRoot = await request.delete(`/`);
+        const deleteRoot = await request.delete(``);
 
         await expect(deleteRoot.status()).toBe(204);
 
@@ -342,7 +342,7 @@ test.describe('Map-storage Upload API', () => {
         let maps = await listOfMaps.json();
         await expect(maps["maps"]["toDelete/map.wam"]).toBeDefined();
 
-        const deleteRoot = await request.delete(`/toDelete`);
+        const deleteRoot = await request.delete(`toDelete`);
 
         await expect(deleteRoot.status() === 204).toBeTruthy();
 
