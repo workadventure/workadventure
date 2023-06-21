@@ -155,10 +155,17 @@ export class GameMapFrontWrapper {
             }
         }
 
+        let nbUnnamedTileArea = 0;
+
         // NOTE: We leave "zone" for legacy reasons
         this.gameMap.tiledObjects
             .filter((object) => ["zone", "area"].includes(object.class ?? ""))
             .forEach((tiledArea: ITiledMapObject) => {
+                if (!tiledArea.name) {
+                    tiledArea.name = "unnamed_tiled_area_" + nbUnnamedTileArea;
+                    nbUnnamedTileArea++;
+                }
+
                 if (tiledArea.width === undefined || tiledArea.height === undefined) {
                     console.warn("Areas must be square objects. Object " + tiledArea.name + " is not square.");
                     return;
