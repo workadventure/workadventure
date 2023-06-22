@@ -54,6 +54,7 @@
                 return {
                     id,
                     type,
+                    closable: true,
                     jitsiRoomConfig: {},
                     hideButtonLabel: true,
                     roomName: "JITSI ROOM",
@@ -62,6 +63,7 @@
                 return {
                     id,
                     type,
+                    closable: true,
                     link: "https://workadventu.re",
                     newTab: false,
                     hideButtonLabel: true,
