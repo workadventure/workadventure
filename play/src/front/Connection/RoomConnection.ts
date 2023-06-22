@@ -47,6 +47,8 @@ import {
     UnwatchSpaceMessage,
     EmbeddableWebsiteAnswer,
     CompanionTextureMessage,
+    MapsListAnswer,
+    StartAreasListAnswer,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
@@ -1484,6 +1486,30 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.embeddableWebsiteAnswer;
+    }
+
+    public async queryMapsList(): Promise<MapsListAnswer> {
+        const answer = await this.query({
+            $case: "mapsListQuery",
+            mapsListQuery: {},
+        });
+        if (answer.$case !== "mapsListAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.mapsListAnswer;
+    }
+
+    public async queryStartAreasList(wamUrl: string): Promise<StartAreasListAnswer> {
+        const answer = await this.query({
+            $case: "startAreasListQuery",
+            startAreasListQuery: {
+                wamUrl,
+            },
+        });
+        if (answer.$case !== "startAreasListAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.startAreasListAnswer;
     }
 
     /**

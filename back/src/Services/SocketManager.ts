@@ -769,7 +769,9 @@ export class SocketManager {
                     break;
                 }
                 case "embeddableWebsiteQuery":
-                case "roomTagsQuery": {
+                case "roomTagsQuery":
+                case "mapsListQuery":
+                case "startAreasListQuery": {
                     // Nothing to do, the message will never be received in the back
                     break;
                 }

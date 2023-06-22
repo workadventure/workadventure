@@ -34,13 +34,14 @@ import {
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { isAxiosError } from "axios";
+import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import { PusherRoom } from "../models/PusherRoom";
 import type { ExSocketInterface, BackSpaceConnection } from "../models/Websocket/ExSocketInterface";
 
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
-import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
+import { EJABBERD_DOMAIN, PUBLIC_MAP_STORAGE_URL } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
 import { emitInBatch } from "./IoSocketHelpers";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
@@ -1216,6 +1217,67 @@ export class SocketManager implements ZoneEventListener {
                     );
                 }
             });
+    }
+
+    async handleMapsListQuery(client: ExSocketInterface, queryMessage: QueryMessage) {
+        const response = await axios.get(`${PUBLIC_MAP_STORAGE_URL}/maps`);
+        let mapsUrl: string[] = [];
+        if (response.data && response.data.maps) {
+            mapsUrl = Object.keys(response.data.maps);
+        }
+        client.send(
+            ServerToClientMessage.encode({
+                message: {
+                    $case: "answerMessage",
+                    answerMessage: {
+                        id: queryMessage.id,
+                        answer: {
+                            $case: "mapsListAnswer",
+                            mapsListAnswer: {
+                                mapsUrl,
+                            },
+                        },
+                    },
+                },
+            }).finish(),
+            true
+        );
+    }
+
+    async handleStartAreasListQuery(client: ExSocketInterface, queryMessage: QueryMessage) {
+        if (queryMessage.query?.$case !== "startAreasListQuery") {
+            return;
+        }
+
+        const wamUrl = queryMessage.query.startAreasListQuery.wamUrl;
+
+        const startAreas: string[] = [];
+        const wamFile = await mapFetcher.fetchWamFile(wamUrl, PUBLIC_MAP_STORAGE_URL, undefined);
+        wamFile.areas.forEach((area) => {
+            area.properties.forEach((property) => {
+                if (property.type === "start") {
+                    startAreas.push(area.name);
+                }
+            });
+        });
+
+        client.send(
+            ServerToClientMessage.encode({
+                message: {
+                    $case: "answerMessage",
+                    answerMessage: {
+                        id: queryMessage.id,
+                        answer: {
+                            $case: "startAreasListAnswer",
+                            startAreasListAnswer: {
+                                startAreas,
+                            },
+                        },
+                    },
+                },
+            }).finish(),
+            true
+        );
     }
 }
 
