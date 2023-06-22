@@ -1,7 +1,6 @@
 import type { ClientDuplexStream } from "@grpc/grpc-js";
 import type { compressors } from "hyper-express";
 import type {
-    WokaDetail,
     MucRoomDefinition,
     ApplicationDefinitionInterface,
     CompanionTextureMessage,
@@ -13,6 +12,7 @@ import type {
     PusherToBackSpaceMessage,
     SpaceFilterMessage,
     SpaceUser,
+    CharacterTextureMessage,
 } from "@workadventure/messages";
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { Zone } from "../Zone";
@@ -20,7 +20,6 @@ import type { PusherRoom } from "../PusherRoom";
 import { CustomJsonReplacerInterface } from "../CustomJsonReplacerInterface";
 import { Space } from "../Space";
 import type { ViewportInterface } from "./ViewportMessage";
-import type { Identificable } from "./Identificable";
 import type { PointInterface } from "./PointInterface";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
@@ -30,7 +29,7 @@ export interface BackSpaceConnection extends BackSpaceConnection_ {
     pingTimeout: NodeJS.Timeout | undefined;
 }
 
-export interface ExSocketInterface extends compressors.WebSocket, Identificable, CustomJsonReplacerInterface {
+export interface ExSocketInterface extends compressors.WebSocket, CustomJsonReplacerInterface {
     token: string;
     roomId: string;
     userUuid: string; // A unique identifier for this user
@@ -39,7 +38,7 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable,
     isLogged: boolean;
     IPAddress: string; // IP address
     name: string;
-    characterTextures: WokaDetail[];
+    characterTextures: CharacterTextureMessage[];
     position: PointInterface;
     viewport: ViewportInterface;
     companionTexture?: CompanionTextureMessage;
@@ -55,13 +54,12 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable,
     messages: unknown;
     tags: string[];
     visitCardUrl: string | null;
-    backConnection: BackConnection;
+    backConnection?: BackConnection;
     listenedZones: Set<Zone>;
     userRoomToken: string | undefined;
-    maxHistoryChat: number;
     pusherRoom: PusherRoom | undefined;
     jabberId: string;
-    jabberPassword: string;
+    jabberPassword: string | undefined | null;
     activatedInviteUser: boolean | undefined;
     mucRooms: Array<MucRoomDefinition>;
     applications: Array<ApplicationDefinitionInterface> | undefined;
@@ -69,7 +67,7 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable,
     spaceUser: SpaceUser;
     spaces: Space[];
     spacesFilters: Map<string, SpaceFilterMessage[]>;
-    cameraState: boolean;
-    microphoneState: boolean;
-    megaphoneState: boolean;
+    cameraState?: boolean;
+    microphoneState?: boolean;
+    megaphoneState?: boolean;
 }

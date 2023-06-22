@@ -44,7 +44,6 @@ message ViewportMessage {
 message CharacterTextureMessage {
   string url = 1;
   string id = 2;
-  string layer = 3;
 }
 
 message ApplicationMessage {

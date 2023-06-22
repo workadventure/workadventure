@@ -218,7 +218,7 @@ export class SocketManager implements ZoneEventListener {
                 positionMessage: ProtobufUtils.toPositionMessage(client.position),
                 tag: client.tags,
                 isLogged: client.isLogged,
-                companionTexture: client.companion,
+                companionTexture: client.companionTexture,
                 activatedInviteUser: client.activatedInviteUser != undefined ? client.activatedInviteUser : true,
                 canEdit: client.canEdit,
                 characterTextures: client.characterTextures,
@@ -485,6 +485,11 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleUserMovesMessage(client: ExSocketInterface, userMovesMessage: UserMovesMessage): void {
+        if (!client.backConnection) {
+            Sentry.captureException("Client has no back connection");
+            throw new Error("Client has no back connection");
+        }
+
         client.backConnection.write({
             message: {
                 $case: "userMovesMessage",
@@ -923,6 +928,12 @@ export class SocketManager implements ZoneEventListener {
         const pusherToBackMessage: PusherToBackMessage = {
             message: message,
         };
+
+        if (!client.backConnection) {
+            Sentry.captureException(new Error("forwardMessageToBack => client.backConnection is undefined"));
+            throw new Error("forwardMessageToBack => client.backConnection is undefined");
+        }
+
         client.backConnection.write(pusherToBackMessage);
     }
 
@@ -970,7 +981,7 @@ export class SocketManager implements ZoneEventListener {
                 };
             }),
             jabberId: client.jabberId,
-            jabberPassword: client.jabberPassword,
+            jabberPassword: client.jabberPassword ?? "",
         };
 
         if (!client.disconnecting) {

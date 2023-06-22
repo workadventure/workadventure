@@ -71,11 +71,6 @@ export const WokaDetail = z.object({
     description: "The URL of the image of the woka.",
     example: "http://example.com/resources/characters/pipoya/male.png",
   }),
-  layer: extendApi(z.string(), {
-    description: "The layer of where the woka will be rendered.",
-  }),
 });
 
 export type WokaDetail = z.infer<typeof WokaDetail>;
-
-export type WokaDetailsResult = WokaDetail[];

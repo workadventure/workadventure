@@ -14,6 +14,7 @@ import {
     ApplicationDefinitionInterface,
     SpaceFilterMessage,
     SpaceUser,
+    CompanionDetail,
 } from "@workadventure/messages";
 import Jwt, { JsonWebTokenError } from "jsonwebtoken";
 import { v4 as uuid } from "uuid";
@@ -314,6 +315,7 @@ export class IoSocketController {
                         availabilityStatus,
                         lastCommandId,
                         version,
+                        companionTextureId,
                     } = query;
 
                     try {
@@ -347,8 +349,6 @@ export class IoSocketController {
                             );
                         }
 
-                        const companionTextureId: string | undefined = query.companionTextureId;
-
                         const characterTextureIds: string[] =
                             typeof query.characterTextureIds === "string"
                                 ? [query.characterTextureIds]
@@ -371,7 +371,8 @@ export class IoSocketController {
                             userUuid: userIdentifier,
                             tags: [],
                             visitCardUrl: null,
-                            textures: [],
+                            characterTextures: [],
+                            companionTexture: undefined,
                             messages: [],
                             anonymous: true,
                             userRoomToken: undefined,
@@ -383,7 +384,7 @@ export class IoSocketController {
                         };
 
                         let characterTextures: WokaDetail[];
-                        let companionTexture: { id: string; url: string } | undefined;
+                        let companionTexture: CompanionDetail | undefined;
 
                         try {
                             try {
@@ -452,8 +453,8 @@ export class IoSocketController {
                             }
                             memberTags = userData.tags;
                             memberVisitCardUrl = userData.visitCardUrl;
-                            characterTextures = userData.textures;
-                            companionTexture = userData.companionTexture;
+                            characterTextures = userData.characterTextures;
+                            companionTexture = userData.companionTexture ?? undefined;
                             memberUserRoomToken = userData.userRoomToken;
                         } catch (e) {
                             console.log(
@@ -570,9 +571,8 @@ export class IoSocketController {
                                 microphoneState: false,
                                 megaphoneState: false,
                                 characterTextures: characterTextures.map((characterTexture) => ({
-                                    url: characterTexture.url ?? "",
+                                    url: characterTexture.url,
                                     id: characterTexture.id,
-                                    layer: characterTexture.layer ?? "",
                                 })),
                                 visitCardUrl: memberVisitCardUrl ?? undefined,
                             }),
@@ -924,7 +924,7 @@ export class IoSocketController {
         client.tags = ws.tags;
         client.visitCardUrl = ws.visitCardUrl;
         client.characterTextures = ws.characterTextures;
-        client.companion = ws.companion;
+        client.companionTexture = ws.companionTexture;
         client.availabilityStatus = ws.availabilityStatus;
         client.lastCommandId = ws.lastCommandId;
         client.roomId = ws.roomId;

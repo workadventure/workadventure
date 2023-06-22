@@ -57,8 +57,14 @@ class AdminCompanionService implements CompanionServiceInterface {
                 return CompanionTextureCollection.array().parse(res.data);
             })
             .catch((err) => {
-                console.error(`Cannot get companion list from admin API with token: ${token}`, err);
-                Sentry.captureException(`Cannot get companion list from admin API with token: ${token}`, err);
+                if (axios.isAxiosError(err)) {
+                    console.log(err.response);
+                }
+                console.error(`Cannot get companion collection list from admin API with token: ${token}`, err);
+                Sentry.captureException(
+                    `Cannot get companion collection list from admin API with token: ${token}`,
+                    err
+                );
                 return undefined;
             });
     }

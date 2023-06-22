@@ -469,9 +469,8 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "invalidCharacterTextureMessage": {
-                    console.info(
-                        "One of your Woka textures is invalid for this world, you will be redirect to the Woka selection screen",
-                        message
+                    console.warn(
+                        "One of your Woka textures is invalid for this world, you will be redirect to the Woka selection screen"
                     );
                     this.goToSelectYourWokaScene();
 
@@ -479,9 +478,8 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "invalidCompanionTextureMessage": {
-                    console.info(
-                        "Your companion texture is invalid for this world, you will be redirect to the companion selection screen",
-                        message
+                    console.warn(
+                        "Your companion texture is invalid for this world, you will be redirect to the companion selection screen"
                     );
                     this.goToSelectYourCompanionScene();
 
