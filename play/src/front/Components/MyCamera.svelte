@@ -11,7 +11,6 @@
     } from "../Stores/MediaStore";
     import { LL } from "../../i18n/i18n-svelte";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
-    import { megaphoneEnabledStore } from "../Stores/MegaphoneStore";
     import { localUserStore } from "../Connection/LocalUserStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
