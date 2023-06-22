@@ -71,12 +71,12 @@ test.describe('Map editor', () => {
 
     await Menu.toggleMegaphoneButton(page);
 
-    // chack if the megaphone confirm is opened
+    // check if the megaphone confirmation box is opened
     await expect(await page.locator('.megaphone-confirm')).toBeVisible({timeout: 5_000});
-    // click on the megaphone button to start streaming session
-    await page.locator('.megaphone-confirm button.light').click({timeout: 5_000});
+    // click on the megaphone button to start the streaming session
+    await page.locator('.megaphone-confirm button.light').click({timeout: 15_000});
 
-    await expect(await page2.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 5_000});
+    await expect(await page2.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 15_000});
 
     await Menu.toggleMegaphoneButton(page);
 

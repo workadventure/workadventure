@@ -1,6 +1,6 @@
 import { GridItem } from "@home-based-studio/phaser3-utils";
 import { GridItemEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/GridItem";
-import { CustomWokaBodyPart } from "./CustomWokaPreviewer";
+import { WokaBodyPart } from "./CustomWokaPreviewer";
 
 export interface WokaBodyPartSlotConfig {
     color: number;
@@ -9,7 +9,7 @@ export interface WokaBodyPartSlotConfig {
     borderSelectedColor: number;
     offsetX: number;
     offsetY: number;
-    textureKeys: Record<CustomWokaBodyPart, string>;
+    textureKeys: Record<WokaBodyPart, string>;
     categoryImageKey?: string;
     selected?: boolean;
 }
@@ -22,7 +22,7 @@ export class WokaBodyPartSlot extends GridItem {
     private background: Phaser.GameObjects.Image;
     private frame: Phaser.GameObjects.Graphics;
     private categoryImage?: Phaser.GameObjects.Image;
-    private sprites: Record<CustomWokaBodyPart, Phaser.GameObjects.Sprite>;
+    private sprites: Record<WokaBodyPart, Phaser.GameObjects.Sprite>;
 
     private config: WokaBodyPartSlotConfig;
 
@@ -37,22 +37,22 @@ export class WokaBodyPartSlot extends GridItem {
 
         const textures = this.config.textureKeys;
         this.sprites = {
-            [CustomWokaBodyPart.Accessory]: this.scene.add
+            [WokaBodyPart.Accessory]: this.scene.add
                 .sprite(this.config.offsetX, this.config.offsetY, textures.Accessory)
                 .setVisible(textures.Accessory !== ""),
-            [CustomWokaBodyPart.Body]: this.scene.add
+            [WokaBodyPart.Body]: this.scene.add
                 .sprite(this.config.offsetX, this.config.offsetY, textures.Body)
                 .setVisible(textures.Body !== ""),
-            [CustomWokaBodyPart.Clothes]: this.scene.add
+            [WokaBodyPart.Clothes]: this.scene.add
                 .sprite(this.config.offsetX, this.config.offsetY, textures.Clothes)
                 .setVisible(textures.Clothes !== ""),
-            [CustomWokaBodyPart.Eyes]: this.scene.add
+            [WokaBodyPart.Eyes]: this.scene.add
                 .sprite(this.config.offsetX, this.config.offsetY, textures.Eyes)
                 .setVisible(textures.Eyes !== ""),
-            [CustomWokaBodyPart.Hair]: this.scene.add
+            [WokaBodyPart.Hair]: this.scene.add
                 .sprite(this.config.offsetX, this.config.offsetY, textures.Hair)
                 .setVisible(textures.Hair !== ""),
-            [CustomWokaBodyPart.Hat]: this.scene.add
+            [WokaBodyPart.Hat]: this.scene.add
                 .sprite(this.config.offsetX, this.config.offsetY, textures.Hat)
                 .setVisible(textures.Hat !== ""),
         };
@@ -91,11 +91,11 @@ export class WokaBodyPartSlot extends GridItem {
         this.scene.add.existing(this);
     }
 
-    public getContentData(): Record<CustomWokaBodyPart, string> {
+    public getContentData(): Record<WokaBodyPart, string> {
         return this.config.textureKeys;
     }
 
-    public setTextures(textureKeys: Record<CustomWokaBodyPart, string>): void {
+    public setTextures(textureKeys: Record<WokaBodyPart, string>): void {
         this.config.textureKeys = textureKeys;
         this.sprites.Accessory.setTexture(textureKeys.Accessory).setVisible(textureKeys.Accessory !== "");
         this.sprites.Body.setTexture(textureKeys.Body).setVisible(textureKeys.Body !== "");

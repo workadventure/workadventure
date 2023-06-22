@@ -1,6 +1,6 @@
 import { UpdateWAMSettingCommand } from "@workadventure/map-editor";
 import { FrontCommandInterface } from "../FrontCommandInterface";
-import { RoomConnection } from "../../../../../Connexion/RoomConnection";
+import { RoomConnection } from "../../../../../Connection/RoomConnection";
 
 export class UpdateWAMSettingFrontCommand extends UpdateWAMSettingCommand implements FrontCommandInterface {
     public getUndoCommand(): UpdateWAMSettingFrontCommand {

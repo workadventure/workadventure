@@ -202,7 +202,7 @@ export class GameMapFrontWrapper {
         // Spawn first entities from WAM file on the map
         const addEntityPromises: Promise<Entity>[] = [];
         for (const [entityId, entityData] of Object.entries(this.gameMap.getGameMapEntities()?.getEntities() ?? {})) {
-            addEntityPromises.push(this.entitiesManager.addEntity(entityId, entityData));
+            addEntityPromises.push(this.entitiesManager.addEntity(entityId, entityData, undefined, undefined, false));
             // We need to AWAIT for all entities to be created.
             // OTHERWISE, delete commands might pass FIRST!
         }
@@ -242,7 +242,13 @@ export class GameMapFrontWrapper {
      * @param collisionGrid Collisions map representing tiles
      * @returns
      */
-    public modifyToCollisionsLayer(x: number, y: number, name: string, collisionGrid: number[][]): void {
+    public modifyToCollisionsLayer(
+        x: number,
+        y: number,
+        name: string,
+        collisionGrid: number[][],
+        withGridUpdate = true
+    ): void {
         const coords = this.entitiesCollisionLayer.worldToTileXY(x, y, true);
         for (let y = 0; y < collisionGrid.length; y += 1) {
             for (let x = 0; x < collisionGrid[y].length; x += 1) {
@@ -263,7 +269,9 @@ export class GameMapFrontWrapper {
             }
         }
         this.entitiesCollisionLayer.setCollisionByProperty({ collides: true });
-        this.updateCollisionGrid(this.entitiesCollisionLayer, false);
+        if (withGridUpdate) {
+            this.updateCollisionGrid(this.entitiesCollisionLayer, false);
+        }
     }
 
     public getPropertiesForIndex(index: number): Array<ITiledMapProperty> {

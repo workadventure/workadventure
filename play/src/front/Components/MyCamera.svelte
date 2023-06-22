@@ -10,8 +10,8 @@
         localStreamStore,
     } from "../Stores/MediaStore";
     import { LL } from "../../i18n/i18n-svelte";
-    import { localUserStore } from "../Connexion/LocalUserStore";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
+    import { localUserStore } from "../Connection/LocalUserStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";

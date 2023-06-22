@@ -9,6 +9,7 @@ import {
     isApplicationDefinitionInterface,
     isCapabilities,
     Capabilities,
+    CompanionDetail,
 } from "@workadventure/messages";
 import type { MapDetailsData, RoomRedirect, AdminApiData } from "@workadventure/messages";
 import { z } from "zod";
@@ -50,14 +51,16 @@ export const isFetchMemberDataByUuidResponse = z.object({
         description: "URL of the visitCard of the user fetched.",
         example: "https://mycompany.com/contact/me",
     }),
-    textures: extendApi(z.array(WokaDetail), {
+    characterTextures: extendApi(z.array(WokaDetail), {
         description: "This data represents the textures (WOKA) that will be available to users.",
+    }),
+    companionTexture: extendApi(CompanionDetail.optional().nullable(), {
+        description: "This data represents the companion texture that will be use.",
     }),
     messages: extendApi(z.array(z.unknown()), {
         description:
             "Sets messages that will be displayed when the user logs in to the WA room. These messages are used for ban or ban warning.",
     }),
-
     anonymous: extendApi(z.boolean().optional(), {
         description: "Defines whether it is possible to login as anonymous on a WorkAdventure room.",
         example: false,
@@ -275,7 +278,8 @@ class AdminApi implements AdminInterface {
         accessToken: string | undefined,
         playUri: string,
         ipAddress: string,
-        characterLayers: string[],
+        characterTextureIds: string[],
+        companionTextureId?: string,
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
         /**
@@ -316,12 +320,16 @@ class AdminApi implements AdminInterface {
          *        required: true
          *        type: "string"
          *        example: "127.0.0.1"
-         *      - name: "characterLayers"
+         *      - name: "characterTextureIds"
          *        in: "query"
          *        type: "array"
          *        items:
          *          type: string
          *        example: ["male1"]
+         *      - name: "companionTextureId"
+         *        in: "query"
+         *        type: "string"
+         *        example: "dog1"
          *     responses:
          *       200:
          *         description: The details of the member
@@ -346,7 +354,8 @@ class AdminApi implements AdminInterface {
                 userIdentifier,
                 playUri,
                 ipAddress,
-                characterLayers,
+                characterTextureIds,
+                companionTextureId,
                 accessToken,
                 isLogged: accessToken ? "1" : "0", // deprecated, use accessToken instead
             },

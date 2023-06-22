@@ -1,7 +1,7 @@
 import { Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
 import { Unsubscriber, get } from "svelte/store";
 import { EditMapCommandMessage } from "@workadventure/messages";
-import type { RoomConnection } from "../../../Connexion/RoomConnection";
+import type { RoomConnection } from "../../../Connection/RoomConnection";
 import type { GameScene } from "../GameScene";
 import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";

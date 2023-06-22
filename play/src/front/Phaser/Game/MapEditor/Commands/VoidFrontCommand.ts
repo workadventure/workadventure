@@ -1,5 +1,5 @@
 import { Command } from "@workadventure/map-editor";
-import { RoomConnection } from "../../../../Connexion/RoomConnection";
+import { RoomConnection } from "../../../../Connection/RoomConnection";
 import { FrontCommandInterface } from "./FrontCommandInterface";
 
 export class VoidFrontCommand extends Command implements FrontCommandInterface {

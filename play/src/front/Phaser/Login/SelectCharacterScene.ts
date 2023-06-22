@@ -2,12 +2,12 @@ import { DraggableGrid } from "@home-based-studio/phaser3-utils";
 import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
 import { wokaList } from "@workadventure/messages";
 import { get } from "svelte/store";
-import { localUserStore } from "../../Connexion/LocalUserStore";
+import { localUserStore } from "../../Connection/LocalUserStore";
 import { loadAllDefaultModels } from "../Entity/PlayerTexturesLoadingManager";
 import { Loader } from "../Components/Loader";
-import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
+import type { WokaTextureDescriptionInterface } from "../Entity/PlayerTextures";
 import { PlayerTextures } from "../Entity/PlayerTextures";
-import { areCharacterLayersValid } from "../../Connexion/LocalUser";
+import { areCharacterTexturesValid } from "../../Connection/LocalUser";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
@@ -32,7 +32,7 @@ export const SelectCharacterSceneName = "SelectCharacterScene";
 
 export class SelectCharacterScene extends AbstractCharacterScene {
     protected selectedWoka: Phaser.GameObjects.Sprite | null = null; // null if we are selecting the "customize" option
-    protected playerModels!: BodyResourceDescriptionInterface[];
+    protected playerModels!: WokaTextureDescriptionInterface[];
 
     private charactersDraggableGrid!: DraggableGrid;
     private collectionKeys!: string[];
@@ -96,10 +96,11 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.selectedWoka = null;
         this.selectedCollectionIndex = 0;
         this.collectionKeys = this.playerTextures.getCollectionsKeys();
-        if (localUserStore.getCharacterLayers()) {
+        const characterTextures = localUserStore.getCharacterTextures();
+        if (characterTextures) {
             this.playerTextures.wokaCollections.forEach((collection, index) => {
                 collection.forEach((woka) => {
-                    const wokaCurrentId = localUserStore.getCharacterLayers()?.find((wokaId) => wokaId === woka.id);
+                    const wokaCurrentId = characterTextures.find((textureId) => textureId === woka.id);
                     if (wokaCurrentId) {
                         this.selectedCollectionIndex = this.collectionKeys.indexOf(index);
                     }
@@ -142,7 +143,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     public nextSceneToCameraScene(): void {
-        if (this.selectedWoka !== null && !areCharacterLayersValid([this.selectedWoka.texture.key])) {
+        if (this.selectedWoka !== null && !areCharacterTexturesValid([this.selectedWoka.texture.key])) {
             return;
         }
         if (!this.selectedWoka) {
@@ -151,7 +152,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
         analyticsClient.validationWoka("SelectWoka");
 
-        gameManager.setCharacterLayers([this.selectedWoka.texture.key]);
+        gameManager.setCharacterTextureIds([this.selectedWoka.texture.key]);
         this.selectedWoka = null;
         this.scene.stop(SelectCharacterSceneName);
         gameManager.tryResumingGame(EnableCameraSceneName);
@@ -160,7 +161,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     public nextSceneToCustomizeScene(): void {
-        if (this.selectedWoka !== null && !areCharacterLayersValid([this.selectedWoka.texture.key])) {
+        if (this.selectedWoka !== null && !areCharacterTexturesValid([this.selectedWoka.texture.key])) {
             return;
         }
         this.selectedWoka = null;
@@ -240,8 +241,10 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
             //ini current Select Item to the first
             if (i === 0) currentSelectedItem = slot;
-            if (localUserStore.getCharacterLayers() && localUserStore.getCharacterLayers()![0] === textures[i].id)
-                currentSelectedItem = slot;
+
+            const characterTextures = localUserStore.getCharacterTextures();
+
+            if (characterTextures && characterTextures[0] === textures[i].id) currentSelectedItem = slot;
             this.charactersDraggableGrid.addItem(slot);
         }
         this.charactersDraggableGrid.moveContentToBeginning();

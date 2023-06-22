@@ -3,7 +3,7 @@ import { EntitiesManager } from "../../../GameMap/EntitiesManager";
 import { Entity } from "../../../../ECS/Entity";
 import { GameScene } from "../../../GameScene";
 import { FrontCommandInterface } from "../FrontCommandInterface";
-import { RoomConnection } from "../../../../../Connexion/RoomConnection";
+import { RoomConnection } from "../../../../../Connection/RoomConnection";
 
 export class UpdateEntityFrontCommand extends UpdateEntityCommand implements FrontCommandInterface {
     constructor(

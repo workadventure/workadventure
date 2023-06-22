@@ -55,6 +55,7 @@ export default defineConfig(({ mode }) => {
     };
 
     if (env.SENTRY_ORG && env.SENTRY_PROJECT && env.SENTRY_AUTH_TOKEN && env.SENTRY_RELEASE && env.SENTRY_ENVIRONMENT) {
+        console.info("Sentry plugin enabled");
         config.plugins.push(
             sentryVitePlugin({
                 org: env.SENTRY_ORG,
@@ -72,6 +73,8 @@ export default defineConfig(({ mode }) => {
                 uploadSourceMaps: true,
             })
         );
+    } else {
+        console.info("Sentry plugin disabled");
     }
     return config;
 });

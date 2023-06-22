@@ -5,7 +5,7 @@ import {
     apiVersionHash,
     AnswerMessage,
     AvailabilityStatus,
-    CharacterLayerMessage,
+    CharacterTextureMessage,
     ClientToServerMessage as ClientToServerMessageTsProto,
     EditMapCommandMessage,
     EmoteEventMessage as EmoteEventMessageTsProto,
@@ -31,7 +31,7 @@ import {
     UserMovedMessage as UserMovedMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
-    WorldConnexionMessage,
+    WorldConnectionMessage,
     XmppSettingsMessage,
     RefreshRoomMessage,
     AddSpaceFilterMessage,
@@ -46,6 +46,7 @@ import {
     UpdateWAMSettingsMessage,
     UnwatchSpaceMessage,
     EmbeddableWebsiteAnswer,
+    CompanionTextureMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
@@ -61,12 +62,15 @@ import {
     warningContainerStore,
 } from "../Stores/MenuStore";
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
-import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
+import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
 import { ENABLE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 import { iframeListener } from "../Api/IframeListener";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
+import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene";
+import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
 import { localUserStore } from "./LocalUserStore";
 import { connectionManager } from "./ConnectionManager";
 import { adminMessagesService } from "./AdminMessagesService";
@@ -124,8 +128,8 @@ export class RoomConnection implements RoomConnection {
     private readonly _worldFullMessageStream = new Subject<string | null>();
     public readonly worldFullMessageStream = this._worldFullMessageStream.asObservable();
 
-    private readonly _worldConnexionMessageStream = new Subject<WorldConnexionMessage>();
-    public readonly worldConnexionMessageStream = this._worldConnexionMessageStream.asObservable();
+    private readonly _worldConnectionMessageStream = new Subject<WorldConnectionMessage>();
+    public readonly worldConnectionMessageStream = this._worldConnectionMessageStream.asObservable();
 
     private readonly _tokenExpiredMessageStream = new Subject<TokenExpiredMessage>();
     public readonly tokenExpiredMessageStream = this._tokenExpiredMessageStream.asObservable();
@@ -205,10 +209,10 @@ export class RoomConnection implements RoomConnection {
      * @param token A JWT token containing the email of the user
      * @param roomUrl The URL of the room in the form "https://example.com/_/[instance]/[map_url]" or "https://example.com/@/[org]/[event]/[map]"
      * @param name
-     * @param characterLayers
+     * @param characterTextureIds
      * @param position
      * @param viewport
-     * @param companion
+     * @param companionTextureId
      * @param availabilityStatus
      * @param lastCommandId
      */
@@ -216,10 +220,10 @@ export class RoomConnection implements RoomConnection {
         token: string | null,
         roomUrl: string,
         name: string,
-        characterLayers: string[],
+        characterTextureIds: string[],
         position: PositionInterface,
         viewport: ViewportInterface,
-        companion: string | null,
+        companionTextureId: string | null,
         availabilityStatus: AvailabilityStatus,
         lastCommandId?: string
     ) {
@@ -234,8 +238,8 @@ export class RoomConnection implements RoomConnection {
             url += "&token=" + encodeURIComponent(token);
         }
         url += "&name=" + encodeURIComponent(name);
-        for (const layer of characterLayers) {
-            url += "&characterLayers=" + encodeURIComponent(layer);
+        for (const textureId of characterTextureIds) {
+            url += "&characterTextureIds=" + encodeURIComponent(textureId);
         }
         url += "&x=" + Math.floor(position.x);
         url += "&y=" + Math.floor(position.y);
@@ -243,8 +247,8 @@ export class RoomConnection implements RoomConnection {
         url += "&bottom=" + Math.floor(viewport.bottom);
         url += "&left=" + Math.floor(viewport.left);
         url += "&right=" + Math.floor(viewport.right);
-        if (companion) {
-            url += "&companion=" + encodeURIComponent(companion);
+        if (companionTextureId) {
+            url += "&companionTextureId=" + encodeURIComponent(companionTextureId);
         }
         url += "&availabilityStatus=" + availabilityStatus;
         if (lastCommandId) {
@@ -279,10 +283,8 @@ export class RoomConnection implements RoomConnection {
 
         this.socket.onmessage = (messageEvent) => {
             const arrayBuffer: ArrayBuffer = messageEvent.data;
-            const initCharacterLayers = characterLayers;
 
             const serverToClientMessage = ServerToClientMessageTsProto.decode(new Uint8Array(arrayBuffer));
-            //const message = ServerToClientMessage.deserializeBinary(new Uint8Array(arrayBuffer));
 
             const message = serverToClientMessage.message;
             if (message === undefined) {
@@ -438,23 +440,8 @@ export class RoomConnection implements RoomConnection {
                         }
                     }
 
-                    // If one of the URLs sent to us does not exist, let's go to the Woka selection screen.
-                    if (
-                        roomJoinedMessage.characterLayer.length !== initCharacterLayers.length ||
-                        roomJoinedMessage.characterLayer.find((layer) => !layer.url)
-                    ) {
-                        console.info("Your Woka texture is invalid for this world, got to select Woka scene");
-                        this.goToSelectYourWokaScene();
-                        this.closed = true;
-                    }
-
-                    if (this.closed) {
-                        this.closeConnection();
-                        break;
-                    }
-
-                    const characterLayers = roomJoinedMessage.characterLayer.map(
-                        this.mapCharacterLayerToBodyResourceDescription.bind(this)
+                    const characterTextures = roomJoinedMessage.characterTextures.map(
+                        this.mapWokaTextureToResourceDescription.bind(this)
                     );
 
                     this._roomJoinedMessageStream.next({
@@ -462,7 +449,7 @@ export class RoomConnection implements RoomConnection {
                         room: {
                             items,
                             variables,
-                            characterLayers,
+                            characterTextures,
                             playerVariables,
                             commandsToApply,
                             webrtcUserName: roomJoinedMessage.webrtcUserName,
@@ -478,27 +465,35 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "worldFullMessage": {
                     this._worldFullMessageStream.next(null);
-                    this.closed = true;
+                    this.closeConnection();
                     break;
                 }
-                case "invalidTextureMessage": {
-                    console.info(
-                        "Your Woka texture is invalid for this world, got to select Woka scene. Message: ",
-                        message
+                case "invalidCharacterTextureMessage": {
+                    console.warn(
+                        "One of your Woka textures is invalid for this world, you will be redirect to the Woka selection screen"
                     );
                     this.goToSelectYourWokaScene();
 
-                    this.closed = true;
+                    this.closeConnection();
+                    break;
+                }
+                case "invalidCompanionTextureMessage": {
+                    console.warn(
+                        "Your companion texture is invalid for this world, you will be redirect to the companion selection screen"
+                    );
+                    this.goToSelectYourCompanionScene();
+
+                    this.closeConnection();
                     break;
                 }
                 case "tokenExpiredMessage": {
                     connectionManager.logout().catch((e) => console.error(e));
-                    this.closed = true; //technically, this isn't needed since loadOpenIDScreen() will do window.location.assign() but I prefer to leave it for consistency
+                    this.closeConnection(); //technically, this isn't needed since loadOpenIDScreen() will do window.location.assign() but I prefer to leave it for consistency
                     break;
                 }
-                case "worldConnexionMessage": {
-                    this._worldFullMessageStream.next(message.worldConnexionMessage.message);
-                    this.closed = true;
+                case "worldConnectionMessage": {
+                    this._worldFullMessageStream.next(message.worldConnectionMessage.message);
+                    this.closeConnection();
                     break;
                 }
                 case "webRtcSignalToClientMessage": {
@@ -669,17 +664,6 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    /*public emitPlayerDetailsMessage(userName: string, characterLayersSelected: BodyResourceDescriptionInterface[]) {
-        const message = new SetPlayerDetailsMessage();
-        message.setName(userName);
-        message.setCharacterlayersList(characterLayersSelected.map((characterLayer) => characterLayer.name));
-
-        const clientToServerMessage = new ClientToServerMessage();
-        clientToServerMessage.setSetplayerdetailsmessage(message);
-
-        this.socket.send(clientToServerMessage.serializeBinary().buffer);
-    }*/
-
     public emitPlayerShowVoiceIndicator(show: boolean): void {
         const message = SetPlayerDetailsMessageTsProto.fromPartial({
             showVoiceIndicator: show,
@@ -786,18 +770,19 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    /*    public onUserJoins(callback: (message: MessageUserJoined) => void): void {
-        this.onMessage(EventMessage.JOIN_ROOM, (message: UserJoinedMessage) => {
-            callback(this.toMessageUserJoined(message));
-        });
-    }*/
-
-    private mapCharacterLayerToBodyResourceDescription(
-        characterLayer: CharacterLayerMessage
-    ): BodyResourceDescriptionInterface {
+    private mapWokaTextureToResourceDescription(texture: CharacterTextureMessage): WokaTextureDescriptionInterface {
         return {
-            id: characterLayer.name,
-            img: characterLayer.url,
+            id: texture.id,
+            url: texture.url,
+        };
+    }
+
+    private mapCompanionTextureToResourceDescription(
+        texture: CompanionTextureMessage
+    ): CompanionTextureDescriptionInterface {
+        return {
+            id: texture.id,
+            url: texture.url,
         };
     }
 
@@ -808,12 +793,12 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Invalid JOIN_ROOM message");
         }
 
-        const characterLayers = message.characterLayers.map(this.mapCharacterLayerToBodyResourceDescription.bind(this));
-
-        const companion = message.companion;
+        const characterTextures = message.characterTextures.map(this.mapWokaTextureToResourceDescription.bind(this));
+        const companionTexture = message.companionTexture
+            ? this.mapCompanionTextureToResourceDescription(message.companionTexture)
+            : undefined;
 
         const variables = new Map<string, unknown>();
-        //console.warn('VARIABLES FOR USER: ', message.variables);
         for (const variable of Object.entries(message.variables)) {
             variables.set(variable[0], RoomConnection.unserializeVariable(variable[1]));
         }
@@ -822,11 +807,11 @@ export class RoomConnection implements RoomConnection {
             userId: message.userId,
             userJid: message.userJid,
             name: message.name,
-            characterLayers,
+            characterTextures,
             visitCardUrl: message.visitCardUrl,
             position: position,
             availabilityStatus: message.availabilityStatus,
-            companion: companion ? companion.name : null,
+            companionTexture,
             userUuid: message.userUuid,
             outlineColor: message.hasOutline ? message.outlineColor : undefined,
             variables: variables,
@@ -913,7 +898,7 @@ export class RoomConnection implements RoomConnection {
         this._webRtcDisconnectMessageStream.complete();
         this._teleportMessageMessageStream.complete();
         this._worldFullMessageStream.complete();
-        this._worldConnexionMessageStream.complete();
+        this._worldConnectionMessageStream.complete();
         this._tokenExpiredMessageStream.complete();
         this._userMovedMessageStream.complete();
         this._groupUpdateMessageStream.complete();
@@ -1228,6 +1213,13 @@ export class RoomConnection implements RoomConnection {
         menuIconVisiblilityStore.set(false);
         selectCharacterSceneVisibleStore.set(true);
         gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
+    }
+
+    private goToSelectYourCompanionScene(): void {
+        menuVisiblilityStore.set(false);
+        menuIconVisiblilityStore.set(false);
+        selectCompanionSceneVisibleStore.set(true);
+        gameManager.leaveGame(SelectCompanionSceneName, new SelectCompanionScene());
     }
 
     private send(message: ClientToServerMessageTsProto): void {

@@ -1,7 +1,7 @@
 import { DeleteAreaCommand, GameMap } from "@workadventure/map-editor";
 import { AreaEditorTool } from "../../Tools/AreaEditorTool";
 import { FrontCommandInterface } from "../FrontCommandInterface";
-import { RoomConnection } from "../../../../../Connexion/RoomConnection";
+import { RoomConnection } from "../../../../../Connection/RoomConnection";
 import { VoidFrontCommand } from "../VoidFrontCommand";
 import { CreateAreaFrontCommand } from "./CreateAreaFrontCommand";
 

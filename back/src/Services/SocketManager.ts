@@ -179,7 +179,7 @@ export class SocketManager {
             userJid: joinRoomMessage.userJid,
             tag: joinRoomMessage.tag,
             userRoomToken: joinRoomMessage.userRoomToken,
-            characterLayer: joinRoomMessage.characterLayer,
+            characterTextures: joinRoomMessage.characterTextures,
             canEdit: joinRoomMessage.canEdit,
             editMapCommandsArrayMessage,
             item: itemStateMessage,
@@ -441,7 +441,7 @@ export class SocketManager {
             userUuid: user.uuid,
             name: user.name,
             availabilityStatus: user.getAvailabilityStatus(),
-            characterLayers: ProtobufUtils.toCharacterLayerMessages(user.characterLayers),
+            characterTextures: user.characterTextures,
             position: ProtobufUtils.toPositionMessage(user.getPosition()),
         };
         if (fromZone) {
@@ -450,7 +450,7 @@ export class SocketManager {
         if (user.visitCardUrl) {
             userJoinedZoneMessage.visitCardUrl = user.visitCardUrl;
         }
-        userJoinedZoneMessage.companion = user.companion;
+        userJoinedZoneMessage.companionTexture = user.companionTexture;
         const outlineColor = user.getOutlineColor();
         if (outlineColor === undefined) {
             userJoinedZoneMessage.hasOutline = false;

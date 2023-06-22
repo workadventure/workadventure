@@ -52,8 +52,8 @@ export class Space implements CustomJsonReplacerInterface {
             if (spaceUser.color) {
                 user.color = spaceUser.color;
             }
-            if (spaceUser.characterLayers.length > 0) {
-                user.characterLayers = spaceUser.characterLayers;
+            if (spaceUser.characterTextures.length > 0) {
+                user.characterTextures = spaceUser.characterTextures;
             }
             if (spaceUser.isLogged !== undefined) {
                 user.isLogged = spaceUser.isLogged;

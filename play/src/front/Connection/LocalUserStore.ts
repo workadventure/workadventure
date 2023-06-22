@@ -1,14 +1,14 @@
 import { z } from "zod";
 import { arrayEmoji, Emoji } from "../Stores/Utils/emojiSchema";
 import type { LocalUser } from "./LocalUser";
-import { areCharacterLayersValid, isUserNameValid } from "./LocalUser";
+import { areCharacterTexturesValid, isUserNameValid } from "./LocalUser";
 
 const playerNameKey = "playerName";
 const selectedPlayerKey = "selectedPlayer";
 const customCursorPositionKey = "customCursorPosition";
 const requestedCameraStateKey = "requestedCameraStateKey";
 const requestedMicrophoneStateKey = "requestedMicrophoneStateKey";
-const characterLayersKey = "characterLayers";
+const characterTexturesKey = "characterTextures";
 const companionKey = "companion";
 const videoQualityKey = "videoQuality";
 const audioPlayerVolumeKey = "audioVolume";
@@ -101,20 +101,20 @@ class LocalUserStore {
         localStorage.setItem(requestedMicrophoneStateKey, JSON.stringify(value));
     }
 
-    setCharacterLayers(layers: string[]): void {
-        localStorage.setItem(characterLayersKey, JSON.stringify(layers));
+    setCharacterTextures(textureIds: string[]): void {
+        localStorage.setItem(characterTexturesKey, JSON.stringify(textureIds));
     }
 
-    getCharacterLayers(): string[] | null {
-        const value = JSON.parse(localStorage.getItem(characterLayersKey) || "null");
-        return areCharacterLayersValid(value) ? value : null;
+    getCharacterTextures(): string[] | null {
+        const value = JSON.parse(localStorage.getItem(characterTexturesKey) || "null");
+        return areCharacterTexturesValid(value) ? value : null;
     }
 
-    setCompanion(companion: string | null): void {
-        return localStorage.setItem(companionKey, JSON.stringify(companion));
+    setCompanionTextureId(textureId: string | null): void {
+        return localStorage.setItem(companionKey, JSON.stringify(textureId));
     }
 
-    getCompanion(): string | null {
+    getCompanionTextureId(): string | null {
         const companion = JSON.parse(localStorage.getItem(companionKey) || "null");
 
         if (typeof companion !== "string" || companion === "") {

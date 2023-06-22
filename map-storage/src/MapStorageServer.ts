@@ -42,8 +42,8 @@ const mapStorageServer: MapStorageServer = {
             mapsManager.clearAfterUpload(wamKey);
             callback(null);
         } catch (e: unknown) {
-            console.error("An error occured in handleClearAfterUpload", e);
-            Sentry.captureException(`An error occured in handleClearAfterUpload ${JSON.stringify(e)}`);
+            console.error("An error occurred in handleClearAfterUpload", e);
+            Sentry.captureException(`An error occurred in handleClearAfterUpload ${JSON.stringify(e)}`);
             let message: string;
             if (typeof e === "object" && e !== null) {
                 message = e.toString();
