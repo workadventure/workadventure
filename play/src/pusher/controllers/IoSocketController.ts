@@ -829,7 +829,7 @@ export class IoSocketController {
                             break;
                         }
                         case "megaphoneStateMessage": {
-                            socketManager.handleMegaphoneState(client, message.message.megaphoneStateMessage.value);
+                            socketManager.handleMegaphoneState(client, message.message.megaphoneStateMessage);
                             break;
                         }
                         case "jitsiParticipantIdSpaceMessage": {

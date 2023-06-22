@@ -566,6 +566,7 @@ message MicrophoneStateMessage {
 
 message MegaphoneStateMessage {
   bool value = 1;
+  optional string spaceName = 2;
 }
 
 message JitsiParticipantIdSpaceMessage {

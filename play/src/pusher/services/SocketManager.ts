@@ -31,6 +31,7 @@ import {
     SpaceFilterMessage,
     WatchSpaceMessage,
     QueryMessage,
+    MegaphoneStateMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { isAxiosError } from "axios";
@@ -1080,16 +1081,18 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    handleMegaphoneState(client: ExSocketInterface, state: boolean) {
-        client.megaphoneState = state;
-        client.spaceUser.megaphoneState = state;
+    handleMegaphoneState(client: ExSocketInterface, megaphoneStateMessage: MegaphoneStateMessage) {
+        client.megaphoneState = megaphoneStateMessage.value;
+        client.spaceUser.megaphoneState = megaphoneStateMessage.value;
         const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
-            megaphoneState: state,
+            megaphoneState: megaphoneStateMessage.value,
             id: client.userId,
         });
-        client.spaces.forEach((space) => {
-            space.updateUser(partialSpaceUser);
-        });
+        client.spaces
+            .filter((space) => !megaphoneStateMessage.spaceName || space.name === megaphoneStateMessage.spaceName)
+            .forEach((space) => {
+                space.updateUser(partialSpaceUser);
+            });
     }
 
     handleJitsiParticipantIdSpace(client: ExSocketInterface, spaceName: string, jitsiParticipantId: string) {
