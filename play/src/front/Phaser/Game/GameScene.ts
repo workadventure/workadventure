@@ -54,7 +54,7 @@ import type {
     PositionInterface,
     RoomJoinedMessageInterface,
 } from "../../Connection/ConnexionModels";
-import type { RoomConnection } from "../../Connection/ConnectionManager";
+import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { peerStore } from "../../Stores/PeerStore";
