@@ -853,14 +853,6 @@ export class IoSocketController {
                                     );
                                     break;
                                 }
-                                case "mapsListQuery": {
-                                    void socketManager.handleMapsListQuery(client, message.message.queryMessage);
-                                    break;
-                                }
-                                case "startAreasListQuery": {
-                                    void socketManager.handleStartAreasListQuery(client, message.message.queryMessage);
-                                    break;
-                                }
                                 default: {
                                     socketManager.forwardMessageToBack(client, message.message);
                                 }

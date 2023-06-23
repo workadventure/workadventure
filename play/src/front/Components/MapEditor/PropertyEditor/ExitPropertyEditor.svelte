@@ -1,8 +1,10 @@
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
-    import { ExitPropertyData } from "@workadventure/map-editor";
+    import { ExitPropertyData, WAMFileFormat } from "@workadventure/map-editor";
+    import axios from "axios";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { MAP_STORAGE_PATH_PREFIX } from "../../../Enum/EnvironmentVariable";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     export let property: ExitPropertyData;
     const dispatch = createEventDispatcher();
@@ -13,28 +15,26 @@
     }
 
     const connection = gameManager.getCurrentGameScene().connection;
+    const wamUrl = new URL(gameManager.getCurrentGameScene().wamUrlFile || "");
+
+    const baseUrl = MAP_STORAGE_PATH_PREFIX ? `${wamUrl.origin}${MAP_STORAGE_PATH_PREFIX}` : wamUrl.origin;
 
     async function fetchMaps(): Promise<void> {
-        if (connection) {
-            mapsUrl = await connection
-                .queryMapsList()
-                .then((maps) => maps.mapsUrl)
-                .catch((e) => {
-                    console.error(e);
-                    return [];
-                });
+        const response = await axios.get(`${baseUrl}/maps`);
+        if (response.data && response.data.maps) {
+            mapsUrl = Object.keys(response.data.maps);
         }
     }
 
     async function fetchStartAreasName(): Promise<void> {
         if (connection && property.url) {
-            startAreas = await connection
-                .queryStartAreasList(property.url)
-                .then((areas) => areas.startAreas)
-                .catch((e) => {
-                    console.error(e);
-                    return [];
-                });
+            const response = await axios.get(`${baseUrl}/${property.url}`);
+            const result = WAMFileFormat.safeParse(response.data);
+            if (result.success && result.data && result.data.areas) {
+                startAreas = result.data.areas
+                    .filter((area) => area.properties.find((property) => property.type === "start"))
+                    .map((area) => area.name);
+            }
         }
     }
 
