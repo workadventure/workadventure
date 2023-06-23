@@ -7,10 +7,11 @@ import AreaEditor from "./utils/map-editor/areaEditor";
 import Map from "./utils/map";
 import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import {resetWamMaps} from "./utils/map-editor/uploader";
+import {evaluateScript} from "./utils/scripting";
 
 
 const protocol = process.env.MAP_STORAGE_PROTOCOL ?? 'http';
-const mapUrl = `${protocol}://play.workadventure.localhost/~/maps/empty.wam`;
+const mapUrl = `${protocol}://play.workadventure.localhost/~/maps/`;
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -27,7 +28,7 @@ test.describe('Map editor', () => {
     // Second browser
     const newBrowser = await browser.browserType().launch();
     const page2 = await newBrowser.newPage();
-    await page2.goto(mapUrl);
+    await page2.goto(mapUrl+'empty.wam');
     await page2.evaluate(() => localStorage.setItem('debug', '*'));
     await login(page2, "test2", 5);
 
@@ -95,7 +96,7 @@ test.describe('Map editor', () => {
 
     await resetWamMaps(request);
 
-    await page.goto(mapUrl);
+    await page.goto(mapUrl+'empty.wam');
     //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
     //await page.reload();
     await login(page, "test", 3);
@@ -123,5 +124,49 @@ test.describe('Map editor', () => {
     await Map.walkToPosition(page2, 4*32, 7*32);
 
     await expect(await page2.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 20_000});
+  });
+
+  test('Successfully set start area in the map editor', async ({ page, browser, request }) => {
+    await resetWamMaps(request);
+    await page.goto(mapUrl + 'start.wam');
+    await login(page, "test", 3);
+
+    await Menu.openMapEditor(page);
+    await MapEditor.openAreaEditor(page);
+    await AreaEditor.drawArea(page, {x: 13 * 32, y: 0}, {x: 15 * 32, y: 2 * 32});
+    await AreaEditor.setAreaName(page, 'MyStartZone');
+    await AreaEditor.addProperty(page, 'Start area');
+    await Menu.closeMapEditor(page);
+  });
+
+  test('Successfully set and working exit area in the map editor', async ({ page, browser, request }) => {
+    await resetWamMaps(request);
+
+    await page.goto(mapUrl+'exit.wam');
+    await login(page, "test", 3);
+
+    await Menu.openMapEditor(page);
+    await MapEditor.openAreaEditor(page);
+    await AreaEditor.drawArea(page, {x: 13*32, y: 13*32}, {x: 15*32, y: 15*32});
+    await AreaEditor.addProperty(page, 'Exit area');
+    await AreaEditor.setExitProperty(page, 'maps/start_defined.wam', 'MyStartZone');
+    await Menu.closeMapEditor(page);
+
+    try {
+      await Map.walkToPosition(page, 9 * 32, 9 * 32);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_) {
+      // evaluateScript will throw an error if the script frame unloaded because of page change
+    }
+    await expect.poll(() => page.url()).toContain('start_defined.wam#MyStartZone');
+
+    await evaluateScript(page, async () => {
+      await WA.onInit();
+      const position = await WA.player.getPosition();
+      if(position.x >= 290 && position.x <= 310 &&  position.y >= 15 && position.y <= 35) {
+        return;
+      }
+      throw new Error(`Player is not at the correct position : ${position.x} ${position.y}`);
+    });
   });
 });

@@ -59,9 +59,9 @@
     </span>
     <span slot="content">
         <div>
-            <label for="startAreaSelector">{$LL.mapEditor.properties.exitProperties.exitMap()}</label>
+            <label for="exitMapSelector">{$LL.mapEditor.properties.exitProperties.exitMap()}</label>
             <select
-                id="startAreaSelector"
+                id="exitMapSelector"
                 class="tw-w-full"
                 bind:value={property.url}
                 on:change={() => {

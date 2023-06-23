@@ -94,14 +94,14 @@ const mapEditor: BaseTranslation = {
         },
         chatEnabled: "Associate a dedicated chat channel",
         startProperties: {
-            label: "Start",
-            description: "",
+            label: "Start area",
+            description: "Where people can start in the map.",
             nameLabel: "Start name",
             namePlaceholder: "Enter1",
         },
         exitProperties: {
-            label: "Exit",
-            description: "",
+            label: "Exit area",
+            description: "Where people can exit the map to another one.",
             exitMap: "Exit map",
             exitMapStartAreaName: "Start area name",
         },
