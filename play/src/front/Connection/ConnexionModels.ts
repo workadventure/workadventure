@@ -66,12 +66,11 @@ export interface ItemEventMessageInterface {
 }
 
 export interface RoomJoinedMessageInterface {
-    //users: MessageUserPositionInterface[],
-    //groups: GroupCreatedUpdatedMessageInterface[],
     items: { [itemId: number]: unknown };
     variables: Map<string, unknown>;
     playerVariables: Map<string, unknown>;
     characterTextures: WokaTextureDescriptionInterface[];
+    companionTexture?: CompanionTextureDescriptionInterface;
     commandsToApply?: EditMapCommandMessage[];
     webrtcUserName: string;
     webrtcPassword: string;

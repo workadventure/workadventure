@@ -26,7 +26,10 @@ import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
-import { CompanionTexturesLoadingManager } from "../Companion/CompanionTexturesLoadingManager";
+import {
+    CompanionTexturesLoadingManager,
+    lazyLoadPlayerCompanionTexture,
+} from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
 import { DEBUG_MODE, ENABLE_MAP_EDITOR, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
 import { Room } from "../../Connection/Room";
@@ -917,12 +920,22 @@ export class GameScene extends DirtyScene {
                 this.subscribeToStores();
 
                 lazyLoadPlayerCharacterTextures(this.superLoad, onConnect.room.characterTextures)
-                    .then((layers) => {
-                        this.currentPlayerTexturesResolve(layers);
+                    .then((textures) => {
+                        this.currentPlayerTexturesResolve(textures);
                     })
                     .catch((e) => {
                         this.currentPlayerTexturesReject(e);
                     });
+
+                if (onConnect.room.companionTexture) {
+                    lazyLoadPlayerCompanionTexture(this.superLoad, onConnect.room.companionTexture)
+                        .then((texture) => {
+                            this.currentCompanionTextureResolve(texture);
+                        })
+                        .catch((e) => {
+                            this.currentCompanionTextureReject(e);
+                        });
+                }
 
                 playersStore.connectToRoomConnection(this.connection);
                 userIsAdminStore.set(this.connection.hasTag("admin"));
@@ -2497,6 +2510,13 @@ ${escapedMessage}
         this.currentPlayerTexturesReject = reject;
     });
 
+    private currentCompanionTextureResolve!: (value: string) => void;
+    private currentCompanionTextureReject!: (reason: unknown) => void;
+    private currentCompanionTexturePromise: CancelablePromise<string> = new CancelablePromise((resolve, reject) => {
+        this.currentCompanionTextureResolve = resolve;
+        this.currentCompanionTextureReject = reject;
+    });
+
     private createCurrentPlayer() {
         //TODO create animation moving between exit and start
         try {
@@ -2508,7 +2528,7 @@ ${escapedMessage}
                 this.currentPlayerTexturesPromise,
                 PositionMessage_Direction.DOWN,
                 false,
-                this.companionLoadingManager?.lazyLoadById(this.companionTextureId)
+                this.companionTextureId ? this.currentCompanionTexturePromise : undefined
             );
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(0x365dff);
@@ -2699,7 +2719,6 @@ ${escapedMessage}
         let player: RemotePlayer;
 
         try {
-            const texturesPromise = lazyLoadPlayerCharacterTextures(this.superLoad, addPlayerData.characterTextures);
             player = new RemotePlayer(
                 addPlayerData.userId,
                 addPlayerData.userUuid,
@@ -2707,12 +2726,12 @@ ${escapedMessage}
                 addPlayerData.position.x,
                 addPlayerData.position.y,
                 addPlayerData.name,
-                texturesPromise,
+                lazyLoadPlayerCharacterTextures(this.superLoad, addPlayerData.characterTextures),
                 addPlayerData.position.direction,
                 addPlayerData.position.moving,
                 addPlayerData.visitCardUrl,
                 addPlayerData.companionTexture
-                    ? this.companionLoadingManager?.lazyLoadById(addPlayerData.companionTexture.id)
+                    ? lazyLoadPlayerCompanionTexture(this.superLoad, addPlayerData.companionTexture)
                     : undefined
             );
         } catch (error) {
