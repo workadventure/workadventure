@@ -50,6 +50,7 @@ import {
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
+import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
@@ -71,6 +72,7 @@ import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene";
 import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
+import { currentMegaphoneNameStore } from "../Stores/MegaphoneStore";
 import { localUserStore } from "./LocalUserStore";
 import { connectionManager } from "./ConnectionManager";
 import { adminMessagesService } from "./AdminMessagesService";
@@ -1440,11 +1442,13 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMegaphoneState(state: boolean) {
+        const currentMegaphoneName = get(currentMegaphoneNameStore);
         this.send({
             message: {
                 $case: "megaphoneStateMessage",
                 megaphoneStateMessage: {
                     value: state,
+                    spaceName: currentMegaphoneName ? slugify(currentMegaphoneName) : undefined,
                 },
             },
         });
