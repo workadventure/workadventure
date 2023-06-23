@@ -46,8 +46,10 @@ export class ActivatablesManager {
         }
     }
 
-    public handlePointerDownEvent(): void {
-        this.selectedActivatableObjectByPointer?.activate();
+    public handlePointerDownEvent(object: ActivatableInterface): void {
+        // Let's consider a pointer down is like an over (for mobile)
+        this.handlePointerOverActivatableObject(object);
+        object.activate();
     }
 
     public deactivateSelectedObject(): void {
