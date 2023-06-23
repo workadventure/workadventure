@@ -26,7 +26,7 @@ import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
 import { scriptUtils } from "../../../Api/ScriptUtils";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
-import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
+import { currentMegaphoneNameStore, requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
 import { gameManager } from "../GameManager";
 import { iframeListener } from "../../../Api/IframeListener";
 import { chatZoneLiveStore } from "../../../Stores/ChatStore";
@@ -406,6 +406,7 @@ export class AreasPropertiesListener {
 
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined) {
+            currentMegaphoneNameStore.set(property.name);
             this.scene.broadcastService.joinSpace(property.name, false);
             isSpeakerStore.set(true);
             requestedMegaphoneStore.set(true);
@@ -417,6 +418,7 @@ export class AreasPropertiesListener {
 
     private handleSpeakerMegaphonePropertyOnLeave(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined) {
+            currentMegaphoneNameStore.set(undefined);
             this.scene.broadcastService.leaveSpace(property.name);
             requestedMegaphoneStore.set(false);
             isSpeakerStore.set(false);
@@ -433,6 +435,7 @@ export class AreasPropertiesListener {
                 property.speakerZoneName
             );
             if (speakerZoneName) {
+                currentMegaphoneNameStore.set(speakerZoneName);
                 this.scene.broadcastService.joinSpace(speakerZoneName, false);
                 if (property.chatEnabled) {
                     this.handleJoinMucRoom(speakerZoneName, "live");
@@ -448,6 +451,7 @@ export class AreasPropertiesListener {
                 property.speakerZoneName
             );
             if (speakerZoneName) {
+                currentMegaphoneNameStore.set(undefined);
                 this.scene.broadcastService.leaveSpace(speakerZoneName);
                 if (property.chatEnabled) {
                     this.handleLeaveMucRoom(speakerZoneName);

@@ -29,7 +29,7 @@ import {
 import { urlManager } from "../../Url/UrlManager";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
-import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
+import { currentMegaphoneNameStore, requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
@@ -473,6 +473,7 @@ export class GameMapPropertiesListener {
         }
         const speakerZone = place.properties.find((property) => property.name === GameMapProperties.SPEAKER_MEGAPHONE);
         if (speakerZone && speakerZone.type === "string" && speakerZone.value !== undefined) {
+            currentMegaphoneNameStore.set(speakerZone.value);
             this.scene.broadcastService.joinSpace(speakerZone.value, false);
             isSpeakerStore.set(true);
             if (get(requestedCameraState) || get(requestedMicrophoneState)) {
@@ -487,6 +488,7 @@ export class GameMapPropertiesListener {
         }
         const speakerZone = place.properties.find((property) => property.name === GameMapProperties.SPEAKER_MEGAPHONE);
         if (speakerZone && speakerZone.type === "string" && speakerZone.value !== undefined) {
+            currentMegaphoneNameStore.set(undefined);
             this.scene.broadcastService.leaveSpace(speakerZone.value);
             requestedMegaphoneStore.set(false);
             isSpeakerStore.set(false);
@@ -506,6 +508,7 @@ export class GameMapPropertiesListener {
                 listenerZone.value
             );
             if (speakerZoneName) {
+                currentMegaphoneNameStore.set(speakerZoneName);
                 this.scene.broadcastService.joinSpace(speakerZoneName, false);
             }
         }
@@ -524,6 +527,7 @@ export class GameMapPropertiesListener {
                 listenerZone.value
             );
             if (speakerZoneName) {
+                currentMegaphoneNameStore.set(undefined);
                 this.scene.broadcastService.leaveSpace(speakerZoneName);
             }
         }
