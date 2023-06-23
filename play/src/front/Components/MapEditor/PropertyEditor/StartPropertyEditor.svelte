@@ -1,9 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { StartPropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
-    export let property: StartPropertyData;
     const dispatch = createEventDispatcher();
 </script>
 
