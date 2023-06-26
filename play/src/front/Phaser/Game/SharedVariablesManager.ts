@@ -43,6 +43,10 @@ export class SharedVariablesManager {
         }
 
         roomConnection.variableMessageStream.subscribe(({ name, value }) => {
+            if (JSON.stringify(value) === JSON.stringify(this._variables.get(name))) {
+                return;
+            }
+
             this._variables.set(name, value);
 
             // On server change, let's notify the iframes
@@ -90,6 +94,9 @@ export class SharedVariablesManager {
 
         // Dispatch to the room connection.
         this.roomConnection.emitSetVariableEvent(key, event.value);
+
+        // Dispatch to other iframes
+        iframeListener.dispatchVariableToOtherIframes(key, event.value, source);
     }
 
     private static findVariablesInMap(gameMapFrontWrapper: GameMapFrontWrapper): Map<string, Variable> {
