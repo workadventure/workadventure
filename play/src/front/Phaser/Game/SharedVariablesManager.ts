@@ -90,9 +90,6 @@ export class SharedVariablesManager {
 
         // Dispatch to the room connection.
         this.roomConnection.emitSetVariableEvent(key, event.value);
-
-        // Dispatch to other iframes
-        iframeListener.dispatchVariableToOtherIframes(key, event.value, source);
     }
 
     private static findVariablesInMap(gameMapFrontWrapper: GameMapFrontWrapper): Map<string, Variable> {
