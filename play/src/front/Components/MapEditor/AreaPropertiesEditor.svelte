@@ -12,6 +12,8 @@
     import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
     import SpeakerMegaphonePropertyEditor from "./PropertyEditor/SpeakerMegaphonePropertyEditor.svelte";
     import ListenerMegaphonePropertyEditor from "./PropertyEditor/ListenerMegaphonePropertyEditor.svelte";
+    import StartPropertyEditor from "./PropertyEditor/StartPropertyEditor.svelte";
+    import ExitPropertyEditor from "./PropertyEditor/ExitPropertyEditor.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -20,6 +22,8 @@
     let hasSilentProperty: boolean;
     let hasSpeakerMegaphoneProperty: boolean;
     let hasListenerMegaphoneProperty: boolean;
+    let hasStartProperty: boolean;
+    let hasExitProperty: boolean;
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
@@ -88,6 +92,13 @@
                     speakerZoneName: "",
                     chatEnabled: false,
                 };
+            case "exit":
+                return {
+                    id,
+                    type,
+                    url: "",
+                    areaName: "",
+                };
         }
     }
 
@@ -135,6 +146,8 @@
         hasSilentProperty = hasProperty("silent");
         hasSpeakerMegaphoneProperty = hasProperty("speakerMegaphone");
         hasListenerMegaphoneProperty = hasProperty("listenerMegaphone");
+        hasStartProperty = hasProperty("start");
+        hasExitProperty = hasProperty("exit");
     }
 </script>
 
@@ -197,6 +210,28 @@
                 }}
             />
         {/if}
+        {#if !hasStartProperty}
+            <AddPropertyButton
+                headerText={$LL.mapEditor.properties.startProperties.label()}
+                descriptionText={$LL.mapEditor.properties.startProperties.description()}
+                img={"resources/icons/icon_start.png"}
+                style="z-index: 3;"
+                on:click={() => {
+                    onAddProperty("start");
+                }}
+            />
+        {/if}
+        {#if !hasExitProperty}
+            <AddPropertyButton
+                headerText={$LL.mapEditor.properties.exitProperties.label()}
+                descriptionText={$LL.mapEditor.properties.exitProperties.description()}
+                img={"resources/icons/icon_exit.png"}
+                style="z-index: 3;"
+                on:click={() => {
+                    onAddProperty("exit");
+                }}
+            />
+        {/if}
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.audioProperties.label()}
             descriptionText={$LL.mapEditor.properties.audioProperties.description()}
@@ -216,7 +251,7 @@
             }}
         />
     </div>
-    <div class="area-name-container" style="display: none;">
+    <div class="area-name-container">
         <label for="objectName">Area name</label>
         <input id="objectName" type="text" placeholder="Value" bind:value={areaName} on:change={onUpdateName} />
     </div>
@@ -272,6 +307,21 @@
                     />
                 {:else if property.type === "listenerMegaphone"}
                     <ListenerMegaphonePropertyEditor
+                        {property}
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                        on:change={() => onUpdateProperty(property)}
+                    />
+                {:else if property.type === "start"}
+                    <StartPropertyEditor
+                        on:close={() => {
+                            onDeleteProperty(property.id);
+                        }}
+                        on:change={() => onUpdateProperty(property)}
+                    />
+                {:else if property.type === "exit"}
+                    <ExitPropertyEditor
                         {property}
                         on:close={() => {
                             onDeleteProperty(property.id);

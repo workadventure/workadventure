@@ -93,6 +93,18 @@ const mapEditor: BaseTranslation = {
             namePlaceholder: "MySpeakerZone",
         },
         chatEnabled: "Associate a dedicated chat channel",
+        startProperties: {
+            label: "Start area",
+            description: "Where people can start in the map.",
+            nameLabel: "Start name",
+            namePlaceholder: "Enter1",
+        },
+        exitProperties: {
+            label: "Exit area",
+            description: "Where people can exit the map to another one.",
+            exitMap: "Exit map",
+            exitMapStartAreaName: "Start area name",
+        },
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",
