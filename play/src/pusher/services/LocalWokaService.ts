@@ -6,7 +6,7 @@ class LocalWokaService implements WokaServiceInterface {
     /**
      * Returns the list of all available Wokas & Woka Parts for the current user.
      */
-    async getWokaList(roomId: string, token: string): Promise<WokaList | undefined> {
+    async getWokaList(roomUrl: string, token: string): Promise<WokaList | undefined> {
         const wokaData: WokaList = await require("../data/woka.json");
         if (!wokaData) {
             return undefined;
@@ -24,13 +24,7 @@ class LocalWokaService implements WokaServiceInterface {
      */
     async fetchWokaDetails(textureIds: string[]): Promise<WokaDetail[] | undefined> {
         const wokaData: WokaList = await require("../data/woka.json");
-        const textures = new Map<
-            string,
-            {
-                url: string;
-                layer: string;
-            }
-        >();
+        const textures = new Map<string, string>();
         const searchIds = new Set(textureIds);
 
         for (const part of wokaPartNames) {
@@ -44,10 +38,7 @@ class LocalWokaService implements WokaServiceInterface {
                     const texture = collection.textures.find((texture) => texture.id === id);
 
                     if (texture) {
-                        textures.set(id, {
-                            url: texture.url,
-                            layer: part,
-                        });
+                        textures.set(id, texture.url);
                         searchIds.delete(id);
                     }
                 }
@@ -63,8 +54,7 @@ class LocalWokaService implements WokaServiceInterface {
         textures.forEach((value, key) => {
             details.push({
                 id: key,
-                url: value.url,
-                layer: value.layer,
+                url: value,
             });
         });
 

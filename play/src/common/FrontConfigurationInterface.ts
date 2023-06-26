@@ -40,4 +40,5 @@ export interface FrontConfigurationInterface {
     JITSI_DOMAIN: string | undefined;
     JITSI_XMPP_DOMAIN: string | undefined;
     JITSI_MUC_DOMAIN: string | undefined;
+    MAP_STORAGE_PATH_PREFIX: string | undefined;
 }

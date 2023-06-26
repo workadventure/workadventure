@@ -111,6 +111,9 @@
           "LOGROCKET_ID": env.LOGROCKET_ID,
           "ROOM_API_PORT": "50051",
           "DEBUG": "*",
+          "JITSI_DOMAIN": "coremeet.workadventu.re",
+          "JITSI_XMPP_DOMAIN": "prosody.workadventu.re",
+          "JITSI_MUC_DOMAIN": "muc.prosody.workadventu.re",
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,
@@ -121,7 +124,7 @@
           "OPID_CLIENT_ID": "auth-code-client",
           "OPID_CLIENT_SECRET": env.ADMIN_API_TOKEN,
           "OPID_CLIENT_ISSUER": "https://publichydra-"+url,
-          "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
+          "START_ROOM_URL": "/~/maps/map.wam",
         } else {
           # Ejabberd
           "EJABBERD_DOMAIN": "xmpp-"+url,

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import type { Readable } from "svelte/store";
-    import { onMount } from "svelte";
+    import { onMount, onDestroy } from "svelte";
     import { PeerStatus, VideoPeer } from "../../WebRtc/VideoPeer";
     import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
@@ -33,6 +33,10 @@
     const gameScene = gameManager.getCurrentGameScene();
 
     onMount(() => {
+        gameScene.reposition();
+    });
+
+    onDestroy(() => {
         gameScene.reposition();
     });
 </script>

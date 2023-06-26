@@ -6,8 +6,8 @@ import {
     REPORT_ISSUES_URL,
 } from "../Enum/EnvironmentVariable";
 import type { Translation } from "../../i18n/i18n-types";
-import { localUserStore } from "../Connexion/LocalUserStore";
-import { connectionManager } from "../Connexion/ConnectionManager";
+import { localUserStore } from "../Connection/LocalUserStore";
+import { connectionManager } from "../Connection/ConnectionManager";
 import {
     AddButtonActionBarEvent,
     RemoveButtonActionBarEvent,

@@ -2,7 +2,7 @@ import { Buffer } from "buffer";
 import type { Readable, Writable } from "svelte/store";
 import { writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
-import type { RoomConnection } from "../Connexion/RoomConnection";
+import type { RoomConnection } from "../Connection/RoomConnection";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import type { PeerStatus } from "./VideoPeer";

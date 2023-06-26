@@ -12,12 +12,12 @@ import { Jitsi } from "@workadventure/shared-utils";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
-import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWesbite";
+import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
 import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
 import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
-import { localUserStore } from "../../../Connexion/LocalUserStore";
+import { localUserStore } from "../../../Connection/LocalUserStore";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
 import { LL } from "../../../../i18n/i18n-svelte";
 import { GameScene } from "../GameScene";
@@ -26,10 +26,11 @@ import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
 import { scriptUtils } from "../../../Api/ScriptUtils";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
-import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
+import { currentMegaphoneNameStore, requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
 import { gameManager } from "../GameManager";
 import { iframeListener } from "../../../Api/IframeListener";
 import { chatZoneLiveStore } from "../../../Stores/ChatStore";
+import { Room } from "../../../Connection/Room";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -77,6 +78,14 @@ export class AreasPropertiesListener {
                     }
                     case "listenerMegaphone": {
                         this.handleListenerMegaphonePropertyOnEnter(property);
+                        break;
+                    }
+                    case "exit": {
+                        let url = `/~/${property.url}`;
+                        if (property.areaName && property.areaName !== "") {
+                            url = `/~/${property.url}#${property.areaName}`;
+                        }
+                        this.handleExitPropertyOnEnter(url);
                         break;
                     }
                     default: {
@@ -406,6 +415,7 @@ export class AreasPropertiesListener {
 
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined) {
+            currentMegaphoneNameStore.set(property.name);
             this.scene.broadcastService.joinSpace(property.name, false);
             isSpeakerStore.set(true);
             requestedMegaphoneStore.set(true);
@@ -417,6 +427,7 @@ export class AreasPropertiesListener {
 
     private handleSpeakerMegaphonePropertyOnLeave(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined) {
+            currentMegaphoneNameStore.set(undefined);
             this.scene.broadcastService.leaveSpace(property.name);
             requestedMegaphoneStore.set(false);
             isSpeakerStore.set(false);
@@ -433,6 +444,7 @@ export class AreasPropertiesListener {
                 property.speakerZoneName
             );
             if (speakerZoneName) {
+                currentMegaphoneNameStore.set(speakerZoneName);
                 this.scene.broadcastService.joinSpace(speakerZoneName, false);
                 if (property.chatEnabled) {
                     this.handleJoinMucRoom(speakerZoneName, "live");
@@ -448,6 +460,7 @@ export class AreasPropertiesListener {
                 property.speakerZoneName
             );
             if (speakerZoneName) {
+                currentMegaphoneNameStore.set(undefined);
                 this.scene.broadcastService.leaveSpace(speakerZoneName);
                 if (property.chatEnabled) {
                     this.handleLeaveMucRoom(speakerZoneName);
@@ -469,5 +482,11 @@ export class AreasPropertiesListener {
     private handleLeaveMucRoom(name: string) {
         iframeListener.sendLeaveMucEventToChatIframe(`${gameManager.getCurrentGameScene().roomUrl}/${slugify(name)}`);
         chatZoneLiveStore.set(false);
+    }
+
+    private handleExitPropertyOnEnter(url: string): void {
+        this.scene
+            .onMapExit(Room.getRoomPathFromExitUrl(url, window.location.toString()))
+            .catch((e) => console.error(e));
     }
 }

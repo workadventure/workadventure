@@ -1,6 +1,6 @@
 import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import { GameMapProperties } from "@workadventure/map-editor";
-import type { RoomConnection } from "../../Connexion/RoomConnection";
+import type { RoomConnection } from "../../Connection/RoomConnection";
 import { iframeListener } from "../../Api/IframeListener";
 import type { SetVariableEvent } from "../../Api/Events/SetVariableEvent";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
@@ -43,6 +43,10 @@ export class SharedVariablesManager {
         }
 
         roomConnection.variableMessageStream.subscribe(({ name, value }) => {
+            if (JSON.stringify(value) === JSON.stringify(this._variables.get(name))) {
+                return;
+            }
+
             this._variables.set(name, value);
 
             // On server change, let's notify the iframes

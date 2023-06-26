@@ -1,7 +1,7 @@
-import { CharacterLayerMessage } from "@workadventure/messages";
+import { CharacterTextureMessage } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
-import { TextureError } from "../../Exception/TextureError";
+import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { gameManager } from "../Game/GameManager";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 
@@ -9,11 +9,11 @@ import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager"
  * Class that let you generate a base64 image from a CharacterLayer[]
  */
 export class CharacterLayerManager {
-    static wokaBase64(characterLayers: CharacterLayerMessage[]): Promise<string> {
+    static wokaBase64(characterTextures: CharacterTextureMessage[]): Promise<string> {
         const scene = gameManager.getCurrentGameScene();
         return lazyLoadPlayerCharacterTextures(
             scene.superLoad,
-            characterLayers.map((layer) => ({ id: layer.name, img: layer.url }))
+            characterTextures.map((texture) => ({ id: texture.id, url: texture.url }))
         )
             .then((textures) => {
                 return this.getSnapshot(scene, this.getSprites(scene, textures)).then((htmlImageElementSrc) => {
@@ -24,11 +24,11 @@ export class CharacterLayerManager {
                 return lazyLoadPlayerCharacterTextures(scene.superLoad, [
                     {
                         id: "color_22",
-                        img: "resources/customisation/character_color/character_color21.png",
+                        url: "resources/customisation/character_color/character_color21.png",
                     },
                     {
                         id: "eyes_23",
-                        img: "resources/customisation/character_eyes/character_eyes23.png",
+                        url: "resources/customisation/character_eyes/character_eyes23.png",
                     },
                 ])
                     .then((textures) => {
@@ -68,12 +68,12 @@ export class CharacterLayerManager {
     ): Map<string, Phaser.GameObjects.Sprite> {
         const sprites = new Map<string, Phaser.GameObjects.Sprite>();
         if (textures.length < 1) {
-            throw new TextureError("no texture given");
+            throw new CharacterTextureError("no texture given");
         }
 
         for (const texture of textures) {
             if (scene && !scene.textures.exists(texture)) {
-                throw new TextureError("texture not found");
+                throw new CharacterTextureError("texture not found");
             }
             const sprite = new Phaser.GameObjects.Sprite(scene, 0, 0, texture, frame);
 

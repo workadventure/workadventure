@@ -1,9 +1,9 @@
 import type { PlayerDetailsUpdatedMessage, UserMovedMessage } from "@workadventure/messages";
 import { availabilityStatusToJSON } from "@workadventure/messages";
-import type { MessageUserJoined } from "../../Connexion/ConnexionModels";
+import type { MessageUserJoined } from "../../Connection/ConnexionModels";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { iframeListener } from "../../Api/IframeListener";
-import { RoomConnection } from "../../Connexion/RoomConnection";
+import { RoomConnection } from "../../Connection/RoomConnection";
 import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
 
 interface RemotePlayerData extends MessageUserJoined {

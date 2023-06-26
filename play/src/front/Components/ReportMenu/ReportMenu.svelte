@@ -3,7 +3,7 @@
     import type { Unsubscriber } from "svelte/store";
     import { get } from "svelte/store";
     import { playersStore } from "../../Stores/PlayersStore";
-    import { connectionManager } from "../../Connexion/ConnectionManager";
+    import { connectionManager } from "../../Connection/ConnectionManager";
     import { showReportScreenStore, userReportEmpty } from "../../Stores/ShowReportScreenStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import ReportSubMenu from "./ReportSubMenu.svelte";

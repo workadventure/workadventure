@@ -18,8 +18,6 @@ export class DynamicAreaManager {
                 throw new Error(`Could not find dynamic area with the name "${modifyAreaEvent.name}" in your map`);
             }
 
-            const insideBefore = this.gameMapFrontWrapper.isPlayerInsideDynamicArea(modifyAreaEvent.name);
-
             if (modifyAreaEvent.x !== undefined) {
                 area.x = modifyAreaEvent.x;
             }
@@ -33,13 +31,8 @@ export class DynamicAreaManager {
                 area.height = modifyAreaEvent.height;
             }
 
-            const insideAfter = this.gameMapFrontWrapper.isPlayerInsideDynamicArea(modifyAreaEvent.name);
-
-            if (insideBefore && !insideAfter) {
-                this.gameMapFrontWrapper.triggerSpecificDynamicAreaOnLeave(area);
-            } else if (!insideBefore && insideAfter) {
-                this.gameMapFrontWrapper.triggerSpecificDynamicAreaOnEnter(area);
-            }
+            // Trigger properties (in case the position change moved the player into or out of the area)
+            this.gameMapFrontWrapper.triggerAllProperties();
         });
     }
 

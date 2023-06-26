@@ -17,6 +17,7 @@ import type { AdminInterface } from "./AdminInterface";
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
+import { localCompanionService } from "./LocalCompanionSevice";
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -27,7 +28,8 @@ class LocalAdmin implements AdminInterface {
         accessToken: string | undefined,
         playUri: string,
         ipAddress: string,
-        characterLayers: string[],
+        characterTextureIds: string[],
+        companionTextureId?: string,
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
         let canEdit = false;
@@ -52,7 +54,10 @@ class LocalAdmin implements AdminInterface {
             tags: [],
             messages: [],
             visitCardUrl: null,
-            textures: (await localWokaService.fetchWokaDetails(characterLayers)) ?? [],
+            characterTextures: (await localWokaService.fetchWokaDetails(characterTextureIds)) ?? [],
+            companionTexture: companionTextureId
+                ? await localCompanionService.fetchCompanionDetails(companionTextureId)
+                : undefined,
             userRoomToken: undefined,
             mucRooms,
             activatedInviteUser: true,

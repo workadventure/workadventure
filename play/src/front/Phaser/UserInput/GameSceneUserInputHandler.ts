@@ -5,6 +5,7 @@ import { RemotePlayer } from "../Entity/RemotePlayer";
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import type { GameScene } from "../Game/GameScene";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { isActivatable } from "../Game/ActivatableInterface";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
@@ -24,6 +25,15 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        if (pointer.wasTouch || pointer.leftButtonReleased()) {
+            for (const object of gameObjects) {
+                if (isActivatable(object)) {
+                    this.gameScene.getActivatablesManager().handlePointerDownEvent(object);
+                    return;
+                }
+            }
+        }
+
         if ((!pointer.wasTouch && pointer.leftButtonReleased()) || pointer.getDuration() > 250) {
             return;
         }
@@ -57,9 +67,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             });
     }
 
-    public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        this.gameScene.getActivatablesManager().handlePointerDownEvent();
-    }
+    public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
 
     public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
 

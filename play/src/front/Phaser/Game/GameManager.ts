@@ -1,7 +1,7 @@
 import { get } from "svelte/store";
-import { connectionManager } from "../../Connexion/ConnectionManager";
-import { localUserStore } from "../../Connexion/LocalUserStore";
-import type { Room } from "../../Connexion/Room";
+import { connectionManager } from "../../Connection/ConnectionManager";
+import { localUserStore } from "../../Connection/LocalUserStore";
+import type { Room } from "../../Connection/Room";
 import { helpCameraSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
@@ -18,8 +18,8 @@ import { GameScene } from "./GameScene";
  */
 export class GameManager {
     private playerName: string | null;
-    private characterLayers: string[] | null;
-    private companion: string | null;
+    private characterTextureIds: string[] | null;
+    private companionTextureId: string | null;
     private startRoom!: Room;
     private cameraSetup?: { video: unknown; audio: unknown };
     private currentGameSceneName: string | null = null;
@@ -29,8 +29,8 @@ export class GameManager {
 
     constructor() {
         this.playerName = localUserStore.getName();
-        this.characterLayers = localUserStore.getCharacterLayers();
-        this.companion = localUserStore.getCompanion();
+        this.characterTextureIds = localUserStore.getCharacterTextures();
+        this.companionTextureId = localUserStore.getCompanionTextureId();
         this.cameraSetup = localUserStore.getCameraSetup();
     }
 
@@ -50,9 +50,8 @@ export class GameManager {
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
         if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
             return LoginSceneName;
-        } else if (!this.characterLayers || !this.characterLayers.length) {
-            // TODO: Remove this debug line
-            console.info("Your Woka texture is invalid for this world, got to select Woka scene. Init game manager.");
+        } else if (!this.characterTextureIds) {
+            console.info("Any Woka texture has been found, you will be redirect to the Woka selection scene");
             return SelectCharacterSceneName;
         } else if (this.cameraSetup == undefined) {
             return EnableCameraSceneName;
@@ -68,13 +67,13 @@ export class GameManager {
         localUserStore.setName(name);
     }
 
-    public setVisitCardurl(visitCardUrl: string): void {
+    public setVisitCardUrl(visitCardUrl: string): void {
         this.visitCardUrl = visitCardUrl;
     }
 
-    public setCharacterLayers(layers: string[]): void {
-        this.characterLayers = layers;
-        localUserStore.setCharacterLayers(layers);
+    public setCharacterTextureIds(textureIds: string[]): void {
+        this.characterTextureIds = textureIds;
+        localUserStore.setCharacterTextures(textureIds);
     }
 
     getPlayerName(): string | null {
@@ -85,19 +84,19 @@ export class GameManager {
         return this.visitCardUrl;
     }
 
-    getCharacterLayers(): string[] {
-        if (!this.characterLayers) {
-            throw new Error("characterLayers are not set");
+    getCharacterTextureIds(): string[] {
+        if (!this.characterTextureIds) {
+            throw new Error("characterTextures are not set");
         }
-        return this.characterLayers;
+        return this.characterTextureIds;
     }
 
-    setCompanion(companion: string | null): void {
-        this.companion = companion;
+    setCompanionTextureId(textureId: string | null): void {
+        this.companionTextureId = textureId;
     }
 
-    getCompanion(): string | null {
-        return this.companion;
+    getCompanionTextureId(): string | null {
+        return this.companionTextureId;
     }
 
     public loadMap(room: Room) {

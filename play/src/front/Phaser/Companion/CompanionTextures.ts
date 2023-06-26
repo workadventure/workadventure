@@ -1,53 +1,56 @@
-import { CompanionCollectionList } from "@workadventure/messages";
+import { CompanionTextureCollection, CompanionTexture } from "@workadventure/messages";
 
-export interface CompanionResourceDescriptionListInterface {
-    [key: string]: CompanionResourceDescriptionInterface;
+export interface CompanionTextureByIdList {
+    [key: string]: CompanionTexture;
 }
-export interface CompanionResourceDescriptionInterface {
+
+export interface CompanionTextureDescriptionInterface {
     id: string;
-    img: string;
-    collection?: string;
-    behaviour?: "dog" | "cat";
+    url: string;
 }
+
 export class CompanionTextures {
-    private companionResources: CompanionResourceDescriptionListInterface = {};
-    private companionCollections = new Map<string, CompanionResourceDescriptionInterface[]>();
+    private companionResources: CompanionTextureByIdList = {};
+    private companionCollections = new Map<string, CompanionTexture[]>();
 
-    public loadCompanionTexturesMetadata(metadata: CompanionCollectionList): void {
+    public loadCompanionTexturesMetadata(metadata: CompanionTextureCollection[]): void {
         this.mapTexturesMetadataIntoResources(metadata);
-    }
-
-    public getTexturesResources(): CompanionResourceDescriptionInterface[] | undefined {
-        return this.companionCollections.get("default");
     }
 
     public getCollectionsKeys(): string[] {
         return Array.from(this.companionCollections.keys());
     }
 
-    public getCompanionCollectionTextures(key: string): CompanionResourceDescriptionInterface[] {
+    public getCompanionCollectionTextures(key: string): CompanionTexture[] {
         return this.companionCollections.get(key) ?? [];
     }
 
-    public mapTexturesMetadataIntoResources(metadata: CompanionCollectionList): void {
-        const resources: CompanionResourceDescriptionListInterface = {};
-        if (!metadata) {
-            return;
-        }
-        for (const collection of metadata.companion.collections) {
-            const textures: CompanionResourceDescriptionInterface[] = [];
+    public mapTexturesMetadataIntoResources(collections: CompanionTextureCollection[]): void {
+        const resources: CompanionTextureByIdList = {};
+        for (const collection of collections) {
+            const textures: CompanionTexture[] = [];
             for (const texture of collection.textures) {
-                textures.push({ id: texture.id, img: texture.url, collection: collection.name });
-                resources[texture.id] = { id: texture.id, img: texture.url, collection: collection.name };
+                textures.push(texture);
+                resources[texture.id] = texture;
                 this.companionCollections.set(collection.name, textures);
             }
         }
         this.companionResources = resources;
     }
-    public getCompanionResourceById(id: string): CompanionResourceDescriptionInterface {
+    public getCompanionResourceById(id: string): CompanionTexture {
         return this.companionResources[id];
     }
-    public getCompanionResources(): CompanionResourceDescriptionListInterface {
+
+    public getCompanionCollectionAndIndexByCompanionId(id: string): [string, number] | undefined {
+        for (const [key, value] of this.companionCollections.entries()) {
+            for (let i = 0; i < value.length; i++) {
+                return [key, i];
+            }
+        }
+        return undefined;
+    }
+
+    public getCompanionResources(): CompanionTextureByIdList {
         return this.companionResources;
     }
 }

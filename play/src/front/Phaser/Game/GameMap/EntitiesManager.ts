@@ -87,12 +87,14 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         entityId: string,
         data: WAMEntityData,
         imagePathPrefix?: string,
-        interactive?: boolean
+        interactive?: boolean,
+        withGridUpdate?: boolean
     ): Promise<Entity> {
         const prefab = await this.scene
             .getEntitiesCollectionsManager()
             .getEntityPrefab(data.prefabRef.collectionName, data.prefabRef.id);
         if (prefab === undefined) {
+            console.warn(`Could not find entity ${data.prefabRef.id} in collection ${data.prefabRef.collectionName}`);
             throw new Error(
                 `Could not find entity ${data.prefabRef.id} in collection ${data.prefabRef.collectionName}`
             );
@@ -118,7 +120,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
         const colGrid = entity.getCollisionGrid();
         if (colGrid) {
-            this.gameMapFrontWrapper.modifyToCollisionsLayer(entity.x, entity.y, "0", colGrid);
+            this.gameMapFrontWrapper.modifyToCollisionsLayer(entity.x, entity.y, "0", colGrid, withGridUpdate);
         }
 
         this.entities.set(entityId, entity);

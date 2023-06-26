@@ -45,14 +45,14 @@ test.describe('Swagger documentation', () => {
         // Test if the component "model-Capabilities" is visible
         await expect(page.locator('#model-Capabilities')).toBeVisible();
 
-        // Test if the component "model-CompanionCollectionList" is visible
-        await expect(page.locator('#model-CompanionCollectionList')).toBeVisible();
+        // Test if the component "model-CompanionTextureCollectionList" is visible
+        await expect(page.locator('#model-CompanionTextureCollectionList')).toBeVisible();
 
         // Test if the component "model-CompanionDetail" is visible
         await expect(page.locator('#model-CompanionDetail')).toBeVisible();
 
-        // Test if the component "model-CompanionCollection" is visible
-        await expect(page.locator('#model-CompanionCollection')).toBeVisible();
+        // Test if the component "model-CompanionTextureCollection" is visible
+        await expect(page.locator('#model-CompanionTextureCollection')).toBeVisible();
 
         // Test if the component "model-ErrorApiErrorData" is visible
         await expect(page.locator('#model-ErrorApiErrorData')).toBeVisible();
