@@ -12,7 +12,7 @@ import {evaluateScript} from "./utils/scripting";
 
 const protocol = process.env.MAP_STORAGE_PROTOCOL ?? 'http';
 
-const url = (end) => `${protocol}://play.workadventure.localhost/~/maps/${end}`;
+const url = (end) => `${protocol}://play.workadventure.localhost/~/maps/${end}.wam`;
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -21,7 +21,7 @@ test.use({
 test.describe('Map editor', () => {
   test('Successfully set the megaphone feature', async ({ page, browser, request }) => {
     await resetWamMaps(request);
-    await page.goto(url("empty.wam"));
+    await page.goto(url("empty"));
     //await page.evaluate(() => localStorage.setItem('debug', '*'));
     await login(page, "test", 3);
     await Map.walkToPosition(page, 5*32, 5*32);
@@ -29,7 +29,7 @@ test.describe('Map editor', () => {
     // Second browser
     const newBrowser = await browser.browserType().launch();
     const page2 = await newBrowser.newPage();
-    await page2.goto(url("empty.wam"));
+    await page2.goto(url("empty"));
     await page2.evaluate(() => localStorage.setItem('debug', '*'));
     await login(page2, "test2", 5);
 
@@ -97,7 +97,7 @@ test.describe('Map editor', () => {
 
     await resetWamMaps(request);
 
-    await page.goto(url("empty.wam"));
+    await page.goto(url("empty"));
     //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
     //await page.reload();
     await login(page, "test", 3);
@@ -118,7 +118,7 @@ test.describe('Map editor', () => {
     // Second browser
     const newBrowser = await browser.browserType().launch();
     const page2 = await newBrowser.newPage();
-    await page2.goto(url("empty.wam"));
+    await page2.goto(url("empty"));
     //await page2.evaluate(() => { localStorage.setItem('debug', '*'); });
     //await page2.reload();
     await login(page2, "test2", 5);
@@ -129,7 +129,7 @@ test.describe('Map editor', () => {
 
   test('Successfully set start area in the map editor', async ({ page, browser, request }) => {
     await resetWamMaps(request);
-    await page.goto(url("start.wam"));
+    await page.goto(url("start"));
     await login(page, "test", 3);
 
     await Menu.openMapEditor(page);
@@ -143,7 +143,7 @@ test.describe('Map editor', () => {
   test('Successfully set and working exit area in the map editor', async ({ page, browser, request }) => {
     await resetWamMaps(request);
 
-    await page.goto(url("exit.wam"));
+    await page.goto(url("exit"));
     await login(page, "test", 3);
 
     await Menu.openMapEditor(page);
