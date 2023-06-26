@@ -242,6 +242,14 @@ export const isMapDetailsData = z.object({
         description: "The URL of the page to report issues (in the 'Report issues' menu). If this parameter is null, report issues menu is hidden",
         example: "https://my-report-issues-form.com/issues",
     }),
+    entityCollectionsUrls: extendApi(z.array(z.string()).optional().nullable(), {
+        description: "What entity collections are available for this map",
+    }),
+    // The URL of the error image on "ErrorScene"
+    errorSceneLogo: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the error image to be used on the ErrorScene",
+        example: "https://example.com/error_logo_login.png",
+    }),
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;
