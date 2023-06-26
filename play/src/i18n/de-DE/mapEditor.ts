@@ -6,6 +6,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaEditor: "Fläche bearbeiten",
         entityEditor: "Entität bearbeiten",
         tileEditor: "Kachel bearbeiten",
+        trashEditor: "Papierkorb",
     },
     properties: {
         jitsiProperties: {
@@ -42,6 +43,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     entityEditor: {
         itemPicker: {
             searchPlaceholder: "Forschen",
+        },
+        trashTool: {
+            delete: "Klicken Sie auf das Objekt, um es zu löschen!",
         },
         deleteButton: "Löschen",
         testInteractionButton: "Interaktion testen",

@@ -9,6 +9,7 @@ const mapEditor: BaseTranslation = {
         entityEditor: "Entity editor tool",
         tileEditor: "Tile editor tool",
         configureMyRoom: "Configure my room",
+        trashEditor: "Trash",
     },
     properties: {
         silentProperty: {
@@ -113,6 +114,9 @@ const mapEditor: BaseTranslation = {
     entityEditor: {
         itemPicker: {
             searchPlaceholder: "Search",
+        },
+        trashTool: {
+            delete: "Click on the object to delete it!",
         },
         deleteButton: "Delete",
         testInteractionButton: "Test Interaction",

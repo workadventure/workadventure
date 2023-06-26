@@ -21,24 +21,24 @@ import { UpdateEntityFrontCommand } from "../Commands/Entity/UpdateEntityFrontCo
 import { MapEditorTool } from "./MapEditorTool";
 
 export class EntityEditorTool extends MapEditorTool {
-    private scene: GameScene;
-    private mapEditorModeManager: MapEditorModeManager;
+    protected scene: GameScene;
+    protected mapEditorModeManager: MapEditorModeManager;
 
-    private entitiesManager: EntitiesManager;
+    protected entitiesManager: EntitiesManager;
 
-    private entityPrefab: EntityPrefab | undefined;
-    private entityPrefabPreview: Phaser.GameObjects.Image | undefined;
-    private entityOldPositionPreview: Phaser.GameObjects.Image | undefined;
+    protected entityPrefab: EntityPrefab | undefined;
+    protected entityPrefabPreview: Phaser.GameObjects.Image | undefined;
+    protected entityOldPositionPreview: Phaser.GameObjects.Image | undefined;
 
-    private shiftKey?: Phaser.Input.Keyboard.Key;
+    protected shiftKey?: Phaser.Input.Keyboard.Key;
 
-    private mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
-    private mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
-    private mapEditorSelectedEntityStoreUnsubscriber!: Unsubscriber;
-    private mapEditorSelectedEntityDraggedStoreUnsubscriber!: Unsubscriber;
+    protected mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
+    protected mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
+    protected mapEditorSelectedEntityStoreUnsubscriber!: Unsubscriber;
+    protected mapEditorSelectedEntityDraggedStoreUnsubscriber!: Unsubscriber;
 
-    private pointerMoveEventHandler!: (pointer: Phaser.Input.Pointer) => void;
-    private pointerDownEventHandler!: (
+    protected pointerMoveEventHandler!: (pointer: Phaser.Input.Pointer) => void;
+    protected pointerDownEventHandler!: (
         pointer: Phaser.Input.Pointer,
         gameObjects: Phaser.GameObjects.GameObject[]
     ) => void;
@@ -189,7 +189,7 @@ export class EntityEditorTool extends MapEditorTool {
         }
     }
 
-    private subscribeToStores(): void {
+    protected subscribeToStores(): void {
         this.mapEditorSelectedEntityPrefabStoreUnsubscriber = mapEditorSelectedEntityPrefabStore.subscribe(
             (entityPrefab: EntityPrefab | undefined): void => {
                 this.entityPrefab = entityPrefab;
@@ -256,7 +256,7 @@ export class EntityEditorTool extends MapEditorTool {
         });
     }
 
-    private bindEntitiesManagerEventHandlers(): void {
+    protected bindEntitiesManagerEventHandlers(): void {
         this.entitiesManager.on(EntitiesManagerEvent.DeleteEntity, (entity: Entity) => {
             this.mapEditorModeManager
                 .executeCommand(
@@ -309,7 +309,7 @@ export class EntityEditorTool extends MapEditorTool {
         });
     }
 
-    private bindEventHandlers(): void {
+    protected bindEventHandlers(): void {
         this.pointerMoveEventHandler = (pointer: Phaser.Input.Pointer) => {
             this.handlePointerMoveEvent(pointer);
         };
@@ -332,12 +332,12 @@ export class EntityEditorTool extends MapEditorTool {
         this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
     }
 
-    private unbindEventHandlers(): void {
+    protected unbindEventHandlers(): void {
         this.scene.input.off(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
         this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
     }
 
-    private handlePointerMoveEvent(pointer: Phaser.Input.Pointer): void {
+    protected handlePointerMoveEvent(pointer: Phaser.Input.Pointer): void {
         if (!this.entityPrefabPreview || !this.entityPrefab) {
             return;
         }
@@ -358,7 +358,10 @@ export class EntityEditorTool extends MapEditorTool {
         this.changePreviewTint();
     }
 
-    private handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+    protected handlePointerDownEvent(
+        pointer: Phaser.Input.Pointer,
+        gameObjects: Phaser.GameObjects.GameObject[]
+    ): void {
         if (get(mapEditorEntityModeStore) === "EDIT" && gameObjects.length === 0) {
             mapEditorEntityModeStore.set("ADD");
             mapEditorSelectedEntityStore.set(undefined);
@@ -412,7 +415,7 @@ export class EntityEditorTool extends MapEditorTool {
             .catch((e) => console.error(e));
     }
 
-    private changePreviewTint(): void {
+    protected changePreviewTint(): void {
         if (!this.entityPrefabPreview || !this.entityPrefab) {
             return;
         }
@@ -439,7 +442,7 @@ export class EntityEditorTool extends MapEditorTool {
         this.scene.markDirty();
     }
 
-    private cleanPreview(): void {
+    protected cleanPreview(): void {
         this.entityPrefabPreview?.destroy();
         this.entityPrefabPreview = undefined;
         this.entityPrefab = undefined;
@@ -448,7 +451,7 @@ export class EntityEditorTool extends MapEditorTool {
         this.scene.markDirty();
     }
 
-    private getEntityPrefabAlignWithGridOffset(): { x: number; y: number } {
+    protected getEntityPrefabAlignWithGridOffset(): { x: number; y: number } {
         if (!this.entityPrefab || !this.entityPrefabPreview) {
             return { x: 0, y: 0 };
         }
