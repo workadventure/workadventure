@@ -452,6 +452,7 @@ export class RoomConnection implements RoomConnection {
                             items,
                             variables,
                             characterTextures,
+                            companionTexture: roomJoinedMessage.companionTexture,
                             playerVariables,
                             commandsToApply,
                             webrtcUserName: roomJoinedMessage.webrtcUserName,

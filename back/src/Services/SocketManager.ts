@@ -180,6 +180,7 @@ export class SocketManager {
             tag: joinRoomMessage.tag,
             userRoomToken: joinRoomMessage.userRoomToken,
             characterTextures: joinRoomMessage.characterTextures,
+            companionTexture: joinRoomMessage.companionTexture,
             canEdit: joinRoomMessage.canEdit,
             editMapCommandsArrayMessage,
             item: itemStateMessage,

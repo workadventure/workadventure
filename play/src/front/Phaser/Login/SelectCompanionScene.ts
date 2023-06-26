@@ -50,12 +50,12 @@ export class SelectCompanionScene extends ResizableScene {
             this.companionTextures.mapTexturesMetadataIntoResources(collections);
             collectionsSizeStore.set(this.companionTextures.getCollectionsKeys().length);
             this.companionModels = companionLoadingManager.loadModels(this.load, this.companionTextures);
+            selectCompanionSceneVisibleStore.set(true);
         });
         this.loader.addLoader();
     }
 
     create() {
-        selectCompanionSceneVisibleStore.set(true);
         this.selectedCollectionIndex = 0;
         this.currentCompanion = 0;
         this.companionCollectionKeys = this.companionTextures.getCollectionsKeys();
