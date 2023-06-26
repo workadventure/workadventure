@@ -1,5 +1,5 @@
-import { VerifyDomainInterface } from "./VerifyDomainInterface";
 import { PUSHER_URL } from "../../enums/EnvironmentVariable";
+import { VerifyDomainInterface } from "./VerifyDomainInterface";
 
 export class LocalVerifyDomainService implements VerifyDomainInterface {
     verifyDomain(uri: string): Promise<boolean> {

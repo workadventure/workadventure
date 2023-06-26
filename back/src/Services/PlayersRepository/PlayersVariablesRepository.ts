@@ -1,5 +1,5 @@
-import { RedisPlayersVariablesRepository } from "./RedisPlayersVariablesRepository";
 import { getRedisClient } from "../RedisClient";
+import { RedisPlayersVariablesRepository } from "./RedisPlayersVariablesRepository";
 import { VoidPlayersVariablesRepository } from "./VoidPlayersVariablesRepository";
 import { PlayersVariablesRepositoryInterface } from "./PlayersVariablesRepositoryInterface";
 

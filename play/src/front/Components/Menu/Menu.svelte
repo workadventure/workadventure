@@ -1,14 +1,9 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import SettingsSubMenu from "./SettingsSubMenu.svelte";
-    import ProfileSubMenu from "./ProfileSubMenu.svelte";
-    import AboutRoomSubMenu from "./AboutRoomSubMenu.svelte";
-    import ContactSubMenu from "./ContactSubMenu.svelte";
-    import CustomSubMenu from "./CustomSubMenu.svelte";
-    import GuestSubMenu from "./GuestSubMenu.svelte";
-    import ReportSubMenu from "./ReportSubMenu.svelte";
+    import { onDestroy, onMount } from "svelte";
+    import type { Unsubscriber } from "svelte/store";
     import chevronImg from "../images/chevron.svg";
-    import type { TranslatedMenu } from "../../Stores/MenuStore";
+    import type { TranslatedMenu, MenuItem } from "../../Stores/MenuStore";
     import {
         activeSubMenuStore,
         checkSubMenuToShow,
@@ -18,12 +13,16 @@
         SubMenusInterface,
         subMenusStore,
     } from "../../Stores/MenuStore";
-    import type { MenuItem } from "../../Stores/MenuStore";
-    import { onDestroy, onMount } from "svelte";
-    import type { Unsubscriber } from "svelte/store";
     import { sendMenuClickedEvent } from "../../Api/Iframe/Ui/MenuItem";
-    import LL from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import SettingsSubMenu from "./SettingsSubMenu.svelte";
+    import ProfileSubMenu from "./ProfileSubMenu.svelte";
+    import AboutRoomSubMenu from "./AboutRoomSubMenu.svelte";
+    import ContactSubMenu from "./ContactSubMenu.svelte";
+    import CustomSubMenu from "./CustomSubMenu.svelte";
+    import GuestSubMenu from "./GuestSubMenu.svelte";
+    import ReportSubMenu from "./ReportSubMenu.svelte";
 
     let activeSubMenu: MenuItem = $subMenusStore[$activeSubMenuStore];
     let activeComponent: typeof ProfileSubMenu | typeof CustomSubMenu = ProfileSubMenu;

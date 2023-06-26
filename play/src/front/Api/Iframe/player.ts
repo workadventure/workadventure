@@ -1,6 +1,6 @@
-import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
-import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events/HasPlayerMovedEvent";
 import { Subject } from "rxjs";
+import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events/HasPlayerMovedEvent";
+import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import { playerState } from "./playerState";
 import type { WorkadventureProximityMeetingCommands } from "./Player/ProximityMeeting";

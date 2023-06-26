@@ -1,0 +1,22 @@
+{"version":"1.0.0","mapUrl":"./areas.tmj","areas":[],"entities":{}, "entityCollections": [
+    {
+        "url": "http://play.workadventure.localhost/collections/FurnitureCollection.json",
+        "type": "file"
+    },
+    {
+        "url": "http://play.workadventure.localhost/collections/OfficeCollection.json",
+        "type": "file"
+    },
+    {
+        "url": "https://limezu.workadventu.re/LimeZu_Modern_Exterior.json",
+        "type": "file"
+    },
+    {
+        "url": "https://limezu.workadventu.re/LimeZu_Modern_Interior.json",
+        "type": "file"
+    },
+    {
+        "url": "https://limezu.workadventu.re/LimeZu_Modern_Office.json",
+        "type": "file"
+    }
+] }

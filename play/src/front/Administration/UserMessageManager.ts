@@ -1,4 +1,4 @@
-import { AdminMessageEventTypes, adminMessagesService } from "../Connexion/AdminMessagesService";
+import { AdminMessageEventTypes, adminMessagesService } from "../Connection/AdminMessagesService";
 import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
 import { soundPlayingStore } from "../Stores/SoundPlayingStore";
 import { UPLOADER_URL } from "../Enum/EnvironmentVariable";

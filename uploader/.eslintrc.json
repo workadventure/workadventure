@@ -8,7 +8,9 @@
     "extends": [
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
-        "plugin:@typescript-eslint/recommended-requiring-type-checking"
+        "plugin:@typescript-eslint/recommended-requiring-type-checking",
+        "plugin:import/recommended",
+        "plugin:import/typescript"
     ],
     "globals": {
         "Atomics": "readonly",
@@ -25,6 +27,11 @@
     ],
     "rules": {
         "no-unused-vars": "off",
-        "@typescript-eslint/no-explicit-any": "error"
+        "@typescript-eslint/no-explicit-any": "error",
+        "import/order": "error"
+    },
+    "settings": {
+        "typescript": true,
+        "node": true
     }
 }

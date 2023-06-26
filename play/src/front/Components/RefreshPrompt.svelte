@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { refreshPromptStore } from "../Stores/RefreshPromptStore";
-    import LL from "../../i18n/i18n-svelte";
+    import { LL } from "../../i18n/i18n-svelte";
 
     let timeToRefreshSeconds = $refreshPromptStore?.timeToRefresh ?? 30;
 
@@ -17,7 +17,7 @@
 
 <div class="tw-grid tw-place-items-center tw-h-screen refresh">
     <div class="tw-px-10 tw-py-80 tw-flex tw-items-center tw-flex-col">
-        <p>{$refreshPromptStore?.comment}</p>
+        <p class="test-class">{$LL.mapEditor.map.refreshPrompt()}</p>
         <button
             type="button"
             class="light tw-m-auto tw-cursor-pointer tw-px-3"

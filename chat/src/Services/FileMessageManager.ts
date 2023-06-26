@@ -1,10 +1,10 @@
-import { uploaderManager } from "./UploaderManager";
-import { filesUploadStore } from "../Stores/ChatStore";
 import { get } from "svelte/store";
+import { isAxiosError } from "axios";
+import { filesUploadStore } from "../Stores/ChatStore";
 import { userStore } from "../Stores/LocalUserStore";
 import { ADMIN_API_URL, ENABLE_CHAT_UPLOAD } from "../Enum/EnvironmentVariable";
 import { WaLink } from "../Xmpp/Lib/Plugin";
-import axios from "axios";
+import { uploaderManager } from "./UploaderManager";
 
 const _VERBOSE = true;
 
@@ -121,7 +121,7 @@ export class FileMessageManager {
             });
         } catch (err) {
             if (err instanceof Error) {
-                if (axios.isAxiosError(err)) {
+                if (isAxiosError(err)) {
                     console.error("sendFiles => ", err, err.response, err.response?.data);
                 } else {
                     console.error("sendFiles => ", err);
@@ -137,7 +137,7 @@ export class FileMessageManager {
                         } else if (err instanceof DisabledChat) {
                             file.errorMessage = "disabled";
                             file.errorCode = 401;
-                        } else if (axios.isAxiosError(err) && err.response) {
+                        } else if (isAxiosError(err) && err.response) {
                             file.errorMessage = err.response?.data.message;
                             file.errorCode = err.response?.status;
                             if (err.response?.data.maxFileSize) {

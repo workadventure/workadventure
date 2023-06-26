@@ -1,26 +1,27 @@
 <script lang="ts">
+    import { onDestroy, onMount } from "svelte";
+    import { Color } from "@workadventure/shared-utils";
     import {
         cameraEnergySavingStore,
         localVolumeStore,
         mediaStreamConstraintsStore,
         requestedCameraState,
         silentStore,
+        localStreamStore,
     } from "../Stores/MediaStore";
-    import { localStreamStore } from "../Stores/MediaStore";
+    import { LL } from "../../i18n/i18n-svelte";
+    import { inExternalServiceStore } from "../Stores/MyMediaStore";
+    import { localUserStore } from "../Connection/LocalUserStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
-    import { onDestroy, onMount } from "svelte";
-    import { getColorByString, getTextColorByBackgroundColor, srcObject } from "./Video/utils";
-    import LL from "../../i18n/i18n-svelte";
-    import Woka from "./Woka/Woka.svelte";
-    import { localUserStore } from "../Connexion/LocalUserStore";
+    import { srcObject } from "./Video/utils";
+    import Woka from "./Woka/WokaFromUserId.svelte";
     import microphoneOffImg from "./images/microphone-off.png";
     import cameraOffImg from "./images/camera-off.png";
-    import { inExternalServiceStore } from "../Stores/MyMediaStore";
 
     let stream: MediaStream | null;
     let userName = localUserStore.getName();
-    let backgroundColor = getColorByString(userName ?? "default");
-    let textColor = getTextColorByBackgroundColor(backgroundColor);
+    let backgroundColor = Color.getColorByString(userName ?? "default");
+    let textColor = Color.getTextColorByBackgroundColor(backgroundColor);
 
     const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
@@ -30,11 +31,11 @@
         }
     });
 
+    let cameraContainer: HTMLDivElement;
+
     onDestroy(() => {
         unsubscribeLocalStreamStore();
     });
-
-    let cameraContainer: HTMLDivElement;
 
     onMount(() => {
         cameraContainer.addEventListener("transitionend", () => {
@@ -88,9 +89,9 @@
                     />
                 </div>
             </div>
-            <div class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all">
+            <div class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all tw-max-h-36">
                 <video
-                    class="tw-h-full tw-w-full tw-rounded md:tw-object-cover"
+                    class="tw-w-full tw-rounded tw-object-contain"
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay

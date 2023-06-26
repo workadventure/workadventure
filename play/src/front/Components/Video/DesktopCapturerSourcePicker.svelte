@@ -1,10 +1,10 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
+    import { onDestroy, onMount } from "svelte";
     import {
         desktopCapturerSourcePromiseResolve,
         showDesktopCapturerSourcePicker,
     } from "../../Stores/ScreenSharingStore";
-    import { onDestroy, onMount } from "svelte";
     import type { DesktopCapturerSource } from "../../Interfaces/DesktopAppInterfaces";
 
     let desktopCapturerSources: DesktopCapturerSource[] = [];
@@ -126,7 +126,7 @@
             background-clip: padding-box;
 
             &.clickable * {
-                cursor: url("../../style/images/cursor_pointer.png"), pointer;
+                cursor: pointer;
             }
 
             &:hover {

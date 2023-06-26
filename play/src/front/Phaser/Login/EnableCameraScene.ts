@@ -1,7 +1,7 @@
 import { gameManager } from "../Game/GameManager";
-import { ResizableScene } from "./ResizableScene";
 import { enableCameraSceneVisibilityStore } from "../../Stores/MediaStore";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { ResizableScene } from "./ResizableScene";
 
 export const EnableCameraSceneName = "EnableCameraScene";
 
@@ -15,7 +15,7 @@ export class EnableCameraScene extends ResizableScene {
     preload() {}
 
     create() {
-        this.input.keyboard.on("keyup-ENTER", () => {
+        this.input.keyboard?.on("keyup-ENTER", () => {
             this.login();
         });
 

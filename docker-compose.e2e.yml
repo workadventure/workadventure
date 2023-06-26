@@ -3,6 +3,12 @@ services:
   # overrides for e2e tests to be closer to production
   # use with command:
   # docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml up -d --build
+  reverse-proxy:
+    depends_on:
+      play:
+        condition: service_healthy
+      back:
+        condition: service_healthy
 
   play:
     image: thecodingmachine/workadventure-play:${DOCKER_TAG:-develop}
@@ -17,13 +23,14 @@ services:
     command: npm run start
     volumes: []
     environment:
-      ENABLE_OPENAPI_ENDPOINT: "false"
+      ENABLE_OPENAPI_ENDPOINT: "true"
       STARTUP_COMMAND_0: ""
       STARTUP_COMMAND_1: ""
       STARTUP_COMMAND_2: ""
       STARTUP_COMMAND_3: ""
       STARTUP_COMMAND_4: ""
       STARTUP_COMMAND_5: ""
+      WOKA_SPEED: 3
 
     labels:
       - "traefik.enable=true"

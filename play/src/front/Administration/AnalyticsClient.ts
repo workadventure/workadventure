@@ -1,5 +1,5 @@
-import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
 import type { PostHog } from "posthog-js";
+import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
 import { Emoji } from "../Stores/Utils/emojiSchema";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare let window: any;
@@ -473,6 +473,30 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_spontaneous_discussion");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openMegaphone(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_action_megaphone");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    startMegaphone(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_start_megaphone");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    stopMegaphone(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_stop_megaphone");
             })
             .catch((e) => console.error(e));
     }

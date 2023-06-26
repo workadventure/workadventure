@@ -62,7 +62,7 @@
         .top-right-btn {
             @apply tw-w-11 tw-h-11 tw-justify-center tw-content-center;
             transform: scale(0.5);
-            cursor: url("./images/cursor_pointer.png"), pointer;
+            cursor: pointer;
         }
 
         #cowebsite-other-actions {

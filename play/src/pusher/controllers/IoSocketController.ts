@@ -1,34 +1,28 @@
-import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
-import type { PointInterface } from "../models/Websocket/PointInterface";
+import { isAxiosError } from "axios";
+import type HyperExpress from "hyper-express";
+import { z } from "zod";
 import {
-    SubMessage,
-    BatchMessage,
-    ClientToServerMessage,
-    SendUserMessage,
-    ServerToClientMessage,
-    CompanionMessage,
-} from "../../messages/generated/messages_pb";
-import type {
-    UserMovesMessage,
-    SetPlayerDetailsMessage,
-    ItemEventMessage,
-    ViewportMessage,
-    WebRtcSignalToServerMessage,
-    PlayGlobalMessage,
-    ReportPlayerMessage,
-    EmotePromptMessage,
-    FollowRequestMessage,
-    FollowConfirmationMessage,
-    FollowAbortMessage,
-    VariableMessage,
-    LockGroupPromptMessage,
-    AskPositionMessage,
+    apiVersionHash,
     AvailabilityStatus,
-    QueryMessage,
-    EditMapCommandMessage,
-    PingMessage,
-} from "../../messages/generated/messages_pb";
-import qs from "qs";
+    ClientToServerMessage,
+    CompanionTextureMessage,
+    ErrorApiData,
+    MucRoomDefinition,
+    ServerToClientMessage as ServerToClientMessageTsProto,
+    SubMessage,
+    WokaDetail,
+    ApplicationDefinitionInterface,
+    SpaceFilterMessage,
+    SpaceUser,
+    CompanionDetail,
+} from "@workadventure/messages";
+import Jwt, { JsonWebTokenError } from "jsonwebtoken";
+import { v4 as uuid } from "uuid";
+import { JID } from "stanza";
+import * as Sentry from "@sentry/node";
+import { Color } from "@workadventure/shared-utils";
+import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
+import { PointInterface } from "../models/Websocket/PointInterface";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
@@ -43,45 +37,37 @@ import {
 } from "../enums/EnvironmentVariable";
 import type { Zone } from "../models/Zone";
 import type { ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
-import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
-import Axios from "axios";
-import { InvalidTokenError } from "./InvalidTokenError";
-import type HyperExpress from "hyper-express";
-import { z } from "zod";
+import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { adminService } from "../services/AdminService";
-import {
-    MucRoomDefinitionInterface,
-    ErrorApiData,
-    WokaDetail,
-    apiVersionHash,
-    isErrorApiData,
-} from "@workadventure/messages";
-import Jwt from "jsonwebtoken";
-import { v4 as uuid } from "uuid";
-import { JID } from "stanza";
+import { validateWebsocketQuery } from "../services/QueryValidator";
 
 type WebSocket = HyperExpress.compressors.WebSocket;
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
  */
-interface UpgradeData {
+type UpgradeData = {
     // Data passed here is accessible on the "websocket" socket object.
     rejected: false;
     token: string;
     userUuid: string;
     userJid: string;
     IPAddress: string;
+    userIdentifier: string;
     roomId: string;
     name: string;
-    companion: CompanionMessage | undefined;
+    companionTexture?: CompanionTextureMessage;
     availabilityStatus: AvailabilityStatus;
-    characterLayers: WokaDetail[];
+    lastCommandId?: string;
     messages: unknown[];
     tags: string[];
     visitCardUrl: string | null;
-    userRoomToken: string | undefined;
+    userRoomToken?: string;
+    characterTextures: WokaDetail[];
+    jabberId?: string;
+    jabberPassword?: string | null;
+    applications?: ApplicationDefinitionInterface[] | null;
     position: PointInterface;
     viewport: {
         top: number;
@@ -89,30 +75,37 @@ interface UpgradeData {
         bottom: number;
         left: number;
     };
-    mucRooms: Array<MucRoomDefinitionInterface> | undefined;
-    activatedInviteUser: boolean | undefined;
+    mucRooms?: MucRoomDefinition[];
+    activatedInviteUser?: boolean;
     isLogged: boolean;
     canEdit: boolean;
-}
+    spaceUser: SpaceUser;
+};
 
-interface UpgradeFailedInvalidData {
+type UpgradeFailedInvalidData = {
     rejected: true;
-    reason: "tokenInvalid" | "textureInvalid" | "invalidVersion" | null;
+    reason: "tokenInvalid" | "invalidVersion" | null;
     message: string;
+    status: number;
     roomId: string;
-}
+};
 
-interface UpgradeFailedErrorData {
+type UpgradeFailedErrorData = {
     rejected: true;
     reason: "error";
+    status: number;
     error: ErrorApiData;
-}
+};
 
-type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
+type UpgradeFailedInvalidTexture = {
+    rejected: true;
+    reason: "invalidTexture";
+    entityType: "character" | "companion";
+};
+
+export type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData | UpgradeFailedInvalidTexture;
 
 export class IoSocketController {
-    private nextUserId = 1;
-
     constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
         this.ioConnection();
         if (ADMIN_SOCKETS_TOKEN) {
@@ -144,7 +137,9 @@ export class IoSocketController {
                     } catch (err) {
                         if (err instanceof z.ZodError) {
                             console.error(err.issues);
+                            Sentry.captureException(err.issues);
                         }
+                        Sentry.captureException(`Invalid message received. ${message}`);
                         console.error("Invalid message received.", message);
                         ws.send(
                             JSON.stringify({
@@ -165,6 +160,7 @@ export class IoSocketController {
                     try {
                         data = jwtTokenManager.verifyAdminSocketToken(token);
                     } catch (e) {
+                        Sentry.captureException(`Admin socket access refused for token: ${token} ${e}`);
                         console.error("Admin socket access refused for token: " + token, e);
                         ws.send(
                             JSON.stringify({
@@ -189,7 +185,8 @@ export class IoSocketController {
                             const errorMessage = `Admin socket refused for client on ${Buffer.from(
                                 ws.getRemoteAddressAsText()
                             ).toString()} listening of : \n${JSON.stringify(notAuthorizedRoom)}`;
-                            console.error();
+                            Sentry.captureException(errorMessage);
+                            console.error(errorMessage);
                             ws.send(
                                 JSON.stringify({
                                     type: "Error",
@@ -203,9 +200,10 @@ export class IoSocketController {
                         }
 
                         for (const roomId of message.roomIds) {
-                            socketManager
-                                .handleAdminRoom(ws as ExAdminSocketInterface, roomId)
-                                .catch((e) => console.error(e));
+                            socketManager.handleAdminRoom(ws as ExAdminSocketInterface, roomId).catch((e) => {
+                                console.error(e);
+                                Sentry.captureException(e);
+                            });
                         }
                     } else if (message.event === "user-message") {
                         const messageToEmit = message.message;
@@ -218,7 +216,10 @@ export class IoSocketController {
                             if (messageToEmit.type === "banned") {
                                 socketManager
                                     .emitBan(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type, roomId)
-                                    .catch((error) => console.error(error));
+                                    .catch((error) => {
+                                        Sentry.captureException(error);
+                                        console.error(error);
+                                    });
                             } else if (messageToEmit.type === "ban") {
                                 socketManager
                                     .emitSendUserMessage(
@@ -227,11 +228,15 @@ export class IoSocketController {
                                         messageToEmit.type,
                                         roomId
                                     )
-                                    .catch((error) => console.error(error));
+                                    .catch((error) => {
+                                        Sentry.captureException(error);
+                                        console.error(error);
+                                    });
                             }
                         }
                     }
                 } catch (err) {
+                    Sentry.captureException(err);
                     console.error(err);
                 }
             },
@@ -241,8 +246,8 @@ export class IoSocketController {
                     Client.disconnecting = true;
                     socketManager.leaveAdminRoom(Client);
                 } catch (e) {
-                    console.error('An error occurred on admin "disconnect"');
-                    console.error(e);
+                    Sentry.captureException(`An error occurred on admin "disconnect" ${e}`);
+                    console.error(`An error occurred on admin "disconnect" ${e}`);
                 }
             },
         });
@@ -265,31 +270,55 @@ export class IoSocketController {
                         upgradeAborted.aborted = true;
                     });
 
-                    const query = qs.parse(req.getQuery());
+                    const query = validateWebsocketQuery(
+                        req,
+                        res,
+                        context,
+                        z.object({
+                            roomId: z.string(),
+                            token: z.string().optional(),
+                            name: z.string(),
+                            characterTextureIds: z.union([z.string(), z.string().array()]),
+                            x: z.coerce.number(),
+                            y: z.coerce.number(),
+                            top: z.coerce.number(),
+                            bottom: z.coerce.number(),
+                            left: z.coerce.number(),
+                            right: z.coerce.number(),
+                            companionTextureId: z.string().optional(),
+                            availabilityStatus: z.coerce.number(),
+                            lastCommandId: z.string().optional(),
+                            version: z.string(),
+                        })
+                    );
+
+                    if (query === undefined) {
+                        return;
+                    }
+
                     const websocketKey = req.getHeader("sec-websocket-key");
                     const websocketProtocol = req.getHeader("sec-websocket-protocol");
                     const websocketExtensions = req.getHeader("sec-websocket-extensions");
                     const IPAddress = req.getHeader("x-forwarded-for");
                     const locale = req.getHeader("accept-language");
 
-                    const roomId = query.roomId;
+                    const {
+                        roomId,
+                        token,
+                        x,
+                        y,
+                        top,
+                        bottom,
+                        left,
+                        right,
+                        name,
+                        availabilityStatus,
+                        lastCommandId,
+                        version,
+                        companionTextureId,
+                    } = query;
+
                     try {
-                        if (typeof roomId !== "string") {
-                            throw new Error("Undefined room ID: ");
-                        }
-
-                        const token = query.token;
-                        const x = Number(query.x);
-                        const y = Number(query.y);
-                        const top = Number(query.top);
-                        const bottom = Number(query.bottom);
-                        const left = Number(query.left);
-                        const right = Number(query.right);
-                        const name = query.name;
-                        const availabilityStatus = Number(query.availabilityStatus);
-                        const lastCommandId = query.lastCommandId;
-                        const version = query.version;
-
                         if (version !== apiVersionHash) {
                             if (upgradeAborted.aborted) {
                                 // If the response points to nowhere, don't attempt an upgrade
@@ -299,6 +328,7 @@ export class IoSocketController {
                                 {
                                     rejected: true,
                                     reason: "error",
+                                    status: 419,
                                     error: {
                                         type: "retry",
                                         title: "Please refresh",
@@ -311,7 +341,7 @@ export class IoSocketController {
                                         buttonTitle: "Refresh",
                                         timeToRetry: 999999,
                                     },
-                                } as UpgradeFailedData,
+                                } satisfies UpgradeFailedData,
                                 websocketKey,
                                 websocketProtocol,
                                 websocketExtensions,
@@ -319,40 +349,12 @@ export class IoSocketController {
                             );
                         }
 
-                        let companion: CompanionMessage | undefined = undefined;
+                        const characterTextureIds: string[] =
+                            typeof query.characterTextureIds === "string"
+                                ? [query.characterTextureIds]
+                                : query.characterTextureIds;
 
-                        if (typeof query.companion === "string") {
-                            companion = new CompanionMessage();
-                            companion.setName(query.companion);
-                        }
-
-                        if (typeof name !== "string") {
-                            throw new Error("Expecting name");
-                        }
-                        if (typeof availabilityStatus !== "number") {
-                            throw new Error("Expecting availability status");
-                        }
-                        if (name === "") {
-                            throw new Error("No empty name");
-                        }
-                        let characterLayers: string[];
-
-                        if (!query.characterLayers) {
-                            throw new Error("Expecting skin");
-                        }
-                        if (typeof query.characterLayers === "string") {
-                            characterLayers = [query.characterLayers];
-                        } else {
-                            const checkCharacterLayers = z.string().array().safeParse(query.characterLayers);
-                            if (!checkCharacterLayers.success) {
-                                throw new Error("Unknown layers data");
-                            }
-
-                            characterLayers = checkCharacterLayers.data;
-                        }
-
-                        const tokenData =
-                            token && typeof token === "string" ? jwtTokenManager.verifyJWTToken(token) : null;
+                        const tokenData = token ? jwtTokenManager.verifyJWTToken(token) : null;
 
                         if (DISABLE_ANONYMOUS && !tokenData) {
                             throw new Error("Expecting token");
@@ -363,15 +365,14 @@ export class IoSocketController {
 
                         let memberTags: string[] = [];
                         let memberVisitCardUrl: string | null = null;
-                        let memberMessages: unknown;
                         let memberUserRoomToken: string | undefined;
-                        let memberTextures: WokaDetail[] = [];
                         let userData: FetchMemberDataByUuidResponse = {
                             email: userIdentifier,
                             userUuid: userIdentifier,
                             tags: [],
                             visitCardUrl: null,
-                            textures: [],
+                            characterTextures: [],
+                            companionTexture: undefined,
                             messages: [],
                             anonymous: true,
                             userRoomToken: undefined,
@@ -382,7 +383,8 @@ export class IoSocketController {
                             canEdit: false,
                         };
 
-                        let characterLayerObjs: WokaDetail[];
+                        let characterTextures: WokaDetail[];
+                        let companionTexture: CompanionDetail | undefined;
 
                         try {
                             try {
@@ -391,18 +393,22 @@ export class IoSocketController {
                                     tokenData?.accessToken,
                                     roomId,
                                     IPAddress,
-                                    characterLayers,
+                                    characterTextureIds,
+                                    companionTextureId,
                                     locale
                                 );
                             } catch (err) {
-                                if (Axios.isAxiosError(err)) {
-                                    const errorType = isErrorApiData.safeParse(err?.response?.data);
+                                if (isAxiosError(err)) {
+                                    const errorType = ErrorApiData.safeParse(err?.response?.data);
                                     if (errorType.success) {
                                         if (upgradeAborted.aborted) {
                                             // If the response points to nowhere, don't attempt an upgrade
                                             return;
                                         }
 
+                                        Sentry.captureException(
+                                            `Axios error on room connection ${err?.response?.status} ${errorType.data}`
+                                        );
                                         console.error(
                                             "Axios error on room connection",
                                             err?.response?.status,
@@ -413,15 +419,16 @@ export class IoSocketController {
                                             {
                                                 rejected: true,
                                                 reason: "error",
-                                                status: err?.response?.status,
+                                                status: err?.response?.status || 500,
                                                 error: errorType.data,
-                                            } as UpgradeFailedData,
+                                            } satisfies UpgradeFailedData,
                                             websocketKey,
                                             websocketProtocol,
                                             websocketExtensions,
                                             context
                                         );
                                     } else {
+                                        Sentry.captureException(`Unknown error on room connection ${err}`);
                                         console.error("Unknown error on room connection", err);
                                         if (upgradeAborted.aborted) {
                                             // If the response points to nowhere, don't attempt an upgrade
@@ -434,7 +441,7 @@ export class IoSocketController {
                                                 status: 500,
                                                 message: err?.response?.data,
                                                 roomId: roomId,
-                                            } as UpgradeFailedData,
+                                            } satisfies UpgradeFailedData,
                                             websocketKey,
                                             websocketProtocol,
                                             websocketExtensions,
@@ -444,16 +451,16 @@ export class IoSocketController {
                                 }
                                 throw err;
                             }
-                            memberMessages = userData.messages;
                             memberTags = userData.tags;
                             memberVisitCardUrl = userData.visitCardUrl;
-                            memberTextures = userData.textures;
+                            characterTextures = userData.characterTextures;
+                            companionTexture = userData.companionTexture ?? undefined;
                             memberUserRoomToken = userData.userRoomToken;
-                            characterLayerObjs = memberTextures;
                         } catch (e) {
                             console.log(
                                 "access not granted for user " + (userIdentifier || "anonymous") + " and room " + roomId
                             );
+                            Sentry.captureException(e);
                             console.error(e);
                             throw new Error("User cannot access this world");
                         }
@@ -477,57 +484,103 @@ export class IoSocketController {
                             userData.jabberId = `${userData.jabberId}/${uuid()}`;
                         }
 
-                        // Generate characterLayers objects from characterLayers string[]
-                        /*const characterLayerObjs: CharacterLayer[] =
-                                SocketManager.mergeCharacterLayersAndCustomTextures(characterLayers, memberTextures);*/
-
                         if (upgradeAborted.aborted) {
                             console.log("Ouch! Client disconnected before we could upgrade it!");
                             /* You must not upgrade now */
                             return;
                         }
 
+                        if (characterTextureIds.length !== characterTextures.length) {
+                            return res.upgrade(
+                                {
+                                    rejected: true,
+                                    reason: "invalidTexture",
+                                    entityType: "character",
+                                } satisfies UpgradeFailedInvalidTexture,
+                                websocketKey,
+                                websocketProtocol,
+                                websocketExtensions,
+                                context
+                            );
+                        }
+
+                        if (companionTextureId && !companionTexture) {
+                            return res.upgrade(
+                                {
+                                    rejected: true,
+                                    reason: "invalidTexture",
+                                    entityType: "companion",
+                                } satisfies UpgradeFailedInvalidTexture,
+                                websocketKey,
+                                websocketProtocol,
+                                websocketExtensions,
+                                context
+                            );
+                        }
+
+                        const responseData = {
+                            // Data passed here is accessible on the "websocket" socket object.
+                            rejected: false,
+                            token: token && typeof token === "string" ? token : "",
+                            userUuid: userData.userUuid,
+                            userJid: userData.jabberId,
+                            IPAddress,
+                            userIdentifier,
+                            roomId,
+                            name,
+                            companionTexture,
+                            availabilityStatus,
+                            lastCommandId,
+                            characterTextures,
+                            tags: memberTags,
+                            visitCardUrl: memberVisitCardUrl,
+                            userRoomToken: memberUserRoomToken,
+                            jabberId: userData.jabberId,
+                            jabberPassword: userData.jabberPassword,
+                            mucRooms: userData.mucRooms || undefined,
+                            activatedInviteUser: userData.activatedInviteUser || undefined,
+                            canEdit: userData.canEdit ?? false,
+                            applications: userData.applications,
+                            position: {
+                                x: x,
+                                y: y,
+                                direction: "down",
+                                moving: false,
+                            },
+                            viewport: {
+                                top,
+                                right,
+                                bottom,
+                                left,
+                            },
+                            isLogged,
+                            messages: [],
+                            spaceUser: SpaceUser.fromPartial({
+                                id: 0,
+                                uuid: userData.userUuid,
+                                name,
+                                playUri: roomId,
+                                // FIXME : Get room name from admin
+                                roomName: "",
+                                availabilityStatus,
+                                isLogged,
+                                color: Color.getColorByString(name),
+                                tags: memberTags,
+                                cameraState: false,
+                                screenSharing: false,
+                                microphoneState: false,
+                                megaphoneState: false,
+                                characterTextures: characterTextures.map((characterTexture) => ({
+                                    url: characterTexture.url,
+                                    id: characterTexture.id,
+                                })),
+                                visitCardUrl: memberVisitCardUrl ?? undefined,
+                            }),
+                        } satisfies UpgradeData;
+
                         /* This immediately calls open handler, you must not use res after this call */
                         res.upgrade(
-                            {
-                                // Data passed here is accessible on the "websocket" socket object.
-                                rejected: false,
-                                token,
-                                userUuid: userData.userUuid,
-                                userJid: userData.jabberId,
-                                IPAddress,
-                                userIdentifier,
-                                roomId,
-                                name,
-                                companion,
-                                availabilityStatus,
-                                lastCommandId,
-                                characterLayers: characterLayerObjs,
-                                messages: memberMessages,
-                                tags: memberTags,
-                                visitCardUrl: memberVisitCardUrl,
-                                userRoomToken: memberUserRoomToken,
-                                textures: memberTextures,
-                                jabberId: userData.jabberId,
-                                jabberPassword: userData.jabberPassword,
-                                mucRooms: userData.mucRooms,
-                                activatedInviteUser: userData.activatedInviteUser,
-                                canEdit: userData.canEdit ?? false,
-                                applications: userData.applications,
-                                position: {
-                                    x: x,
-                                    y: y,
-                                    direction: "down",
-                                    moving: false,
-                                } as PointInterface,
-                                viewport: {
-                                    top,
-                                    right,
-                                    bottom,
-                                    left,
-                                },
-                                isLogged,
-                            } as UpgradeData,
+                            responseData,
                             /* Spell these correctly */
                             websocketKey,
                             websocketProtocol,
@@ -536,7 +589,8 @@ export class IoSocketController {
                         );
                     } catch (e) {
                         if (e instanceof Error) {
-                            if (!(e instanceof InvalidTokenError)) {
+                            if (!(e instanceof JsonWebTokenError)) {
+                                Sentry.captureException(e);
                                 console.error(e);
                             }
                             if (upgradeAborted.aborted) {
@@ -546,10 +600,11 @@ export class IoSocketController {
                             res.upgrade(
                                 {
                                     rejected: true,
-                                    reason: e instanceof InvalidTokenError ? tokenInvalidException : null,
+                                    reason: e instanceof JsonWebTokenError ? tokenInvalidException : null,
+                                    status: 401,
                                     message: e.message,
                                     roomId,
-                                } as UpgradeFailedData,
+                                } satisfies UpgradeFailedData,
                                 websocketKey,
                                 websocketProtocol,
                                 websocketExtensions,
@@ -565,8 +620,9 @@ export class IoSocketController {
                                     rejected: true,
                                     reason: null,
                                     message: "500 Internal Server Error",
+                                    status: 500,
                                     roomId,
-                                } as UpgradeFailedData,
+                                } satisfies UpgradeFailedData,
                                 websocketKey,
                                 websocketProtocol,
                                 websocketExtensions,
@@ -574,7 +630,10 @@ export class IoSocketController {
                             );
                         }
                     }
-                })().catch((e) => console.error(e));
+                })().catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
             },
             /* Handlers */
             open: (_ws: WebSocket) => {
@@ -586,15 +645,18 @@ export class IoSocketController {
                             socketManager.deleteRoomIfEmptyFromId(ws.roomId);
                         }
 
-                        //FIX ME to use status code
                         if (ws.reason === tokenInvalidException) {
                             socketManager.emitTokenExpiredMessage(ws);
-                        } else if (ws.reason === "textureInvalid") {
-                            socketManager.emitInvalidTextureMessage(ws);
                         } else if (ws.reason === "error") {
                             socketManager.emitErrorScreenMessage(ws, ws.error);
+                        } else if (ws.reason === "invalidTexture") {
+                            if (ws.entityType === "character") {
+                                socketManager.emitInvalidCharacterTextureMessage(ws);
+                            } else {
+                                socketManager.emitInvalidCompanionTextureMessage(ws);
+                            }
                         } else {
-                            socketManager.emitConnexionErrorMessage(ws, ws.message);
+                            socketManager.emitConnectionErrorMessage(ws, ws.message);
                         }
                         setTimeout(() => ws.close(), 0);
                         return;
@@ -603,128 +665,236 @@ export class IoSocketController {
                     // Let's join the room
                     const client = this.initClient(ws);
                     await socketManager.handleJoinRoom(client);
+
                     socketManager.emitXMPPSettings(client);
 
                     //get data information and show messages
                     if (client.messages && Array.isArray(client.messages)) {
                         client.messages.forEach((c: unknown) => {
-                            const messageToSend = c as { type: string; message: string };
+                            const messageToSend = z.object({ type: z.string(), message: z.string() }).parse(c);
 
-                            const sendUserMessage = new SendUserMessage();
-                            sendUserMessage.setType(messageToSend.type);
-                            sendUserMessage.setMessage(messageToSend.message);
-
-                            const serverToClientMessage = new ServerToClientMessage();
-                            serverToClientMessage.setSendusermessage(sendUserMessage);
+                            const bytes = ServerToClientMessageTsProto.encode({
+                                message: {
+                                    $case: "sendUserMessage",
+                                    sendUserMessage: {
+                                        type: messageToSend.type,
+                                        message: messageToSend.message,
+                                    },
+                                },
+                            }).finish();
 
                             if (!client.disconnecting) {
-                                client.send(serverToClientMessage.serializeBinary().buffer, true);
+                                client.send(bytes, true);
                             }
                         });
                     }
-                })().catch((e) => console.error(e));
+
+                    // Performance test
+                    /*
+                    const positionMessage = new PositionMessage();
+                    positionMessage.setMoving(true);
+                    positionMessage.setX(300);
+                    positionMessage.setY(300);
+                    positionMessage.setDirection(PositionMessage.Direction.DOWN);
+
+                    const userMovedMessage = new UserMovedMessage();
+                    userMovedMessage.setUserid(1);
+                    userMovedMessage.setPosition(positionMessage);
+
+                    const subMessage = new SubMessage();
+                    subMessage.setUsermovedmessage(userMovedMessage);
+
+                    const startTimestamp2 = Date.now();
+                    for (let i = 0; i < 100000; i++) {
+                        const batchMessage = new BatchMessage();
+                        batchMessage.setEvent("");
+                        batchMessage.setPayloadList([
+                            subMessage
+                        ]);
+
+                        const serverToClientMessage = new ServerToClientMessage();
+                        serverToClientMessage.setBatchmessage(batchMessage);
+
+                        client.send(serverToClientMessage.serializeBinary().buffer, true);
+                    }
+                    const endTimestamp2 = Date.now();
+                    console.log("Time taken 2: " + (endTimestamp2 - startTimestamp2) + "ms");
+
+                    const startTimestamp = Date.now();
+                    for (let i = 0; i < 100000; i++) {
+                        // Let's do a performance test!
+                        const bytes = ServerToClientMessageTsProto.encode({
+                            message: {
+                                $case: "batchMessage",
+                                batchMessage: {
+                                    event: '',
+                                    payload: [
+                                        {
+                                            message: {
+                                                $case: "userMovedMessage",
+                                                userMovedMessage: {
+                                                    userId: 1,
+                                                    position: {
+                                                        moving: true,
+                                                        x: 300,
+                                                        y: 300,
+                                                        direction: PositionMessage_Direction.DOWN,
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }).finish();
+
+                        client.send(bytes);
+                    }
+                    const endTimestamp = Date.now();
+                    console.log("Time taken: " + (endTimestamp - startTimestamp) + "ms");
+                    */
+                })().catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
             },
             message: (ws, arrayBuffer): void => {
                 (async () => {
                     const client = ws as ExSocketInterface;
-                    const message = ClientToServerMessage.deserializeBinary(new Uint8Array(arrayBuffer));
 
-                    if (message.hasViewportmessage()) {
-                        socketManager.handleViewport(
-                            client,
-                            (message.getViewportmessage() as ViewportMessage).toObject()
-                        );
-                    } else if (message.hasUsermovesmessage()) {
-                        socketManager.handleUserMovesMessage(client, message.getUsermovesmessage() as UserMovesMessage);
-                    } else if (message.hasSetplayerdetailsmessage()) {
-                        socketManager.handleSetPlayerDetails(
-                            client,
-                            message.getSetplayerdetailsmessage() as SetPlayerDetailsMessage
-                        );
-                    } else if (message.hasItemeventmessage()) {
-                        socketManager.handleItemEvent(client, message.getItemeventmessage() as ItemEventMessage);
-                    } else if (message.hasVariablemessage()) {
-                        socketManager.handleVariableEvent(client, message.getVariablemessage() as VariableMessage);
-                    } else if (message.hasWebrtcsignaltoservermessage()) {
-                        socketManager.emitVideo(
-                            client,
-                            message.getWebrtcsignaltoservermessage() as WebRtcSignalToServerMessage
-                        );
-                    } else if (message.hasWebrtcscreensharingsignaltoservermessage()) {
-                        socketManager.emitScreenSharing(
-                            client,
-                            message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage
-                        );
-                    } else if (message.hasPlayglobalmessage()) {
-                        await socketManager.emitPlayGlobalMessage(
-                            client,
-                            message.getPlayglobalmessage() as PlayGlobalMessage
-                        );
-                    } else if (message.hasReportplayermessage()) {
-                        await socketManager.handleReportMessage(
-                            client,
-                            message.getReportplayermessage() as ReportPlayerMessage
-                        );
-                    } else if (message.hasQuerymessage()) {
-                        socketManager.handleQueryMessage(client, message.getQuerymessage() as QueryMessage);
-                    } else if (message.hasEmotepromptmessage()) {
-                        socketManager.handleEmotePromptMessage(
-                            client,
-                            message.getEmotepromptmessage() as EmotePromptMessage
-                        );
-                    } else if (message.hasFollowrequestmessage()) {
-                        socketManager.handleFollowRequest(
-                            client,
-                            message.getFollowrequestmessage() as FollowRequestMessage
-                        );
-                    } else if (message.hasFollowconfirmationmessage()) {
-                        socketManager.handleFollowConfirmation(
-                            client,
-                            message.getFollowconfirmationmessage() as FollowConfirmationMessage
-                        );
-                    } else if (message.hasFollowabortmessage()) {
-                        socketManager.handleFollowAbort(client, message.getFollowabortmessage() as FollowAbortMessage);
-                    } else if (message.hasLockgrouppromptmessage()) {
-                        socketManager.handleLockGroup(
-                            client,
-                            message.getLockgrouppromptmessage() as LockGroupPromptMessage
-                        );
-                    } else if (message.hasPingmessage()) {
-                        socketManager.handlePingMessage(client, message.getPingmessage() as PingMessage);
-                    } else if (message.hasEditmapcommandmessage()) {
-                        socketManager.handleEditMapCommandMessage(
-                            client,
-                            message.getEditmapcommandmessage() as EditMapCommandMessage
-                        );
-                    } else if (message.hasAskpositionmessage()) {
-                        socketManager.handleAskPositionMessage(
-                            client,
-                            message.getAskpositionmessage() as AskPositionMessage
-                        );
+                    const message = ClientToServerMessage.decode(new Uint8Array(arrayBuffer));
+
+                    if (!message.message) {
+                        console.warn("Empty message received.");
+                        return;
+                    }
+
+                    switch (message.message.$case) {
+                        case "viewportMessage": {
+                            socketManager.handleViewport(client, message.message.viewportMessage);
+                            break;
+                        }
+                        case "userMovesMessage": {
+                            socketManager.handleUserMovesMessage(client, message.message.userMovesMessage);
+                            break;
+                        }
+                        case "playGlobalMessage": {
+                            await socketManager.emitPlayGlobalMessage(client, message.message.playGlobalMessage);
+                            break;
+                        }
+                        case "reportPlayerMessage": {
+                            await socketManager.handleReportMessage(client, message.message.reportPlayerMessage);
+                            break;
+                        }
+                        case "addSpaceFilterMessage": {
+                            socketManager.handleAddSpaceFilterMessage(client, message.message.addSpaceFilterMessage);
+                            break;
+                        }
+                        case "updateSpaceFilterMessage": {
+                            socketManager.handleUpdateSpaceFilterMessage(
+                                client,
+                                message.message.updateSpaceFilterMessage
+                            );
+                            break;
+                        }
+                        case "removeSpaceFilterMessage": {
+                            socketManager.handleRemoveSpaceFilterMessage(
+                                client,
+                                message.message.removeSpaceFilterMessage
+                            );
+                            break;
+                        }
+                        case "setPlayerDetailsMessage": {
+                            socketManager.handleSetPlayerDetails(client, message.message.setPlayerDetailsMessage);
+                            break;
+                        }
+                        case "watchSpaceMessage": {
+                            void socketManager.handleJoinSpace(
+                                client,
+                                message.message.watchSpaceMessage.spaceName,
+                                message.message.watchSpaceMessage.spaceFilter
+                            );
+                            break;
+                        }
+                        case "unwatchSpaceMessage": {
+                            void socketManager.handleLeaveSpace(client, message.message.unwatchSpaceMessage.spaceName);
+                            break;
+                        }
+                        case "cameraStateMessage": {
+                            socketManager.handleCameraState(client, message.message.cameraStateMessage.value);
+                            break;
+                        }
+                        case "microphoneStateMessage": {
+                            socketManager.handleMicrophoneState(client, message.message.microphoneStateMessage.value);
+                            break;
+                        }
+                        case "megaphoneStateMessage": {
+                            socketManager.handleMegaphoneState(client, message.message.megaphoneStateMessage);
+                            break;
+                        }
+                        case "jitsiParticipantIdSpaceMessage": {
+                            socketManager.handleJitsiParticipantIdSpace(
+                                client,
+                                message.message.jitsiParticipantIdSpaceMessage.spaceName,
+                                message.message.jitsiParticipantIdSpaceMessage.value
+                            );
+                            break;
+                        }
+                        case "queryMessage": {
+                            if (message.message.queryMessage.query?.$case === "roomTagsQuery") {
+                                void socketManager.handleRoomTagsQuery(client, message.message.queryMessage);
+                            } else if (message.message.queryMessage.query?.$case === "embeddableWebsiteQuery") {
+                                void socketManager.handleEmbeddableWebsiteQuery(client, message.message.queryMessage);
+                            } else {
+                                socketManager.forwardMessageToBack(client, message.message);
+                            }
+                            break;
+                        }
+                        case "itemEventMessage":
+                        case "variableMessage":
+                        case "webRtcSignalToServerMessage":
+                        case "webRtcScreenSharingSignalToServerMessage":
+                        case "emotePromptMessage":
+                        case "followRequestMessage":
+                        case "followConfirmationMessage":
+                        case "followAbortMessage":
+                        case "lockGroupPromptMessage":
+                        case "pingMessage":
+                        case "editMapCommandMessage":
+                        case "askPositionMessage": {
+                            socketManager.forwardMessageToBack(client, message.message);
+                            break;
+                        }
+                        default: {
+                            const _exhaustiveCheck: never = message.message;
+                        }
                     }
 
                     /* Ok is false if backpressure was built up, wait for drain */
                     //let ok = ws.send(message, isBinary);
-                })().catch((e) => console.error(e));
+                })().catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
             },
             drain: (ws) => {
                 console.log("WebSocket backpressure: " + ws.getBufferedAmount());
             },
             close: (ws) => {
-                const Client = ws as ExSocketInterface;
+                const client = ws as ExSocketInterface;
                 try {
-                    Client.disconnecting = true;
-                    //leave room
-                    socketManager.leaveRoom(Client);
+                    client.disconnecting = true;
+                    socketManager.leaveRoom(client);
+                    socketManager.leaveSpaces(client);
                 } catch (e) {
-                    console.error('An error occurred on "disconnect"');
+                    Sentry.captureException(`An error occurred on "disconnect" ${e}`);
                     console.error(e);
                 } finally {
-                    if (Client.pingIntervalId) {
-                        clearInterval(Client.pingIntervalId);
+                    if (client.pingIntervalId) {
+                        clearInterval(client.pingIntervalId);
                     }
-                    if (Client.pongTimeoutId) {
-                        clearTimeout(Client.pongTimeoutId);
+                    if (client.pongTimeoutId) {
+                        clearTimeout(client.pongTimeoutId);
                     }
                 }
             },
@@ -734,13 +904,14 @@ export class IoSocketController {
     //eslint-disable-next-line @typescript-eslint/no-explicit-any
     private initClient(ws: any): ExSocketInterface {
         const client: ExSocketInterface = ws;
-        client.userId = this.nextUserId;
-        this.nextUserId++;
         client.userJid = ws.userJid;
         client.userUuid = ws.userUuid;
         client.IPAddress = ws.IPAddress;
         client.token = ws.token;
-        client.batchedMessages = new BatchMessage();
+        client.batchedMessages = {
+            event: "",
+            payload: [],
+        };
         client.batchTimeout = null;
         client.emitInBatch = (payload: SubMessage): void => {
             emitInBatch(client, payload);
@@ -752,8 +923,8 @@ export class IoSocketController {
         client.userIdentifier = ws.userIdentifier;
         client.tags = ws.tags;
         client.visitCardUrl = ws.visitCardUrl;
-        client.characterLayers = ws.characterLayers;
-        client.companion = ws.companion;
+        client.characterTextures = ws.characterTextures;
+        client.companionTexture = ws.companionTexture;
         client.availabilityStatus = ws.availabilityStatus;
         client.lastCommandId = ws.lastCommandId;
         client.roomId = ws.roomId;
@@ -771,6 +942,10 @@ export class IoSocketController {
             }
             return undefined;
         };
+        client.spaces = [];
+        client.spacesFilters = new Map<string, SpaceFilterMessage[]>();
+        client.cameraState = ws.cameraState;
+        client.microphoneState = ws.microphoneState;
         return client;
     }
 }

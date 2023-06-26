@@ -1,11 +1,8 @@
-import type { ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
+import type { ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
 
 export class PropertyUtils {
-    public static findProperty(
-        name: string,
-        properties: ITiledMapProperty[] | undefined
-    ): string | boolean | number | undefined {
-        return properties?.find((property) => property.name === name)?.value as string | boolean | number | undefined;
+    public static findProperty(name: string, properties: ITiledMapProperty[] | undefined): Json | undefined {
+        return properties?.find((property) => property.name === name)?.value;
     }
 
     public static findBooleanProperty(
@@ -46,9 +43,9 @@ export class PropertyUtils {
         name: string,
         properties: ITiledMapProperty[] | undefined,
         context?: string
-    ): string | boolean | number {
+    ): Exclude<Json, null> {
         const property = PropertyUtils.findProperty(name, properties);
-        if (property === undefined) {
+        if (property === undefined || property === null) {
             throw new Error('Could not find property "' + name + '"' + (context ? " (" + context + ")" : ""));
         }
         return property;

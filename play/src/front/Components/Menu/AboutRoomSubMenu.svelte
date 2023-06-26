@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { gameManager } from "../../Phaser/Game/GameManager";
     import { onMount } from "svelte";
-    import LL from "../../../i18n/i18n-svelte";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { LL } from "../../../i18n/i18n-svelte";
 
     let gameScene = gameManager.getCurrentGameScene();
 

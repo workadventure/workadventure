@@ -9,6 +9,8 @@ module.exports = {
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended-requiring-type-checking",
+        "plugin:import/recommended",
+        "plugin:import/typescript",
     ],
     "globals": {
         "Atomics": "readonly",
@@ -45,9 +47,12 @@ module.exports = {
         "@typescript-eslint/no-unsafe-member-access": "off",
         "@typescript-eslint/restrict-template-expressions": "off",
         "@typescript-eslint/no-unsafe-argument": "off",
+        "import/order": "error",
     },
     "settings": {
         "svelte3/typescript": () => require('typescript'),
-        "svelte3/ignore-styles": () => true
+        "svelte3/ignore-styles": () => true,
+        "typescript": true,
+        "node": true,
     }
 }

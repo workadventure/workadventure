@@ -10,11 +10,11 @@ const emoji: DeepPartial<Translation["emoji"]> = {
         animals: "Tiere & Natur",
         food: "Essen & Trinken",
         activities: "Aktivitäten",
-        travel: "Reise & Orte",
+        travel: "Reisen & Orte",
         objects: "Objekte",
         symbols: "Symbole",
         flags: "Flaggen",
-        custom: "Benutzerdefinier",
+        custom: "Benutzerdefiniert",
     },
     notFound: "Keine Emojis gefunden",
 };

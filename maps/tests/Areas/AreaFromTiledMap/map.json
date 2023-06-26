@@ -262,7 +262,7 @@
                  "class":"area",
                  "height":96.7364135338346,
                  "id":41,
-                 "name":"",
+                 "name":"silent",
                  "properties":[
                         {
                          "name":"silent",
@@ -336,10 +336,10 @@
         {
          "name":"script",
          "type":"string",
-         "value":"..\/dist\/script.js"
+         "value":"..\/..\/E2E\/empty.js"
         }],
  "renderorder":"right-down",
- "tiledversion":"1.9.0",
+ "tiledversion":"1.9.2",
  "tileheight":32,
  "tilesets":[
         {

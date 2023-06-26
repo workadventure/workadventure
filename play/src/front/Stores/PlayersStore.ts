@@ -1,9 +1,9 @@
 import { writable } from "svelte/store";
-import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
-import type { RoomConnection } from "../Connexion/RoomConnection";
 import { AvailabilityStatus } from "@workadventure/messages";
-import { getColorByString } from "../Components/Video/utils";
-import { localUserStore } from "../Connexion/LocalUserStore";
+import { Color } from "@workadventure/shared-utils";
+import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
+import type { RoomConnection } from "../Connection/RoomConnection";
+import { localUserStore } from "../Connection/LocalUserStore";
 
 let idCount = 0;
 
@@ -27,12 +27,12 @@ function createPlayersStore() {
                         userId: message.userId,
                         userJid: message.userJid,
                         name: message.name,
-                        characterLayers: message.characterLayers,
+                        characterTextures: message.characterTextures,
                         visitCardUrl: message.visitCardUrl,
-                        companion: message.companion,
+                        companionTexture: message.companionTexture,
                         userUuid: message.userUuid,
                         availabilityStatus: message.availabilityStatus,
-                        color: getColorByString(message.name),
+                        color: Color.getColorByString(message.name),
                         isLogged: localUserStore.isLogged(),
                     });
                     return users;
@@ -69,12 +69,11 @@ function createPlayersStore() {
                     userId: newUserId,
                     userJid: "fake",
                     name,
-                    characterLayers: [],
+                    characterTextures: [],
                     visitCardUrl: null,
-                    companion: null,
                     availabilityStatus: AvailabilityStatus.ONLINE,
                     userUuid: "dummy",
-                    color: getColorByString(name),
+                    color: Color.getColorByString(name),
                     isLogged: localUserStore.isLogged(),
                 });
                 return users;

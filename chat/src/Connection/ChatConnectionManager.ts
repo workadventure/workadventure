@@ -1,9 +1,9 @@
 import { XmppSettingsMessage } from "@workadventure/messages";
+import { get } from "svelte/store";
+import Debug from "debug";
 import { XmppClient } from "../Xmpp/XmppClient";
 import { connectionEstablishedStore, enableChat } from "../Stores/ChatStore";
-import { get } from "svelte/store";
 import { xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
-import Debug from "debug";
 
 const debug = Debug("chat");
 

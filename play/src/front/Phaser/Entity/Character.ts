@@ -1,29 +1,30 @@
-import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
-import { SpeechBubble } from "./SpeechBubble";
-import { TextureError } from "../../Exception/TextureError";
-import { Companion } from "../Companion/Companion";
-import type { GameScene } from "../Game/GameScene";
-import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
-import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
-import { TexturesHelper } from "../Helpers/TexturesHelper";
-import type { PictureStore } from "../../Stores/PictureStore";
-import type { Unsubscriber, Writable } from "svelte/store";
-import { writable } from "svelte/store";
-import { createColorStore } from "../../Stores/OutlineColorStore";
-import type { OutlineableInterface } from "../Game/OutlineableInterface";
+import { Unsubscriber, Writable, get, writable } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
-import { TalkIcon } from "../Components/TalkIcon";
 import { Deferred } from "ts-deferred";
-import { PlayerStatusDot } from "../Components/PlayerStatusDot";
+import type { AvailabilityStatus as AvailabilityStatusType } from "@workadventure/messages";
+import { AvailabilityStatus, PositionMessage_Direction } from "@workadventure/messages";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import type { AvailabilityStatus } from "@workadventure/messages";
-import { PositionMessage_Direction } from "@workadventure/messages";
+import { PlayerStatusDot } from "../Components/PlayerStatusDot";
+import { TalkIcon } from "../Components/TalkIcon";
+import type { OutlineableInterface } from "../Game/OutlineableInterface";
+import { createColorStore } from "../../Stores/OutlineColorStore";
+import type { PictureStore } from "../../Stores/PictureStore";
+import { TexturesHelper } from "../Helpers/TexturesHelper";
+import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
+import type { GameScene } from "../Game/GameScene";
+import { Companion } from "../Companion/Companion";
+import { CharacterTextureError } from "../../Exception/CharacterTextureError";
+import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
+import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
+import { SpeakerIcon } from "../Components/SpeakerIcon";
+import { MegaphoneIcon } from "../Components/MegaphoneIcon";
+import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
+import { SpeechBubble } from "./SpeechBubble";
 import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
 import DOMElement = Phaser.GameObjects.DOMElement;
-import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 
 const playerNameY = -25;
 const interactiveRadius = 35;
@@ -33,6 +34,8 @@ export abstract class Character extends Container implements OutlineableInterfac
     private readonly playerNameText: Text;
     private readonly talkIcon: TalkIcon;
     protected readonly statusDot: PlayerStatusDot;
+    protected readonly speakerIcon: SpeakerIcon;
+    protected readonly megaphoneIcon: MegaphoneIcon;
     public playerName: string;
     public sprites: Map<string, Sprite>;
     protected lastDirection: PositionMessage_Direction = PositionMessage_Direction.DOWN;
@@ -63,7 +66,6 @@ export abstract class Character extends Container implements OutlineableInterfac
         moving: boolean,
         frame: string | number,
         isClickable: boolean,
-        companion: string | null,
         companionTexturePromise?: CancelablePromise<string>,
         userId?: string | null
     ) {
@@ -94,11 +96,11 @@ export abstract class Character extends Container implements OutlineableInterfac
                 return lazyLoadPlayerCharacterTextures(scene.superLoad, [
                     {
                         id: "color_22",
-                        img: "resources/customisation/character_color/character_color21.png",
+                        url: "resources/customisation/character_color/character_color21.png",
                     },
                     {
                         id: "eyes_23",
-                        img: "resources/customisation/character_eyes/character_eyes23.png",
+                        url: "resources/customisation/character_eyes/character_eyes23.png",
                     },
                 ])
                     .then((textures) => {
@@ -119,6 +121,11 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.texturePromise = undefined;
             });
 
+        if (typeof companionTexturePromise !== "undefined") {
+            this.addCompanion(companionTexturePromise);
+        }
+
+        // Todo: Replace the font family with a better one
         this.playerNameText = new Text(scene, 0, playerNameY, name, {
             fontFamily: '"Press Start 2P"',
             fontSize: "8px",
@@ -132,35 +139,31 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
 
         this.talkIcon = new TalkIcon(scene, 0, -45);
-        this.add(this.talkIcon);
+        this.speakerIcon = new SpeakerIcon(scene, 0, -45);
+        this.add([this.talkIcon, this.speakerIcon]);
 
         if (isClickable) {
             this.setInteractive({
-                hitArea: new Phaser.Geom.Circle(0, 0, interactiveRadius),
+                hitArea: new Phaser.Geom.Circle(8, 8, interactiveRadius),
                 hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
                 useHandCursor: true,
             });
         }
         this.playerNameText.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
-        this.statusDot = new PlayerStatusDot(scene, this.playerNameText.getLeftCenter().x - 6, playerNameY - 1);
-        this.add([this.playerNameText, this.statusDot]);
+        this.statusDot = new PlayerStatusDot(scene, (this.playerNameText.getLeftCenter().x ?? 0) - 6, playerNameY - 1);
+        this.megaphoneIcon = new MegaphoneIcon(scene, this.playerNameText.width - 10, playerNameY - 1);
+        this.add([this.playerNameText, this.statusDot, this.megaphoneIcon]);
 
         this.setClickable(isClickable);
 
         this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
-            if (color === undefined) {
-                this.getOutlinePlugin()?.remove(this.playerNameText);
-            } else {
-                this.getOutlinePlugin()?.remove(this.playerNameText);
-                this.getOutlinePlugin()?.add(this.playerNameText, {
-                    thickness: 2,
-                    outlineColor: color,
-                });
-            }
-            this.scene.markDirty();
+            this.setOutline(color);
         });
 
         scene.add.existing(this);
+        scene.getOutlineManager().add(this.getObjectToOutline(), () => {
+            return this.getCurrentOutline();
+        });
 
         this.scene.physics.world.enableBody(this);
         this.getBody().setImmovable(true);
@@ -169,10 +172,6 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.getBody().setSize(16, 16); //edit the hitbox to better match the character model
         this.getBody().setOffset(0, 8);
         this.setDepth(0);
-
-        if (typeof companion === "string") {
-            this.addCompanion(companion, companionTexturePromise);
-        }
     }
 
     public setClickable(clickable = true): void {
@@ -243,32 +242,41 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    public showTalkIcon(show = true, forceClose = false): void {
-        this.talkIcon.show(show, forceClose);
+    public toggleTalk(show = true, forceClose = false): void {
+        if (this.getAvailabilityStatus() === AvailabilityStatus.SPEAKER) {
+            this.talkIcon.show(false, forceClose);
+            this.speakerIcon.show(show, forceClose);
+        } else {
+            this.talkIcon.show(show, forceClose);
+            this.speakerIcon.show(false, forceClose);
+        }
     }
 
-    public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant = false): void {
+    public setAvailabilityStatus(availabilityStatus: AvailabilityStatusType, instant = false): void {
         this.statusDot.setAvailabilityStatus(availabilityStatus, instant);
+        if (this.getAvailabilityStatus() === AvailabilityStatus.SPEAKER) {
+            this.megaphoneIcon.show(true, false);
+        } else {
+            this.megaphoneIcon.show(false, false);
+        }
     }
 
     public getAvailabilityStatus() {
         return this.statusDot.availabilityStatus;
     }
 
-    public addCompanion(name: string, texturePromise?: CancelablePromise<string>): void {
-        if (typeof texturePromise !== "undefined") {
-            this.companion = new Companion(this.scene, this.x, this.y, name, texturePromise);
-        }
+    public addCompanion(texturePromise: CancelablePromise<string>): void {
+        this.companion = new Companion(this.scene, this.x, this.y, texturePromise);
     }
 
     private addTextures(textures: string[], frame?: string | number): void {
         if (textures.length < 1) {
-            throw new TextureError("no texture given");
+            throw new CharacterTextureError("No texture given");
         }
 
         for (const texture of textures) {
             if (this.scene && !this.scene.textures.exists(texture)) {
-                throw new TextureError("texture not found");
+                throw new CharacterTextureError(`Texture "${texture}" not found`);
             }
             const sprite = new Sprite(this.scene, 0, 0, texture, frame);
             this.add(sprite);
@@ -431,6 +439,19 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
+    private setOutline(color: number | undefined) {
+        if (color === undefined) {
+            this.getOutlinePlugin()?.remove(this.playerNameText);
+        } else {
+            this.getOutlinePlugin()?.remove(this.playerNameText);
+            this.getOutlinePlugin()?.add(this.playerNameText, {
+                thickness: 2,
+                outlineColor: color,
+            });
+        }
+        this.scene.markDirty();
+    }
+
     cancelPreviousEmote() {
         if (!this.emote) return;
 
@@ -478,6 +499,10 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     public characterFarAwayOutline(): void {
         this.outlineColorStore.characterFarAway();
+    }
+
+    public getCurrentOutline(): { thickness: number; color?: number } {
+        return { thickness: 2, color: get(this.outlineColorStore) };
     }
 
     /**

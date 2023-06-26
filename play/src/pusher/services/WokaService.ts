@@ -1,6 +1,6 @@
+import { Capabilities } from "@workadventure/messages";
 import { adminWokaService } from "./AdminWokaService";
 import { localWokaService } from "./LocalWokaService";
-import { Capabilities } from "@workadventure/messages";
 import type { WokaServiceInterface } from "./WokaServiceInterface";
 
 export class WokaService {

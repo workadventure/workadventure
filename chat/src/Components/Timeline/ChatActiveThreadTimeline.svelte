@@ -1,7 +1,9 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { ArrowLeftIcon, RefreshCwIcon, SmileIcon } from "svelte-feather-icons";
-    import { SendIcon } from "svelte-feather-icons";
+    import { ArrowLeftIcon, RefreshCwIcon, SmileIcon, SendIcon } from "svelte-feather-icons";
+    import { createEventDispatcher, onDestroy, onMount } from "svelte";
+    import { Unsubscriber } from "svelte/store";
+    import { EmojiButton } from "@joeattardi/emoji-button";
     import {
         chatMessagesStore,
         chatInputFocusStore,
@@ -11,12 +13,9 @@
         _newChatMessageWritingStatusSubject,
         lastTimelineMessageRead,
     } from "../../Stores/ChatStore";
-    import { createEventDispatcher, onDestroy, onMount } from "svelte";
-    import LL, { locale } from "../../i18n/i18n-svelte";
+    import { LL, locale } from "../../i18n/i18n-svelte";
     import { activeThreadStore } from "../../Stores/ActiveThreadStore";
-    import { Unsubscriber } from "svelte/store";
     import { mucRoomsStore } from "../../Stores/MucRoomsStore";
-    import { EmojiButton } from "@joeattardi/emoji-button";
     import { HtmlUtils } from "../../Utils/HtmlUtils";
     import { defaultWoka } from "../../Xmpp/AbstractRoom";
     import UserWriting from "./UserWriting.svelte";

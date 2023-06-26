@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { afterUpdate } from "svelte";
     import type { Game } from "../Phaser/Game/Game";
     import { errorStore } from "../Stores/ErrorStore";
     import { errorScreenStore } from "../Stores/ErrorScreenStore";
@@ -9,6 +10,9 @@
         selectCharacterCustomizeSceneVisibleStore,
     } from "../Stores/SelectCharacterStore";
     import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
+    import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
+    import { mapEditorModeStore } from "../Stores/MapEditorStore";
+    import { refreshPromptStore } from "../Stores/RefreshPromptStore";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
@@ -17,11 +21,7 @@
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import ErrorScreen from "./UI/ErrorScreen.svelte";
     import Chat from "./Chat/Chat.svelte";
-    import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
-    import { mapEditorModeStore } from "../Stores/MapEditorStore";
-    import { refreshPromptStore } from "../Stores/RefreshPromptStore";
     import MapEditor from "./MapEditor/MapEditor.svelte";
-    import { afterUpdate } from "svelte";
     import RefreshPrompt from "./RefreshPrompt.svelte";
 
     export let game: Game;
@@ -62,13 +62,13 @@
         <EnableCameraScene {game} />
     </div>
 {:else if $gameSceneIsLoadedStore && !$selectCharacterCustomizeSceneVisibleStore}
+    {#if $refreshPromptStore}
+        <RefreshPrompt />
+    {/if}
     {#key unique}
         <Chat />
         {#if $mapEditorModeStore}
             <MapEditor />
-        {/if}
-        {#if $refreshPromptStore}
-            <RefreshPrompt />
         {/if}
         <MainLayout />
     {/key}

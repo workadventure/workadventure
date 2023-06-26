@@ -1,13 +1,14 @@
+import { get } from "svelte/store";
+import type CancelablePromise from "cancelable-promise";
+import { PositionMessage_Direction } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
 import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
 import { Character } from "../Entity/Character";
 
-import { get } from "svelte/store";
 import { userMovingStore } from "../../Stores/GameStore";
 import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
-import type CancelablePromise from "cancelable-promise";
-import { PositionMessage_Direction } from "@workadventure/messages";
+import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -25,10 +26,9 @@ export class Player extends Character {
         texturesPromise: CancelablePromise<string[]>,
         direction: PositionMessage_Direction,
         moving: boolean,
-        companion: string | null,
         companionTexturePromise?: CancelablePromise<string>
     ) {
-        super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companion, companionTexturePromise, "me");
+        super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companionTexturePromise, "me");
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
     }
@@ -58,6 +58,18 @@ export class Player extends Character {
             [x, y] = this.computeFollowPathMovement();
         }
         this.inputStep(activeUserInputEvents, x, y);
+    }
+
+    public rotate(): void {
+        const direction = (this.lastDirection + 1) % (PositionMessage_Direction.LEFT + 1);
+        this.emit(hasMovedEventName, {
+            moving: false,
+            direction: (this.lastDirection + 1) % (PositionMessage_Direction.LEFT + 1),
+            x: this.x,
+            y: this.y,
+        });
+        this.lastDirection = direction;
+        this.playAnimation(this.lastDirection, false);
     }
 
     public sendFollowRequest() {
@@ -99,7 +111,7 @@ export class Player extends Character {
     }
 
     private deduceSpeed(speedUp: boolean, followMode: boolean): number {
-        return this.pathWalkingSpeed ? this.pathWalkingSpeed : speedUp && !followMode ? 25 : 9;
+        return this.pathWalkingSpeed ? this.pathWalkingSpeed : speedUp && !followMode ? 2.5 * WOKA_SPEED : WOKA_SPEED;
     }
 
     private adjustPathToFollowToColliderBounds(path: { x: number; y: number }[]): { x: number; y: number }[] {

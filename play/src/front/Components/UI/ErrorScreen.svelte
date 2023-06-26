@@ -1,10 +1,10 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { errorScreenStore } from "../../Stores/ErrorScreenStore";
-    import { gameManager } from "../../Phaser/Game/GameManager";
-    import { connectionManager } from "../../Connexion/ConnectionManager";
     import { get } from "svelte/store";
     import { onDestroy } from "svelte";
+    import { errorScreenStore } from "../../Stores/ErrorScreenStore";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { connectionManager } from "../../Connection/ConnectionManager";
 
     import logoImg from "../images/logo-min-white.png";
     import reload from "../images/reload.png";

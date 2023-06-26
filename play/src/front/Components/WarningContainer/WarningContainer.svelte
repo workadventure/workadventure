@@ -2,7 +2,7 @@
     import { fly } from "svelte/transition";
     import { userIsAdminStore, limitMapStore, bannerStore } from "../../Stores/GameStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
-    import LL from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
     import { warningContainerStore } from "../../Stores/MenuStore";
     const registerLink = ADMIN_URL + "/second-step-register";
 

@@ -1,33 +1,13 @@
 <script lang="ts">
-    import { onDestroy } from "svelte";
-    import { gameManager } from "../../Phaser/Game/GameManager";
-
-    export let userId: number;
-    export let placeholderSrc: string;
+    export let src: string;
     export let customWidth: string;
     export let customHeight: string;
     let width = "62px";
     let height = "62px";
 
-    const gameScene = gameManager.getCurrentGameScene();
-    let playerWokaPictureStore;
-    if (userId === -1) {
-        playerWokaPictureStore = gameScene.CurrentPlayer.pictureStore;
-    } else {
-        playerWokaPictureStore = gameScene.MapPlayersByKey.getNestedStore(userId, (item) => item.pictureStore);
-    }
-
-    let src = placeholderSrc;
-
-    const unsubscribe = playerWokaPictureStore.subscribe((source) => {
-        src = source ?? placeholderSrc;
-    });
-
     function noDrag() {
         return false;
     }
-
-    onDestroy(unsubscribe);
 </script>
 
 <img

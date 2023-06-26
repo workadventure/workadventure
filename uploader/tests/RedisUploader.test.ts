@@ -1,17 +1,17 @@
 // import App from "../src/App";
+import {ChildProcess} from "child_process"
 import axios from "axios";
 import {StartedTestContainer} from "testcontainers";
+import {createClient} from "redis";
+import {describe, expect, jest, it, beforeAll, afterAll} from '@jest/globals';
+import {CHAT_URL} from "../src/Enum/EnvironmentVariable";
 import {verifyResponseHeaders} from "./utils/verifyResponseHeaders";
 import {uploadFile} from "./utils/uploadFile";
 import {download} from "./utils/download";
 import {uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon";
 import {RedisContainer} from "./utils/RedisContainer";
-import {ChildProcess} from "child_process"
 import isPortReachable from "./utils/isPortReachable";
 import startTestServer from "./startTestServer";
-import {createClient} from "redis";
-import {CHAT_URL} from "../src/Enum/EnvironmentVariable";
-import {describe, expect, jest, it, beforeAll, afterAll} from '@jest/globals';
 
 const APP_PORT = 7373
 

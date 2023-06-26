@@ -1,11 +1,10 @@
+import { z } from "zod";
 import {
     isMessageReferenceEvent,
     isTriggerActionMessageEvent,
     removeActionMessage,
     triggerActionMessage,
 } from "./TriggerActionMessageEvent";
-
-import { z } from "zod";
 
 const isTriggerMessageEventObject = z.object({
     type: z.enum([triggerActionMessage]),

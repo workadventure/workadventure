@@ -1,8 +1,8 @@
 <script lang="ts">
-    import PresentationLayout from "./Layouts/PresentationLayout.svelte";
-    import MozaicLayout from "./Layouts/MozaicLayout.svelte";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+    import PresentationLayout from "./Layouts/PresentationLayout.svelte";
+    import MozaicLayout from "./Layouts/MozaicLayout.svelte";
     import "../../style/wa-theme/video-ui.scss";
 </script>
 

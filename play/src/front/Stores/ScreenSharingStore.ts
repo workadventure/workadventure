@@ -1,9 +1,9 @@
 import type { Readable } from "svelte/store";
 import { derived, readable, writable } from "svelte/store";
+import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import { peerStore } from "./PeerStore";
 import type { LocalStreamStoreValue } from "./MediaStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
-import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import type {} from "../Api/Desktop";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any

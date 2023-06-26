@@ -1,14 +1,14 @@
 import {v4} from "uuid";
 //import {HttpRequest, HttpResponse} from "uWebSockets.js";
 //import {Readable} from 'stream'
+import axios, {AxiosError} from "axios";
+import {Express} from "express";
+import multer from "multer";
 import {uploaderService} from "../Service/UploaderService";
 import {ByteLenghtBufferException} from "../Exception/ByteLenghtBufferException";
-import Axios, {AxiosError} from "axios";
 import {ADMIN_API_URL, ENABLE_CHAT_UPLOAD, UPLOAD_MAX_FILESIZE, UPLOADER_URL} from "../Enum/EnvironmentVariable";
-import {HttpResponseDevice} from "./HttpResponseDevice";
-import {Express} from "express";
 import {UploadedFile} from "../../../chat/src/Services/FileMessageManager";
-import multer from "multer";
+import {HttpResponseDevice} from "./HttpResponseDevice";
 const upload = multer({
     storage: multer.memoryStorage()
 })
@@ -96,7 +96,7 @@ export class FileController {
                         if(!userRoomToken){
                             throw new NotLoggedUser();
                         } else {
-                            await Axios.get(`${ADMIN_API_URL}/api/limit/fileSize`, {
+                            await axios.get(`${ADMIN_API_URL}/api/limit/fileSize`, {
                                 headers: {'userRoomToken': userRoomToken},
                                 params: {fileSize: file.buffer.byteLength}
                             });

@@ -1,6 +1,4 @@
 export class TexturesHelper {
-    public static readonly ENTITIES_TEXTURES_DIRECTORY = "/resources/entities/";
-
     public static async getSnapshot(
         scene: Phaser.Scene,
         ...sprites: { sprite: Phaser.GameObjects.Sprite; frame?: string | number }[]
@@ -17,7 +15,11 @@ export class TexturesHelper {
                 try {
                     rt.snapshot(
                         (url) => {
-                            resolve((url as HTMLImageElement).src);
+                            if (url instanceof HTMLImageElement) {
+                                resolve(url.src);
+                            } else {
+                                resolve(String(url));
+                            }
                             rt.destroy();
                         },
                         "image/png",

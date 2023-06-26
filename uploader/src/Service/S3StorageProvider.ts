@@ -1,4 +1,5 @@
-import {StorageProvider} from "./StorageProvider";
+import AWS, {S3} from "aws-sdk";
+import {CORSRules} from "aws-sdk/clients/s3";
 import {
     AWS_ACCESS_KEY_ID,
     AWS_BUCKET,
@@ -7,8 +8,7 @@ import {
     AWS_SECRET_ACCESS_KEY,
     UPLOADER_AWS_SIGNED_URL_EXPIRATION
 } from "../Enum/EnvironmentVariable";
-import AWS, {S3} from "aws-sdk";
-import {CORSRules} from "aws-sdk/clients/s3";
+import {StorageProvider} from "./StorageProvider";
 import {TargetDevice} from "./TargetDevice";
 
 export class S3StorageProvider implements StorageProvider {
@@ -23,7 +23,7 @@ export class S3StorageProvider implements StorageProvider {
 
     async upload(fileUuid: string, chunks: Buffer, mimeType:string|undefined): Promise<string> {
         let uploadParams: S3.Types.PutObjectRequest = {
-            Bucket: `${(AWS_BUCKET as string)}`,
+            Bucket: `${AWS_BUCKET ?? ''}`,
             Key: fileUuid,
             Body: chunks
         };
@@ -47,7 +47,7 @@ export class S3StorageProvider implements StorageProvider {
 
     async deleteFileById(fileId: string): Promise<void> {
         const deleteParams: S3.Types.DeleteObjectRequest = {
-            Bucket: `${(AWS_BUCKET as string)}`,
+            Bucket: `${AWS_BUCKET ?? ''}`,
             Key: fileId
         };
         await this.S3().deleteObject(deleteParams).promise();

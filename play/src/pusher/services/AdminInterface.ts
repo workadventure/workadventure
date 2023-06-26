@@ -1,12 +1,12 @@
-import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
+import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 
 export interface AdminInterface {
     /**
      * @var playUri is url of the room
      * @var userIdentifier can to be undefined or email or uuid
      * @var ipAddress
-     * @var characterLayers
+     * @var characterTextures
      * @return MapDetailsData|RoomRedirect
      */
     fetchMemberDataByUuid(
@@ -14,7 +14,8 @@ export interface AdminInterface {
         accessToken: string | undefined,
         playUri: string,
         ipAddress: string,
-        characterLayers: string[],
+        characterTextureIds: string[],
+        companionTextureId?: string,
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse>;
 
@@ -97,4 +98,6 @@ export interface AdminInterface {
         message: string,
         byUserEmail: string
     ): Promise<boolean>;
+
+    getTagsList(roomUrl: string): Promise<string[]>;
 }

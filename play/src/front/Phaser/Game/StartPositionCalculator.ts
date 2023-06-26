@@ -1,4 +1,4 @@
-import { AreaType, GameMapProperties } from "@workadventure/map-editor";
+import { GameMapProperties } from "@workadventure/map-editor";
 import { MathUtils } from "@workadventure/math-utils";
 import type {
     ITiledMap,
@@ -6,7 +6,7 @@ import type {
     ITiledMapObject,
     ITiledMapTileLayer,
 } from "@workadventure/tiled-map-type-guard";
-import type { PositionInterface } from "../../Connexion/ConnexionModels";
+import type { PositionInterface } from "../../Connection/ConnexionModels";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 export class StartPositionCalculator {
     public startPosition!: PositionInterface;
@@ -36,10 +36,25 @@ export class StartPositionCalculator {
                 names.push(obj.name);
             }
         }
-        for (const area of this.gameMapFrontWrapper.getAreas(AreaType.Static)) {
-            if (area.name === "start" || area.properties.customProperties[GameMapProperties.START] === true) {
-                names.push(area.name);
+
+        for (const dynamicArea of this.gameMapFrontWrapper.dynamicAreas.values()) {
+            if (dynamicArea.name === "start") {
+                names.push(dynamicArea.name);
                 continue;
+            }
+            const properties = dynamicArea.properties;
+            if (properties && properties[GameMapProperties.START] === true) {
+                names.push(dynamicArea.name);
+            }
+        }
+
+        const areas = this.gameMapFrontWrapper.getAreas();
+
+        if (areas) {
+            for (const area of Array.from(areas.values())) {
+                if (area.name === "start" || area.properties.find((property) => property.type === "start")) {
+                    names.push(area.name);
+                }
             }
         }
         return names;
@@ -54,15 +69,18 @@ export class StartPositionCalculator {
                 this.startPositionName = startPositionName;
             }
             // try to get custom starting position from Area object
-            if (!this.initPositionFromArea(this.startPositionName, true)) {
-                // if cannot, look for custom name Layers
-                if (!this.initPositionFromLayerName(this.startPositionName)) {
-                    // if cannot, look for Tile
-                    if (!this.initPositionFromTile()) {
-                        // if cannot, look for Area with DEFAULT start name
-                        if (!this.initPositionFromArea(this.DEFAULT_START_NAME)) {
-                            // default name layer
-                            this.initPositionFromLayerName();
+            if (!this.initPositionFromTiledArea(this.startPositionName, true)) {
+                // try to get custom starting position from Area object
+                if (!this.initPositionFromArea(this.startPositionName, true)) {
+                    // if cannot, look for custom name Layers
+                    if (!this.initPositionFromLayerName(this.startPositionName)) {
+                        // if cannot, look for Tile
+                        if (!this.initPositionFromTile()) {
+                            // if cannot, look for Area with DEFAULT start name
+                            if (!this.initPositionFromArea(this.DEFAULT_START_NAME)) {
+                                // default name layer
+                                this.initPositionFromLayerName();
+                            }
                         }
                     }
                 }
@@ -81,11 +99,35 @@ export class StartPositionCalculator {
         }
     }
 
+    private initPositionFromTiledArea(startPositionName: string, needStartProperty = false): boolean {
+        const tiledAreas = this.gameMapFrontWrapper.dynamicAreas;
+        for (const [name, tiledArea] of tiledAreas.entries()) {
+            if (!tiledArea || name !== startPositionName) {
+                continue;
+            }
+            const properties = tiledArea.properties;
+            if (needStartProperty && properties) {
+                if (!properties["start"]) {
+                    return false;
+                }
+            }
+            const tiledAreaRect: { x: number; y: number; width: number; height: number } = {
+                x: tiledArea.x,
+                y: tiledArea.y,
+                width: tiledArea.width ?? 0,
+                height: tiledArea.height ?? 0,
+            };
+            this.startPosition = MathUtils.randomPositionFromRect(tiledAreaRect, 16);
+            return true;
+        }
+        return false;
+    }
+
     private initPositionFromArea(startPositionName: string, needStartProperty = false): boolean {
-        const area = this.gameMapFrontWrapper.getAreaByName(startPositionName, AreaType.Static);
+        const area = this.gameMapFrontWrapper.getAreaByName(startPositionName);
         if (area) {
             if (needStartProperty) {
-                if (!area.properties.customProperties["start"]) {
+                if (!area.properties.find((property) => property.type === "start")) {
                     return false;
                 }
             }

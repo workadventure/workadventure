@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { iframeListener } from "../../IframeListener";
     import { onDestroy, onMount, beforeUpdate } from "svelte";
-    import { linkFunction } from "../../Services/WebLinkManager";
     import { marked } from "marked";
+    import { iframeListener } from "../../IframeListener";
+    import { linkFunction } from "../../Services/WebLinkManager";
     import { HtmlUtils } from "../../Utils/HtmlUtils";
     import { settingsViewStore } from "../../Stores/ActiveThreadStore";
     import { Message } from "../../Model/Message";

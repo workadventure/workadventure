@@ -2,6 +2,7 @@
  * Handles variables shared between the scripting API and the server.
  */
 import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import * as Sentry from "@sentry/node";
 import { User } from "../Model/User";
 import { getVariablesRepository } from "./Repository/VariablesRepository";
 import { VariableError } from "./VariableError";
@@ -176,7 +177,7 @@ export class VariablesManager {
      * @param value
      * @param user
      */
-    setVariable(name: string, value: string, user: User): string | undefined | false {
+    setVariable(name: string, value: string, user: User | "RoomApi"): string | undefined | false {
         let readableBy: string | undefined;
         let variableObject: Variable | undefined;
         if (this.variableObjects) {
@@ -187,7 +188,7 @@ export class VariablesManager {
                 );
             }
 
-            if (variableObject.writableBy && !user.tags.includes(variableObject.writableBy)) {
+            if (variableObject.writableBy && user !== "RoomApi" && !user.tags.includes(variableObject.writableBy)) {
                 throw new VariableError(
                     'Trying to set a variable "' +
                         name +
@@ -212,15 +213,16 @@ export class VariablesManager {
         this._variables.set(name, value);
 
         if (variableObject !== undefined && variableObject.persist) {
-            this.variablesRepository
-                .saveVariable(this.roomUrl, name, value)
-                .catch((e) => console.error("Error while saving variable in Redis:", e));
+            this.variablesRepository.saveVariable(this.roomUrl, name, value).catch((e) => {
+                console.error("Error while saving variable in Redis:", e);
+                Sentry.captureException(`Error while saving variable in Redis: ${JSON.stringify(e)}`);
+            });
         }
 
         return readableBy;
     }
 
-    public getVariablesForTags(tags: string[]): Map<string, string> {
+    public getVariablesForTags(tags: string[] | undefined): Map<string, string> {
         if (this.variableObjects === undefined) {
             return this._variables;
         }
@@ -232,7 +234,7 @@ export class VariablesManager {
             if (variableObject === undefined) {
                 throw new Error('Unexpected variable "' + key + '" found has no associated variableObject.');
             }
-            if (!variableObject.readableBy || tags.includes(variableObject.readableBy)) {
+            if (tags === undefined || !variableObject.readableBy || tags.includes(variableObject.readableBy)) {
                 readableVariables.set(key, value);
             }
         }

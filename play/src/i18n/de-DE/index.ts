@@ -17,6 +17,8 @@ import muc from "./muc";
 import notification from "./notification";
 import cowebsite from "./cowebsite";
 import actionbar from "./actionbar";
+//import mapEditor from "./mapEditor";
+import megaphone from "./megaphone";
 
 const de_DE = merge(en_US, {
     audio,
@@ -36,6 +38,8 @@ const de_DE = merge(en_US, {
     notification,
     cowebsite,
     actionbar,
+    //mapEditor,
+    megaphone,
 });
 
 export default de_DE;

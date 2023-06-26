@@ -9,7 +9,9 @@
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended",
-        "plugin:@typescript-eslint/recommended-requiring-type-checking"
+        "plugin:@typescript-eslint/recommended-requiring-type-checking",
+        "plugin:import/recommended",
+        "plugin:import/typescript"
     ],
     "globals": {
         "Atomics": "readonly",
@@ -31,6 +33,11 @@
             "error", { "args": "none", "caughtErrors": "all", "varsIgnorePattern": "_exhaustiveCheck" }
         ],
         "no-throw-literal": "error",
-        "@typescript-eslint/no-empty-function": "off"
+        "@typescript-eslint/no-empty-function": "off",
+        "import/order": "error"
+    },
+    "settings": {
+        "typescript": true,
+        "node": true
     }
 }

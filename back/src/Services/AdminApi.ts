@@ -1,6 +1,7 @@
-import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
-import Axios from "axios";
+import axios from "axios";
 import { isMapDetailsData, MapDetailsData, isRoomRedirect, RoomRedirect } from "@workadventure/messages";
+import * as Sentry from "@sentry/node";
+import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 
 class AdminApi {
     async fetchMapDetails(playUri: string): Promise<MapDetailsData | RoomRedirect> {
@@ -12,7 +13,7 @@ class AdminApi {
             playUri,
         };
 
-        const res = await Axios.get(ADMIN_API_URL + "/api/map", {
+        const res = await axios.get(ADMIN_API_URL + "/api/map", {
             headers: { Authorization: `${ADMIN_API_TOKEN ?? ""}` },
             params,
         });
@@ -31,6 +32,9 @@ class AdminApi {
         console.error(mapDetailData.error.issues);
         console.error(roomRedirect.error.issues);
         console.error("Unexpected answer from the /api/map admin endpoint.", res.data);
+        Sentry.captureException(mapDetailData.error.issues);
+        Sentry.captureException(roomRedirect.error.issues);
+        Sentry.captureException(`Unexpected answer from the /api/map admin endpoint. ${JSON.stringify(res.data)}`);
         throw new Error("Unexpected answer from the /api/map admin endpoint.");
     }
 }

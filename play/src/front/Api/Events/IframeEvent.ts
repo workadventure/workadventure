@@ -29,7 +29,7 @@ import { isAddActionsMenuKeyToRemotePlayerEvent } from "./AddActionsMenuKeyToRem
 import { isRemoveActionsMenuKeyFromRemotePlayerEvent } from "./RemoveActionsMenuKeyFromRemotePlayerEvent";
 import { isSetAreaPropertyEvent } from "./SetAreaPropertyEvent";
 import { isCreateUIWebsiteEvent, isModifyUIWebsiteEvent, isUIWebsiteEvent } from "./Ui/UIWebsiteEvent";
-import { isAreaEvent, isCreateAreaEvent } from "./CreateAreaEvent";
+import { isDynamicAreaEvent, isCreateDynamicAreaEvent } from "./CreateDynamicAreaEvent";
 import { isUserInputChatEvent } from "./UserInputChatEvent";
 import { isEnterLeaveEvent } from "./EnterLeaveEvent";
 import { isChangeLayerEvent } from "./ChangeLayerEvent";
@@ -228,7 +228,7 @@ export const isIframeEventWrapper = z.union([
     }),
     z.object({
         type: z.literal("modifyArea"),
-        data: isAreaEvent,
+        data: isDynamicAreaEvent,
     }),
     z.object({
         type: z.literal("askPosition"),
@@ -511,15 +511,15 @@ export const iframeQueryMapTypeGuards = {
         answer: z.undefined(),
     },
     createArea: {
-        query: isCreateAreaEvent,
+        query: isCreateDynamicAreaEvent,
         answer: z.undefined(),
     },
     getArea: {
         query: z.string(),
-        answer: isCreateAreaEvent,
+        answer: isCreateDynamicAreaEvent,
     },
     modifyArea: {
-        query: isAreaEvent,
+        query: isDynamicAreaEvent,
         answer: z.undefined(),
     },
     deleteArea: {

@@ -10,7 +10,9 @@
         "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended",
 //        "plugin:@typescript-eslint/recommended-requiring-type-checking",
-        "plugin:playwright/playwright-test"
+        "plugin:playwright/playwright-test",
+        "plugin:import/recommended",
+        "plugin:import/typescript"
     ],
     "globals": {
         "Atomics": "readonly",
@@ -30,11 +32,16 @@
         "playwright/no-conditional-in-test": "off",
         "@typescript-eslint/no-unused-vars": [
             "error", { "args": "none", "caughtErrors": "all", "varsIgnorePattern": "_exhaustiveCheck" }
-        ]
+        ],
+        "import/order": "error"
 /*        "@typescript-eslint/no-explicit-any": "error",
 
         "no-throw-literal": "error",
         "@typescript-eslint/camelcase": "off",
         "@typescript-eslint/ban-ts-ignore": "off"*/
+    },
+    "settings": {
+        "typescript": true,
+        "node": true
     }
 }

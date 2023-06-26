@@ -6,19 +6,16 @@ import {
     isErrorApiRetryData,
     isErrorApiUnauthorizedData,
     isMapDetailsData,
-    isWokaDetail,
+    WokaDetail,
     wokaList,
     wokaTexture,
     isRoomRedirect,
-} from "@workadventure/messages";
-import { isFetchMemberDataByUuidResponse } from "./AdminApi";
-import type { SchemaObject } from "openapi3-ts";
-import {
-    companionCollectionList,
-    companionTextureCollection,
-    isCompanionDetail,
+    CompanionTextureCollection,
+    CompanionDetail,
     isCapabilities,
 } from "@workadventure/messages";
+import type { SchemaObject } from "openapi3-ts";
+import { isFetchMemberDataByUuidResponse } from "./AdminApi";
 
 class SwaggerGenerator {
     definitions(type: string | null): {
@@ -31,7 +28,7 @@ class SwaggerGenerator {
                 FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByUuidResponse),
                 MapDetailsData: generateSchema(isMapDetailsData),
                 RoomRedirect: generateSchema(isRoomRedirect),
-                WokaDetail: generateSchema(isWokaDetail),
+                WokaDetail: generateSchema(WokaDetail),
             },
         };
         if (type === "external") {
@@ -40,23 +37,18 @@ class SwaggerGenerator {
         return {
             definitions: {
                 AdminApiData: generateSchema(isAdminApiData),
-                //BanBannedAdminMessageInterface: generateSchema(isBanBannedAdminMessageInterface),
                 Capabilities: generateSchema(isCapabilities),
-                CompanionCollectionList: generateSchema(companionCollectionList),
-                CompanionDetail: generateSchema(isCompanionDetail),
-                CompanionCollection: generateSchema(companionTextureCollection),
+                CompanionTextureCollectionList: generateSchema(CompanionTextureCollection.array()),
+                CompanionDetail: generateSchema(CompanionDetail),
+                CompanionTextureCollection: generateSchema(CompanionTextureCollection),
                 ErrorApiErrorData: generateSchema(isErrorApiErrorData),
                 ErrorApiRedirectData: generateSchema(isErrorApiRedirectData),
                 ErrorApiRetryData: generateSchema(isErrorApiRetryData),
                 ErrorApiUnauthorizedData: generateSchema(isErrorApiUnauthorizedData),
                 FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByUuidResponse),
-                //ListenRoomsMessageInterface: generateSchema(isListenRoomsMessageInterface),
                 MapDetailsData: generateSchema(isMapDetailsData),
                 RoomRedirect: generateSchema(isRoomRedirect),
-                //RegisterData: generateSchema(isRegisterData),
-                //RoomRedirect: generateSchema(isRoomRedirect),
-                //UserMessageAdminMessageInterface: generateSchema(isUserMessageAdminMessageInterface),
-                WokaDetail: generateSchema(isWokaDetail),
+                WokaDetail: generateSchema(WokaDetail),
                 WokaList: generateSchema(wokaList),
                 WokaTexture: generateSchema(wokaTexture),
             },

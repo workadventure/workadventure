@@ -1,6 +1,6 @@
+import type { CreateEmbeddedWebsiteEvent } from "../Events/EmbeddedWebsiteEvent";
 import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
 import { EmbeddedWebsite } from "./Room/EmbeddedWebsite";
-import type { CreateEmbeddedWebsiteEvent } from "../Events/EmbeddedWebsiteEvent";
 
 export class WorkadventureRoomWebsiteCommands extends IframeApiContribution<WorkadventureRoomWebsiteCommands> {
     callbacks = [];

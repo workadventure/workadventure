@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { connectionManager } from "../../Connexion/ConnectionManager";
+    import { connectionManager } from "../../Connection/ConnectionManager";
     import { REPORT_ISSUES_URL } from "../../Enum/EnvironmentVariable";
 
     function getReportIssuesUrl() {

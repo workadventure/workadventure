@@ -1,18 +1,18 @@
 <script lang="ts">
-    import { localUserStore } from "../../Connexion/LocalUserStore";
-    import { videoConstraintStore } from "../../Stores/MediaStore";
+    import { onMount } from "svelte";
+    import { frameRateStore } from "../../Stores/MediaStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
-    import LL, { locale } from "../../../i18n/i18n-svelte";
+    import { LL, locale } from "../../../i18n/i18n-svelte";
     import type { Locales } from "../../../i18n/i18n-types";
     import { displayableLocales, setCurrentLocale } from "../../../i18n/locales";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
-    import { onMount } from "svelte";
 
     import infoImg from "../images/info.svg";
     import { iframeListener } from "../../Api/IframeListener";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { localUserStore } from "../../Connection/LocalUserStore";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();
@@ -42,7 +42,8 @@
 
         if (valueVideo !== previewValueVideo) {
             previewValueVideo = valueVideo;
-            videoConstraintStore.setFrameRate(valueVideo);
+            frameRateStore.set(valueVideo);
+            localUserStore.setVideoQualityValue(valueVideo);
         }
 
         if (valueCameraPrivacySettings !== previewCameraPrivacySettings) {
