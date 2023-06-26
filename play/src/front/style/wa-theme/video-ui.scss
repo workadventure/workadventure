@@ -1,6 +1,6 @@
 //* GENERAL */
 .media-box-camera-on-size {
-    @apply tw-h-fit tw-w-56 sm:tw-w-80 md:tw-w-48 lg:tw-w-44 xl:tw-w-64 2xl:tw-w-96 tw-max-h-36;
+    @apply tw-h-fit tw-w-56 sm:tw-w-80 md:tw-w-48 lg:tw-w-44 xl:tw-w-64 2xl:tw-w-96;
 }
 
 .media-box-camera-on-position {
@@ -272,7 +272,7 @@
     transition: all 0.2s ease;
 
     video {
-        //object-fit: cover;
+        object-fit: cover;
         &.object-contain {
             object-fit: contain;
         }
