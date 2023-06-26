@@ -34,12 +34,6 @@ return [
         'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/meeting-rooms.md',
     ],
     [
-        'title' => 'Broadcasting / Megaphone',
-        'url' => '/map-building/broadcast.md',
-        'markdown' => 'maps.broadcast',
-        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/broadcast.md',
-    ],
-    [
         'title' => 'Special zones',
         'url' => '/map-building/special-zones.md',
         'markdown' => 'maps.special-zones',

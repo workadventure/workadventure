@@ -10,14 +10,20 @@ return [
     [
         'title' => 'Accessing the map editor',
         'url' => '/map-building/editor/access.md',
-        'markdown' => 'maps.editor.index',
-        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/editor/index.md',
+        'markdown' => 'maps.editor.access',
+        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/editor/access.md',
     ],
     [
         'title' => 'Megaphone',
         'url' => '/map-building/editor/megaphone.md',
         'markdown' => 'maps.editor.megaphone',
         'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/editor/megaphone.md',
+    ],
+    [
+        'title' => 'Broadcasting / Presentation zones',
+        'url' => '/map-building/editor/broadcast.md',
+        'markdown' => 'maps.editor.broadcast',
+        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/editor/broadcast.md',
     ],
     [
         'title' => 'Placing objects',
@@ -42,12 +48,6 @@ return [
         'url' => '/map-building/editor/meeting-rooms.md',
         'markdown' => 'maps.editor.meeting-rooms',
         'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/editor/meeting-rooms.md',
-    ],
-    [
-        'title' => 'Presentation zones',
-        'url' => '/map-building/editor/presentation-zones.md',
-        'markdown' => 'maps.editor.presentation-zones',
-        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/editor/presentation-zones.md',
     ],
     [
         'title' => 'Other zones',
