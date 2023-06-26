@@ -1150,73 +1150,52 @@ export class SocketManager implements ZoneEventListener {
         }
 
         const url = queryMessage.query.embeddableWebsiteQuery.url;
-        await axios
-            .head(url, { timeout: 5_000 })
-            .then((response) => {
-                client.send(
-                    ServerToClientMessage.encode({
-                        message: {
-                            $case: "answerMessage",
-                            answerMessage: {
-                                id: queryMessage.id,
-                                answer: {
-                                    $case: "embeddableWebsiteAnswer",
-                                    embeddableWebsiteAnswer: {
-                                        url,
-                                        state: true,
-                                        embeddable: !response.headers["x-frame-options"],
-                                    },
+
+        const emitAnswerMessage = (state: boolean, embeddable: boolean, message: string | undefined = undefined) => {
+            client.send(
+                ServerToClientMessage.encode({
+                    message: {
+                        $case: "answerMessage",
+                        answerMessage: {
+                            id: queryMessage.id,
+                            answer: {
+                                $case: "embeddableWebsiteAnswer",
+                                embeddableWebsiteAnswer: {
+                                    url,
+                                    state,
+                                    embeddable,
+                                    message,
                                 },
                             },
                         },
-                    }).finish(),
-                    true
-                );
-            })
-            .catch((error) => {
-                // If the error is a 999 error, it means that this is Linkedin that return this error code because the website is not embeddable and is not reachable by axios
-                if (isAxiosError(error) && error.response?.status === 999) {
-                    client.send(
-                        ServerToClientMessage.encode({
-                            message: {
-                                $case: "answerMessage",
-                                answerMessage: {
-                                    id: queryMessage.id,
-                                    answer: {
-                                        $case: "embeddableWebsiteAnswer",
-                                        embeddableWebsiteAnswer: {
-                                            url,
-                                            state: true,
-                                            embeddable: false,
-                                        },
-                                    },
-                                },
-                            },
-                        }).finish(),
-                        true
-                    );
+                    },
+                }).finish(),
+                true
+            );
+        };
+
+        const processError = (error: { response: { status: number } }) => {
+            // If the error is a 999 error, it means that this is LinkedIn that return this error code because the website is not embeddable and is not reachable by axios
+            if (isAxiosError(error) && error.response?.status === 999) {
+                emitAnswerMessage(true, false);
+            } else {
+                debug(`SocketManager => embeddableUrl : ${url} ${error}`);
+                emitAnswerMessage(false, false, "URL is not reachable");
+            }
+        };
+
+        await axios
+            .head(url, { timeout: 5_000 })
+            .then((response) => emitAnswerMessage(true, !response.headers["x-frame-options"]))
+            .catch(async (error) => {
+                // If response from server is "Method not allowed", we try to do a GET request
+                if (isAxiosError(error) && error.response?.status === 405) {
+                    await axios
+                        .get(url, { timeout: 5_000 })
+                        .then((response) => emitAnswerMessage(true, !response.headers["x-frame-options"]))
+                        .catch((error) => processError(error));
                 } else {
-                    debug(`SocketManager => embeddableUrl : ${url} ${error}`);
-                    client.send(
-                        ServerToClientMessage.encode({
-                            message: {
-                                $case: "answerMessage",
-                                answerMessage: {
-                                    id: queryMessage.id,
-                                    answer: {
-                                        $case: "embeddableWebsiteAnswer",
-                                        embeddableWebsiteAnswer: {
-                                            url,
-                                            state: false,
-                                            embeddable: false,
-                                            message: "URL is not reachable",
-                                        },
-                                    },
-                                },
-                            },
-                        }).finish(),
-                        true
-                    );
+                    processError(error);
                 }
             });
     }
