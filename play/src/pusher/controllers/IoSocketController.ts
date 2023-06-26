@@ -841,12 +841,21 @@ export class IoSocketController {
                             break;
                         }
                         case "queryMessage": {
-                            if (message.message.queryMessage.query?.$case === "roomTagsQuery") {
-                                void socketManager.handleRoomTagsQuery(client, message.message.queryMessage);
-                            } else if (message.message.queryMessage.query?.$case === "embeddableWebsiteQuery") {
-                                void socketManager.handleEmbeddableWebsiteQuery(client, message.message.queryMessage);
-                            } else {
-                                socketManager.forwardMessageToBack(client, message.message);
+                            switch (message.message.queryMessage.query?.$case) {
+                                case "roomTagsQuery": {
+                                    void socketManager.handleRoomTagsQuery(client, message.message.queryMessage);
+                                    break;
+                                }
+                                case "embeddableWebsiteQuery": {
+                                    void socketManager.handleEmbeddableWebsiteQuery(
+                                        client,
+                                        message.message.queryMessage
+                                    );
+                                    break;
+                                }
+                                default: {
+                                    socketManager.forwardMessageToBack(client, message.message);
+                                }
                             }
                             break;
                         }

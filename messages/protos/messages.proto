@@ -303,7 +303,6 @@ message QueryMessage {
     JoinBBBMeetingQuery joinBBBMeetingQuery = 20;
     RoomTagsQuery roomTagsQuery = 3;
     EmbeddableWebsiteQuery embeddableWebsiteQuery = 4;
-
   }
 }
 

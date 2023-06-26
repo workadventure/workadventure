@@ -30,6 +30,7 @@ import { currentMegaphoneNameStore, requestedMegaphoneStore } from "../../../Sto
 import { gameManager } from "../GameManager";
 import { iframeListener } from "../../../Api/IframeListener";
 import { chatZoneLiveStore } from "../../../Stores/ChatStore";
+import { Room } from "../../../Connection/Room";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -77,6 +78,14 @@ export class AreasPropertiesListener {
                     }
                     case "listenerMegaphone": {
                         this.handleListenerMegaphonePropertyOnEnter(property);
+                        break;
+                    }
+                    case "exit": {
+                        let url = `/~/${property.url}`;
+                        if (property.areaName && property.areaName !== "") {
+                            url = `/~/${property.url}#${property.areaName}`;
+                        }
+                        this.handleExitPropertyOnEnter(url);
                         break;
                     }
                     default: {
@@ -473,5 +482,11 @@ export class AreasPropertiesListener {
     private handleLeaveMucRoom(name: string) {
         iframeListener.sendLeaveMucEventToChatIframe(`${gameManager.getCurrentGameScene().roomUrl}/${slugify(name)}`);
         chatZoneLiveStore.set(false);
+    }
+
+    private handleExitPropertyOnEnter(url: string): void {
+        this.scene
+            .onMapExit(Room.getRoomPathFromExitUrl(url, window.location.toString()))
+            .catch((e) => console.error(e));
     }
 }

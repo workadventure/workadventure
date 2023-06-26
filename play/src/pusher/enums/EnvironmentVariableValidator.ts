@@ -102,6 +102,7 @@ export const EnvironmentVariables = z.object({
     JITSI_DOMAIN: z.string().optional(),
     JITSI_XMPP_DOMAIN: z.string().optional(),
     JITSI_MUC_DOMAIN: z.string().optional(),
+    MAP_STORAGE_PATH_PREFIX: z.string().optional(),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

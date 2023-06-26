@@ -244,6 +244,10 @@ export class GameMapAreas {
                     flattenedProperties[GameMapProperties.START] = true;
                     break;
                 }
+                case "exit": {
+                    flattenedProperties[GameMapProperties.EXIT_URL] = property.url;
+                    break;
+                }
                 case "silent": {
                     flattenedProperties[GameMapProperties.SILENT] = true;
                     break;

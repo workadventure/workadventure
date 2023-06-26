@@ -83,7 +83,7 @@
             "name":"Computer Screen",
             "tags":["equipment", "electronic"],
             "imagePath":"Office/Computer/ScreenBlackUp.png",
-            "direction":"Down",
+            "direction":"Up",
             "color":"black"
         },
         {
@@ -97,7 +97,7 @@
             "name":"Computer Screen",
             "tags":["equipment", "electronic"],
             "imagePath":"Office/Computer/ScreenWhiteUp.png",
-            "direction":"Down",
+            "direction":"Up",
             "color":"white"
         },
         {
@@ -111,7 +111,7 @@
             "name":"Computer Screen (Big)",
             "tags":["equipment", "electronic"],
             "imagePath":"Office/Computer/BigScreenBlackUp.png",
-            "direction":"Down",
+            "direction":"Up",
             "color":"black"
         },
         {
@@ -125,7 +125,7 @@
             "name":"Computer Screen (Big)",
             "tags":["equipment", "electronic"],
             "imagePath":"Office/Computer/BigScreenWhiteUp.png",
-            "direction":"Upv",
+            "direction":"Up",
             "color":"white"
         },
         {

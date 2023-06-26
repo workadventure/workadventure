@@ -92,6 +92,7 @@ services:
       - JITSI_XMPP_DOMAIN
       - JITSI_MUC_DOMAIN
       - WOKA_SPEED
+      - MAP_STORAGE_PATH_PREFIX=/map-storage
 
     labels:
       traefik.enable: "true"
