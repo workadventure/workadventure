@@ -1,6 +1,6 @@
 import {expect, test, webkit} from '@playwright/test';
 import Menu from "./utils/menu";
-import {login} from "./utils/roles";
+import {hideNoCamera, login} from "./utils/roles";
 import MapEditor from "./utils/mapeditor";
 import Megaphone from "./utils/map-editor/megaphone";
 import AreaEditor from "./utils/map-editor/areaEditor";
@@ -127,10 +127,14 @@ test.describe('Map editor', () => {
     await expect(await page2.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 20_000});
   });
 
-  test('Successfully set start area in the map editor', async ({ page, browser, request }) => {
+  test('Successfully set start area in the map editor', async ({ page, browser, request, browserName }) => {
     await resetWamMaps(request);
     await page.goto(url("start"));
     await login(page, "test", 3);
+    if(browserName === "webkit"){
+      // Because webkit in playwright does not support Camera/Microphone Permission by settings
+      await hideNoCamera(page);
+    }
 
     await Menu.openMapEditor(page);
     await MapEditor.openAreaEditor(page);
@@ -140,11 +144,15 @@ test.describe('Map editor', () => {
     await Menu.closeMapEditor(page);
   });
 
-  test('Successfully set and working exit area in the map editor', async ({ page, browser, request }) => {
+  test('Successfully set and working exit area in the map editor', async ({ page, browser, request, browserName }) => {
     await resetWamMaps(request);
 
     await page.goto(url("exit"));
     await login(page, "test", 3);
+    if(browserName === "webkit"){
+      // Because webkit in playwright does not support Camera/Microphone Permission by settings
+      await hideNoCamera(page);
+    }
 
     await Menu.openMapEditor(page);
     await MapEditor.openAreaEditor(page);
