@@ -189,6 +189,12 @@ class JitsiFactory {
 
                 this.jitsiApi.addListener("videoConferenceJoined", () => {
                     this.jitsiApi?.executeCommand("displayName", playerName);
+
+                    // Enable Noise suppression by default.
+                    this.jitsiApi?.executeCommand("setNoiseSuppressionEnabled", {
+                        enabled: true,
+                    });
+
                     this.updateParticipantsCountStore();
                 });
 
