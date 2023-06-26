@@ -5,9 +5,9 @@ $extraUtilsMenu = require __DIR__.'/../../scripting_api_extra_doc/menu_functions
 return [
     [
         'title' => 'Getting started',
-        'url' => '/map-building/',
-        'markdown' => 'maps.index',
-        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/index.md',
+        'url' => '/map-building/build-your-map.md',
+        'markdown' => 'maps.build-your-map',
+        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/build-your-map.md',
     ],
     [
         'title' => 'WorkAdventure maps',
