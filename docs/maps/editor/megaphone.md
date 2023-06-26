@@ -16,7 +16,7 @@ Megaphone settings will affect the entire map.
 
 <div class="row">
     <div class="col">
-        <img src="../images/megaphone_general.png" class="figure-img img-fluid rounded" alt="" />
+        <img src="../images/editor/megaphone_general.png" class="figure-img img-fluid rounded" alt="" />
     </div>
 </div>
 
