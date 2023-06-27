@@ -44,4 +44,4 @@ To do that, you must follow those instructions :
     </div>
 </div>
 
-Note: This would be a nice place to document the "invite" feature.
+Note: If you want to create a link to share this map to other user, you can use the [invite feature](../invite.md).
