@@ -91,7 +91,7 @@
             </div>
             <div class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all">
                 <video
-                    class="tw-w-full tw-rounded md:tw-object-cover"
+                    class="tw-h-full tw-w-full tw-rounded md:tw-object-cover"
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay
