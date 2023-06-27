@@ -300,6 +300,9 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             }
         });
         entity.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
+            if (pointer.downElement?.tagName !== "CANVAS") {
+                return;
+            }
             console.log("Phaser.Input.Events.POINTER_DOWN => get(mapEditorModeStore)", get(mapEditorModeStore));
             console.log(
                 "Phaser.Input.Events.POINTER_DOWN => this.isEntityEditorToolActive()",
@@ -322,7 +325,10 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 mapEditorSelectedEntityStore.set(entity);
             }
         });
-        entity.on(Phaser.Input.Events.POINTER_OVER, () => {
+        entity.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
+            if (pointer.downElement?.tagName !== "CANVAS") {
+                return;
+            }
             this.pointerOverEntitySubject.next(entity);
             console.log("Phaser.Input.Events.POINTER_OVER => get(mapEditorModeStore)", get(mapEditorModeStore));
             console.log(
