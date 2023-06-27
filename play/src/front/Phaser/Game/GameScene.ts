@@ -791,6 +791,7 @@ export class GameScene extends DirtyScene {
                                 code: "CONNECTION_LOST",
                                 title: get(LL).warning.connectionLostTitle(),
                                 details: get(LL).warning.connectionLostSubtitle(),
+                                image: this.room.errorSceneLogo,
                             })
                         );
                     }

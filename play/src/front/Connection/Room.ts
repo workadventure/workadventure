@@ -55,6 +55,8 @@ export class Room {
     private _iconBody: string | undefined;
     private _iconTurn: string | undefined;
     private _reportIssuesUrl: string | undefined;
+    private _entityCollectionsUrls: string[] | undefined;
+    private _errorSceneLogo: string | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -183,6 +185,10 @@ export class Room {
                 this._iconHat = data.customizeWokaScene?.hatIcon ?? undefined;
                 this._iconTurn = data.customizeWokaScene?.turnIcon ?? undefined;
                 this._reportIssuesUrl = data.reportIssuesUrl ?? undefined;
+
+                this._entityCollectionsUrls = data.entityCollectionsUrls ?? undefined;
+
+                this._errorSceneLogo = data.errorSceneLogo ?? undefined;
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {
@@ -385,5 +391,13 @@ export class Room {
 
     get reportIssuesUrl(): string | undefined {
         return this._reportIssuesUrl;
+    }
+
+    get entityCollectionsUrls(): string[] | undefined {
+        return this._entityCollectionsUrls;
+    }
+
+    get errorSceneLogo(): string | undefined {
+        return this._errorSceneLogo;
     }
 }

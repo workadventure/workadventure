@@ -230,7 +230,7 @@ export const videoConstraintStore = derived(
     ([$cameraDeviceIdStore, $frameRateStore]) => {
         const constraints = {
             width: { min: 640, ideal: 1280, max: 1920 },
-            height: { min: 400, ideal: 720 },
+            height: { min: 400, ideal: 720, max: 1080 },
             frameRate: { ideal: localUserStore.getVideoQualityValue() },
             facingMode: "user",
             resizeMode: "crop-and-scale",
