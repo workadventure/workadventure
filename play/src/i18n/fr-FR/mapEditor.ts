@@ -7,6 +7,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         entityEditor: "Outil d'édition d'entités",
         tileEditor: "Outil d'édition de tuiles",
         configureMyRoom: "Configurer la salle",
+        trashEditor: "Corbeille",
     },
     properties: {
         textProperties: {
@@ -47,6 +48,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     entityEditor: {
         itemPicker: {
             searchPlaceholder: "Rechercher",
+        },
+        trashTool: {
+            delete: "Supprimer un item en cliquant dessus !",
         },
         deleteButton: "Supprimer",
         testInteractionButton: "Tester interaction",

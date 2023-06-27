@@ -1,6 +1,7 @@
 import { AreaData, CreateAreaCommand, GameMap } from "@workadventure/map-editor";
 import { AreaEditorTool } from "../../Tools/AreaEditorTool";
 import { FrontCommandInterface } from "../FrontCommandInterface";
+import { TrashEditorTool } from "../../Tools/TrashEditorTool";
 import { RoomConnection } from "../../../../../Connection/RoomConnection";
 import { DeleteAreaFrontCommand } from "./DeleteAreaFrontCommand";
 
@@ -9,7 +10,7 @@ export class CreateAreaFrontCommand extends CreateAreaCommand implements FrontCo
         gameMap: GameMap,
         areaObjectConfig: AreaData,
         commandId: string | undefined,
-        private areaEditorTool: AreaEditorTool,
+        private areaEditorTool: AreaEditorTool | TrashEditorTool,
         private localCommand: boolean
     ) {
         super(gameMap, areaObjectConfig, commandId);

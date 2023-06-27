@@ -14,7 +14,7 @@ export enum AreaPreviewEvent {
     Updated = "AreaPreview:Updated",
     Delete = "AreaPreview:Delete",
 }
-
+const DEFAULT_COLOR = 0x0000ff;
 export class AreaPreview extends Phaser.GameObjects.Rectangle {
     private squares: SizeAlteringSquare[];
 
@@ -41,7 +41,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
             areaData.y + areaData.height * 0.5,
             areaData.width,
             areaData.height,
-            0x0000ff,
+            DEFAULT_COLOR,
             0.5
         );
 
@@ -458,5 +458,37 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                     color: "FFFFFF",
                 };
         }
+    }
+
+    public changeColor(color: string | number | Phaser.Types.Display.InputColorObject) {
+        this.setFillStyle(Phaser.Display.Color.ValueToColor(color).color, 0.5);
+        this.updateSquaresPositions();
+    }
+
+    public resetColor() {
+        if (this.areaData != undefined) {
+            this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.destroy());
+            let counter = 0;
+            if (this.areaData.properties.length > 0) {
+                for (const property of this.areaData.properties) {
+                    const iconProperties = this.getPropertyIcons(property.type);
+
+                    const icon = new GameObjects.Image(
+                        this.scene,
+                        (this.getTopLeft().x ?? 0) + 10 + counter * 15,
+                        (this.getTopLeft().y ?? 0) + 10,
+                        `icon${iconProperties.name}`
+                    );
+                    icon.setScale(0.12);
+                    icon.setDepth(this.depth + 1);
+                    icon.setVisible(true);
+                    this.setFillStyle(Phaser.Display.Color.ValueToColor(iconProperties.color).color, 0.5);
+                    counter++;
+                }
+            } else {
+                this.setFillStyle(Phaser.Display.Color.ValueToColor(DEFAULT_COLOR).color, 0.5);
+            }
+        }
+        this.updateSquaresPositions();
     }
 }

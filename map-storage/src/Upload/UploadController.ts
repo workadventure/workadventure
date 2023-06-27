@@ -53,7 +53,7 @@ export class UploadController {
 
     private index() {
         this.app.get("/", passportAuthenticator, (req, res) => {
-            res.sendFile(__dirname + "/index.html");
+            res.redirect("/ui/");
         });
     }
 

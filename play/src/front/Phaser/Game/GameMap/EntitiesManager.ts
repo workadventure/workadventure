@@ -300,26 +300,48 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             }
         });
         entity.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
+            console.log("Phaser.Input.Events.POINTER_DOWN => get(mapEditorModeStore)", get(mapEditorModeStore));
+            console.log(
+                "Phaser.Input.Events.POINTER_DOWN => this.isEntityEditorToolActive()",
+                this.isEntityEditorToolActive()
+            );
+            console.log(
+                "Phaser.Input.Events.POINTER_DOWN => !get(mapEditorSelectedEntityPrefabStore)",
+                !get(mapEditorSelectedEntityPrefabStore)
+            );
             if (
                 get(mapEditorModeStore) &&
                 this.isEntityEditorToolActive() &&
                 !get(mapEditorSelectedEntityPrefabStore)
             ) {
+                if (this.isTrashEditorToolActive()) {
+                    entity.delete();
+                    return;
+                }
                 mapEditorEntityModeStore.set("EDIT");
                 mapEditorSelectedEntityStore.set(entity);
             }
         });
         entity.on(Phaser.Input.Events.POINTER_OVER, () => {
             this.pointerOverEntitySubject.next(entity);
-
+            console.log("Phaser.Input.Events.POINTER_OVER => get(mapEditorModeStore)", get(mapEditorModeStore));
+            console.log(
+                "Phaser.Input.Events.POINTER_OVER => this.isEntityEditorToolActive()",
+                this.isEntityEditorToolActive()
+            );
             if (get(mapEditorModeStore) && this.isEntityEditorToolActive()) {
-                entity.setPointedToEditColor(0x00ff00);
+                entity.setPointedToEditColor(this.isTrashEditorToolActive() ? 0xff0000 : 0x00ff00);
                 this.scene.markDirty();
             }
         });
         entity.on(Phaser.Input.Events.POINTER_OUT, () => {
             this.pointerOutEntitySubject.next(entity);
 
+            console.log("Phaser.Input.Events.POINTER_OUT => get(mapEditorModeStore)", get(mapEditorModeStore));
+            console.log(
+                "Phaser.Input.Events.POINTER_OUT => this.isEntityEditorToolActive()",
+                this.isEntityEditorToolActive()
+            );
             if (get(mapEditorModeStore) && this.isEntityEditorToolActive()) {
                 entity.removePointedToEditColor();
                 this.scene.markDirty();
@@ -366,7 +388,14 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
     }
 
     private isEntityEditorToolActive(): boolean {
-        return get(mapEditorSelectedToolStore) === EditorToolName.EntityEditor;
+        return (
+            get(mapEditorSelectedToolStore) === EditorToolName.EntityEditor ||
+            get(mapEditorSelectedToolStore) === EditorToolName.TrashEditor
+        );
+    }
+
+    private isTrashEditorToolActive(): boolean {
+        return get(mapEditorSelectedToolStore) === EditorToolName.TrashEditor;
     }
 
     public getEntities(): Map<string, Entity> {

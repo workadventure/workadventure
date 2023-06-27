@@ -11,12 +11,14 @@ import { EntityEditorTool } from "./Tools/EntityEditorTool";
 import { WAMSettingsEditorTool } from "./Tools/WAMSettingsEditorTool";
 import { FrontCommandInterface } from "./Commands/FrontCommandInterface";
 import { FrontCommand } from "./Commands/FrontCommand";
+import { TrashEditorTool } from "./Tools/TrashEditorTool";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
     FloorEditor = "FloorEditor",
     EntityEditor = "EntityEditor",
     WAMSettingsEditor = "WAMSettingsEditor",
+    TrashEditor = "TrashEditor",
 }
 
 export class MapEditorModeManager {
@@ -77,6 +79,7 @@ export class MapEditorModeManager {
             [EditorToolName.EntityEditor]: new EntityEditorTool(this),
             [EditorToolName.FloorEditor]: new FloorEditorTool(this),
             [EditorToolName.WAMSettingsEditor]: new WAMSettingsEditorTool(this),
+            [EditorToolName.TrashEditor]: new TrashEditorTool(this),
         };
         this.activeTool = undefined;
         this.lastlyUsedTool = undefined;
