@@ -81,6 +81,9 @@
             display: flex;
             padding: 0;
             button {
+                display: flex;
+                justify-content: center;
+                align-items: center;
                 height: 3em;
                 width: 3em;
                 padding: 10px;
