@@ -292,6 +292,7 @@
                 {:else if property.type === "openWebsite"}
                     <OpenWebsitePropertyEditor
                         {property}
+                        isArea={true}
                         on:close={() => {
                             onDeleteProperty(property.id);
                         }}
