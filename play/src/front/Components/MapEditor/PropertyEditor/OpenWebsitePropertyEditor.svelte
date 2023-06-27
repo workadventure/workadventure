@@ -8,6 +8,7 @@
 
     export let property: OpenWebsitePropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
+    export let isArea = false;
     let optionAdvancedActivated = false;
     let embeddable = true;
     let embeddableLoading = false;
@@ -94,21 +95,24 @@
         {$LL.mapEditor.properties.linkProperties.label()}
     </span>
     <span slot="content">
-        <div>
-            <label class="tw-m-0" for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
-            <select
-                id="trigger"
-                class="tw-w-full tw-m-0"
-                bind:value={property.trigger}
-                on:change={onTriggerValueChange}
-            >
-                <option value={undefined}>{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option>
-                {#if !property.newTab}
-                    <option value="onicon">{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option>
-                {/if}
-                <option value="onaction">{$LL.mapEditor.properties.linkProperties.triggerOnAction()}</option>
-            </select>
-        </div>
+        {#if isArea}
+            <div>
+                <label class="tw-m-0" for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
+                <select
+                    id="trigger"
+                    class="tw-w-full tw-m-0"
+                    bind:value={property.trigger}
+                    on:change={onTriggerValueChange}
+                >
+                    <option value={undefined}>{$LL.mapEditor.properties.linkProperties.triggerShowImmediately()}</option
+                    >
+                    {#if !property.newTab}
+                        <option value="onicon">{$LL.mapEditor.properties.linkProperties.triggerOnClick()}</option>
+                    {/if}
+                    <option value="onaction">{$LL.mapEditor.properties.linkProperties.triggerOnAction()}</option>
+                </select>
+            </div>
+        {/if}
         <div class="value-input tw-flex tw-flex-col">
             <label for="tabLink">{$LL.mapEditor.properties.linkProperties.linkLabel()}</label>
             <input
