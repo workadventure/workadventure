@@ -19,11 +19,15 @@ test.use({
   baseURL: (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://john.doe:password@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost'),
 })
 test.describe('Map editor', () => {
-  test('Successfully set the megaphone feature', async ({ page, browser, request }) => {
+  test('Successfully set the megaphone feature', async ({ page, browser, request, browserName }) => {
     await resetWamMaps(request);
     await page.goto(url("empty"));
     //await page.evaluate(() => localStorage.setItem('debug', '*'));
     await login(page, "test", 3);
+    // Because webkit in playwright does not support Camera/Microphone Permission by settings
+    if(browserName === "webkit"){
+      await hideNoCamera(page);
+    }
     await Map.walkToPosition(page, 5*32, 5*32);
 
     // Second browser
