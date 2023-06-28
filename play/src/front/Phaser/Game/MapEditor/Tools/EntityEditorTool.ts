@@ -89,6 +89,9 @@ export class EntityEditorTool extends MapEditorTool {
         switch (event.key.toLowerCase()) {
             case "escape": {
                 if (get(mapEditorEntityModeStore) === "EDIT") {
+                    if (document.activeElement instanceof HTMLElement) {
+                        document.activeElement.blur();
+                    }
                     mapEditorSelectedEntityStore.set(undefined);
                     mapEditorEntityModeStore.set("ADD");
                     return;
@@ -364,6 +367,9 @@ export class EntityEditorTool extends MapEditorTool {
     ): void {
         if (get(mapEditorEntityModeStore) === "EDIT" && gameObjects.length === 0) {
             mapEditorEntityModeStore.set("ADD");
+            if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur();
+            }
             mapEditorSelectedEntityStore.set(undefined);
         }
         if (!this.entityPrefabPreview || !this.entityPrefab) {
