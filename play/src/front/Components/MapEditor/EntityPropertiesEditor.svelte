@@ -61,6 +61,7 @@
                     id,
                     type,
                     jitsiRoomConfig: {},
+                    closable: true,
                     roomName: "JITSI ROOM",
                     buttonLabel: "Connect to Jitsi",
                 };
@@ -78,6 +79,7 @@
                 return {
                     id,
                     type,
+                    closable: true,
                     buttonLabel: "Open Website",
                     link,
                     newTab: false,

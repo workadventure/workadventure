@@ -1,7 +1,8 @@
 import { AreaData, CreateAreaCommand, GameMap } from "@workadventure/map-editor";
 import { AreaEditorTool } from "../../Tools/AreaEditorTool";
 import { FrontCommandInterface } from "../FrontCommandInterface";
-import { RoomConnection } from "../../../../../Connexion/RoomConnection";
+import { TrashEditorTool } from "../../Tools/TrashEditorTool";
+import { RoomConnection } from "../../../../../Connection/RoomConnection";
 import { DeleteAreaFrontCommand } from "./DeleteAreaFrontCommand";
 
 export class CreateAreaFrontCommand extends CreateAreaCommand implements FrontCommandInterface {
@@ -9,7 +10,7 @@ export class CreateAreaFrontCommand extends CreateAreaCommand implements FrontCo
         gameMap: GameMap,
         areaObjectConfig: AreaData,
         commandId: string | undefined,
-        private areaEditorTool: AreaEditorTool,
+        private areaEditorTool: AreaEditorTool | TrashEditorTool,
         private localCommand: boolean
     ) {
         super(gameMap, areaObjectConfig, commandId);
@@ -25,6 +26,6 @@ export class CreateAreaFrontCommand extends CreateAreaCommand implements FrontCo
     }
 
     public emitEvent(roomConnection: RoomConnection): void {
-        roomConnection.emitMapEditorCreateArea(this.id, this.areaConfig);
+        roomConnection.emitMapEditorCreateArea(this.commandId, this.areaConfig);
     }
 }

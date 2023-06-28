@@ -1,11 +1,12 @@
 import { isMapDetailsData } from "@workadventure/messages";
 import { z } from "zod";
 import type { Request, Response } from "hyper-express";
+import { JsonWebTokenError } from "jsonwebtoken";
+import axios from "axios";
 import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
 import { adminService } from "../services/AdminService";
 import { validateQuery } from "../services/QueryValidator";
 import { BaseHttpController } from "./BaseHttpController";
-import { InvalidTokenError } from "./InvalidTokenError";
 
 export class MapController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map
@@ -77,14 +78,19 @@ export class MapController extends BaseHttpController {
 
                 res.json(mapDetails);
                 return;
-            } catch (e) {
-                if (e instanceof InvalidTokenError) {
-                    console.warn("Invalid token received", e);
+            } catch (error) {
+                if (error instanceof JsonWebTokenError) {
+                    console.warn("Invalid token received", error);
                     res.status(401);
                     res.send("The Token is invalid");
                     return;
+                } else if (axios.isAxiosError(error)) {
+                    console.warn("Error while fetching map details", error);
+                    res.status(error.response?.status ?? 404);
+                    res.send("Error while fetching map details");
+                    return;
                 } else {
-                    throw e;
+                    throw error;
                 }
             }
         });

@@ -25,13 +25,12 @@ export class Companion extends Container {
     private updateListener: (time: number, delta: number) => void;
     private target: { x: number; y: number; direction: PositionMessage_Direction };
 
-    private companionId: string;
     private direction: PositionMessage_Direction;
     private animationType: PlayerAnimationTypes;
     private readonly _pictureStore: Writable<string | undefined>;
     private texturePromise: CancelablePromise<string | void> | undefined;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, id: string, texturePromise: CancelablePromise<string>) {
+    constructor(scene: Phaser.Scene, x: number, y: number, texturePromise: CancelablePromise<string>) {
         super(scene, x + 14, y + 4);
 
         this.sprites = new Map<string, Sprite>();
@@ -43,7 +42,6 @@ export class Companion extends Container {
         this.direction = PositionMessage_Direction.DOWN;
         this.animationType = PlayerAnimationTypes.Idle;
 
-        this.companionId = id;
         this._pictureStore = writable(undefined);
 
         this.texturePromise = texturePromise
@@ -125,18 +123,6 @@ export class Companion extends Container {
 
         this.setDepth(this.y);
         this.playAnimation(this.direction, this.animationType);
-    }
-
-    public getStatus(): CompanionStatus {
-        const { x, y, direction, animationType, companionId } = this;
-
-        return {
-            x,
-            y,
-            direction,
-            moving: animationType === PlayerAnimationTypes.Walk,
-            name: companionId,
-        };
     }
 
     public async getSnapshot(): Promise<string> {

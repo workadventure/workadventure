@@ -1,5 +1,5 @@
-import type { Room } from "../Connexion/Room";
-import { localUserStore } from "../Connexion/LocalUserStore";
+import type { Room } from "../Connection/Room";
+import { localUserStore } from "../Connection/LocalUserStore";
 
 export enum GameConnexionTypes {
     room = 1,
@@ -43,7 +43,7 @@ class UrlManager {
 
     public pushRoomIdToUrl(room: Room): void {
         if (window.location.pathname === room.id) return;
-        //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
+        //Set last room visited! (connected or nor, must to be saved in local storage and cache API)
         //use href to keep # value
         localUserStore.setLastRoomUrl(room.href).catch((e) => console.error(e));
         const hash = window.location.hash;

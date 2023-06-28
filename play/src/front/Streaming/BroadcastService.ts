@@ -7,7 +7,7 @@ import { SpaceFilterMessage } from "@workadventure/messages";
 import debug from "debug";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { megaphoneEnabledStore } from "../Stores/MegaphoneStore";
-import { RoomConnection } from "../Connexion/RoomConnection";
+import { RoomConnection } from "../Connection/RoomConnection";
 import { Space } from "../Space/Space";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { JITSI_DOMAIN, JITSI_MUC_DOMAIN, JITSI_XMPP_DOMAIN } from "../Enum/EnvironmentVariable";

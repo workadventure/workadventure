@@ -1,5 +1,5 @@
 import { get, writable } from "svelte/store";
-import { localUserStore } from "../Connexion/LocalUserStore";
+import { localUserStore } from "../Connection/LocalUserStore";
 import { Emoji } from "./Utils/emojiSchema";
 
 function createEmoteMenuStore() {

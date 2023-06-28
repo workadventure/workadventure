@@ -1,5 +1,6 @@
 import type { AvailabilityStatus } from "@workadventure/messages";
 import { isRegisterData } from "@workadventure/messages";
+import { isAxiosError } from "axios";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { subMenusStore, userIsConnected, warningContainerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
@@ -204,7 +205,12 @@ class ConnectionManager {
                     await this.checkAuthUserConnexion(this.authToken);
                     analyticsClient.loggedWithSso();
                 } catch (err) {
-                    console.error(err);
+                    if (isAxiosError(err) && err.response?.status === 401) {
+                        console.warn("Token expired, trying to login anonymously");
+                    } else {
+                        console.error(err);
+                    }
+
                     // if the user must be connected to the current room or if the pusher error is not openid provider access error
                     if (this._currentRoom.authenticationMandatory) {
                         const redirect = this.loadOpenIDScreen();
@@ -212,6 +218,8 @@ class ConnectionManager {
                             throw new Error("Unable to redirect on login page.");
                         }
                         return redirect;
+                    } else {
+                        await this.anonymousLogin();
                     }
                 }
             }
@@ -262,10 +270,10 @@ class ConnectionManager {
     public connectToRoomSocket(
         roomUrl: string,
         name: string,
-        characterLayers: string[],
+        characterTextureIds: string[],
         position: PositionInterface,
         viewport: ViewportInterface,
-        companion: string | null,
+        companionTextureId: string | null,
         availabilityStatus: AvailabilityStatus,
         lastCommandId?: string
     ): Promise<OnConnectInterface> {
@@ -274,10 +282,10 @@ class ConnectionManager {
                 this.authToken,
                 roomUrl,
                 name,
-                characterLayers,
+                characterTextureIds,
                 position,
                 viewport,
-                companion,
+                companionTextureId,
                 availabilityStatus,
                 lastCommandId
             );
@@ -341,20 +349,20 @@ class ConnectionManager {
                         "connectToRoomSocket => catch => ew Promise[OnConnectInterface] reconnectingTimeout => setTimeout",
                         roomUrl,
                         name,
-                        characterLayers,
+                        characterTextureIds,
                         position,
                         viewport,
-                        companion,
+                        companionTextureId,
                         availabilityStatus,
                         lastCommandId
                     );
                     void this.connectToRoomSocket(
                         roomUrl,
                         name,
-                        characterLayers,
+                        characterTextureIds,
                         position,
                         viewport,
-                        companion,
+                        companionTextureId,
                         availabilityStatus,
                         lastCommandId
                     ).then((connection) => resolve(connection));
@@ -385,7 +393,7 @@ class ConnectionManager {
         this.authToken = authToken;
 
         if (visitCardUrl) {
-            gameManager.setVisitCardurl(visitCardUrl);
+            gameManager.setVisitCardUrl(visitCardUrl);
         }
 
         const opidWokaNamePolicy = this.currentRoom?.opidWokaNamePolicy;
@@ -413,14 +421,14 @@ class ConnectionManager {
         }
 
         if (textures) {
-            const layers: string[] = [];
+            const textureIds: string[] = [];
             for (const texture of textures) {
                 if (texture !== undefined) {
-                    layers.push(texture.id);
+                    textureIds.push(texture.id);
                 }
             }
-            if (layers.length > 0) {
-                gameManager.setCharacterLayers(layers);
+            if (textureIds.length > 0) {
+                gameManager.setCharacterTextureIds(textureIds);
             }
         }
 

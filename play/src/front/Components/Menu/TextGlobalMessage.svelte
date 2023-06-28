@@ -3,8 +3,8 @@
     import { onDestroy, onMount } from "svelte";
     import { menuInputFocusStore } from "../../Stores/MenuStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
-    import type { PlayGlobalMessageInterface } from "../../Connexion/ConnexionModels";
+    import { AdminMessageEventTypes } from "../../Connection/AdminMessagesService";
+    import type { PlayGlobalMessageInterface } from "../../Connection/ConnexionModels";
     import { LL } from "../../../i18n/i18n-svelte";
 
     //toolbar

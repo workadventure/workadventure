@@ -38,6 +38,12 @@ export const StartPropertyData = PropertyBase.extend({
     type: z.literal("start"),
 });
 
+export const ExitPropertyData = PropertyBase.extend({
+    type: z.literal("exit"),
+    url: z.string(),
+    areaName: z.string(),
+});
+
 export const JitsiRoomPropertyData = PropertyBase.extend({
     type: z.literal("jitsiRoomProperty"),
     roomName: z.string(),
@@ -69,15 +75,17 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
         .default("fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture")
         .optional(),
     position: z.number().optional(),
-    application: z.union([
-        z.literal("website"),
-        z.literal("youtube"),
-        z.literal("klaxoon"),
-        z.literal("googleDocs"),
-        z.literal("googleSheets"),
-        z.literal("googleSlides"),
-        z.literal("googleForms")
-    ]).default("website"),
+    application: z
+        .union([
+            z.literal("website"),
+            z.literal("youtube"),
+            z.literal("klaxoon"),
+            z.literal("googleDocs"),
+            z.literal("googleSheets"),
+            z.literal("googleSlides"),
+            z.literal("googleForms"),
+        ])
+        .default("website"),
 });
 
 export const SpeakerMegaphonePropertyData = PropertyBase.extend({
@@ -94,6 +102,7 @@ export const ListenerMegaphonePropertyData = PropertyBase.extend({
 
 export const AreaDataProperty = z.union([
     StartPropertyData,
+    ExitPropertyData,
     FocusablePropertyData,
     SilentPropertyData,
     JitsiRoomPropertyData,
@@ -232,12 +241,20 @@ export type EntityData = z.infer<typeof EntityData>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
 export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite";
-export type OpenWebsiteTypePropertiesKeys = "website" | "youtube" | "klaxoon" | "googleDocs" | "googleSheets" | "googleSlides" | "googleForms";
+export type OpenWebsiteTypePropertiesKeys =
+    | "website"
+    | "youtube"
+    | "klaxoon"
+    | "googleDocs"
+    | "googleSheets"
+    | "googleSlides"
+    | "googleForms";
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
 export type AreaDataProperty = z.infer<typeof AreaDataProperty>;
 export type AreaDataPropertiesKeys = AreaDataProperty["type"];
 export type ActionsMenuData = z.infer<typeof PropertyBase>;
+export type ExitPropertyData = z.infer<typeof ExitPropertyData>;
 export type StartPropertyData = z.infer<typeof StartPropertyData>;
 export type SilentPropertyData = z.infer<typeof SilentPropertyData>;
 export type FocusablePropertyData = z.infer<typeof FocusablePropertyData>;

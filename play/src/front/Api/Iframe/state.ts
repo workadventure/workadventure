@@ -17,7 +17,17 @@ export class WorkadventureStateCommands extends AbstractWorkadventureStateComman
     ];
 
     saveVariable(key: string, value: unknown): Promise<void> {
+        if (this.variables.get(key) === value) {
+            return new Promise((resolve) => resolve());
+        }
+
         this.variables.set(key, value);
+
+        const subscriber = this.variableSubscribers.get(key);
+        if (subscriber) {
+            subscriber.next(value);
+        }
+
         return queryWorkadventure({
             type: "setVariable",
             data: {

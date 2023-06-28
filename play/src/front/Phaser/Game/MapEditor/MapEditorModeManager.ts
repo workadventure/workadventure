@@ -1,7 +1,7 @@
 import { Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
 import { Unsubscriber, get } from "svelte/store";
 import { EditMapCommandMessage } from "@workadventure/messages";
-import type { RoomConnection } from "../../../Connexion/RoomConnection";
+import type { RoomConnection } from "../../../Connection/RoomConnection";
 import type { GameScene } from "../GameScene";
 import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
@@ -11,12 +11,14 @@ import { EntityEditorTool } from "./Tools/EntityEditorTool";
 import { WAMSettingsEditorTool } from "./Tools/WAMSettingsEditorTool";
 import { FrontCommandInterface } from "./Commands/FrontCommandInterface";
 import { FrontCommand } from "./Commands/FrontCommand";
+import { TrashEditorTool } from "./Tools/TrashEditorTool";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
     FloorEditor = "FloorEditor",
     EntityEditor = "EntityEditor",
     WAMSettingsEditor = "WAMSettingsEditor",
+    TrashEditor = "TrashEditor",
 }
 
 export class MapEditorModeManager {
@@ -77,6 +79,7 @@ export class MapEditorModeManager {
             [EditorToolName.EntityEditor]: new EntityEditorTool(this),
             [EditorToolName.FloorEditor]: new FloorEditorTool(this),
             [EditorToolName.WAMSettingsEditor]: new WAMSettingsEditorTool(this),
+            [EditorToolName.TrashEditor]: new TrashEditorTool(this),
         };
         this.activeTool = undefined;
         this.lastlyUsedTool = undefined;
@@ -127,7 +130,7 @@ export class MapEditorModeManager {
                     this.currentCommandIndex += 1;
                 }
 
-                this.scene.getGameMap().updateLastCommandIdProperty(command.id);
+                this.scene.getGameMap().updateLastCommandIdProperty(command.commandId);
                 return;
                 //return true;
             } catch (error) {
@@ -262,7 +265,7 @@ export class MapEditorModeManager {
         connection.editMapCommandMessageStream.subscribe((editMapCommandMessage) => {
             (async () => {
                 if (this.pendingCommands.length > 0) {
-                    if (this.pendingCommands[0].id === editMapCommandMessage.id) {
+                    if (this.pendingCommands[0].commandId === editMapCommandMessage.id) {
                         this.pendingCommands.shift();
                         return;
                     }
@@ -282,7 +285,9 @@ export class MapEditorModeManager {
             if (command) {
                 //await command.getUndoCommand();
                 // also remove from local history of commands as this is invalid
-                const index = this.localCommandsHistory.findIndex((localCommand) => localCommand.id === command.id);
+                const index = this.localCommandsHistory.findIndex(
+                    (localCommand) => localCommand.commandId === command.commandId
+                );
                 if (index !== -1) {
                     this.localCommandsHistory.splice(index, 1);
                     this.currentCommandIndex -= 1;

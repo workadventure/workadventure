@@ -3,8 +3,8 @@ import type { Subscription } from "rxjs";
 import type {
     WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
-} from "../Connexion/ConnexionModels";
-import type { RoomConnection } from "../Connexion/RoomConnection";
+} from "../Connection/ConnexionModels";
+import type { RoomConnection } from "../Connection/RoomConnection";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";

@@ -10,7 +10,7 @@ export enum PathTileType {
 export class PathfindingManager {
     private scene: Phaser.Scene;
 
-    private easyStar;
+    private easyStar: EasyStar.js;
     private grid: number[][];
     private tileDimensions: { width: number; height: number };
 
@@ -21,6 +21,7 @@ export class PathfindingManager {
         this.easyStar.enableDiagonals();
         this.easyStar.disableCornerCutting();
         this.easyStar.setTileCost(PathTileType.Exit, 100);
+        this.easyStar.setIterationsPerCalculation(1000);
 
         this.grid = collisionsGrid;
         this.tileDimensions = tileDimensions;

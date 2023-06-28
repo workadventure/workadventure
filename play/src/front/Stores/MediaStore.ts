@@ -2,7 +2,7 @@ import type { Readable, Writable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import deepEqual from "fast-deep-equal";
 import { AvailabilityStatus } from "@workadventure/messages";
-import { localUserStore } from "../Connexion/LocalUserStore";
+import { localUserStore } from "../Connection/LocalUserStore";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import { getNavigatorType, isIOS, NavigatorType } from "../WebRtc/DeviceUtils";
 import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
@@ -181,6 +181,8 @@ const mouseInCameraTriggerArea = readable(false, function start(set) {
 
 export const cameraNoEnergySavingStore = writable<boolean>(false);
 
+export const streamingMegaphoneStore = writable<boolean>(false);
+
 /**
  * A store that contains "true" if the webcam should be stopped for energy efficiency reason - i.e. we are not moving and not in a conversation.
  */
@@ -191,6 +193,7 @@ export const cameraEnergySavingStore = derived(
         enabledWebCam10secondsAgoStore,
         mouseInCameraTriggerArea,
         cameraNoEnergySavingStore,
+        streamingMegaphoneStore,
     ],
     ([
         $userMoved5SecondsAgoStore,
@@ -198,13 +201,15 @@ export const cameraEnergySavingStore = derived(
         $enabledWebCam10secondsAgoStore,
         $mouseInBottomRight,
         $cameraNoEnergySavingStore,
+        $streamingMegaphoneStore,
     ]) => {
         return (
             !$mouseInBottomRight &&
             !$userMoved5SecondsAgoStore &&
             $peerStore.size === 0 &&
             !$enabledWebCam10secondsAgoStore &&
-            !$cameraNoEnergySavingStore
+            !$cameraNoEnergySavingStore &&
+            !$streamingMegaphoneStore
         );
     }
 );
@@ -225,7 +230,7 @@ export const videoConstraintStore = derived(
     ([$cameraDeviceIdStore, $frameRateStore]) => {
         const constraints = {
             width: { min: 640, ideal: 1280, max: 1920 },
-            height: { min: 400, ideal: 720 },
+            height: { min: 400, ideal: 720, max: 1080 },
             frameRate: { ideal: localUserStore.getVideoQualityValue() },
             facingMode: "user",
             resizeMode: "crop-and-scale",

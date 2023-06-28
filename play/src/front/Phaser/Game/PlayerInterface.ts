@@ -1,13 +1,14 @@
 import type { AvailabilityStatus } from "@workadventure/messages";
-import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
+import { CompanionTextureDescriptionInterface } from "../Companion/CompanionTextures";
+import type { WokaTextureDescriptionInterface } from "../Entity/PlayerTextures";
 
 export interface PlayerInterface {
     userId: number;
     userJid: string;
     name: string;
-    characterLayers: BodyResourceDescriptionInterface[];
+    characterTextures: WokaTextureDescriptionInterface[];
     visitCardUrl: string | null;
-    companion: string | null;
+    companionTexture?: CompanionTextureDescriptionInterface;
     userUuid: string;
     availabilityStatus: AvailabilityStatus;
     color?: string | null;

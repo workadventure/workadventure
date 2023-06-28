@@ -1,15 +1,15 @@
 import axios from "axios";
 import type { AxiosResponse } from "axios";
-import { companionCollectionList, CompanionCollectionList } from "@workadventure/messages";
+import { CompanionTextureCollection } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../enums/EnvironmentVariable";
 import type { CompanionServiceInterface } from "./CompanionServiceInterface";
 
-export class AdminCompanionService implements CompanionServiceInterface {
+class AdminCompanionService implements CompanionServiceInterface {
     /**
      * Returns the list of all companions for the current user.
      */
-    getCompanionList(roomUrl: string, token: string): Promise<CompanionCollectionList | undefined> {
+    getCompanionList(roomUrl: string, token: string): Promise<CompanionTextureCollection[] | undefined> {
         /**
          * @openapi
          * /api/companion/list:
@@ -54,12 +54,20 @@ export class AdminCompanionService implements CompanionServiceInterface {
                 },
             })
             .then((res) => {
-                return companionCollectionList.parse(res.data);
+                return CompanionTextureCollection.array().parse(res.data);
             })
             .catch((err) => {
-                console.error(`Cannot get companion list from admin API with token: ${token}`, err);
-                Sentry.captureException(`Cannot get companion list from admin API with token: ${token}`, err);
+                if (axios.isAxiosError(err)) {
+                    console.log(err.response);
+                }
+                console.error(`Cannot get companion collection list from admin API with token: ${token}`, err);
+                Sentry.captureException(
+                    `Cannot get companion collection list from admin API with token: ${token}`,
+                    err
+                );
                 return undefined;
             });
     }
 }
+
+export const adminCompanionService = new AdminCompanionService();

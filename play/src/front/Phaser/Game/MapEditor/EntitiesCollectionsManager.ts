@@ -81,10 +81,10 @@ export class EntitiesCollectionsManager {
                             url,
                         });
                     })
-                    .catch((error) => console.error(error));
+                    .catch((error) => console.warn(error));
             }
 
-            Promise.all(fetchUrlPromises)
+            Promise.allSettled(fetchUrlPromises)
                 .then(() => {
                     for (const { collection, url } of entityCollections) {
                         const tagSet = new Set<string>();
@@ -126,7 +126,13 @@ export class EntitiesCollectionsManager {
     }
 
     private async fetchRawCollection(url: string): Promise<EntityCollectionRaw> {
-        return (await fetch(url)).json();
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+        } else if (response.headers.get("Content-Type") !== "application/json") {
+            throw new Error(`Failed to fetch ${url}: invalid content type`);
+        }
+        return response.json();
     }
 
     private parseRawCollection(rawCollection: EntityCollectionRaw): EntityCollection {

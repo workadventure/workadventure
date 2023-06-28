@@ -31,14 +31,16 @@ RUN --mount=type=secret,id=SENTRY_RELEASE \
     --mount=type=secret,id=SENTRY_AUTH_TOKEN \
     --mount=type=secret,id=SENTRY_ORG \
     --mount=type=secret,id=SENTRY_PROJECT \
+    --mount=type=secret,id=SENTRY_ENVIRONMENT \
     export SENTRY_RELEASE=$(cat /run/secrets/SENTRY_RELEASE) && \
     export SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN) && \
     export SENTRY_ORG=$(cat /run/secrets/SENTRY_ORG) && \
     export SENTRY_PROJECT=$(cat /run/secrets/SENTRY_PROJECT) && \
+    export SENTRY_ENVIRONMENT=$(cat /run/secrets/SENTRY_ENVIRONMENT) && \
     cd play && \
     npm run typesafe-i18n && \
     npm run build-iframe-api && \
-    SENTRY_RELEASE=$SENTRY_RELEASE SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN SENTRY_ORG=$SENTRY_ORG SENTRY_PROJECT=$SENTRY_PROJECT NODE_OPTIONS="--max-old-space-size=6144" npm run build
+    SENTRY_RELEASE=$SENTRY_RELEASE SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN SENTRY_ORG=$SENTRY_ORG SENTRY_PROJECT=$SENTRY_PROJECT SENTRY_ENVIRONMENT=$SENTRY_ENVIRONMENT NODE_OPTIONS="--max-old-space-size=6144" npm run build
 
 # final production image
 FROM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d

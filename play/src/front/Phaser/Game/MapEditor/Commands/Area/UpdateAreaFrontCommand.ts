@@ -1,7 +1,7 @@
 import { AreaData, AtLeast, GameMap, UpdateAreaCommand } from "@workadventure/map-editor";
 import { AreaEditorTool } from "../../Tools/AreaEditorTool";
 import { FrontCommandInterface } from "../FrontCommandInterface";
-import { RoomConnection } from "../../../../../Connexion/RoomConnection";
+import { RoomConnection } from "../../../../../Connection/RoomConnection";
 
 export class UpdateAreaFrontCommand extends UpdateAreaCommand implements FrontCommandInterface {
     constructor(
@@ -26,6 +26,6 @@ export class UpdateAreaFrontCommand extends UpdateAreaCommand implements FrontCo
     }
 
     public emitEvent(roomConnection: RoomConnection): void {
-        roomConnection.emitMapEditorModifyArea(this.id, this.newConfig);
+        roomConnection.emitMapEditorModifyArea(this.commandId, this.newConfig);
     }
 }

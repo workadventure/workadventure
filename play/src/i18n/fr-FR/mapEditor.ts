@@ -2,28 +2,52 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const mapEditor: DeepPartial<Translation["mapEditor"]> = {
+    map: {
+        refreshPrompt: "Nouvelle version de la carte détectée. Actualisation nécessaire",
+    },
     sideBar: {
         areaEditor: "Outil d'édition de zone",
         entityEditor: "Outil d'édition d'entités",
         tileEditor: "Outil d'édition de tuiles",
         configureMyRoom: "Configurer la salle",
+        trashEditor: "Corbeille",
     },
     properties: {
+        silentProperty: {
+            label: "Silent",
+            description: "Ne permet pas les conversations à l'intérieur.",
+        },
         textProperties: {
-            label: "Texte d'Entête",
-            placeholder: "Entrez ici le texte qui sera affiché lorsque l'on interagit avec l'objet.",
+            label: "Texte d'en-tête",
+            placeholder: "Saisissez ici le texte qui sera affiché lors de l'interaction avec l'objet",
+        },
+        focusableProperties: {
+            label: "Focusable",
+            description: "Focus de la caméra sur cette zone à l'entrée.",
+            zoomMarginLabel: "Marge de zoom",
+            defaultButtonLabel: "Focus sur",
         },
         jitsiProperties: {
             label: "Salle Jitsi",
-            roomNameLabel: "Nom de Salle",
-            roomNamePlaceholder: "Nom de la Salle",
+            description: "Démarrer une réunion Jitsi lors de l'entrée dans la zone.",
+            roomNameLabel: "Nom de la salle",
+            jitsiUrl: "Jitsi URL",
+            jitsiUrlPlaceholder: "meet.jit.si",
+            roomNamePlaceholder: "Nom de la salle",
             defaultButtonLabel: "Ouvrir la salle Jitsi",
-            audioMutedLabel: "Sourdine par défaut",
+            audioMutedLabel: "Désactivé par défaut",
             moreOptionsLabel: "Plus d'options",
+            trigger: "Interaction",
+            triggerMessage: "Message de notification",
+            triggerShowImmediately: "Afficher immédiatement à l'entrée",
+            triggerOnClick: "Démarrer en mode réduit dans la barre inférieure",
+            triggerOnAction: "Afficher une notification avec le message",
+            closable: "Peut être fermé",
+            noPrefix: "Pas de préfixe de nom de salle Jitsi",
             jitsiRoomConfig: {
                 addConfig: "Ajouter une option",
-                startWithAudioMuted: "Démarrer avec le microphone coupé",
-                startWithVideoMuted: "Démarrer avec la vidéo coupée",
+                startWithAudioMuted: "Démarrer avec le microphone désactivé",
+                startWithVideoMuted: "Démarrer avec la vidéo désactivée",
                 cancel: "Annuler",
                 validate: "Valider",
             },
@@ -43,10 +67,38 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             errorEmbeddableLink: "Le lien ne peut pas être intégré",
         },
         advancedOptions: "Options avancées",
+        speakerMegaphoneProperties: {
+            label: "Zone de diffusion pour haut-parleur",
+            description: "",
+            nameLabel: "Nom de la zone",
+            namePlaceholder: "MaZoneDeDiffusion",
+        },
+        listenerMegaphoneProperties: {
+            label: "Zone d'écoute pour haut-parleur",
+            description: "",
+            nameLabel: "Nom de la zone",
+            namePlaceholder: "MaZoneDecoute",
+        },
+        chatEnabled: "Associate a dedicated chat channel",
+        startProperties: {
+            label: "Zone de départ",
+            description: "Où les joueurs apparaissent lorsqu'ils entrent dans la carte.",
+            nameLabel: "Nom de la zone",
+            namePlaceholder: "Nom de la zone de départ",
+        },
+        exitProperties: {
+            label: "Exit area",
+            description: "Where people can exit the map to another one.",
+            exitMap: "Exit map",
+            exitMapStartAreaName: "Start area name",
+        },
     },
     entityEditor: {
         itemPicker: {
             searchPlaceholder: "Rechercher",
+        },
+        trashTool: {
+            delete: "Supprimer un item en cliquant dessus !",
         },
         deleteButton: "Supprimer",
         testInteractionButton: "Tester interaction",

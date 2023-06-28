@@ -6,14 +6,18 @@
     import EntityEditor from "./EntityEditor.svelte";
     import AreaEditor from "./AreaEditor.svelte";
     import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
+    import TrashEditor from "./TrashEditor.svelte";
 </script>
 
 <MapEditorSideBar />
-<div class="map-editor tw-bg-dark-blue/95">
+<div class={`map-editor tw-bg-dark-blue/95 ${$mapEditorSelectedToolStore}`}>
     {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
         <ConfigureMyRoom />
     {:else}
         <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
+            {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
+                <TrashEditor />
+            {/if}
             {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
                 <EntityEditor />
             {/if}
@@ -34,6 +38,12 @@
 
         pointer-events: auto;
         color: whitesmoke;
+
+        &.WAMSettingsEditor {
+            width: 80% !important;
+            left: 10%;
+            height: 0 !important;
+        }
 
         .sidebar {
             position: relative !important;

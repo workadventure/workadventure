@@ -10,9 +10,8 @@
         localStreamStore,
     } from "../Stores/MediaStore";
     import { LL } from "../../i18n/i18n-svelte";
-    import { localUserStore } from "../Connexion/LocalUserStore";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
-    import { megaphoneEnabledStore } from "../Stores/MegaphoneStore";
+    import { localUserStore } from "../Connection/LocalUserStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";
@@ -32,11 +31,11 @@
         }
     });
 
+    let cameraContainer: HTMLDivElement;
+
     onDestroy(() => {
         unsubscribeLocalStreamStore();
     });
-
-    let cameraContainer: HTMLDivElement;
 
     onMount(() => {
         cameraContainer.addEventListener("transitionend", () => {
@@ -92,9 +91,7 @@
             </div>
             <div class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all">
                 <video
-                    class="tw-h-full tw-w-full tw-rounded md:tw-object-cover {$megaphoneEnabledStore
-                        ? 'tw-border-orange tw-border-3 tw-border-solid'
-                        : ''}"
+                    class="tw-h-full tw-w-full tw-rounded md:tw-object-cover"
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay

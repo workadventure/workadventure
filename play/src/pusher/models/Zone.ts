@@ -3,8 +3,8 @@ import Debug from "debug";
 import {
     AvailabilityStatus,
     BatchToPusherMessage,
-    CharacterLayerMessage,
-    CompanionMessage,
+    CharacterTextureMessage,
+    CompanionTextureMessage,
     EmoteEventMessage,
     ErrorMessage,
     GroupUpdateMessage,
@@ -48,12 +48,12 @@ export class UserDescriptor {
         public readonly userJid: string,
         private userUuid: string,
         private name: string,
-        private characterLayers: CharacterLayerMessage[],
+        private characterTextures: CharacterTextureMessage[],
         private position: PositionMessage,
         private availabilityStatus: AvailabilityStatus,
         private visitCardUrl: string | null,
         private variables: { [key: string]: string },
-        private companion?: CompanionMessage,
+        private companionTexture?: CompanionTextureMessage,
         private outlineColor?: number
     ) {
         if (!Number.isInteger(this.userId)) {
@@ -71,12 +71,12 @@ export class UserDescriptor {
             message.userJid,
             message.userUuid,
             message.name,
-            message.characterLayers,
+            message.characterTextures,
             position,
             message.availabilityStatus,
             message.visitCardUrl,
             message.variables,
-            message.companion,
+            message.companionTexture,
             message.hasOutline ? message.outlineColor : undefined
         );
     }
@@ -113,11 +113,11 @@ export class UserDescriptor {
             userId: this.userId,
             userJid: this.userJid,
             name: this.name,
-            characterLayers: this.characterLayers,
+            characterTextures: this.characterTextures,
             position: this.position,
             availabilityStatus: this.availabilityStatus,
             visitCardUrl: this.visitCardUrl ?? "", // FIXME: improve the typing
-            companion: this.companion,
+            companionTexture: this.companionTexture,
             userUuid: this.userUuid,
             outlineColor: this.outlineColor ?? 0, // FIXME: improve the typing
             hasOutline: this.outlineColor !== undefined,

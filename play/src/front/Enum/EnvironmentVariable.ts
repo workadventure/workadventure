@@ -51,3 +51,5 @@ export const WOKA_SPEED = env.WOKA_SPEED;
 export const JITSI_DOMAIN = env.JITSI_DOMAIN;
 export const JITSI_XMPP_DOMAIN = env.JITSI_XMPP_DOMAIN;
 export const JITSI_MUC_DOMAIN = env.JITSI_MUC_DOMAIN;
+
+export const MAP_STORAGE_PATH_PREFIX = env.MAP_STORAGE_PATH_PREFIX;
