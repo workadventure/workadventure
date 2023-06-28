@@ -48,7 +48,7 @@
     <!--put a section to avoid lower div to be affected by some css-->
     <div class="side-bar">
         {#each availableTools as tool (tool.toolName)}
-            <div class="tool-button">
+            <div class="tool-button" id={tool.toolName}>
                 <button
                     class={tool.toolName == $mapEditorSelectedToolStore ? "active" : ""}
                     on:click|preventDefault={() => switchTool(tool.toolName)}
