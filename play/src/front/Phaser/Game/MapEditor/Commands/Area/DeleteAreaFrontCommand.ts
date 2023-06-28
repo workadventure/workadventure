@@ -2,6 +2,7 @@ import { DeleteAreaCommand, GameMap } from "@workadventure/map-editor";
 import { AreaEditorTool } from "../../Tools/AreaEditorTool";
 import { FrontCommandInterface } from "../FrontCommandInterface";
 import { RoomConnection } from "../../../../../Connection/RoomConnection";
+import { TrashEditorTool } from "../../Tools/TrashEditorTool";
 import { VoidFrontCommand } from "../VoidFrontCommand";
 import { CreateAreaFrontCommand } from "./CreateAreaFrontCommand";
 
@@ -10,7 +11,7 @@ export class DeleteAreaFrontCommand extends DeleteAreaCommand implements FrontCo
         gameMap: GameMap,
         areaId: string,
         commandId: string | undefined,
-        private areaEditorTool: AreaEditorTool,
+        private editorTool: AreaEditorTool | TrashEditorTool,
         private localCommand: boolean
     ) {
         super(gameMap, areaId, commandId);
@@ -18,7 +19,7 @@ export class DeleteAreaFrontCommand extends DeleteAreaCommand implements FrontCo
 
     public execute(): Promise<void> {
         const returnVal = super.execute();
-        this.areaEditorTool.handleAreaPreviewDeletion(this.areaId);
+        this.editorTool.handleAreaPreviewDeletion(this.areaId);
 
         return returnVal;
     }
@@ -27,7 +28,7 @@ export class DeleteAreaFrontCommand extends DeleteAreaCommand implements FrontCo
         if (!this.areaConfig) {
             return new VoidFrontCommand();
         }
-        return new CreateAreaFrontCommand(this.gameMap, this.areaConfig, undefined, this.areaEditorTool, false);
+        return new CreateAreaFrontCommand(this.gameMap, this.areaConfig, undefined, this.editorTool, false);
     }
 
     public emitEvent(roomConnection: RoomConnection): void {
