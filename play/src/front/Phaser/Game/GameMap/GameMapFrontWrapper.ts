@@ -207,7 +207,10 @@ export class GameMapFrontWrapper {
             // OTHERWISE, delete commands might pass FIRST!
         }
 
-        return Promise.allSettled(addEntityPromises).then(() => this.initializedPromise.resolve());
+        return Promise.allSettled(addEntityPromises).then(() => {
+            this.updateCollisionGrid(this.entitiesCollisionLayer, false);
+            this.initializedPromise.resolve();
+        });
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {
@@ -296,7 +299,7 @@ export class GameMapFrontWrapper {
         }
         // go through all tilemap layers on map. Maintain order
         for (const layer of this.phaserLayers) {
-            if (!layer.visible) {
+            if (!layer.visible && layer !== this.entitiesCollisionLayer) {
                 continue;
             }
             if (!useCache) {
