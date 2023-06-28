@@ -9,13 +9,13 @@ The stage is the **speaker zone**. Anyone walking on the stage will be able to s
 The audience is the **listening zone**. Anyone walking in the audience will be able to see and hear the speaker(s) in
 the speaker zone.
 
-Please note that [access to the map editor](access.md) is required to perform the following steps.
+Please note that [access to the map editor](../access.md) is required to perform the following steps.
 
 #### Creating a speaker zone
 
 <div class="row">
     <div class="col">
-        <img src="../images/editor/megaphone_speaker_1.png" class="figure-img img-fluid rounded" alt="" />
+        <img src="../../images/editor/megaphone_speaker_1.png" class="figure-img img-fluid rounded" alt="" />
     </div>
 </div>
 
@@ -26,7 +26,7 @@ Please note that [access to the map editor](access.md) is required to perform th
 
 <div class="row">
     <div class="col">
-        <img src="../images/editor/megaphone_speaker_2.png" class="figure-img img-fluid rounded" alt="" />
+        <img src="../../images/editor/megaphone_speaker_2.png" class="figure-img img-fluid rounded" alt="" />
     </div>
 </div>
 
@@ -37,7 +37,7 @@ Please note that [access to the map editor](access.md) is required to perform th
 
 <div class="row">
     <div class="col">
-        <img src="../images/editor/megaphone_listener_1.png" class="figure-img img-fluid rounded" alt="" />
+        <img src="../../images/editor/megaphone_listener_1.png" class="figure-img img-fluid rounded" alt="" />
     </div>
 </div>
 
@@ -46,7 +46,7 @@ Please note that [access to the map editor](access.md) is required to perform th
 
 <div class="row">
     <div class="col">
-        <img src="../images/editor/megaphone_listener_2.png" class="figure-img img-fluid rounded" alt="" />
+        <img src="../../images/editor/megaphone_listener_2.png" class="figure-img img-fluid rounded" alt="" />
     </div>
 </div>
 
