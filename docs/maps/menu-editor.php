@@ -43,16 +43,4 @@ return [
         'markdown' => 'maps.editor.entry-exit',
         'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/editor/entry-exit.md',
     ],
-    [
-        'title' => 'Meeting rooms',
-        'url' => '/map-building/editor/meeting-rooms.md',
-        'markdown' => 'maps.editor.meeting-rooms',
-        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/editor/meeting-rooms.md',
-    ],
-    [
-        'title' => 'Other zones',
-        'url' => '/map-building/editor/other-zones.md',
-        'markdown' => 'maps.editor.other-zones',
-        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/editor/other-zones.md',
-    ],
 ];
