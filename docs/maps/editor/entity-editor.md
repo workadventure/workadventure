@@ -7,10 +7,6 @@ objects and furniture in your map.
 
 Use the entity editor to drag'n'drop objects from the right panel into the map.
 
-
-
-
-
 TODO
 TODO
 TODO
@@ -18,6 +14,43 @@ TODO
 TODO
 TODO
 
+Some objects can be rotated (top, left, bottom, right).
+Some objects can have different colors.
+
+When you click on an object, you can attach a number of actions in the right panel.
+
+## Objects name
+
+Objects can have a name.
+The name of the object is displayed in a pop-up when users click on the object.
+
+## Attaching actions to objects
+
+When you add an action to an object, the object becomes "clickable" by users.
+When a user clicks on the object, a pop-up is displayed with the list of possible actions.
+
+Possible actions are:
+
+- **Opening a link**: Opens a webpage, either inside WorkAdventure or in a new tab of the browser.
+- **Opening a videoconference**: Opens a Jitsi videoconference inside WorkAdventure. You could for instance attach 
+  a videoconference to a phone or a phonebooth inside your map that would connect you to a Jitsi room in another
+  part of the map.
+- **Play an audio file**: Plays an audio file. Useful for Jukeboxes!
+
+## Snapping objects to the grid
+
+When placing objects on the map, you can place most objects in a "pixel perfect" way.
+If you hold the SHIFT key, objects will be "snapped" to the grid.
+
+WorkAdventure will force any "colliding" objects to be snapped to the grid. This means that if an object cannot be
+traversed (like a table), WorkAdventure will make it snap to the grid. This is a limitation of the physics engine
+used internally by WorkAdventure.
+
+## Deleting an object
+
+You can delete an object by selecting it and pressing the `Delete` key on your keyboard.
+Alternatively, if you have many objects to delete, you can select the "delete tool" (the bin icon) in the toolbar and 
+click on the objects you want to delete.
 
 ## Frequently Asked Questions
 
