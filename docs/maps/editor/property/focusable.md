@@ -1,4 +1,4 @@
-## Focus property
+## Focusable property
 It is possible to define special regions on the map that can make the camera zoom and center on themselves. We call them "Focusable Area". When player gets inside, his camera view will be altered - focused, zoomed and locked on defined area, like this:
 
 <div class="row">
@@ -7,7 +7,7 @@ It is possible to define special regions on the map that can make the camera zoo
     </div>
 </div>
 
-## Adding new Focusable Area :
+## Setting focusable area :
 1. When editing an area, you can add the focusable property to it. You must click on the "focusable" icon.
 <div class="row">
     <div class="col">

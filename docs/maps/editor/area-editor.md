@@ -22,11 +22,12 @@ You can edit an area by clicking on it and then by adjusting the size with the l
 You can delete an area by clicking on it and then by clicking on the trash icon or on the delete key.
 
 ## Trigger action when entering the area
-You can trigger an action when a user enters an area. There is a list of possible actions :
-- [Focus on an area](property/focus.md)
-- [Silent zone](property/silent-zone.md)
+You can trigger an action when a user enters an area. There is a list of possible properties :
+- [Focusable](property/focusable.md)
+- [Silent](property/silent.md)
 - [Jitsi meeting](property/jitsi.md)
 - [Broadcast](property/broadcast.md)
-- [Redirect to another map](property/entry-exit.md)
+- [Start/ Exit](property/entry-exit.md)
 - [Play sound](property/play-sound.md)
 - [Open a link](property/open-link.md)
+You can add multiple "Play sound" and "Open a link" actions to an area.
