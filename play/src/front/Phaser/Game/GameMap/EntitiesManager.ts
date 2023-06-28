@@ -322,6 +322,9 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     return;
                 }
                 mapEditorEntityModeStore.set("EDIT");
+                if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                }
                 mapEditorSelectedEntityStore.set(entity);
             }
         });
@@ -359,6 +362,9 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         const positionToPlaceCopyAt = { ...entity.getPosition() };
         const oldPos = entity.getOldPosition();
         entity.setPosition(oldPos.x, oldPos.y);
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
         mapEditorSelectedEntityStore.set(undefined);
         const eventData: CopyEntityEventData = {
             position: positionToPlaceCopyAt,

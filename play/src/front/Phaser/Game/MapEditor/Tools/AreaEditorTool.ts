@@ -299,6 +299,9 @@ export class AreaEditorTool extends MapEditorTool {
 
             if (currentlySelectedArea) {
                 if (!sortedAreaPreviews.includes(currentlySelectedArea)) {
+                    if (document.activeElement instanceof HTMLElement) {
+                        document.activeElement.blur();
+                    }
                     mapEditorSelectedAreaPreviewStore.set(sortedAreaPreviews[0]);
                 } else {
                     if (this.wasAreaMoved) {
@@ -307,12 +310,18 @@ export class AreaEditorTool extends MapEditorTool {
                     } else {
                         const nextAreaIndex =
                             (sortedAreaPreviews.indexOf(currentlySelectedArea) + 1) % sortedAreaPreviews.length;
+                        if (document.activeElement instanceof HTMLElement) {
+                            document.activeElement.blur();
+                        }
                         mapEditorSelectedAreaPreviewStore.set(sortedAreaPreviews[nextAreaIndex]);
                     }
                 }
                 // can happen after we delete an Area
             } else {
                 if (sortedAreaPreviews.length > 0) {
+                    if (document.activeElement instanceof HTMLElement) {
+                        document.activeElement.blur();
+                    }
                     mapEditorSelectedAreaPreviewStore.set(sortedAreaPreviews[0]);
                 }
             }
@@ -383,6 +392,9 @@ export class AreaEditorTool extends MapEditorTool {
     private changeAreaMode(mode: MapEditorAreaToolMode, areaPreview?: AreaPreview): void {
         mapEditorAreaModeStore.set(mode);
         this.scene.input.setDefaultCursor(mode === "ADD" ? "copy" : "auto");
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
         mapEditorSelectedAreaPreviewStore.set(areaPreview);
     }
 
