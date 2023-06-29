@@ -1,5 +1,10 @@
 ## Focusable property
-It is possible to define special regions on the map that can make the camera zoom and center on themselves. We call them "Focusable Area". When player gets inside, his camera view will be altered - focused, zoomed and locked on defined area, like this:
+When you make an area "focusable", the camera will automatically zoom on the area when the user enters it.
+Apply this on a meeting room, for instance, to make the camera show the complete meeting room.
+
+Focusable areas have one property: the "zoom margin".
+If your focusable area is small, we advise you to set a zoom margin. The camera will zoom out a little bit from
+the area. This allows zooming too much and can give a better rendering.
 
 <div class="row">
     <div class="col">

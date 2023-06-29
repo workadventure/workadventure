@@ -1,5 +1,8 @@
 ## Silent property
-On your map, you can define special silent zones where nobody is allowed to talk. In these zones, users will not speak to each others, even if they are next to each others.
+Add a "silent" area to your map to prevent users from talking to each others (in bubbles) inside this area.
+
+When a user enters a "silent" area, the indicator next to the Woka's name will turn red.
+No-one can talk to this user, and this user cannot talk to anyone else until the area is left.
 
 ## Setting silent area :
 1. When editing an area, you can add the silent property to it. You must click on the "silent" icon.
