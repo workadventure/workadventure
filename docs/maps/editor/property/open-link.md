@@ -1,8 +1,9 @@
 ## Open link property
 On your map, you can define special zones where a link will be opened when a user enters the area.
+Also, you can define an entity that will trigger a link too.
 
 ## Setting open link area :
-When editing an area, you can add the silent property to it. You must click on the "link" icon.
+When editing an area or an entity, you can add the silent property to it. You must click on the "link" icon.
 
 <div class="row">
     <div class="col">

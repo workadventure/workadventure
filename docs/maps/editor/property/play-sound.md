@@ -1,8 +1,9 @@
 # Play sound property
-On your map, you can define special zones where a sound will be played when a user enters the area.
+On your map, you can define special zones where a sound will be played when a user enters the area. 
+Also, you can define an entity that will trigger a sound.
 
 ## Setting play sound area :
-When editing an area, you can add the play sound property to it. You must click on the "play sound" icon.
+When editing an area or an entity, you can add the play sound property to it. You must click on the "play sound" icon.
 
 <div class="row">
     <div class="col">

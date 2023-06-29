@@ -1,8 +1,9 @@
 ## Jitsi meeting property
 On your map, you can define special zones where a Jitsi meeting will be opened when a user enters the area.
+YOu can also define an entity that will be trigger a Jitsi meeting room.
 
 ## Setting Jitsi meeting area :
-When editing an area, you can add the Jitsi meeting property to it. You must click on the "Jitsi meeting" icon.
+When editing an area or an entity, you can add the Jitsi meeting property to it. You must click on the "Jitsi meeting" icon.
 
 <div class="row">
     <div class="col">

@@ -30,4 +30,5 @@ You can trigger an action when a user enters an area. There is a list of possibl
 - [Start/ Exit](property/entry-exit.md)
 - [Play sound](property/play-sound.md)
 - [Open a link](property/open-link.md)
+
 You can add multiple "Play sound" and "Open a link" actions to an area.
