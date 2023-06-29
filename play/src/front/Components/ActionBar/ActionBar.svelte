@@ -39,6 +39,8 @@
     import hammerImg from "../images/hammer.png";
     import megaphoneImg from "../images/megaphone.svg";
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
+    import appOnImg from "../images/applications/appOn.png";
+    import appOffImg from "../images/applications/appOff.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
@@ -394,6 +396,28 @@
     function buttonActionBarTrigger(id: string) {
         const button = $additionnalButtonsMenu.get(id) as AddButtonActionBarEvent;
         return iframeListener.sendButtonActionBarTriggered(button);
+    }
+
+    // Variable to store the app menu state opened or closed
+    let appMenuOpened = false;
+    function toggleAppMenu(){
+        appMenuOpened = !appMenuOpened;
+    }
+
+    function openKlaxoonActivityPicker(){
+        // Todo, use the metada from admin to get klaxoon api key
+        
+        // @ts-ignore
+        KlaxoonActivityPicker.openPicker({
+            clientId: 'YOUR_KLAXOON_API',
+            success: (payload: unknown) => {
+                console.info('Message received from Klaxoon Activity Picker: ', payload);
+            },
+            options: {
+                height: 940,
+                width: 639,
+            }
+        });
     }
 </script>
 
@@ -777,6 +801,38 @@
                         </button>
                     </div>
                 {/if}
+                <div
+                    in:fly={{}}
+                    on:dragstart|preventDefault={noDrag}
+                    on:keyup|preventDefault={noDrag}
+                    on:keypress|preventDefault={noDrag}
+                    on:keydown|preventDefault={noDrag}
+                    on:focus|preventDefault={noDrag}
+                    on:blur|preventDefault={noDrag}
+                    on:click={() => {
+                        toggleAppMenu();
+                    }}
+                    class="bottom-action-button"
+                >
+                    <Tooltip text={$LL.actionbar.app()} />
+                    <button id="klaxoon">
+                        {#if appMenuOpened}
+                            <img
+                                draggable="false"
+                                src={appOnImg}
+                                style="padding: 2px"
+                                alt={$LL.actionbar.app()}
+                            />
+                        {:else}
+                            <img
+                                draggable="false"
+                                src={appOffImg}
+                                style="padding: 2px"
+                                alt={$LL.actionbar.app()}
+                            />
+                        {/if}
+                    </button>
+                </div>
             </div>
 
             {#if $addActionButtonActionBarEvent.length > 0}

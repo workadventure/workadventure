@@ -241,6 +241,7 @@ export class FrontController extends BaseHttpController {
 
         try {
             const metaTagsData = await builder.getMeta(req.header("User-Agent"));
+            console.log("metaTagsData", metaTagsData);
             let option = {};
             if (req.query.logrocket === "true" && LOGROCKET_ID != undefined) {
                 option = {
@@ -252,6 +253,7 @@ export class FrontController extends BaseHttpController {
             }
             html = Mustache.render(this.indexFile, {
                 ...metaTagsData,
+                // TODO change it to push data from admin
                 msApplicationTileImage: metaTagsData.favIcons[metaTagsData.favIcons.length - 1].src,
                 url,
                 script: this.script,
