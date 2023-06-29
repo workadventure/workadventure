@@ -43,4 +43,18 @@ return [
         'markdown' => 'maps.editor.entry-exit',
         'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/editor/entry-exit.md',
     ],
+    [
+        'title' => 'References',
+        'url' => '/map-building/editor/entity-collection-file-format.md',
+        'markdown' => 'maps.editor.entity-collection-file-format',
+        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/editor/entity-collection-file-format.md',
+        'children' => [
+            [
+                'title' => 'Entity collection file format',
+                'url' => '/map-building/editor/entity-collection-file-format.md',
+                'markdown' => 'maps.editor.entity-collection-file-format',
+                'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/editor/entity-collection-file-format.md',
+            ],
+        ],
+    ],
 ];

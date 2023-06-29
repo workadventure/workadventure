@@ -7,12 +7,7 @@ objects and furniture in your map.
 
 Use the entity editor to drag'n'drop objects from the right panel into the map.
 
-TODO
-TODO
-TODO
-TODO
-TODO
-TODO
+[Map editor - placing objects](https://www.youtube.com/watch?v=WfGBxyVctgY)
 
 Some objects can be rotated (top, left, bottom, right).
 Some objects can have different colors.
@@ -63,8 +58,7 @@ However, if you are a die-hard fan and are not afraid of doing some technical wo
 collections by writing a JSON file and then manually modifying the map file (with the `.wam` extension) to add a 
 reference to your JSON object collection.
 
-TODO: add links to the documentation of the JSON format.
-TODO: document the existence of WAM files
+You can read more about the entity collection format in the [documentation](entity-collection-file-format.md).
 
 ### I cannot move or select an object on the map
 
