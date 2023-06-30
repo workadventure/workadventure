@@ -787,6 +787,7 @@ jobs:
           sed -i "s/JITSI_DOMAIN=/JITSI_DOMAIN=coremeet.workadventu.re/g" .env
           sed -i "s/JITSI_MUC_DOMAIN=/JITSI_MUC_DOMAIN=muc.prosody.workadventu.re/g" .env
           sed -i "s/JITSI_XMPP_DOMAIN=/JITSI_XMPP_DOMAIN=prosody.workadventu.re/g" .env
+          sed -i "s/FEATURE_FLAG_BROADCAST_AREAS=/FEATURE_FLAG_BROADCAST_AREAS=true/g" .env
           echo "WOKA_SPEED=3" >> .env
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}

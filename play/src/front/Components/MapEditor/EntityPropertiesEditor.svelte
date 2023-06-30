@@ -6,6 +6,7 @@
     import visioSvg from "../images/visio-white.svg";
     import audioSvg from "../images/audio-white.svg";
     import webSvg from "../images/web-white.svg";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
@@ -25,6 +26,7 @@
 
     function onAddProperty(type: EntityDataPropertiesKeys) {
         if ($mapEditorSelectedEntityStore) {
+            analyticsClient.addMapEditorProperty("entity", type || "unknown");
             $mapEditorSelectedEntityStore.addProperty(getPropertyFromType(type));
             // refresh properties
             properties = $mapEditorSelectedEntityStore?.getProperties();
@@ -77,6 +79,7 @@
 
     function onDeleteProperty(id: string) {
         if ($mapEditorSelectedEntityStore) {
+            analyticsClient.removeMapEditorProperty("entity", properties.find((p) => p.id === id)?.type || "unknown");
             $mapEditorSelectedEntityStore.deleteProperty(id);
             // refresh properties
             properties = $mapEditorSelectedEntityStore?.getProperties();

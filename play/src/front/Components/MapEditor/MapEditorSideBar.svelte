@@ -10,6 +10,7 @@
     import Tooltip from "../Util/Tooltip.svelte";
     import ConfigureImg from "../images/configure.svg";
     import TrashImg from "../images/trash.svg";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     const gameScene = gameManager.getCurrentGameScene();
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
@@ -40,6 +41,7 @@
     });
 
     function switchTool(newTool: EditorToolName) {
+        analyticsClient.openMapEditorTool(newTool);
         gameScene.getMapEditorModeManager().equipTool(newTool);
     }
 </script>
