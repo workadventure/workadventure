@@ -26,9 +26,9 @@ You can trigger an action when a user enters an area. There is a list of possibl
 - [Focusable](property/focusable.md)
 - [Silent](property/silent.md)
 - [Jitsi meeting](property/jitsi.md)
-- [Broadcast](property/broadcast.md)
 - [Start/ Exit](property/entry-exit.md)
 - [Play sound](property/play-sound.md)
 - [Open a link](property/open-link.md)
+<!-- - [Broadcast](property/broadcast.md)-->
 
 You can add multiple "Play sound" and "Open a link" actions to an area.

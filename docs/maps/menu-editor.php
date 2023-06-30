@@ -63,12 +63,12 @@ return [
                 'markdown' => 'maps.editor.property.jitsi',
                 'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/editor/property/jitsi.md',
             ],
-            [
+            /*[
                 'title' => 'Broadcasting / Presentation zones',
                 'url' => '/map-building/editor/property/broadcast.md',
                 'markdown' => 'maps.editor.property.broadcast',
                 'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/editor/property/broadcast.md',
-            ],
+            ],*/
             [
                 'title' => 'Entries and exits',
                 'url' => '/map-building/editor/property/entry-exit.md',
