@@ -97,6 +97,7 @@ export const EnvironmentVariables = z.object({
         .optional()
         .transform((val) => toArray(val)),
     WOKA_SPEED: PositiveIntAsString.optional().transform((val) => toNumber(val, 9)),
+    FEATURE_FLAG_BROADCAST_AREAS: BoolAsString.optional().transform((val) => toBool(val, false)),
 
     // Jitsi related environment variables
     JITSI_DOMAIN: z.string().optional(),
