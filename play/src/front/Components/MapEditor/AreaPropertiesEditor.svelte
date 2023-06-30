@@ -287,7 +287,7 @@
                     />
                 {:else if property.type === "playAudio"}
                     <PlayAudioPropertyEditor
-                        {property}
+                        property={{ ...property, hideButtonLabel: true }}
                         on:close={() => {
                             onDeleteProperty(property.id);
                         }}
