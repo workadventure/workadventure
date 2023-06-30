@@ -24,6 +24,7 @@
     let hasListenerMegaphoneProperty: boolean;
     let hasStartProperty: boolean;
     let hasExitProperty: boolean;
+    let hasplayAudioProperty: boolean;
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
@@ -148,6 +149,7 @@
         hasListenerMegaphoneProperty = hasProperty("listenerMegaphone");
         hasStartProperty = hasProperty("start");
         hasExitProperty = hasProperty("exit");
+        hasplayAudioProperty = hasProperty("playAudio");
     }
 </script>
 
@@ -232,15 +234,17 @@
                 }}
             />
         {/if}
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.audioProperties.label()}
-            descriptionText={$LL.mapEditor.properties.audioProperties.description()}
-            img={audioSvg}
-            style="z-index: 2;"
-            on:click={() => {
-                onAddProperty("playAudio");
-            }}
-        />
+        {#if !hasplayAudioProperty}
+            <AddPropertyButton
+                headerText={$LL.mapEditor.properties.audioProperties.label()}
+                descriptionText={$LL.mapEditor.properties.audioProperties.description()}
+                img={audioSvg}
+                style="z-index: 2;"
+                on:click={() => {
+                    onAddProperty("playAudio");
+                }}
+            />
+        {/if}
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.linkProperties.label()}
             descriptionText={$LL.mapEditor.properties.linkProperties.description()}
