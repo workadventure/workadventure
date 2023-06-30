@@ -210,4 +210,9 @@ export class TrashEditorTool extends EntityEditorTool {
         this.unbindEventHandlers();
         this.scene.markDirty();
     }
+
+    protected bindEntitiesManagerEventHandlers(): void {
+        // NOTE: We don't need to bind anything here, because all the events emitted by EntitiesManager are handled by
+        // the parent of this class (EntityEditorTool) who is already called in the MapEditorModeManager constructor.
+    }
 }
