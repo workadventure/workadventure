@@ -259,6 +259,8 @@ You will be notified if your WorkAdventure version contains a known security fla
 
 If you want to connect WorkAdventure to an authentication provider, you can follow the [OpenID Connect documentation](../../docs/dev/openid.md).
 
+Finally, you can set up a list of restricted users [allowed to access the inline map editor](../../docs/dev/inline-map-editor.md).
+
 ## Upgrading WorkAdventure
 
 The upgrade path will depend on the installation of WorkAdventure you are using.
