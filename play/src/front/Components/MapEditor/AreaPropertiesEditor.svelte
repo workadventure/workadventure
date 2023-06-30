@@ -26,6 +26,7 @@
     let hasListenerMegaphoneProperty: boolean;
     let hasStartProperty: boolean;
     let hasExitProperty: boolean;
+    let hasplayAudioProperty: boolean;
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
@@ -155,6 +156,7 @@
         hasListenerMegaphoneProperty = hasProperty("listenerMegaphone");
         hasStartProperty = hasProperty("start");
         hasExitProperty = hasProperty("exit");
+        hasplayAudioProperty = hasProperty("playAudio");
     }
 </script>
 
@@ -167,7 +169,7 @@
                 headerText={$LL.mapEditor.properties.focusableProperties.label()}
                 descriptionText={$LL.mapEditor.properties.focusableProperties.description()}
                 img={"resources/icons/icon_focus.png"}
-                style="z-index: 5;"
+                style="z-index: 9;"
                 on:click={() => {
                     onAddProperty("focusable");
                 }}
@@ -178,7 +180,7 @@
                 headerText={$LL.mapEditor.properties.silentProperty.label()}
                 descriptionText={$LL.mapEditor.properties.silentProperty.description()}
                 img={"resources/icons/icon_silent.png"}
-                style="z-index: 4;"
+                style="z-index: 8;"
                 on:click={() => {
                     onAddProperty("silent");
                 }}
@@ -189,7 +191,7 @@
                 headerText={$LL.mapEditor.properties.jitsiProperties.label()}
                 descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
                 img={"resources/icons/icon_meeting.png"}
-                style="z-index: 3;"
+                style="z-index: 7;"
                 on:click={() => {
                     onAddProperty("jitsiRoomProperty");
                 }}
@@ -201,7 +203,7 @@
                     headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
                     descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.description()}
                     img={"resources/icons/icon_speaker.png"}
-                    style="z-index: 3;"
+                    style="z-index: 6;"
                     on:click={() => {
                         onAddProperty("speakerMegaphone");
                     }}
@@ -212,7 +214,7 @@
                     headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
                     descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
                     img={"resources/icons/icon_listener.png"}
-                    style="z-index: 3;"
+                    style="z-index: 5;"
                     on:click={() => {
                         onAddProperty("listenerMegaphone");
                     }}
@@ -224,7 +226,7 @@
                 headerText={$LL.mapEditor.properties.startProperties.label()}
                 descriptionText={$LL.mapEditor.properties.startProperties.description()}
                 img={"resources/icons/icon_start.png"}
-                style="z-index: 3;"
+                style="z-index: 4;"
                 on:click={() => {
                     onAddProperty("start");
                 }}
@@ -241,15 +243,17 @@
                 }}
             />
         {/if}
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.audioProperties.label()}
-            descriptionText={$LL.mapEditor.properties.audioProperties.description()}
-            img={audioSvg}
-            style="z-index: 2;"
-            on:click={() => {
-                onAddProperty("playAudio");
-            }}
-        />
+        {#if !hasplayAudioProperty}
+            <AddPropertyButton
+                headerText={$LL.mapEditor.properties.audioProperties.label()}
+                descriptionText={$LL.mapEditor.properties.audioProperties.description()}
+                img={audioSvg}
+                style="z-index: 2;"
+                on:click={() => {
+                    onAddProperty("playAudio");
+                }}
+            />
+        {/if}
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.linkProperties.label()}
             descriptionText={$LL.mapEditor.properties.linkProperties.description()}
@@ -292,7 +296,7 @@
                     />
                 {:else if property.type === "playAudio"}
                     <PlayAudioPropertyEditor
-                        {property}
+                        property={{ ...property, hideButtonLabel: true }}
                         on:close={() => {
                             onDeleteProperty(property.id);
                         }}

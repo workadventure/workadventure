@@ -14,6 +14,7 @@
 
     let properties: EntityDataProperties = [];
     let entityName = "";
+    let hasJitsiRoomProperty: boolean;
 
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
         if (currentEntity) {
@@ -29,6 +30,7 @@
             $mapEditorSelectedEntityStore.addProperty(getPropertyFromType(type));
             // refresh properties
             properties = $mapEditorSelectedEntityStore?.getProperties();
+            refreshFlags();
         }
     }
 
@@ -84,7 +86,15 @@
             // $mapEditorSelectedEntityStore.delete();
             // mapEditorSelectedEntityStore.set(undefined);
             // mapEditorEntityModeStore.set("ADD");
+            refreshFlags();
         }
+    }
+
+    function refreshFlags(): void {
+        hasJitsiRoomProperty = hasProperty("jitsiRoomProperty");
+    }
+    function hasProperty(propertyType: EntityDataPropertiesKeys): boolean {
+        return properties.find((property) => property.type === propertyType) !== undefined;
     }
 
     onDestroy(() => {
@@ -99,15 +109,17 @@
         <h2>Editing: {$mapEditorSelectedEntityStore.getPrefab().name}</h2>
     </div>
     <div class="properties-buttons tw-flex tw-flex-row">
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.jitsiProperties.label()}
-            descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
-            img={visioSvg}
-            style="z-index: 5;"
-            on:click={() => {
-                onAddProperty("jitsiRoomProperty");
-            }}
-        />
+        {#if !hasJitsiRoomProperty}
+            <AddPropertyButton
+                headerText={$LL.mapEditor.properties.jitsiProperties.label()}
+                descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
+                img={visioSvg}
+                style="z-index: 5;"
+                on:click={() => {
+                    onAddProperty("jitsiRoomProperty");
+                }}
+            />
+        {/if}
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.audioProperties.label()}
             descriptionText={$LL.mapEditor.properties.audioProperties.description()}

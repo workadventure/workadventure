@@ -188,7 +188,11 @@ export class UserInputManager {
     }
 
     restoreControls() {
-        this.scene.input.keyboard?.enableGlobalCapture();
+        try {
+            this.scene.input.keyboard?.enableGlobalCapture();
+        } catch (e) {
+            console.warn(e);
+        }
         this.isInputDisabled = false;
     }
 
