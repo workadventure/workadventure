@@ -212,7 +212,7 @@ export class TrashEditorTool extends EntityEditorTool {
     }
 
     protected bindEntitiesManagerEventHandlers(): void {
-        // NOTE: We don't need to bind anything here, because all the events emit by EntitiesManager are handled by
+        // NOTE: We don't need to bind anything here, because all the events emitted by EntitiesManager are handled by
         // the parent of this class (EntityEditorTool) who is already called in the MapEditorModeManager constructor.
     }
 }
