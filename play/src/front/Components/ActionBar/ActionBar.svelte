@@ -182,6 +182,7 @@
     }
 
     function toggleMapEditorMode() {
+        analyticsClient.toggleMapEditor(!$mapEditorModeStore);
         mapEditorModeStore.switchMode(!$mapEditorModeStore);
     }
 

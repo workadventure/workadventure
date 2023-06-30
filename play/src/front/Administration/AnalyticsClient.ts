@@ -500,5 +500,37 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+
+    toggleMapEditor(open: boolean): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_mapeditor_${open ? "open" : "close"}`);
+            })
+            .catch((e) => console.error(e));
+    }
+
+    addMapEditorProperty(type: string, propertyName: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_mapeditor_${type}_add_${propertyName}_property`);
+            })
+            .catch((e) => console.error(e));
+    }
+
+    removeMapEditorProperty(type: string, propertyName: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_map-editor_${type}_remove_${propertyName}_property`);
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openMapEditorTool(toolName: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_map-editor_open_${toolName}`);
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();
