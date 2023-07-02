@@ -34,7 +34,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Docker meta
         id: meta
@@ -133,7 +133,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Docker meta
         id: meta
@@ -208,7 +208,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Docker meta
         id: meta
@@ -303,7 +303,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Docker meta
         id: meta
@@ -367,7 +367,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Docker meta
         id: meta
@@ -434,7 +434,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Docker meta
         id: meta
@@ -526,7 +526,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Docker meta
         id: meta
@@ -622,7 +622,7 @@ jobs:
         working-directory: tests
       - name: 'Setup .env file'
         run: cp .env.template .env
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
       - name: Display pulled version
         run: echo "Pulling images with tag ${DOCKER_TAG}"
         env:
@@ -765,7 +765,7 @@ jobs:
       - name: 'Setup .env file'
         run: cp .env.prod.template .env
         working-directory: contrib/docker
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: "Install Room Api client dependencies"
         run: npm ci
@@ -849,7 +849,7 @@ jobs:
         uses: actions/checkout@v2
 
       # Create a slugified value of the branch
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Set ADMIN_URL if "deploy-connect-to-admin" label is set
         run: echo "ADMIN_API_URL=https://${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re" >> $GITHUB_ENV
