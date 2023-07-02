@@ -15,6 +15,7 @@ import {
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS } from "../Enum/EnvironmentVariable";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -23,7 +24,6 @@ import { MessageStatusMessage } from "./P2PMessages/MessageStatusMessage";
 import { P2PMessage } from "./P2PMessages/P2PMessage";
 import { BlockMessage } from "./P2PMessages/BlockMessage";
 import { UnblockMessage } from "./P2PMessages/UnblockMessage";
-import { PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS } from "../Enum/EnvironmentVariable";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
