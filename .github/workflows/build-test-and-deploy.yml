@@ -57,11 +57,12 @@ jobs:
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
           secrets: |
+            "SENTRY_URL=${{ secrets.SENTRY_URL }}"
             "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
             "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
             "SENTRY_PROJECT=play"
-            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF == 'master' && 'staging' || 'testing' }}"
-            "SENTRY_RELEASE=${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}"
+            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF_SLUG == 'master' && 'staging' || 'testing' }}"
+            "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_HEAD_REF_SLUG || format('{0}@{1}', env.GITHUB_HEAD_REF_SLUG, env.GITHUB_SHA_SHORT) }}"
 
       - name: Build test image
         uses: docker/build-push-action@v3
@@ -84,15 +85,18 @@ jobs:
 
       - name: Sentry push source maps
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        continue-on-error: true
         env:
+          SENTRY_URL: ${{ secrets.SENTRY_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: play
-          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF == 'master' && 'staging' || 'testing' }}
-          SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF_SLUG == 'master' && 'staging' || 'testing' }}
+          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_HEAD_REF_SLUG || format('{0}@{1}', env.GITHUB_HEAD_REF_SLUG, env.GITHUB_SHA_SHORT) }}
         run: |
           docker run --rm \
             --user 0       \
+            -e SENTRY_URL \
             -e SENTRY_AUTH_TOKEN \
             -e SENTRY_ORG \
             -e SENTRY_PROJECT \
@@ -156,11 +160,12 @@ jobs:
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
           secrets: |
+            "SENTRY_URL=${{ secrets.SENTRY_URL }}"
             "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
             "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
             "SENTRY_PROJECT=chat"
-            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF == 'master' && 'staging' || 'testing' }}"
-            "SENTRY_RELEASE=${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}"
+            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF_SLUG == 'master' && 'staging' || 'testing' }}"
+            "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_HEAD_REF_SLUG || format('{0}@{1}', env.GITHUB_HEAD_REF_SLUG, env.GITHUB_SHA_SHORT) }}"
 
       - name: Build test image
         uses: docker/build-push-action@v3
@@ -259,14 +264,16 @@ jobs:
       - name: Sentry push source maps
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         env:
+          SENTRY_URL: ${{ secrets.SENTRY_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: back
-          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF == 'master' && 'staging' || 'testing' }}
-          SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF_SLUG == 'master' && 'staging' || 'testing' }}
+          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_HEAD_REF_SLUG || format('{0}@{1}', env.GITHUB_HEAD_REF_SLUG, env.GITHUB_SHA_SHORT) }}
         run: |
             docker run --rm \
               --user 0       \
+              -e SENTRY_URL \
               -e SENTRY_AUTH_TOKEN \
               -e SENTRY_ORG \
               -e SENTRY_PROJECT \
@@ -479,14 +486,16 @@ jobs:
       - name: Sentry push source maps
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         env:
+          SENTRY_URL: ${{ secrets.SENTRY_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: map-storage
-          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF == 'master' && 'staging' || 'testing' }}
-          SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF_SLUG == 'master' && 'staging' || 'testing' }}
+          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_HEAD_REF_SLUG || format('{0}@{1}', env.GITHUB_HEAD_REF_SLUG, env.GITHUB_SHA_SHORT) }}
         run: |
           docker run --rm \
             --user 0       \
+            -e SENTRY_URL \
             -e SENTRY_AUTH_TOKEN \
             -e SENTRY_ORG \
             -e SENTRY_PROJECT \
