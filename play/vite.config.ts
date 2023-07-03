@@ -66,6 +66,7 @@ export default defineConfig(({ mode }) => {
                 deploy: {
                     env: env.SENTRY_ENVIRONMENT,
                 },
+                finalize: true,
                 uploadSourceMaps: true,
             })
         );

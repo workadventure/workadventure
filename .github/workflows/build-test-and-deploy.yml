@@ -90,7 +90,7 @@ jobs:
           SENTRY_URL: ${{ secrets.SENTRY_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: play
+          SENTRY_PROJECT: pusher
           SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF_SLUG == 'master' && 'staging' || 'testing' }}
           SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_HEAD_REF_SLUG || format('{0}@{1}', env.GITHUB_HEAD_REF_SLUG, env.GITHUB_SHA_SHORT) }}
         run: |
