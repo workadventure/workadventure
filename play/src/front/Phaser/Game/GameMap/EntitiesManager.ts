@@ -99,16 +99,13 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 `Could not find entity ${data.prefabRef.id} in collection ${data.prefabRef.collectionName}`
             );
         }
-        TexturesHelper.loadEntityImage(this.scene, prefab.imagePath, `${imagePathPrefix ?? ""}${prefab.imagePath}`)
-            .then(() => {
-                const entity = this.entities.get(entityId);
-                if (entity) {
-                    entity
-                        .setTexture(prefab.imagePath)
-                        .setDepth(entity.y + entity.displayHeight + (entity.getPrefab().depthOffset ?? 0));
-                }
-            })
-            .catch((e) => console.error(e));
+
+        await TexturesHelper.loadEntityImage(
+            this.scene,
+            prefab.imagePath,
+            `${imagePathPrefix ?? ""}${prefab.imagePath}`
+        );
+
         const entity = new Entity(this.scene, entityId, data, prefab);
 
         if (interactive) {
@@ -123,7 +120,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.gameMapFrontWrapper.modifyToCollisionsLayer(entity.x, entity.y, "0", colGrid, withGridUpdate);
         }
 
-        this.entities.set(entityId, entity);
         if (entity.isActivatable()) {
             this.activatableEntities.push(entity);
         }
