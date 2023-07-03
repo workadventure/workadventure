@@ -27,12 +27,7 @@ export default defineConfig(({ mode }) => {
         },
         plugins: [
             svelte({
-                preprocess: sveltePreprocess({
-                    sourceMap: true,
-                }),
-                compilerOptions: {
-                    enableSourcemap: true,
-                },
+                preprocess: sveltePreprocess(),
                 onwarn(warning, defaultHandler) {
                     // don't warn on:
                     if (warning.code === "a11y-click-events-have-key-events") return;
@@ -58,6 +53,7 @@ export default defineConfig(({ mode }) => {
         console.info("Sentry plugin enabled");
         config.plugins.push(
             sentryVitePlugin({
+                url: env.SENTRY_URL || "https://sentry.io/",
                 org: env.SENTRY_ORG,
                 project: env.SENTRY_PROJECT,
                 // Specify the directory containing build artifacts
