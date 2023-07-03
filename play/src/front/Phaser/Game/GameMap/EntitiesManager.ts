@@ -120,6 +120,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.gameMapFrontWrapper.modifyToCollisionsLayer(entity.x, entity.y, "0", colGrid, withGridUpdate);
         }
 
+        this.entities.set(entityId, entity);
         if (entity.isActivatable()) {
             this.activatableEntities.push(entity);
         }
