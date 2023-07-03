@@ -149,7 +149,7 @@ export class IoSocketController {
                                 },
                             })
                         );
-                        ws.close();
+                        ws.end(1007, "Invalid message received!");
                         return;
                     }
 
@@ -170,7 +170,7 @@ export class IoSocketController {
                                 },
                             })
                         );
-                        ws.close();
+                        ws.end(1008, "Access refused");
                         return;
                     }
 
@@ -195,7 +195,7 @@ export class IoSocketController {
                                     },
                                 })
                             );
-                            ws.close();
+                            ws.end(1008, "Access refused");
                             return;
                         }
 
@@ -658,7 +658,7 @@ export class IoSocketController {
                         } else {
                             socketManager.emitConnectionErrorMessage(ws, ws.message);
                         }
-                        setTimeout(() => ws.close(), 0);
+                        ws.end(1000, "Error message sent");
                         return;
                     }
 

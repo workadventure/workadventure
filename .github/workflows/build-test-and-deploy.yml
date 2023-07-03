@@ -34,7 +34,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Docker meta
         id: meta
@@ -57,11 +57,12 @@ jobs:
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
           secrets: |
+            "SENTRY_URL=${{ secrets.SENTRY_URL }}"
             "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
             "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
             "SENTRY_PROJECT=play"
-            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF == 'master' && 'staging' || 'testing' }}"
-            "SENTRY_RELEASE=${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}"
+            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF_SLUG == 'master' && 'staging' || 'testing' }}"
+            "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_HEAD_REF_SLUG || format('{0}@{1}', env.GITHUB_HEAD_REF_SLUG, env.GITHUB_SHA_SHORT) }}"
 
       - name: Build test image
         uses: docker/build-push-action@v3
@@ -84,15 +85,18 @@ jobs:
 
       - name: Sentry push source maps
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
+        continue-on-error: true
         env:
+          SENTRY_URL: ${{ secrets.SENTRY_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: play
-          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF == 'master' && 'staging' || 'testing' }}
-          SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF_SLUG == 'master' && 'staging' || 'testing' }}
+          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_HEAD_REF_SLUG || format('{0}@{1}', env.GITHUB_HEAD_REF_SLUG, env.GITHUB_SHA_SHORT) }}
         run: |
           docker run --rm \
             --user 0       \
+            -e SENTRY_URL \
             -e SENTRY_AUTH_TOKEN \
             -e SENTRY_ORG \
             -e SENTRY_PROJECT \
@@ -133,7 +137,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Docker meta
         id: meta
@@ -156,11 +160,12 @@ jobs:
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
           secrets: |
+            "SENTRY_URL=${{ secrets.SENTRY_URL }}"
             "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
             "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
             "SENTRY_PROJECT=chat"
-            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF == 'master' && 'staging' || 'testing' }}"
-            "SENTRY_RELEASE=${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}"
+            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF_SLUG == 'master' && 'staging' || 'testing' }}"
+            "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_HEAD_REF_SLUG || format('{0}@{1}', env.GITHUB_HEAD_REF_SLUG, env.GITHUB_SHA_SHORT) }}"
 
       - name: Build test image
         uses: docker/build-push-action@v3
@@ -208,7 +213,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Docker meta
         id: meta
@@ -259,14 +264,16 @@ jobs:
       - name: Sentry push source maps
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         env:
+          SENTRY_URL: ${{ secrets.SENTRY_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: back
-          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF == 'master' && 'staging' || 'testing' }}
-          SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF_SLUG == 'master' && 'staging' || 'testing' }}
+          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_HEAD_REF_SLUG || format('{0}@{1}', env.GITHUB_HEAD_REF_SLUG, env.GITHUB_SHA_SHORT) }}
         run: |
             docker run --rm \
               --user 0       \
+              -e SENTRY_URL \
               -e SENTRY_AUTH_TOKEN \
               -e SENTRY_ORG \
               -e SENTRY_PROJECT \
@@ -303,7 +310,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Docker meta
         id: meta
@@ -367,7 +374,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Docker meta
         id: meta
@@ -434,7 +441,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Docker meta
         id: meta
@@ -479,14 +486,16 @@ jobs:
       - name: Sentry push source maps
         if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
         env:
+          SENTRY_URL: ${{ secrets.SENTRY_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: map-storage
-          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF == 'master' && 'staging' || 'testing' }}
-          SENTRY_RELEASE: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF_SLUG == 'master' && 'staging' || 'testing' }}
+          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_HEAD_REF_SLUG || format('{0}@{1}', env.GITHUB_HEAD_REF_SLUG, env.GITHUB_SHA_SHORT) }}
         run: |
           docker run --rm \
             --user 0       \
+            -e SENTRY_URL \
             -e SENTRY_AUTH_TOKEN \
             -e SENTRY_ORG \
             -e SENTRY_PROJECT \
@@ -526,7 +535,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Docker meta
         id: meta
@@ -622,7 +631,7 @@ jobs:
         working-directory: tests
       - name: 'Setup .env file'
         run: cp .env.template .env
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
       - name: Display pulled version
         run: echo "Pulling images with tag ${DOCKER_TAG}"
         env:
@@ -765,7 +774,7 @@ jobs:
       - name: 'Setup .env file'
         run: cp .env.prod.template .env
         working-directory: contrib/docker
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: "Install Room Api client dependencies"
         run: npm ci
@@ -849,7 +858,7 @@ jobs:
         uses: actions/checkout@v2
 
       # Create a slugified value of the branch
-      - uses: rlespinasse/github-slug-action@3.1.0
+      - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Set ADMIN_URL if "deploy-connect-to-admin" label is set
         run: echo "ADMIN_API_URL=https://${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re" >> $GITHUB_ENV

@@ -84,8 +84,10 @@ export default defineConfig(({ mode }) => {
     };
 
     if (env.SENTRY_ORG && env.SENTRY_PROJECT && env.SENTRY_AUTH_TOKEN && env.SENTRY_RELEASE && env.SENTRY_ENVIRONMENT) {
+        console.info("Sentry plugin enabled");
         config.plugins.push(
             sentryVitePlugin({
+                url: env.SENTRY_URL || "https://sentry.io/",
                 org: env.SENTRY_ORG,
                 project: env.SENTRY_PROJECT,
                 // Specify the directory containing build artifacts
@@ -98,8 +100,11 @@ export default defineConfig(({ mode }) => {
                 deploy: {
                     env: env.SENTRY_ENVIRONMENT,
                 },
+                uploadSourceMaps: true,
             })
         );
+    } else {
+        console.info("Sentry plugin disabled");
     }
     return config;
 });
