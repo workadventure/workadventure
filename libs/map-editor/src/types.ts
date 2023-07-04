@@ -89,7 +89,7 @@ export const ListenerMegaphonePropertyData = PropertyBase.extend({
     chatEnabled: z.boolean().default(false),
 });
 
-export const AreaDataProperty = z.union([
+export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,
     FocusablePropertyData,
@@ -114,7 +114,11 @@ export const AreaData = z.object({
     properties: AreaDataProperties,
 });
 
-export const EntityDataProperty = z.union([JitsiRoomPropertyData, PlayAudioPropertyData, OpenWebsitePropertyData]);
+export const EntityDataProperty = z.discriminatedUnion("type", [
+    JitsiRoomPropertyData,
+    PlayAudioPropertyData,
+    OpenWebsitePropertyData,
+]);
 
 export const EntityDataProperties = z.array(EntityDataProperty);
 
