@@ -269,7 +269,7 @@ export class MapEditorModeManager {
                         this.pendingCommands.shift();
                         return;
                     }
-                    this.revertPendingCommands();
+                    await this.revertPendingCommands();
                 }
 
                 for (const tool of Object.values(this.editorTools)) {
@@ -279,11 +279,11 @@ export class MapEditorModeManager {
         });
     }
 
-    private revertPendingCommands(): void {
+    private async revertPendingCommands(): Promise<void> {
         while (this.pendingCommands.length > 0) {
             const command = this.pendingCommands.pop();
             if (command) {
-                //await command.getUndoCommand();
+                await command.getUndoCommand().execute();
                 // also remove from local history of commands as this is invalid
                 const index = this.localCommandsHistory.findIndex(
                     (localCommand) => localCommand.commandId === command.commandId

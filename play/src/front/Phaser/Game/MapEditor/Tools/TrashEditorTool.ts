@@ -1,15 +1,15 @@
 import type { AreaData } from "@workadventure/map-editor";
+import { EditMapCommandMessage } from "@workadventure/messages";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import { DeleteAreaFrontCommand } from "../Commands/Area/DeleteAreaFrontCommand";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
-import { EntityEditorTool } from "./EntityEditorTool";
+import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
-export class TrashEditorTool extends EntityEditorTool {
+export class TrashEditorTool extends EntityRelatedEditorTool {
     private areaPreviews: AreaPreview[];
 
-    protected shiftKey?: Phaser.Input.Keyboard.Key;
     protected ctrlKey?: Phaser.Input.Keyboard.Key;
 
     private active = false;
@@ -21,7 +21,6 @@ export class TrashEditorTool extends EntityEditorTool {
 
         this.active = false;
 
-        this.shiftKey = this.scene.input.keyboard?.addKey("SHIFT");
         this.ctrlKey = this.scene.input.keyboard?.addKey("CTRL");
 
         this.areaPreviews = this.createAreaPreviews();
@@ -196,18 +195,22 @@ export class TrashEditorTool extends EntityEditorTool {
         console.info("handleAreaPreviewCreation => No create area preview in trash mode");
     }
 
+    public async handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
+        // Nothing to do here
+    }
+
     public activate() {
+        super.activate();
         this.active = true;
         this.setAreaPreviewsVisibility(true);
-        this.bindEventHandlers();
         this.updateAreaPreviews();
         this.scene.markDirty();
     }
 
     public clear() {
+        super.clear();
         this.active = false;
         this.setAreaPreviewsVisibility(false);
-        this.unbindEventHandlers();
         this.scene.markDirty();
     }
 

@@ -100,13 +100,20 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             );
         }
 
-        await TexturesHelper.loadEntityImage(
-            this.scene,
-            prefab.imagePath,
-            `${imagePathPrefix ?? ""}${prefab.imagePath}`
-        );
-
         const entity = new Entity(this.scene, entityId, data, prefab);
+        entity.setVisible(false);
+
+        TexturesHelper.loadEntityImage(this.scene, prefab.imagePath, `${imagePathPrefix ?? ""}${prefab.imagePath}`)
+            .then(() => {
+                const entity = this.entities.get(entityId);
+                if (entity) {
+                    entity
+                        .setTexture(prefab.imagePath)
+                        .setDepth(entity.y + entity.displayHeight + (entity.getPrefab().depthOffset ?? 0))
+                        .setVisible(true);
+                }
+            })
+            .catch((e) => console.error(e));
 
         if (interactive) {
             entity.setInteractive({ pixelPerfect: true, cursor: "pointer" });
