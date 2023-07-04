@@ -56,6 +56,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         testInteractionButton: "Tester interaction",
         buttonLabel: "Texte du bouton",
         editInstructions: "Sélectionnez un objet pour modifier ses propriétés.",
+        selectObject: "Cliquer sur un objet pour le selectionner",
     },
     settings: {
         loading: "Chargement en cours",
