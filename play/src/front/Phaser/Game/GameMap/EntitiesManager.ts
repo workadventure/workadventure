@@ -324,9 +324,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             }
         });
         entity.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
-            if (pointer.downElement?.tagName !== "CANVAS") {
-                return;
-            }
             this.pointerOverEntitySubject.next(entity);
             if (get(mapEditorModeStore) && this.isEntityEditorToolActive()) {
                 entity.setPointedToEditColor(this.isTrashEditorToolActive() ? 0xff0000 : 0x00ff00);
