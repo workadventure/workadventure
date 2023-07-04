@@ -1,12 +1,16 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import { mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
+    import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import EntityEditor from "./EntityEditor.svelte";
     import AreaEditor from "./AreaEditor.svelte";
     import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
     import TrashEditor from "./TrashEditor.svelte";
+
+    function closeChat() {
+        mapEditorModeStore.switchMode(false);
+    }
 </script>
 
 <MapEditorSideBar />
@@ -15,6 +19,7 @@
         <ConfigureMyRoom />
     {:else}
         <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
+            <button class="close-window" on:click={closeChat}>&#215;</button>
             {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
                 <TrashEditor />
             {/if}

@@ -122,6 +122,7 @@ const mapEditor: BaseTranslation = {
         testInteractionButton: "Test Interaction",
         buttonLabel: "Button Label",
         editInstructions: "Click an entity to modify its properties.",
+        selectObject: "Click on an object to select it",
     },
     settings: {
         loading: "Loading",
