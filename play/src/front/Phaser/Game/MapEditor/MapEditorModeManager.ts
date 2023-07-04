@@ -1,6 +1,7 @@
 import { Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
 import { Unsubscriber, get } from "svelte/store";
 import { EditMapCommandMessage } from "@workadventure/messages";
+import pLimit from "p-limit";
 import type { RoomConnection } from "../../../Connection/RoomConnection";
 import type { GameScene } from "../GameScene";
 import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
@@ -262,8 +263,9 @@ export class MapEditorModeManager {
     }
 
     public subscribeToRoomConnection(connection: RoomConnection): void {
+        const limit = pLimit(1);
         connection.editMapCommandMessageStream.subscribe((editMapCommandMessage) => {
-            (async () => {
+            limit(async () => {
                 if (this.pendingCommands.length > 0) {
                     if (this.pendingCommands[0].commandId === editMapCommandMessage.id) {
                         this.pendingCommands.shift();
@@ -275,7 +277,7 @@ export class MapEditorModeManager {
                 for (const tool of Object.values(this.editorTools)) {
                     await tool.handleIncomingCommandMessage(editMapCommandMessage);
                 }
-            })().catch((e) => console.error(e));
+            }).catch((e) => console.error(e));
         });
     }
 
