@@ -112,6 +112,8 @@
           "LOGROCKET_ID": env.LOGROCKET_ID,
           "ROOM_API_PORT": "50051",
           "DEBUG": "*",
+          "PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS": "600",
+          "PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS": "1000",
           "JITSI_DOMAIN": "coremeet.workadventu.re",
           "JITSI_XMPP_DOMAIN": "prosody.workadventu.re",
           "JITSI_MUC_DOMAIN": "muc.prosody.workadventu.re",
