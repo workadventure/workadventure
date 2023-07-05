@@ -24,7 +24,6 @@ import {
 import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import * as Sentry from "@sentry/node";
-import { getMessageFromError } from "workadventureback/src/Services/MessageHelpers";
 import { mapsManager } from "./MapsManager";
 import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
 
@@ -236,5 +235,15 @@ const mapStorageServer: MapStorageServer = {
         });
     },
 };
+
+function getMessageFromError(error: unknown): string {
+    if (error instanceof Error) {
+        return error.message;
+    } else if (typeof error === "string") {
+        return error;
+    } else {
+        return "Unknown error";
+    }
+}
 
 export { mapStorageServer };
