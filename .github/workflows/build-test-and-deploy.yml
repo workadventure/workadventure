@@ -61,8 +61,8 @@ jobs:
             "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
             "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
             "SENTRY_PROJECT=play"
-            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF_SLUG == 'master' && 'staging' || 'testing' }}"
-            "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_HEAD_REF_SLUG || format('{0}@{1}', env.GITHUB_HEAD_REF_SLUG, env.GITHUB_SHA_SHORT) }}"
+            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}"
+            "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME, env.GITHUB_SHA) }}"
 
       - name: Build test image
         uses: docker/build-push-action@v3
@@ -91,8 +91,8 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: pusher
-          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF_SLUG == 'master' && 'staging' || 'testing' }}
-          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_HEAD_REF_SLUG || format('{0}@{1}', env.GITHUB_HEAD_REF_SLUG, env.GITHUB_SHA_SHORT) }}
+          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}
+          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME, env.GITHUB_SHA) }}
         run: |
           docker run --rm \
             --user 0       \
@@ -164,8 +164,8 @@ jobs:
             "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
             "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
             "SENTRY_PROJECT=chat"
-            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF_SLUG == 'master' && 'staging' || 'testing' }}"
-            "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_HEAD_REF_SLUG || format('{0}@{1}', env.GITHUB_HEAD_REF_SLUG, env.GITHUB_SHA_SHORT) }}"
+            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}"
+            "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME, env.GITHUB_SHA) }}"
 
       - name: Build test image
         uses: docker/build-push-action@v3
@@ -268,8 +268,8 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: back
-          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF_SLUG == 'master' && 'staging' || 'testing' }}
-          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_HEAD_REF_SLUG || format('{0}@{1}', env.GITHUB_HEAD_REF_SLUG, env.GITHUB_SHA_SHORT) }}
+          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}
+          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME, env.GITHUB_SHA) }}
         run: |
             docker run --rm \
               --user 0       \
@@ -490,8 +490,8 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: map-storage
-          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_HEAD_REF_SLUG == 'master' && 'staging' || 'testing' }}
-          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_HEAD_REF_SLUG || format('{0}@{1}', env.GITHUB_HEAD_REF_SLUG, env.GITHUB_SHA_SHORT) }}
+          SENTRY_ENVIRONMENT: ${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}
+          SENTRY_RELEASE: ${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME, env.GITHUB_SHA) }}
         run: |
           docker run --rm \
             --user 0       \
