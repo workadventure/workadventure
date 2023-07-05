@@ -578,6 +578,10 @@ message MegaphoneEnabledMessage {
   bool value = 1;
 }
 
+message ErrorEditMapCommandMessage {
+  string commandId = 1;
+}
+
 
 /**
  * Messages going from back and pusher to the front
@@ -611,6 +615,7 @@ message ServerToClientMessage {
     XmppSettingsMessage xmppSettingsMessage = 29;
     MoveToPositionMessage moveToPositionMessage = 31;
     InvalidCompanionTextureMessage invalidCompanionTextureMessage = 32;
+    ErrorEditMapCommandMessage errorEditMapCommandMessage = 33;
   }
 }
 

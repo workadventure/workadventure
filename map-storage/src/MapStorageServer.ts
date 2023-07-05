@@ -219,7 +219,7 @@ const mapStorageServer: MapStorageServer = {
             console.log(e);
             let message: string;
             if (typeof e === "object" && e !== null) {
-                message = e.toString();
+                message = call.request.editMapCommandMessage?.id ?? "Unknown id command error";
             } else {
                 message = "Unknown error";
             }
