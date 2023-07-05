@@ -130,6 +130,7 @@ export class MapEditorModeManager {
                         this.localCommandsHistory.splice(this.currentCommandIndex + 1);
                     }
                     this.pendingCommands.push(command);
+                    console.warn("adding command to pendingList : ", command);
                     this.localCommandsHistory.push(command);
                     this.currentCommandIndex += 1;
                 }
@@ -156,6 +157,7 @@ export class MapEditorModeManager {
             const command = this.localCommandsHistory[this.currentCommandIndex];
             const undoCommand1 = command.getUndoCommand();
             this.pendingCommands.push(command);
+            console.warn("adding command to pendingList : ", command);
 
             // do any necessary changes for active tool interface
             //this.handleCommandExecutionByTools(undoCommand1, true);
@@ -181,6 +183,7 @@ export class MapEditorModeManager {
             const command = this.localCommandsHistory[this.currentCommandIndex + 1];
             //const commandConfig = await command.execute();
             this.pendingCommands.push(command);
+            console.warn("adding command to pendingList : ", command);
 
             // do any necessary changes for active tool interface
             //this.handleCommandExecutionByTools(commandConfig, true);
@@ -271,6 +274,7 @@ export class MapEditorModeManager {
             limit(async () => {
                 if (this.pendingCommands.length > 0) {
                     if (this.pendingCommands[0].commandId === editMapCommandMessage.id) {
+                        console.warn("removing command of pendingList : ", editMapCommandMessage.id);
                         this.pendingCommands.shift();
                         return;
                     }
@@ -288,12 +292,14 @@ export class MapEditorModeManager {
                 (command) => command.commandId === errorEditMapCommandMessage.commandId
             );
             if (command) {
+                console.warn("ErrorEditMapCommandMessage received for command: ", command);
                 this.pendingCommands.splice(this.pendingCommands.indexOf(command), 1);
             }
         });
     }
 
     private async revertPendingCommands(): Promise<void> {
+        console.warn("Reverting pending commands");
         // We are blocking the normal execution of commands until we revert all pending commands
         this.isReverting = (async () => {
             while (this.pendingCommands.length > 0) {
