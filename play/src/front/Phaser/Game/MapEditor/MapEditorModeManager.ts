@@ -63,6 +63,8 @@ export class MapEditorModeManager {
     private ctrlKey?: Phaser.Input.Keyboard.Key;
     private shiftKey?: Phaser.Input.Keyboard.Key;
 
+    private isReverting: Promise<void> = Promise.resolve();
+
     constructor(scene: GameScene) {
         this.scene = scene;
 
@@ -109,6 +111,7 @@ export class MapEditorModeManager {
         emitMapEditorUpdate = true,
         addToLocalCommandsHistory = true
     ): Promise<void> {
+        await this.isReverting;
         // Commands are throttled. Only one at a time.
         return (this.currentRunningCommand = this.currentRunningCommand.then(async () => {
             const delay = 0;
@@ -282,20 +285,24 @@ export class MapEditorModeManager {
     }
 
     private async revertPendingCommands(): Promise<void> {
-        while (this.pendingCommands.length > 0) {
-            const command = this.pendingCommands.pop();
-            if (command) {
-                await command.getUndoCommand().execute();
-                // also remove from local history of commands as this is invalid
-                const index = this.localCommandsHistory.findIndex(
-                    (localCommand) => localCommand.commandId === command.commandId
-                );
-                if (index !== -1) {
-                    this.localCommandsHistory.splice(index, 1);
-                    this.currentCommandIndex -= 1;
+        // We are blocking the normal execution of commands until we revert all pending commands
+        this.isReverting = (async () => {
+            while (this.pendingCommands.length > 0) {
+                const command = this.pendingCommands.pop();
+                if (command) {
+                    await command.getUndoCommand().execute();
+                    // also remove from local history of commands as this is invalid
+                    const index = this.localCommandsHistory.findIndex(
+                        (localCommand) => localCommand.commandId === command.commandId
+                    );
+                    if (index !== -1) {
+                        this.localCommandsHistory.splice(index, 1);
+                        this.currentCommandIndex -= 1;
+                    }
                 }
             }
-        }
+        })();
+        return this.isReverting;
     }
 
     public equipTool(tool?: EditorToolName): void {
