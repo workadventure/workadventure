@@ -284,15 +284,12 @@ export class MapEditorModeManager {
         });
 
         connection.errorEditMapCommandMessageStream.subscribe((errorEditMapCommandMessage) => {
-            (async () => {
-                const command = this.pendingCommands.find(
-                    (command) => command.commandId === errorEditMapCommandMessage.commandId
-                );
-                if (command) {
-                    await command.getUndoCommand().execute();
-                    this.pendingCommands.splice(this.pendingCommands.indexOf(command), 1);
-                }
-            })().catch((e) => console.error(e));
+            const command = this.pendingCommands.find(
+                (command) => command.commandId === errorEditMapCommandMessage.commandId
+            );
+            if (command) {
+                this.pendingCommands.splice(this.pendingCommands.indexOf(command), 1);
+            }
         });
     }
 
