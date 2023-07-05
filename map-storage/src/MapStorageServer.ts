@@ -24,6 +24,7 @@ import {
 import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import * as Sentry from "@sentry/node";
+import { getMessageFromError } from "workadventureback/src/Services/MessageHelpers";
 import { mapsManager } from "./MapsManager";
 import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
 
@@ -208,6 +209,10 @@ const mapStorageServer: MapStorageServer = {
                     await mapsManager.executeCommand(mapKey, new UpdateWAMSettingCommand(wam, message, commandId));
                     break;
                 }
+                case "errorCommandMessage": {
+                    // Nothing to do, this message will never come from client
+                    break;
+                }
                 default: {
                     const _exhaustiveCheck: never = editMapMessage;
                 }
@@ -217,13 +222,17 @@ const mapStorageServer: MapStorageServer = {
             callback(null, editMapCommandMessage);
         })().catch((e: unknown) => {
             console.log(e);
-            let message: string;
-            if (typeof e === "object" && e !== null) {
-                message = call.request.editMapCommandMessage?.id ?? "Unknown id command error";
-            } else {
-                message = "Unknown error";
-            }
-            callback({ name: "MapStorageError", message }, null);
+            callback(null, {
+                id: call.request.editMapCommandMessage?.id ?? "Unknown id command error",
+                editMapMessage: {
+                    message: {
+                        $case: "errorCommandMessage",
+                        errorCommandMessage: {
+                            reason: getMessageFromError(e),
+                        },
+                    },
+                },
+            });
         });
     },
 };

@@ -272,6 +272,20 @@ export class MapEditorModeManager {
         const limit = pLimit(1);
         connection.editMapCommandMessageStream.subscribe((editMapCommandMessage) => {
             limit(async () => {
+                if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
+                    console.error(
+                        "ErrorCommandMessage received",
+                        editMapCommandMessage.editMapMessage?.message.errorCommandMessage
+                    );
+                    const command = this.pendingCommands.find(
+                        (command) => command.commandId === editMapCommandMessage.id
+                    );
+                    if (command) {
+                        console.warn("removing command of pendingList : ", editMapCommandMessage.id);
+                        this.pendingCommands.splice(this.pendingCommands.indexOf(command), 1);
+                    }
+                    return;
+                }
                 if (this.pendingCommands.length > 0) {
                     if (this.pendingCommands[0].commandId === editMapCommandMessage.id) {
                         console.warn("removing command of pendingList : ", editMapCommandMessage.id);
@@ -285,16 +299,6 @@ export class MapEditorModeManager {
                     await tool.handleIncomingCommandMessage(editMapCommandMessage);
                 }
             }).catch((e) => console.error(e));
-        });
-
-        connection.errorEditMapCommandMessageStream.subscribe((errorEditMapCommandMessage) => {
-            const command = this.pendingCommands.find(
-                (command) => command.commandId === errorEditMapCommandMessage.commandId
-            );
-            if (command) {
-                console.warn("ErrorEditMapCommandMessage received for command: ", command);
-                this.pendingCommands.splice(this.pendingCommands.indexOf(command), 1);
-            }
         });
     }
 

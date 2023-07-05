@@ -132,7 +132,12 @@ message EditMapMessage {
     CreateEntityMessage createEntityMessage = 5;
     DeleteEntityMessage deleteEntityMessage = 6;
     UpdateWAMSettingsMessage updateWAMSettingsMessage = 7;
+    ErrorCommandMessage errorCommandMessage = 8;
   }
+}
+
+message ErrorCommandMessage {
+  string reason = 1;
 }
 
 message UpdateWAMSettingsMessage {
@@ -578,10 +583,6 @@ message MegaphoneEnabledMessage {
   bool value = 1;
 }
 
-message ErrorEditMapCommandMessage {
-  string commandId = 1;
-}
-
 
 /**
  * Messages going from back and pusher to the front
@@ -615,7 +616,6 @@ message ServerToClientMessage {
     XmppSettingsMessage xmppSettingsMessage = 29;
     MoveToPositionMessage moveToPositionMessage = 31;
     InvalidCompanionTextureMessage invalidCompanionTextureMessage = 32;
-    ErrorEditMapCommandMessage errorEditMapCommandMessage = 33;
   }
 }
 

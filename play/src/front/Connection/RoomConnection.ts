@@ -47,7 +47,6 @@ import {
     UnwatchSpaceMessage,
     EmbeddableWebsiteAnswer,
     CompanionTextureMessage,
-    ErrorEditMapCommandMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
@@ -201,8 +200,6 @@ export class RoomConnection implements RoomConnection {
     public readonly removeSpaceUserMessageStream = this._removeSpaceUserMessageStream.asObservable();
     private readonly _megaphoneSettingsMessageStream = new BehaviorSubject<MegaphoneSettings | undefined>(undefined);
     public readonly megaphoneSettingsMessageStream = this._megaphoneSettingsMessageStream.asObservable();
-    private readonly _errorEditMapCommandMessageStream = new Subject<ErrorEditMapCommandMessage>();
-    public readonly errorEditMapCommandMessageStream = this._errorEditMapCommandMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -639,10 +636,6 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "xmppSettingsMessage": {
                     this._xmppSettingsMessageStream.next(message.xmppSettingsMessage);
-                    break;
-                }
-                case "errorEditMapCommandMessage": {
-                    this._errorEditMapCommandMessageStream.next(message.errorEditMapCommandMessage);
                     break;
                 }
                 default: {

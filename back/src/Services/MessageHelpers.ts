@@ -8,7 +8,7 @@ import * as Sentry from "@sentry/node";
 import { UserSocket } from "../Model/User";
 import { AdminSocket, RoomSocket, ZoneSocket } from "../RoomManager";
 
-function getMessageFromError(error: unknown): string {
+export function getMessageFromError(error: unknown): string {
     if (error instanceof Error) {
         return error.message;
     } else if (typeof error === "string") {
