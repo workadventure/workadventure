@@ -27,6 +27,7 @@ if (SENTRY_DSN_FRONT != undefined) {
     try {
         const sentryOptions: Sentry.BrowserOptions = {
             dsn: SENTRY_DSN_FRONT,
+            release: SENTRY_RELEASE,
             environment: SENTRY_ENVIRONMENT,
             integrations: [new Sentry.BrowserTracing()],
             // Set tracesSampleRate to 1.0 to capture 100%
@@ -34,11 +35,7 @@ if (SENTRY_DSN_FRONT != undefined) {
             // We recommend adjusting this value in production
             tracesSampleRate: 0.2,
         };
-        if (SENTRY_RELEASE != undefined) {
-            // Make sure this value is identical to the name you give the release that you
-            // create below using Sentry CLI
-            sentryOptions.release = SENTRY_RELEASE;
-        }
+
         Sentry.init(sentryOptions);
         console.info("Sentry initialized");
     } catch (e) {
