@@ -132,7 +132,12 @@ message EditMapMessage {
     CreateEntityMessage createEntityMessage = 5;
     DeleteEntityMessage deleteEntityMessage = 6;
     UpdateWAMSettingsMessage updateWAMSettingsMessage = 7;
+    ErrorCommandMessage errorCommandMessage = 8;
   }
+}
+
+message ErrorCommandMessage {
+  string reason = 1;
 }
 
 message UpdateWAMSettingsMessage {

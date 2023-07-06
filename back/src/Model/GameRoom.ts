@@ -1104,7 +1104,33 @@ export class GameRoom implements BrothersFinder {
             },
             (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
                 if (err) {
-                    emitError(user.socket, err);
+                    let message = "Unknown error";
+                    if (err instanceof Error) {
+                        message = err.message;
+                    } else if (typeof err === "string") {
+                        message = err;
+                    }
+                    emitError(user.socket, message);
+                    return;
+                }
+                if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
+                    // Return the error message to the sender and don't dispatch it to the room
+                    user.socket.write({
+                        message: {
+                            $case: "batchMessage",
+                            batchMessage: {
+                                event: "",
+                                payload: [
+                                    {
+                                        message: {
+                                            $case: "editMapCommandMessage",
+                                            editMapCommandMessage,
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    });
                     return;
                 }
                 if (editMapCommandMessage.editMapMessage?.message?.$case === "updateWAMSettingsMessage") {

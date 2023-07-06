@@ -208,6 +208,10 @@ const mapStorageServer: MapStorageServer = {
                     await mapsManager.executeCommand(mapKey, new UpdateWAMSettingCommand(wam, message, commandId));
                     break;
                 }
+                case "errorCommandMessage": {
+                    // Nothing to do, this message will never come from client
+                    break;
+                }
                 default: {
                     const _exhaustiveCheck: never = editMapMessage;
                 }
@@ -217,15 +221,29 @@ const mapStorageServer: MapStorageServer = {
             callback(null, editMapCommandMessage);
         })().catch((e: unknown) => {
             console.log(e);
-            let message: string;
-            if (typeof e === "object" && e !== null) {
-                message = e.toString();
-            } else {
-                message = "Unknown error";
-            }
-            callback({ name: "MapStorageError", message }, null);
+            callback(null, {
+                id: call.request.editMapCommandMessage?.id ?? "Unknown id command error",
+                editMapMessage: {
+                    message: {
+                        $case: "errorCommandMessage",
+                        errorCommandMessage: {
+                            reason: getMessageFromError(e),
+                        },
+                    },
+                },
+            });
         });
     },
 };
+
+function getMessageFromError(error: unknown): string {
+    if (error instanceof Error) {
+        return error.message;
+    } else if (typeof error === "string") {
+        return error;
+    } else {
+        return "Unknown error";
+    }
+}
 
 export { mapStorageServer };

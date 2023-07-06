@@ -1,42 +1,22 @@
-import { EntityData, EntityPrefab, WAMEntityData } from "@workadventure/map-editor";
+import { EntityData, WAMEntityData } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
-import { get, Unsubscriber } from "svelte/store";
-import {
-    mapEditorCopiedEntityDataPropertiesStore,
-    mapEditorModeStore,
-    mapEditorSelectedEntityDraggedStore,
-    mapEditorSelectedEntityPrefabStore,
-    mapEditorSelectedEntityStore,
-    mapEditorEntityModeStore,
-} from "../../../../Stores/MapEditorStore";
+import { get } from "svelte/store";
 import { Entity } from "../../../ECS/Entity";
-import { TexturesHelper } from "../../../Helpers/TexturesHelper";
-import { CopyEntityEventData, EntitiesManager, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
-import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
-import { GameScene } from "../../GameScene";
+import { CopyEntityEventData, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { CreateEntityFrontCommand } from "../Commands/Entity/CreateEntityFrontCommand";
 import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand";
 import { UpdateEntityFrontCommand } from "../Commands/Entity/UpdateEntityFrontCommand";
-import { MapEditorTool } from "./MapEditorTool";
+import { TexturesHelper } from "../../../Helpers/TexturesHelper";
+import {
+    mapEditorCopiedEntityDataPropertiesStore,
+    mapEditorEntityModeStore,
+    mapEditorSelectedEntityStore,
+} from "../../../../Stores/MapEditorStore";
+import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
-export class EntityEditorTool extends MapEditorTool {
-    protected scene: GameScene;
-    protected mapEditorModeManager: MapEditorModeManager;
-
-    protected entitiesManager: EntitiesManager;
-
-    protected entityPrefab: EntityPrefab | undefined;
-    protected entityPrefabPreview: Phaser.GameObjects.Image | undefined;
-    protected entityOldPositionPreview: Phaser.GameObjects.Image | undefined;
-
+export class EntityEditorTool extends EntityRelatedEditorTool {
     protected shiftKey?: Phaser.Input.Keyboard.Key;
-
-    protected mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
-    protected mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
-    protected mapEditorSelectedEntityStoreUnsubscriber!: Unsubscriber;
-    protected mapEditorSelectedEntityDraggedStoreUnsubscriber!: Unsubscriber;
-
     protected pointerMoveEventHandler!: (pointer: Phaser.Input.Pointer) => void;
     protected pointerDownEventHandler!: (
         pointer: Phaser.Input.Pointer,
@@ -44,73 +24,13 @@ export class EntityEditorTool extends MapEditorTool {
     ) => void;
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
-        super();
-        this.mapEditorModeManager = mapEditorModeManager;
-        this.scene = this.mapEditorModeManager.getScene();
-
+        super(mapEditorModeManager);
         this.shiftKey = this.scene.input.keyboard?.addKey("SHIFT");
 
-        this.entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
-
-        this.entityPrefab = undefined;
-        this.entityPrefabPreview = undefined;
-        this.entityOldPositionPreview = undefined;
-
-        this.subscribeToStores();
+        this.bindEventHandlers();
         this.bindEntitiesManagerEventHandlers();
     }
 
-    public update(time: number, dt: number): void {}
-    public clear(): void {
-        this.scene.input.topOnly = false;
-        mapEditorEntityModeStore.set("ADD");
-        this.entitiesManager.clearAllEntitiesTint();
-        this.entitiesManager.clearAllEntitiesEditOutlines();
-        this.cleanPreview();
-        this.unbindEventHandlers();
-    }
-    public activate(): void {
-        this.scene.input.topOnly = true;
-        this.entitiesManager.makeAllEntitiesInteractive();
-        this.bindEventHandlers();
-    }
-    public destroy(): void {
-        this.cleanPreview();
-        this.unbindEventHandlers();
-        this.mapEditorSelectedEntityPrefabStoreUnsubscriber();
-        this.mapEntityEditorModeStoreUnsubscriber();
-        this.mapEditorSelectedEntityStoreUnsubscriber();
-        this.mapEditorSelectedEntityDraggedStoreUnsubscriber();
-    }
-    public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
-        console.log("EntityEditorTool subscribeToGameMapFrontWrapperEvents");
-    }
-    public handleKeyDownEvent(event: KeyboardEvent): void {
-        switch (event.key.toLowerCase()) {
-            case "escape": {
-                if (get(mapEditorEntityModeStore) === "EDIT") {
-                    if (document.activeElement instanceof HTMLElement) {
-                        document.activeElement.blur();
-                    }
-                    mapEditorSelectedEntityStore.set(undefined);
-                    mapEditorEntityModeStore.set("ADD");
-                    return;
-                }
-                if (get(mapEditorEntityModeStore) === "ADD") {
-                    this.cleanPreview();
-                    return;
-                }
-                break;
-            }
-            case "backspace":
-            case "delete": {
-                get(mapEditorSelectedEntityStore)?.delete();
-                mapEditorSelectedEntityStore.set(undefined);
-                mapEditorEntityModeStore.set("ADD");
-                break;
-            }
-        }
-    }
     /**
      * React on commands coming from the outside
      */
@@ -192,73 +112,6 @@ export class EntityEditorTool extends MapEditorTool {
         }
     }
 
-    protected subscribeToStores(): void {
-        this.mapEditorSelectedEntityPrefabStoreUnsubscriber = mapEditorSelectedEntityPrefabStore.subscribe(
-            (entityPrefab: EntityPrefab | undefined): void => {
-                this.entityPrefab = entityPrefab;
-                if (!entityPrefab) {
-                    this.entityPrefabPreview?.destroy();
-                    this.entityPrefabPreview = undefined;
-                } else {
-                    TexturesHelper.loadEntityImage(this.scene, entityPrefab.imagePath, entityPrefab.imagePath)
-                        .then(() => {
-                            if (this.entityPrefabPreview) {
-                                this.entityPrefabPreview.setTexture(entityPrefab.imagePath);
-                            } else {
-                                const pointer = this.scene.input.activePointer;
-                                this.entityPrefabPreview = this.scene.add.image(
-                                    Math.floor(pointer.worldX),
-                                    Math.floor(pointer.worldY),
-                                    entityPrefab.imagePath
-                                );
-                            }
-                            this.scene.markDirty();
-                        })
-                        .catch(() => {
-                            console.error("COULD NOT LOAD THE ENTITY PREVIEW TEXTURE");
-                        });
-                }
-                this.scene.markDirty();
-            }
-        );
-
-        this.mapEditorSelectedEntityDraggedStoreUnsubscriber = mapEditorSelectedEntityDraggedStore.subscribe(
-            (dragged) => {
-                if (!dragged) {
-                    this.entityOldPositionPreview?.destroy();
-                }
-            }
-        );
-
-        this.mapEditorSelectedEntityStoreUnsubscriber = mapEditorSelectedEntityStore.subscribe((entity) => {
-            this.entityOldPositionPreview?.destroy();
-            if (!entity) {
-                return;
-            }
-            this.entityOldPositionPreview = this.scene.add
-                .image(entity.x, entity.y, entity.texture)
-                .setOrigin(0)
-                .setAlpha(0.5);
-        });
-
-        this.mapEntityEditorModeStoreUnsubscriber = mapEditorEntityModeStore.subscribe((mode) => {
-            if (!get(mapEditorModeStore)) {
-                return;
-            }
-            switch (mode) {
-                case "ADD": {
-                    this.entitiesManager.makeAllEntitiesInteractive();
-                    break;
-                }
-                case "EDIT": {
-                    this.entitiesManager.makeAllEntitiesInteractive();
-                    this.cleanPreview();
-                    break;
-                }
-            }
-        });
-    }
-
     protected bindEntitiesManagerEventHandlers(): void {
         this.entitiesManager.on(EntitiesManagerEvent.DeleteEntity, (entity: Entity) => {
             this.mapEditorModeManager
@@ -312,16 +165,13 @@ export class EntityEditorTool extends MapEditorTool {
         });
     }
 
-    protected bindEventHandlers(): void {
-        this.pointerMoveEventHandler = (pointer: Phaser.Input.Pointer) => {
-            this.handlePointerMoveEvent(pointer);
-        };
-        this.pointerDownEventHandler = (
-            pointer: Phaser.Input.Pointer,
-            gameObjects: Phaser.GameObjects.GameObject[]
-        ) => {
+    protected bindEventHandlers() {
+        this.pointerMoveEventHandler = (pointer: Phaser.Input.Pointer) => this.handlePointerMoveEvent(pointer);
+        this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
+
+        this.pointerDownEventHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) =>
             this.handlePointerDownEvent(pointer, gameObjects);
-        };
+        this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
 
         this.shiftKey?.on(Phaser.Input.Keyboard.Events.DOWN, () => {
             this.changePreviewTint();
@@ -330,14 +180,6 @@ export class EntityEditorTool extends MapEditorTool {
         this.shiftKey?.on(Phaser.Input.Keyboard.Events.UP, () => {
             this.changePreviewTint();
         });
-
-        this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
-        this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
-    }
-
-    protected unbindEventHandlers(): void {
-        this.scene.input.off(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
-        this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
     }
 
     protected handlePointerMoveEvent(pointer: Phaser.Input.Pointer): void {
@@ -359,6 +201,33 @@ export class EntityEditorTool extends MapEditorTool {
                 (this.entityPrefab.depthOffset ?? 0)
         );
         this.changePreviewTint();
+    }
+
+    protected changePreviewTint(): void {
+        if (!this.entityPrefabPreview || !this.entityPrefab) {
+            return;
+        }
+        if (
+            !this.scene
+                .getGameMapFrontWrapper()
+                .canEntityBePlaced(
+                    this.entityPrefabPreview.getTopLeft(),
+                    this.entityPrefabPreview.displayWidth,
+                    this.entityPrefabPreview.displayHeight,
+                    this.entityPrefab.collisionGrid,
+                    undefined,
+                    this.shiftKey?.isDown
+                )
+        ) {
+            this.entityPrefabPreview.setTint(0xff0000);
+        } else {
+            if (this.shiftKey?.isDown) {
+                this.entityPrefabPreview.setTint(0xffa500);
+            } else {
+                this.entityPrefabPreview.clearTint();
+            }
+        }
+        this.scene.markDirty();
     }
 
     protected handlePointerDownEvent(
@@ -421,56 +290,10 @@ export class EntityEditorTool extends MapEditorTool {
             .catch((e) => console.error(e));
     }
 
-    protected changePreviewTint(): void {
-        if (!this.entityPrefabPreview || !this.entityPrefab) {
-            return;
-        }
-        if (
-            !this.scene
-                .getGameMapFrontWrapper()
-                .canEntityBePlaced(
-                    this.entityPrefabPreview.getTopLeft(),
-                    this.entityPrefabPreview.displayWidth,
-                    this.entityPrefabPreview.displayHeight,
-                    this.entityPrefab.collisionGrid,
-                    undefined,
-                    this.shiftKey?.isDown
-                )
-        ) {
-            this.entityPrefabPreview.setTint(0xff0000);
-        } else {
-            if (this.shiftKey?.isDown) {
-                this.entityPrefabPreview.setTint(0xffa500);
-            } else {
-                this.entityPrefabPreview.clearTint();
-            }
-        }
-        this.scene.markDirty();
-    }
-
-    protected cleanPreview(): void {
-        this.entityPrefabPreview?.destroy();
-        this.entityPrefabPreview = undefined;
-        this.entityPrefab = undefined;
-        mapEditorCopiedEntityDataPropertiesStore.set(undefined);
-        mapEditorSelectedEntityPrefabStore.set(undefined);
-        this.scene.markDirty();
-    }
-
-    protected getEntityPrefabAlignWithGridOffset(): { x: number; y: number } {
-        if (!this.entityPrefab || !this.entityPrefabPreview) {
-            return { x: 0, y: 0 };
-        }
-        const collisionGrid = this.entityPrefab.collisionGrid;
-        if (collisionGrid && collisionGrid.length > 0) {
-            return {
-                x: collisionGrid[0].length % 2 === 1 ? 16 : 0,
-                y: collisionGrid.length % 2 === 1 ? 16 : 0,
-            };
-        }
-        return {
-            x: Math.floor(this.entityPrefabPreview.displayWidth / 32) % 2 === 1 ? 16 : 0,
-            y: Math.floor(this.entityPrefabPreview.displayHeight / 32) % 2 === 1 ? 16 : 0,
-        };
+    protected unbindEventHandlers(): void {
+        this.scene.input.off(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
+        this.shiftKey?.off(Phaser.Input.Keyboard.Events.DOWN);
+        this.shiftKey?.off(Phaser.Input.Keyboard.Events.UP);
+        this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
     }
 }
