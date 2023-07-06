@@ -30,19 +30,27 @@ ENV NODE_ENV=production
 RUN --mount=type=secret,id=SENTRY_RELEASE \
     --mount=type=secret,id=SENTRY_URL \
     --mount=type=secret,id=SENTRY_AUTH_TOKEN \
+    --mount=type=secret,id=SENTRY_PROJECT_FRONT \
+    --mount=type=secret,id=SENTRY_PROJECT_PUSHER \
+    --mount=type=secret,id=SENTRY_DSN_FRONT \
+    --mount=type=secret,id=SENTRY_DSN_PUSHER \
     --mount=type=secret,id=SENTRY_ORG \
     --mount=type=secret,id=SENTRY_PROJECT \
     --mount=type=secret,id=SENTRY_ENVIRONMENT \
     export SENTRY_RELEASE=$(cat /run/secrets/SENTRY_RELEASE) && \
     export SENTRY_URL=$(cat /run/secrets/SENTRY_URL) && \
     export SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN) && \
+    export SENTRY_PROJECT_FRONT=$(cat /run/secrets/SENTRY_PROJECT_FRONT) && \
+    export SENTRY_PROJECT_PUSHER=$(cat /run/secrets/SENTRY_PROJECT_PUSHER) && \
+    export SENTRY_DSN_FRONT=$(cat /run/secrets/SENTRY_DSN_FRONT) && \
+    export SENTRY_DSN_PUSHER=$(cat /run/secrets/SENTRY_DSN_PUSHER) && \
     export SENTRY_ORG=$(cat /run/secrets/SENTRY_ORG) && \
     export SENTRY_PROJECT=$(cat /run/secrets/SENTRY_PROJECT) && \
     export SENTRY_ENVIRONMENT=$(cat /run/secrets/SENTRY_ENVIRONMENT) && \
     cd play && \
     npm run typesafe-i18n && \
     npm run build-iframe-api && \
-    SENTRY_RELEASE=$SENTRY_RELEASE SENTRY_URL=$SENTRY_URL SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN SENTRY_ORG=$SENTRY_ORG SENTRY_PROJECT=$SENTRY_PROJECT SENTRY_ENVIRONMENT=$SENTRY_ENVIRONMENT NODE_OPTIONS="--max-old-space-size=6144" npm run build
+    SENTRY_RELEASE=$SENTRY_RELEASE SENTRY_PROJECT_FRONT=$SENTRY_PROJECT_FRONT SENTRY_PROJECT_PUSHER=$SENTRY_PROJECT_PUSHER SENTRY_URL=$SENTRY_URL SENTRY_DSN_FRONT=$SENTRY_DSN_FRONT SENTRY_DSN_PUSHER=$SENTRY_DSN_PUSHER SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN SENTRY_ORG=$SENTRY_ORG SENTRY_PROJECT=$SENTRY_PROJECT SENTRY_ENVIRONMENT=$SENTRY_ENVIRONMENT NODE_OPTIONS="--max-old-space-size=6144" npm run build
 
 # final production image
 FROM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d
