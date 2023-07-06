@@ -28,21 +28,11 @@ if (SENTRY_DSN != undefined) {
     try {
         const sentryOptions: Sentry.NodeOptions = {
             dsn: SENTRY_DSN,
+            release: SENTRY_RELEASE,
             environment: SENTRY_ENVIRONMENT,
+            tracesSampleRate: SENTRY_TRACES_SAMPLE_RATE,
         };
 
-        if (SENTRY_TRACES_SAMPLE_RATE != undefined) {
-            // Set tracesSampleRate to 1.0 to capture 100%
-            // of transactions for performance monitoring.
-            // We recommend adjusting this value in production
-            sentryOptions.tracesSampleRate = SENTRY_TRACES_SAMPLE_RATE;
-        }
-
-        if (SENTRY_RELEASE != undefined) {
-            // Make sure this value is identical to the name you give the release that you
-            // create below using Sentry CLI
-            sentryOptions.release = SENTRY_RELEASE;
-        }
         Sentry.init(sentryOptions);
         console.info("Sentry initialized");
     } catch (e) {
