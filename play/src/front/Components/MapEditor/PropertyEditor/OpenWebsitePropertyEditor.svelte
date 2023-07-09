@@ -12,9 +12,9 @@
     let optionAdvancedActivated = false;
     let embeddable = true;
     let embeddableLoading = false;
-    let oldValue = property.link;
     let error = "";
     let oldNewTabValue = property.newTab;
+    let linkElement: HTMLInputElement;
 
     const dispatch = createEventDispatcher();
 
@@ -43,6 +43,13 @@
     function checkEmbeddableWebsite() {
         embeddableLoading = true;
         error = "";
+
+        if (!linkElement.checkValidity()) {
+            embeddableLoading = false;
+            error = $LL.mapEditor.properties.linkProperties.errorInvalidUrl();
+            return;
+        }
+
         gameManager
             .getCurrentGameScene()
             .connection?.queryEmbeddableWebsite(property.link)
@@ -67,15 +74,17 @@
                     }
                 }
             })
-            .catch((e) => {
-                embeddable = false;
-                error = e.response?.data?.message ?? $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                console.info("Error to check embeddable website", e);
-                property.link = oldValue;
+            .catch((e: unknown) => {
+                embeddable = true;
+                if (e instanceof Error) {
+                    error = e.message;
+                } else {
+                    error = $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                }
+                console.info("Error checking embeddable website", e);
             })
             .finally(() => {
                 embeddableLoading = false;
-                oldValue = property.link;
                 onValueChange();
             });
     }
@@ -117,14 +126,15 @@
             <label for="tabLink">{$LL.mapEditor.properties.linkProperties.linkLabel()}</label>
             <input
                 id="tabLink"
-                type="text"
+                type="url"
+                bind:this={linkElement}
                 placeholder={$LL.mapEditor.properties.linkProperties.linkPlaceholder()}
                 bind:value={property.link}
                 on:change={onValueChange}
                 on:blur={checkEmbeddableWebsite}
                 disabled={embeddableLoading}
             />
-            {#if !embeddable && error}
+            {#if error}
                 <span class="err tw-text-pop-red tw-text-xs tw-italic tw-mt-1">{error}</span>
             {/if}
             {#if !embeddable && !error}

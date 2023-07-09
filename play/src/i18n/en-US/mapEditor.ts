@@ -61,7 +61,7 @@ const mapEditor: BaseTranslation = {
         },
         linkProperties: {
             label: "Open Link",
-            description: "Open website within Workadventure or as a new tab.",
+            description: "Open website within WorkAdventure or as a new tab.",
             linkLabel: "Link URL",
             newTabLabel: "Open in new tab",
             trigger: "Interaction",
@@ -78,6 +78,7 @@ const mapEditor: BaseTranslation = {
             policyPlaceholder: "fullscreen",
             errorEmbeddableLink: "The link is not embeddable",
             warningEmbeddableLink: "The link is not embeddable. It will open in a new tab",
+            errorInvalidUrl: 'Please enter a valid URL (starting with "https://")',
             findOutMoreHere: "Find out more here",
         },
         advancedOptions: "Advanced Options",
@@ -122,6 +123,7 @@ const mapEditor: BaseTranslation = {
         testInteractionButton: "Test Interaction",
         buttonLabel: "Button Label",
         editInstructions: "Click an entity to modify its properties.",
+        selectObject: "Click on an object to select it",
     },
     settings: {
         loading: "Loading",

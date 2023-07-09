@@ -1,30 +1,24 @@
 import type { AreaData } from "@workadventure/map-editor";
+import { EditMapCommandMessage } from "@workadventure/messages";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import { DeleteAreaFrontCommand } from "../Commands/Area/DeleteAreaFrontCommand";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
-import { EntityEditorTool } from "./EntityEditorTool";
+import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
-export class TrashEditorTool extends EntityEditorTool {
+export class TrashEditorTool extends EntityRelatedEditorTool {
     private areaPreviews: AreaPreview[];
-
-    protected shiftKey?: Phaser.Input.Keyboard.Key;
     protected ctrlKey?: Phaser.Input.Keyboard.Key;
-
     private active = false;
-
-    // private mapEditorSelectedAreaPreviewStoreSubscribe!: Unsubscriber;
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super(mapEditorModeManager);
 
         this.active = false;
-
-        this.shiftKey = this.scene.input.keyboard?.addKey("SHIFT");
         this.ctrlKey = this.scene.input.keyboard?.addKey("CTRL");
-
         this.areaPreviews = this.createAreaPreviews();
+        this.bindEventHandlers();
     }
 
     private createAreaPreviews(): AreaPreview[] {
@@ -41,7 +35,7 @@ export class TrashEditorTool extends EntityEditorTool {
     }
 
     private createAreaPreview(areaConfig: AreaData): AreaPreview {
-        const areaPreview = new AreaPreview(this.scene, structuredClone(areaConfig), this.shiftKey, this.ctrlKey);
+        const areaPreview = new AreaPreview(this.scene, structuredClone(areaConfig), undefined, this.ctrlKey);
         this.bindAreaPreviewEventHandlers(areaPreview);
         this.areaPreviews.push(areaPreview);
         return areaPreview;
@@ -167,16 +161,12 @@ export class TrashEditorTool extends EntityEditorTool {
     }
 
     protected bindEventHandlers(): void {
-        super.bindEventHandlers();
-
         this.scene.input.on(Phaser.Input.Events.POINTER_UP, this.pointerUpEventHandler);
         this.scene.input.on(Phaser.Input.Events.POINTER_OVER, this.pointerHoverEventHandler);
         this.scene.input.on(Phaser.Input.Events.POINTER_OUT, this.pointerOutEventHandler);
     }
 
     protected unbindEventHandlers(): void {
-        super.unbindEventHandlers();
-
         this.scene.input.off(Phaser.Input.Events.POINTER_UP, this.pointerUpEventHandler);
         this.scene.input.off(Phaser.Input.Events.POINTER_OVER, this.pointerHoverEventHandler);
         this.scene.input.off(Phaser.Input.Events.POINTER_OUT, this.pointerOutEventHandler);
@@ -197,22 +187,21 @@ export class TrashEditorTool extends EntityEditorTool {
     }
 
     public activate() {
+        super.activate();
         this.active = true;
         this.setAreaPreviewsVisibility(true);
-        this.bindEventHandlers();
         this.updateAreaPreviews();
         this.scene.markDirty();
     }
 
     public clear() {
+        super.clear();
         this.active = false;
         this.setAreaPreviewsVisibility(false);
-        this.unbindEventHandlers();
         this.scene.markDirty();
     }
 
-    protected bindEntitiesManagerEventHandlers(): void {
-        // NOTE: We don't need to bind anything here, because all the events emitted by EntitiesManager are handled by
-        // the parent of this class (EntityEditorTool) who is already called in the MapEditorModeManager constructor.
+    handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
+        return Promise.resolve(undefined);
     }
 }

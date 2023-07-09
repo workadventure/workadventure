@@ -1,9 +1,15 @@
 <script lang="ts">
     import type { EntityPrefab } from "@workadventure/map-editor";
     import { onDestroy, onMount } from "svelte";
+    import { get } from "svelte/store";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { mapEditorSelectedEntityPrefabStore } from "../../Stores/MapEditorStore";
+    import {
+        mapEditorEntityModeStore,
+        mapEditorSelectedEntityPrefabStore,
+        mapEditorSelectedEntityStore,
+    } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import closeImg from "../images/close.png";
 
     const entitiesCollectionsManager = gameManager.getCurrentGameScene().getEntitiesCollectionsManager();
 
@@ -116,34 +122,44 @@
             onPickItem(rootItem[0]);
         }
     }
+
+    function backToSelectObject() {
+        get(mapEditorSelectedEntityStore)?.delete();
+        mapEditorSelectedEntityStore.set(undefined);
+        mapEditorSelectedEntityPrefabStore.set(undefined);
+        mapEditorEntityModeStore.set("ADD");
+        console.log("backToSelectObject");
+    }
 </script>
 
 <div class="item-picker">
     <div class="item-filter">
         <input
-            class="filter-input"
+            class="filter-input tw-h-8"
             type="search"
             bind:value={filter}
             on:input={onNameChange}
             placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
         />
-        <select class="tag-selector" bind:value={selectedTag} on:change={() => onTagPick()}>
+        <select class="tag-selector tw-h-8" bind:value={selectedTag} on:change={() => onTagPick()}>
             {#each tags as tag}
                 <option>{tag}</option>
             {/each}
         </select>
     </div>
-    <div class="item-picker-container">
-        {#each rootItem as item (item.id)}
-            <div class="pickable-item {item.id === pickedItem?.id ? 'active' : ''}" on:click={() => onPickItem(item)}>
-                <img class="item-image" src={item.imagePath} alt={item.name} />
+    <div class="item-variations">
+        {#if pickedItem}
+            <div class="item-name">
+                {pickedItem?.name ?? "this entity"}
+                <img
+                    class="tw-absolute tw-h-2 tw-mx-2 tw-mt-2 tw-cursor-pointer"
+                    src={closeImg}
+                    alt="Unselect object picked"
+                    on:keyup
+                    on:click={backToSelectObject}
+                />
             </div>
-        {/each}
-    </div>
-    {#if pickedItem}
-        <div class="item-variations">
-            <div class="item-name">{pickedItem?.name ?? "this entity"}</div>
-            <div class="item-variant-picker-container">
+            <div class="item-variant-picker-container tw-h-28">
                 {#each currentVariants as item}
                     <div
                         class="pickable-item {item.imagePath === pickedVariant?.imagePath ? 'active' : ''}"
@@ -164,8 +180,18 @@
                     </div>
                 {/each}
             </div>
-        </div>
-    {/if}
+        {:else}
+            <div class="item-name">{$LL.mapEditor.entityEditor.selectObject()}</div>
+            <div class="item-variant-picker-container tw-h-28" />
+        {/if}
+    </div>
+    <div class="item-picker-container">
+        {#each rootItem as item (item.id)}
+            <div class="pickable-item {item.id === pickedItem?.id ? 'active' : ''}" on:click={() => onPickItem(item)}>
+                <img class="item-image" src={item.imagePath} alt={item.name} />
+            </div>
+        {/each}
+    </div>
 </div>
 
 <style lang="scss">
@@ -177,6 +203,7 @@
         .item-filter {
             .filter-input {
                 max-width: 90%;
+                margin-bottom: 0;
             }
             .tag-selector {
                 max-width: 10%;
@@ -186,7 +213,8 @@
             }
         }
         .item-variations {
-            margin-top: 30px;
+            margin-top: 10px;
+            margin-bottom: 30px;
             .item-name {
                 font-weight: bold;
             }
