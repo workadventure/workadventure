@@ -15,7 +15,7 @@
     "google-protobuf": "^3.21.0",
     "long": "^5.2.1",
     "openapi3-ts": "^3.0.2",
-    "protobufjs": "^7.1.2",
+    "protobufjs": "^7.2.4",
     "rxjs": "6.6.3",
     "zod": "^3.19.1"
   },
