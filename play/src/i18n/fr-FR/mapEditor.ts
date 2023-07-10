@@ -42,6 +42,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             linkPlaceholder: "https://example.com",
             defaultButtonLabel: "Ouvrir le lien",
             errorEmbeddableLink: "Le lien ne peut pas être intégré",
+            messageNotEmbeddableLink:
+                "Le lien ne peut pas être intégré. Il peut uniquement s'ouvrir dans un nouvel onglet.",
+            warningEmbeddableLink: "Ce lien ne peut pas être intégré.",
         },
         advancedOptions: "Options avancées",
     },
