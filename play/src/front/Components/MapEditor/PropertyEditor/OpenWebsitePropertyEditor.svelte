@@ -140,7 +140,7 @@
             {#if !embeddable && !error}
                 <span class="err tw-text-orange tw-text-xs tw-italic tw-mt-1"
                     ><AlertTriangleIcon size="12" />
-                    {$LL.mapEditor.properties.linkProperties.warningEmbeddableLink()}.
+                    {$LL.mapEditor.properties.linkProperties.messageNotEmbeddableLink()}.
                     <a
                         href="https://workadventu.re/map-building/troubleshooting.md#content-issues-embedding-a-website"
                         target="_blank">{$LL.mapEditor.properties.linkProperties.findOutMoreHere()}</a
@@ -178,9 +178,20 @@
                     class="input-switch"
                     bind:checked={property.newTab}
                     on:change={onNewTabValueChange}
-                    disabled={!embeddable}
                 />
             </div>
+            {#if !embeddable && !property.newTab}
+                <div class="tw-mb-3">
+                    <span class="err tw-text-orange tw-text-xs tw-italic"
+                        ><AlertTriangleIcon size="12" />
+                        {$LL.mapEditor.properties.linkProperties.warningEmbeddableLink()}.
+                        <a
+                            href="https://workadventu.re/map-building/troubleshooting.md#content-issues-embedding-a-website"
+                            target="_blank">{$LL.mapEditor.properties.linkProperties.findOutMoreHere()}</a
+                        >.</span
+                    >
+                </div>
+            {/if}
             {#if !property.newTab}
                 <div class="">
                     <label for="websiteWidth"
