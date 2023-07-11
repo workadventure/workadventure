@@ -33,7 +33,6 @@ import {
 import { iframeListener } from "../../Api/IframeListener";
 import { DEBUG_MODE, ENABLE_MAP_EDITOR, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
 import { Room } from "../../Connection/Room";
-import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
@@ -96,7 +95,6 @@ import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStor
 import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
-import type { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
@@ -1455,15 +1453,6 @@ export class GameScene extends DirtyScene {
         contextRed.stroke();
         contextRed.fill();
         this.circleRedTexture.refresh();
-    }
-
-    private safeParseJSONstring(jsonString: string | undefined, propertyName: string) {
-        try {
-            return jsonString ? JSON.parse(jsonString) : {};
-        } catch (e) {
-            console.warn('Invalid JSON found in property "' + propertyName + '" of the map:' + jsonString, e);
-            return {};
-        }
     }
 
     private listenToIframeEvents(): void {
@@ -2998,39 +2987,6 @@ ${escapedMessage}
                 this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
             }
         });
-    }
-
-    public initialiseJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string, jitsiUrl?: string): void {
-        const allProps = this.gameMapFrontWrapper.getCurrentProperties();
-        const isJitsiConfig = z.string().optional().safeParse(allProps.get(GameMapProperties.JITSI_CONFIG));
-        const isJitsiInterfaceConfig = z
-            .string()
-            .optional()
-            .safeParse(allProps.get(GameMapProperties.JITSI_INTERFACE_CONFIG));
-        const isJitsiUrl = z.string().optional().safeParse(allProps.get(GameMapProperties.JITSI_URL));
-
-        const jitsiConfig = this.safeParseJSONstring(
-            isJitsiConfig.success ? isJitsiConfig.data : undefined,
-            GameMapProperties.JITSI_CONFIG
-        );
-
-        const jitsiInterfaceConfig = this.safeParseJSONstring(
-            isJitsiInterfaceConfig.success ? isJitsiInterfaceConfig.data : undefined,
-            GameMapProperties.JITSI_INTERFACE_CONFIG
-        );
-        if (!jitsiUrl) {
-            jitsiUrl = isJitsiUrl.success ? isJitsiUrl.data : undefined;
-        }
-
-        coWebsite.setJitsiLoadPromise(() => {
-            return jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);
-        });
-
-        coWebsiteManager.loadCoWebsite(coWebsite).catch((err) => {
-            console.error(err);
-        });
-
-        analyticsClient.enteredJitsi(roomName, this.room.id);
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)

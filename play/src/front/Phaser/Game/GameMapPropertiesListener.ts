@@ -3,6 +3,7 @@ import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-t
 import { AreaData, GameMapProperties } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
+import { z } from "zod";
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
@@ -101,7 +102,8 @@ export class GameMapPropertiesListener {
                     this.scene.roomUrl,
                     allProps.has(GameMapProperties.JITSI_NO_PREFIX)
                 );
-                let jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
+                const isJitsiUrl = z.string().optional().safeParse(allProps.get(GameMapProperties.JITSI_URL));
+                let jitsiUrl = isJitsiUrl.success ? isJitsiUrl.data : undefined;
 
                 let jwt: string | undefined;
                 if (JITSI_PRIVATE_MODE && !jitsiUrl) {
@@ -136,10 +138,43 @@ export class GameMapPropertiesListener {
                 // TODO create new property to allow to close the jitsi room
                 //const closable = allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined;
 
-                const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, true);
+                const isJitsiConfig = z.string().optional().safeParse(allProps.get(GameMapProperties.JITSI_CONFIG));
+                const isJitsiInterfaceConfig = z
+                    .string()
+                    .optional()
+                    .safeParse(allProps.get(GameMapProperties.JITSI_INTERFACE_CONFIG));
+
+                const jitsiConfig = this.safeParseJSONstring(
+                    isJitsiConfig.success ? isJitsiConfig.data : undefined,
+                    GameMapProperties.JITSI_CONFIG
+                );
+
+                const jitsiInterfaceConfig = this.safeParseJSONstring(
+                    isJitsiInterfaceConfig.success ? isJitsiInterfaceConfig.data : undefined,
+                    GameMapProperties.JITSI_INTERFACE_CONFIG
+                );
+
+                const coWebsite = new JitsiCoWebsite(
+                    new URL(domain),
+                    false,
+                    undefined,
+                    undefined,
+                    true,
+                    roomName,
+                    gameManager.getPlayerName() ?? "unknown",
+                    jwt,
+                    jitsiConfig,
+                    jitsiInterfaceConfig,
+                    domainWithoutProtocol
+                );
 
                 coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
-                this.scene.initialiseJitsi(coWebsite, roomName, jwt, domainWithoutProtocol);
+
+                coWebsiteManager.loadCoWebsite(coWebsite).catch((err) => {
+                    console.error(err);
+                });
+
+                analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
                 layoutManagerActionStore.removeAction("jitsi");
             };
@@ -631,5 +666,14 @@ export class GameMapPropertiesListener {
 
     private getIdFromPlace(place: ITiledPlace): string {
         return `${place.name}:${place.type ?? ""}:${place.id ?? 0}`;
+    }
+
+    private safeParseJSONstring(jsonString: string | undefined, propertyName: string) {
+        try {
+            return jsonString ? JSON.parse(jsonString) : {};
+        } catch (e) {
+            console.warn('Invalid JSON found in property "' + propertyName + '" of the map:' + jsonString, e);
+            return {};
+        }
     }
 }
