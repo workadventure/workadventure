@@ -2,6 +2,7 @@
     import { fly } from "svelte/transition";
     import type { Readable } from "svelte/store";
     import { onMount, onDestroy } from "svelte";
+    import { get } from "svelte/store";
     import { PeerStatus, VideoPeer } from "../../WebRtc/VideoPeer";
     import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
@@ -88,20 +89,38 @@
         </div>
     </div>
 {:else if streamable instanceof JitsiTrackWrapper}
-    <div
-        class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
+    {#if get(streamable.videoTrack) || get(streamable.audioTrack)}
+        <div
+            class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
      media-box-shape-color tw-pointer-events-auto screen-blocker
 "
-        class:clickable={isClickable}
-        class:mozaic-duo={mozaicDuo}
-        class:mozaic-full-width={mozaicSolo}
-        class:mozaic-quarter={mozaicQuarter}
-        transition:fly={{ x: 200, duration: 250 }}
-    >
-        <div class="{isHightlighted ? 'tw-h-[32vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex screen-blocker">
-            <JitsiMediaBox peer={streamable} clickable={isClickable} />
+            class:clickable={isClickable}
+            class:mozaic-duo={mozaicDuo}
+            class:mozaic-full-width={mozaicSolo}
+            class:mozaic-quarter={mozaicQuarter}
+            transition:fly={{ x: 200, duration: 250 }}
+        >
+            <div class="{isHightlighted ? 'tw-h-[32vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex screen-blocker">
+                <JitsiMediaBox peer={streamable} clickable={isClickable} />
+            </div>
         </div>
-    </div>
+    {/if}
+    {#if get(streamable.screenSharingTrack)}
+        <div
+            class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
+     media-box-shape-color tw-pointer-events-auto screen-blocker
+"
+            class:clickable={isClickable}
+            class:mozaic-duo={mozaicDuo}
+            class:mozaic-full-width={mozaicSolo}
+            class:mozaic-quarter={mozaicQuarter}
+            transition:fly={{ x: 200, duration: 250 }}
+        >
+            <div class="{isHightlighted ? 'tw-h-[32vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex screen-blocker">
+                <JitsiMediaBox peer={streamable} clickable={isClickable} isScreenSharing={true} />
+            </div>
+        </div>
+    {/if}
 {:else}
     <div
         class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}

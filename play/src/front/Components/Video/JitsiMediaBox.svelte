@@ -1,6 +1,7 @@
 <script lang="ts">
     import { afterUpdate, onDestroy, onMount } from "svelte";
     import { Color } from "@workadventure/shared-utils";
+    import { readable } from "svelte/store";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
@@ -15,9 +16,10 @@
 
     export let clickable = false;
     export let peer: JitsiTrackWrapper;
+    export let isScreenSharing = false;
 
-    let videoTrackStore = peer.videoTrack;
-    let audioTrackStore = peer.audioTrack;
+    let videoTrackStore = !isScreenSharing ? peer.videoTrack : peer.screenSharingTrack;
+    let audioTrackStore = !isScreenSharing ? peer.audioTrack : readable(undefined);
 
     let embedScreen: EmbedScreen;
     let videoContainer: HTMLDivElement;
@@ -106,7 +108,7 @@
         {:then wokaBase64}
             <UserTag
                 isMe={$audioTrackStore?.isLocal() || $videoTrackStore?.isLocal()}
-                name={peer.spaceUser?.name ?? ""}
+                name={(peer.spaceUser?.name ?? "") + (isScreenSharing ? "🖥️" : "")}
                 wokaSrc={wokaBase64}
                 minimal={!!$videoTrackStore}
             />

@@ -22,6 +22,7 @@ import {
 } from "../../Stores/MediaStore";
 import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
+import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 import { JitsiLocalTracks } from "./JitsiLocalTracks";
 
@@ -42,6 +43,7 @@ export class JitsiConferenceWrapper {
     private requestedMicrophoneStateUnsubscriber: Unsubscriber | undefined;
     private cameraDeviceIdStoreUnsubscriber: Unsubscriber | undefined;
     private microphoneDeviceIdStoreUnsubscriber: Unsubscriber | undefined;
+    private requestedScreenSharingStateUnsubscriber: Unsubscriber | undefined;
     private cameraDeviceId: string | undefined = undefined;
     private microphoneDeviceId: string | undefined = undefined;
 
@@ -144,6 +146,21 @@ export class JitsiConferenceWrapper {
                         microphoneDeviceId !== jitsiConferenceWrapper.microphoneDeviceId
                     ) {
                         (async () => jitsiConferenceWrapper.handleLocalTrackState("audio", true))()
+                            .then((newTracks) => {
+                                debug("this is a success");
+                            })
+                            .catch((e) => {
+                                console.error("jitsiLocalTracks", e);
+                            });
+                    }
+                }
+            );
+
+            jitsiConferenceWrapper.requestedScreenSharingStateUnsubscriber = requestedScreenSharingState.subscribe(
+                (requestedScreenSharingState) => {
+                    if (jitsiConferenceWrapper.firstLocalTrackInitialization) {
+                        (async (): Promise<JitsiLocalTracks> =>
+                            jitsiConferenceWrapper.handleLocalTrackState("desktop", requestedScreenSharingState))()
                             .then((newTracks) => {
                                 debug("this is a success");
                             })
@@ -305,14 +322,15 @@ export class JitsiConferenceWrapper {
     }
 
     private async handleTrack(oldTrack: JitsiLocalTrack | undefined, track: JitsiLocalTrack | undefined) {
+        const getType = (track: JitsiLocalTrack) => (track.isAudioTrack() ? "audio" : track.getVideoType());
         if (oldTrack && track) {
-            debug(`REPLACING LOCAL ${oldTrack.getType()} TRACK`);
+            debug(`REPLACING LOCAL ${getType(oldTrack)} TRACK`);
             await this.jitsiConference.replaceTrack(oldTrack, track);
             if (track.isAudioTrack()) {
                 this.trackVolumeLocalAudioTrack(track.getOriginalStream());
             }
         } else if (oldTrack && !track) {
-            debug(`REMOVING LOCAL ${oldTrack.getType()} TRACK`);
+            debug(`REMOVING LOCAL ${getType(oldTrack)} TRACK`);
             await oldTrack.dispose();
             if (oldTrack.isAudioTrack()) {
                 this.trackVolumeLocalAudioTrack(undefined);
@@ -320,7 +338,7 @@ export class JitsiConferenceWrapper {
             //room.removeTrack(oldTrack);
             //await oldTrack.dispose();
         } else if (!oldTrack && track) {
-            debug(`ADDING LOCAL ${track.getType()} TRACK`);
+            debug(`ADDING LOCAL ${getType(track)} TRACK`);
             await this.jitsiConference.addTrack(track);
             if (track.isAudioTrack()) {
                 this.trackVolumeLocalAudioTrack(track.getOriginalStream());
@@ -349,11 +367,13 @@ export class JitsiConferenceWrapper {
                         await this.handleTrack(this.tracks.audio, track);
                         this.tracks.audio = track;
                     } else if (track.isVideoTrack()) {
-                        await this.handleTrack(this.tracks.video, track);
-                        this.tracks.video = track;
-                    } else if (track.isScreenSharing()) {
-                        await this.handleTrack(this.tracks.screenSharing, track);
-                        this.tracks.screenSharing = track;
+                        if (track.getVideoType() === "desktop") {
+                            await this.handleTrack(this.tracks.screenSharing, track);
+                            this.tracks.screenSharing = track;
+                        } else {
+                            await this.handleTrack(this.tracks.video, track);
+                            this.tracks.video = track;
+                        }
                     }
                 }
             }
@@ -434,7 +454,7 @@ export class JitsiConferenceWrapper {
             // @ts-ignore
             const participantId = track.getParticipantId();
             if (!participantId) {
-                console.error("Track has no participantId");
+                console.error("Track has no participantId", track);
                 return tracks;
             }
             let jitsiTrackWrapper = tracks.get(participantId);
@@ -476,9 +496,17 @@ export class JitsiConferenceWrapper {
                     jitsiTrackWrapper.muteAudio();
                 }
                 if (track.isVideoTrack()) {
-                    jitsiTrackWrapper.muteVideo();
+                    if (track.getVideoType() === "desktop") {
+                        jitsiTrackWrapper.muteScreenSharing();
+                    } else {
+                        jitsiTrackWrapper.muteVideo();
+                    }
                 }
-                if (jitsiTrackWrapper.videoTrack === undefined && jitsiTrackWrapper.audioTrack === undefined) {
+                if (
+                    jitsiTrackWrapper.videoTrack === undefined &&
+                    jitsiTrackWrapper.audioTrack === undefined &&
+                    jitsiTrackWrapper.screenSharingTrack === undefined
+                ) {
                     jitsiTrackWrapper.unsubscribe();
                     tracks.delete(participantId);
                 }

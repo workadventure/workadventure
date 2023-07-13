@@ -1081,6 +1081,18 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
+    handleScreenSharingState(client: ExSocketInterface, state: boolean) {
+        client.screenSharingState = state;
+        client.spaceUser.screenSharingState = state;
+        const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
+            screenSharingState: state,
+            id: client.userId,
+        });
+        client.spaces.forEach((space) => {
+            space.updateUser(partialSpaceUser);
+        });
+    }
+
     handleMegaphoneState(client: ExSocketInterface, megaphoneStateMessage: MegaphoneStateMessage) {
         client.megaphoneState = megaphoneStateMessage.value;
         client.spaceUser.megaphoneState = megaphoneStateMessage.value;

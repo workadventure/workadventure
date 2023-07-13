@@ -19,6 +19,7 @@
         usedCameraDeviceIdStore,
         usedMicrophoneDeviceIdStore,
         streamingMegaphoneStore,
+        isSpeakerStore,
     } from "../../Stores/MediaStore";
     import cameraImg from "../images/camera.png";
     import cameraOffImg from "../images/camera-off.png";
@@ -33,6 +34,7 @@
     import mapBuilder from "../images/maps-builder.png";
     import screenshareOn from "../images/screenshare-on.png";
     import screenshareOff from "../images/screenshare-off.png";
+    import screenshareOffAlt from "../images/screenshare-off-alt.png";
     import emojiPickOn from "../images/emoji-on.png";
     import closeImg from "../images/close.png";
     import penImg from "../images/pen.png";
@@ -676,6 +678,35 @@
                             {/if}
                         </div>
                     {/if}
+                {/if}
+
+                {#if $isSpeakerStore}
+                    <div
+                        class="tw-transition-all bottom-action-button"
+                        on:click={() => analyticsClient.screenSharing()}
+                        on:click={screenSharingClick}
+                        class:enabled={$requestedScreenSharingState}
+                    >
+                        <Tooltip text={$LL.actionbar.screensharing()} />
+
+                        <button class:border-top-light={$requestedScreenSharingState}>
+                            {#if $requestedScreenSharingState}
+                                <img
+                                    draggable="false"
+                                    src={screenshareOn}
+                                    style="padding: 2px;"
+                                    alt="Stop screen sharing"
+                                />
+                            {:else}
+                                <img
+                                    draggable="false"
+                                    src={screenshareOffAlt}
+                                    style="padding: 2px;"
+                                    alt="Start screen sharing"
+                                />
+                            {/if}
+                        </button>
+                    </div>
                 {/if}
 
                 <!-- svelte-ignore a11y-click-events-have-key-events -->

@@ -135,8 +135,8 @@ export class Space implements CustomJsonReplacerInterface {
             if (spaceUser.visitCardUrl) {
                 user.visitCardUrl = spaceUser.visitCardUrl;
             }
-            if (spaceUser.screenSharing !== undefined) {
-                user.screenSharing = spaceUser.screenSharing;
+            if (spaceUser.screenSharingState !== undefined) {
+                user.screenSharingState = spaceUser.screenSharingState;
             }
             if (spaceUser.microphoneState !== undefined) {
                 user.microphoneState = spaceUser.microphoneState;
@@ -289,7 +289,7 @@ export class Space implements CustomJsonReplacerInterface {
                 return true;
             }
             case "spaceFilterLiveStreaming": {
-                return (user.screenSharing || user.microphoneState || user.cameraState) && user.megaphoneState;
+                return (user.screenSharingState || user.microphoneState || user.cameraState) && user.megaphoneState;
             }
             default: {
                 const _exhaustiveCheck: never = spaceFilters.filter;

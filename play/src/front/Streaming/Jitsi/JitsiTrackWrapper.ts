@@ -9,6 +9,7 @@ export class JitsiTrackWrapper {
     private _spaceUser: SpaceUserExtended | undefined;
     private _audioTrack: Writable<JitsiTrack | undefined> = writable<JitsiTrack | undefined>(undefined);
     private _videoTrack: Writable<JitsiTrack | undefined> = writable<JitsiTrack | undefined>(undefined);
+    private _screenSharingTrack: Writable<JitsiTrack | undefined> = writable<JitsiTrack | undefined>(undefined);
     private _audioStreamStore: Writable<MediaStream | null> = writable<MediaStream | null>(null);
     private _volumeStore: Readable<number[] | undefined> | undefined;
     private volumeStoreSubscribe: Unsubscriber | undefined;
@@ -89,14 +90,25 @@ export class JitsiTrackWrapper {
 
             this._audioStreamStore.set(jitsiTrack.getOriginalStream());
         } else if (jitsiTrack.isVideoTrack()) {
-            if (get(this._videoTrack) !== undefined) {
-                if (!allowOverride) {
-                    throw new Error("A video track is already defined");
-                } else {
-                    get(this._videoTrack)?.dispose();
+            if (jitsiTrack.getVideoType() === "desktop") {
+                if (get(this._screenSharingTrack) !== undefined) {
+                    if (!allowOverride) {
+                        throw new Error("A screenSharing track is already defined");
+                    } else {
+                        get(this._screenSharingTrack)?.dispose();
+                    }
                 }
+                this._screenSharingTrack.set(jitsiTrack);
+            } else {
+                if (get(this._videoTrack) !== undefined) {
+                    if (!allowOverride) {
+                        throw new Error("A video track is already defined");
+                    } else {
+                        get(this._videoTrack)?.dispose();
+                    }
+                }
+                this._videoTrack.set(jitsiTrack);
             }
-            this._videoTrack.set(jitsiTrack);
         } else {
             throw new Error("Jitsi Track is neither audio nor video");
         }
@@ -110,6 +122,10 @@ export class JitsiTrackWrapper {
         return this._audioTrack;
     }
 
+    get screenSharingTrack(): Writable<JitsiTrack | undefined> {
+        return this._screenSharingTrack;
+    }
+
     muteAudio() {
         this._audioTrack.set(undefined);
         this._audioStreamStore.set(null);
@@ -118,6 +134,10 @@ export class JitsiTrackWrapper {
 
     muteVideo() {
         this._videoTrack.set(undefined);
+    }
+
+    muteScreenSharing() {
+        this._screenSharingTrack.set(undefined);
     }
 
     get spaceUser(): SpaceUserExtended | undefined {
@@ -135,6 +155,7 @@ export class JitsiTrackWrapper {
     unsubscribe() {
         this._audioTrack.set(undefined);
         this._videoTrack.set(undefined);
+        this._screenSharingTrack.set(undefined);
         this._audioStreamStore.set(null);
         this._spaceUser = undefined;
     }
