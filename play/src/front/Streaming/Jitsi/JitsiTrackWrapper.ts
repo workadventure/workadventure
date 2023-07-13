@@ -122,7 +122,7 @@ export class JitsiTrackWrapper {
         return this._audioTrack;
     }
 
-    get screenSharingTrack(): Writable<JitsiTrack | undefined> {
+    get screenSharingTrack(): Readable<JitsiTrack | undefined> {
         return this._screenSharingTrack;
     }
 

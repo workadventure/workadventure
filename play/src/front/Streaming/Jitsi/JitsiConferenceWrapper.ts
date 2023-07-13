@@ -93,31 +93,43 @@ export class JitsiConferenceWrapper {
             });
 
             jitsiConferenceWrapper.requestedCameraStateUnsubscriber = requestedCameraState.subscribe(
-                (requestedCameraState) => {
+                (requestedCameraState_) => {
                     if (jitsiConferenceWrapper.firstLocalTrackInitialization) {
-                        (async (): Promise<JitsiLocalTracks> =>
-                            jitsiConferenceWrapper.handleLocalTrackState("video", requestedCameraState))()
-                            .then((newTracks) => {
-                                debug("this is a success");
-                            })
-                            .catch((e) => {
-                                console.error("jitsiLocalTracks", e);
-                            });
+                        if(
+                            (jitsiConferenceWrapper.tracks.video && !requestedCameraState_) ||
+                            (!jitsiConferenceWrapper.tracks.video && requestedCameraState_)
+                        ) {
+                            (async (): Promise<JitsiLocalTracks> =>
+                                jitsiConferenceWrapper.handleLocalTrackState("video", requestedCameraState_))()
+                                .then((newTracks) => {
+                                    debug("requestedCameraState => subscribe => localTrack added");
+                                })
+                                .catch((e) => {
+                                    requestedCameraState.disableWebcam();
+                                    console.error("jitsiLocalTracks", e);
+                                });
+                        }
                     }
                 }
             );
 
             jitsiConferenceWrapper.requestedMicrophoneStateUnsubscriber = requestedMicrophoneState.subscribe(
-                (requestedMicrophoneState) => {
+                (requestedMicrophoneState_) => {
                     if (jitsiConferenceWrapper.firstLocalTrackInitialization) {
-                        (async (): Promise<JitsiLocalTracks> =>
-                            jitsiConferenceWrapper.handleLocalTrackState("audio", requestedMicrophoneState))()
-                            .then((newTracks) => {
-                                debug("this is a success");
-                            })
-                            .catch((e) => {
-                                console.error("jitsiLocalTracks", e);
-                            });
+                        if(
+                            (jitsiConferenceWrapper.tracks.audio && !requestedMicrophoneState_) ||
+                            (!jitsiConferenceWrapper.tracks.audio && requestedMicrophoneState_)
+                        ) {
+                            (async (): Promise<JitsiLocalTracks> =>
+                                jitsiConferenceWrapper.handleLocalTrackState("audio", requestedMicrophoneState_))()
+                                .then((newTracks) => {
+                                    debug("requestedMicrophoneState => subscribe => localTrack added");
+                                })
+                                .catch((e) => {
+                                    requestedMicrophoneState.disableMicrophone();
+                                    console.error("jitsiLocalTracks", e);
+                                });
+                        }
                     }
                 }
             );
@@ -130,7 +142,7 @@ export class JitsiConferenceWrapper {
                     ) {
                         (async () => jitsiConferenceWrapper.handleLocalTrackState("video", true))()
                             .then((newTracks) => {
-                                debug("this is a success");
+                                debug("requestedCameraDeviceIdStore => subscribe => localTrack added");
                             })
                             .catch((e) => {
                                 console.error("jitsiLocalTracks", e);
@@ -147,7 +159,7 @@ export class JitsiConferenceWrapper {
                     ) {
                         (async () => jitsiConferenceWrapper.handleLocalTrackState("audio", true))()
                             .then((newTracks) => {
-                                debug("this is a success");
+                                debug("requestedMicrophoneDeviceIdStore => subscribe => localTrack added");
                             })
                             .catch((e) => {
                                 console.error("jitsiLocalTracks", e);
@@ -157,16 +169,22 @@ export class JitsiConferenceWrapper {
             );
 
             jitsiConferenceWrapper.requestedScreenSharingStateUnsubscriber = requestedScreenSharingState.subscribe(
-                (requestedScreenSharingState) => {
+                (requestedScreenSharingState_) => {
                     if (jitsiConferenceWrapper.firstLocalTrackInitialization) {
-                        (async (): Promise<JitsiLocalTracks> =>
-                            jitsiConferenceWrapper.handleLocalTrackState("desktop", requestedScreenSharingState))()
-                            .then((newTracks) => {
-                                debug("this is a success");
-                            })
-                            .catch((e) => {
-                                console.error("jitsiLocalTracks", e);
-                            });
+                        if(
+                            (jitsiConferenceWrapper.tracks.screenSharing && !requestedScreenSharingState_) ||
+                            (!jitsiConferenceWrapper.tracks.screenSharing && requestedScreenSharingState_)
+                        ) {
+                            (async (): Promise<JitsiLocalTracks> =>
+                                jitsiConferenceWrapper.handleLocalTrackState("desktop", requestedScreenSharingState_))()
+                                .then((newTracks) => {
+                                    debug("requestedScreenSharingState => subscribe => localTrack added");
+                                })
+                                .catch((e) => {
+                                    requestedScreenSharingState.disableScreenSharing();
+                                    console.error("jitsiLocalTracks", e);
+                                });
+                        }
                     }
                 }
             );
@@ -294,6 +312,9 @@ export class JitsiConferenceWrapper {
             if (this.tracks.video) {
                 void this.handleTrack(this.tracks.video, undefined);
             }
+            if (this.tracks.screenSharing) {
+                void this.handleTrack(this.tracks.screenSharing, undefined);
+            }
         });
     }
 
@@ -355,6 +376,9 @@ export class JitsiConferenceWrapper {
             }
             if (get(requestedMicrophoneState)) {
                 requestedDevices.push("audio");
+            }
+            if (get(requestedScreenSharingState)) {
+                requestedDevices.push("desktop");
             }
             let newTracks: JitsiLocalTrack[] | JitsiConferenceErrors = [];
             if (requestedDevices.length > 0) {
@@ -455,6 +479,7 @@ export class JitsiConferenceWrapper {
             const participantId = track.getParticipantId();
             if (!participantId) {
                 console.error("Track has no participantId", track);
+                throw new Error("Track has no participantId");
                 return tracks;
             }
             let jitsiTrackWrapper = tracks.get(participantId);

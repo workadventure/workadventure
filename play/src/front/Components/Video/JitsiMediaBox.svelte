@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { afterUpdate, onDestroy, onMount } from "svelte";
+    import {afterUpdate, onDestroy, onMount} from "svelte";
     import { Color } from "@workadventure/shared-utils";
-    import { readable } from "svelte/store";
+    import {derived, readable} from "svelte/store";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
@@ -16,10 +16,20 @@
 
     export let clickable = false;
     export let peer: JitsiTrackWrapper;
-    export let isScreenSharing = false;
+    export let uniqueId: string;
 
-    let videoTrackStore = !isScreenSharing ? peer.videoTrack : peer.screenSharingTrack;
-    let audioTrackStore = !isScreenSharing ? peer.audioTrack : readable(undefined);
+    let cameraTrackStore = peer.videoTrack;
+    let screenSharingTrackStore = peer.screenSharingTrack;
+    let audioTrackStore = peer.audioTrack;
+
+    if(uniqueId.includes('screenSharing')){
+        cameraTrackStore = readable(undefined);
+        audioTrackStore = readable(undefined);
+    } else {
+        screenSharingTrackStore = readable(undefined);
+    }
+
+    const videoTrackStore = derived([cameraTrackStore, screenSharingTrackStore], ([$cameraTrackStore, $screenSharingTrackStore]) => $cameraTrackStore || $screenSharingTrackStore);
 
     let embedScreen: EmbedScreen;
     let videoContainer: HTMLDivElement;
@@ -56,8 +66,11 @@
         if ($audioTrackStore && !$audioTrackStore?.isLocal()) {
             $audioTrackStore?.attach(audioElement);
         }
-        if ($videoTrackStore) {
-            $videoTrackStore?.attach(videoElement);
+        if ($cameraTrackStore) {
+            $cameraTrackStore?.attach(videoElement);
+        }
+        if($screenSharingTrackStore){
+            $screenSharingTrackStore?.attach(videoElement);
         }
     }
 
@@ -67,50 +80,52 @@
 </script>
 
 <div
-    id="container"
-    class="jitsi-video"
-    bind:this={videoContainer}
-    on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
+        id="container"
+        class="jitsi-video"
+        bind:this={videoContainer}
+        on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     {#if $videoTrackStore}
-        <div class="tw-flex tw-w-full tw-flex-col tw-h-full tw-rounded-sm tw-overflow-hidden">
+        <div class="tw-rounded-sm tw-overflow-hidden tw-flex tw-w-full tw-flex-col tw-h-full">
             <video
-                bind:this={videoElement}
-                class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
-                class="tw-h-full tw-max-w-full tw-rounded-sm"
-                autoplay
-                playsinline
+                    bind:this={videoElement}
+                    class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
+                    class="tw-h-full tw-max-w-full tw-rounded-sm"
+                    autoplay
+                    playsinline
             />
         </div>
     {/if}
-    <div class={`tw-absolute ${$videoTrackStore ? "tw-top-0.5 tw-right-2" : "tw-top-1 tw-right-3"}`}>
-        {#if $audioTrackStore}
-            <audio autoplay muted={false} bind:this={audioElement} />
-            <SoundMeterWidgetWrapper
-                classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
-                barColor={$videoTrackStore ? "blue" : "black"}
-                volume={peer.volumeStore}
-            />
-        {:else}
-            <img
-                draggable="false"
-                src={microphoneOffImg}
-                class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
-                alt="Mute"
-                class:tw-brightness-0={textColor === "black" && !$videoTrackStore}
-                class:tw-brightness-100={textColor === "white" && !$videoTrackStore}
-            />
-        {/if}
-    </div>
+    {#if !$screenSharingTrackStore}
+        <div class={`tw-absolute ${$videoTrackStore ? "tw-top-0.5 tw-right-2" : "tw-top-1 tw-right-3"}`}>
+            {#if $audioTrackStore}
+                <audio autoplay muted={false} bind:this={audioElement} />
+                <SoundMeterWidgetWrapper
+                        classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                        barColor={$videoTrackStore ? "blue" : "black"}
+                        volume={peer.volumeStore}
+                />
+            {:else}
+                <img
+                        draggable="false"
+                        src={microphoneOffImg}
+                        class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                        alt="Mute"
+                        class:tw-brightness-0={textColor === "black" && !$videoTrackStore}
+                        class:tw-brightness-100={textColor === "white" && !$videoTrackStore}
+                />
+            {/if}
+        </div>
+    {/if}
     {#if peer.spaceUser}
         {#await peer.spaceUser?.getWokaBase64()}
             <div />
         {:then wokaBase64}
             <UserTag
-                isMe={$audioTrackStore?.isLocal() || $videoTrackStore?.isLocal()}
-                name={(peer.spaceUser?.name ?? "") + (isScreenSharing ? "🖥️" : "")}
-                wokaSrc={wokaBase64}
-                minimal={!!$videoTrackStore}
+                    isMe={$audioTrackStore?.isLocal() || $cameraTrackStore?.isLocal() || $screenSharingTrackStore?.isLocal()}
+                    name={peer.spaceUser?.name ?? ""}
+                    wokaSrc={wokaBase64}
+                    minimal={!!$videoTrackStore}
             />
         {/await}
     {/if}
