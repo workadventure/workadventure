@@ -307,10 +307,10 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    openedWebsite(): void {
+    openedWebsite(url: URL): void {
         this.posthogPromise
             ?.then((posthog) => {
-                posthog.capture("wa_opened_website");
+                posthog.capture("wa_opened_website", { url: url.toString() });
             })
             .catch((e) => console.error(e));
     }

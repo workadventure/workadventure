@@ -402,7 +402,7 @@ export class AreasPropertiesListener {
         inOpenWebsite.set(true);
 
         // analytics event for open website
-        analyticsClient.openedWebsite();
+        analyticsClient.openedWebsite(coWebsite.getUrl());
     }
 
     private loadCoWebsiteFunction(coWebsite: CoWebsite, actionId: string): void {
