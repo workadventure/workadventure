@@ -1,7 +1,6 @@
 // eslint-disable-next-line import/no-unresolved
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import { Readable, Unsubscriber, writable, Writable, readable, get } from "svelte/store";
-import { v4 as uuid } from "uuid";
 import { SoundMeter } from "../../Phaser/Components/SoundMeter";
 import { SpaceUserExtended } from "../../Space/Space";
 
@@ -64,20 +63,10 @@ export class JitsiTrackWrapper {
 
     get uniqueId(): string {
         return this.participantId;
-        // FIXME: What is following should not be necessary, a track must be set by a participant, so he definitely has a participantId that is set when he is instantiated
-
-        //@ts-ignore
-        const trackId = get(this._videoTrack)?.getParticipantId() ?? get(this._audioTrack)?.getParticipantId();
-        if (!trackId) {
-            //throw new Error("Jitsi Track has no ID");
-            return uuid();
-        }
-        return trackId;
     }
 
     setJitsiTrack(jitsiTrack: JitsiTrack, allowOverride = false) {
         if (jitsiTrack.isAudioTrack()) {
-            console.log("new track is audio", { allowOverride: allowOverride });
             if (get(this._audioTrack) !== undefined) {
                 if (!allowOverride) {
                     throw new Error("An audio track is already defined");
@@ -129,7 +118,6 @@ export class JitsiTrackWrapper {
     muteAudio() {
         this._audioTrack.set(undefined);
         this._audioStreamStore.set(null);
-        console.log("JitsiTrackWrapper => Audio is muted, unsubscribe from volume store");
     }
 
     muteVideo() {

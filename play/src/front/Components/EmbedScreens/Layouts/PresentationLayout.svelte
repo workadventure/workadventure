@@ -71,6 +71,7 @@
                                 isHightlighted={true}
                                 isClickable={true}
                                 streamable={$highlightedEmbedScreen.embed}
+                                uniqueId={$highlightedEmbedScreen.embed.uniqueId}
                             />
                         {/key}
                     {:else if $highlightedEmbedScreen.type === "cowebsite"}

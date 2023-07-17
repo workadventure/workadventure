@@ -16,7 +16,7 @@ const warning: BaseTranslation = {
     connectionLostSubtitle: "Reconnecting",
     waitingConnectionTitle: "Waiting for connection",
     waitingConnectionSubtitle: "Connecting",
-    megaphoneNeeds: "To use the megaphone, you must activate your camera or your microphone.",
+    megaphoneNeeds: "To use the megaphone, you must activate your camera or your microphone or share your screen.",
     mapEditorShortCut: "There was an error while trying to open the map editor.",
     mapEditorNotEnabled: "The map editor is not enabled on this world.",
 };

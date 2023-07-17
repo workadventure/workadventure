@@ -174,7 +174,7 @@
             streamingMegaphoneStore.set(false);
             return;
         }
-        if ($requestedMegaphoneStore) {
+        if ($requestedMegaphoneStore || $megaphoneEnabledStore) {
             analyticsClient.stopMegaphone();
             requestedMegaphoneStore.set(false);
             return;
@@ -680,7 +680,7 @@
                     {/if}
                 {/if}
 
-                {#if $isSpeakerStore}
+                {#if $isSpeakerStore || $streamingMegaphoneStore || $megaphoneEnabledStore}
                     <div
                         class="tw-transition-all bottom-action-button"
                         on:click={() => analyticsClient.screenSharing()}
