@@ -184,6 +184,7 @@
     }
 
     function toggleMapEditorMode() {
+        analyticsClient.toggleMapEditor(!$mapEditorModeStore);
         mapEditorModeStore.switchMode(!$mapEditorModeStore);
     }
 
@@ -400,23 +401,23 @@
 
     // Variable to store the app menu state opened or closed
     let appMenuOpened = false;
-    function toggleAppMenu(){
+    function toggleAppMenu() {
         appMenuOpened = !appMenuOpened;
     }
 
-    function openKlaxoonActivityPicker(){
+    function openKlaxoonActivityPicker() {
         // Todo, use the metada from admin to get klaxoon api key
-        
+
         // @ts-ignore
         KlaxoonActivityPicker.openPicker({
-            clientId: 'YOUR_KLAXOON_API',
+            clientId: "YOUR_KLAXOON_API",
             success: (payload: unknown) => {
-                console.info('Message received from Klaxoon Activity Picker: ', payload);
+                console.info("Message received from Klaxoon Activity Picker: ", payload);
             },
             options: {
                 height: 940,
                 width: 639,
-            }
+            },
         });
     }
 </script>
@@ -817,19 +818,9 @@
                     <Tooltip text={$LL.actionbar.app()} />
                     <button id="klaxoon">
                         {#if appMenuOpened}
-                            <img
-                                draggable="false"
-                                src={appOnImg}
-                                style="padding: 2px"
-                                alt={$LL.actionbar.app()}
-                            />
+                            <img draggable="false" src={appOnImg} style="padding: 2px" alt={$LL.actionbar.app()} />
                         {:else}
-                            <img
-                                draggable="false"
-                                src={appOffImg}
-                                style="padding: 2px"
-                                alt={$LL.actionbar.app()}
-                            />
+                            <img draggable="false" src={appOffImg} style="padding: 2px" alt={$LL.actionbar.app()} />
                         {/if}
                     </button>
                 </div>

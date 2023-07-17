@@ -1,6 +1,10 @@
 {.section-title.accent.text-primary}
 # Entries and exits
 
+{.alert.alert-warning}
+While the information below is still valid, we recommend you to use the new [inline map editor](editor/) to define entries and exits.
+The inline map editor is easier to use and can be accessed directly from WorkAdventure.
+
 [Building your map - Defined entries and exits](https://www.youtube.com/watch?v=MuhVgu8H7U0)
 
 ## Defining a default entry point

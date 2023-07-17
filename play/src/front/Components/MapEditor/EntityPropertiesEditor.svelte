@@ -13,6 +13,7 @@
     import webSvg from "../images/web-white.svg";
     import youtubeSvg from "../images/applications/icon_youtube.svg";
     import klaxoonSvg from "../images/applications/icon_klaxoon.svg";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
@@ -20,6 +21,7 @@
 
     let properties: EntityDataProperties = [];
     let entityName = "";
+    let hasJitsiRoomProperty: boolean;
 
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
         if (currentEntity) {
@@ -31,9 +33,11 @@
 
     function onAddProperty(type: EntityDataPropertiesKeys, subtype?: OpenWebsiteTypePropertiesKeys) {
         if ($mapEditorSelectedEntityStore) {
+            analyticsClient.addMapEditorProperty("entity", type || "unknown");
             $mapEditorSelectedEntityStore.addProperty(getPropertyFromType(type, subtype));
             // refresh properties
             properties = $mapEditorSelectedEntityStore?.getProperties();
+            refreshFlags();
         }
     }
 
@@ -99,13 +103,22 @@
 
     function onDeleteProperty(id: string) {
         if ($mapEditorSelectedEntityStore) {
+            analyticsClient.removeMapEditorProperty("entity", properties.find((p) => p.id === id)?.type || "unknown");
             $mapEditorSelectedEntityStore.deleteProperty(id);
             // refresh properties
             properties = $mapEditorSelectedEntityStore?.getProperties();
             // $mapEditorSelectedEntityStore.delete();
             // mapEditorSelectedEntityStore.set(undefined);
             // mapEditorEntityModeStore.set("ADD");
+            refreshFlags();
         }
+    }
+
+    function refreshFlags(): void {
+        hasJitsiRoomProperty = hasProperty("jitsiRoomProperty");
+    }
+    function hasProperty(propertyType: EntityDataPropertiesKeys): boolean {
+        return properties.find((property) => property.type === propertyType) !== undefined;
     }
 
     onDestroy(() => {
@@ -119,16 +132,18 @@
     <div class="header-container">
         <h2>Editing: {$mapEditorSelectedEntityStore.getPrefab().name}</h2>
     </div>
-    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.jitsiProperties.label()}
-            descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
-            img={visioSvg}
-            style="z-index: 5;"
-            on:click={() => {
-                onAddProperty("jitsiRoomProperty");
-            }}
-        />
+    <div class="properties-buttons tw-flex tw-flex-row">
+        {#if !hasJitsiRoomProperty}
+            <AddPropertyButton
+                headerText={$LL.mapEditor.properties.jitsiProperties.label()}
+                descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
+                img={visioSvg}
+                style="z-index: 5;"
+                on:click={() => {
+                    onAddProperty("jitsiRoomProperty");
+                }}
+            />
+        {/if}
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.audioProperties.label()}
             descriptionText={$LL.mapEditor.properties.audioProperties.description()}

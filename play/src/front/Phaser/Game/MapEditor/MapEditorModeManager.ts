@@ -1,6 +1,8 @@
 import { Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
 import { Unsubscriber, get } from "svelte/store";
 import { EditMapCommandMessage } from "@workadventure/messages";
+import pLimit from "p-limit";
+import debug from "debug";
 import type { RoomConnection } from "../../../Connection/RoomConnection";
 import type { GameScene } from "../GameScene";
 import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
@@ -20,6 +22,8 @@ export enum EditorToolName {
     WAMSettingsEditor = "WAMSettingsEditor",
     TrashEditor = "TrashEditor",
 }
+
+const logger = debug("map-editor");
 
 export class MapEditorModeManager {
     private scene: GameScene;
@@ -61,6 +65,8 @@ export class MapEditorModeManager {
 
     private ctrlKey?: Phaser.Input.Keyboard.Key;
     private shiftKey?: Phaser.Input.Keyboard.Key;
+
+    private isReverting: Promise<void> = Promise.resolve();
 
     constructor(scene: GameScene) {
         this.scene = scene;
@@ -108,6 +114,7 @@ export class MapEditorModeManager {
         emitMapEditorUpdate = true,
         addToLocalCommandsHistory = true
     ): Promise<void> {
+        await this.isReverting;
         // Commands are throttled. Only one at a time.
         return (this.currentRunningCommand = this.currentRunningCommand.then(async () => {
             const delay = 0;
@@ -126,6 +133,7 @@ export class MapEditorModeManager {
                         this.localCommandsHistory.splice(this.currentCommandIndex + 1);
                     }
                     this.pendingCommands.push(command);
+                    logger("adding command to pendingList : ", command);
                     this.localCommandsHistory.push(command);
                     this.currentCommandIndex += 1;
                 }
@@ -134,7 +142,7 @@ export class MapEditorModeManager {
                 return;
                 //return true;
             } catch (error) {
-                console.warn(error);
+                logger(error);
                 //return false;
                 return;
             }
@@ -152,6 +160,7 @@ export class MapEditorModeManager {
             const command = this.localCommandsHistory[this.currentCommandIndex];
             const undoCommand1 = command.getUndoCommand();
             this.pendingCommands.push(command);
+            logger("adding command to pendingList : ", command);
 
             // do any necessary changes for active tool interface
             //this.handleCommandExecutionByTools(undoCommand1, true);
@@ -162,7 +171,7 @@ export class MapEditorModeManager {
         } catch (e) {
             this.localCommandsHistory.splice(this.currentCommandIndex, 1);
             this.currentCommandIndex -= 1;
-            console.warn(e);
+            logger(e);
         }
     }
 
@@ -177,6 +186,7 @@ export class MapEditorModeManager {
             const command = this.localCommandsHistory[this.currentCommandIndex + 1];
             //const commandConfig = await command.execute();
             this.pendingCommands.push(command);
+            logger("adding command to pendingList : ", command);
 
             // do any necessary changes for active tool interface
             //this.handleCommandExecutionByTools(commandConfig, true);
@@ -187,7 +197,7 @@ export class MapEditorModeManager {
         } catch (e) {
             this.localCommandsHistory.splice(this.currentCommandIndex, 1);
             this.currentCommandIndex -= 1;
-            console.warn(e);
+            logger(e);
         }
     }
 
@@ -262,38 +272,59 @@ export class MapEditorModeManager {
     }
 
     public subscribeToRoomConnection(connection: RoomConnection): void {
+        const limit = pLimit(1);
         connection.editMapCommandMessageStream.subscribe((editMapCommandMessage) => {
-            (async () => {
+            limit(async () => {
+                if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
+                    logger(
+                        "ErrorCommandMessage received",
+                        editMapCommandMessage.editMapMessage?.message.errorCommandMessage
+                    );
+                    const command = this.pendingCommands.find(
+                        (command) => command.commandId === editMapCommandMessage.id
+                    );
+                    if (command) {
+                        logger("removing command of pendingList : ", editMapCommandMessage.id);
+                        this.pendingCommands.splice(this.pendingCommands.indexOf(command), 1);
+                    }
+                    return;
+                }
                 if (this.pendingCommands.length > 0) {
                     if (this.pendingCommands[0].commandId === editMapCommandMessage.id) {
+                        logger("removing command of pendingList : ", editMapCommandMessage.id);
                         this.pendingCommands.shift();
                         return;
                     }
-                    this.revertPendingCommands();
+                    await this.revertPendingCommands();
                 }
 
                 for (const tool of Object.values(this.editorTools)) {
                     await tool.handleIncomingCommandMessage(editMapCommandMessage);
                 }
-            })().catch((e) => console.error(e));
+            }).catch((e) => console.error(e));
         });
     }
 
-    private revertPendingCommands(): void {
-        while (this.pendingCommands.length > 0) {
-            const command = this.pendingCommands.pop();
-            if (command) {
-                //await command.getUndoCommand();
-                // also remove from local history of commands as this is invalid
-                const index = this.localCommandsHistory.findIndex(
-                    (localCommand) => localCommand.commandId === command.commandId
-                );
-                if (index !== -1) {
-                    this.localCommandsHistory.splice(index, 1);
-                    this.currentCommandIndex -= 1;
+    private async revertPendingCommands(): Promise<void> {
+        logger("Reverting pending commands");
+        // We are blocking the normal execution of commands until we revert all pending commands
+        this.isReverting = (async () => {
+            while (this.pendingCommands.length > 0) {
+                const command = this.pendingCommands.pop();
+                if (command) {
+                    await command.getUndoCommand().execute();
+                    // also remove from local history of commands as this is invalid
+                    const index = this.localCommandsHistory.findIndex(
+                        (localCommand) => localCommand.commandId === command.commandId
+                    );
+                    if (index !== -1) {
+                        this.localCommandsHistory.splice(index, 1);
+                        this.currentCommandIndex -= 1;
+                    }
                 }
             }
-        }
+        })();
+        return this.isReverting;
     }
 
     public equipTool(tool?: EditorToolName): void {

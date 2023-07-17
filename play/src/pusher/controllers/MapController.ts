@@ -85,6 +85,11 @@ export class MapController extends BaseHttpController {
                     res.send("The Token is invalid");
                     return;
                 } else if (axios.isAxiosError(error)) {
+                    if (error.response?.status === 404) {
+                        // An error 404 means the map was not found.
+                        // Note: we should definitely change this.
+                        throw error;
+                    }
                     console.warn("Error while fetching map details", error);
                     res.status(error.response?.status ?? 404);
                     res.send("Error while fetching map details");

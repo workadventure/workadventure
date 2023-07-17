@@ -99,17 +99,21 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 `Could not find entity ${data.prefabRef.id} in collection ${data.prefabRef.collectionName}`
             );
         }
+
+        const entity = new Entity(this.scene, entityId, data, prefab);
+        entity.setVisible(false);
+
         TexturesHelper.loadEntityImage(this.scene, prefab.imagePath, `${imagePathPrefix ?? ""}${prefab.imagePath}`)
             .then(() => {
                 const entity = this.entities.get(entityId);
                 if (entity) {
                     entity
                         .setTexture(prefab.imagePath)
-                        .setDepth(entity.y + entity.displayHeight + (entity.getPrefab().depthOffset ?? 0));
+                        .setDepth(entity.y + entity.displayHeight + (entity.getPrefab().depthOffset ?? 0))
+                        .setVisible(true);
                 }
             })
             .catch((e) => console.error(e));
-        const entity = new Entity(this.scene, entityId, data, prefab);
 
         if (interactive) {
             entity.setInteractive({ pixelPerfect: true, cursor: "pointer" });
@@ -303,15 +307,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             if (pointer.downElement?.tagName !== "CANVAS") {
                 return;
             }
-            console.log("Phaser.Input.Events.POINTER_DOWN => get(mapEditorModeStore)", get(mapEditorModeStore));
-            console.log(
-                "Phaser.Input.Events.POINTER_DOWN => this.isEntityEditorToolActive()",
-                this.isEntityEditorToolActive()
-            );
-            console.log(
-                "Phaser.Input.Events.POINTER_DOWN => !get(mapEditorSelectedEntityPrefabStore)",
-                !get(mapEditorSelectedEntityPrefabStore)
-            );
             if (
                 get(mapEditorModeStore) &&
                 this.isEntityEditorToolActive() &&
@@ -329,15 +324,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             }
         });
         entity.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
-            if (pointer.downElement?.tagName !== "CANVAS") {
-                return;
-            }
             this.pointerOverEntitySubject.next(entity);
-            console.log("Phaser.Input.Events.POINTER_OVER => get(mapEditorModeStore)", get(mapEditorModeStore));
-            console.log(
-                "Phaser.Input.Events.POINTER_OVER => this.isEntityEditorToolActive()",
-                this.isEntityEditorToolActive()
-            );
             if (get(mapEditorModeStore) && this.isEntityEditorToolActive()) {
                 entity.setPointedToEditColor(this.isTrashEditorToolActive() ? 0xff0000 : 0x00ff00);
                 this.scene.markDirty();
@@ -345,12 +332,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         });
         entity.on(Phaser.Input.Events.POINTER_OUT, () => {
             this.pointerOutEntitySubject.next(entity);
-
-            console.log("Phaser.Input.Events.POINTER_OUT => get(mapEditorModeStore)", get(mapEditorModeStore));
-            console.log(
-                "Phaser.Input.Events.POINTER_OUT => this.isEntityEditorToolActive()",
-                this.isEntityEditorToolActive()
-            );
             if (get(mapEditorModeStore) && this.isEntityEditorToolActive()) {
                 entity.removePointedToEditColor();
                 this.scene.markDirty();

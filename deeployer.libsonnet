@@ -106,6 +106,7 @@
           "TURN_SERVER": "turn:coturn.workadventure.fr:443,turns:coturn.workadventure.fr:443",
           "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
           "ENABLE_MAP_EDITOR":"true",
+          "FEATURE_FLAG_BROADCAST_AREAS":"true",
           "ICON_URL": "https://icon-"+url,
           "CHAT_URL": "https://chat-"+url,
           "LOGROCKET_ID": env.LOGROCKET_ID,

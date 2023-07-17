@@ -171,11 +171,13 @@ export class FrontController extends BaseHttpController {
         });
 
         this.app.get("/*", (req: Request, res: Response) => {
-            if (req.path.startsWith("/collections")
-                || req.path.startsWith("/resources")
-                || req.path.startsWith("/src")
-                || req.path.startsWith("/node_modules")
-                || req.path.startsWith("/@fs/")) {
+            if (
+                req.path.startsWith("/collections") ||
+                req.path.startsWith("/resources") ||
+                req.path.startsWith("/src") ||
+                req.path.startsWith("/node_modules") ||
+                req.path.startsWith("/@fs/")
+            ) {
                 res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
                 return;
             }
