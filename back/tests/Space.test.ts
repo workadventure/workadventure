@@ -56,7 +56,7 @@ describe("Space", () => {
             cameraState: false,
             microphoneState: false,
             megaphoneState: false,
-            screenSharing: false,
+            screenSharingState: false,
         });
         // Add user to space from watcher1
         space.addUser(watcher1, spaceUser);
@@ -94,7 +94,7 @@ describe("Space", () => {
             cameraState: true,
             microphoneState: true,
             megaphoneState: true,
-            screenSharing: true,
+            screenSharingState: true,
             visitCardUrl: "test2",
         });
 
@@ -117,7 +117,7 @@ describe("Space", () => {
             expect(user?.cameraState).toBe(true);
             expect(user?.microphoneState).toBe(true);
             expect(user?.megaphoneState).toBe(true);
-            expect(user?.screenSharing).toBe(true);
+            expect(user?.screenSharingState).toBe(true);
             expect(user?.visitCardUrl).toBe("test2");
         }
 
