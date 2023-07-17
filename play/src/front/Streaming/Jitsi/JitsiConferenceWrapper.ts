@@ -95,7 +95,7 @@ export class JitsiConferenceWrapper {
             jitsiConferenceWrapper.requestedCameraStateUnsubscriber = requestedCameraState.subscribe(
                 (requestedCameraState_) => {
                     if (jitsiConferenceWrapper.firstLocalTrackInitialization) {
-                        if(
+                        if (
                             (jitsiConferenceWrapper.tracks.video && !requestedCameraState_) ||
                             (!jitsiConferenceWrapper.tracks.video && requestedCameraState_)
                         ) {
@@ -116,7 +116,7 @@ export class JitsiConferenceWrapper {
             jitsiConferenceWrapper.requestedMicrophoneStateUnsubscriber = requestedMicrophoneState.subscribe(
                 (requestedMicrophoneState_) => {
                     if (jitsiConferenceWrapper.firstLocalTrackInitialization) {
-                        if(
+                        if (
                             (jitsiConferenceWrapper.tracks.audio && !requestedMicrophoneState_) ||
                             (!jitsiConferenceWrapper.tracks.audio && requestedMicrophoneState_)
                         ) {
@@ -171,7 +171,7 @@ export class JitsiConferenceWrapper {
             jitsiConferenceWrapper.requestedScreenSharingStateUnsubscriber = requestedScreenSharingState.subscribe(
                 (requestedScreenSharingState_) => {
                     if (jitsiConferenceWrapper.firstLocalTrackInitialization) {
-                        if(
+                        if (
                             (jitsiConferenceWrapper.tracks.screenSharing && !requestedScreenSharingState_) ||
                             (!jitsiConferenceWrapper.tracks.screenSharing && requestedScreenSharingState_)
                         ) {

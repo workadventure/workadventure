@@ -14,7 +14,7 @@
         {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
             {#if !highlightedEmbedScreen || highlightedEmbedScreen.type !== "streamable" || (highlightedEmbedScreen.type === "streamable" && highlightedEmbedScreen.embed !== peer)}
                 {#key uniqueId}
-                    <MediaBox streamable={peer} isClickable={clickable} {uniqueId}/>
+                    <MediaBox streamable={peer} isClickable={clickable} {uniqueId} />
                 {/key}
             {/if}
         {/each}

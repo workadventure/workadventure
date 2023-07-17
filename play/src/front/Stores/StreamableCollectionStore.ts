@@ -34,10 +34,10 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
             $screenSharingStreamStore.forEach(addPeer);
             $peerStore.forEach(addPeer);
             $jitsiTracksStore.forEach((jitsiTrackWrapper) => {
-                if(get(jitsiTrackWrapper.videoTrack) || get(jitsiTrackWrapper.audioTrack)){
+                if (get(jitsiTrackWrapper.videoTrack) || get(jitsiTrackWrapper.audioTrack)) {
                     peers.set(`other-${jitsiTrackWrapper.uniqueId}`, jitsiTrackWrapper);
                 }
-                if(get(jitsiTrackWrapper.screenSharingTrack)){
+                if (get(jitsiTrackWrapper.screenSharingTrack)) {
                     peers.set(`screenSharing-${jitsiTrackWrapper.uniqueId}`, jitsiTrackWrapper);
                 }
             });
