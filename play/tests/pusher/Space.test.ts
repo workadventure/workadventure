@@ -54,7 +54,7 @@ describe("Space", () => {
             availabilityStatus: 0,
             cameraState: false,
             microphoneState: false,
-            screenSharing: false,
+            screenSharingState: false,
             megaphoneState: false,
             characterTextures: [],
             tags: [],
@@ -80,7 +80,7 @@ describe("Space", () => {
             availabilityStatus: 1,
             cameraState: true,
             microphoneState: true,
-            screenSharing: true,
+            screenSharingState: true,
             megaphoneState: true,
             characterTextures: [],
             tags: [],
@@ -109,7 +109,7 @@ describe("Space", () => {
         expect(user?.cameraState).toBe(true);
         expect(user?.microphoneState).toBe(true);
         expect(user?.megaphoneState).toBe(true);
-        expect(user?.screenSharing).toBe(true);
+        expect(user?.screenSharingState).toBe(true);
         expect(user?.visitCardUrl).toBe("test");
     });
     it("should add the name filter 'test' and send me the delta (nothing because user is already sent, and delta return nothing)", () => {
@@ -165,7 +165,7 @@ describe("Space", () => {
             availabilityStatus: 0,
             cameraState: false,
             microphoneState: false,
-            screenSharing: false,
+            screenSharingState: false,
             megaphoneState: false,
             characterTextures: [],
             tags: [],

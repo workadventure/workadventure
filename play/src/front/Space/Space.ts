@@ -75,8 +75,8 @@ export class Space {
                         if (partialUser.megaphoneState !== undefined) {
                             user.megaphoneState = partialUser.megaphoneState;
                         }
-                        if (partialUser.screenSharing !== undefined) {
-                            user.screenSharing = partialUser.screenSharing;
+                        if (partialUser.screenSharingState !== undefined) {
+                            user.screenSharingState = partialUser.screenSharingState;
                         }
                         if (partialUser.jitsiParticipantId !== undefined) {
                             user.jitsiParticipantId = partialUser.jitsiParticipantId;
