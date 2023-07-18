@@ -215,27 +215,12 @@ export class JitsiConferenceWrapper {
                     debug("track video type changed");
                 });
                 track.addEventListener(JitsiMeetJS.events.track.LOCAL_TRACK_STOPPED, () => {
+                    // TODO : Remove track that is stopped and update all other users
                     debug("local track stopped");
                 });
                 track.addEventListener(JitsiMeetJS.events.track.TRACK_AUDIO_OUTPUT_CHANGED, (deviceId) =>
                     debug(`track audio output device was changed to ${deviceId}`)
                 );
-
-                /*const id = participant + track.getType() + idx;
-
-                if (track.getType() === 'video') {
-                    $('body').prepend(
-                        `<video autoplay='1' id='${participant}video${idx}'  />`);
-                } else {
-                    $('body').prepend(
-                        `<audio autoplay='1' id='${participant}audio${idx}' />`);
-                }
-                track.attach(document.getElementById(`${id}`));*/
-
-                /*jitsiConferenceWrapper._streamStore.update((tracks) => {
-                    tracks.push(new JitsiTrackWrapper(track));
-                    return tracks;
-                });*/
             }
 
             room.on(JitsiMeetJS.events.conference.TRACK_ADDED, onRemoteTrack);

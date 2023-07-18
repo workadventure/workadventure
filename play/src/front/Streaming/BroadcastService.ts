@@ -42,9 +42,11 @@ class BroadcastSpace extends Space {
                                 this.jitsiConference = undefined;
                             })
                             .catch((e) => {
+                                // TODO : Handle the error and retry to leave the conference
                                 console.error(e);
                             })
                             .finally(() => {
+                                jitsiLoadingStore.set(false);
                                 broadcastService.checkIfCanDisconnect();
                             });
                     }
@@ -63,6 +65,7 @@ class BroadcastSpace extends Space {
                                 jitsiLoadingStore.set(false);
                             })
                             .catch((e) => {
+                                // TODO : Handle the error and retry to join the conference
                                 console.error("Error while joining the conference", e);
                             });
                     }
@@ -80,6 +83,7 @@ class BroadcastSpace extends Space {
             })
             .finally(() => {
                 this.broadcastService.checkIfCanDisconnect();
+                jitsiLoadingStore.set(false);
             });
         this.unsubscribes.forEach((unsubscribe) => unsubscribe());
         super.destroy();
@@ -140,6 +144,7 @@ export class BroadcastService {
             this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.name !== spaceName);
             broadcastServiceLogger("BroadcastService => leaveSpace", spaceName);
         }
+        jitsiLoadingStore.set(false);
     }
 
     private async connect() {
@@ -240,6 +245,7 @@ export class BroadcastService {
                 })
                 .catch((e) => {
                     console.error(e);
+                    jitsiLoadingStore.set(false);
                 });
         }
     }

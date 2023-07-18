@@ -48,10 +48,12 @@ export class Space implements CustomJsonReplacerInterface {
                 }
             }
         });
+        debug(`${this.name} : watcher added ${watcher.name}`);
     }
 
     public removeClientWatcher(watcher: ExSocketInterface) {
         this.clientWatchers.delete(watcher.userId);
+        debug(`${this.name} : watcher removed ${watcher.name}`);
     }
 
     public addUser(spaceUser: SpaceUser) {
@@ -99,7 +101,6 @@ export class Space implements CustomJsonReplacerInterface {
             },
         };
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
-        debug(`${this.name} : user update sent ${spaceUser.id}`);
         this.localUpdateUser(spaceUser);
     }
     public localUpdateUser(spaceUser: PartialSpaceUser) {
@@ -212,6 +213,7 @@ export class Space implements CustomJsonReplacerInterface {
     private notifyAll(subMessage: SubMessage, youngUser: SpaceUserExtended, oldUser: SpaceUserExtended | null = null) {
         this.clientWatchers.forEach((watcher) => {
             if (this.isWatcherTargeted(watcher, youngUser) || (oldUser && this.isWatcherTargeted(watcher, oldUser))) {
+                debug(`${this.name} : ${watcher.name} targeted`);
                 const filterOfThisSpace = watcher.spacesFilters.get(this.name) ?? [];
                 const filtersTargeted = filterOfThisSpace.filter(
                     (spaceFilter) =>
@@ -222,6 +224,7 @@ export class Space implements CustomJsonReplacerInterface {
                     filtersTargeted.forEach((spaceFilter) => {
                         if (subMessage.message?.$case === "addSpaceUserMessage") {
                             subMessage.message.addSpaceUserMessage.filterName = spaceFilter.filterName;
+                            debug(`${this.name} : user ${youngUser.lowercaseName} add sent to ${watcher.name}`);
                             watcher.emitInBatch(subMessage);
                         } else if (subMessage.message?.$case === "updateSpaceUserMessage") {
                             if (
@@ -239,10 +242,12 @@ export class Space implements CustomJsonReplacerInterface {
                             } else {
                                 subMessage.message.updateSpaceUserMessage.filterName = spaceFilter.filterName;
                                 watcher.emitInBatch(subMessage);
+                                debug(`${this.name} : user ${youngUser.lowercaseName} update sent to ${watcher.name}`);
                             }
                         } else if (subMessage.message?.$case === "removeSpaceUserMessage") {
                             subMessage.message.removeSpaceUserMessage.filterName = spaceFilter.filterName;
                             watcher.emitInBatch(subMessage);
+                            debug(`${this.name} : user ${youngUser.lowercaseName} remove sent to ${watcher.name}`);
                         }
                     });
                 }
