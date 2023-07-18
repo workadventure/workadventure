@@ -59,7 +59,7 @@
         dispatch("change", property.link);
     }
 
-    async function checkWebsiteProperty() : Promise<void> {
+    async function checkWebsiteProperty(): Promise<void> {
         // if the link is not a website, we don't need to check if it is embeddable
         embeddableLoading = true;
         error = "";

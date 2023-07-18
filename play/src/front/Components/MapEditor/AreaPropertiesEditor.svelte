@@ -205,7 +205,7 @@
                 headerText={$LL.mapEditor.properties.focusableProperties.label()}
                 descriptionText={$LL.mapEditor.properties.focusableProperties.description()}
                 img={"resources/icons/icon_focus.png"}
-                style="z-index: 9;"
+                style="z-index: 14;"
                 on:click={() => {
                     onAddProperty("focusable");
                 }}
@@ -216,7 +216,7 @@
                 headerText={$LL.mapEditor.properties.silentProperty.label()}
                 descriptionText={$LL.mapEditor.properties.silentProperty.description()}
                 img={"resources/icons/icon_silent.png"}
-                style="z-index: 8;"
+                style="z-index: 13;"
                 on:click={() => {
                     onAddProperty("silent");
                 }}
@@ -227,7 +227,7 @@
                 headerText={$LL.mapEditor.properties.jitsiProperties.label()}
                 descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
                 img={"resources/icons/icon_meeting.png"}
-                style="z-index: 7;"
+                style="z-index: 12;"
                 on:click={() => {
                     onAddProperty("jitsiRoomProperty");
                 }}
@@ -239,7 +239,7 @@
                     headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
                     descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.description()}
                     img={"resources/icons/icon_speaker.png"}
-                    style="z-index: 6;"
+                    style="z-index: 11;"
                     on:click={() => {
                         onAddProperty("speakerMegaphone");
                     }}
@@ -250,7 +250,7 @@
                     headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
                     descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
                     img={"resources/icons/icon_listener.png"}
-                    style="z-index: 5;"
+                    style="z-index: 10;"
                     on:click={() => {
                         onAddProperty("listenerMegaphone");
                     }}
@@ -262,7 +262,7 @@
                 headerText={$LL.mapEditor.properties.startProperties.label()}
                 descriptionText={$LL.mapEditor.properties.startProperties.description()}
                 img={"resources/icons/icon_start.png"}
-                style="z-index: 4;"
+                style="z-index: 9;"
                 on:click={() => {
                     onAddProperty("start");
                 }}
@@ -273,7 +273,7 @@
                 headerText={$LL.mapEditor.properties.exitProperties.label()}
                 descriptionText={$LL.mapEditor.properties.exitProperties.description()}
                 img={"resources/icons/icon_exit.png"}
-                style="z-index: 3;"
+                style="z-index: 8;"
                 on:click={() => {
                     onAddProperty("exit");
                 }}
@@ -284,7 +284,7 @@
                 headerText={$LL.mapEditor.properties.audioProperties.label()}
                 descriptionText={$LL.mapEditor.properties.audioProperties.description()}
                 img={audioSvg}
-                style="z-index: 2;"
+                style="z-index: 7;"
                 on:click={() => {
                     onAddProperty("playAudio");
                 }}
@@ -294,7 +294,7 @@
             headerText={$LL.mapEditor.properties.linkProperties.label()}
             descriptionText={$LL.mapEditor.properties.linkProperties.description()}
             img={"resources/icons/icon_link.png"}
-            style="z-index: 1;"
+            style="z-index: 6;"
             on:click={() => {
                 onAddProperty("openWebsite");
             }}
@@ -305,7 +305,7 @@
             headerText={$LL.mapEditor.properties.youtubeProperties.label()}
             descriptionText={$LL.mapEditor.properties.youtubeProperties.description()}
             img={"resources/icons/applications/icon_youtube.svg"}
-            style="z-index: 1;"
+            style="z-index: 5;"
             on:click={() => {
                 onAddProperty("openWebsite", "youtube");
             }}
@@ -314,7 +314,7 @@
             headerText={$LL.mapEditor.properties.klaxoonProperties.label()}
             descriptionText={$LL.mapEditor.properties.klaxoonProperties.description()}
             img={"resources/icons/applications/icon_klaxoon.svg"}
-            style="z-index: 1;"
+            style="z-index: 4;"
             on:click={() => {
                 onAddProperty("openWebsite", "klaxoon");
             }}
@@ -323,7 +323,7 @@
             headerText={$LL.mapEditor.properties.googleDocsProperties.label()}
             descriptionText={$LL.mapEditor.properties.googleDocsProperties.description()}
             img={"resources/icons/applications/icon_google_docs.svg"}
-            style="z-index: 1;"
+            style="z-index: 3;"
             on:click={() => {
                 onAddProperty("openWebsite", "googleDocs");
             }}
@@ -332,7 +332,7 @@
             headerText={$LL.mapEditor.properties.googleSheetsProperties.label()}
             descriptionText={$LL.mapEditor.properties.googleSheetsProperties.description()}
             img={"resources/icons/applications/icon_google_sheets.svg"}
-            style="z-index: 1;"
+            style="z-index: 2;"
             on:click={() => {
                 onAddProperty("openWebsite", "googleSheets");
             }}

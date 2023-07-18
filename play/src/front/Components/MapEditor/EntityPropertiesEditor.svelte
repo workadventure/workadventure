@@ -152,7 +152,7 @@
                 headerText={$LL.mapEditor.properties.jitsiProperties.label()}
                 descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
                 img={visioSvg}
-                style="z-index: 5;"
+                style="z-index: 8;"
                 on:click={() => {
                     onAddProperty("jitsiRoomProperty");
                 }}
@@ -162,7 +162,7 @@
             headerText={$LL.mapEditor.properties.audioProperties.label()}
             descriptionText={$LL.mapEditor.properties.audioProperties.description()}
             img={audioSvg}
-            style="z-index: 4;"
+            style="z-index: 7;"
             on:click={() => {
                 onAddProperty("playAudio");
             }}
@@ -171,7 +171,7 @@
             headerText={$LL.mapEditor.properties.linkProperties.label()}
             descriptionText={$LL.mapEditor.properties.linkProperties.description()}
             img={webSvg}
-            style="z-index: 3;"
+            style="z-index: 6;"
             on:click={() => {
                 onAddProperty("openWebsite");
             }}
@@ -182,7 +182,7 @@
             headerText={$LL.mapEditor.properties.youtubeProperties.label()}
             descriptionText={$LL.mapEditor.properties.youtubeProperties.description()}
             img={youtubeSvg}
-            style="z-index: 3;"
+            style="z-index: 5;"
             on:click={() => {
                 onAddProperty("openWebsite", "youtube");
             }}
@@ -191,7 +191,7 @@
             headerText={$LL.mapEditor.properties.klaxoonProperties.label()}
             descriptionText={$LL.mapEditor.properties.klaxoonProperties.description()}
             img={klaxoonSvg}
-            style="z-index: 3;"
+            style="z-index: 4;"
             on:click={() => {
                 onAddProperty("openWebsite", "klaxoon");
             }}
@@ -209,7 +209,7 @@
             headerText={$LL.mapEditor.properties.googleSheetsProperties.label()}
             descriptionText={$LL.mapEditor.properties.googleSheetsProperties.description()}
             img={googleSheetsSvg}
-            style="z-index: 3;"
+            style="z-index: 2;"
             on:click={() => {
                 onAddProperty("openWebsite", "googleSheets");
             }}
@@ -218,7 +218,7 @@
             headerText={$LL.mapEditor.properties.googleSlidesProperties.label()}
             descriptionText={$LL.mapEditor.properties.googleSlidesProperties.description()}
             img={googleSlidesSvg}
-            style="z-index: 3;"
+            style="z-index: 1;"
             on:click={() => {
                 onAddProperty("openWebsite", "googleSlides");
             }}

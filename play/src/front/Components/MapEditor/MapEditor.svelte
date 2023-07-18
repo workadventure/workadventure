@@ -44,6 +44,10 @@
         pointer-events: auto;
         color: whitesmoke;
 
+        button.close-window {
+            right: 0.5rem;
+        }
+
         &.WAMSettingsEditor {
             width: 80% !important;
             left: 10%;

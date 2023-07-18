@@ -419,8 +419,9 @@
     }
 
     function openKlaxoonActivityPicker() {
+        // prettier-ignore
         // @ts-ignore
-        KlaxoonActivityPicker.openPicker({
+        KlaxoonActivityPicker.openPicker({ // eslint-disable-line
             clientId: KLAXOON_CLIENT_ID,
             success: (payload: unknown) => {
                 console.info("Message received from Klaxoon Activity Picker: ", payload);
@@ -999,6 +1000,7 @@
         <div class="bottom-action-bar">
             <div class="bottom-action-section tw-flex animate">
                 <div class="tw-transition-all bottom-action-button">
+                    <Tooltip text={$LL.mapEditor.properties.klaxoonProperties.label()} />
                     <button
                         on:click={() => {
                             openKlaxoonActivityPicker();
@@ -1011,6 +1013,7 @@
             </div>
             <div class="bottom-action-section tw-flex animate">
                 <div class="tw-transition-all bottom-action-button">
+                    <Tooltip text={$LL.mapEditor.properties.googleDocsProperties.label()} />
                     <button
                         on:click={() => {
                             window.open(`https://docs.google.com/document/u/1/`, "_blanck");
@@ -1021,6 +1024,7 @@
                     </button>
                 </div>
                 <div class="tw-transition-all bottom-action-button">
+                    <Tooltip text={$LL.mapEditor.properties.googleSheetsProperties.label()} />
                     <button
                         on:click={() => {
                             window.open(`https://docs.google.com/spreadsheets/u/1/`, "_blanck");
@@ -1031,6 +1035,7 @@
                     </button>
                 </div>
                 <div class="tw-transition-all bottom-action-button">
+                    <Tooltip text={$LL.mapEditor.properties.googleSlidesProperties.label()} />
                     <button
                         on:click={() => {
                             window.open(`https://docs.google.com/presentation/u/1/`, "_blanck");
