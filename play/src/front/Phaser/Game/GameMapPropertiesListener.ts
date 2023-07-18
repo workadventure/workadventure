@@ -463,7 +463,7 @@ export class GameMapPropertiesListener {
             inOpenWebsite.set(true);
 
             // analytics event for open website
-            analyticsClient.openedWebsite();
+            analyticsClient.openedWebsite(coWebsite.getUrl());
         };
 
         if (localUserStore.getForceCowebsiteTrigger() || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
