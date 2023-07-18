@@ -41,6 +41,7 @@
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
     import appOnImg from "../images/applications/appOn.png";
     import appOffImg from "../images/applications/appOff.png";
+    import klaxoonImg from "../images/applications/icon_klaxoon.svg";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
@@ -94,6 +95,7 @@
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
+    import { KLAXOON_CLIENT_ID } from "../../Enum/EnvironmentVariable";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -410,7 +412,7 @@
 
         // @ts-ignore
         KlaxoonActivityPicker.openPicker({
-            clientId: "YOUR_KLAXOON_API",
+            clientId: KLAXOON_CLIENT_ID,
             success: (payload: unknown) => {
                 console.info("Message received from Klaxoon Activity Picker: ", payload);
             },
@@ -973,6 +975,28 @@
                             style="padding: 4px"
                             alt={$LL.menu.icon.open.closeEmoji()}
                         />
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{/if}
+
+{#if appMenuOpened}
+    <div
+        class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
+        style="margin-bottom: 4.5rem; height: auto;"
+    >
+        <div class="bottom-action-bar">
+            <div class="bottom-action-section tw-flex animate">
+                <div class="tw-transition-all bottom-action-button">
+                    <button
+                        on:click={() => {
+                            openKlaxoonActivityPicker();
+                        }}
+                        id={`button-app-klaxoon`}
+                    >
+                        <img draggable="false" src={klaxoonImg} style="padding: 2px" alt="Klaxoon" />
                     </button>
                 </div>
             </div>

@@ -42,4 +42,5 @@ export interface FrontConfigurationInterface {
     JITSI_MUC_DOMAIN: string | undefined;
     MAP_STORAGE_PATH_PREFIX: string | undefined;
     FEATURE_FLAG_BROADCAST_AREAS: boolean;
+    KLAXOON_CLIENT_ID: string | undefined;
 }
