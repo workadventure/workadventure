@@ -2,10 +2,24 @@
     import { createEventDispatcher, onMount } from "svelte";
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
     import { AlertTriangleIcon } from "svelte-feather-icons";
-    import axios from "axios";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import youtubeSvg from "../../images/applications/icon_youtube.svg";
+    import klaxoonSvg from "../../images/applications/icon_klaxoon.svg";
+    import googleDocsSvg from "../../images/applications/icon_google_docs.svg";
+    import googleSheetsSvg from "../../images/applications/icon_google_sheets.svg";
+    import googleSlidesSvg from "../../images/applications/icon_google_slides.svg";
+    import { getYoutubeEmbedUrl } from "../../../Services/Application/YoutubeService";
+    import {
+        getGoogleDocsEmbedUrl,
+        getGoogleSheetsEmbedUrl,
+        getGoogleSlidesEmbedUrl,
+    } from "../../../Services/Application/GoogleWorkSpaceService";
+    import {
+        GoogleDocsException,
+        GoogleSheetsException,
+        GoogleSlidesException,
+    } from "../../../Services/Application/Exception/GoogleWorkSpaceException";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenWebsitePropertyData;
@@ -22,7 +36,9 @@
     const dispatch = createEventDispatcher();
 
     onMount(() => {
-        checkWebsiteProperty();
+        checkWebsiteProperty().catch((e) => {
+            console.error("Error checking embeddable website", e);
+        });
     });
 
     function onTriggerValueChange() {
@@ -40,49 +56,98 @@
     }
 
     function onValueChange() {
-        console.log("onValueChange", property.link);
         dispatch("change", property.link);
     }
 
-    function checkWebsiteProperty(): void {
+    async function checkWebsiteProperty() : Promise<void> {
         // if the link is not a website, we don't need to check if it is embeddable
         embeddableLoading = true;
         error = "";
         let oldValue = property.link;
-        let promiseWebsiteProperty: Promise<void> | undefined;
         if (property.application == "youtube") {
-            promiseWebsiteProperty = axios
-                .get(`https://www.youtube.com/oembed?url=${property.link}&format:json`)
-                .then((res) => {
-                    const html = res.data.html;
-                    const div = document.createElement("div");
-                    div.insertAdjacentHTML("beforeend", html);
-                    const iframe: HTMLIFrameElement = div.firstChild as HTMLIFrameElement;
-                    property.link = iframe.src;
-                    embeddable = true;
-                    optionAdvancedActivated = false;
-                    property.newTab = oldNewTabValue;
-                })
-                .catch((e) => {
-                    embeddable = false;
-                    error = e.response?.data?.message ?? $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                    console.info("Error to check embeddable website", e);
-                    property.link = oldValue;
-                });
+            try {
+                const link = await getYoutubeEmbedUrl(new URL(property.link));
+                embeddable = true;
+                optionAdvancedActivated = false;
+                property.link = link;
+                property.newTab = oldNewTabValue;
+            } catch (e: unknown) {
+                embeddable = false;
+                error = $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                console.info("Error to check embeddable website", e);
+                property.link = oldValue;
+            }
+
+            embeddableLoading = false;
+            oldValue = property.link;
+            onValueChange();
         }
 
-        // check if the link is embeddable
-        if (promiseWebsiteProperty) {
-            promiseWebsiteProperty.finally(() => {
-                embeddableLoading = false;
-                oldValue = property.link;
-                onValueChange();
-
-                checkEmbeddableLink();
-            });
-        } else {
-            checkEmbeddableLink();
+        if (property.application == "googleDocs") {
+            try {
+                const link = getGoogleDocsEmbedUrl(new URL(property.link));
+                embeddable = true;
+                optionAdvancedActivated = false;
+                property.link = link;
+                property.newTab = oldNewTabValue;
+            } catch (e) {
+                embeddable = false;
+                error =
+                    e instanceof GoogleDocsException
+                        ? e.message
+                        : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                console.info("Error to check embeddable website", e);
+                property.link = oldValue;
+            }
+            embeddableLoading = false;
+            oldValue = property.link;
+            onValueChange();
         }
+
+        if (property.application == "googleSheets") {
+            try {
+                const link = getGoogleSheetsEmbedUrl(new URL(property.link));
+                embeddable = true;
+                optionAdvancedActivated = false;
+                property.link = link;
+                property.newTab = oldNewTabValue;
+            } catch (e) {
+                embeddable = false;
+                error =
+                    e instanceof GoogleSheetsException
+                        ? e.message
+                        : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                console.info("Error to check embeddable website", e);
+                property.link = oldValue;
+            }
+            embeddableLoading = false;
+            oldValue = property.link;
+            onValueChange();
+        }
+
+        if (property.application == "googleSlides") {
+            try {
+                const link = getGoogleSlidesEmbedUrl(new URL(property.link));
+                embeddable = true;
+                optionAdvancedActivated = false;
+                property.link = link;
+                property.newTab = oldNewTabValue;
+            } catch (e) {
+                embeddable = false;
+                error =
+                    e instanceof GoogleSlidesException
+                        ? e.message
+                        : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                console.info("Error to check embeddable website", e);
+                property.link = oldValue;
+            }
+            embeddableLoading = false;
+            oldValue = property.link;
+            onValueChange();
+        }
+
+        // allow to check if the link is embeddable
+        checkEmbeddableLink();
     }
 
     function checkEmbeddableLink(): void {
@@ -144,8 +209,40 @@
 >
     <span slot="header" class="tw-flex tw-justify-center tw-items-center">
         {#if property.application === "youtube"}
-            <img class="tw-w-6 tw-mr-1" src={youtubeSvg} alt={$LL.mapEditor.properties.linkProperties.description()} />
-            {$LL.mapEditor.properties.linkProperties.label()}
+            <img
+                class="tw-w-6 tw-mr-1"
+                src={youtubeSvg}
+                alt={$LL.mapEditor.properties.youtubeProperties.description()}
+            />
+            {$LL.mapEditor.properties.youtubeProperties.label()}
+        {:else if property.application === "klaxoon"}
+            <img
+                class="tw-w-6 tw-mr-1"
+                src={klaxoonSvg}
+                alt={$LL.mapEditor.properties.klaxoonProperties.description()}
+            />
+            {$LL.mapEditor.properties.klaxoonProperties.label()}
+        {:else if property.application === "googleDocs"}
+            <img
+                class="tw-w-6 tw-mr-1"
+                src={googleDocsSvg}
+                alt={$LL.mapEditor.properties.googleDocsProperties.description()}
+            />
+            {$LL.mapEditor.properties.googleDocsProperties.label()}
+        {:else if property.application === "googleSheets"}
+            <img
+                class="tw-w-6 tw-mr-1"
+                src={googleSheetsSvg}
+                alt={$LL.mapEditor.properties.googleSheetsProperties.description()}
+            />
+            {$LL.mapEditor.properties.googleSheetsProperties.label()}
+        {:else if property.application === "googleSlides"}
+            <img
+                class="tw-w-6 tw-mr-1"
+                src={googleSlidesSvg}
+                alt={$LL.mapEditor.properties.googleSlidesProperties.description()}
+            />
+            {$LL.mapEditor.properties.googleSlidesProperties.label()}
         {:else}
             <img class="tw-w-6 tw-mr-1" src={icon} alt={$LL.mapEditor.properties.linkProperties.description()} />
             {$LL.mapEditor.properties.linkProperties.label()}

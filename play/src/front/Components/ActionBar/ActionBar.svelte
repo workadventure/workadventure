@@ -42,6 +42,9 @@
     import appOnImg from "../images/applications/appOn.png";
     import appOffImg from "../images/applications/appOff.png";
     import klaxoonImg from "../images/applications/icon_klaxoon.svg";
+    import googleDocsSvg from "../images/applications/icon_google_docs.svg";
+    import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
+    import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
@@ -94,8 +97,8 @@
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
     import { KLAXOON_CLIENT_ID } from "../../Enum/EnvironmentVariable";
+    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -168,7 +171,12 @@
     }
 
     function toggleEmojiPicker() {
-        $emoteMenuSubStore == true ? emoteMenuSubStore.closeEmoteMenu() : emoteMenuSubStore.openEmoteMenu();
+        if ($emoteMenuSubStore == true) {
+            emoteMenuSubStore.closeEmoteMenu();
+        } else {
+            emoteMenuSubStore.openEmoteMenu();
+            appMenuOpened = false;
+        }
     }
 
     function toggleMegaphone() {
@@ -405,11 +413,12 @@
     let appMenuOpened = false;
     function toggleAppMenu() {
         appMenuOpened = !appMenuOpened;
+        if (appMenuOpened && $emoteMenuSubStore) {
+            emoteMenuSubStore.closeEmoteMenu();
+        }
     }
 
     function openKlaxoonActivityPicker() {
-        // Todo, use the metada from admin to get klaxoon api key
-
         // @ts-ignore
         KlaxoonActivityPicker.openPicker({
             clientId: KLAXOON_CLIENT_ID,
@@ -997,6 +1006,38 @@
                         id={`button-app-klaxoon`}
                     >
                         <img draggable="false" src={klaxoonImg} style="padding: 2px" alt="Klaxoon" />
+                    </button>
+                </div>
+            </div>
+            <div class="bottom-action-section tw-flex animate">
+                <div class="tw-transition-all bottom-action-button">
+                    <button
+                        on:click={() => {
+                            window.open(`https://docs.google.com/document/u/1/`, "_blanck");
+                        }}
+                        id={`button-app-klaxoon`}
+                    >
+                        <img draggable="false" src={googleDocsSvg} style="padding: 2px" alt="Klaxoon" />
+                    </button>
+                </div>
+                <div class="tw-transition-all bottom-action-button">
+                    <button
+                        on:click={() => {
+                            window.open(`https://docs.google.com/spreadsheets/u/1/`, "_blanck");
+                        }}
+                        id={`button-app-klaxoon`}
+                    >
+                        <img draggable="false" src={googleSheetsSvg} style="padding: 2px" alt="Klaxoon" />
+                    </button>
+                </div>
+                <div class="tw-transition-all bottom-action-button">
+                    <button
+                        on:click={() => {
+                            window.open(`https://docs.google.com/presentation/u/1/`, "_blanck");
+                        }}
+                        id={`button-app-klaxoon`}
+                    >
+                        <img draggable="false" src={googleSlidesSvg} style="padding: 2px" alt="Klaxoon" />
                     </button>
                 </div>
             </div>

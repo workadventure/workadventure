@@ -13,6 +13,9 @@
     import webSvg from "../images/web-white.svg";
     import youtubeSvg from "../images/applications/icon_youtube.svg";
     import klaxoonSvg from "../images/applications/icon_klaxoon.svg";
+    import googleDocsSvg from "../images/applications/icon_google_docs.svg";
+    import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
+    import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
@@ -76,6 +79,17 @@
                         break;
                     case "klaxoon":
                         link = "https://klaxoon.com/";
+                        break;
+                    case "googleDocs":
+                        link = "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit";
+                        break;
+                    case "googleSheets":
+                        link =
+                            "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit";
+                        break;
+                    case "googleSlides":
+                        link =
+                            "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit";
                         break;
                     default:
                         link = "https://workadventu.re";
@@ -165,8 +179,8 @@
     </div>
     <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
         <AddPropertyButton
-            headerText={$LL.mapEditor.properties.linkProperties.label()}
-            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            headerText={$LL.mapEditor.properties.youtubeProperties.label()}
+            descriptionText={$LL.mapEditor.properties.youtubeProperties.description()}
             img={youtubeSvg}
             style="z-index: 3;"
             on:click={() => {
@@ -174,12 +188,39 @@
             }}
         />
         <AddPropertyButton
-            headerText={$LL.mapEditor.properties.linkProperties.label()}
-            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            headerText={$LL.mapEditor.properties.klaxoonProperties.label()}
+            descriptionText={$LL.mapEditor.properties.klaxoonProperties.description()}
             img={klaxoonSvg}
             style="z-index: 3;"
             on:click={() => {
                 onAddProperty("openWebsite", "klaxoon");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.googleDocsProperties.label()}
+            descriptionText={$LL.mapEditor.properties.googleDocsProperties.description()}
+            img={googleDocsSvg}
+            style="z-index: 3;"
+            on:click={() => {
+                onAddProperty("openWebsite", "googleDocs");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.googleSheetsProperties.label()}
+            descriptionText={$LL.mapEditor.properties.googleSheetsProperties.description()}
+            img={googleSheetsSvg}
+            style="z-index: 3;"
+            on:click={() => {
+                onAddProperty("openWebsite", "googleSheets");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.googleSlidesProperties.label()}
+            descriptionText={$LL.mapEditor.properties.googleSlidesProperties.description()}
+            img={googleSlidesSvg}
+            style="z-index: 3;"
+            on:click={() => {
+                onAddProperty("openWebsite", "googleSlides");
             }}
         />
     </div>

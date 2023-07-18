@@ -243,7 +243,6 @@ export class FrontController extends BaseHttpController {
 
         try {
             const metaTagsData = await builder.getMeta(req.header("User-Agent"));
-            console.log("metaTagsData", metaTagsData);
             let option = {};
             if (req.query.logrocket === "true" && LOGROCKET_ID != undefined) {
                 option = {
@@ -251,6 +250,12 @@ export class FrontController extends BaseHttpController {
                     /* TODO change it to push data from admin */
                     logRocketId: LOGROCKET_ID,
                     userId: uuid(),
+                };
+            }
+            if (process.env.KLAXOON_CLIENT_ID != undefined) {
+                option = {
+                    ...option,
+                    klaxoonClientId: process.env.KLAXOON_CLIENT_ID,
                 };
             }
             html = Mustache.render(this.indexFile, {

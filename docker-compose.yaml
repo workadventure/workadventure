@@ -121,6 +121,8 @@ services:
             JITSI_MUC_DOMAIN: "$JITSI_MUC_DOMAIN"
             JITSI_XMPP_DOMAIN: "$JITSI_XMPP_DOMAIN"
             FEATURE_FLAG_BROADCAST_AREAS: "true"
+            #Klaxoon client id
+            KLAXOON_CLIENT_ID: "$KLAXOON_CLIENT_ID"
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"

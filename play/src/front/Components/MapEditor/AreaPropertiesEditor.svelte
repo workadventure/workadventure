@@ -76,12 +76,24 @@
                     roomName: "JITSI ROOM",
                 };
             case "openWebsite":
+                // TODO refactore and use the same code than EntityPropertiesEditor
                 switch (subtype) {
                     case "youtube":
                         link = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
                         break;
                     case "klaxoon":
                         link = "https://klaxoon.com/";
+                        break;
+                    case "googleDocs":
+                        link = "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit";
+                        break;
+                    case "googleSheets":
+                        link =
+                            "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit";
+                        break;
+                    case "googleSlides":
+                        link =
+                            "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit";
                         break;
                     default:
                         link = "https://workadventu.re";
@@ -287,9 +299,11 @@
                 onAddProperty("openWebsite");
             }}
         />
+    </div>
+    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
         <AddPropertyButton
-            headerText={$LL.mapEditor.properties.linkProperties.label()}
-            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            headerText={$LL.mapEditor.properties.youtubeProperties.label()}
+            descriptionText={$LL.mapEditor.properties.youtubeProperties.description()}
             img={"resources/icons/applications/icon_youtube.svg"}
             style="z-index: 1;"
             on:click={() => {
@@ -297,8 +311,8 @@
             }}
         />
         <AddPropertyButton
-            headerText={$LL.mapEditor.properties.linkProperties.label()}
-            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            headerText={$LL.mapEditor.properties.klaxoonProperties.label()}
+            descriptionText={$LL.mapEditor.properties.klaxoonProperties.description()}
             img={"resources/icons/applications/icon_klaxoon.svg"}
             style="z-index: 1;"
             on:click={() => {
@@ -306,8 +320,8 @@
             }}
         />
         <AddPropertyButton
-            headerText={$LL.mapEditor.properties.linkProperties.label()}
-            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            headerText={$LL.mapEditor.properties.googleDocsProperties.label()}
+            descriptionText={$LL.mapEditor.properties.googleDocsProperties.description()}
             img={"resources/icons/applications/icon_google_docs.svg"}
             style="z-index: 1;"
             on:click={() => {
@@ -315,17 +329,8 @@
             }}
         />
         <AddPropertyButton
-            headerText={$LL.mapEditor.properties.linkProperties.label()}
-            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
-            img={"resources/icons/applications/icon_google_forms.svg"}
-            style="z-index: 1;"
-            on:click={() => {
-                onAddProperty("openWebsite", "googleForms");
-            }}
-        />
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.linkProperties.label()}
-            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
+            headerText={$LL.mapEditor.properties.googleSheetsProperties.label()}
+            descriptionText={$LL.mapEditor.properties.googleSheetsProperties.description()}
             img={"resources/icons/applications/icon_google_sheets.svg"}
             style="z-index: 1;"
             on:click={() => {
@@ -333,9 +338,9 @@
             }}
         />
         <AddPropertyButton
-            headerText={$LL.mapEditor.properties.linkProperties.label()}
-            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
-            img={"resources/icons/applications/icon_google_sheets.svg"}
+            headerText={$LL.mapEditor.properties.googleSlidesProperties.label()}
+            descriptionText={$LL.mapEditor.properties.googleSlidesProperties.description()}
+            img={"resources/icons/applications/icon_google_slides.svg"}
             style="z-index: 1;"
             on:click={() => {
                 onAddProperty("openWebsite", "googleSlides");

@@ -107,6 +107,31 @@ const mapEditor: BaseTranslation = {
             exitMap: "Exit map",
             exitMapStartAreaName: "Start area name",
         },
+        youtubeProperties: {
+            label: "Youtube Video",
+            description: "Open Youtube video within WorkAdventure or as a new tab.",
+            error: "Please enter a valid Youtube URL",
+        },
+        googleDocsProperties: {
+            label: "Google Docs",
+            description: "Open Google Docs within WorkAdventure or as a new tab.",
+            error: "Please enter a valid Google Docs URL",
+        },
+        klaxoonProperties: {
+            label: "Klaxoon",
+            description: "Open Klaxoon within WorkAdventure or as a new tab.",
+            error: "Please enter a valid Klaxoon URL",
+        },
+        googleSheetsProperties: {
+            label: "Google Sheets",
+            description: "Open Google Sheets within WorkAdventure or as a new tab.",
+            error: "Please enter a valid Google Sheets URL",
+        },
+        googleSlidesProperties: {
+            label: "Google Slides",
+            description: "Open Google Slides within WorkAdventure or as a new tab.",
+            error: "Please enter a valid Google Slides URL",
+        },
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",
