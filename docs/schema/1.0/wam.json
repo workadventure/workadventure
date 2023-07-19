@@ -168,6 +168,19 @@
                         },
                         "position": {
                           "type": "number"
+                        },
+                        "application": {
+                          "type": "string",
+                          "enum": [
+                            "website",
+                            "youtube",
+                            "klaxoon",
+                            "googleDocs",
+                            "googleSheets",
+                            "googleSlides",
+                            "googleForms"
+                          ],
+                          "default": "website"
                         }
                       },
                       "required": [

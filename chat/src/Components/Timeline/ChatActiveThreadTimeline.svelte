@@ -152,39 +152,39 @@
         applicationMenuIsOpenned = !applicationMenuIsOpenned;
     }
 
-    interface Application{
+    interface Application {
         name: string;
         icon: string;
     }
     const applications: Application[] = [
         {
-            name: 'kalxoon',
-            icon: './static/images/applications/klaxoon.svg',
+            name: "kalxoon",
+            icon: "./static/images/applications/klaxoon.svg",
         },
         {
-            name: 'Youtube',
-            icon: './static/images/applications/youtube.svg',
+            name: "Youtube",
+            icon: "./static/images/applications/youtube.svg",
         },
         {
-            name: 'Google Doc',
-            icon: './static/images/applications/google-docs.svg',
+            name: "Google Doc",
+            icon: "./static/images/applications/google-docs.svg",
         },
         {
-            name: 'Google Sheet',
-            icon: './static/images/applications/google-sheets.svg',
+            name: "Google Sheet",
+            icon: "./static/images/applications/google-sheets.svg",
         },
         {
-            name: 'Google Slide',
-            icon: './static/images/applications/google-slides.svg',
+            name: "Google Slide",
+            icon: "./static/images/applications/google-slides.svg",
         },
         {
-            name: 'Google Form',
-            icon: './static/images/applications/google-forms.svg',
+            name: "Google Form",
+            icon: "./static/images/applications/google-forms.svg",
         },
     ];
 
-    function addNewApp(app: Application){
-        console.log('add new app', app);
+    function addNewApp(app: Application) {
+        console.log("add new app", app);
     }
 
     onDestroy(() => {
@@ -424,7 +424,7 @@
                         on:keyup
                         on:click|stopPropagation|preventDefault={() => addNewApp(app)}
                     >
-                        <img src={app.icon} alt={`App ${app.name} iniated in the chat`} width="20px"/>
+                        <img src={app.icon} alt={`App ${app.name} iniated in the chat`} width="20px" />
                         {app.name}
                     </span>
                 {/each}
@@ -526,7 +526,7 @@
     form [contenteditable="true"] {
         padding-right: 4rem;
     }
-    .wa-dropdown-menu{
+    .wa-dropdown-menu {
         margin: 0 0 0 10px;
         position: relative;
         width: 94%;
