@@ -21,6 +21,13 @@
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
     import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
+    import {
+        GOOGLE_DOCS_ENABLED,
+        GOOGLE_SHEETS_ENABLED,
+        GOOGLE_SLIDES_ENABLED,
+        KLAXOON_ENABLED,
+        YOUTUBE_ENABLED,
+    } from "../../Enum/EnvironmentVariable";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
@@ -183,6 +190,7 @@
             descriptionText={$LL.mapEditor.properties.youtubeProperties.description()}
             img={youtubeSvg}
             style="z-index: 5;"
+            disabled={!YOUTUBE_ENABLED}
             on:click={() => {
                 onAddProperty("openWebsite", "youtube");
             }}
@@ -192,6 +200,7 @@
             descriptionText={$LL.mapEditor.properties.klaxoonProperties.description()}
             img={klaxoonSvg}
             style="z-index: 4;"
+            disabled={!KLAXOON_ENABLED}
             on:click={() => {
                 onAddProperty("openWebsite", "klaxoon");
             }}
@@ -201,6 +210,7 @@
             descriptionText={$LL.mapEditor.properties.googleDocsProperties.description()}
             img={googleDocsSvg}
             style="z-index: 3;"
+            disabled={!GOOGLE_DOCS_ENABLED}
             on:click={() => {
                 onAddProperty("openWebsite", "googleDocs");
             }}
@@ -210,6 +220,7 @@
             descriptionText={$LL.mapEditor.properties.googleSheetsProperties.description()}
             img={googleSheetsSvg}
             style="z-index: 2;"
+            disabled={!GOOGLE_SHEETS_ENABLED}
             on:click={() => {
                 onAddProperty("openWebsite", "googleSheets");
             }}
@@ -219,6 +230,7 @@
             descriptionText={$LL.mapEditor.properties.googleSlidesProperties.description()}
             img={googleSlidesSvg}
             style="z-index: 1;"
+            disabled={!GOOGLE_SLIDES_ENABLED}
             on:click={() => {
                 onAddProperty("openWebsite", "googleSlides");
             }}

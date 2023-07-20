@@ -9,7 +9,14 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import audioSvg from "../images/audio-white.svg";
-    import { FEATURE_FLAG_BROADCAST_AREAS } from "../../Enum/EnvironmentVariable";
+    import {
+        FEATURE_FLAG_BROADCAST_AREAS,
+        GOOGLE_DOCS_ENABLED,
+        KLAXOON_ENABLED,
+        YOUTUBE_ENABLED,
+        GOOGLE_SHEETS_ENABLED,
+        GOOGLE_SLIDES_ENABLED,
+    } from "../../Enum/EnvironmentVariable";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
@@ -306,6 +313,7 @@
             descriptionText={$LL.mapEditor.properties.youtubeProperties.description()}
             img={"resources/icons/applications/icon_youtube.svg"}
             style="z-index: 5;"
+            disabled={!YOUTUBE_ENABLED}
             on:click={() => {
                 onAddProperty("openWebsite", "youtube");
             }}
@@ -315,6 +323,7 @@
             descriptionText={$LL.mapEditor.properties.klaxoonProperties.description()}
             img={"resources/icons/applications/icon_klaxoon.svg"}
             style="z-index: 4;"
+            disabled={!KLAXOON_ENABLED}
             on:click={() => {
                 onAddProperty("openWebsite", "klaxoon");
             }}
@@ -324,6 +333,7 @@
             descriptionText={$LL.mapEditor.properties.googleDocsProperties.description()}
             img={"resources/icons/applications/icon_google_docs.svg"}
             style="z-index: 3;"
+            disabled={!GOOGLE_DOCS_ENABLED}
             on:click={() => {
                 onAddProperty("openWebsite", "googleDocs");
             }}
@@ -333,6 +343,7 @@
             descriptionText={$LL.mapEditor.properties.googleSheetsProperties.description()}
             img={"resources/icons/applications/icon_google_sheets.svg"}
             style="z-index: 2;"
+            disabled={!GOOGLE_SHEETS_ENABLED}
             on:click={() => {
                 onAddProperty("openWebsite", "googleSheets");
             }}
@@ -342,6 +353,7 @@
             descriptionText={$LL.mapEditor.properties.googleSlidesProperties.description()}
             img={"resources/icons/applications/icon_google_slides.svg"}
             style="z-index: 1;"
+            disabled={!GOOGLE_SLIDES_ENABLED}
             on:click={() => {
                 onAddProperty("openWebsite", "googleSlides");
             }}

@@ -97,7 +97,13 @@
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import { KLAXOON_CLIENT_ID } from "../../Enum/EnvironmentVariable";
+    import {
+        GOOGLE_DOCS_ENABLED,
+        KLAXOON_CLIENT_ID,
+        KLAXOON_ENABLED,
+        GOOGLE_SHEETS_ENABLED,
+        GOOGLE_SLIDES_ENABLED,
+    } from "../../Enum/EnvironmentVariable";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -1006,6 +1012,7 @@
                             openKlaxoonActivityPicker();
                         }}
                         id={`button-app-klaxoon`}
+                        disabled={!KLAXOON_ENABLED}
                     >
                         <img draggable="false" src={klaxoonImg} style="padding: 2px" alt="Klaxoon" />
                     </button>
@@ -1019,6 +1026,7 @@
                             window.open(`https://docs.google.com/document/u/1/`, "_blanck");
                         }}
                         id={`button-app-klaxoon`}
+                        disabled={!GOOGLE_DOCS_ENABLED}
                     >
                         <img draggable="false" src={googleDocsSvg} style="padding: 2px" alt="Klaxoon" />
                     </button>
@@ -1030,6 +1038,7 @@
                             window.open(`https://docs.google.com/spreadsheets/u/1/`, "_blanck");
                         }}
                         id={`button-app-klaxoon`}
+                        disabled={!GOOGLE_SHEETS_ENABLED}
                     >
                         <img draggable="false" src={googleSheetsSvg} style="padding: 2px" alt="Klaxoon" />
                     </button>
@@ -1041,6 +1050,7 @@
                             window.open(`https://docs.google.com/presentation/u/1/`, "_blanck");
                         }}
                         id={`button-app-klaxoon`}
+                        disabled={!GOOGLE_SLIDES_ENABLED}
                     >
                         <img draggable="false" src={googleSlidesSvg} style="padding: 2px" alt="Klaxoon" />
                     </button>
