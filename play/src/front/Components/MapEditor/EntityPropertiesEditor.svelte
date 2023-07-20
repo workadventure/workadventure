@@ -17,10 +17,6 @@
     import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
-    import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
-    import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
-    import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
     import {
         GOOGLE_DOCS_ENABLED,
         GOOGLE_SHEETS_ENABLED,
@@ -28,6 +24,10 @@
         KLAXOON_ENABLED,
         YOUTUBE_ENABLED,
     } from "../../Enum/EnvironmentVariable";
+    import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
+    import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
+    import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
+    import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
