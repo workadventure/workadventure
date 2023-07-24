@@ -59,6 +59,28 @@ const en_US: BaseTranslation = {
     form: {
         placeholder: "Enter your message...",
         typing: " typing...",
+        application: {
+            klaxoon: {
+                title: "Klaxoon",
+                description: "Send embedded klaxoon in the chat!",
+            },
+            youtube: {
+                title: "Youtube",
+                description: "Send embedded youtube video in the chat!",
+            },
+            googleDocs: {
+                title: "Google Docs",
+                description: "Send embedded google docs in the chat!",
+            },
+            googleSlides: {
+                title: "Google Slides",
+                description: "Send embedded google slides in the chat!",
+            },
+            googleSheets: {
+                title: "Google Sheets",
+                description: "Send embedded google sheets in the chat!",
+            },
+        },
     },
     notification: {
         discussion: "wants to discuss with you",

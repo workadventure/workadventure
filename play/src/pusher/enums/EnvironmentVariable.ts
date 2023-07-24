@@ -90,6 +90,14 @@ export const ROOM_API_SECRET_KEY = env.ROOM_API_SECRET_KEY;
 export const ENABLE_MAP_EDITOR: boolean = env.ENABLE_MAP_EDITOR;
 export const MAP_EDITOR_ALLOWED_USERS: string[] = env.MAP_EDITOR_ALLOWED_USERS;
 
+// Integration tools
+export const KLAXOON_ENABLED = env.KLAXOON_ENABLED;
+export const KLAXOON_CLIENT_ID = env.KLAXOON_CLIENT_ID;
+export const YOUTUBE_ENABLED = env.YOUTUBE_ENABLED;
+export const GOOGLE_DOCS_ENABLED = env.GOOGLE_DOCS_ENABLED;
+export const GOOGLE_SHEETS_ENABLED = env.GOOGLE_SHEETS_ENABLED;
+export const GOOGLE_SLIDES_ENABLED = env.GOOGLE_SLIDES_ENABLED;
+
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: env.DEBUG_MODE,

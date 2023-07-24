@@ -59,6 +59,28 @@ const fr_FR: Translation = {
     form: {
         placeholder: "Écrire votre message...",
         typing: " écrit...",
+        application: {
+            klaxoon: {
+                title: "Klaxoon",
+                description: "Envoyer un klaxoon dans le chat !",
+            },
+            youtube: {
+                title: "Youtube",
+                description: "Envoyer une vidéo youtube dans le chat !",
+            },
+            googleDocs: {
+                title: "Google Docs",
+                description: "Envoyer un document google docs dans le chat !",
+            },
+            googleSlides: {
+                title: "Google Slides",
+                description: "Envoyer une présentation google slides dans le chat !",
+            },
+            googleSheets: {
+                title: "Google Sheets",
+                description: "Envoyer un tableau google sheets dans le chat !",
+            },
+        },
     },
     notification: {
         discussion: "veut discuter avec toi",

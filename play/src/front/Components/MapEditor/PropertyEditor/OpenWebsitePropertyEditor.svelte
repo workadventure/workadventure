@@ -2,6 +2,7 @@
     import { createEventDispatcher, onMount } from "svelte";
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
     import { AlertTriangleIcon } from "svelte-feather-icons";
+    import { GoogleWorkSpaceException, GoogleWorkSpaceService, YoutubeService } from "@workadventure/shared-utils";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import youtubeSvg from "../../images/applications/icon_youtube.svg";
@@ -9,17 +10,6 @@
     import googleDocsSvg from "../../images/applications/icon_google_docs.svg";
     import googleSheetsSvg from "../../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../../images/applications/icon_google_slides.svg";
-    import { getYoutubeEmbedUrl } from "../../../Services/Application/YoutubeService";
-    import {
-        getGoogleDocsEmbedUrl,
-        getGoogleSheetsEmbedUrl,
-        getGoogleSlidesEmbedUrl,
-    } from "../../../Services/Application/GoogleWorkSpaceService";
-    import {
-        GoogleDocsException,
-        GoogleSheetsException,
-        GoogleSlidesException,
-    } from "../../../Services/Application/Exception/GoogleWorkSpaceException";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenWebsitePropertyData;
@@ -66,7 +56,7 @@
         let oldValue = property.link;
         if (property.application == "youtube") {
             try {
-                const link = await getYoutubeEmbedUrl(new URL(property.link));
+                const link = await YoutubeService.getYoutubeEmbedUrl(new URL(property.link));
                 embeddable = true;
                 optionAdvancedActivated = false;
                 property.link = link;
@@ -85,7 +75,7 @@
 
         if (property.application == "googleDocs") {
             try {
-                const link = getGoogleDocsEmbedUrl(new URL(property.link));
+                const link = GoogleWorkSpaceService.getGoogleDocsEmbedUrl(new URL(property.link));
                 embeddable = true;
                 optionAdvancedActivated = false;
                 property.link = link;
@@ -93,8 +83,8 @@
             } catch (e) {
                 embeddable = false;
                 error =
-                    e instanceof GoogleDocsException
-                        ? e.message
+                    e instanceof GoogleWorkSpaceException.GoogleDocsException
+                        ? $LL.mapEditor.properties.googleDocsProperties.error()
                         : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
                 console.info("Error to check embeddable website", e);
                 property.link = oldValue;
@@ -106,7 +96,7 @@
 
         if (property.application == "googleSheets") {
             try {
-                const link = getGoogleSheetsEmbedUrl(new URL(property.link));
+                const link = GoogleWorkSpaceService.getGoogleSheetsEmbedUrl(new URL(property.link));
                 embeddable = true;
                 optionAdvancedActivated = false;
                 property.link = link;
@@ -114,8 +104,8 @@
             } catch (e) {
                 embeddable = false;
                 error =
-                    e instanceof GoogleSheetsException
-                        ? e.message
+                    e instanceof GoogleWorkSpaceException.GoogleSheetsException
+                        ? $LL.mapEditor.properties.googleSheetsProperties.error()
                         : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
                 console.info("Error to check embeddable website", e);
                 property.link = oldValue;
@@ -127,7 +117,7 @@
 
         if (property.application == "googleSlides") {
             try {
-                const link = getGoogleSlidesEmbedUrl(new URL(property.link));
+                const link = GoogleWorkSpaceService.getGoogleSlidesEmbedUrl(new URL(property.link));
                 embeddable = true;
                 optionAdvancedActivated = false;
                 property.link = link;
@@ -135,8 +125,8 @@
             } catch (e) {
                 embeddable = false;
                 error =
-                    e instanceof GoogleSlidesException
-                        ? e.message
+                    e instanceof GoogleWorkSpaceException.GoogleSlidesException
+                        ? $LL.mapEditor.properties.googleSlidesProperties.error()
                         : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
                 console.info("Error to check embeddable website", e);
                 property.link = oldValue;

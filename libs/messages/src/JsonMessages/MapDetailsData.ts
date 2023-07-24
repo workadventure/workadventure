@@ -255,7 +255,7 @@ export const isMapDetailsData = z.object({
         description: "Whether the klaxoon tool is activated or not on this room",
         example: true,
     }),
-    klaxoonToolClientId: extendApi(z.string().optional(), {
+    klaxoonToolClientId: extendApi(z.string().optional().nullable(), {
         description: "The client id of the klaxoon tool",
         example: "klaxoon-client-id",
     }),

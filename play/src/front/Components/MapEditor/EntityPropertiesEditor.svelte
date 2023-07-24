@@ -17,13 +17,7 @@
     import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import {
-        GOOGLE_DOCS_ENABLED,
-        GOOGLE_SHEETS_ENABLED,
-        GOOGLE_SLIDES_ENABLED,
-        KLAXOON_ENABLED,
-        YOUTUBE_ENABLED,
-    } from "../../Enum/EnvironmentVariable";
+    import { connectionManager } from "../../Connection/ConnectionManager";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
@@ -44,6 +38,7 @@
     function onAddProperty(type: EntityDataPropertiesKeys, subtype?: OpenWebsiteTypePropertiesKeys) {
         if ($mapEditorSelectedEntityStore) {
             analyticsClient.addMapEditorProperty("entity", type || "unknown");
+            console.log("getPropertyFromType(type, subtype)", getPropertyFromType(type, subtype));
             $mapEditorSelectedEntityStore.addProperty(getPropertyFromType(type, subtype));
             // refresh properties
             properties = $mapEditorSelectedEntityStore?.getProperties();
@@ -187,50 +182,60 @@
     <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.youtubeProperties.label()}
-            descriptionText={$LL.mapEditor.properties.youtubeProperties.description()}
+            descriptionText={connectionManager.currentRoom?.youtubeToolActivated
+                ? $LL.mapEditor.properties.youtubeProperties.description()
+                : $LL.mapEditor.properties.youtubeProperties.disabled()}
             img={youtubeSvg}
             style="z-index: 5;"
-            disabled={!YOUTUBE_ENABLED}
+            disabled={!connectionManager.currentRoom?.youtubeToolActivated}
             on:click={() => {
                 onAddProperty("openWebsite", "youtube");
             }}
         />
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.klaxoonProperties.label()}
-            descriptionText={$LL.mapEditor.properties.klaxoonProperties.description()}
+            descriptionText={connectionManager.currentRoom?.klaxoonToolActivated
+                ? $LL.mapEditor.properties.klaxoonProperties.description()
+                : $LL.mapEditor.properties.klaxoonProperties.disabled()}
             img={klaxoonSvg}
             style="z-index: 4;"
-            disabled={!KLAXOON_ENABLED}
+            disabled={!connectionManager.currentRoom?.klaxoonToolActivated}
             on:click={() => {
                 onAddProperty("openWebsite", "klaxoon");
             }}
         />
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.googleDocsProperties.label()}
-            descriptionText={$LL.mapEditor.properties.googleDocsProperties.description()}
+            descriptionText={connectionManager.currentRoom?.googleDocsToolActivated
+                ? $LL.mapEditor.properties.googleDocsProperties.description()
+                : $LL.mapEditor.properties.googleDocsProperties.disabled()}
             img={googleDocsSvg}
             style="z-index: 3;"
-            disabled={!GOOGLE_DOCS_ENABLED}
+            disabled={!connectionManager.currentRoom?.googleDocsToolActivated}
             on:click={() => {
                 onAddProperty("openWebsite", "googleDocs");
             }}
         />
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.googleSheetsProperties.label()}
-            descriptionText={$LL.mapEditor.properties.googleSheetsProperties.description()}
+            descriptionText={connectionManager.currentRoom?.googleSheetsToolActivated
+                ? $LL.mapEditor.properties.googleSheetsProperties.description()
+                : $LL.mapEditor.properties.googleSheetsProperties.disabled()}
             img={googleSheetsSvg}
             style="z-index: 2;"
-            disabled={!GOOGLE_SHEETS_ENABLED}
+            disabled={!connectionManager.currentRoom?.googleSheetsToolActivated}
             on:click={() => {
                 onAddProperty("openWebsite", "googleSheets");
             }}
         />
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.googleSlidesProperties.label()}
-            descriptionText={$LL.mapEditor.properties.googleSlidesProperties.description()}
+            descriptionText={connectionManager.currentRoom?.googleSlidesToolActivated
+                ? $LL.mapEditor.properties.googleSlidesProperties.description()
+                : $LL.mapEditor.properties.googleSlidesProperties.disabled()}
             img={googleSlidesSvg}
             style="z-index: 1;"
-            disabled={!GOOGLE_SLIDES_ENABLED}
+            disabled={!connectionManager.currentRoom?.googleSlidesToolActivated}
             on:click={() => {
                 onAddProperty("openWebsite", "googleSlides");
             }}

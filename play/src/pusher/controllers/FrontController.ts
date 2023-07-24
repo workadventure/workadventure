@@ -252,12 +252,7 @@ export class FrontController extends BaseHttpController {
                     userId: uuid(),
                 };
             }
-            if (process.env.KLAXOON_CLIENT_ID != undefined) {
-                option = {
-                    ...option,
-                    klaxoonClientId: process.env.KLAXOON_CLIENT_ID,
-                };
-            }
+            console.log("metaTagsData", metaTagsData);
             html = Mustache.render(this.indexFile, {
                 ...metaTagsData,
                 // TODO change it to push data from admin

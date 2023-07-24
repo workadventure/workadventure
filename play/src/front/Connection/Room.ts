@@ -6,6 +6,12 @@ import {
     DISABLE_ANONYMOUS,
     OPID_LOGOUT_REDIRECT_URL,
     OPID_WOKA_NAME_POLICY,
+    KLAXOON_ENABLED,
+    KLAXOON_CLIENT_ID,
+    YOUTUBE_ENABLED,
+    GOOGLE_DOCS_ENABLED,
+    GOOGLE_SHEETS_ENABLED,
+    GOOGLE_SLIDES_ENABLED,
 } from "../Enum/EnvironmentVariable";
 import { ApiError } from "../Stores/Errors/ApiError";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
@@ -57,6 +63,12 @@ export class Room {
     private _reportIssuesUrl: string | undefined;
     private _entityCollectionsUrls: string[] | undefined;
     private _errorSceneLogo: string | undefined;
+    private _klaxoonToolActivated: boolean | undefined;
+    private _klaxoonToolClientId: string | undefined;
+    private _youtubeToolActivated: boolean | undefined;
+    private _googleDocsToolActivated: boolean | undefined;
+    private _googleSheetsToolActivated: boolean | undefined;
+    private _googleSlidesToolActivated: boolean | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -189,6 +201,13 @@ export class Room {
                 this._entityCollectionsUrls = data.entityCollectionsUrls ?? undefined;
 
                 this._errorSceneLogo = data.errorSceneLogo ?? undefined;
+
+                this._klaxoonToolActivated = data.klaxoonToolActivated ?? KLAXOON_ENABLED;
+                this._klaxoonToolClientId = data.klaxoonToolClientId ?? KLAXOON_CLIENT_ID;
+                this._youtubeToolActivated = data.youtubeToolActivated ?? YOUTUBE_ENABLED;
+                this._googleDocsToolActivated = data.googleDocsToolActivated ?? GOOGLE_DOCS_ENABLED;
+                this._googleSheetsToolActivated = data.googleSheetsToolActivated ?? GOOGLE_SHEETS_ENABLED;
+                this._googleSlidesToolActivated = data.googleSlidesToolActivated ?? GOOGLE_SLIDES_ENABLED;
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {
@@ -399,5 +418,24 @@ export class Room {
 
     get errorSceneLogo(): string | undefined {
         return this._errorSceneLogo;
+    }
+
+    get klaxoonToolActivated(): boolean | undefined {
+        return this._klaxoonToolActivated;
+    }
+    get klaxoonToolClientId(): string | undefined {
+        return this._klaxoonToolClientId;
+    }
+    get youtubeToolActivated(): boolean {
+        return this._youtubeToolActivated ?? false;
+    }
+    get googleDocsToolActivated(): boolean {
+        return this._googleDocsToolActivated ?? false;
+    }
+    get googleSheetsToolActivated(): boolean {
+        return this._googleSheetsToolActivated ?? false;
+    }
+    get googleSlidesToolActivated(): boolean {
+        return this._googleSlidesToolActivated ?? false;
     }
 }

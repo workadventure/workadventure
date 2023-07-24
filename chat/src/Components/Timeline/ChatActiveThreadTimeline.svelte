@@ -1,8 +1,8 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { ArrowLeftIcon, RefreshCwIcon, SmileIcon, SendIcon, PlusIcon } from "svelte-feather-icons";
+    import { ArrowLeftIcon, RefreshCwIcon, SmileIcon, SendIcon } from "svelte-feather-icons";
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
-    import { Unsubscriber } from "svelte/store";
+    import { Unsubscriber, writable } from "svelte/store";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import {
         chatMessagesStore,
@@ -28,6 +28,7 @@
     let newMessageText = "";
     let htmlMessageText = "";
     let input: HTMLElement;
+    const applicationsSelected = writable<Set<Application>>(new Set());
 
     function reInitialize() {
         chatMessagesStore.reInitialize();
@@ -155,36 +156,59 @@
     interface Application {
         name: string;
         icon: string;
+        exemple: string;
     }
+    /*
+                        case "youtube":
+                        link = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
+                        break;
+                    case "klaxoon":
+                        link = "https://klaxoon.com/";
+                        break;
+                    case "googleDocs":
+                        link = "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit";
+                        break;
+                    case "googleSheets":
+                        link =
+                            "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit";
+                        break;
+                    case "googleSlides":
+                        link =
+                            "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit";
+                        break;
+    */
     const applications: Application[] = [
         {
-            name: "kalxoon",
+            name: "Klaxoon",
             icon: "./static/images/applications/klaxoon.svg",
+            exemple: "https://klaxoon.com/fr",
         },
         {
             name: "Youtube",
             icon: "./static/images/applications/youtube.svg",
+            exemple: "https://www.youtube.com/watch?v=Y9ubBWf5w20",
         },
         {
-            name: "Google Doc",
+            name: "Google Docs",
             icon: "./static/images/applications/google-docs.svg",
+            exemple: "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit",
         },
         {
-            name: "Google Sheet",
+            name: "Google Sheets",
             icon: "./static/images/applications/google-sheets.svg",
+            exemple: "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit",
         },
         {
-            name: "Google Slide",
+            name: "Google Slides",
             icon: "./static/images/applications/google-slides.svg",
-        },
-        {
-            name: "Google Form",
-            icon: "./static/images/applications/google-forms.svg",
+            exemple: "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit",
         },
     ];
 
     function addNewApp(app: Application) {
-        console.log("add new app", app);
+        $applicationsSelected.add(app);
+        applicationsSelected.set($applicationsSelected);
+        applicationMenuIsOpenned = false;
     }
 
     onDestroy(() => {
@@ -193,10 +217,12 @@
 </script>
 
 <!-- thread -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     id="activeTimeline"
     class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full"
     transition:fly={{ x: 500, duration: 400 }}
+    on:click={() => (applicationMenuIsOpenned = false)}
 >
     <div class="wa-thread-head">
         <div class="title">
@@ -416,23 +442,69 @@
             <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
         </div>
         {#if applicationMenuIsOpenned}
-            <div class="wa-dropdown-menu">
+            <div class="tw-absolute tw-bottom-0 tw-pb-12 tw-flex tw-flex-col tw-items-center tw-w-auto tw-left-6">
                 {#each applications as app}
-                    <span
-                        class="wa-dropdown-item user-tag"
+                    <button
+                        class="btn-app tw-cursor-pointer tw-flex tw-flex-row tw-justify-center"
                         on:keydown
                         on:keyup
                         on:click|stopPropagation|preventDefault={() => addNewApp(app)}
                     >
                         <img src={app.icon} alt={`App ${app.name} iniated in the chat`} width="20px" />
-                        {app.name}
-                    </span>
+                    </button>
                 {/each}
             </div>
         {/if}
 
-        <form on:submit|preventDefault={saveMessage}>
-            <div class="tw-w-full tw-px-2 tw-pb-2">
+        <form on:submit|preventDefault={saveMessage} class="tw-flex tw-flex-col">
+            {#each [...$applicationsSelected] as app}
+                <div
+                    class="tw-mx-2 tw-mb-2 tw-px-6 tw-py-3 tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-xl tw-text-xxs tw-justify-between tw-items-center tw-bottom-12"
+                >
+                    <label for="app">
+                        <img src={app.icon} alt={app.name} width="20px" />
+                        {#if app.name === "Klaxoon"}
+                            {$LL.form.application.klaxoon.description()}
+                        {/if}
+                        {#if app.name === "Youtube"}
+                            {$LL.form.application.youtube.description()}
+                        {/if}
+                        {#if app.name === "Google Docs"}
+                            {$LL.form.application.googleDocs.description()}
+                        {/if}
+                        {#if app.name === "Google Sheets"}
+                            {$LL.form.application.googleSheets.description()}
+                        {/if}
+                        {#if app.name === "Google Slides"}
+                            {$LL.form.application.googleSlides.description()}
+                        {/if}
+                    </label>
+                    <input
+                        id="app"
+                        type="text"
+                        placeholder={app.exemple}
+                        class="tw-bg-transparent tw-text-light-blue tw-w-full tw-py-1 tw-px-2 tw-mb-0 tw-text-sm tw-border-white"
+                    />
+                    <!-- todo add logo -->
+                </div>
+            {/each}
+
+            <div class="tw-w-full tw-px-2 tw-pb-2 tw-flex tw-flex-row tw-justify-center tw-items-center">
+                <div class="actions tw-px-2 tw-py-2">
+                    <div class="tw-flex tw-items-center tw-space-x-1">
+                        <button
+                            id="application"
+                            class="tw-bg-transparent tw-p-0 tw-m-0 tw-inline-flex tw-justify-center tw-items-center"
+                            on:click|stopPropagation={toggleApplicationMenu}
+                        >
+                            <img
+                                src={`./static/images/applications/app${applicationMenuIsOpenned ? "On" : "Off"}.png`}
+                                alt="send"
+                                width="17px"
+                            />
+                        </button>
+                    </div>
+                </div>
                 <div
                     bind:this={input}
                     contenteditable="true"
@@ -444,7 +516,7 @@
                     on:focus={onFocus}
                     on:blur={onBlur}
                 />
-                <div class="actions tw-absolute tw-right-6">
+                <div class="actions tw-px-2 tw-py-2">
                     <div class="tw-flex tw-items-center tw-space-x-1">
                         <button
                             class={`tw-bg-transparent tw-p-0 tw-m-0 tw-inline-flex tw-justify-center tw-items-center ${
@@ -461,15 +533,6 @@
                             on:click|stopPropagation={saveMessage}
                         >
                             <SendIcon size="17" />
-                        </button>
-                        <button
-                            id="application"
-                            class={`tw-bg-transparent tw-p-0 tw-m-0 tw-inline-flex tw-justify-center tw-items-center ${
-                                applicationMenuIsOpenned ? "tw-text-light-blue" : ""
-                            }`}
-                            on:click|stopPropagation={toggleApplicationMenu}
-                        >
-                            <PlusIcon size="17" />
                         </button>
                     </div>
                 </div>
@@ -533,5 +596,23 @@
         max-height: 50vh;
         overflow-y: auto;
         overflow-x: hidden;
+    }
+    button.btn-app {
+        margin: 0px;
+        height: 2.5rem;
+        width: 2.5rem;
+        border-radius: 0px;
+        background-color: rgb(27 27 41 / 0.95);
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        margin-bottom: 2px;
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+        border-radius: 14px;
+    }
+
+    input {
+        border-color: #879fc2;
+        margin-bottom: 0px;
     }
 </style>

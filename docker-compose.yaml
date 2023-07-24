@@ -121,8 +121,12 @@ services:
             JITSI_MUC_DOMAIN: "$JITSI_MUC_DOMAIN"
             JITSI_XMPP_DOMAIN: "$JITSI_XMPP_DOMAIN"
             FEATURE_FLAG_BROADCAST_AREAS: "true"
-            #Klaxoon client id
+            # Integration tools
+            KLAXOON_ENABLED: "$KLAXOON_ENABLED"
             KLAXOON_CLIENT_ID: "$KLAXOON_CLIENT_ID"
+            GOOGLE_DOCS_ENABLED: "$GOOGLE_DOCS_ENABLED"
+            GOOGLE_SHEETS_ENABLED: "$GOOGLE_SHEETS_ENABLED"
+            GOOGLE_SLIDES_ENABLED: "$GOOGLE_SLIDES_ENABLED"
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"
