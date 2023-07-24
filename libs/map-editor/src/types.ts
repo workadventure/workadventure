@@ -63,7 +63,7 @@ export const PlayAudioPropertyData = PropertyBase.extend({
 
 export const OpenWebsitePropertyData = PropertyBase.extend({
     type: z.literal("openWebsite"),
-    link: z.string().default("https://workadventu.re"),
+    link: z.string().nullable().default("https://workadventu.re"),
     newTab: z.boolean().optional().default(false),
     closable: z.boolean().optional(),
     allowAPI: z.boolean().optional(),

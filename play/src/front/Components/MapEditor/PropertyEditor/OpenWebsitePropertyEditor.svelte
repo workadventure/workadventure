@@ -50,10 +50,10 @@
     }
 
     async function checkWebsiteProperty(): Promise<void> {
+        if (property.link == undefined) return;
         // if the link is not a website, we don't need to check if it is embeddable
         embeddableLoading = true;
         error = "";
-        let oldValue = property.link;
         if (property.application == "youtube") {
             try {
                 const link = await YoutubeService.getYoutubeEmbedUrl(new URL(property.link));
@@ -65,17 +65,16 @@
                 embeddable = false;
                 error = $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
                 console.info("Error to check embeddable website", e);
-                property.link = oldValue;
+                property.link = null;
             }
 
             embeddableLoading = false;
-            oldValue = property.link;
             onValueChange();
         }
 
         if (property.application == "googleDocs") {
             try {
-                const link = GoogleWorkSpaceService.getGoogleDocsEmbedUrl(new URL(property.link));
+                const link = GoogleWorkSpaceService.getGoogleDocsEmbedUrl(new URL(property.link as string));
                 embeddable = true;
                 optionAdvancedActivated = false;
                 property.link = link;
@@ -87,16 +86,15 @@
                         ? $LL.mapEditor.properties.googleDocsProperties.error()
                         : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
                 console.info("Error to check embeddable website", e);
-                property.link = oldValue;
+                property.link = null;
             }
             embeddableLoading = false;
-            oldValue = property.link;
             onValueChange();
         }
 
         if (property.application == "googleSheets") {
             try {
-                const link = GoogleWorkSpaceService.getGoogleSheetsEmbedUrl(new URL(property.link));
+                const link = GoogleWorkSpaceService.getGoogleSheetsEmbedUrl(new URL(property.link as string));
                 embeddable = true;
                 optionAdvancedActivated = false;
                 property.link = link;
@@ -108,16 +106,15 @@
                         ? $LL.mapEditor.properties.googleSheetsProperties.error()
                         : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
                 console.info("Error to check embeddable website", e);
-                property.link = oldValue;
+                property.link = null;
             }
             embeddableLoading = false;
-            oldValue = property.link;
             onValueChange();
         }
 
         if (property.application == "googleSlides") {
             try {
-                const link = GoogleWorkSpaceService.getGoogleSlidesEmbedUrl(new URL(property.link));
+                const link = GoogleWorkSpaceService.getGoogleSlidesEmbedUrl(new URL(property.link as string));
                 embeddable = true;
                 optionAdvancedActivated = false;
                 property.link = link;
@@ -129,10 +126,9 @@
                         ? $LL.mapEditor.properties.googleSlidesProperties.error()
                         : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
                 console.info("Error to check embeddable website", e);
-                property.link = oldValue;
+                property.link = null;
             }
             embeddableLoading = false;
-            oldValue = property.link;
             onValueChange();
         }
 
@@ -141,9 +137,9 @@
     }
 
     function checkEmbeddableLink(): void {
-        if (!linkElement.checkValidity()) {
+        if (property.link == undefined || !linkElement.checkValidity()) {
             embeddableLoading = false;
-            error = $LL.mapEditor.properties.linkProperties.errorInvalidUrl();
+            error = error ? error : $LL.mapEditor.properties.linkProperties.errorInvalidUrl();
             return;
         }
 

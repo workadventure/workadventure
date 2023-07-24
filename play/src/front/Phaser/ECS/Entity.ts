@@ -250,11 +250,14 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                                     propertyValue: JSON.stringify(roomConfig),
                                 }
                             );
+                            actionsMenuStore.clear();
                         },
                     });
                     break;
                 }
                 case "openWebsite": {
+                    // TODO add description to the empty interaction
+                    if (!property.link) break;
                     const link = property.link;
                     const newTab = property.newTab;
                     actions.push({
@@ -274,6 +277,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                                     console.error("Error during loading a co-website: " + coWebsite.getUrl());
                                 });
                             }
+                            actionsMenuStore.clear();
                         },
                     });
                     break;
@@ -289,6 +293,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                                 propertyName: GameMapProperties.PLAY_AUDIO,
                                 propertyValue: audioLink,
                             });
+                            actionsMenuStore.clear();
                         },
                     });
                     break;

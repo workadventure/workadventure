@@ -64,6 +64,7 @@
     ): EntityDataProperty {
         const id = crypto.randomUUID();
         let link: string;
+        let buttonLabel: string;
         switch (type) {
             case "jitsiRoomProperty":
                 return {
@@ -72,35 +73,41 @@
                     jitsiRoomConfig: {},
                     closable: true,
                     roomName: "JITSI ROOM",
-                    buttonLabel: "Connect to Jitsi",
+                    buttonLabel: $LL.mapEditor.properties.jitsiProperties.label(),
                 };
             case "openWebsite":
                 switch (subtype) {
                     case "youtube":
                         link = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
+                        buttonLabel = $LL.mapEditor.properties.youtubeProperties.label();
                         break;
                     case "klaxoon":
                         link = "https://klaxoon.com/";
+                        buttonLabel = $LL.mapEditor.properties.klaxoonProperties.label();
                         break;
                     case "googleDocs":
                         link = "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit";
+                        buttonLabel = $LL.mapEditor.properties.googleDocsProperties.label();
                         break;
                     case "googleSheets":
                         link =
                             "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit";
+                        buttonLabel = $LL.mapEditor.properties.googleSheetsProperties.label();
                         break;
                     case "googleSlides":
                         link =
                             "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit";
+                        buttonLabel = $LL.mapEditor.properties.googleSheetsProperties.label();
                         break;
                     default:
                         link = "https://workadventu.re";
+                        buttonLabel = $LL.mapEditor.properties.linkProperties.label();
                 }
                 return {
                     id,
                     type,
                     closable: true,
-                    buttonLabel: "Open Website",
+                    buttonLabel,
                     link,
                     newTab: false,
                     application: subtype ?? "website",
@@ -109,7 +116,7 @@
                 return {
                     id,
                     type,
-                    buttonLabel: "Play audio",
+                    buttonLabel: $LL.mapEditor.properties.audioProperties.label(),
                     audioLink: "",
                 };
             default:

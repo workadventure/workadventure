@@ -80,7 +80,7 @@
                     closable: true,
                     jitsiRoomConfig: {},
                     hideButtonLabel: true,
-                    roomName: "JITSI ROOM",
+                    roomName: $LL.mapEditor.properties.jitsiProperties.label(),
                 };
             case "openWebsite":
                 // TODO refactore and use the same code than EntityPropertiesEditor

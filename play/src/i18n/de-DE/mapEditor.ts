@@ -39,6 +39,36 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             errorEmbeddableLink: "Der Link ist nicht einbettbar",
         },
         advancedOptions: "Erweiterte Optionen",
+        youtubeProperties: {
+            label: "Youtube-Video öffnen",
+            description: "Öffnen Sie Youtube-Videos innerhalb von WorkAdventure oder als neuen Tab.",
+            error: "Bitte geben Sie eine gültige Youtube-URL ein",
+            disabled: "Die Youtube-Integration ist deaktiviert.",
+        },
+        googleDocsProperties: {
+            label: "Google Docs öffnen",
+            description: "Öffnen Sie Google Docs innerhalb von WorkAdventure oder als neuen Tab.",
+            error: "Bitte geben Sie eine gültige Google Docs-URL ein",
+            disabled: "Die Google Docs-Integration ist deaktiviert.",
+        },
+        klaxoonProperties: {
+            label: "Klaxoon öffnen",
+            description: "Öffnen Sie Klaxoon innerhalb von WorkAdventure oder als neuen Tab.",
+            error: "Bitte geben Sie eine gültige Klaxoon-URL ein",
+            disabled: "Die Klaxoon-Integration ist deaktiviert.",
+        },
+        googleSheetsProperties: {
+            label: "Google Sheets öffnen",
+            description: "Öffnen Sie Google Sheets innerhalb von WorkAdventure oder als neuen Tab.",
+            error: "Bitte geben Sie eine gültige Google Sheets-URL ein",
+            disabled: "Die Google Sheets-Integration ist deaktiviert.",
+        },
+        googleSlidesProperties: {
+            label: "Google Slides öffnen",
+            description: "Öffnen Sie Google Slides innerhalb von WorkAdventure oder als neuen Tab.",
+            error: "Bitte geben Sie eine gültige Google Slides-URL ein",
+            disabled: "Die Google Slides-Integration ist deaktiviert.",
+        },
     },
     entityEditor: {
         itemPicker: {
