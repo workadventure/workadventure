@@ -126,10 +126,10 @@
             </script>
         {{/logRocketId}}
 
-        {{#klaxoonClientId}}
+        {{#klaxoonEnabled}}
             <!-- Klaxoon integration -->
-            <script type="text/javascript" src="https://static.klaxoon.com/activity-picker/activity-picker-1.0-alpha2.js"></script>
-        {{/klaxoonClientId}}
+            <script type="text/javascript" src="https://metadventure.s3.eu-west-1.amazonaws.com/scripting/klaxoon.js"></script>
+        {{/klaxoonEnabled}}
     </head>
     <body id="body" style="margin: 0; background-color: #000">
         <input type="hidden" id="authToken" value="{{ authToken }}" name="authToken">

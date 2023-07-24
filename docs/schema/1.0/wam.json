@@ -135,7 +135,10 @@
                           "const": "openWebsite"
                         },
                         "link": {
-                          "type": "string",
+                          "type": [
+                            "string",
+                            "null"
+                          ],
                           "default": "https://workadventu.re"
                         },
                         "newTab": {
@@ -181,6 +184,12 @@
                             "googleForms"
                           ],
                           "default": "website"
+                        },
+                        "poster": {
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "type": "string"
                         }
                       },
                       "required": [

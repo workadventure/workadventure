@@ -4,8 +4,11 @@
         EntityDataProperties,
         EntityDataPropertiesKeys,
         EntityDataProperty,
+        OpenWebsitePropertyData,
         OpenWebsiteTypePropertiesKeys,
     } from "@workadventure/map-editor";
+    import { KlaxoonEvent } from "@workadventure/shared-utils/src/types";
+    import { KlaxoonService } from "@workadventure/shared-utils";
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
     import visioSvg from "../images/visio-white.svg";
@@ -18,6 +21,7 @@
     import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { connectionManager } from "../../Connection/ConnectionManager";
+    import { KLAXOON_CLIENT_ID } from "../../Enum/EnvironmentVariable";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
@@ -38,8 +42,14 @@
     function onAddProperty(type: EntityDataPropertiesKeys, subtype?: OpenWebsiteTypePropertiesKeys) {
         if ($mapEditorSelectedEntityStore) {
             analyticsClient.addMapEditorProperty("entity", type || "unknown");
-            console.log("getPropertyFromType(type, subtype)", getPropertyFromType(type, subtype));
-            $mapEditorSelectedEntityStore.addProperty(getPropertyFromType(type, subtype));
+            const property = getPropertyFromType(type, subtype);
+            $mapEditorSelectedEntityStore.addProperty(property);
+
+            // if klaxoon, open Activity Picker
+            if (subtype === "klaxoon") {
+                openKlaxoonActivityPicker(property as OpenWebsitePropertyData);
+            }
+
             // refresh properties
             properties = $mapEditorSelectedEntityStore?.getProperties();
             refreshFlags();
@@ -63,7 +73,7 @@
         subtype?: OpenWebsiteTypePropertiesKeys
     ): EntityDataProperty {
         const id = crypto.randomUUID();
-        let link: string;
+        let placeholder: string;
         let buttonLabel: string;
         switch (type) {
             case "jitsiRoomProperty":
@@ -78,29 +88,30 @@
             case "openWebsite":
                 switch (subtype) {
                     case "youtube":
-                        link = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
+                        placeholder = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
                         buttonLabel = $LL.mapEditor.properties.youtubeProperties.label();
                         break;
                     case "klaxoon":
-                        link = "https://klaxoon.com/";
+                        placeholder = "https://app.klaxoon.com/";
                         buttonLabel = $LL.mapEditor.properties.klaxoonProperties.label();
                         break;
                     case "googleDocs":
-                        link = "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit";
+                        placeholder =
+                            "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit";
                         buttonLabel = $LL.mapEditor.properties.googleDocsProperties.label();
                         break;
                     case "googleSheets":
-                        link =
+                        placeholder =
                             "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit";
                         buttonLabel = $LL.mapEditor.properties.googleSheetsProperties.label();
                         break;
                     case "googleSlides":
-                        link =
+                        placeholder =
                             "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit";
-                        buttonLabel = $LL.mapEditor.properties.googleSheetsProperties.label();
+                        buttonLabel = $LL.mapEditor.properties.googleSlidesProperties.label();
                         break;
                     default:
-                        link = "https://workadventu.re";
+                        placeholder = "https://workadventu.re";
                         buttonLabel = $LL.mapEditor.properties.linkProperties.label();
                 }
                 return {
@@ -108,9 +119,10 @@
                     type,
                     closable: true,
                     buttonLabel,
-                    link,
+                    link: "",
                     newTab: false,
                     application: subtype ?? "website",
+                    placeholder,
                 };
             case "playAudio":
                 return {
@@ -142,6 +154,19 @@
     }
     function hasProperty(propertyType: EntityDataPropertiesKeys): boolean {
         return properties.find((property) => property.type === propertyType) !== undefined;
+    }
+
+    function openKlaxoonActivityPicker(app: EntityDataProperty) {
+        if (!KLAXOON_CLIENT_ID || app.type !== "openWebsite" || app.application !== "klaxoon") {
+            console.info("openKlaxoonActivityPicker: app is not a klaxoon app");
+            return;
+        }
+        KlaxoonService.openKlaxoonActivityPicker(KLAXOON_CLIENT_ID, (payload: KlaxoonEvent) => {
+            app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(payload.url));
+            app.poster = payload.imageUrl;
+            app.buttonLabel = payload.title;
+            onUpdateProperty(app);
+        });
     }
 
     onDestroy(() => {
@@ -278,6 +303,7 @@
                             onDeleteProperty(property.id);
                         }}
                         on:change={() => onUpdateProperty(property)}
+                        on:openKlaxoonActivityPicker={() => openKlaxoonActivityPicker(property)}
                     />
                 {/if}
             </div>

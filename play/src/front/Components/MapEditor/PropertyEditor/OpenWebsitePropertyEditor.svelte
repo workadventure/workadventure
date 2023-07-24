@@ -2,7 +2,13 @@
     import { createEventDispatcher, onMount } from "svelte";
     import { OpenWebsitePropertyData } from "@workadventure/map-editor";
     import { AlertTriangleIcon } from "svelte-feather-icons";
-    import { GoogleWorkSpaceException, GoogleWorkSpaceService, YoutubeService } from "@workadventure/shared-utils";
+    import {
+        GoogleWorkSpaceException,
+        GoogleWorkSpaceService,
+        KlaxoonException,
+        KlaxoonService,
+        YoutubeService,
+    } from "@workadventure/shared-utils";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import youtubeSvg from "../../images/applications/icon_youtube.svg";
@@ -132,6 +138,26 @@
             onValueChange();
         }
 
+        if (property.application == "klaxoon") {
+            try {
+                const link = KlaxoonService.getKlaxoonEmbedUrl(new URL(property.link as string));
+                embeddable = true;
+                optionAdvancedActivated = false;
+                property.link = link;
+                property.newTab = oldNewTabValue;
+            } catch (e) {
+                embeddable = false;
+                error =
+                    e instanceof KlaxoonException.KlaxoonException
+                        ? $LL.mapEditor.properties.klaxoonProperties.error()
+                        : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                console.info("Error to check embeddable website", e);
+                property.link = null;
+            }
+            embeddableLoading = false;
+            onValueChange();
+        }
+
         // allow to check if the link is embeddable
         checkEmbeddableLink();
     }
@@ -185,6 +211,12 @@
     function onKeyPressed() {
         dispatch("change", property.link);
     }
+
+    function onClickInputHandler() {
+        // If klaxxon application, open the activity picker
+        if (property.application !== "klaxoon") return;
+        dispatch("openKlaxoonActivityPicker");
+    }
 </script>
 
 <PropertyEditorBase
@@ -235,6 +267,11 @@
         {/if}
     </span>
     <span slot="content">
+        {#if property.poster}
+            <div class="tw-text-center">
+                <img class="tw-w-20  tw-mr-1" src={property.poster} alt="" />
+            </div>
+        {/if}
         {#if isArea}
             <div>
                 <label class="tw-m-0" for="trigger">{$LL.mapEditor.properties.linkProperties.trigger()}</label>
@@ -259,11 +296,12 @@
                 id="tabLink"
                 type="url"
                 bind:this={linkElement}
-                placeholder={$LL.mapEditor.properties.linkProperties.linkPlaceholder()}
+                placeholder={property.placeholder ?? $LL.mapEditor.properties.linkProperties.linkPlaceholder()}
                 bind:value={property.link}
                 on:keypress={onKeyPressed}
                 on:change={onValueChange}
                 on:blur={checkWebsiteProperty}
+                on:click={onClickInputHandler}
                 disabled={embeddableLoading}
             />
             {#if error}
@@ -354,7 +392,7 @@
                 <input
                     id="policy"
                     type="text"
-                    placeholder={$LL.mapEditor.properties.linkProperties.policyPlaceholder()}
+                    placeholder={property.placeholder ?? $LL.mapEditor.properties.linkProperties.policyPlaceholder()}
                     bind:value={property.policy}
                     on:change={onValueChange}
                 />

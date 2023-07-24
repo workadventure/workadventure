@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isUserData } from "@workadventure/messages";
+import { KLAXOON_ACTIVITY_PICKER_EVENT, isKlaxoonEvent } from "@workadventure/shared-utils";
 import { isNotification } from "./Notification";
 import { isLocale } from "./Locale";
 import { isLeaveMucEvent } from "./LeaveMucEvent";
@@ -67,6 +68,32 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("peerConnectionStatus"),
         data: z.boolean(),
+    }),
+
+    // The integration tool to use for the chat
+    z.object({
+        type: z.literal("klaxoonToolActivated"),
+        data: z.boolean().optional().default(false),
+    }),
+    z.object({
+        type: z.literal("youtubeToolActivated"),
+        data: z.boolean().optional().default(false),
+    }),
+    z.object({
+        type: z.literal("googleDocsToolActivated"),
+        data: z.boolean().optional().default(false),
+    }),
+    z.object({
+        type: z.literal("googleSheetsToolActivated"),
+        data: z.boolean().optional().default(false),
+    }),
+    z.object({
+        type: z.literal("googleSlidesToolActivated"),
+        data: z.boolean().optional().default(false),
+    }),
+    z.object({
+        type: z.literal(KLAXOON_ACTIVITY_PICKER_EVENT),
+        data: isKlaxoonEvent,
     }),
 ]);
 

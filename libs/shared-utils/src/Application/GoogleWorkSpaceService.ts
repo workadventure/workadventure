@@ -5,27 +5,43 @@ import {
 } from "./Exception/GoogleWorkSpaceException";
 
 export const getGoogleDocsEmbedUrl = (url: URL): string => {
-    const link = url.toString();
-    if (link.indexOf("/document/") === -1) throw new GoogleDocsException();
+    if (!isGoogleDocsLink(url)) throw new GoogleDocsException();
     return getGoogleWorkSpaceEmbedUrl(url);
 };
 
 export const getGoogleSheetsEmbedUrl = (url: URL): string => {
-    const link = url.toString();
-    if (link.indexOf("/spreadsheets/") === -1) throw new GoogleSheetsException();
+    if (!isGoogleSheetsLink(url)) throw new GoogleSheetsException();
     return getGoogleWorkSpaceEmbedUrl(url);
 };
 
 export const getGoogleSlidesEmbedUrl = (url: URL): string => {
-    const link = url.toString();
-    if (link.indexOf("/presentation/") === -1) throw new GoogleSlidesException();
+    if (!isGoogleSlidesLink(url)) throw new GoogleSlidesException();
     return getGoogleWorkSpaceEmbedUrl(url);
 };
 
 function getGoogleWorkSpaceEmbedUrl(url: URL): string {
     const link = url.toString();
-    if (link.indexOf("embed") > -1) return link;
+    if (isEmbedableGooglWorkSapceLink(url)) return link;
     url.searchParams.set("embedded", "true");
-    console.log("url", url);
     return url.toString();
 }
+
+// create function to check if the link is a Google Docs link
+export const isGoogleDocsLink = (url: URL): boolean => {
+    return url.toString().indexOf("/document/") > -1;
+};
+
+// create function to check if the link is a Google Sheets link
+export const isGoogleSheetsLink = (url: URL): boolean => {
+    return url.toString().indexOf("/spreadsheets/") > -1;
+};
+
+// create function to check if the link is a Google Slides link
+export const isGoogleSlidesLink = (url: URL): boolean => {
+    return url.toString().indexOf("/presentation/") > -1;
+};
+
+// create function to check if the Google WorkSpace link in parameter is embedable or not
+export const isEmbedableGooglWorkSapceLink = (url: URL): boolean => {
+    return url.searchParams.get("embedded") === "true";
+};

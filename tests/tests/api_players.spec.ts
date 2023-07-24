@@ -299,7 +299,6 @@ test.describe('API WA.players', () => {
     await oidcLogout(page);
   });
 
-
   test('Test variables are sent across frames.', async ({ page }) => {
     await page.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty_2_frames.json'

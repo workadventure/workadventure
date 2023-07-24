@@ -68,6 +68,11 @@ export const defaultUserData: UserData = {
     availabilityStatus: 0,
     roomName: null,
     visitCardUrl: null,
+    klaxoonToolActivated: false,
+    youtubeToolActivated: false,
+    googleDocsToolActivated: false,
+    googleSheetsToolActivated: false,
+    googleSlidesToolActivated: false,
 };
 
 export class AbstractRoom {

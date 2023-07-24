@@ -63,22 +63,30 @@ const en_US: BaseTranslation = {
             klaxoon: {
                 title: "Klaxoon",
                 description: "Send embedded klaxoon in the chat!",
+                error: "Please enter a valid Klaxoon URL",
             },
             youtube: {
                 title: "Youtube",
                 description: "Send embedded youtube video in the chat!",
+                error: "Please enter a valid Youtube URL",
             },
             googleDocs: {
                 title: "Google Docs",
                 description: "Send embedded google docs in the chat!",
+                error: "Please enter a valid Google Docs URL",
             },
             googleSlides: {
                 title: "Google Slides",
                 description: "Send embedded google slides in the chat!",
+                error: "Please enter a valid Google Slides URL",
             },
             googleSheets: {
                 title: "Google Sheets",
                 description: "Send embedded google sheets in the chat!",
+                error: "Please enter a valid Google Sheets URL",
+            },
+            weblink: {
+                error: "Please enter a valid URL",
             },
         },
     },
@@ -116,7 +124,7 @@ const en_US: BaseTranslation = {
     reply: "Reply",
     react: "React",
     copy: "Copy",
-    copied: "Copied !",
+    copied: "Copied!",
     file: {
         fileContentNoEmbed: "Content unavailable for viewing. Please download it",
         download: "download",
@@ -133,6 +141,7 @@ const en_US: BaseTranslation = {
     disabledByAdmin: "This feature is disabled by the administrator.",
     anAdmin: "an administrator",
     messageDeletedByYou: "You deleted this message",
+    waiting: "Waiting",
 };
 
 export default en_US;

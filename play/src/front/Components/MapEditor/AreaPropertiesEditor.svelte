@@ -6,6 +6,7 @@
         AreaDataProperties,
         OpenWebsiteTypePropertiesKeys,
     } from "@workadventure/map-editor";
+    import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import audioSvg from "../images/audio-white.svg";
@@ -16,6 +17,7 @@
         YOUTUBE_ENABLED,
         GOOGLE_SHEETS_ENABLED,
         GOOGLE_SLIDES_ENABLED,
+        KLAXOON_CLIENT_ID,
     } from "../../Enum/EnvironmentVariable";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
@@ -53,7 +55,7 @@
         subtype?: OpenWebsiteTypePropertiesKeys
     ): AreaDataProperty {
         const id = crypto.randomUUID();
-        let link: string;
+        let placeholder: string;
         switch (type) {
             case "start":
                 return {
@@ -86,34 +88,36 @@
                 // TODO refactore and use the same code than EntityPropertiesEditor
                 switch (subtype) {
                     case "youtube":
-                        link = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
+                        placeholder = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
                         break;
                     case "klaxoon":
-                        link = "https://klaxoon.com/";
+                        placeholder = "https://app.klaxoon.com/";
                         break;
                     case "googleDocs":
-                        link = "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit";
+                        placeholder =
+                            "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit";
                         break;
                     case "googleSheets":
-                        link =
+                        placeholder =
                             "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit";
                         break;
                     case "googleSlides":
-                        link =
+                        placeholder =
                             "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit";
                         break;
                     default:
-                        link = "https://workadventu.re";
+                        placeholder = "https://workadventu.re";
                         break;
                 }
                 return {
                     id,
                     type,
-                    link,
+                    link: "",
                     closable: true,
                     newTab: false,
                     hideButtonLabel: true,
                     application: subtype ?? "website",
+                    placeholder,
                 };
             case "playAudio":
                 return {
@@ -154,7 +158,13 @@
     function onAddProperty(type: AreaDataPropertiesKeys, subtype?: OpenWebsiteTypePropertiesKeys) {
         if ($mapEditorSelectedAreaPreviewStore) {
             analyticsClient.addMapEditorProperty("area", type || "unknown");
-            $mapEditorSelectedAreaPreviewStore.addProperty(getPropertyFromType(type, subtype));
+            const property = getPropertyFromType(type, subtype);
+            $mapEditorSelectedAreaPreviewStore.addProperty(property);
+
+            // if klaxoon, open Activity Picker
+            if (subtype === "klaxoon") {
+                openKlaxoonActivityPicker(property);
+            }
 
             // refresh properties
             properties = $mapEditorSelectedAreaPreviewStore.getProperties();
@@ -200,6 +210,21 @@
         hasStartProperty = hasProperty("start");
         hasExitProperty = hasProperty("exit");
         hasplayAudioProperty = hasProperty("playAudio");
+    }
+
+    function openKlaxoonActivityPicker(app: AreaDataProperty) {
+        console.log("openKlaxoonActivityPicker", app);
+        console.log("KLAXOON_CLIENT_ID", KLAXOON_CLIENT_ID);
+        if (!KLAXOON_CLIENT_ID || app.type !== "openWebsite" || app.application !== "klaxoon") {
+            console.info("openKlaxoonActivityPicker: app is not a klaxoon app");
+            return;
+        }
+        KlaxoonService.openKlaxoonActivityPicker(KLAXOON_CLIENT_ID, (payload: KlaxoonEvent) => {
+            app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(payload.url));
+            app.poster = payload.imageUrl;
+            app.buttonLabel = payload.title;
+            onUpdateProperty(app);
+        });
     }
 </script>
 

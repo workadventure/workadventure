@@ -4,6 +4,8 @@
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { writable } from "svelte/store";
+    import { KlaxoonEvent } from "@workadventure/shared-utils/src/types";
+    import { KlaxoonService } from "@workadventure/shared-utils";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
         cameraListStore,
@@ -104,6 +106,8 @@
         GOOGLE_SHEETS_ENABLED,
         GOOGLE_SLIDES_ENABLED,
     } from "../../Enum/EnvironmentVariable";
+    import { helpSettingsPopupBlockedStore } from "../../Stores/HelpSettingsPopupBlockedStore";
+    import { connectionManager } from "../../Connection/ConnectionManager";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -424,19 +428,27 @@
         }
     }
 
-    function openKlaxoonActivityPicker() {
-        // prettier-ignore
-        // @ts-ignore
-        KlaxoonActivityPicker.openPicker({ // eslint-disable-line
-            clientId: KLAXOON_CLIENT_ID,
-            success: (payload: unknown) => {
-                console.info("Message received from Klaxoon Activity Picker: ", payload);
-            },
-            options: {
-                height: 940,
-                width: 639,
-            },
+    function klaxoonButtonHandler() {
+        console.log("klaxoonButtonHandler");
+        if (!KLAXOON_CLIENT_ID) return;
+        console.log("openKlaxoonActivityPicker => KLAXOON_CLIENT_ID", KLAXOON_CLIENT_ID);
+        KlaxoonService.openKlaxoonActivityPicker(KLAXOON_CLIENT_ID, (payload: KlaxoonEvent) => {
+            console.log("klaxoonButtonHandler => payload", payload);
+            if (!payload.url) return;
+            const openNewTab = window.open(payload.url, "_blank");
+            if (!openNewTab || openNewTab.closed || typeof openNewTab.closed == "undefined") {
+                helpSettingsPopupBlockedStore.set(true);
+            }
         });
+    }
+
+    function oneApplicationIsActivated() {
+        return (
+            connectionManager.currentRoom?.klaxoonToolActivated ||
+            connectionManager.currentRoom?.googleDocsToolActivated ||
+            connectionManager.currentRoom?.googleSheetsToolActivated ||
+            connectionManager.currentRoom?.googleSlidesToolActivated
+        );
     }
 </script>
 
@@ -801,7 +813,11 @@
                         class="bottom-action-button"
                     >
                         <Tooltip text={$LL.actionbar.mapEditor()} />
-                        <button id="mapEditorIcon" class:border-top-light={$mapEditorModeStore}>
+                        <button
+                            id="mapEditorIcon"
+                            class:border-top-light={$mapEditorModeStore}
+                            name="toggle-map-editor"
+                        >
                             <img draggable="false" src={mapBuilder} style="padding: 2px" alt="toggle-map-editor" />
                         </button>
                     </div>
@@ -816,32 +832,34 @@
                         <Tooltip text={$LL.actionbar.bo()} />
 
                         <button id="backOfficeIcon">
-                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-map-editor" />
+                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-bo" />
                         </button>
                     </div>
                 {/if}
-                <div
-                    in:fly={{}}
-                    on:dragstart|preventDefault={noDrag}
-                    on:keyup|preventDefault={noDrag}
-                    on:keypress|preventDefault={noDrag}
-                    on:keydown|preventDefault={noDrag}
-                    on:focus|preventDefault={noDrag}
-                    on:blur|preventDefault={noDrag}
-                    on:click={() => {
-                        toggleAppMenu();
-                    }}
-                    class="bottom-action-button"
-                >
-                    <Tooltip text={$LL.actionbar.app()} />
-                    <button id="klaxoon">
-                        {#if appMenuOpened}
-                            <img draggable="false" src={appOnImg} style="padding: 2px" alt={$LL.actionbar.app()} />
-                        {:else}
-                            <img draggable="false" src={appOffImg} style="padding: 2px" alt={$LL.actionbar.app()} />
-                        {/if}
-                    </button>
-                </div>
+                {#if oneApplicationIsActivated()}
+                    <div
+                        in:fly={{}}
+                        on:dragstart|preventDefault={noDrag}
+                        on:keyup|preventDefault={noDrag}
+                        on:keypress|preventDefault={noDrag}
+                        on:keydown|preventDefault={noDrag}
+                        on:focus|preventDefault={noDrag}
+                        on:blur|preventDefault={noDrag}
+                        on:click={() => {
+                            toggleAppMenu();
+                        }}
+                        class="bottom-action-button"
+                    >
+                        <Tooltip text={$LL.actionbar.app()} />
+                        <button id="klaxoon">
+                            {#if appMenuOpened}
+                                <img draggable="false" src={appOnImg} style="padding: 2px" alt={$LL.actionbar.app()} />
+                            {:else}
+                                <img draggable="false" src={appOffImg} style="padding: 2px" alt={$LL.actionbar.app()} />
+                            {/if}
+                        </button>
+                    </div>
+                {/if}
             </div>
 
             {#if $addActionButtonActionBarEvent.length > 0}
@@ -1004,57 +1022,66 @@
         style="margin-bottom: 4.5rem; height: auto;"
     >
         <div class="bottom-action-bar">
+            {#if KLAXOON_ENABLED}
+                <div class="bottom-action-section tw-flex animate">
+                    <div class="tw-transition-all bottom-action-button">
+                        <Tooltip text={$LL.mapEditor.properties.klaxoonProperties.label()} />
+                        <button
+                            on:click={() => {
+                                klaxoonButtonHandler();
+                                appMenuOpened = false;
+                            }}
+                            id={`button-app-klaxoon`}
+                            disabled={!KLAXOON_ENABLED}
+                        >
+                            <img draggable="false" src={klaxoonImg} style="padding: 2px" alt="Klaxoon" />
+                        </button>
+                    </div>
+                </div>
+            {/if}
             <div class="bottom-action-section tw-flex animate">
-                <div class="tw-transition-all bottom-action-button">
-                    <Tooltip text={$LL.mapEditor.properties.klaxoonProperties.label()} />
-                    <button
-                        on:click={() => {
-                            openKlaxoonActivityPicker();
-                        }}
-                        id={`button-app-klaxoon`}
-                        disabled={!KLAXOON_ENABLED}
-                    >
-                        <img draggable="false" src={klaxoonImg} style="padding: 2px" alt="Klaxoon" />
-                    </button>
-                </div>
-            </div>
-            <div class="bottom-action-section tw-flex animate">
-                <div class="tw-transition-all bottom-action-button">
-                    <Tooltip text={$LL.mapEditor.properties.googleDocsProperties.label()} />
-                    <button
-                        on:click={() => {
-                            window.open(`https://docs.google.com/document/u/1/`, "_blanck");
-                        }}
-                        id={`button-app-klaxoon`}
-                        disabled={!GOOGLE_DOCS_ENABLED}
-                    >
-                        <img draggable="false" src={googleDocsSvg} style="padding: 2px" alt="Klaxoon" />
-                    </button>
-                </div>
-                <div class="tw-transition-all bottom-action-button">
-                    <Tooltip text={$LL.mapEditor.properties.googleSheetsProperties.label()} />
-                    <button
-                        on:click={() => {
-                            window.open(`https://docs.google.com/spreadsheets/u/1/`, "_blanck");
-                        }}
-                        id={`button-app-klaxoon`}
-                        disabled={!GOOGLE_SHEETS_ENABLED}
-                    >
-                        <img draggable="false" src={googleSheetsSvg} style="padding: 2px" alt="Klaxoon" />
-                    </button>
-                </div>
-                <div class="tw-transition-all bottom-action-button">
-                    <Tooltip text={$LL.mapEditor.properties.googleSlidesProperties.label()} />
-                    <button
-                        on:click={() => {
-                            window.open(`https://docs.google.com/presentation/u/1/`, "_blanck");
-                        }}
-                        id={`button-app-klaxoon`}
-                        disabled={!GOOGLE_SLIDES_ENABLED}
-                    >
-                        <img draggable="false" src={googleSlidesSvg} style="padding: 2px" alt="Klaxoon" />
-                    </button>
-                </div>
+                {#if GOOGLE_DOCS_ENABLED}
+                    <div class="tw-transition-all bottom-action-button">
+                        <Tooltip text={$LL.mapEditor.properties.googleDocsProperties.label()} />
+                        <button
+                            on:click={() => {
+                                window.open(`https://docs.google.com/document/u/1/`, "_blanck");
+                                appMenuOpened = false;
+                            }}
+                            id={`button-app-klaxoon`}
+                        >
+                            <img draggable="false" src={googleDocsSvg} style="padding: 2px" alt="Klaxoon" />
+                        </button>
+                    </div>
+                {/if}
+                {#if GOOGLE_SHEETS_ENABLED}
+                    <div class="tw-transition-all bottom-action-button">
+                        <Tooltip text={$LL.mapEditor.properties.googleSheetsProperties.label()} />
+                        <button
+                            on:click={() => {
+                                window.open(`https://docs.google.com/spreadsheets/u/1/`, "_blanck");
+                                appMenuOpened = false;
+                            }}
+                            id={`button-app-klaxoon`}
+                        >
+                            <img draggable="false" src={googleSheetsSvg} style="padding: 2px" alt="Klaxoon" />
+                        </button>
+                    </div>
+                {/if}
+                {#if GOOGLE_SLIDES_ENABLED}
+                    <div class="tw-transition-all bottom-action-button">
+                        <Tooltip text={$LL.mapEditor.properties.googleSlidesProperties.label()} />
+                        <button
+                            on:click={() => {
+                                window.open(`https://docs.google.com/presentation/u/1/`, "_blanck");
+                                appMenuOpened = false;
+                            }}
+                            id={`button-app-klaxoon`}
+                        >
+                            <img draggable="false" src={googleSlidesSvg} style="padding: 2px" alt="Klaxoon" />
+                        </button>
+                    </div>
+                {/if}
             </div>
         </div>
     </div>

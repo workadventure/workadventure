@@ -1,9 +1,17 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { ArrowLeftIcon, RefreshCwIcon, SmileIcon, SendIcon } from "svelte-feather-icons";
+    import { ArrowLeftIcon, RefreshCwIcon, SmileIcon, SendIcon, Trash2Icon } from "svelte-feather-icons";
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import { Unsubscriber, writable } from "svelte/store";
     import { EmojiButton } from "@joeattardi/emoji-button";
+    import {
+        GoogleWorkSpaceException,
+        GoogleWorkSpaceService,
+        KlaxoonService,
+        YoutubeService,
+        KlaxoonException,
+        KlaxoonEvent,
+    } from "@workadventure/shared-utils";
     import {
         chatMessagesStore,
         chatInputFocusStore,
@@ -18,6 +26,8 @@
     import { mucRoomsStore } from "../../Stores/MucRoomsStore";
     import { HtmlUtils } from "../../Utils/HtmlUtils";
     import { defaultWoka } from "../../Xmpp/AbstractRoom";
+    import { chatConnectionManager } from "../../Connection/ChatConnectionManager";
+    import ApplicationPicker from "../Content/ApplicationPicker.svelte";
     import UserWriting from "./UserWriting.svelte";
 
     const dispatch = createEventDispatcher();
@@ -28,6 +38,15 @@
     let newMessageText = "";
     let htmlMessageText = "";
     let input: HTMLElement;
+
+    interface Application {
+        name: string;
+        icon: string;
+        exemple: string;
+        link?: string;
+        error?: string;
+    }
+    const applications = writable<Set<Application>>(new Set());
     const applicationsSelected = writable<Set<Application>>(new Set());
 
     function reInitialize() {
@@ -42,14 +61,25 @@
         chatInputFocusStore.set(false);
     }
     function saveMessage() {
-        if (!newMessageText) return;
-        chatMessagesStore.addPersonalMessage(newMessageText);
-        newMessageText = "";
-        htmlMessageText = "";
-        setTimeout(() => {
-            input.innerHTML = "";
-        }, 0);
-        return false;
+        if (newMessageText) {
+            chatMessagesStore.addPersonalMessage(newMessageText);
+            newMessageText = "";
+            htmlMessageText = "";
+            setTimeout(() => {
+                input.innerHTML = "";
+            }, 0);
+        }
+        if ($applicationsSelected.size > 0) {
+            for (const app of $applicationsSelected) {
+                if (app.link != undefined) {
+                    chatMessagesStore.addPersonalMessage(app.link);
+                }
+                applicationsSelected.update((apps) => {
+                    apps.delete(app);
+                    return apps;
+                });
+            }
+        }
     }
 
     function backToThreadList() {
@@ -89,6 +119,12 @@
                 setTimeout(() => {
                     lastTimelineMessageRead.set(new Date());
                 }, 50);
+                setTimeout(() => {
+                    const messageList = document.getElementById("timeLine-messageList");
+                    if (messageList) {
+                        document.scrollingElement?.scrollTo(0, messageList.scrollHeight);
+                    }
+                }, 100);
             })
         );
 
@@ -131,6 +167,57 @@
         picker.on("hidden", () => {
             emojiOpened = false;
         });
+
+        if (chatConnectionManager.klaxoonToolIsActivated) {
+            applications.update((apps) => {
+                apps.add({
+                    name: "Klaxoon",
+                    icon: "./static/images/applications/klaxoon.svg",
+                    exemple: "https://klaxoon.com/fr",
+                });
+                return apps;
+            });
+        }
+        if (chatConnectionManager.youtubeToolIsActivated) {
+            applications.update((apps) => {
+                apps.add({
+                    name: "Youtube",
+                    icon: "./static/images/applications/youtube.svg",
+                    exemple: "https://www.youtube.com/watch?v=Y9ubBWf5w20",
+                });
+                return apps;
+            });
+        }
+        if (chatConnectionManager.googleDocsToolIsActivated) {
+            applications.update((apps) => {
+                apps.add({
+                    name: "Google Docs",
+                    icon: "./static/images/applications/google-docs.svg",
+                    exemple: "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit",
+                });
+                return apps;
+            });
+        }
+        if (chatConnectionManager.googleSheetsToolIsActivated) {
+            applications.update((apps) => {
+                apps.add({
+                    name: "Google Sheets",
+                    icon: "./static/images/applications/google-sheets.svg",
+                    exemple: "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit",
+                });
+                return apps;
+            });
+        }
+        if (chatConnectionManager.googleSlidesToolIsActivated) {
+            applications.update((apps) => {
+                apps.add({
+                    name: "Google Slides",
+                    icon: "./static/images/applications/google-slides.svg",
+                    exemple: "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit",
+                });
+                return apps;
+            });
+        }
     });
 
     function needHideHeader(authorName: string, date: Date, i: number) {
@@ -153,62 +240,124 @@
         applicationMenuIsOpenned = !applicationMenuIsOpenned;
     }
 
-    interface Application {
-        name: string;
-        icon: string;
-        exemple: string;
-    }
-    /*
-                        case "youtube":
-                        link = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
-                        break;
-                    case "klaxoon":
-                        link = "https://klaxoon.com/";
-                        break;
-                    case "googleDocs":
-                        link = "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit";
-                        break;
-                    case "googleSheets":
-                        link =
-                            "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit";
-                        break;
-                    case "googleSlides":
-                        link =
-                            "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit";
-                        break;
-    */
-    const applications: Application[] = [
-        {
-            name: "Klaxoon",
-            icon: "./static/images/applications/klaxoon.svg",
-            exemple: "https://klaxoon.com/fr",
-        },
-        {
-            name: "Youtube",
-            icon: "./static/images/applications/youtube.svg",
-            exemple: "https://www.youtube.com/watch?v=Y9ubBWf5w20",
-        },
-        {
-            name: "Google Docs",
-            icon: "./static/images/applications/google-docs.svg",
-            exemple: "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit",
-        },
-        {
-            name: "Google Sheets",
-            icon: "./static/images/applications/google-sheets.svg",
-            exemple: "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit",
-        },
-        {
-            name: "Google Slides",
-            icon: "./static/images/applications/google-slides.svg",
-            exemple: "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit",
-        },
-    ];
-
     function addNewApp(app: Application) {
-        $applicationsSelected.add(app);
-        applicationsSelected.set($applicationsSelected);
+        applicationsSelected.update((apps) => {
+            apps.add(app);
+            return apps;
+        });
+        if (app.name === "Klaxoon") {
+            if (!chatConnectionManager.klaxoonToolClientId) return;
+            KlaxoonService.openKlaxoonActivityPicker(
+                chatConnectionManager.klaxoonToolClientId,
+                (event: KlaxoonEvent) => {
+                    // Remove previous app
+                    applicationsSelected.update((apps) => {
+                        apps.delete(app);
+                        return apps;
+                    });
+                    // Update app with Klaxoon's Activity Picker
+                    app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(event.url));
+                    if (event.imageUrl) app.icon = event.imageUrl;
+                    if (event.title) app.name = event.title;
+                    // Add new app
+                    applicationsSelected.update((apps) => {
+                        apps.add(app);
+                        return apps;
+                    });
+                }
+            );
+        }
         applicationMenuIsOpenned = false;
+    }
+
+    function deleteApplication(app: Application) {
+        applicationsSelected.update((apps) => {
+            apps.delete(app);
+            return apps;
+        });
+    }
+
+    async function checkWebsiteProperty(app: Application): Promise<void> {
+        app.error = undefined;
+        if (app.link == undefined) return;
+        switch (app.name) {
+            case "Klaxoon":
+                try {
+                    app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(app.link));
+                } catch (err) {
+                    if (err instanceof KlaxoonException.KlaxoonException) {
+                        app.error = $LL.form.application.klaxoon.error();
+                    } else {
+                        app.error = $LL.form.application.weblink.error();
+                    }
+                    app.link = undefined;
+                }
+                break;
+            case "Youtube":
+                try {
+                    app.link = await YoutubeService.getYoutubeEmbedUrl(new URL(app.link));
+                } catch (err) {
+                    if (err instanceof GoogleWorkSpaceException.YoutubeException) {
+                        app.error = $LL.form.application.youtube.error();
+                    } else {
+                        app.error = $LL.form.application.weblink.error();
+                    }
+                    app.link = undefined;
+                }
+                break;
+            case "Google Docs":
+                try {
+                    app.link = GoogleWorkSpaceService.getGoogleDocsEmbedUrl(new URL(app.link));
+                } catch (err) {
+                    if (err instanceof GoogleWorkSpaceException.GoogleDocsException) {
+                        app.error = $LL.form.application.googleDocs.error();
+                    } else {
+                        app.error = $LL.form.application.weblink.error();
+                    }
+                    app.link = undefined;
+                }
+                break;
+            case "Google Sheets":
+                try {
+                    app.link = GoogleWorkSpaceService.getGoogleSheetsEmbedUrl(new URL(app.link));
+                    console.log("app.link", app.link);
+                } catch (err) {
+                    console.error(err);
+                    if (err instanceof GoogleWorkSpaceException.GoogleSheetsException) {
+                        app.error = $LL.form.application.googleSheets.error();
+                    } else {
+                        app.error = $LL.form.application.weblink.error();
+                    }
+                    app.link = undefined;
+                }
+                break;
+            case "Google Slides":
+                try {
+                    app.link = GoogleWorkSpaceService.getGoogleSlidesEmbedUrl(new URL(app.link));
+                } catch (err) {
+                    if (err instanceof GoogleWorkSpaceException.GoogleSlidesException) {
+                        app.error = $LL.form.application.googleSlides.error();
+                    } else {
+                        app.error = $LL.form.application.weblink.error();
+                    }
+                    app.link = undefined;
+                }
+                break;
+            default:
+                throw new Error("Application not found");
+        }
+        applicationsSelected.update((apps) => {
+            apps.add(app);
+            return apps;
+        });
+    }
+
+    function handlerKeyDownAppInput(keyPressEvent: KeyboardEvent) {
+        if (keyPressEvent.key === "Enter" && !keyPressEvent.shiftKey) {
+            // blur element from keyPressEvent
+            (keyPressEvent.target as HTMLInputElement).blur();
+            keyPressEvent.preventDefault();
+        }
     }
 
     onDestroy(() => {
@@ -275,7 +424,7 @@
     <!-- MESSAGE LIST-->
     <div
         id="timeLine-messageList"
-        class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-pt-14 tw-pb-14 tw-justify-end tw-h-auto tw-min-h-screen"
+        class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-py-24 tw-justify-end tw-h-auto tw-min-h-screen"
     >
         {#each $chatMessagesStore as message, i}
             {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
@@ -441,19 +590,13 @@
         <div class="emote-menu-container">
             <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
         </div>
+
         {#if applicationMenuIsOpenned}
-            <div class="tw-absolute tw-bottom-0 tw-pb-12 tw-flex tw-flex-col tw-items-center tw-w-auto tw-left-6">
-                {#each applications as app}
-                    <button
-                        class="btn-app tw-cursor-pointer tw-flex tw-flex-row tw-justify-center"
-                        on:keydown
-                        on:keyup
-                        on:click|stopPropagation|preventDefault={() => addNewApp(app)}
-                    >
-                        <img src={app.icon} alt={`App ${app.name} iniated in the chat`} width="20px" />
-                    </button>
-                {/each}
-            </div>
+            <ApplicationPicker
+                applications={$applications}
+                on:addNewApp={(event) => addNewApp(event.detail)}
+                _class="tw-pb-9 tw-left-6"
+            />
         {/if}
 
         <form on:submit|preventDefault={saveMessage} class="tw-flex tw-flex-col">
@@ -461,31 +604,46 @@
                 <div
                     class="tw-mx-2 tw-mb-2 tw-px-6 tw-py-3 tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-xl tw-text-xxs tw-justify-between tw-items-center tw-bottom-12"
                 >
-                    <label for="app">
-                        <img src={app.icon} alt={app.name} width="20px" />
-                        {#if app.name === "Klaxoon"}
-                            {$LL.form.application.klaxoon.description()}
-                        {/if}
-                        {#if app.name === "Youtube"}
-                            {$LL.form.application.youtube.description()}
-                        {/if}
-                        {#if app.name === "Google Docs"}
-                            {$LL.form.application.googleDocs.description()}
-                        {/if}
-                        {#if app.name === "Google Sheets"}
-                            {$LL.form.application.googleSheets.description()}
-                        {/if}
-                        {#if app.name === "Google Slides"}
-                            {$LL.form.application.googleSlides.description()}
-                        {/if}
-                    </label>
+                    <div class="tw-flex tw-flex-row tw-justify-between tw-items-center tw-m-1 tw-w-full">
+                        <label for="app" class="tw-m-0">
+                            <img src={app.icon} alt={app.name} width="20px" />
+                            {#if app.name === "Klaxoon"}
+                                {$LL.form.application.klaxoon.description()}
+                            {/if}
+                            {#if app.name === "Youtube"}
+                                {$LL.form.application.youtube.description()}
+                            {/if}
+                            {#if app.name === "Google Docs"}
+                                {$LL.form.application.googleDocs.description()}
+                            {/if}
+                            {#if app.name === "Google Sheets"}
+                                {$LL.form.application.googleSheets.description()}
+                            {/if}
+                            {#if app.name === "Google Slides"}
+                                {$LL.form.application.googleSlides.description()}
+                            {/if}
+                        </label>
+                        <button
+                            on:click|preventDefault|stopPropagation={() => {
+                                deleteApplication(app);
+                            }}
+                            class="delete tw-pr-0 tw-mr-0"
+                        >
+                            <Trash2Icon size="14" />
+                        </button>
+                    </div>
                     <input
                         id="app"
                         type="text"
                         placeholder={app.exemple}
                         class="tw-bg-transparent tw-text-light-blue tw-w-full tw-py-1 tw-px-2 tw-mb-0 tw-text-sm tw-border-white"
+                        bind:value={app.link}
+                        on:keypress={handlerKeyDownAppInput}
+                        on:blur={() => checkWebsiteProperty(app)}
                     />
-                    <!-- todo add logo -->
+                    {#if app.error}
+                        <p class="tw-text-pop-red tw-text-xs tw-px-2 tw-mt-2 tw-my-0">{app.error}</p>
+                    {/if}
                 </div>
             {/each}
 
@@ -495,7 +653,8 @@
                         <button
                             id="application"
                             class="tw-bg-transparent tw-p-0 tw-m-0 tw-inline-flex tw-justify-center tw-items-center"
-                            on:click|stopPropagation={toggleApplicationMenu}
+                            on:click|preventDefault|stopPropagation={toggleApplicationMenu}
+                            disabled={$applications.size === 0}
                         >
                             <img
                                 src={`./static/images/applications/app${applicationMenuIsOpenned ? "On" : "Off"}.png`}
@@ -579,7 +738,7 @@
     .messageList {
         display: flex;
         justify-content: flex-end;
-        overflow-y: scroll;
+        overflow-y: hidden;
         min-height: calc(100vh - 40px);
         padding: 60px 0;
     }
@@ -597,22 +756,63 @@
         overflow-y: auto;
         overflow-x: hidden;
     }
-    button.btn-app {
-        margin: 0px;
-        height: 2.5rem;
-        width: 2.5rem;
-        border-radius: 0px;
-        background-color: rgb(27 27 41 / 0.95);
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
-        margin-bottom: 2px;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-        border-radius: 14px;
-    }
 
     input {
         border-color: #879fc2;
         margin-bottom: 0px;
+    }
+    .wa-message-form {
+        .actions {
+            .action {
+                cursor: pointer;
+                opacity: 0.8;
+                position: relative;
+                .caption {
+                    @apply tw-absolute tw-bg-dark-blue tw-text-sm tw-px-2 tw-py-1 tw-rounded-xl tw-border-lighter-purple tw-border tw-border-solid;
+                    display: none;
+                    top: 5px;
+                    left: 54px;
+                    z-index: 10;
+                    width: max-content;
+                    &::before {
+                        @apply tw-absolute tw-border-lighter-purple;
+                        left: -18px;
+                        top: 40%;
+                        content: "";
+                        width: 0;
+                        height: 0;
+                        border-left: 9px solid transparent;
+                        border-right: 9px solid transparent;
+                        border-top-width: 6px;
+                        border-top-style: solid;
+                        transform: rotate(90deg);
+                    }
+                    &::after {
+                        @apply tw-absolute tw-border-dark-blue;
+                        left: -16px;
+                        top: 40%;
+                        content: "";
+                        width: 0;
+                        height: 0;
+                        border-left: 7px solid transparent;
+                        border-right: 7px solid transparent;
+                        border-top-width: 5px;
+                        border-top-style: solid;
+                        transform: rotate(90deg);
+                    }
+                }
+                &:hover {
+                    opacity: 1;
+                    .caption {
+                        display: block;
+                    }
+                }
+            }
+        }
+        &:hover {
+            .actions {
+                visibility: visible;
+            }
+        }
     }
 </style>

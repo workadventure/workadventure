@@ -171,13 +171,15 @@ export class FrontController extends BaseHttpController {
         });
 
         this.app.get("/*", (req: Request, res: Response) => {
-            if (
+            if (req.path.startsWith("/src") || req.path.startsWith("/node_modules") || req.path.startsWith("/@fs/")) {
+                // TODO check how this is used and if it is still needed for MacOs (it is not used in the current version)
+                /*if (
                 req.path.startsWith("/collections") ||
                 req.path.startsWith("/resources") ||
                 req.path.startsWith("/src") ||
                 req.path.startsWith("/node_modules") ||
                 req.path.startsWith("/@fs/")
-            ) {
+            ) {*/
                 res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
                 return;
             }
@@ -252,7 +254,6 @@ export class FrontController extends BaseHttpController {
                     userId: uuid(),
                 };
             }
-            console.log("metaTagsData", metaTagsData);
             html = Mustache.render(this.indexFile, {
                 ...metaTagsData,
                 // TODO change it to push data from admin
@@ -261,6 +262,7 @@ export class FrontController extends BaseHttpController {
                 script: this.script,
                 authToken: authToken,
                 ...option,
+                klaxoonEnabled: FRONT_ENVIRONMENT_VARIABLES.KLAXOON_ENABLED,
             });
         } catch (e) {
             console.log(`Cannot render metatags on ${url}`, e);
