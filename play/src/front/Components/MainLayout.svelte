@@ -107,10 +107,6 @@
             <LimitRoomModal />
         {/if}
 
-        {#if $actionsMenuStore}
-            <ActionsMenu />
-        {/if}
-
         {#if $followStateStore !== "off" || $peerStore.size > 0}
             <FollowMenu />
         {/if}
@@ -134,6 +130,10 @@
 
     {#if $layoutManagerActionVisibilityStore}
         <LayoutActionManager />
+    {/if}
+
+    {#if $actionsMenuStore}
+        <ActionsMenu />
     {/if}
 
     <ActionBar />
