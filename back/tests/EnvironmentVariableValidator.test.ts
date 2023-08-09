@@ -6,7 +6,7 @@ import { EnvironmentVariables } from "../src/Enum/EnvironmentVariableValidator";
 describe("EnvironmentVariable", () => {
     it("should validate properly URLs", () => {
         let result = EnvironmentVariables.safeParse({
-            PLAY_URL: "https://exemple.com",
+            PLAY_URL: "https://example.com",
         });
         expect(result.success).toBe(true);
 

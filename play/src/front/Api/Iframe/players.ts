@@ -137,7 +137,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      *
      * ```ts
      * WA.players.onVariableChange("score").subscribe({ player, value } => {
-     *     console.log("Score for player", player.name, "has been updated to", value);
+     *     console.info("Score for player", player.name, "has been updated to", value);
      * });
      * ```
      *

@@ -429,11 +429,8 @@
     }
 
     function klaxoonButtonHandler() {
-        console.log("klaxoonButtonHandler");
         if (!KLAXOON_CLIENT_ID) return;
-        console.log("openKlaxoonActivityPicker => KLAXOON_CLIENT_ID", KLAXOON_CLIENT_ID);
         KlaxoonService.openKlaxoonActivityPicker(KLAXOON_CLIENT_ID, (payload: KlaxoonEvent) => {
-            console.log("klaxoonButtonHandler => payload", payload);
             if (!payload.url) return;
             const openNewTab = window.open(payload.url, "_blank");
             if (!openNewTab || openNewTab.closed || typeof openNewTab.closed == "undefined") {

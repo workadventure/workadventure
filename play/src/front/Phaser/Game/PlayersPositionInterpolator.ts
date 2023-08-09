@@ -20,10 +20,8 @@ export class PlayersPositionInterpolator {
         const positions = new Map<number, HasPlayerMovedInterface>();
         this.playerMovements.forEach((playerMovement: PlayerMovement, userId: number) => {
             if (playerMovement.isOutdated(tick)) {
-                //console.log("outdated")
                 this.playerMovements.delete(userId);
             }
-            //console.log("moving")
             positions.set(userId, playerMovement.getPosition(tick));
         });
         return positions;

@@ -291,7 +291,7 @@ class ConnectionManager {
             );
 
             connection.onConnectError((error: object) => {
-                console.log("onConnectError => An error occurred while connecting to socket server. Retrying");
+                console.info("onConnectError => An error occurred while connecting to socket server. Retrying");
                 reject(error);
             });
 

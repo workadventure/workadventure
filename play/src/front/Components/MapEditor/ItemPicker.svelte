@@ -128,7 +128,6 @@
         mapEditorSelectedEntityStore.set(undefined);
         mapEditorSelectedEntityPrefabStore.set(undefined);
         mapEditorEntityModeStore.set("ADD");
-        console.log("backToSelectObject");
     }
 </script>
 

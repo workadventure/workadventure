@@ -81,7 +81,6 @@
         if (!messageId) return;
         const messageElement = document.getElementById(`message_${messageId}`);
         if (!messageElement) return;
-        console.log("messageElement", messageElement);
         messageElement.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
     }
 

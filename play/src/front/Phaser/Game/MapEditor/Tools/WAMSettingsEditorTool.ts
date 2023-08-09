@@ -16,22 +16,22 @@ export class WAMSettingsEditorTool extends MapEditorTool {
     }
 
     public update(time: number, dt: number): void {
-        console.log("WAMSettingsEditorTool update");
+        console.info("WAMSettingsEditorTool update");
     }
     public clear(): void {
-        console.log("WAMSettingsEditorTool clear");
+        console.info("WAMSettingsEditorTool clear");
     }
     public activate(): void {
-        console.log("WAMSettingsEditorTool activate");
+        console.info("WAMSettingsEditorTool activate");
     }
     public destroy(): void {
-        console.log("WAMSettingsEditorTool destroy");
+        console.info("WAMSettingsEditorTool destroy");
     }
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
-        console.log("WAMSettingsEditorTool subscribeToGameMapFrontWrapperEvents");
+        console.info("WAMSettingsEditorTool subscribeToGameMapFrontWrapperEvents");
     }
     public handleKeyDownEvent(event: KeyboardEvent): void {
-        console.log("WAMSettingsEditorTool handleKeyDownEvent");
+        console.info("WAMSettingsEditorTool handleKeyDownEvent");
     }
     /**
      * React on commands coming from the outside

@@ -61,7 +61,7 @@
     interface Application {
         name: string;
         icon: string;
-        exemple: string;
+        example: string;
         link?: string;
         error?: string;
     }
@@ -341,7 +341,6 @@
             case "Google Sheets":
                 try {
                     app.link = GoogleWorkSpaceService.getGoogleSheetsEmbedUrl(new URL(app.link));
-                    console.log("app.link", app.link);
                 } catch (err) {
                     console.error(err);
                     if (err instanceof GoogleWorkSpaceException.GoogleSheetsException) {
@@ -427,7 +426,7 @@
                 apps.add({
                     name: "Klaxoon",
                     icon: "./static/images/applications/klaxoon.svg",
-                    exemple: "https://klaxoon.com/fr",
+                    example: "https://klaxoon.com/fr",
                 });
                 return apps;
             });
@@ -437,7 +436,7 @@
                 apps.add({
                     name: "Youtube",
                     icon: "./static/images/applications/youtube.svg",
-                    exemple: "https://www.youtube.com/watch?v=Y9ubBWf5w20",
+                    example: "https://www.youtube.com/watch?v=Y9ubBWf5w20",
                 });
                 return apps;
             });
@@ -447,7 +446,7 @@
                 apps.add({
                     name: "Google Docs",
                     icon: "./static/images/applications/google-docs.svg",
-                    exemple: "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit",
+                    example: "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit",
                 });
                 return apps;
             });
@@ -457,7 +456,7 @@
                 apps.add({
                     name: "Google Sheets",
                     icon: "./static/images/applications/google-sheets.svg",
-                    exemple: "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit",
+                    example: "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit",
                 });
                 return apps;
             });
@@ -467,7 +466,7 @@
                 apps.add({
                     name: "Google Slides",
                     icon: "./static/images/applications/google-slides.svg",
-                    exemple: "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit",
+                    example: "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit",
                 });
                 return apps;
             });
@@ -565,7 +564,7 @@
             <input
                 id="app"
                 type="text"
-                placeholder={app.exemple}
+                placeholder={app.example}
                 class="tw-bg-transparent tw-text-light-blue tw-w-full tw-py-1 tw-px-2 tw-mb-0 tw-text-sm tw-border-white"
                 bind:value={app.link}
                 on:keypress={handlerKeyDownAppInput}

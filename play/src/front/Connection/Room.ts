@@ -155,7 +155,7 @@ export class Room {
                     data.authenticationMandatory = Boolean(data.authenticationMandatory);
                 }
 
-                console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
+                console.info("Map ", this.id, " resolves to URL ", data.mapUrl);
                 this._mapUrl = data.mapUrl;
                 this._wamUrl = data.wamUrl;
                 this._group = data.group;
@@ -214,7 +214,6 @@ export class Room {
                 const error = errorApiDataChecking.data;
                 throw new ApiError(error);
             } else {
-                console.log(data);
                 console.error("roomRedirectChecking", roomRedirectChecking.error.issues);
                 console.error("mapDetailsDataChecking", mapDetailsDataChecking.error.issues);
                 console.error("errorApiDataChecking", errorApiDataChecking.error.issues);

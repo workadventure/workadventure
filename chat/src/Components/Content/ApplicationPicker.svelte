@@ -4,7 +4,7 @@
     interface Application {
         name: string;
         icon: string;
-        exemple: string;
+        example: string;
         link?: string;
         error?: string;
     }
