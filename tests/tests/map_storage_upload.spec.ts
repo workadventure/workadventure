@@ -2,12 +2,27 @@ import *  as fs from "fs";
 import { APIResponse, expect, test } from '@playwright/test';
 import { login } from './utils/roles';
 import {createZipFromDirectory} from "./utils/zip";
+import { checkMapPlayService, checkMapStorageService } from "./utils/containers";
 
 test.use({
     baseURL: (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://john.doe:password@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost'),
 })
 
 test.describe('Map-storage Upload API', () => {
+    test.beforeAll(async () => {
+        // Extend timeout for all tests running this hook by 120000.
+        test.setTimeout(120000);
+        // Let's wait for the services to be up.
+        let servicesIsUp  = checkMapStorageService() && checkMapPlayService();
+        for(let i = 0; i < 10; i++){
+            if(servicesIsUp) break;
+            console.log('Waiting for services to be up...');
+            await new Promise(resolve => setTimeout(resolve, 10000));
+            servicesIsUp  = checkMapStorageService() && checkMapPlayService();
+        }
+        await expect(servicesIsUp).toBeTruthy();
+    });
+
     test('can upload ZIP file', async ({
         request,
     }) => {
@@ -566,7 +581,6 @@ test.describe('Map-storage Upload API', () => {
         await expect(page2.getByText("New version of map detected. Refresh needed")).toBeHidden();
 
     });
-
 
     test('special characters support', async ({
         request,

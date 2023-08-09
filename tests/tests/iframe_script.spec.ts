@@ -16,17 +16,20 @@ test.describe('Iframe API', () => {
   });
 
   test('can add a custom menu by scripting API', async ({
-                                                                 page,
-                                                               }) => {
+    page
+  }) => {
     await page.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Metadata/customMenu.json'
     );
 
     await login(page);
 
-    await page.click('#menuIcon img:first-child');
-
-    await page.click('button:has-text("custom iframe menu")');
+    // wait some time for the scripting menu to be loaded
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await page.waitForTimeout(2_000);
+    
+    await page.click('#menuIcon img:first-child', { timeout: 10000 });
+    await page.click('button:has-text("custom iframe menu")', { timeout: 10000 });
 
     const iframeParagraph = page
         .frameLocator('.menu-submenu-container iframe')

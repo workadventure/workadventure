@@ -5,7 +5,7 @@ import Dockerode from 'dockerode';
 /**
  * Execute Docker compose, passing the correct host directory
  */
-export function dockerCompose(command: string): void {
+export function dockerCompose(command: string) {
     let param = '';
     const overrideDockerCompose = process.env.OVERRIDE_DOCKER_COMPOSE;
 
@@ -13,7 +13,7 @@ export function dockerCompose(command: string): void {
         param += ' -f '+overrideDockerCompose;
     }
 
-    /*const stdout =*/ execSync('docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml '+param+' '+command, {
+    return execSync('docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml '+param+' '+command, {
         cwd: __dirname + '/../../../'
     });
 }
@@ -97,4 +97,21 @@ export function stopRedis(): void {
 
 export function startRedis(): void {
     dockerCompose('start redis');
+}
+
+// create function to check that "play", "back", "chat", "map-storage" services are up and running
+export function checkMapStorageService(): boolean {
+    console.log('Checking map storage services',
+        dockerCompose('logs --tail=1000 map-storage').toString(),
+    );
+    return dockerCompose('logs --tail=1000 map-storage').indexOf('Application is running') !== -1;
+}
+
+// create function to check that "play", "back", "chat", "map-storage" services are up and running
+export function checkMapPlayService(): boolean {
+    console.log('Checking play services',
+        dockerCompose('logs --tail=1000 play').toString(),
+    );
+    return dockerCompose('logs --tail=1000 play').indexOf('WorkAdventure Pusher started on port') !== -1 &&
+            dockerCompose('logs --tail=1000 play').indexOf('RoomAPI starting on port') !== -1;
 }
