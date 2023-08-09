@@ -24,7 +24,6 @@ export class SoundMeter {
             return [];
         }
         this.analyser.getByteFrequencyData(this.dataArray);
-        //console.log(this.dataArray)
 
         // const input = this.dataArray;
         // let i;

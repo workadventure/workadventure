@@ -191,7 +191,7 @@ export class SocketManager implements ZoneEventListener {
             },
         };
 
-        console.log(
+        console.info(
             `Admin socket handle room ${roomId} connections for a client on ${Buffer.from(
                 client.getRemoteAddressAsText()
             ).toString()}`

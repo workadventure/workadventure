@@ -150,7 +150,7 @@ export class SuperLoaderPlugin {
                 if (immediateCallback) {
                     immediateCallback(key, type, data);
                 }
-                console.log("Resolve done for ", url);
+                console.info("Resolve done for ", url);
             };
 
             cancel(() => {

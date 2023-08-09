@@ -46,7 +46,6 @@ export class Companion extends Container {
 
         this.texturePromise = texturePromise
             .then((resource) => {
-                console.log(resource);
                 this.addResource(resource);
                 this.invisible = false;
                 return this.getSnapshot().then((htmlImageElementSrc) => {

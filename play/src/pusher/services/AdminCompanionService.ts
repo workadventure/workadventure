@@ -58,7 +58,7 @@ class AdminCompanionService implements CompanionServiceInterface {
             })
             .catch((err) => {
                 if (axios.isAxiosError(err)) {
-                    console.log(err.response);
+                    console.error(err.response);
                 }
                 console.error(`Cannot get companion collection list from admin API with token: ${token}`, err);
                 Sentry.captureException(

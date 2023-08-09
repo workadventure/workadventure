@@ -39,7 +39,6 @@ export class JitsiTrackWrapper {
                 timeout = setInterval(() => {
                     try {
                         set(soundMeter?.getVolume());
-                        //console.log("Volume", soundMeter?.getVolume());
                     } catch (err) {
                         if (!error) {
                             console.error(err);
@@ -76,7 +75,7 @@ export class JitsiTrackWrapper {
 
     setJitsiTrack(jitsiTrack: JitsiTrack, allowOverride = false) {
         if (jitsiTrack.isAudioTrack()) {
-            console.log("new track is audio", { allowOverride: allowOverride });
+            console.info("new track is audio", { allowOverride: allowOverride });
             if (get(this._audioTrack) !== undefined) {
                 if (!allowOverride) {
                     throw new Error("An audio track is already defined");
@@ -113,7 +112,6 @@ export class JitsiTrackWrapper {
     muteAudio() {
         this._audioTrack.set(undefined);
         this._audioStreamStore.set(null);
-        console.log("JitsiTrackWrapper => Audio is muted, unsubscribe from volume store");
     }
 
     muteVideo() {

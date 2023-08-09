@@ -220,7 +220,7 @@ export class FrontController extends BaseHttpController {
         try {
             redirectUrl = await builder.getRedirectUrl();
         } catch (e) {
-            console.log(`Cannot get redirect URL ${url}`, e);
+            console.info(`Cannot get redirect URL ${url}`, e);
         }
 
         if (redirectUrl) {
@@ -265,7 +265,7 @@ export class FrontController extends BaseHttpController {
                 klaxoonEnabled: FRONT_ENVIRONMENT_VARIABLES.KLAXOON_ENABLED,
             });
         } catch (e) {
-            console.log(`Cannot render metatags on ${url}`, e);
+            console.info(`Cannot render metatags on ${url}`, e);
         }
 
         return res.type("html").send(html);

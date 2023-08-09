@@ -133,7 +133,7 @@ export class XmppClient {
         });
         client.on("disconnected", (message) => {
             this.status = "disconnected";
-            console.log("disconnected", message);
+            console.info("disconnected", message);
             this.restart();
         });
         client.on("auth:success", () => {
@@ -258,7 +258,7 @@ export class XmppClient {
             xmpp.on("disconnect", () => {
                 debug("XmppClient => createClient => disconnect => status", status);
                 if (status !== "disconnected") {
-                    console.log("Disconnected from xmpp server");
+                    console.info("Disconnected from xmpp server");
                     //if connection manager is not closed or be closing,
                     //continue with the same WebSocket and wait information from server
                     //if (!connectionManager.isClose) {

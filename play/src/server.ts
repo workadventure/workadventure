@@ -42,7 +42,7 @@ if (SENTRY_DSN != undefined) {
     await app.init();
 
     app.listen(PUSHER_HTTP_PORT)
-        .then(() => console.log(`WorkAdventure Pusher started on port ${PUSHER_HTTP_PORT}!`))
+        .then(() => console.info(`WorkAdventure Pusher started on port ${PUSHER_HTTP_PORT}!`))
         .catch((e) => {
             console.error(e);
             Sentry.captureException(e);
@@ -64,7 +64,7 @@ if (!ADMIN_API_URL && !ROOM_API_SECRET_KEY) {
         if (err) {
             throw err;
         }
-        console.log(`RoomAPI starting on port ${ROOM_API_PORT}!`);
+        console.info(`RoomAPI starting on port ${ROOM_API_PORT}!`);
         RoomAPI.start();
     });
 }

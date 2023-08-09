@@ -320,7 +320,6 @@
             case "Google Sheets":
                 try {
                     app.link = GoogleWorkSpaceService.getGoogleSheetsEmbedUrl(new URL(app.link));
-                    console.log("app.link", app.link);
                 } catch (err) {
                     console.error(err);
                     if (err instanceof GoogleWorkSpaceException.GoogleSheetsException) {

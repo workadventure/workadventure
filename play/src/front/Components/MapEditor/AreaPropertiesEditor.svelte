@@ -213,8 +213,6 @@
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
-        console.log("openKlaxoonActivityPicker", app);
-        console.log("KLAXOON_CLIENT_ID", KLAXOON_CLIENT_ID);
         if (!KLAXOON_CLIENT_ID || app.type !== "openWebsite" || app.application !== "klaxoon") {
             console.info("openKlaxoonActivityPicker: app is not a klaxoon app");
             return;
