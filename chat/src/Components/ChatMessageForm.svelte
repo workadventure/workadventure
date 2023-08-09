@@ -98,7 +98,10 @@
         }
 
         mucRoom.updateComposingState(ChatState.Paused);
-        const message = htmlMessageText.replace(/<div>/g, "\n").replace(/(<([^>]+)>)/gi, "");
+        const message = htmlMessageText
+            .replace(/<div>/g, "\n")
+            .replace(/(<([^>]+)>)/gi, "")
+            .replace(/&nbsp;/g, " ");
         if ($selectedMessageToReply) {
             sendReplyMessage(message);
         } else {
