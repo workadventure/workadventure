@@ -293,7 +293,7 @@ test.describe('Map editor', () => {
     await MapEditor.openEntityEditor(page);
 
     // select entity and push it into the map
-    await EntityEditor.selectEntity(page, 10);
+    await EntityEditor.selectEntity(page, 0, 'small table');
     await EntityEditor.moveAndClick(page, 13*32, 13*32);
 
     // quit object selector
@@ -342,7 +342,7 @@ test.describe('Map editor', () => {
     await MapEditor.openEntityEditor(page);
 
     // select entity and push it into the map
-    await EntityEditor.selectEntity(page, 10);
+    await EntityEditor.selectEntity(page, 0, 'small table');
     await EntityEditor.moveAndClick(page, 13*32, 13*32);
 
     // quit object selector

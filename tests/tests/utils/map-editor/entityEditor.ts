@@ -3,8 +3,8 @@ import {Page} from "@playwright/test";
 class EntityEditor {
     async selectEntity(page: Page, nb: number, search?: string){
         if(search != undefined){
-            await page.getByPlaceholder('Rechercher').click();
-            await page.getByPlaceholder('Rechercher').fill(search);
+            await page.getByPlaceholder('Search').click();
+            await page.getByPlaceholder('Search').fill(search);
         }
         await page.locator('.map-editor .item-picker .item-picker-container .pickable-item').nth(nb).click();
     }
