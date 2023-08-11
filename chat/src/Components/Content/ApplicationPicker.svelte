@@ -20,7 +20,7 @@
 </script>
 
 <div
-    class={`actions tw-absolute tw-bottom-0 tw-pb-16 tw-flex tw-flex-col tw-items-center tw-w-auto tw-left-4 ${_class}`}
+    class={`actions tw-absolute tw-bottom-0 tw-mb-16 tw-flex tw-flex-col tw-items-center tw-w-auto tw-left-4 ${_class}`}
     style={_style}
 >
     {#each [...applications] as app}

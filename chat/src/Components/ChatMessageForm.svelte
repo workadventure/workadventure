@@ -121,7 +121,7 @@
 
         mucRoom.updateComposingState(ChatState.Paused);
         if (fileMessageManager.files.length > 0 || (htmlMessageText && htmlMessageText.replace(/\s/g, "").length > 0)) {
-            const message = htmlMessageText.replace(/<div>/g, "\n").replace(/(<([^>]+)>)/gi, "");
+            const message = htmlMessageText.replace(/<div>|<br>/g, "\r").replace(/(<([^>]+)>)/gi, "");
             if ($selectedMessageToReply) {
                 sendReplyMessage(message);
             } else {

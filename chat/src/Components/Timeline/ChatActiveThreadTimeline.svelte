@@ -35,7 +35,6 @@
 
     export let settingsView = false;
 
-    let newMessageText = "";
     let htmlMessageText = "";
     let input: HTMLElement;
 
@@ -61,9 +60,9 @@
         chatInputFocusStore.set(false);
     }
     function saveMessage() {
-        if (newMessageText) {
-            chatMessagesStore.addPersonalMessage(newMessageText);
-            newMessageText = "";
+        if (htmlMessageText) {
+            const message = htmlMessageText.replace(/<div>|<br>/g, "\n").replace(/(<([^>]+)>)/gi, "");
+            chatMessagesStore.addPersonalMessage(message);
             htmlMessageText = "";
             setTimeout(() => {
                 input.innerHTML = "";
@@ -88,7 +87,7 @@
     }
 
     function writing() {
-        if (newMessageText != undefined && newMessageText !== "") {
+        if (htmlMessageText != undefined && htmlMessageText !== "" && htmlMessageText !== "<br>") {
             _newChatMessageWritingStatusSubject.next(ChatMessageTypes.userWriting);
         } else {
             _newChatMessageWritingStatusSubject.next(ChatMessageTypes.userStopWriting);
@@ -162,7 +161,7 @@
         });
 
         picker.on("emoji", ({ emoji }) => {
-            newMessageText += emoji;
+            htmlMessageText += emoji;
         });
         picker.on("hidden", () => {
             emojiOpened = false;
@@ -352,6 +351,7 @@
     }
 
     function handlerKeyDownAppInput(keyPressEvent: KeyboardEvent) {
+        console.log("handlerKeyDownAppInput => htmlMessageText", htmlMessageText);
         if (keyPressEvent.key === "Enter" && !keyPressEvent.shiftKey) {
             // blur element from keyPressEvent
             (keyPressEvent.target as HTMLInputElement).blur();
@@ -499,7 +499,7 @@
                                 <div class="wa-message-body">
                                     {#each message.text as text}
                                         <div
-                                            class="tw-text-ellipsis tw-overflow-y-auto tw-whitespace-normal tw-break-words"
+                                            class="tw-text-ellipsis tw-overflow-y-auto tw-break-words tw-whitespace-pre"
                                         >
                                             {#await HtmlUtils.urlify(text)}
                                                 <p>...waiting</p>
@@ -594,7 +594,7 @@
             <ApplicationPicker
                 applications={$applications}
                 on:addNewApp={(event) => addNewApp(event.detail)}
-                _class="tw-pb-9 tw-left-6"
+                _class="tw-mb-9 tw-left-6"
             />
         {/if}
 
@@ -666,7 +666,6 @@
                 <div
                     bind:this={input}
                     contenteditable="true"
-                    bind:textContent={newMessageText}
                     bind:innerHTML={htmlMessageText}
                     data-placeholder={$LL.enterText()}
                     on:keydown={handlerKeyDown}
@@ -700,7 +699,7 @@
                     <div class="tw-flex tw-items-center tw-relative">
                         <textarea
                             type="text"
-                            bind:value={newMessageText}
+                            bind:value={htmlMessageText}
                             placeholder={$LL.form.placeholder()}
                             on:keydown={handlerKeyDown}
                             on:input={writing}
