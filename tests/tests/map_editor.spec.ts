@@ -23,12 +23,12 @@ test.use({
 test.describe('Map editor', () => {
   test.beforeAll(async () => {
     // Extend timeout for all tests running this hook by 120000.
-    test.setTimeout(120000);
+    test.setTimeout(340000);
     // Let's wait for the services to be up.
     let servicesIsUp  = checkMapPlayService();
     for(let i = 0; i < 10; i++){
         if(servicesIsUp) break;
-        console.log('Waiting for services to be up...');
+        console.info(`Waiting for services to be up... ${i}`);
         await new Promise(resolve => setTimeout(resolve, 10000));
         servicesIsUp  = checkMapPlayService();
     }

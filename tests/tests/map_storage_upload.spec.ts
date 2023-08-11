@@ -11,12 +11,12 @@ test.use({
 test.describe('Map-storage Upload API', () => {
     test.beforeAll(async () => {
         // Extend timeout for all tests running this hook by 120000.
-        test.setTimeout(120000);
+        test.setTimeout(340000);
         // Let's wait for the services to be up.
         let servicesIsUp  = checkMapStorageService() && checkMapPlayService();
         for(let i = 0; i < 10; i++){
-            if(servicesIsUp) break;
-            console.log('Waiting for services to be up...');
+            if(servicesIsUp || i > 10) break;
+            console.info(`Waiting for services to be up... ${i}`);
             await new Promise(resolve => setTimeout(resolve, 10000));
             servicesIsUp  = checkMapStorageService() && checkMapPlayService();
         }
