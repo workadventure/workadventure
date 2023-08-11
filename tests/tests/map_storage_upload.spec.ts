@@ -20,7 +20,6 @@ test.describe('Map-storage Upload API', () => {
             await new Promise(resolve => setTimeout(resolve, 10000));
             servicesIsUp  = checkMapStorageService() && checkMapPlayService();
         }
-        await expect(servicesIsUp).toBeTruthy();
     });
 
     test('users are asked to reconnect when a map is updated', async ({

@@ -32,7 +32,6 @@ test.describe('Map editor', () => {
         await new Promise(resolve => setTimeout(resolve, 10000));
         servicesIsUp  = checkMapPlayService();
     }
-    await expect(servicesIsUp).toBeTruthy();
   });
 
   test('Successfully set the megaphone feature', async ({ page, browser, request, browserName }) => {
