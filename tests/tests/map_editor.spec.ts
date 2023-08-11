@@ -33,7 +33,7 @@ test.describe('Map editor', () => {
         servicesIsUp  = checkMapPlayService();
     }
     await expect(servicesIsUp).toBeTruthy();
-});
+  });
 
   test('Successfully set the megaphone feature', async ({ page, browser, request, browserName }) => {
     await resetWamMaps(request);
@@ -234,7 +234,6 @@ test.describe('Map editor', () => {
     // TODO make same test with object editor
   });
 
-  // TODO create test for google Workspace application
   test('Successfully set GoogleWorkspace\'s applications in the area in the map editor', async ({ page, browser, request, browserName }) => {
     await resetWamMaps(request);
 
@@ -294,11 +293,11 @@ test.describe('Map editor', () => {
 
     // select entity and push it into the map
     await EntityEditor.selectEntity(page, 0, 'small table');
-    await EntityEditor.moveAndClick(page, 13*32, 13*32);
+    await EntityEditor.moveAndClick(page, 14*32, 14*32);
 
     // quit object selector
     await EntityEditor.quitEntitySelector(page);
-    await EntityEditor.moveAndClick(page, 13*32, 13*32);
+    await EntityEditor.moveAndClick(page, 14*32, 13*32);
 
     // add property Google Docs
     await EntityEditor.addProperty(page, 'Open Google Docs');
@@ -319,7 +318,7 @@ test.describe('Map editor', () => {
     await Menu.closeMapEditor(page);
 
     // click on the object and open popup
-    await EntityEditor.moveAndClick(page, 13*32, 13*32);
+    await EntityEditor.moveAndClick(page, 14*32, 13*32);
 
     // check if the popup with application is opened
     await expect(page.locator('.actions-menu .actions button').nth(0)).toContainText('Open Google Docs');
@@ -343,11 +342,11 @@ test.describe('Map editor', () => {
 
     // select entity and push it into the map
     await EntityEditor.selectEntity(page, 0, 'small table');
-    await EntityEditor.moveAndClick(page, 13*32, 13*32);
+    await EntityEditor.moveAndClick(page, 14*32, 14*32);
 
     // quit object selector
     await EntityEditor.quitEntitySelector(page);
-    await EntityEditor.moveAndClick(page, 13*32, 13*32);
+    await EntityEditor.moveAndClick(page, 14*32, 13*32);
 
     // add property Klaxoon
     await EntityEditor.addProperty(page, 'Open Klaxoon')
@@ -359,7 +358,7 @@ test.describe('Map editor', () => {
     await Menu.closeMapEditor(page);
 
     // click on the object and open popup
-    await EntityEditor.moveAndClick(page, 13*32, 13*32);
+    await EntityEditor.moveAndClick(page, 14*32, 13*32);
 
     // check if the popup with application is opened
     await expect(page.locator('.actions-menu .actions button').nth(0)).toContainText('Open Klaxoon');
