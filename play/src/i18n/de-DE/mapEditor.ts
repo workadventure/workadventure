@@ -73,6 +73,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     entityEditor: {
         itemPicker: {
             searchPlaceholder: "Forschen",
+            backToSelectObject: "Zurück zur Auswahl",
         },
         trashTool: {
             delete: "Klicken Sie auf das Objekt, um es zu löschen!",

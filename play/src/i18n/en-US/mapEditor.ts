@@ -145,6 +145,7 @@ const mapEditor: BaseTranslation = {
     entityEditor: {
         itemPicker: {
             searchPlaceholder: "Search",
+            backToSelectObject: "Back to select object",
         },
         trashTool: {
             delete: "Click on the object to delete it!",

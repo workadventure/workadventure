@@ -9,8 +9,14 @@
     } from "@workadventure/map-editor";
     import { KlaxoonEvent } from "@workadventure/shared-utils/src/types";
     import { KlaxoonService } from "@workadventure/shared-utils";
+    import { ArrowLeftIcon } from "svelte-feather-icons";
+    import { get } from "svelte/store";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { mapEditorSelectedEntityStore } from "../../Stores/MapEditorStore";
+    import {
+        mapEditorEntityModeStore,
+        mapEditorSelectedEntityPrefabStore,
+        mapEditorSelectedEntityStore,
+    } from "../../Stores/MapEditorStore";
     import visioSvg from "../images/visio-white.svg";
     import audioSvg from "../images/audio-white.svg";
     import webSvg from "../images/web-white.svg";
@@ -169,6 +175,13 @@
         });
     }
 
+    function backToSelectObject() {
+        get(mapEditorSelectedEntityStore)?.delete();
+        mapEditorSelectedEntityStore.set(undefined);
+        mapEditorSelectedEntityPrefabStore.set(undefined);
+        mapEditorEntityModeStore.set("ADD");
+    }
+
     onDestroy(() => {
         selectedEntityUnsubscriber();
     });
@@ -180,6 +193,10 @@
     <div class="header-container">
         <h2>Editing: {$mapEditorSelectedEntityStore.getPrefab().name}</h2>
     </div>
+    <p on:click|preventDefault={backToSelectObject} class="tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0">
+        <ArrowLeftIcon size="12" class="tw-cursor-pointer" />
+        <span class="tw-ml-1 tw-cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
+    </p>
     <div class="properties-buttons tw-flex tw-flex-row">
         {#if !hasJitsiRoomProperty}
             <AddPropertyButton
