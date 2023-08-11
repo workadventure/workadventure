@@ -93,13 +93,14 @@ export const isIframeEventWrapper = z.union([
     }),
     z.object({
         type: z.literal(KLAXOON_ACTIVITY_PICKER_EVENT),
-        data: isKlaxoonEvent,
+        payload: isKlaxoonEvent,
     }),
 ]);
 
 export const isLookingLikeIframeEventWrapper = z.object({
     type: z.string(),
     data: z.unknown().optional(),
+    payload: z.unknown().optional(),
 });
 
 export type lookingLikeIframeEventWrapper = z.infer<typeof isLookingLikeIframeEventWrapper>;

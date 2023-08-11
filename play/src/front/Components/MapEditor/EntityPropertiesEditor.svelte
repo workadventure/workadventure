@@ -4,11 +4,8 @@
         EntityDataProperties,
         EntityDataPropertiesKeys,
         EntityDataProperty,
-        OpenWebsitePropertyData,
         OpenWebsiteTypePropertiesKeys,
     } from "@workadventure/map-editor";
-    import { KlaxoonEvent } from "@workadventure/shared-utils/src/types";
-    import { KlaxoonService } from "@workadventure/shared-utils";
     import { ArrowLeftIcon } from "svelte-feather-icons";
     import { get } from "svelte/store";
     import { LL } from "../../../i18n/i18n-svelte";
@@ -27,7 +24,6 @@
     import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { connectionManager } from "../../Connection/ConnectionManager";
-    import { KLAXOON_CLIENT_ID } from "../../Enum/EnvironmentVariable";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
@@ -50,11 +46,6 @@
             analyticsClient.addMapEditorProperty("entity", type || "unknown");
             const property = getPropertyFromType(type, subtype);
             $mapEditorSelectedEntityStore.addProperty(property);
-
-            // if klaxoon, open Activity Picker
-            if (subtype === "klaxoon") {
-                openKlaxoonActivityPicker(property as OpenWebsitePropertyData);
-            }
 
             // refresh properties
             properties = $mapEditorSelectedEntityStore?.getProperties();
@@ -160,19 +151,6 @@
     }
     function hasProperty(propertyType: EntityDataPropertiesKeys): boolean {
         return properties.find((property) => property.type === propertyType) !== undefined;
-    }
-
-    function openKlaxoonActivityPicker(app: EntityDataProperty) {
-        if (!KLAXOON_CLIENT_ID || app.type !== "openWebsite" || app.application !== "klaxoon") {
-            console.info("openKlaxoonActivityPicker: app is not a klaxoon app");
-            return;
-        }
-        KlaxoonService.openKlaxoonActivityPicker(KLAXOON_CLIENT_ID, (payload: KlaxoonEvent) => {
-            app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(payload.url));
-            app.poster = payload.imageUrl;
-            app.buttonLabel = payload.title;
-            onUpdateProperty(app);
-        });
     }
 
     function backToSelectObject() {
@@ -320,7 +298,6 @@
                             onDeleteProperty(property.id);
                         }}
                         on:change={() => onUpdateProperty(property)}
-                        on:openKlaxoonActivityPicker={() => openKlaxoonActivityPicker(property)}
                     />
                 {/if}
             </div>

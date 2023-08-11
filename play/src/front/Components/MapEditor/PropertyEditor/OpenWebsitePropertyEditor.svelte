@@ -5,6 +5,7 @@
     import {
         GoogleWorkSpaceException,
         GoogleWorkSpaceService,
+        KlaxoonEvent,
         KlaxoonException,
         KlaxoonService,
         YoutubeService,
@@ -16,6 +17,7 @@
     import googleDocsSvg from "../../images/applications/icon_google_docs.svg";
     import googleSheetsSvg from "../../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../../images/applications/icon_google_slides.svg";
+    import { KLAXOON_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenWebsitePropertyData;
@@ -32,6 +34,10 @@
     const dispatch = createEventDispatcher();
 
     onMount(() => {
+        // if klaxoon, open Activity Picker
+        if (property.application === "klaxoon" && (property.link == undefined || property.link === "")) {
+            openKlaxoonActivityPicker();
+        }
         checkWebsiteProperty().catch((e) => {
             console.error("Error checking embeddable website", e);
         });
@@ -215,7 +221,23 @@
     function onClickInputHandler() {
         // If klaxxon application, open the activity picker
         if (property.application !== "klaxoon") return;
-        dispatch("openKlaxoonActivityPicker");
+        openKlaxoonActivityPicker();
+    }
+
+    function openKlaxoonActivityPicker() {
+        if (!KLAXOON_CLIENT_ID || property.type !== "openWebsite" || property.application !== "klaxoon") {
+            console.info("openKlaxoonActivityPicker: app is not a klaxoon app");
+            return;
+        }
+        KlaxoonService.openKlaxoonActivityPicker(KLAXOON_CLIENT_ID, (payload: KlaxoonEvent) => {
+            property.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(payload.url));
+            property.poster = payload.imageUrl;
+            property.buttonLabel = payload.title;
+            // check if the link is embeddable
+            checkWebsiteProperty().catch((e) => {
+                console.error("Error checking embeddable website", e);
+            });
+        });
     }
 </script>
 
@@ -304,10 +326,10 @@
                 on:click={onClickInputHandler}
                 disabled={embeddableLoading}
             />
-            {#if error}
+            {#if error !== ""}
                 <span class="err tw-text-pop-red tw-text-xs tw-italic tw-mt-1">{error}</span>
             {/if}
-            {#if !embeddable && !error}
+            {#if !embeddable && error === ""}
                 <span class="err tw-text-orange tw-text-xs tw-italic tw-mt-1"
                     ><AlertTriangleIcon size="12" />
                     {$LL.mapEditor.properties.linkProperties.warningEmbeddableLink()}.

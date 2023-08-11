@@ -166,7 +166,8 @@ class IframeListener {
                             break;
                         }
                         case KLAXOON_ACTIVITY_PICKER_EVENT: {
-                            const event = new MessageEvent("AcitivityPickerFromWorkAdventure", iframeEvent);
+                            // @ts-ignore
+                            const event = new MessageEvent("AcitivityPickerFromWorkAdventure", message);
                             window.dispatchEvent(event);
                             break;
                         }
