@@ -1,6 +1,7 @@
 import { isAxiosError } from "axios";
 import type { MucRoomDefinition, LegalsData } from "@workadventure/messages";
 import { isMapDetailsData, isRoomRedirect, ErrorApiData, OpidWokaNamePolicy } from "@workadventure/messages";
+import { KlaxoonService } from "@workadventure/shared-utils";
 import {
     CONTACT_URL,
     DISABLE_ANONYMOUS,
@@ -204,6 +205,9 @@ export class Room {
 
                 this._klaxoonToolActivated = data.klaxoonToolActivated ?? KLAXOON_ENABLED;
                 this._klaxoonToolClientId = data.klaxoonToolClientId ?? KLAXOON_CLIENT_ID;
+                if (this._klaxoonToolClientId) {
+                    KlaxoonService.initWindowKlaxoonActivityPicker();
+                }
                 this._youtubeToolActivated = data.youtubeToolActivated ?? YOUTUBE_ENABLED;
                 this._googleDocsToolActivated = data.googleDocsToolActivated ?? GOOGLE_DOCS_ENABLED;
                 this._googleSheetsToolActivated = data.googleSheetsToolActivated ?? GOOGLE_SHEETS_ENABLED;

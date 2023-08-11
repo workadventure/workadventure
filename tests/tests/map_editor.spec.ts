@@ -9,7 +9,6 @@ import Map from "./utils/map";
 import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import {resetWamMaps} from "./utils/map-editor/uploader";
 import {evaluateScript} from "./utils/scripting";
-import { checkMapPlayService } from './utils/containers';
 
 
 const protocol = process.env.MAP_STORAGE_PROTOCOL ?? 'http';
@@ -21,19 +20,6 @@ test.use({
   baseURL: (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://john.doe:password@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost'),
 })
 test.describe('Map editor', () => {
-  test.beforeAll(async () => {
-    // Extend timeout for all tests running this hook by 120000.
-    test.setTimeout(340000);
-    // Let's wait for the services to be up.
-    let servicesIsUp  = checkMapPlayService();
-    for(let i = 0; i < 10; i++){
-        if(servicesIsUp) break;
-        console.info(`Waiting for services to be up... ${i}`);
-        await new Promise(resolve => setTimeout(resolve, 10000));
-        servicesIsUp  = checkMapPlayService();
-    }
-  });
-
   test('Successfully set the megaphone feature', async ({ page, browser, request, browserName }) => {
     await resetWamMaps(request);
     await page.goto(url("empty"));

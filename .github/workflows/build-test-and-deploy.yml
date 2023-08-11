@@ -15,7 +15,6 @@ concurrency:
 jobs:
   build-play:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -118,7 +117,6 @@ jobs:
 
   build-chat:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -194,7 +192,6 @@ jobs:
 
   build-back:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -295,7 +292,6 @@ jobs:
 
   build-uploader:
     runs-on: ubuntu-latest
-
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -356,7 +352,6 @@ jobs:
 
   build-maps:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -422,7 +417,6 @@ jobs:
 
   build-map-storage:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -516,7 +510,6 @@ jobs:
 
   build-ejabberd:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2

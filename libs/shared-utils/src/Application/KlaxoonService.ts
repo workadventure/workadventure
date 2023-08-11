@@ -1,6 +1,19 @@
 import { KlaxoonEvent } from "../types";
 import { KlaxoonException } from "./Exception/KlaxoonException";
 
+export const initWindowKlaxoonActivityPicker = () => {
+    // @ts-ignore
+    // prettier-ignore
+    if(window.KlaxoonActivityPicker)return;
+    // @ts-ignore
+    // prettier-ignore
+    // eslint-disable-next-line  @typescript-eslint/restrict-template-expressions,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call
+    window.KlaxoonActivityPicker={openPicker({clientId:t,directSelection:e=!1,success:i,host:o="go.klaxoon.com",options:c={}}){const n=Object.entries({height:940,left:100,top:100,width:639,...c,popup:!0}),s=window.open(`https://${o}/auth-ui?redirect=%2Factivity-picker%3FclientId%3D${t}%26directSelection%3D${e}`,null,n.map((t=>t.join("="))).join(","));window.addEventListener("AcitivityPickerFromWorkAdventure",(function(t){const{type:e,payload:o}=t.data;"activity-picker-result"===e&&(i(o),s.close())}),{once:!0})}};
+    // @ts-ignore
+    // prettier-ignore
+    console.info("A new function was added into the browser winddow: KlaxoonActivityPicker", window.KlaxoonActivityPicker);
+};
+
 export const openKlaxoonActivityPicker = (clientId: string, successCallback: (arg1: KlaxoonEvent) => void) => {
     // @ts-ignore
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access,@typescript-eslint/no-unsafe-call

@@ -262,7 +262,6 @@ export class FrontController extends BaseHttpController {
                 script: this.script,
                 authToken: authToken,
                 ...option,
-                klaxoonEnabled: FRONT_ENVIRONMENT_VARIABLES.KLAXOON_ENABLED,
             });
         } catch (e) {
             console.info(`Cannot render metatags on ${url}`, e);

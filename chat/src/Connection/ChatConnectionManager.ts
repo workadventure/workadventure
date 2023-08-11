@@ -1,4 +1,5 @@
 import { XmppSettingsMessage } from "@workadventure/messages";
+import { KlaxoonService } from "@workadventure/shared-utils";
 import { get } from "svelte/store";
 import Debug from "debug";
 import { XmppClient } from "../Xmpp/XmppClient";
@@ -44,6 +45,9 @@ class ChatConnectionManager {
 
         this._klaxoonToolActivated = klaxoonToolActivated;
         this._klaxoonToolClientId = klaxoonToolClientId;
+        if (klaxoonToolClientId) {
+            KlaxoonService.initWindowKlaxoonActivityPicker();
+        }
         this._youtubeToolActivated = youtubeToolActivated;
         this._googleDocsToolActivated = googleDocsToolActivated;
         this._googleSheetsToolActivated = googleSheetsToolActivated;

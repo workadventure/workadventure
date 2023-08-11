@@ -2,26 +2,13 @@ import *  as fs from "fs";
 import { APIResponse, expect, test } from '@playwright/test';
 import { login } from './utils/roles';
 import {createZipFromDirectory} from "./utils/zip";
-import { checkMapPlayService, checkMapStorageService, gotoWait200 } from "./utils/containers";
+import { gotoWait200 } from "./utils/containers";
 
 test.use({
     baseURL: (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://john.doe:password@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost'),
 })
 
 test.describe('Map-storage Upload API', () => {
-    test.beforeAll(async () => {
-        // Extend timeout for all tests running this hook by 120000.
-        test.setTimeout(340000);
-        // Let's wait for the services to be up.
-        let servicesIsUp  = checkMapStorageService() && checkMapPlayService();
-        for(let i = 0; i < 10; i++){
-            if(servicesIsUp || i > 10) break;
-            console.info(`Waiting for services to be up... ${i}`);
-            await new Promise(resolve => setTimeout(resolve, 10000));
-            servicesIsUp  = checkMapStorageService() && checkMapPlayService();
-        }
-    });
-
     test('users are asked to reconnect when a map is updated', async ({
         request, page, browser
     }) => {
