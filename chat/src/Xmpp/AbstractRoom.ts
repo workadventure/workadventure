@@ -73,6 +73,7 @@ export const defaultUserData: UserData = {
     googleDocsToolActivated: false,
     googleSheetsToolActivated: false,
     googleSlidesToolActivated: false,
+    eraserToolActivated: false,
 };
 
 export class AbstractRoom {

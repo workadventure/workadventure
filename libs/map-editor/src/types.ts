@@ -84,6 +84,7 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
             z.literal("googleSheets"),
             z.literal("googleSlides"),
             z.literal("googleForms"),
+            z.literal("eraser"),
         ])
         .default("website"),
     poster: z.string().optional(),
@@ -254,7 +255,8 @@ export type OpenWebsiteTypePropertiesKeys =
     | "googleDocs"
     | "googleSheets"
     | "googleSlides"
-    | "googleForms";
+    | "googleForms"
+    | "eraser";
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
 export type AreaDataProperty = z.infer<typeof AreaDataProperty>;

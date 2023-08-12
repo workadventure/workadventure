@@ -122,6 +122,7 @@
           "GOOGLE_DOCS_ENABLED": "true",
           "GOOGLE_SHEETS_ENABLED": "true",
           "GOOGLE_SLIDES_ENABLED": "true",
+          "ERASER_ENABLED": "true",
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,

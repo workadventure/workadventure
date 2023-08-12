@@ -22,6 +22,7 @@
     import googleDocsSvg from "../images/applications/icon_google_docs.svg";
     import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
+    import eraserSvg from "../images/applications/icon_eraser.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
@@ -265,6 +266,18 @@
             disabled={!connectionManager.currentRoom?.googleSlidesToolActivated}
             on:click={() => {
                 onAddProperty("openWebsite", "googleSlides");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.eraserProperties.label()}
+            descriptionText={connectionManager.currentRoom?.eraserToolActivated
+                ? $LL.mapEditor.properties.eraserProperties.description()
+                : $LL.mapEditor.properties.eraserProperties.disabled()}
+            img={eraserSvg}
+            style="z-index: 1;"
+            disabled={!connectionManager.currentRoom?.eraserToolActivated}
+            on:click={() => {
+                onAddProperty("openWebsite", "eraser");
             }}
         />
     </div>

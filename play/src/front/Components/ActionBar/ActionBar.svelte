@@ -444,7 +444,8 @@
             connectionManager.currentRoom?.klaxoonToolActivated ||
             connectionManager.currentRoom?.googleDocsToolActivated ||
             connectionManager.currentRoom?.googleSheetsToolActivated ||
-            connectionManager.currentRoom?.googleSlidesToolActivated
+            connectionManager.currentRoom?.googleSlidesToolActivated ||
+            connectionManager.currentRoom?.eraserToolActivated
         );
     }
 </script>

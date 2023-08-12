@@ -18,6 +18,7 @@ import {
     GOOGLE_DOCS_ENABLED,
     GOOGLE_SHEETS_ENABLED,
     GOOGLE_SLIDES_ENABLED,
+    ERASER_ENABLED,
 } from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
@@ -141,6 +142,7 @@ class LocalAdmin implements AdminInterface {
             googleDocsToolActivated: GOOGLE_DOCS_ENABLED,
             googleSheetsToolActivated: GOOGLE_SHEETS_ENABLED,
             googleSlidesToolActivated: GOOGLE_SLIDES_ENABLED,
+            eraserToolActivated: ERASER_ENABLED,
             metatags: {
                 ...MetaTagsDefaultValue,
             },

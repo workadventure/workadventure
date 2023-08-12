@@ -48,4 +48,5 @@ export interface FrontConfigurationInterface {
     GOOGLE_DOCS_ENABLED: boolean;
     GOOGLE_SHEETS_ENABLED: boolean;
     GOOGLE_SLIDES_ENABLED: boolean;
+    ERASER_ENABLED: boolean;
 }

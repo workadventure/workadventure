@@ -110,6 +110,7 @@
                                         googleSlidesToolActivated:
                                             connectionManager.currentRoom?.googleSlidesToolActivated,
                                         klaxoonToolClientId: KLAXOON_CLIENT_ID,
+                                        eraserTootlActivated: connectionManager.currentRoom?.eraserToolActivated,
                                     },
                                 },
                                 "*"

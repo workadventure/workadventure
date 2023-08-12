@@ -18,6 +18,7 @@ export const isUserData = z.object({
   googleDocsToolActivated: z.boolean().optional().default(false),
   googleSheetsToolActivated: z.boolean().optional().default(false),
   googleSlidesToolActivated: z.boolean().optional().default(false),
+  eraserToolActivated: z.boolean().optional().default(false),
   klaxoonToolClientId: z.string().optional(),
 });
 

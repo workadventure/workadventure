@@ -95,6 +95,10 @@ export const isIframeEventWrapper = z.union([
         type: z.literal(KLAXOON_ACTIVITY_PICKER_EVENT),
         payload: isKlaxoonEvent,
     }),
+    z.object({
+        type: z.literal("eraserToolActivated"),
+        data: z.boolean().optional().default(false),
+    }),
 ]);
 
 export const isLookingLikeIframeEventWrapper = z.object({
