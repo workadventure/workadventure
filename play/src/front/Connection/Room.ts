@@ -203,15 +203,15 @@ export class Room {
 
                 this._errorSceneLogo = data.errorSceneLogo ?? undefined;
 
-                this._klaxoonToolActivated = data.klaxoonToolActivated ?? KLAXOON_ENABLED;
-                this._klaxoonToolClientId = data.klaxoonToolClientId ?? KLAXOON_CLIENT_ID;
+                this._klaxoonToolActivated = data.thirdParty?.klaxoonToolActivated ?? KLAXOON_ENABLED;
+                this._klaxoonToolClientId = data.thirdParty?.klaxoonToolClientId ?? KLAXOON_CLIENT_ID;
                 if (this._klaxoonToolClientId) {
                     KlaxoonService.initWindowKlaxoonActivityPicker();
                 }
-                this._youtubeToolActivated = data.youtubeToolActivated ?? YOUTUBE_ENABLED;
-                this._googleDocsToolActivated = data.googleDocsToolActivated ?? GOOGLE_DOCS_ENABLED;
-                this._googleSheetsToolActivated = data.googleSheetsToolActivated ?? GOOGLE_SHEETS_ENABLED;
-                this._googleSlidesToolActivated = data.googleSlidesToolActivated ?? GOOGLE_SLIDES_ENABLED;
+                this._youtubeToolActivated = data.thirdParty?.youtubeToolActivated ?? YOUTUBE_ENABLED;
+                this._googleDocsToolActivated = data.thirdParty?.googleDocsToolActivated ?? GOOGLE_DOCS_ENABLED;
+                this._googleSheetsToolActivated = data.thirdParty?.googleSheetsToolActivated ?? GOOGLE_SHEETS_ENABLED;
+                this._googleSlidesToolActivated = data.thirdParty?.googleSlidesToolActivated ?? GOOGLE_SLIDES_ENABLED;
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {

@@ -535,7 +535,7 @@
         >
             <div class="tw-flex tw-flex-row tw-justify-between tw-items-center tw-m-1 tw-w-full">
                 <label for="app" class="tw-m-0">
-                    <img src={app.icon} alt={app.name} width="20px" />
+                    <img src={app.icon} alt={`App ${app.name} iniated in the chat`} width="20px" />
                     {#if app.name === "Klaxoon"}
                         {$LL.form.application.klaxoon.description()}
                     {/if}
