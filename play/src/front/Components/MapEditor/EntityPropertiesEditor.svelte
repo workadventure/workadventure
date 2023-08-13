@@ -108,6 +108,10 @@
                             "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit";
                         buttonLabel = $LL.mapEditor.properties.googleSlidesProperties.label();
                         break;
+                    case "eraser":
+                        placeholder = "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU";
+                        buttonLabel = $LL.mapEditor.properties.eraserProperties.label();
+                        break;
                     default:
                         placeholder = "https://workadventu.re";
                         buttonLabel = $LL.mapEditor.properties.linkProperties.label();

@@ -152,7 +152,7 @@ class ChatConnectionManager {
     get googleSlidesToolIsActivated(): boolean {
         return this._googleSlidesToolActivated;
     }
-    get eraserToolActivated(): boolean {
+    get eraserToolIsActivated(): boolean {
         return this._eraserToolActivated;
     }
 }
