@@ -29,6 +29,8 @@
     const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
 
     function submit() {
+        selectCamera();
+        selectMicrophone();
         enableCameraScene.login();
     }
 
