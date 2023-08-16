@@ -221,18 +221,10 @@ export const requestedCameraDeviceIdStore: Writable<string | undefined> = writab
     localUserStore.getPreferredVideoInputDevice()
 );
 
-requestedCameraDeviceIdStore.subscribe((deviceId) => {
-    localUserStore.setPreferredVideoInputDevice(deviceId);
-});
-
 export const frameRateStore: Writable<number | undefined> = writable();
 export const requestedMicrophoneDeviceIdStore: Writable<string | undefined> = writable(
     localUserStore.getPreferredAudioInputDevice()
 );
-
-requestedMicrophoneDeviceIdStore.subscribe((deviceId) => {
-    localUserStore.setPreferredAudioInputDevice(deviceId);
-});
 
 export const usedCameraDeviceIdStore: Writable<string | undefined> = writable();
 export const usedMicrophoneDeviceIdStore: Writable<string | undefined> = writable();
@@ -471,6 +463,8 @@ export const mediaStreamConstraintsStore = derived(
                 audio: currentAudioConstraint,
             });
         }
+
+        console.info("Media constraints changed", currentVideoConstraint, currentAudioConstraint);
     },
     {
         video: false,

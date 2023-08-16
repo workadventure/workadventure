@@ -347,11 +347,13 @@
 
     function selectCamera(deviceId: string) {
         requestedCameraDeviceIdStore.set(deviceId);
+        localUserStore.setPreferredVideoInputDevice(deviceId);
         cameraActive = false;
     }
 
     function selectMicrophone(deviceId: string) {
         requestedMicrophoneDeviceIdStore.set(deviceId);
+        localUserStore.setPreferredAudioInputDevice(deviceId);
         microphoneActive = false;
     }
 

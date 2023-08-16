@@ -20,6 +20,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { StringUtils } from "../../Utils/StringUtils";
     import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
+    import { localUserStore } from "../../Connection/LocalUserStore";
     import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
 
     export let game: Game;
@@ -83,21 +84,25 @@
     });
 
     function selectCamera() {
-        if (selectedCamera === null) {
+        if (selectedCamera === undefined) {
+            localUserStore.setPreferredVideoInputDevice("");
             requestedCameraState.disableWebcam();
             return;
         }
         requestedCameraState.enableWebcam();
         requestedCameraDeviceIdStore.set(selectedCamera);
+        localUserStore.setPreferredVideoInputDevice(selectedCamera);
     }
 
     function selectMicrophone() {
-        if (selectedMicrophone === null) {
+        if (selectedMicrophone === undefined) {
+            localUserStore.setPreferredAudioInputDevice("");
             requestedMicrophoneState.disableMicrophone();
             return;
         }
         requestedMicrophoneState.enableMicrophone();
         requestedMicrophoneDeviceIdStore.set(selectedMicrophone);
+        localUserStore.setPreferredAudioInputDevice(selectedMicrophone);
     }
 </script>
 
@@ -134,7 +139,7 @@
                     <div class="is-dark">
                         <select bind:value={selectedCamera} on:change={selectCamera} class="tw-w-52 md:tw-w-96">
                             <!-- start with camera off -->
-                            <option value={null}>{$LL.camera.disable()}</option>
+                            <option value={undefined}>{$LL.camera.disable()}</option>
 
                             {#each $cameraListStore ?? [] as camera}
                                 <option value={camera.deviceId}>
@@ -150,7 +155,7 @@
                     <div class="is-dark">
                         <select bind:value={selectedMicrophone} on:change={selectMicrophone} class="tw-w-52 md:tw-w-96">
                             <!-- start with microphone off -->
-                            <option value={null}>{$LL.audio.disable()}</option>
+                            <option value={undefined}>{$LL.audio.disable()}</option>
 
                             {#each $microphoneListStore ?? [] as microphone}
                                 <option value={microphone.deviceId}>

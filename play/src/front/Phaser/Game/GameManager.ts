@@ -52,6 +52,9 @@ export class GameManager {
         const preferredAudioInputDeviceId = localUserStore.getPreferredAudioInputDevice();
         const preferredVideoInputDeviceId = localUserStore.getPreferredVideoInputDevice();
 
+        console.info("Preferred audio input device: " + preferredAudioInputDeviceId);
+        console.info("Preferred video input device: " + preferredVideoInputDeviceId);
+
         //If player name was not set show login scene with player name
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
         if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
@@ -62,8 +65,13 @@ export class GameManager {
         } else if (preferredVideoInputDeviceId === undefined || preferredAudioInputDeviceId === undefined) {
             return EnableCameraSceneName;
         } else {
-            requestedCameraDeviceIdStore.set(preferredVideoInputDeviceId);
-            requestedMicrophoneDeviceIdStore.set(preferredAudioInputDeviceId);
+            if (preferredVideoInputDeviceId !== "") {
+                requestedCameraDeviceIdStore.set(preferredVideoInputDeviceId);
+            }
+
+            if (preferredAudioInputDeviceId !== "") {
+                requestedMicrophoneDeviceIdStore.set(preferredAudioInputDeviceId);
+            }
 
             this.activeMenuSceneAndHelpCameraSettings();
             //TODO fix to return href with # saved in localstorage
