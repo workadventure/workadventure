@@ -4,7 +4,7 @@ import deepEqual from "fast-deep-equal";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
-import { getNavigatorType, isIOS, NavigatorType } from "../WebRtc/DeviceUtils";
+import { isIOS } from "../WebRtc/DeviceUtils";
 import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
@@ -143,6 +143,40 @@ const userMoved5SecondsAgoStore = readable(false, function start(set) {
 });
 
 /**
+ * A store awaiting the loading of devices information.
+ */
+const devicesNotLoaded = writable(true);
+
+const deviceChanged10SecondsAgoStore = readable(false, function start(set) {
+    let timeout: NodeJS.Timeout | null = null;
+
+    const unsubscribeCamera = videoConstraintStore.subscribe((constraints) => {
+        if (timeout) {
+            clearTimeout(timeout);
+        }
+        set(true);
+        timeout = setTimeout(() => {
+            set(false);
+        }, 10000);
+    });
+
+    const unsubscribeAudio = audioConstraintStore.subscribe((constraints) => {
+        if (timeout) {
+            clearTimeout(timeout);
+        }
+        set(true);
+        timeout = setTimeout(() => {
+            set(false);
+        }, 10000);
+    });
+
+    return function stop() {
+        unsubscribeCamera();
+        unsubscribeAudio();
+    };
+});
+
+/**
  * A store containing whether the mouse is getting close the bottom right corner.
  */
 const mouseInCameraTriggerArea = readable(false, function start(set) {
@@ -183,40 +217,15 @@ export const cameraNoEnergySavingStore = writable<boolean>(false);
 
 export const streamingMegaphoneStore = writable<boolean>(false);
 
-/**
- * A store that contains "true" if the webcam should be stopped for energy efficiency reason - i.e. we are not moving and not in a conversation.
- */
-export const cameraEnergySavingStore = derived(
-    [
-        userMoved5SecondsAgoStore,
-        peerStore,
-        enabledWebCam10secondsAgoStore,
-        mouseInCameraTriggerArea,
-        cameraNoEnergySavingStore,
-        streamingMegaphoneStore,
-    ],
-    ([
-        $userMoved5SecondsAgoStore,
-        $peerStore,
-        $enabledWebCam10secondsAgoStore,
-        $mouseInBottomRight,
-        $cameraNoEnergySavingStore,
-        $streamingMegaphoneStore,
-    ]) => {
-        return (
-            !$mouseInBottomRight &&
-            !$userMoved5SecondsAgoStore &&
-            $peerStore.size === 0 &&
-            !$enabledWebCam10secondsAgoStore &&
-            !$cameraNoEnergySavingStore &&
-            !$streamingMegaphoneStore
-        );
-    }
+export const requestedCameraDeviceIdStore: Writable<string | undefined> = writable(
+    localUserStore.getPreferredVideoInputDevice()
 );
 
-export const requestedCameraDeviceIdStore: Writable<string | undefined> = writable();
 export const frameRateStore: Writable<number | undefined> = writable();
-export const requestedMicrophoneDeviceIdStore: Writable<string | undefined> = writable();
+export const requestedMicrophoneDeviceIdStore: Writable<string | undefined> = writable(
+    localUserStore.getPreferredAudioInputDevice()
+);
+
 export const usedCameraDeviceIdStore: Writable<string | undefined> = writable();
 export const usedMicrophoneDeviceIdStore: Writable<string | undefined> = writable();
 
@@ -238,6 +247,7 @@ export const videoConstraintStore = derived(
         } as MediaTrackConstraints;
 
         if ($cameraDeviceIdStore !== undefined) {
+            console.log("Using camera device ID", $cameraDeviceIdStore);
             constraints.deviceId = {
                 exact: $cameraDeviceIdStore,
             };
@@ -269,6 +279,43 @@ export const audioConstraintStore = derived(requestedMicrophoneDeviceIdStore, ($
     }
     return constraints;
 });
+
+/**
+ * A store that contains "true" if the webcam should be stopped for energy efficiency reason - i.e. we are not moving and not in a conversation.
+ */
+export const cameraEnergySavingStore = derived(
+    [
+        deviceChanged10SecondsAgoStore,
+        userMoved5SecondsAgoStore,
+        peerStore,
+        enabledWebCam10secondsAgoStore,
+        mouseInCameraTriggerArea,
+        cameraNoEnergySavingStore,
+        streamingMegaphoneStore,
+        devicesNotLoaded,
+    ],
+    ([
+        $deviceChanged10SecondsAgoStore,
+        $userMoved5SecondsAgoStore,
+        $peerStore,
+        $enabledWebCam10secondsAgoStore,
+        $mouseInBottomRight,
+        $cameraNoEnergySavingStore,
+        $streamingMegaphoneStore,
+        $devicesNotLoaded,
+    ]) => {
+        return (
+            !$mouseInBottomRight &&
+            !$userMoved5SecondsAgoStore &&
+            !$deviceChanged10SecondsAgoStore &&
+            $peerStore.size === 0 &&
+            !$enabledWebCam10secondsAgoStore &&
+            !$cameraNoEnergySavingStore &&
+            !$devicesNotLoaded &&
+            !$streamingMegaphoneStore
+        );
+    }
+);
 
 export const inJitsiStore = writable(false);
 export const inBbbStore = writable(false);
@@ -417,14 +464,7 @@ export const mediaStreamConstraintsStore = derived(
             });
         }
 
-        if ($enableCameraSceneVisibilityStore) {
-            localUserStore.setCameraSetup(
-                JSON.stringify({
-                    video: currentVideoConstraint,
-                    audio: currentAudioConstraint,
-                })
-            );
-        }
+        console.info("Media constraints changed", currentVideoConstraint, currentAudioConstraint);
     },
     {
         video: false,
@@ -446,46 +486,6 @@ interface StreamErrorValue {
 
 let currentStream: MediaStream | null = null;
 let oldConstraints = { video: false, audio: false };
-//only firefox correctly implements the 'enabled' track  property, on chrome we have to stop the track then reinstantiate the stream
-const implementCorrectTrackBehavior = getNavigatorType() === NavigatorType.firefox;
-
-/**
- * Stops the camera from filming
- */
-async function applyCameraConstraints(
-    currentStream: MediaStream | null,
-    constraints: MediaTrackConstraints | boolean
-): Promise<void[]> {
-    if (!currentStream) {
-        return [];
-    }
-    return Promise.all(currentStream.getVideoTracks().map((track) => toggleConstraints(track, constraints)));
-}
-
-/**
- * Stops the microphone from listening
- */
-async function applyMicrophoneConstraints(
-    currentStream: MediaStream | null,
-    constraints: MediaTrackConstraints | boolean
-): Promise<void[]> {
-    if (!currentStream) {
-        return [];
-    }
-    return Promise.all(currentStream.getAudioTracks().map((track) => toggleConstraints(track, constraints)));
-}
-
-async function toggleConstraints(track: MediaStreamTrack, constraints: MediaTrackConstraints | boolean): Promise<void> {
-    if (implementCorrectTrackBehavior) {
-        track.enabled = constraints !== false;
-    } else if (constraints === false) {
-        track.stop();
-    }
-
-    if (typeof constraints !== "boolean") {
-        return track.applyConstraints(constraints);
-    }
-}
 
 // This promise is important to queue the calls to "getUserMedia"
 // Otherwise, this can happen:
@@ -565,7 +565,6 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
 
         if (navigator.mediaDevices === undefined) {
             if (window.location.protocol === "http:") {
-                //throw new Error('Unable to access your camera or microphone. You need to use a HTTPS connection.');
                 set({
                     type: "error",
                     error: new Error("Unable to access your camera or microphone. You need to use a HTTPS connection."),
@@ -594,67 +593,39 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
             });
         }
 
-        (async () => {
-            let applyNewConstraintSuccess = true;
-            try {
-                await applyMicrophoneConstraints(currentStream, constraints.audio || false);
-            } catch (err) {
-                console.error("applyMicrophoneConstraints => error :", err);
-                applyNewConstraintSuccess = false;
-            }
-            try {
-                await applyCameraConstraints(currentStream, constraints.video || false);
-            } catch (err) {
-                console.error("applyCameraConstraints => error :", err);
-                applyNewConstraintSuccess = false;
-            }
-
-            if (implementCorrectTrackBehavior && applyNewConstraintSuccess) {
-                //on good navigators like firefox, we can instantiate the stream once and simply disable or enable the tracks as needed
-                if (currentStream === null) {
-                    initStream(constraints).catch((e) => {
-                        set({
-                            type: "error",
-                            error: e instanceof Error ? e : new Error("An unknown error happened"),
-                        });
-                    });
+        //on bad navigators like chrome, we have to stop the tracks when we mute and reinstantiate the stream when we need to unmute
+        if (constraints.audio === false && constraints.video === false) {
+            currentGetUserMediaPromise = currentGetUserMediaPromise.then(() => {
+                if (currentStream) {
+                    //we need stop all tracks to make sure the old stream will be garbage collected
+                    currentStream.getTracks().forEach((t) => t.stop());
                 }
-            } else {
-                //on bad navigators like chrome, we have to stop the tracks when we mute and reinstantiate the stream when we need to unmute
-                if (constraints.audio === false && constraints.video === false) {
-                    currentGetUserMediaPromise = currentGetUserMediaPromise.then(() => {
-                        if (currentStream) {
-                            //we need stop all tracks to make sure the old stream will be garbage collected
-                            currentStream.getTracks().forEach((t) => t.stop());
-                        }
 
-                        currentStream = null;
-                        set({
-                            type: "success",
-                            stream: null,
-                        });
-                        return undefined;
-                    });
-                } //we reemit the stream if it was muted just to be sure
-                else if (
-                    constraints.audio /* && !oldConstraints.audio*/ ||
-                    (!oldConstraints.video && constraints.video) ||
-                    !deepEqual(oldConstraints.audio, constraints.audio) ||
-                    !deepEqual(oldConstraints.video, constraints.video)
-                ) {
-                    initStream(constraints).catch((e) => {
-                        set({
-                            type: "error",
-                            error: e instanceof Error ? e : new Error("An unknown error happened"),
-                        });
-                    });
-                }
-                oldConstraints = {
-                    video: !!constraints.video,
-                    audio: !!constraints.audio,
-                };
-            }
-        })().catch((e) => console.error(e));
+                currentStream = null;
+                set({
+                    type: "success",
+                    stream: null,
+                });
+                return undefined;
+            });
+        } //we reemit the stream if it was muted just to be sure
+        else if (
+            constraints.audio /* && !oldConstraints.audio*/ ||
+            (!oldConstraints.video && constraints.video) ||
+            !deepEqual(oldConstraints.audio, constraints.audio) ||
+            !deepEqual(oldConstraints.video, constraints.video)
+        ) {
+            initStream(constraints).catch((e) => {
+                set({
+                    type: "error",
+                    error: e instanceof Error ? e : new Error("An unknown error happened"),
+                });
+            });
+        }
+        oldConstraints = {
+            video: !!constraints.video,
+            audio: !!constraints.audio,
+        };
     }
 );
 
@@ -724,7 +695,7 @@ export const localVolumeStore = readable<number[] | undefined>(undefined, (set) 
 /**
  * Device list
  */
-export const deviceListStore = readable<MediaDeviceInfo[]>([], function start(set) {
+export const deviceListStore = readable<MediaDeviceInfo[] | undefined>(undefined, function start(set) {
     let deviceListCanBeQueried = false;
 
     const queryDeviceList = () => {
@@ -733,9 +704,11 @@ export const deviceListStore = readable<MediaDeviceInfo[]>([], function start(se
             .enumerateDevices()
             .then((mediaDeviceInfos) => {
                 set(mediaDeviceInfos);
+                devicesNotLoaded.set(false);
             })
             .catch((e) => {
                 console.error(e);
+                devicesNotLoaded.set(false);
                 throw e;
             });
     };
@@ -762,14 +735,26 @@ export const deviceListStore = readable<MediaDeviceInfo[]>([], function start(se
 });
 
 export const cameraListStore = derived(deviceListStore, ($deviceListStore) => {
+    if ($deviceListStore === undefined) {
+        return undefined;
+    }
+
     return $deviceListStore.filter((device) => device.kind === "videoinput");
 });
 
 export const microphoneListStore = derived(deviceListStore, ($deviceListStore) => {
+    if ($deviceListStore === undefined) {
+        return undefined;
+    }
+
     return $deviceListStore.filter((device) => device.kind === "audioinput");
 });
 
 export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {
+    if ($deviceListStore === undefined) {
+        return undefined;
+    }
+
     const audiooutput = $deviceListStore.filter((device) => device.kind === "audiooutput");
     // if the previous speaker used isn`t defined in the list, apply default speaker
     const value = audiooutput.find((device) => device.deviceId === get(speakerSelectedStore));
@@ -792,6 +777,10 @@ function isConstrainDOMStringParameters(param: ConstrainDOMString): param is Con
 
 // TODO: detect the new webcam and automatically switch on it.
 cameraListStore.subscribe((devices) => {
+    // Store not initialized yet
+    if (devices === undefined) {
+        return;
+    }
     // If the selected camera is unplugged, let's remove the constraint on deviceId
     const constraints = get(videoConstraintStore);
     const deviceId = constraints.deviceId;
@@ -802,12 +791,18 @@ cameraListStore.subscribe((devices) => {
     // If we cannot find the device ID, let's remove it.
     if (isConstrainDOMStringParameters(deviceId)) {
         if (!devices.find((device) => device.deviceId === deviceId.exact)) {
+            console.log("Camera unplugged, removing constraint on deviceId");
             requestedCameraDeviceIdStore.set(undefined);
         }
     }
 });
 
 microphoneListStore.subscribe((devices) => {
+    // Store not initialized yet
+    if (devices === undefined) {
+        return;
+    }
+
     // If the selected camera is unplugged, let's remove the constraint on deviceId
     const constraints = get(audioConstraintStore);
     if (typeof constraints === "boolean") {
@@ -836,16 +831,18 @@ localStreamStore.subscribe((streamResult) => {
 
 // When the stream is initialized, the new sound constraint is recreated and the first speaker is set.
 // If the user did not select the new speaker, the first new speaker cannot be selected automatically.
-speakerSelectedStore.subscribe((value) => {
+speakerSelectedStore.subscribe((speaker) => {
     const oldValue = localUserStore.getSpeakerDeviceId();
-    const currentValue = value;
-    const oldDevice = oldValue
-        ? get(speakerListStore).find((mediaDeviceInfo) => mediaDeviceInfo.deviceId == oldValue)
-        : null;
+    const currentValue = speaker;
+    const speakerList = get(speakerListStore);
+    const oldDevice =
+        oldValue && speakerList ? speakerList.find((mediaDeviceInfo) => mediaDeviceInfo.deviceId == oldValue) : null;
     if (
         oldDevice != undefined &&
+        speakerList != undefined &&
         currentValue !== oldDevice.deviceId &&
-        get(speakerListStore).find((value) => value.deviceId == oldValue)
-    )
+        speakerList.find((value) => value.deviceId == oldValue)
+    ) {
         speakerSelectedStore.set(oldDevice.deviceId);
+    }
 });

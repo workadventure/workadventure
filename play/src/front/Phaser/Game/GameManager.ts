@@ -3,7 +3,12 @@ import { connectionManager } from "../../Connection/ConnectionManager";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import type { Room } from "../../Connection/Room";
 import { helpCameraSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
-import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import {
+    requestedCameraDeviceIdStore,
+    requestedCameraState,
+    requestedMicrophoneDeviceIdStore,
+    requestedMicrophoneState,
+} from "../../Stores/MediaStore";
 import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
 import { EnableCameraSceneName } from "../Login/EnableCameraScene";
 import { LoginSceneName } from "../Login/LoginScene";
@@ -21,7 +26,6 @@ export class GameManager {
     private characterTextureIds: string[] | null;
     private companionTextureId: string | null;
     private startRoom!: Room;
-    private cameraSetup?: { video: unknown; audio: unknown };
     private currentGameSceneName: string | null = null;
     // Note: this scenePlugin is the scenePlugin of the EntryScene. We should always provide a key in methods called on this scenePlugin.
     private scenePlugin!: Phaser.Scenes.ScenePlugin;
@@ -31,7 +35,6 @@ export class GameManager {
         this.playerName = localUserStore.getName();
         this.characterTextureIds = localUserStore.getCharacterTextures();
         this.companionTextureId = localUserStore.getCompanionTextureId();
-        this.cameraSetup = localUserStore.getCameraSetup();
     }
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
@@ -46,6 +49,12 @@ export class GameManager {
         this.startRoom = result;
         this.loadMap(this.startRoom);
 
+        const preferredAudioInputDeviceId = localUserStore.getPreferredAudioInputDevice();
+        const preferredVideoInputDeviceId = localUserStore.getPreferredVideoInputDevice();
+
+        console.info("Preferred audio input device: " + preferredAudioInputDeviceId);
+        console.info("Preferred video input device: " + preferredVideoInputDeviceId);
+
         //If player name was not set show login scene with player name
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
         if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
@@ -53,9 +62,17 @@ export class GameManager {
         } else if (!this.characterTextureIds) {
             console.info("Any Woka texture has been found, you will be redirect to the Woka selection scene");
             return SelectCharacterSceneName;
-        } else if (this.cameraSetup == undefined) {
+        } else if (preferredVideoInputDeviceId === undefined || preferredAudioInputDeviceId === undefined) {
             return EnableCameraSceneName;
         } else {
+            if (preferredVideoInputDeviceId !== "") {
+                requestedCameraDeviceIdStore.set(preferredVideoInputDeviceId);
+            }
+
+            if (preferredAudioInputDeviceId !== "") {
+                requestedMicrophoneDeviceIdStore.set(preferredAudioInputDeviceId);
+            }
+
             this.activeMenuSceneAndHelpCameraSettings();
             //TODO fix to return href with # saved in localstorage
             return this.startRoom.key;

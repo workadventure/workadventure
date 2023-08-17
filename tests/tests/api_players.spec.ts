@@ -352,7 +352,7 @@ test.describe('API WA.players', () => {
     const page2 = await context.newPage();
 
     await page2.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
     );
 
     /*console.log("PAGE 2 MY ID", await evaluateScript(page2, async () => {

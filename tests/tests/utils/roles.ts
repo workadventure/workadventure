@@ -19,13 +19,16 @@ export async function login(
 
   await page.click('button.selectCharacterSceneFormSubmit');
 
+  await selectMedias(page);
+}
+
+export async function selectMedias(page: Page) {
   await expect(page.locator('h2', { hasText: "Turn on your camera and microphone" })).toBeVisible();
 
   await page.click("text=Let's go!");
 
-  await expect(page.locator("button#menuIcon")).toBeVisible();
+  await expect(page.locator("button#menuIcon").nth(0)).toBeVisible();
 }
-
 
 export async function hideNoCamera(page: Page){
   await page.locator('form.helpCameraSettings button[type="submit"]').click();

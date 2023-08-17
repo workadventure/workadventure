@@ -22,7 +22,8 @@ const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const notification = "notificationPermission";
 const chatSounds = "chatSounds";
-const cameraSetup = "cameraSetup";
+const preferredVideoInputDevice = "preferredVideoInputDevice";
+const preferredAudioInputDevice = "preferredAudioInputDevice";
 const cacheAPIIndex = "workavdenture-cache";
 const userProperties = "user-properties";
 const cameraPrivacySettings = "cameraPrivacySettings";
@@ -269,13 +270,43 @@ class LocalUserStore {
         return localStorage.getItem(chatSounds) !== "false";
     }
 
-    setCameraSetup(cameraId: string) {
-        localStorage.setItem(cameraSetup, cameraId);
+    setPreferredVideoInputDevice(deviceId?: string) {
+        console.log("setPreferredVideoInputDevice", deviceId);
+        if (deviceId === undefined) {
+            localStorage.removeItem(preferredVideoInputDevice);
+            return;
+        }
+
+        localStorage.setItem(preferredVideoInputDevice, deviceId);
     }
 
-    getCameraSetup(): { video: unknown; audio: unknown } | undefined {
-        const cameraSetupValues = localStorage.getItem(cameraSetup);
-        return cameraSetupValues != undefined ? JSON.parse(cameraSetupValues) : undefined;
+    setPreferredAudioInputDevice(deviceId?: string) {
+        if (deviceId === undefined) {
+            localStorage.removeItem(preferredAudioInputDevice);
+            return;
+        }
+
+        localStorage.setItem(preferredAudioInputDevice, deviceId);
+    }
+
+    getPreferredVideoInputDevice(): string | undefined {
+        const deviceId = localStorage.getItem(preferredVideoInputDevice);
+
+        if (deviceId === null) {
+            return undefined;
+        }
+
+        return deviceId;
+    }
+
+    getPreferredAudioInputDevice(): string | undefined {
+        const deviceId = localStorage.getItem(preferredAudioInputDevice);
+
+        if (deviceId === null) {
+            return undefined;
+        }
+
+        return deviceId;
     }
 
     setCameraPrivacySettings(option: boolean) {
