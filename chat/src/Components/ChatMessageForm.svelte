@@ -485,7 +485,7 @@
                 return apps;
             });
         }
-        if (chatConnectionManager.eraserToolActivated) {
+        if (chatConnectionManager.eraserToolIsActivated) {
             applications.update((apps) => {
                 apps.add({
                     name: "Eraser",
