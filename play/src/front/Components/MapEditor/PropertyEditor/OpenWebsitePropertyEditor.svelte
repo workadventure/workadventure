@@ -30,6 +30,8 @@
     let error = "";
     let oldNewTabValue = property.newTab;
     let linkElement: HTMLInputElement;
+    let iconUrl: string|undefined;
+    let title: string|undefined;
 
     const dispatch = createEventDispatcher();
 
@@ -197,10 +199,14 @@
                         property.newTab = true;
                         embeddable = false;
                     }
+                    iconUrl = answer.iconUrl;
+                    title = answer.title;
                 }
             })
             .catch((e: unknown) => {
                 embeddable = true;
+                iconUrl = undefined;
+                title = undefined;
                 if (e instanceof Error) {
                     error = e.message;
                 } else {
@@ -247,7 +253,7 @@
     }}
     on:keypress={onKeyPressed}
 >
-    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+    <span slot="header" class="tw-flex tw-justify-center tw-items-center" title={title}>
         {#if property.application === "youtube"}
             <img
                 class="tw-w-6 tw-mr-1"
@@ -284,8 +290,8 @@
             />
             {$LL.mapEditor.properties.googleSlidesProperties.label()}
         {:else}
-            <img class="tw-w-6 tw-mr-1" src={icon} alt={$LL.mapEditor.properties.linkProperties.description()} />
-            {$LL.mapEditor.properties.linkProperties.label()}
+            <img class="tw-w-6 tw-mr-1" src={iconUrl ?? icon} alt={$LL.mapEditor.properties.linkProperties.description()} />
+            {title ?? $LL.mapEditor.properties.linkProperties.label()}
         {/if}
     </span>
     <span slot="content">
@@ -340,6 +346,14 @@
                 >
             {/if}
         </div>
+        {#if iconUrl || title}
+        <div class="tw-truncate" title={title}>
+            {#if iconUrl}
+            <img src={iconUrl} alt="icon" class="tw-w-6 tw-mr-1" />
+            {/if}
+            <span>{title}</span>
+        </div>
+        {/if}
         {#if !property.hideButtonLabel}
             <div class="value-input tw-flex tw-flex-col">
                 <label for="linkButton">{$LL.mapEditor.entityEditor.buttonLabel()}</label>

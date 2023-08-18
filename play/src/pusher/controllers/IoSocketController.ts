@@ -14,7 +14,7 @@ import {
     ApplicationDefinitionInterface,
     SpaceFilterMessage,
     SpaceUser,
-    CompanionDetail,
+    CompanionDetail, ServerToClientMessage,
 } from "@workadventure/messages";
 import Jwt, { JsonWebTokenError } from "jsonwebtoken";
 import { v4 as uuid } from "uuid";
@@ -843,14 +843,30 @@ export class IoSocketController {
                         case "queryMessage": {
                             switch (message.message.queryMessage.query?.$case) {
                                 case "roomTagsQuery": {
-                                    void socketManager.handleRoomTagsQuery(client, message.message.queryMessage);
+                                    await socketManager.handleRoomTagsQuery(client, message.message.queryMessage);
                                     break;
                                 }
                                 case "embeddableWebsiteQuery": {
-                                    void socketManager.handleEmbeddableWebsiteQuery(
+                                    const answer = await socketManager.handleEmbeddableWebsiteQuery(
                                         client,
-                                        message.message.queryMessage
+                                        message.message.queryMessage.query.embeddableWebsiteQuery,
                                     );
+                                    client.send(
+                                        ServerToClientMessage.encode({
+                                            message: {
+                                                $case: "answerMessage",
+                                                answerMessage: {
+                                                    id: message.message.queryMessage.id,
+                                                    answer: {
+                                                        $case: "embeddableWebsiteAnswer",
+                                                        embeddableWebsiteAnswer: answer,
+                                                    },
+                                                },
+                                            },
+                                        }).finish(),
+                                        true
+                                    );
+
                                     break;
                                 }
                                 default: {

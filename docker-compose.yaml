@@ -32,6 +32,7 @@ services:
                     - 'oidc.workadventure.localhost'
                     - 'map-storage.workadventure.localhost'
                     - 'xmpp.workadventure.localhost'
+                    - 'iframely.workadventure.localhost'
 
     play:
         image: thecodingmachine/nodejs:v2-18-bullseye
@@ -342,6 +343,7 @@ services:
             - "traefik.http.routers.redisinsight.entryPoints=web"
             - "traefik.http.services.redisinsight.loadbalancer.server.port=8001"
 
+    # TODO: migrate from iconserver to iframely
     icon:
         image: matthiasluedtke/iconserver:v3.13.0
         labels:
@@ -349,6 +351,14 @@ services:
             - "traefik.http.routers.icon.rule=Host(`icon.workadventure.localhost`)"
             - "traefik.http.routers.icon.entryPoints=web"
             - "traefik.http.services.icon.loadbalancer.server.port=8080"
+
+    iframely:
+        image: thecodingmachine/workadventure-iframely:v2.2.1
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.iframely.rule=Host(`iframely.workadventure.localhost`)"
+            - "traefik.http.routers.iframely.entryPoints=web"
+            - "traefik.http.services.iframely.loadbalancer.server.port=8061"
 
     ejabberd:
       image: workadventure/ejabberd:v1

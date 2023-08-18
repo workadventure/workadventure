@@ -31,7 +31,7 @@ import {
     SpaceFilterMessage,
     WatchSpaceMessage,
     QueryMessage,
-    MegaphoneStateMessage,
+    MegaphoneStateMessage, EmbeddableWebsiteQuery, EmbeddableWebsiteAnswer,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { isAxiosError } from "axios";
@@ -48,6 +48,8 @@ import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
 import { adminService } from "./AdminService";
+import {embeddableService} from "./EmbeddableService";
+import {iframelyService} from "./IframelyService";
 
 const debug = Debug("socket");
 
@@ -1144,66 +1146,52 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    async handleEmbeddableWebsiteQuery(client: ExSocketInterface, queryMessage: QueryMessage) {
-        if (queryMessage.query?.$case !== "embeddableWebsiteQuery") {
-            return;
+    async handleEmbeddableWebsiteQuery(client: ExSocketInterface, embeddableWebsiteQuery: EmbeddableWebsiteQuery): Promise<EmbeddableWebsiteAnswer> {
+
+        const url = embeddableWebsiteQuery.url;
+
+        const isEmbeddablePromise = embeddableService.embedUrl(url);
+        const iframelyPromise = iframelyService.embedUrl(url);
+
+        const response: EmbeddableWebsiteAnswer = {
+            embeddable: false,
+            message: undefined,
+            state: false,
+            iconUrl: undefined,
+            url: url,
+            title: undefined,
+            policies: [],
         }
 
-        const url = queryMessage.query.embeddableWebsiteQuery.url;
+        // Let's run both the x-frame-options check and the iframely check in parallel
+        const [isEmbeddableResult, iframelyResult] = await Promise.allSettled([isEmbeddablePromise, iframelyPromise]);
 
-        const emitAnswerMessage = (state: boolean, embeddable: boolean, message: string | undefined = undefined) => {
-            client.send(
-                ServerToClientMessage.encode({
-                    message: {
-                        $case: "answerMessage",
-                        answerMessage: {
-                            id: queryMessage.id,
-                            answer: {
-                                $case: "embeddableWebsiteAnswer",
-                                embeddableWebsiteAnswer: {
-                                    url,
-                                    state,
-                                    embeddable,
-                                    message,
-                                },
-                            },
-                        },
-                    },
-                }).finish(),
-                true
-            );
-        };
+        if (isEmbeddableResult.status === "rejected") {
+            response.message = isEmbeddableResult.reason;
+        } else {
+            response.embeddable = isEmbeddableResult.value.embeddable;
+            response.message = isEmbeddableResult.value.message;
+            response.state = isEmbeddableResult.value.state;
+        }
 
-        const processError = (error: { response: { status: number } }) => {
-            // If the error is a 999 error, it means that this is LinkedIn that return this error code because the website is not embeddable and is not reachable by axios
-            if (isAxiosError(error) && error.response?.status === 999) {
-                emitAnswerMessage(true, false);
-            } else {
-                debug(`SocketManager => embeddableUrl : ${url} ${error}`);
-                // If the URL is not reachable, we send a message to the client
-                // Catch is used to avoid crash if the client is disconnected
-                try {
-                    emitAnswerMessage(false, false, "URL is not reachable");
-                } catch (e) {
-                    console.error(e);
-                }
+        if (iframelyResult.status === "rejected") {
+            console.error("Iframely error", iframelyResult.reason);
+            Sentry.captureException(iframelyResult.reason);
+        } else {
+            const iframely = iframelyResult.value;
+            let embeddable = response.embeddable;
+            if (!embeddable && iframely.url !== url) {
+                embeddable = true;
             }
-        };
+            const finalUrl = response.embeddable ? url : iframely.url ?? url;
 
-        await axios
-            .head(url, { timeout: 5_000 })
-            .then((response) => emitAnswerMessage(true, !response.headers["x-frame-options"]))
-            .catch(async (error) => {
-                // If response from server is "Method not allowed", we try to do a GET request
-                if (isAxiosError(error) && error.response?.status === 405) {
-                    await axios
-                        .get(url, { timeout: 5_000 })
-                        .then((response) => emitAnswerMessage(true, !response.headers["x-frame-options"]))
-                        .catch((error) => processError(error));
-                } else {
-                    processError(error);
-                }
-            });
+            response.embeddable = embeddable;
+            response.iconUrl = iframelyResult.value.icon;
+            response.url = finalUrl;
+            response.title = iframelyResult.value.title;
+        }
+
+        return response;
     }
 }
 

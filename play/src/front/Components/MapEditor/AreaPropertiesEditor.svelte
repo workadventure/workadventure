@@ -85,7 +85,7 @@
                     roomName: $LL.mapEditor.properties.jitsiProperties.label(),
                 };
             case "openWebsite":
-                // TODO refactore and use the same code than EntityPropertiesEditor
+                // TODO refactor and use the same code than EntityPropertiesEditor
                 switch (subtype) {
                     case "youtube":
                         placeholder = "https://www.youtube.com/watch?v=Y9ubBWf5w20";

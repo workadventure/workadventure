@@ -361,6 +361,9 @@ message EmbeddableWebsiteAnswer {
   bool state = 2;
   bool embeddable = 3;
   optional string message = 4;
+  optional string iconUrl = 5;
+  optional string title = 6;
+  repeated string policies = 7;
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/
