@@ -3,7 +3,7 @@
     import { onDestroy, onMount } from "svelte";
     import type { Unsubscriber } from "svelte/store";
     import chevronImg from "../images/chevron.svg";
-    import type { TranslatedMenu, MenuItem } from "../../Stores/MenuStore";
+    import type { MenuItem } from "../../Stores/MenuStore";
     import {
         activeSubMenuStore,
         checkSubMenuToShow,
@@ -60,14 +60,7 @@
     async function switchMenu(menu: MenuItem) {
         if (menu.type === "translated") {
             activeSubMenu = menu;
-            const indexMenuSearch = $subMenusStore.findIndex(
-                (menuSearch) => (menuSearch as TranslatedMenu).key === menu.key
-            );
-            if (indexMenuSearch === -1) {
-                console.error(`Sub menu was not founded for key: ${menu.key} in the array: `, $activeSubMenuStore);
-                return;
-            }
-            activeSubMenuStore.set(indexMenuSearch);
+            activeSubMenuStore.activateByMenuItem(menu);
             switch (menu.key) {
                 case SubMenusInterface.profile:
                     activeComponent = ProfileSubMenu;
@@ -112,7 +105,7 @@
     }
 
     function closeMenu() {
-        activeSubMenuStore.set(0);
+        activeSubMenuStore.activateByIndex(0);
         menuVisiblilityStore.set(false);
     }
 

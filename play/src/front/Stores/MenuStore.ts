@@ -84,7 +84,7 @@ export const inviteUserActivated = writable(true);
 export const mapEditorActivated = writable(false);
 
 function createSubMenusStore() {
-    const { subscribe, update } = writable<MenuItem[]>([
+    const store = writable<MenuItem[]>([
         {
             type: "translated",
             key: SubMenusInterface.profile,
@@ -107,6 +107,7 @@ function createSubMenusStore() {
             key: SubMenusInterface.contact,
         },
     ]);
+    const { subscribe, update } = store;
 
     inviteUserActivated.subscribe((value) => {
         //update menu tab
@@ -144,6 +145,35 @@ function createSubMenusStore() {
                 }
                 return menuList;
             });
+        },
+        /**
+         * Returns a translated menu item by its key.
+         * Throw an error if the key was not found.
+         */
+        findByKey(key: MenuKeys): MenuItem {
+            const menuItem = get(store).find((menu) => menu.type === "translated" && menu.key === key);
+            if (menuItem === undefined) {
+                throw new Error(`Menu key: ${key} was not founded in menuStore`);
+            }
+            return menuItem;
+        },
+        /**
+         * Returns a custom menu item by its label.
+         * Throw an error if the label was not found.
+         */
+        findByLabel(label: string): MenuItem {
+            const menuItem = get(store).find((menu) => menu.type === "scripting" && menu.label === label);
+            if (menuItem === undefined) {
+                throw new Error(`Custom menu with label: ${label} was not founded in menuStore`);
+            }
+            return menuItem;
+        },
+        findMenuIndex(menuItem: MenuItem): number {
+            const index = get(store).findIndex((item) => menuItem === item);
+            if (index === -1) {
+                throw new Error("Menu not found in menu store");
+            }
+            return index;
         },
         addScriptingMenu(menuCommand: string) {
             update((menuList) => {
@@ -186,7 +216,27 @@ function createSubMenusStore() {
 
 export const subMenusStore = createSubMenusStore();
 
-export const activeSubMenuStore = writable<number>(0);
+function createActiveSubMenuStore() {
+    const activeSubMenuStore = writable<number>(0);
+    const { subscribe, set } = activeSubMenuStore;
+
+    return {
+        subscribe,
+        activateByIndex(index: number) {
+            set(index);
+        },
+        activateByMenuItem(menuItem: MenuItem) {
+            const index = subMenusStore.findMenuIndex(menuItem);
+            set(index);
+        },
+        isActive(menuItem: MenuItem): boolean {
+            const index = subMenusStore.findMenuIndex(menuItem);
+            return index === get(activeSubMenuStore);
+        },
+    };
+}
+
+export const activeSubMenuStore = createActiveSubMenuStore();
 
 export const contactPageStore = writable<string | undefined>(CONTACT_URL);
 
@@ -227,6 +277,12 @@ export function handleMenuRegistrationEvent(
 export function handleMenuUnregisterEvent(menuName: string) {
     subMenusStore.removeScriptingMenu(menuName);
     customMenuIframe.delete(menuName);
+}
+
+export function handleOpenMenuEvent(menuName: string) {
+    const inviteMenu = subMenusStore.findByLabel(menuName);
+    activeSubMenuStore.activateByMenuItem(inviteMenu);
+    menuVisiblilityStore.set(true);
 }
 
 export function getProfileUrl() {
