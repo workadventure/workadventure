@@ -75,6 +75,7 @@ Add a custom menu item containing the text `commandDescriptor` in the navbar of 
 `options` attribute accepts an object with three properties :
 - `callback : (commandDescriptor: string) => void` : A click on the custom menu will trigger the `callback`.
 - `iframe: string` : A click on the custom menu will open the `iframe` inside the menu.
+- `key?: string` : A unique identifier for your menu item.
 - `allowApi?: boolean` : Allow the iframe of the custom menu to use the Scripting API.
 
 Important : `options` accepts only `callback` or `iframe` not both.
@@ -124,7 +125,23 @@ class Menu {
 }
 ```
 
+## Fetching a custom menu
 
+```
+WA.ui.getMenuCommand(key: string): Promise<Menu>
+```
+
+You can retrieve a menu by its key using `WA.ui.getMenuCommand`.
+You can also access the list of default menu items provided by WA.
+
+Here is the full list of pre-registered keys: "settings", "profile", "invite", "credit", "globalMessages", "contact", "report".
+
+Example: open the "invite" page from a script:
+
+```ts
+const menu = await WA.ui.getMenuCommand("invite");
+menu.open();
+```
 
 ### Awaiting User Confirmation (with space bar)
 

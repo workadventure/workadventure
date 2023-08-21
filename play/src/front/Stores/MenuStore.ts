@@ -71,6 +71,7 @@ export interface TranslatedMenu {
 interface ScriptingMenu {
     type: "scripting";
     label: string;
+    key: string;
 }
 
 export type MenuItem = TranslatedMenu | ScriptingMenu;
@@ -150,8 +151,8 @@ function createSubMenusStore() {
          * Returns a translated menu item by its key.
          * Throw an error if the key was not found.
          */
-        findByKey(key: MenuKeys): MenuItem {
-            const menuItem = get(store).find((menu) => menu.type === "translated" && menu.key === key);
+        findByKey(key: MenuKeys | string): MenuItem {
+            const menuItem = get(store).find((menu) => menu.key === key);
             if (menuItem === undefined) {
                 throw new Error(`Menu key: ${key} was not founded in menuStore`);
             }
@@ -175,20 +176,21 @@ function createSubMenusStore() {
             }
             return index;
         },
-        addScriptingMenu(menuCommand: string) {
+        addScriptingMenu(menuCommand: string, menuKey: string) {
             update((menuList) => {
-                if (!menuList.find((menu) => menu.type === "scripting" && menu.label === menuCommand)) {
+                if (!menuList.find((menu) => menu.type === "scripting" && menu.key === menuKey)) {
                     menuList.push({
                         type: "scripting",
                         label: menuCommand,
+                        key: menuKey,
                     });
                 }
                 return menuList;
             });
         },
-        removeScriptingMenu(menuCommand: string) {
+        removeScriptingMenu(key: string) {
             update((menuList) => {
-                const index = menuList.findIndex((menu) => menu.type === "scripting" && menu.label === menuCommand);
+                const index = menuList.findIndex((menu) => /*menu.type === "scripting" &&*/ menu.key === key);
                 if (index !== -1) {
                     menuList.splice(index, 1);
                 }
@@ -258,6 +260,7 @@ export const customMenuIframe = new Map<string, { url: string; allowApi: boolean
 export function handleMenuRegistrationEvent(
     menuName: string,
     iframeUrl: string | undefined = undefined,
+    key: string,
     source: string | undefined = undefined,
     options: { allowApi: boolean }
 ) {
@@ -266,22 +269,22 @@ export function handleMenuRegistrationEvent(
         return;
     }
 
-    subMenusStore.addScriptingMenu(menuName);
+    subMenusStore.addScriptingMenu(menuName, key);
 
     if (iframeUrl !== undefined) {
         const url = new URL(iframeUrl, source);
-        customMenuIframe.set(menuName, { url: url.toString(), allowApi: options.allowApi });
+        customMenuIframe.set(key, { url: url.toString(), allowApi: options.allowApi });
     }
 }
 
-export function handleMenuUnregisterEvent(menuName: string) {
-    subMenusStore.removeScriptingMenu(menuName);
-    customMenuIframe.delete(menuName);
+export function handleMenuUnregisterEvent(key: string) {
+    subMenusStore.removeScriptingMenu(key);
+    customMenuIframe.delete(key);
 }
 
-export function handleOpenMenuEvent(menuName: string) {
-    const inviteMenu = subMenusStore.findByLabel(menuName);
-    activeSubMenuStore.activateByMenuItem(inviteMenu);
+export function handleOpenMenuEvent(key: string) {
+    const menu = subMenusStore.findByKey(key);
+    activeSubMenuStore.activateByMenuItem(menu);
     menuVisiblilityStore.set(true);
 }
 

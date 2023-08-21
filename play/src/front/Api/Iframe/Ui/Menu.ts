@@ -1,8 +1,7 @@
 import { sendToWorkadventure } from "../IframeApiContribution";
-import { MenuOptions } from "../ui";
 
 export class Menu {
-    constructor(private menuName: string, private options: MenuOptions) {}
+    constructor(private key: string) {}
 
     /**
      * remove the menu
@@ -11,25 +10,20 @@ export class Menu {
         sendToWorkadventure({
             type: "unregisterMenu",
             data: {
-                name: this.menuName,
+                key: this.key,
             },
         });
     }
 
     /**
-     * Programmatically open the menu
+     * Programmatically open the menu (only works if the menu has been defined with the "iframe" property)
      */
     public open(): void {
-        if (this.options.callback) {
-            this.options.callback(this.menuName);
-        }
-        if (this.options.iframe) {
-            sendToWorkadventure({
-                type: "openMenu",
-                data: {
-                    name: this.menuName,
-                },
-            });
-        }
+        sendToWorkadventure({
+            type: "openMenu",
+            data: {
+                key: this.key,
+            },
+        });
     }
 }

@@ -92,13 +92,13 @@
                     break;
             }
         } else {
-            const customMenu = customMenuIframe.get(menu.label);
+            const customMenu = customMenuIframe.get(menu.key);
             if (customMenu !== undefined) {
                 activeSubMenu = menu;
                 props = { url: customMenu.url, allowApi: customMenu.allowApi };
                 activeComponent = CustomSubMenu;
             } else {
-                sendMenuClickedEvent(menu.label);
+                sendMenuClickedEvent(menu.key);
                 menuVisiblilityStore.set(false);
             }
         }
