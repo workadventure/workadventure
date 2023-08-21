@@ -182,50 +182,44 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         commandDescriptor: string,
         options: MenuOptions | ((commandDescriptor: string) => void)
     ): Menu {
-        const menu = new Menu(commandDescriptor);
-
         if (typeof options === "function") {
-            menuCallbacks.set(commandDescriptor, options);
+            options = {
+                callback: options,
+            };
+        }
+
+        const menu = new Menu(commandDescriptor, options);
+
+        options.allowApi = options.allowApi === undefined ? options.iframe !== undefined : options.allowApi;
+
+        if (options.iframe !== undefined) {
+            sendToWorkadventure({
+                type: "registerMenu",
+                data: {
+                    name: commandDescriptor,
+                    iframe: options.iframe,
+                    options: {
+                        allowApi: options.allowApi,
+                    },
+                },
+            });
+        } else if (options.callback !== undefined) {
+            menuCallbacks.set(commandDescriptor, options.callback);
             sendToWorkadventure({
                 type: "registerMenu",
                 data: {
                     name: commandDescriptor,
                     options: {
-                        allowApi: false,
+                        allowApi: options.allowApi,
                     },
                 },
             });
         } else {
-            options.allowApi = options.allowApi === undefined ? options.iframe !== undefined : options.allowApi;
-
-            if (options.iframe !== undefined) {
-                sendToWorkadventure({
-                    type: "registerMenu",
-                    data: {
-                        name: commandDescriptor,
-                        iframe: options.iframe,
-                        options: {
-                            allowApi: options.allowApi,
-                        },
-                    },
-                });
-            } else if (options.callback !== undefined) {
-                menuCallbacks.set(commandDescriptor, options.callback);
-                sendToWorkadventure({
-                    type: "registerMenu",
-                    data: {
-                        name: commandDescriptor,
-                        options: {
-                            allowApi: options.allowApi,
-                        },
-                    },
-                });
-            } else {
-                throw new Error(
-                    "When adding a menu with WA.ui.registerMenuCommand, you must pass either an iframe or a callback"
-                );
-            }
+            throw new Error(
+                "When adding a menu with WA.ui.registerMenuCommand, you must pass either an iframe or a callback"
+            );
         }
+
         menus.set(commandDescriptor, menu);
         return menu;
     }

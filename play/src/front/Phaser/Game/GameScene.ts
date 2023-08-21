@@ -70,7 +70,6 @@ import {
     userIsEditorStore,
     userIsJitsiDominantSpeakerStore,
 } from "../../Stores/GameStore";
-import type { MenuItem, TranslatedMenu } from "../../Stores/MenuStore";
 import {
     activeSubMenuStore,
     contactPageStore,
@@ -1680,22 +1679,13 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.openInviteMenuStream.subscribe(() => {
-                const indexInviteMenu = get(subMenusStore).findIndex(
-                    (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.invite
-                );
-                if (indexInviteMenu === -1) {
-                    console.error(
-                        `Menu key: ${SubMenusInterface.invite} was not founded in subMenusStore: `,
-                        get(subMenusStore)
-                    );
-                    return;
-                }
-                if (get(menuVisiblilityStore) && get(activeSubMenuStore) === indexInviteMenu) {
+                const inviteMenu = subMenusStore.findByKey(SubMenusInterface.invite);
+                if (get(menuVisiblilityStore) && activeSubMenuStore.isActive(inviteMenu)) {
                     menuVisiblilityStore.set(false);
-                    activeSubMenuStore.set(0);
+                    activeSubMenuStore.activateByIndex(0);
                     return;
                 }
-                activeSubMenuStore.set(indexInviteMenu);
+                activeSubMenuStore.activateByMenuItem(inviteMenu);
                 menuVisiblilityStore.set(true);
             })
         );

@@ -105,14 +105,22 @@ menu.remove();
 
 Please note that `registerMenuCommand` returns an object of the `Menu` class.
 
-The `Menu` class contains a single method: `remove(): void`. This will obviously remove the menu when called.
+The `Menu` class contains two methods: `remove(): void` and `open(): void`.
+
+`remove` will remove the menu when called.
+`open` will programmatically open the menu.
 
 ```ts
 class Menu {
-	/**
-	* Remove the menu
-	*/
-	remove() {};
+  /**
+   * Remove the menu
+   */
+  public remove(): void {/*...*/};
+
+  /**
+   * Programmatically open the menu
+   */
+  public open(): void {/*...*/};
 }
 ```
 

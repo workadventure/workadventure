@@ -23,3 +23,12 @@ export const isMenuRegisterEvent = z.object({
 });
 
 export type MenuRegisterEvent = z.infer<typeof isMenuRegisterEvent>;
+
+/**
+ * A message sent from a script to the game to open a menu
+ */
+export const isOpenMenuEvent = z.object({
+    name: z.string(),
+});
+
+export type OpenMenuEvent = z.infer<typeof isOpenMenuEvent>;
