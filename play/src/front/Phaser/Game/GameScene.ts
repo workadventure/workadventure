@@ -2170,9 +2170,7 @@ ${escapedMessage}
             return;
         }
 
-        if (roomUrl.hash) {
-            urlManager.pushStartLayerNameToUrl(roomUrl.hash);
-        }
+        urlManager.pushStartLayerNameToUrl(roomUrl.hash);
 
         if (!targetRoom.isEqual(this.room)) {
             if (this.scene.get(targetRoom.key) === null) {
