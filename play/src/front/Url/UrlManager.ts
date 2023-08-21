@@ -82,7 +82,12 @@ class UrlManager {
     }
 
     pushStartLayerNameToUrl(startLayerName: string): void {
-        window.location.hash = startLayerName;
+        if (startLayerName) {
+            window.location.hash = startLayerName;
+        } else {
+            // Remove the hash
+            history.pushState("", document.title, window.location.pathname + window.location.search);
+        }
     }
 
     getPlayUri(): string {
