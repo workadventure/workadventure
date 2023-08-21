@@ -91,6 +91,7 @@
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
+    import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -307,7 +308,7 @@
     }
 
     function openBo() {
-        window.open(`https://workadventu.re/admin`, "_blanck");
+        window.open(ADMIN_URL, "_blank");
     }
 
     /*function register() {
@@ -774,7 +775,7 @@
                         <Tooltip text={$LL.actionbar.bo()} />
 
                         <button id="backOfficeIcon">
-                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-map-editor" />
+                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="open-back-office" />
                         </button>
                     </div>
                 {/if}
