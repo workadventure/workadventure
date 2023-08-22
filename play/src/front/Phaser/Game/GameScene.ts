@@ -31,7 +31,13 @@ import {
     lazyLoadPlayerCompanionTexture,
 } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
-import { DEBUG_MODE, ENABLE_MAP_EDITOR, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
+import {
+    DEBUG_MODE,
+    ENABLE_MAP_EDITOR,
+    ENABLE_OPENID,
+    MAX_PER_GROUP,
+    POSITION_DELAY,
+} from "../../Enum/EnvironmentVariable";
 import { Room } from "../../Connection/Room";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";
 import { localUserStore } from "../../Connection/LocalUserStore";
@@ -125,6 +131,7 @@ import { BroadcastService } from "../../Streaming/BroadcastService";
 import { megaphoneCanBeUsedStore, megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
+import { scriptUtils } from "../../Api/ScriptUtils";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -2122,6 +2129,13 @@ ${escapedMessage}
                 });
             });
         });
+
+        iframeListener.registerAnswerer("goToLogin", () => {
+            if (!ENABLE_OPENID) {
+                throw new Error("Cannot access login page. OpenID connect must configured first.");
+            }
+            scriptUtils.goToPage("/login");
+        });
     }
 
     private setPropertyLayer(
@@ -2263,6 +2277,7 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("getUIWebsiteById");
         iframeListener.unregisterAnswerer("closeUIWebsite");
         iframeListener.unregisterAnswerer("enablePlayersTracking");
+        iframeListener.unregisterAnswerer("goToLogin");
         this.sharedVariablesManager?.close();
         this.playerVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
