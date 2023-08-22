@@ -494,6 +494,10 @@ export const iframeQueryMapTypeGuards = {
         query: z.undefined(),
         answer: z.undefined(),
     },
+    goToLogin: {
+        query: z.undefined(),
+        answer: z.undefined(),
+    },
     triggerActionMessage: {
         query: isTriggerActionMessageEvent,
         answer: z.undefined(),
