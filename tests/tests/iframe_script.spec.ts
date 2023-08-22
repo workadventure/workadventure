@@ -64,5 +64,17 @@ test.describe('Iframe API', () => {
         .frameLocator('.menu-submenu-container iframe')
         .locator('p');
     await expect(iframeParagraph2).toHaveText('This is an iframe in a custom menu.');
+
+    await Menu.closeMenu(page);
+
+    // Now, let's test that we can open a default menu:
+    await evaluateScript(page, async () => {
+      await WA.onInit();
+
+      const menu = await WA.ui.getMenuCommand('invite');
+      await menu.open();
+    });
+
+    await expect(page.locator('.menu-container')).toContainText("Share the link of the room");
   });
 });

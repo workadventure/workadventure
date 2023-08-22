@@ -20,7 +20,7 @@ class Menu {
     }
 
     async closeMenu(page: Page) {
-        await page.getByRole('button', { name: '×' }).click();
+        await page.locator('.menu-container').getByRole('button', { name: '×' }).click();
         await expect(await page.locator('#menuIcon')).not.toHaveClass(/border-top-light/);
     }
 
