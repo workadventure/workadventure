@@ -274,7 +274,11 @@ export const audioConstraintStore = derived(requestedMicrophoneDeviceIdStore, ($
     if (typeof constraints === "boolean") {
         constraints = {};
     }
-    if ($microphoneDeviceIdStore !== undefined && navigator.mediaDevices.getSupportedConstraints().deviceId === true) {
+    if (
+        $microphoneDeviceIdStore !== undefined &&
+        navigator.mediaDevices &&
+        navigator.mediaDevices.getSupportedConstraints().deviceId === true
+    ) {
         constraints.deviceId = { exact: $microphoneDeviceIdStore };
     }
     return constraints;
