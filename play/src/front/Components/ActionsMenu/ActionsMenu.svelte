@@ -81,6 +81,7 @@
         height: max-content !important;
         max-height: 50vh;
         margin-top: 200px;
+        overflow-y: auto;
         z-index: 425;
 
         pointer-events: auto;
@@ -105,8 +106,9 @@
         }
 
         .name {
-            max-height: 15vh;
+            max-height: 25vh;
             margin: 20px 20px 0 20px;
+            overflow-y: auto;
         }
 
         .actions::-webkit-scrollbar {
