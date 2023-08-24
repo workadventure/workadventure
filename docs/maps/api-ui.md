@@ -317,6 +317,8 @@ If your code is running inside a UIWebsite iframe, you can use `WA.iframeId` to 
 ```ts
 const websiteId = WA.iframeId;
 const website = await WA.ui.website.getById(websiteId);
+```
+
 ## The modal iframe API
 ### Open the modal iframe
 
@@ -332,13 +334,7 @@ WA.ui.modal.openModal({
 ```
 
 
-### Close the chat window
-
-```ts
-WA.ui.modal.closeModal(): void
-```
-
-### Example of mofal opened
+### Example
 
 ```ts
 WA.ui.modal.openModal({
@@ -403,6 +399,12 @@ If the user is in mobile definition, the modal will open in full screen:
         <img src="images/modal/modal-mobile.png" class="figure-img img-fluid rounded" alt="" />
     </div>
 </div>
+
+### Closing a modal
+
+```ts
+WA.ui.modal.closeModal(): void
+```
 
 ## Action bar button API
 
