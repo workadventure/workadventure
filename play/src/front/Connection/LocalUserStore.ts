@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH, PEER_VIDEO_RECOMMENDED_BANDWIDTH } from "../Enum/EnvironmentVariable";
 import { arrayEmoji, Emoji } from "../Stores/Utils/emojiSchema";
 import type { LocalUser } from "./LocalUser";
 import { areCharacterTexturesValid, isUserNameValid } from "./LocalUser";
@@ -10,7 +11,6 @@ const requestedCameraStateKey = "requestedCameraStateKey";
 const requestedMicrophoneStateKey = "requestedMicrophoneStateKey";
 const characterTexturesKey = "characterTextures";
 const companionKey = "companion";
-const videoQualityKey = "videoQuality";
 const audioPlayerVolumeKey = "audioVolume";
 const audioPlayerMuteKey = "audioMute";
 const helpCameraSettingsShown = "helpCameraSettingsShown";
@@ -127,14 +127,6 @@ class LocalUserStore {
 
     wasCompanionSet(): boolean {
         return localStorage.getItem(companionKey) ? true : false;
-    }
-
-    setVideoQualityValue(value: number): void {
-        localStorage.setItem(videoQualityKey, "" + value);
-    }
-
-    getVideoQualityValue(): number {
-        return parseInt(localStorage.getItem(videoQualityKey) || "20");
     }
 
     setAudioPlayerVolume(value: number): void {
@@ -451,6 +443,42 @@ class LocalUserStore {
 
     getSpeakerDeviceId() {
         return localStorage.getItem(speakerDeviceId);
+    }
+
+    setVideoBandwidth(value: number | "unlimited") {
+        localStorage.setItem("videoBandwidth", value.toString());
+    }
+
+    getVideoBandwidth(): number | "unlimited" {
+        const value = localStorage.getItem("videoBandwidth");
+
+        if (!value) {
+            return PEER_VIDEO_RECOMMENDED_BANDWIDTH;
+        }
+
+        if (value === "unlimited") {
+            return value;
+        }
+
+        return parseInt(value);
+    }
+
+    setScreenShareBandwidth(value: number | "unlimited") {
+        localStorage.setItem("screenShareBandwidth", value.toString());
+    }
+
+    getScreenShareBandwidth(): number | "unlimited" {
+        const value = localStorage.getItem("screenShareBandwidth");
+
+        if (!value) {
+            return PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH;
+        }
+
+        if (value === "unlimited") {
+            return value;
+        }
+
+        return parseInt(value);
     }
 }
 

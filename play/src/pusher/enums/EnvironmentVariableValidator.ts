@@ -106,8 +106,10 @@ export const EnvironmentVariables = z.object({
     MAP_STORAGE_PATH_PREFIX: z.string().optional(),
 
     // Limit bandwidth environment variables
-    PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS: PositiveIntAsString.optional(),
-    PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS: PositiveIntAsString.optional(),
+    PEER_VIDEO_LOW_BANDWIDTH: PositiveIntAsString.optional(),
+    PEER_VIDEO_RECOMMENDED_BANDWIDTH: PositiveIntAsString.optional(),
+    PEER_SCREEN_SHARE_LOW_BANDWIDTH: PositiveIntAsString.optional(),
+    PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: PositiveIntAsString.optional(),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

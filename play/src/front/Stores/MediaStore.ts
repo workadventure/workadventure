@@ -240,7 +240,7 @@ export const videoConstraintStore = derived(
         const constraints = {
             width: { min: 640, ideal: 1280, max: 1920 },
             height: { min: 400, ideal: 720, max: 1080 },
-            frameRate: { ideal: localUserStore.getVideoQualityValue() },
+            frameRate: { ideal: undefined },
             facingMode: "user",
             resizeMode: "crop-and-scale",
             aspectRatio: 1.777777778,
@@ -850,3 +850,17 @@ speakerSelectedStore.subscribe((speaker) => {
         speakerSelectedStore.set(oldDevice.deviceId);
     }
 });
+
+function createVideoBandwidthStore() {
+    const { subscribe, set } = writable<number | "unlimited">(localUserStore.getVideoBandwidth());
+
+    return {
+        subscribe,
+        setBandwidth: (bandwidth: number | "unlimited") => {
+            set(bandwidth);
+            localUserStore.setVideoBandwidth(bandwidth);
+        },
+    };
+}
+
+export const videoBandwidthStore = createVideoBandwidthStore();

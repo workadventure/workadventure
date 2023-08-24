@@ -1,18 +1,21 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { frameRateStore } from "../../Stores/MediaStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
-    import { menuVisiblilityStore } from "../../Stores/MenuStore";
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import type { Locales } from "../../../i18n/i18n-types";
     import { displayableLocales, setCurrentLocale } from "../../../i18n/locales";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
 
     import infoImg from "../images/info.svg";
     import { iframeListener } from "../../Api/IframeListener";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { localUserStore } from "../../Connection/LocalUserStore";
+    import {
+        PEER_SCREEN_SHARE_LOW_BANDWIDTH,
+        PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH,
+        PEER_VIDEO_LOW_BANDWIDTH,
+        PEER_VIDEO_RECOMMENDED_BANDWIDTH,
+    } from "../../Enum/EnvironmentVariable";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();
@@ -20,49 +23,66 @@
     let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
     let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
     let decreaseAudioPlayerVolumeWhileTalking: boolean = localUserStore.getDecreaseAudioPlayerVolumeWhileTalking();
-    let valueVideo: number = localUserStore.getVideoQualityValue();
     let valueLocale: string = $locale;
     let valueCameraPrivacySettings = localUserStore.getCameraPrivacySettings();
     let valueMicrophonePrivacySettings = localUserStore.getMicrophonePrivacySettings();
+    const initialVideoBandwidth = localUserStore.getVideoBandwidth();
+    console.log("initialVideoBandwidth", initialVideoBandwidth);
+    let valueVideoBandwidth =
+        initialVideoBandwidth === "unlimited" ? 3 : initialVideoBandwidth === PEER_VIDEO_LOW_BANDWIDTH ? 1 : 2;
+    const initialScreenShareBandwidth = localUserStore.getScreenShareBandwidth();
+    let valueScreenShareBandwidth =
+        initialScreenShareBandwidth === "unlimited"
+            ? 3
+            : initialScreenShareBandwidth === PEER_SCREEN_SHARE_LOW_BANDWIDTH
+            ? 1
+            : 2;
 
-    let previewValueVideo = valueVideo;
-    let previewValueLocale = valueLocale;
     let previewCameraPrivacySettings = valueCameraPrivacySettings;
     let previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
 
     let divContainer: HTMLDivElement;
 
-    async function saveSetting() {
-        let change = false;
+    async function updateLocale() {
+        await setCurrentLocale(valueLocale as Locales);
+    }
 
-        if (valueLocale !== previewValueLocale) {
-            previewValueLocale = valueLocale;
-            await setCurrentLocale(valueLocale as Locales);
+    function updateVideoBandwidth() {
+        let value: number | "unlimited";
+
+        switch (valueVideoBandwidth) {
+            case 1:
+                value = PEER_VIDEO_LOW_BANDWIDTH;
+                break;
+            case 3:
+                value = "unlimited";
+                break;
+            default:
+                value = PEER_VIDEO_RECOMMENDED_BANDWIDTH;
+                break;
         }
 
-        if (valueVideo !== previewValueVideo) {
-            previewValueVideo = valueVideo;
-            frameRateStore.set(valueVideo);
-            localUserStore.setVideoQualityValue(valueVideo);
+        console.log("value setted", value);
+
+        localUserStore.setVideoBandwidth(value);
+    }
+
+    function updateScreenShareBandwidth() {
+        let value: number | "unlimited";
+
+        switch (valueScreenShareBandwidth) {
+            case 1:
+                value = PEER_SCREEN_SHARE_LOW_BANDWIDTH;
+                break;
+            case 3:
+                value = "unlimited";
+                break;
+            default:
+                value = PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH;
+                break;
         }
 
-        if (valueCameraPrivacySettings !== previewCameraPrivacySettings) {
-            previewCameraPrivacySettings = valueCameraPrivacySettings;
-            localUserStore.setCameraPrivacySettings(valueCameraPrivacySettings);
-        }
-
-        if (valueMicrophonePrivacySettings !== previewMicrophonePrivacySettings) {
-            previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
-            localUserStore.setMicrophonePrivacySettings(valueMicrophonePrivacySettings);
-        }
-
-        audioManagerVolumeStore.setDecreaseWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
-
-        if (change) {
-            window.location.reload();
-        }
-
-        closeMenu();
+        localUserStore.setScreenShareBandwidth(value);
     }
 
     function changeFullscreen() {
@@ -128,10 +148,6 @@
         localUserStore.setDecreaseAudioPlayerVolumeWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
     }
 
-    function closeMenu() {
-        menuVisiblilityStore.set(false);
-    }
-
     function changeCameraPrivacySettings() {
         // Analytics Client
         analyticsClient.settingMicrophone(valueCameraPrivacySettings ? "true" : "false");
@@ -162,33 +178,62 @@
     });
 </script>
 
-<div on:submit|preventDefault={saveSetting} bind:this={divContainer}>
+<div bind:this={divContainer}>
     <section class="bottom-separator">
-        <h3 class="blue-title">{$LL.menu.settings.videoQuality.title()}</h3>
-        <select bind:value={valueVideo} class="tw-w-full">
-            <option value={30}
-                >{isMobile
-                    ? $LL.menu.settings.videoQuality.short.high()
-                    : $LL.menu.settings.videoQuality.long.high()}</option
-            >
-            <option value={20}
-                >{isMobile
-                    ? $LL.menu.settings.videoQuality.short.medium()
-                    : $LL.menu.settings.videoQuality.long.medium()}</option
-            >
-            <option value={10}
-                >{isMobile
-                    ? $LL.menu.settings.videoQuality.short.small()
-                    : $LL.menu.settings.videoQuality.long.small()}</option
-            >
-            <option value={5}
-                >{isMobile
-                    ? $LL.menu.settings.videoQuality.short.minimum()
-                    : $LL.menu.settings.videoQuality.long.minimum()}</option
-            >
-        </select>
+        <h3 class="blue-title">{$LL.menu.settings.videoBandwidth.title()}</h3>
+        <div class="tw-flex tw-w-full tw-justify-center">
+            <div class="tw-flex tw-flex-col tw-w-10/12 lg:tw-w-6/12">
+                <ul class="tw-flex tw-justify-between tw-w-full tw-px-[10px] tw-mb-5">
+                    <li class="tw-flex tw-justify-center tw-relative">
+                        <span class="tw-absolute">{$LL.menu.settings.videoBandwidth.low()}</span>
+                    </li>
+                    <li class="tw-flex tw-justify-center tw-relative">
+                        <span class="tw-absolute">{$LL.menu.settings.videoBandwidth.recommended()}</span>
+                    </li>
+                    <li class="tw-flex tw-justify-center tw-relative">
+                        <span class="tw-absolute">{$LL.menu.settings.videoBandwidth.unlimited()}</span>
+                    </li>
+                </ul>
+                <input
+                    type="range"
+                    class="tw-w-full"
+                    min="1"
+                    max="3"
+                    step="1"
+                    bind:value={valueVideoBandwidth}
+                    on:change={updateVideoBandwidth}
+                />
+            </div>
+        </div>
+
+        <h3 class="blue-title">{$LL.menu.settings.shareScreenBandwidth.title()}</h3>
+        <div class="tw-flex tw-w-full tw-justify-center">
+            <div class="tw-flex tw-flex-col tw-w-10/12 lg:tw-w-6/12">
+                <ul class="tw-flex tw-justify-between tw-w-full tw-px-[10px] tw-mb-5">
+                    <li class="tw-flex tw-justify-center tw-relative">
+                        <span class="tw-absolute">{$LL.menu.settings.shareScreenBandwidth.low()}</span>
+                    </li>
+                    <li class="tw-flex tw-justify-center tw-relative">
+                        <span class="tw-absolute">{$LL.menu.settings.shareScreenBandwidth.recommended()}</span>
+                    </li>
+                    <li class="tw-flex tw-justify-center tw-relative">
+                        <span class="tw-absolute">{$LL.menu.settings.shareScreenBandwidth.unlimited()}</span>
+                    </li>
+                </ul>
+                <input
+                    type="range"
+                    class="tw-w-full"
+                    min="1"
+                    max="3"
+                    step="1"
+                    bind:value={valueScreenShareBandwidth}
+                    on:change={updateScreenShareBandwidth}
+                />
+            </div>
+        </div>
+
         <h3 class="blue-title">{$LL.menu.settings.language.title()}</h3>
-        <select class="tw-w-full languages-switcher" bind:value={valueLocale}>
+        <select class="tw-w-full languages-switcher" bind:value={valueLocale} on:change={updateLocale}>
             {#each displayableLocales as locale (locale.id)}
                 <option value={locale.id}>
                     {`${locale.language ? locale.language.charAt(0).toUpperCase() + locale.language.slice(1) : ""} (${
@@ -197,13 +242,6 @@
                 </option>
             {/each}
         </select>
-
-        <div class="centered-column">
-            <p>{$LL.menu.settings.save.warning()}</p>
-            <button type="button" class="light" on:click|preventDefault={saveSetting}
-                >{$LL.menu.settings.save.button()}</button
-            >
-        </div>
     </section>
     <section class="bottom-separator tw-flex tw-flex-col">
         <div class="tooltip tw-w-fit">
@@ -227,6 +265,7 @@
         </label>
     </section>
     <section class="tw-flex tw-flex-col">
+        <h3 class="blue-title">{$LL.menu.settings.otherSettings()}</h3>
         <label>
             <input type="checkbox" bind:checked={fullscreen} on:change={changeFullscreen} />
             <span>{$LL.menu.settings.fullscreen()}</span>
