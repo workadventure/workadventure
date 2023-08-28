@@ -1,38 +1,30 @@
 <script lang="ts">
     import { afterUpdate, onMount } from "svelte";
     import { Color } from "@workadventure/shared-utils";
-    import { derived, readable } from "svelte/store";
+    import { Readable } from "svelte/store";
+    import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { JitsiTrackWrapper } from "../../Streaming/Jitsi/JitsiTrackWrapper";
     import microphoneOffImg from "../images/microphone-off.png";
 
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
+    import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
     import UserTag from "./UserTag.svelte";
 
     export let clickable = true;
-    export let peer: JitsiTrackWrapper;
-    export let uniqueId = "";
+    export let peer: JitsiTrackStreamWrapper;
 
-    let cameraTrackStore = peer.videoTrack;
-    let screenSharingTrackStore = peer.screenSharingTrack;
-    let audioTrackStore = peer.audioTrack;
-
-    if (uniqueId.includes("screenSharing")) {
-        cameraTrackStore = readable(undefined);
-        audioTrackStore = readable(undefined);
+    let videoTrackStore: Readable<JitsiTrack | undefined>;
+    if (peer.target === "desktop") {
+        videoTrackStore = peer.jitsiTrackWrapper.screenSharingTrack;
     } else {
-        screenSharingTrackStore = readable(undefined);
+        videoTrackStore = peer.jitsiTrackWrapper.videoTrack;
     }
-
-    const videoTrackStore = derived(
-        [cameraTrackStore, screenSharingTrackStore],
-        ([$cameraTrackStore, $screenSharingTrackStore]) => $cameraTrackStore || $screenSharingTrackStore
-    );
+    const audioTrackStore: Readable<JitsiTrack | undefined> = peer.jitsiTrackWrapper.audioTrack;
 
     let embedScreen: EmbedScreen;
     let videoContainer: HTMLDivElement;
@@ -41,7 +33,7 @@
     //let minimized: boolean;
     let isMobile: boolean;
 
-    let backGroundColor = Color.getColorByString(peer.spaceUser?.name ?? "");
+    let backGroundColor = Color.getColorByString(peer.jitsiTrackWrapper.spaceUser?.name ?? "");
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
 
     if (peer) {
@@ -69,12 +61,7 @@
         if ($audioTrackStore && !$audioTrackStore?.isLocal()) {
             $audioTrackStore?.attach(audioElement);
         }
-        if ($cameraTrackStore) {
-            $videoTrackStore?.attach(videoElement);
-        }
-        if ($screenSharingTrackStore) {
-            $screenSharingTrackStore?.attach(videoElement);
-        }
+        $videoTrackStore?.attach(videoElement);
     }
 </script>
 
@@ -90,20 +77,20 @@
                 bind:this={videoElement}
                 class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
                 class="tw-h-full tw-max-w-full tw-rounded-sm"
-                class:tw-scale-x-[-1]={$cameraTrackStore?.isLocal()}
+                class:tw-scale-x-[-1]={$videoTrackStore?.isLocal()}
                 autoplay
                 playsinline
             />
         </div>
     {/if}
-    {#if !$screenSharingTrackStore}
+    {#if peer.target === "video/audio"}
         <div class={`tw-absolute ${$videoTrackStore ? "tw-top-0.5 tw-right-2" : "tw-top-1 tw-right-3"}`}>
             {#if $audioTrackStore}
                 <audio autoplay muted={false} bind:this={audioElement} />
                 <SoundMeterWidgetWrapper
                     classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
                     barColor={$videoTrackStore ? "blue" : "black"}
-                    volume={peer.volumeStore}
+                    volume={peer.jitsiTrackWrapper.volumeStore}
                 />
             {:else}
                 <img
@@ -117,15 +104,13 @@
             {/if}
         </div>
     {/if}
-    {#if peer.spaceUser}
-        {#await peer.spaceUser?.getWokaBase64()}
+    {#if peer.jitsiTrackWrapper.spaceUser}
+        {#await peer.jitsiTrackWrapper.spaceUser?.getWokaBase64()}
             <div />
         {:then wokaBase64}
             <UserTag
-                isMe={$audioTrackStore?.isLocal() ||
-                    $cameraTrackStore?.isLocal() ||
-                    $screenSharingTrackStore?.isLocal()}
-                name={peer.spaceUser?.name ?? ""}
+                isMe={$audioTrackStore?.isLocal() || $videoTrackStore?.isLocal()}
+                name={peer.jitsiTrackWrapper.spaceUser?.name ?? ""}
                 wokaSrc={wokaBase64}
                 minimal={!!$videoTrackStore}
             />

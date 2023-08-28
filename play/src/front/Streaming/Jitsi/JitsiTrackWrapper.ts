@@ -129,6 +129,8 @@ export class JitsiTrackWrapper {
         }
     }
 
+    // FIXME: Instead of exposing videoTrack, audioTrack and screenSharingTrack, we should expose 2 JitsiTrackStreamWrapper!!!!
+
     get videoTrack(): Readable<JitsiTrack | undefined> {
         return this._videoTrack;
     }

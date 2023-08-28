@@ -32,7 +32,6 @@
                 mozaicSolo={$streamableCollectionStore.size === 1}
                 mozaicDuo={$streamableCollectionStore.size === 2}
                 mozaicQuarter={$streamableCollectionStore.size === 3 || $streamableCollectionStore.size >= 4}
-                {uniqueId}
             />
         {/each}
         {#if $myCameraStore && displayFullMedias}

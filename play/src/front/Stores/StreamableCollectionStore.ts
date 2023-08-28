@@ -4,13 +4,14 @@ import { createNestedStore } from "@workadventure/store-utils";
 import type { RemotePeer } from "../WebRtc/SimplePeer";
 import { GameScene } from "../Phaser/Game/GameScene";
 import { JitsiTrackWrapper } from "../Streaming/Jitsi/JitsiTrackWrapper";
+import { JitsiTrackStreamWrapper } from "../Streaming/Jitsi/JitsiTrackStreamWrapper";
 import type { ScreenSharingLocalMedia } from "./ScreenSharingStore";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 import { peerStore, screenSharingStreamStore } from "./PeerStore";
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
 import { gameSceneStore } from "./GameSceneStore";
 
-export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackWrapper;
+export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
 
 const jitsiTracksStore = createNestedStore<GameScene | undefined, Map<string, JitsiTrackWrapper>>(
     gameSceneStore,
@@ -35,10 +36,10 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
             $peerStore.forEach(addPeer);
             $jitsiTracksStore.forEach((jitsiTrackWrapper) => {
                 if (get(jitsiTrackWrapper.videoTrack) || get(jitsiTrackWrapper.audioTrack)) {
-                    peers.set(`other-${jitsiTrackWrapper.uniqueId}`, jitsiTrackWrapper);
+                    addPeer(new JitsiTrackStreamWrapper(jitsiTrackWrapper, "video/audio"));
                 }
                 if (get(jitsiTrackWrapper.screenSharingTrack)) {
-                    peers.set(`screenSharing-${jitsiTrackWrapper.uniqueId}`, jitsiTrackWrapper);
+                    addPeer(new JitsiTrackStreamWrapper(jitsiTrackWrapper, "desktop"));
                 }
             });
 

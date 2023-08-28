@@ -30,6 +30,6 @@
 
 <div class="chat-mode {cssClass}">
     {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
-        <MediaBox streamable={peer} {uniqueId} />
+        <MediaBox streamable={peer} />
     {/each}
 </div>
