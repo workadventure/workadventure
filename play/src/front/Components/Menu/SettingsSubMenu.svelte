@@ -14,6 +14,8 @@
         PEER_VIDEO_LOW_BANDWIDTH,
         PEER_VIDEO_RECOMMENDED_BANDWIDTH,
     } from "../../Enum/EnvironmentVariable";
+    import { videoBandwidthStore } from "../../Stores/MediaStore";
+    import { screenShareBandwidthStore } from "../../Stores/ScreenSharingStore";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();
@@ -25,7 +27,7 @@
     let valueCameraPrivacySettings = localUserStore.getCameraPrivacySettings();
     let valueMicrophonePrivacySettings = localUserStore.getMicrophonePrivacySettings();
     const initialVideoBandwidth = localUserStore.getVideoBandwidth();
-    console.log("initialVideoBandwidth", initialVideoBandwidth);
+
     let valueVideoBandwidth =
         initialVideoBandwidth === "unlimited" ? 3 : initialVideoBandwidth === PEER_VIDEO_LOW_BANDWIDTH ? 1 : 2;
     const initialScreenShareBandwidth = localUserStore.getScreenShareBandwidth();
@@ -58,9 +60,7 @@
                 break;
         }
 
-        console.log("value setted", value);
-
-        localUserStore.setVideoBandwidth(value);
+        videoBandwidthStore.setBandwidth(value);
     }
 
     function updateScreenShareBandwidth() {
@@ -78,7 +78,7 @@
                 break;
         }
 
-        localUserStore.setScreenShareBandwidth(value);
+        screenShareBandwidthStore.setBandwidth(value);
     }
 
     function changeFullscreen() {
