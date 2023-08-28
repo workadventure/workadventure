@@ -1,10 +1,8 @@
 <script lang="ts">
-    import { onMount } from "svelte";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import type { Locales } from "../../../i18n/i18n-types";
     import { displayableLocales, setCurrentLocale } from "../../../i18n/locales";
-    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 
     import infoImg from "../images/info.svg";
     import { iframeListener } from "../../Api/IframeListener";
@@ -40,8 +38,6 @@
 
     let previewCameraPrivacySettings = valueCameraPrivacySettings;
     let previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
-
-    let divContainer: HTMLDivElement;
 
     async function updateLocale() {
         await setCurrentLocale(valueLocale as Locales);
@@ -167,18 +163,9 @@
             localUserStore.setMicrophonePrivacySettings(valueMicrophonePrivacySettings);
         }
     }
-
-    let isMobile = isMediaBreakpointUp("md");
-    const resizeObserver = new ResizeObserver(() => {
-        isMobile = isMediaBreakpointUp("md");
-    });
-
-    onMount(() => {
-        resizeObserver.observe(divContainer);
-    });
 </script>
 
-<div bind:this={divContainer}>
+<div>
     <section class="bottom-separator">
         <h3 class="blue-title">{$LL.menu.settings.videoBandwidth.title()}</h3>
         <div class="tw-flex tw-w-full tw-justify-center">
@@ -196,7 +183,7 @@
                 </ul>
                 <input
                     type="range"
-                    class="tw-w-full"
+                    class="tw-w-full tw-bg-pop-blue"
                     min="1"
                     max="3"
                     step="1"
@@ -298,5 +285,4 @@
 </div>
 
 <style lang="scss">
-    @import "../../style/breakpoints.scss";
 </style>

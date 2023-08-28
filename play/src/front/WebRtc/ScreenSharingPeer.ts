@@ -37,7 +37,7 @@ export class ScreenSharingPeer extends Peer {
             config: {
                 iceServers: getIceServersConfig(user),
             },
-            sdpTransform: getSdpTransform(bandwidth === "no-limit" ? undefined : bandwidth),
+            sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
         });
 
         this.userId = user.userId;

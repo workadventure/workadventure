@@ -732,7 +732,7 @@
                         {/if}
 
                         <button
-                            class:border-top-orange={$megaphoneEnabledStore || $streamingMegaphoneStore}
+                            class:border-top-warning={$megaphoneEnabledStore || $streamingMegaphoneStore}
                             id="megaphone"
                         >
                             <img draggable="false" src={megaphoneImg} style="padding: 2px" alt="Toggle megaphone" />
@@ -740,10 +740,10 @@
                         {#if $megaphoneEnabledStore}
                             <div class="tw-absolute tw-top-[1.05rem] tw-right-1">
                                 <span
-                                    class="tw-w-3 tw-h-3 tw-bg-orange tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping tw-cursor-pointer"
+                                    class="tw-w-3 tw-h-3 tw-bg-warning tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping tw-cursor-pointer"
                                 />
                                 <span
-                                    class="tw-w-2 tw-h-2 tw-bg-orange tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5 tw-cursor-pointer"
+                                    class="tw-w-2 tw-h-2 tw-bg-warning tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5 tw-cursor-pointer"
                                 />
                             </div>
                         {/if}
