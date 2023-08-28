@@ -79,6 +79,9 @@ export class JitsiTrackWrapper {
 
             this._audioStreamStore.set(jitsiTrack.getOriginalStream());
         } else if (jitsiTrack.isVideoTrack()) {
+            // The jitsiTrack.getVideoType() return is a lie.
+            // Because it comes from Jitsi signaling, it is first evaluated to "video" and can AFTER be changed to "desktop"
+
             if (jitsiTrack.getVideoType() === "desktop") {
                 if (get(this._screenSharingTrack) !== undefined) {
                     if (!allowOverride) {
@@ -91,12 +94,35 @@ export class JitsiTrackWrapper {
             } else {
                 if (get(this._videoTrack) !== undefined) {
                     if (!allowOverride) {
-                        throw new Error("A video track is already defined");
+                        // The jitsiTrack.getVideoType() return is a lie.
+                        // Because it comes from Jitsi signaling, it is first evaluated to "video" and can AFTER be changed to "desktop"
+                        // So if we land here, is is possible that the video type is "desktop" and not "video"!!!!!
+                        if (get(this._screenSharingTrack) !== undefined) {
+                            throw new Error("A video track is already defined");
+                        }
+                        this._screenSharingTrack.set(jitsiTrack);
                     } else {
                         get(this._videoTrack)?.dispose();
                     }
                 }
-                this._videoTrack.set(jitsiTrack);
+                if (get(this._screenSharingTrack) !== jitsiTrack) {
+                    this._videoTrack.set(jitsiTrack);
+                }
+                // The video track might be a lie! It is maybe a screen sharing track
+                // We need to check the video type after a few seconds and switch the track to "screen sharing" if needed
+                setTimeout(() => {
+                    if (get(this._videoTrack) === jitsiTrack && jitsiTrack.getVideoType() === "desktop") {
+                        if (get(this._screenSharingTrack) !== undefined) {
+                            if (!allowOverride) {
+                                throw new Error("A screenSharing track is already defined");
+                            } else {
+                                get(this._screenSharingTrack)?.dispose();
+                            }
+                        }
+                        this._screenSharingTrack.set(jitsiTrack);
+                        this._videoTrack.set(undefined);
+                    }
+                }, 5000);
             }
         } else {
             throw new Error("Jitsi Track is neither audio nor video");
