@@ -51,24 +51,17 @@ class BroadcastSpace extends Space {
                             });
                     }
                 } else {
-                    if (this.jitsiConference === undefined) {
-                        limit(async () => {
-                            if (this.jitsiConference === undefined) {
-                                jitsiLoadingStore.set(true);
-                                return await broadcastService.joinJitsiConference(spaceName, this);
-                            }
-                            throw new Error("Jitsi conference already exists");
-                        })
-                            .then((jitsiConference) => {
-                                this.jitsiConference = jitsiConference;
-                                broadcastService.emitJitsiParticipantIdSpace(spaceName, jitsiConference.participantId);
-                                jitsiLoadingStore.set(false);
-                            })
-                            .catch((e) => {
-                                // TODO : Handle the error and retry to join the conference
-                                console.error("Error while joining the conference", e);
-                            });
-                    }
+                    limit(async () => {
+                        if (this.jitsiConference === undefined) {
+                            jitsiLoadingStore.set(true);
+                            this.jitsiConference = await broadcastService.joinJitsiConference(spaceName, this);
+                            broadcastService.emitJitsiParticipantIdSpace(spaceName, this.jitsiConference.participantId);
+                            jitsiLoadingStore.set(false);
+                        }
+                    }).catch((e) => {
+                        // TODO : Handle the error and retry to join the conference
+                        console.error("Error while joining the conference", e);
+                    });
                 }
             })
         );
