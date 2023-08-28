@@ -121,6 +121,10 @@ services:
             JITSI_MUC_DOMAIN: "$JITSI_MUC_DOMAIN"
             JITSI_XMPP_DOMAIN: "$JITSI_XMPP_DOMAIN"
             FEATURE_FLAG_BROADCAST_AREAS: "true"
+            PEER_VIDEO_LOW_BANDWIDTH: "$PEER_VIDEO_LOW_BANDWIDTH"
+            PEER_VIDEO_RECOMMENDED_BANDWIDTH: "$PEER_VIDEO_RECOMMENDED_BANDWIDTH"
+            PEER_SCREEN_SHARE_LOW_BANDWIDTH: "$PEER_SCREEN_SHARE_LOW_BANDWIDTH"
+            PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: "$PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH"
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"

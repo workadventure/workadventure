@@ -1,6 +1,7 @@
 import type { Readable } from "svelte/store";
 import { derived, readable, writable } from "svelte/store";
 import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
+import { localUserStore } from "../Connection/LocalUserStore";
 import { peerStore } from "./PeerStore";
 import type { LocalStreamStoreValue } from "./MediaStore";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
@@ -39,6 +40,20 @@ function stopScreenSharing(): void {
 
 let previousComputedVideoConstraint: boolean | MediaTrackConstraints = false;
 let previousComputedAudioConstraint: boolean | MediaTrackConstraints = false;
+
+function createScreenShareBandwidthStore() {
+    const { subscribe, set } = writable<number | "unlimited">(localUserStore.getScreenShareBandwidth());
+
+    return {
+        subscribe,
+        setBandwidth: (bandwidth: number | "unlimited") => {
+            set(bandwidth);
+            localUserStore.setScreenShareBandwidth(bandwidth);
+        },
+    };
+}
+
+export const screenShareBandwidthStore = createScreenShareBandwidthStore();
 
 /**
  * A store containing the media constraints we want to apply.

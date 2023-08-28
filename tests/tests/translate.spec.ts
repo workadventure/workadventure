@@ -14,7 +14,6 @@ test.describe('Translation', () => {
     await page.click('#menuIcon img:first-child');
     await page.click('button:has-text("Settings")');
     await page.selectOption('.languages-switcher', 'fr-FR');
-    await page.click('button:has-text("Save")');
 
     await page.reload();
     await page.click('#menuIcon img:first-child');

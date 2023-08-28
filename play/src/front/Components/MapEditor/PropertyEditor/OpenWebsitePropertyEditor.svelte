@@ -138,7 +138,7 @@
                 <span class="err tw-text-pop-red tw-text-xs tw-italic tw-mt-1">{error}</span>
             {/if}
             {#if !embeddable && !error}
-                <span class="err tw-text-orange tw-text-xs tw-italic tw-mt-1"
+                <span class="err tw-text-warning tw-text-xs tw-italic tw-mt-1"
                     ><AlertTriangleIcon size="12" />
                     {$LL.mapEditor.properties.linkProperties.warningEmbeddableLink()}.
                     <a

@@ -28,20 +28,17 @@ const menu: DeepPartial<Translation["menu"]> = {
         logout: "Déconnexion",
     },
     settings: {
-        videoQuality: {
-            title: "Qualité de la vidéo",
-            short: {
-                high: "Haute (30 fps)",
-                medium: "Moyenne (20 fps)",
-                small: "Reduite (10 fps)",
-                minimum: "Minimale (5 fps)",
-            },
-            long: {
-                high: "Haute (30 fps)",
-                medium: "Moyenne (20 fps, recommandée)",
-                small: "Reduite (10 fps)",
-                minimum: "Minimale (5 fps)",
-            },
+        videoBandwidth: {
+            title: "Qualité vidéo",
+            low: "Basse",
+            recommended: "Recommandée",
+            unlimited: "Illimitée",
+        },
+        shareScreenBandwidth: {
+            title: "Qualité du partage d'écran",
+            low: "Basse",
+            recommended: "Recommandée",
+            unlimited: "Illimitée",
         },
         language: {
             title: "Langage",
@@ -53,10 +50,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             cameraToggle: 'Garder la caméra activée en "mode absent"',
             microphoneToggle: 'Garder le microphone activé en "mode absent"',
         },
-        save: {
-            warning: "(La sauvegarde de ces paramètres redémarre le jeu)",
-            button: "Sauvegarder",
-        },
+        save: "Sauvegarder",
         fullscreen: "Plein écran",
         notifications: "Notifications",
         chatSounds: "Sons du chat",
