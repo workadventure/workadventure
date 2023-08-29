@@ -24,17 +24,16 @@
 </script>
 
 <video
-        bind:this={videoElement}
-        class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
-        class="tw-h-full tw-max-w-full tw-rounded-sm"
-        class:tw-scale-x-[-1]={isLocal}
-        autoplay
-        playsinline
+    bind:this={videoElement}
+    class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
+    class="tw-h-full tw-max-w-full tw-rounded-sm"
+    class:tw-scale-x-[-1]={isLocal}
+    autoplay
+    playsinline
 />
 
-
 <style lang="scss">
-  /*    video.no-video {
+    /*    video.no-video {
       visibility: collapse;
   }*/
 </style>

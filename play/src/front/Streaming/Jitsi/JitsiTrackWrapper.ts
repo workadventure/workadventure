@@ -104,6 +104,12 @@ export class JitsiTrackWrapper {
                     }
                 }
                 this.screenSharingTrackWrapper.setVideoTrack(jitsiTrack);
+
+                // Let's notify the embedded store that a new screen-sharing has started
+                highlightedEmbedScreen.highlight({
+                    type: "streamable",
+                    embed: this.screenSharingTrackWrapper,
+                });
             } else {
                 const oldVideoTrack = this.cameraTrackWrapper.getVideoTrack();
                 if (oldVideoTrack !== undefined) {
@@ -117,7 +123,7 @@ export class JitsiTrackWrapper {
                         }
                         this.screenSharingTrackWrapper.setVideoTrack(jitsiTrack);
 
-                        // Let's notify the embedded store that a new screensharing has started
+                        // Let's notify the embedded store that a new screen-sharing has started
                         highlightedEmbedScreen.highlight({
                             type: "streamable",
                             embed: this.screenSharingTrackWrapper,
@@ -150,7 +156,7 @@ export class JitsiTrackWrapper {
                         this.screenSharingTrackWrapper.setVideoTrack(jitsiTrack);
                         this.cameraTrackWrapper.setVideoTrack(undefined);
 
-                        // Let's notify the embedded store that a new screensharing has started
+                        // Let's notify the embedded store that a new screen-sharing has started
                         highlightedEmbedScreen.highlight({
                             type: "streamable",
                             embed: this.screenSharingTrackWrapper,
@@ -182,6 +188,20 @@ export class JitsiTrackWrapper {
 
     set spaceUser(value: SpaceUserExtended | undefined) {
         this._spaceUser = value;
+        this._spaceUser?.updateSubject.subscribe((event) => {
+            if (event.changes.screenSharingState) {
+                // This is the only reliable way to know if the screen sharing is active or not
+                // Indeed, if the user stops the screen sharing using the "Stop sharing" button in the OS, the screen sharing track is not removed
+                // When the user starts the screen sharing again, the track is not replaced and therefore, we cannot put the screen sharing track in full screen again.
+                // With this trick, we can force the screen sharing to go full screen again.
+
+                // Let's notify the embedded store that a new screen-sharing has started
+                highlightedEmbedScreen.highlight({
+                    type: "streamable",
+                    embed: this.screenSharingTrackWrapper,
+                });
+            }
+        });
     }
 
     get volumeStore(): Readable<number[] | undefined> | undefined {

@@ -41,7 +41,10 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
                     addPeer(cameraTrackWrapper);
                 }
                 const screenSharingTrackWrapper = jitsiTrackWrapper.screenSharingTrackWrapper;
-                if (!screenSharingTrackWrapper.isEmpty()) {
+                if (
+                    !screenSharingTrackWrapper.isEmpty() &&
+                    screenSharingTrackWrapper.jitsiTrackWrapper.spaceUser?.screenSharingState !== false
+                ) {
                     addPeer(screenSharingTrackWrapper);
                 }
             });

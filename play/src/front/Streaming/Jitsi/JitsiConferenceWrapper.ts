@@ -214,9 +214,13 @@ export class JitsiConferenceWrapper {
                 track.addEventListener(JitsiMeetJS.events.track.TRACK_VIDEOTYPE_CHANGED, (event) => {
                     debug("track video type changed");
                 });
-                track.addEventListener(JitsiMeetJS.events.track.LOCAL_TRACK_STOPPED, () => {
+                track.addEventListener(JitsiMeetJS.events.track.LOCAL_TRACK_STOPPED, (track: JitsiTrack) => {
                     // TODO : Remove track that is stopped and update all other users
-                    debug("local track stopped");
+                    debug("local track stopped", track);
+
+                    if (track.isVideoTrack() && track.getVideoType() === "desktop") {
+                        requestedScreenSharingState.disableScreenSharing();
+                    }
                 });
                 track.addEventListener(JitsiMeetJS.events.track.TRACK_AUDIO_OUTPUT_CHANGED, (deviceId) =>
                     debug(`track audio output device was changed to ${deviceId}`)

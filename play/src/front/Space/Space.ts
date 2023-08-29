@@ -1,7 +1,7 @@
-import { SpaceFilterMessage, SpaceUser } from "@workadventure/messages";
+import { PartialSpaceUser, SpaceFilterMessage, SpaceUser } from "@workadventure/messages";
 import { MapStore } from "@workadventure/store-utils";
 import debug from "debug";
-import { Subscription } from "rxjs";
+import { Subject, Subscription } from "rxjs";
 import { Readable } from "svelte/store";
 import { RoomConnection } from "../Connection/RoomConnection";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
@@ -9,6 +9,10 @@ import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
 export interface SpaceUserExtended extends SpaceUser {
     wokaPromise: Promise<string> | undefined;
     getWokaBase64(): Promise<string>;
+    updateSubject: Subject<{
+        newUser: SpaceUserExtended;
+        changes: PartialSpaceUser;
+    }>;
 }
 
 const spaceLogger = debug("space");
@@ -84,6 +88,10 @@ export class Space {
                         if (partialUser.uuid !== undefined) {
                             user.uuid = partialUser.uuid;
                         }
+                        user.updateSubject.next({
+                            newUser: user,
+                            changes: partialUser,
+                        });
                         this._users.set(partialUser.id, user);
                     }
                 }
@@ -93,7 +101,11 @@ export class Space {
             this.connection.removeSpaceUserMessageStream.subscribe((message) => {
                 spaceLogger(`Space => ${this.name} => removeSpaceUserMessageStream`, message);
                 if (message.spaceName === name && message.filterName === spaceFilter.filterName) {
-                    this._users.delete(message.userId);
+                    const user = this._users.get(message.userId);
+                    if (user !== undefined) {
+                        user.updateSubject.complete();
+                        this._users.delete(message.userId);
+                    }
                 }
             })
         );
@@ -122,6 +134,10 @@ export class Space {
                 }
                 return this.wokaPromise;
             },
+            updateSubject: new Subject<{
+                newUser: SpaceUserExtended;
+                changes: PartialSpaceUser;
+            }>(),
         };
     }
 }
