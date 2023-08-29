@@ -243,7 +243,9 @@ export class JitsiConferenceWrapper {
                 debug(`remote ${track.type} track removed`);
                 jitsiConferenceWrapper.removeRemoteTrack(track);
             });
-
+            room.on(JitsiMeetJS.events.conference.USER_LEFT, (id) => {
+                jitsiConferenceWrapper.removeUser(id);
+            });
             /*room.on(JitsiMeetJS.events.conference.USER_JOINED, id => {
                 debug('user join');
                 remoteTracks[id] = [];
@@ -270,7 +272,7 @@ export class JitsiConferenceWrapper {
         this._broadcastDevicesStore.set(devices);
     }
 
-    public leave(reason?: string): Promise<unknown> {
+    public async leave(reason?: string): Promise<void> {
         debug("JitsiConferenceWrapper => leaving ...");
         if (this.requestedMicrophoneStateUnsubscriber) {
             this.requestedMicrophoneStateUnsubscriber();
@@ -284,22 +286,26 @@ export class JitsiConferenceWrapper {
         if (this.cameraDeviceIdStoreUnsubscriber) {
             this.cameraDeviceIdStoreUnsubscriber();
         }
+
+        await this.jitsiConference.leave(reason).then(async () => {
+            if (this.tracks.audio) {
+                await this.handleTrack(this.tracks.audio, undefined);
+            }
+            if (this.tracks.video) {
+                await this.handleTrack(this.tracks.video, undefined);
+            }
+            if (this.tracks.screenSharing) {
+                await this.handleTrack(this.tracks.screenSharing, undefined);
+            }
+        });
+
+        // jitsiConference.leave should trigger a "user" left event for every user.
+        // still, the event is not triggered for the local user.
         this._streamStore.update((tracks) => {
             tracks.forEach((track) => {
                 track.unsubscribe();
             });
             return new Map<string, JitsiTrackWrapper>();
-        });
-        return this.jitsiConference.leave(reason).then(() => {
-            if (this.tracks.audio) {
-                void this.handleTrack(this.tracks.audio, undefined);
-            }
-            if (this.tracks.video) {
-                void this.handleTrack(this.tracks.video, undefined);
-            }
-            if (this.tracks.screenSharing) {
-                void this.handleTrack(this.tracks.screenSharing, undefined);
-            }
         });
     }
 
@@ -512,14 +518,15 @@ export class JitsiConferenceWrapper {
                         jitsiTrackWrapper.muteVideo();
                     }
                 }
-                if (
-                    jitsiTrackWrapper.videoTrack === undefined &&
-                    jitsiTrackWrapper.audioTrack === undefined &&
-                    jitsiTrackWrapper.screenSharingTrack === undefined
+                // Do not remove the jitsiTrackWrapper if it is empty.
+                // Indeed, when Jitsi switches from JVB to P2P mode, it destroys the JVB track first, then creates a new P2P track.
+                // During a few milliseconds, the jitsiTrackWrapper is empty.
+                /*if (
+                    jitsiTrackWrapper.isEmpty()
                 ) {
                     jitsiTrackWrapper.unsubscribe();
                     tracks.delete(participantId);
-                }
+                }*/
             }
 
             return tracks;
@@ -536,5 +543,19 @@ export class JitsiConferenceWrapper {
 
     get participantId(): string {
         return this.jitsiConference.myUserId();
+    }
+
+    private removeUser(participantId: string) {
+        this._streamStore.update((tracks) => {
+            const jitsiTrackWrapper = tracks.get(participantId);
+            if (!jitsiTrackWrapper) {
+                console.error("Could not find jitsiTrackWrapper for participantId", participantId);
+                return tracks;
+            }
+            jitsiTrackWrapper.unsubscribe();
+            tracks.delete(participantId);
+
+            return tracks;
+        });
     }
 }

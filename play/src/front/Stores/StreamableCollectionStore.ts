@@ -34,12 +34,15 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
             $screenSharingStreamStore.forEach(addPeer);
             $peerStore.forEach(addPeer);
+            console.warn("streamableCollectionStore triggerred");
             $jitsiTracksStore.forEach((jitsiTrackWrapper) => {
-                if (get(jitsiTrackWrapper.videoTrack) || get(jitsiTrackWrapper.audioTrack)) {
-                    addPeer(new JitsiTrackStreamWrapper(jitsiTrackWrapper, "video/audio"));
+                const cameraTrackWrapper = jitsiTrackWrapper.cameraTrackWrapper;
+                if (!cameraTrackWrapper.isEmpty()) {
+                    addPeer(cameraTrackWrapper);
                 }
-                if (get(jitsiTrackWrapper.screenSharingTrack)) {
-                    addPeer(new JitsiTrackStreamWrapper(jitsiTrackWrapper, "desktop"));
+                const screenSharingTrackWrapper = jitsiTrackWrapper.screenSharingTrackWrapper;
+                if (!screenSharingTrackWrapper.isEmpty()) {
+                    addPeer(screenSharingTrackWrapper);
                 }
             });
 
@@ -53,7 +56,6 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
                 highlightedEmbedScreen.removeHighlight();
             }
 
-            //set(peers);
             return peers;
         }
     );

@@ -1,16 +1,16 @@
 // eslint-disable-next-line import/no-unresolved
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-import { Readable, Unsubscriber, writable, Writable, readable, get } from "svelte/store";
+import { Readable, Unsubscriber, writable, Writable, readable } from "svelte/store";
 import { SoundMeter } from "../../Phaser/Components/SoundMeter";
 import { SpaceUserExtended } from "../../Space/Space";
+import { JitsiTrackStreamWrapper } from "./JitsiTrackStreamWrapper";
 
 export class JitsiTrackWrapper {
     private _spaceUser: SpaceUserExtended | undefined;
-    private _audioTrack: Writable<JitsiTrack | undefined> = writable<JitsiTrack | undefined>(undefined);
-    private _videoTrack: Writable<JitsiTrack | undefined> = writable<JitsiTrack | undefined>(undefined);
-    private _screenSharingTrack: Writable<JitsiTrack | undefined> = writable<JitsiTrack | undefined>(undefined);
+    public readonly cameraTrackWrapper: JitsiTrackStreamWrapper = new JitsiTrackStreamWrapper(this, "video/audio");
+    public readonly screenSharingTrackWrapper: JitsiTrackStreamWrapper = new JitsiTrackStreamWrapper(this, "desktop");
     private _audioStreamStore: Writable<MediaStream | null> = writable<MediaStream | null>(null);
-    private _volumeStore: Readable<number[] | undefined> | undefined;
+    private readonly _volumeStore: Readable<number[] | undefined> | undefined;
     private volumeStoreSubscribe: Unsubscriber | undefined;
 
     constructor(readonly participantId: string, jitsiTrack: JitsiTrack) {
@@ -66,16 +66,27 @@ export class JitsiTrackWrapper {
     }
 
     setJitsiTrack(jitsiTrack: JitsiTrack, allowOverride = false) {
+        // Let's start by suppressing any "echo". setJitsiTrack can be called multiple times for the same track
+        // For some reason, Jitsi can trigger the remoteTrack event several times.
+        if (
+            this.cameraTrackWrapper.getAudioTrack() === jitsiTrack ||
+            this.cameraTrackWrapper.getVideoTrack() === jitsiTrack ||
+            this.screenSharingTrackWrapper.getVideoTrack() === jitsiTrack ||
+            this.screenSharingTrackWrapper.getAudioTrack() === jitsiTrack
+        ) {
+            return;
+        }
+
         if (jitsiTrack.isAudioTrack()) {
-            if (get(this._audioTrack) !== undefined) {
+            const oldAudioTrack = this.cameraTrackWrapper.getAudioTrack();
+            if (oldAudioTrack !== undefined) {
                 if (!allowOverride) {
                     throw new Error("An audio track is already defined");
                 } else {
-                    get(this._audioTrack)?.dispose();
+                    oldAudioTrack.dispose();
                 }
             }
-            this._audioTrack.set(jitsiTrack);
-            //this.soundMeter = new SoundMeter(jitsiTrack.getOriginalStream());
+            this.cameraTrackWrapper.setAudioTrack(jitsiTrack);
 
             this._audioStreamStore.set(jitsiTrack.getOriginalStream());
         } else if (jitsiTrack.isVideoTrack()) {
@@ -83,44 +94,56 @@ export class JitsiTrackWrapper {
             // Because it comes from Jitsi signaling, it is first evaluated to "video" and can AFTER be changed to "desktop"
 
             if (jitsiTrack.getVideoType() === "desktop") {
-                if (get(this._screenSharingTrack) !== undefined) {
+                const oldScreenSharingTrack = this.screenSharingTrackWrapper.getVideoTrack();
+                if (oldScreenSharingTrack !== undefined) {
                     if (!allowOverride) {
                         throw new Error("A screenSharing track is already defined");
                     } else {
-                        get(this._screenSharingTrack)?.dispose();
+                        oldScreenSharingTrack?.dispose();
                     }
                 }
-                this._screenSharingTrack.set(jitsiTrack);
+                this.screenSharingTrackWrapper.setVideoTrack(jitsiTrack);
             } else {
-                if (get(this._videoTrack) !== undefined) {
+                const oldVideoTrack = this.cameraTrackWrapper.getVideoTrack();
+                if (oldVideoTrack !== undefined) {
                     if (!allowOverride) {
                         // The jitsiTrack.getVideoType() return is a lie.
                         // Because it comes from Jitsi signaling, it is first evaluated to "video" and can AFTER be changed to "desktop"
-                        // So if we land here, is is possible that the video type is "desktop" and not "video"!!!!!
-                        if (get(this._screenSharingTrack) !== undefined) {
+                        // So if we land here, it is possible that the video type is "desktop" and not "video"!!!!!
+                        const oldScreenSharingVideoTrack = this.screenSharingTrackWrapper.getVideoTrack();
+                        if (oldScreenSharingVideoTrack !== undefined) {
                             throw new Error("A video track is already defined");
                         }
-                        this._screenSharingTrack.set(jitsiTrack);
+                        this.screenSharingTrackWrapper.setVideoTrack(jitsiTrack);
                     } else {
-                        get(this._videoTrack)?.dispose();
+                        oldVideoTrack?.dispose();
                     }
                 }
-                if (get(this._screenSharingTrack) !== jitsiTrack) {
-                    this._videoTrack.set(jitsiTrack);
+                if (this.screenSharingTrackWrapper.getVideoTrack() !== jitsiTrack) {
+                    this.cameraTrackWrapper.setVideoTrack(jitsiTrack);
                 }
                 // The video track might be a lie! It is maybe a screen sharing track
                 // We need to check the video type after a few seconds and switch the track to "screen sharing" if needed
                 setTimeout(() => {
-                    if (get(this._videoTrack) === jitsiTrack && jitsiTrack.getVideoType() === "desktop") {
-                        if (get(this._screenSharingTrack) !== undefined) {
+                    // TODO: IF A SWITCH IS MADE HERE, THE StreamableCollectionStore will probably not be notified!
+
+                    if (
+                        this.cameraTrackWrapper.getVideoTrack() === jitsiTrack &&
+                        jitsiTrack.getVideoType() === "desktop"
+                    ) {
+                        const oldScreenSharingTrack = this.screenSharingTrackWrapper.getVideoTrack();
+                        if (oldScreenSharingTrack !== undefined) {
                             if (!allowOverride) {
                                 throw new Error("A screenSharing track is already defined");
                             } else {
-                                get(this._screenSharingTrack)?.dispose();
+                                oldScreenSharingTrack?.dispose();
                             }
                         }
-                        this._screenSharingTrack.set(jitsiTrack);
-                        this._videoTrack.set(undefined);
+                        console.log("Switching camera track to screen sharing track");
+                        this.screenSharingTrackWrapper.setVideoTrack(jitsiTrack);
+                        this.cameraTrackWrapper.setVideoTrack(undefined);
+
+                        // Let's notify the embedded store that a new screensharing has started
                     }
                 }, 5000);
             }
@@ -129,31 +152,17 @@ export class JitsiTrackWrapper {
         }
     }
 
-    // FIXME: Instead of exposing videoTrack, audioTrack and screenSharingTrack, we should expose 2 JitsiTrackStreamWrapper!!!!
-
-    get videoTrack(): Readable<JitsiTrack | undefined> {
-        return this._videoTrack;
-    }
-
-    get audioTrack(): Readable<JitsiTrack | undefined> {
-        return this._audioTrack;
-    }
-
-    get screenSharingTrack(): Readable<JitsiTrack | undefined> {
-        return this._screenSharingTrack;
-    }
-
     muteAudio() {
-        this._audioTrack.set(undefined);
+        this.cameraTrackWrapper.setAudioTrack(undefined);
         this._audioStreamStore.set(null);
     }
 
     muteVideo() {
-        this._videoTrack.set(undefined);
+        this.cameraTrackWrapper.setVideoTrack(undefined);
     }
 
     muteScreenSharing() {
-        this._screenSharingTrack.set(undefined);
+        this.screenSharingTrackWrapper.setVideoTrack(undefined);
     }
 
     get spaceUser(): SpaceUserExtended | undefined {
@@ -169,10 +178,15 @@ export class JitsiTrackWrapper {
     }
 
     unsubscribe() {
-        this._audioTrack.set(undefined);
-        this._videoTrack.set(undefined);
-        this._screenSharingTrack.set(undefined);
+        this.cameraTrackWrapper.setVideoTrack(undefined);
+        this.cameraTrackWrapper.setAudioTrack(undefined);
+        this.screenSharingTrackWrapper.setVideoTrack(undefined);
+        this.screenSharingTrackWrapper.setAudioTrack(undefined);
         this._audioStreamStore.set(null);
         this._spaceUser = undefined;
+    }
+
+    public isEmpty(): boolean {
+        return this.cameraTrackWrapper.isEmpty() && this.screenSharingTrackWrapper.isEmpty();
     }
 }

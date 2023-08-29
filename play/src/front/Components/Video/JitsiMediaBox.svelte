@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { afterUpdate, onMount } from "svelte";
+    import { onMount } from "svelte";
     import { Color } from "@workadventure/shared-utils";
     import { Readable } from "svelte/store";
     import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
@@ -14,22 +14,17 @@
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
     import UserTag from "./UserTag.svelte";
+    import JitsiVideoElement from "./JitsiVideoElement.svelte";
+    import JitsiAudioElement from "./JitsiAudioElement.svelte";
 
     export let clickable = true;
     export let peer: JitsiTrackStreamWrapper;
 
-    let videoTrackStore: Readable<JitsiTrack | undefined>;
-    if (peer.target === "desktop") {
-        videoTrackStore = peer.jitsiTrackWrapper.screenSharingTrack;
-    } else {
-        videoTrackStore = peer.jitsiTrackWrapper.videoTrack;
-    }
-    const audioTrackStore: Readable<JitsiTrack | undefined> = peer.jitsiTrackWrapper.audioTrack;
+    const videoTrackStore: Readable<JitsiTrack | undefined> = peer.videoTrackStore;
+    const audioTrackStore: Readable<JitsiTrack | undefined> = peer.audioTrackStore;
 
     let embedScreen: EmbedScreen;
     let videoContainer: HTMLDivElement;
-    let videoElement: HTMLVideoElement;
-    let audioElement: HTMLAudioElement;
     //let minimized: boolean;
     let isMobile: boolean;
 
@@ -50,19 +45,7 @@
 
     onMount(() => {
         resizeObserver.observe(videoContainer);
-        attachTrack();
     });
-
-    afterUpdate(() => {
-        attachTrack();
-    });
-
-    function attachTrack() {
-        if ($audioTrackStore && !$audioTrackStore?.isLocal()) {
-            $audioTrackStore?.attach(audioElement);
-        }
-        $videoTrackStore?.attach(videoElement);
-    }
 </script>
 
 <div
@@ -73,20 +56,17 @@
 >
     {#if $videoTrackStore}
         <div class="tw-rounded-sm tw-overflow-hidden tw-flex tw-w-full tw-flex-col tw-h-full">
-            <video
-                bind:this={videoElement}
-                class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
-                class="tw-h-full tw-max-w-full tw-rounded-sm"
-                class:tw-scale-x-[-1]={$videoTrackStore?.isLocal()}
-                autoplay
-                playsinline
+            <JitsiVideoElement
+                jitsiTrack={$videoTrackStore}
+                isMobile={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
+                isLocal={$videoTrackStore?.isLocal()}
             />
         </div>
     {/if}
     {#if peer.target === "video/audio"}
         <div class={`tw-absolute ${$videoTrackStore ? "tw-top-0.5 tw-right-2" : "tw-top-1 tw-right-3"}`}>
             {#if $audioTrackStore}
-                <audio autoplay muted={false} bind:this={audioElement} />
+                <JitsiAudioElement jitsiTrack={$audioTrackStore} />
                 <SoundMeterWidgetWrapper
                     classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
                     barColor={$videoTrackStore ? "blue" : "black"}
