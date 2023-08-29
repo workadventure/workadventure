@@ -3,6 +3,7 @@ import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack
 import { Readable, Unsubscriber, writable, Writable, readable } from "svelte/store";
 import { SoundMeter } from "../../Phaser/Components/SoundMeter";
 import { SpaceUserExtended } from "../../Space/Space";
+import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import { JitsiTrackStreamWrapper } from "./JitsiTrackStreamWrapper";
 
 export class JitsiTrackWrapper {
@@ -115,6 +116,12 @@ export class JitsiTrackWrapper {
                             throw new Error("A video track is already defined");
                         }
                         this.screenSharingTrackWrapper.setVideoTrack(jitsiTrack);
+
+                        // Let's notify the embedded store that a new screensharing has started
+                        highlightedEmbedScreen.highlight({
+                            type: "streamable",
+                            embed: this.screenSharingTrackWrapper,
+                        });
                     } else {
                         oldVideoTrack?.dispose();
                     }
@@ -144,6 +151,10 @@ export class JitsiTrackWrapper {
                         this.cameraTrackWrapper.setVideoTrack(undefined);
 
                         // Let's notify the embedded store that a new screensharing has started
+                        highlightedEmbedScreen.highlight({
+                            type: "streamable",
+                            embed: this.screenSharingTrackWrapper,
+                        });
                     }
                 }, 5000);
             }
