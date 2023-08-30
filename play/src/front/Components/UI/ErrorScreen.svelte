@@ -1,21 +1,35 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { get } from "svelte/store";
-    import { onDestroy } from "svelte";
-    import { errorScreenStore } from "../../Stores/ErrorScreenStore";
+    import { onDestroy, onMount } from "svelte";
+    import { errorImageStore, errorLogoStore, errorScreenStore } from "../../Stores/ErrorScreenStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { connectionManager } from "../../Connection/ConnectionManager";
 
-    import logoImg from "../images/logo-min-white.png";
     import reload from "../images/reload.png";
-    import error from "./images/error.gif";
 
-    let errorScreen = get(errorScreenStore);
-    let logo =
+    let errorScreen = $errorScreenStore;
+    let logoErrorParent: HTMLDivElement;
+    let imageErrorParent: HTMLDivElement;
+
+    let logoErrorSrc =
         errorScreen?.image ??
         gameManager?.currentStartedRoom?.errorSceneLogo ??
         gameManager?.currentStartedRoom?.loginSceneLogo ??
-        logoImg;
+        undefined;
+
+    let logoError: HTMLImageElement = $errorLogoStore;
+
+    if (logoErrorSrc !== undefined) {
+        logoError = document.createElement("img");
+        logoError.src = logoErrorSrc;
+    }
+
+    logoError.style.maxHeight = "25vh";
+    logoError.style.maxWidth = "80%";
+
+    const errorImage = $errorImageStore;
+    errorImage.style.height = "125px";
+    errorImage.style.maxWidth = "100%";
 
     function click() {
         if (errorScreen?.type === "unauthorized") void connectionManager.logout();
@@ -38,6 +52,17 @@
     }
 
     $: detailsStylized = (details ?? "").replace("{time}", `${timeVar / 1000}`);
+
+    onMount(() => {
+        if (logoErrorParent) {
+            logoErrorParent.innerHTML = "";
+            logoErrorParent.appendChild(logoError);
+        }
+        if (imageErrorParent) {
+            imageErrorParent.innerHTML = "";
+            imageErrorParent.appendChild(errorImage);
+        }
+    });
 </script>
 
 {#if $errorScreenStore}
@@ -47,8 +72,8 @@
         transition:fly={{ y: -200, duration: 500 }}
     >
         <div class="tw-flex tw-flex-col tw-items-center" style="width: 90%;">
-            <div class="logo"><img src={logo} alt="WorkAdventure" /></div>
-            <div class="icon"><img src={error} alt="Error logo" /></div>
+            <div class="logo" bind:this={logoErrorParent} />
+            <div class="icon" bind:this={imageErrorParent} />
             {#if $errorScreenStore.type !== "retry"}<h2>{$errorScreenStore.title}</h2>{/if}
             {#if $errorScreenStore.subtitle}<p>{$errorScreenStore.subtitle}</p>{/if}
             {#if $errorScreenStore.type !== "retry"}<p class="code">Code : {$errorScreenStore.code}</p>{/if}
@@ -73,21 +98,10 @@
         min-width: 300px;
         z-index: 700;
         .logo {
-            width: 50%;
-            max-height: 25vh;
-            max-width: 50vw;
             margin: 0 auto 50px auto;
         }
         .icon {
-            height: 125px;
-            max-height: 25vh;
-            max-width: 50vw;
             margin: 0 auto 25px auto;
-        }
-        .logo img,
-        .icon img {
-            max-width: 100%;
-            max-height: 100%;
         }
         h2 {
             padding: 5px;
