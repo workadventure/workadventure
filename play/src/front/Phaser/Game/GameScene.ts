@@ -125,7 +125,7 @@ import {
     mapEditorSelectedToolStore,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
-import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
+import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
 import { megaphoneCanBeUsedStore, megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
@@ -1248,7 +1248,10 @@ export class GameScene extends DirtyScene {
         });
 
         this.availabilityStatusStoreUnsubscriber = availabilityStatusStore.subscribe((availabilityStatus) => {
-            this.connection?.emitPlayerStatusChange(availabilityStatus);
+            if (!this.connection) {
+                throw new Error("Connection is undefined");
+            }
+            this.connection.emitPlayerStatusChange(availabilityStatus);
             this.CurrentPlayer.setAvailabilityStatus(availabilityStatus);
             if (availabilityStatus === AvailabilityStatus.SILENT) {
                 this.CurrentPlayer.toggleTalk(false, true);
@@ -2600,18 +2603,20 @@ ${escapedMessage}
         }
 
         for (const addedPlayer of this.remotePlayersRepository.getAddedPlayers()) {
-            debugAddPlayer("Player will be added to the GameScene", addedPlayer.userId);
+            debugAddPlayer("Player will be add to the GameScene", addedPlayer);
             this.doAddPlayer(addedPlayer);
-            debugAddPlayer("Player has been added to the GameScene", addedPlayer.userId);
+            debugAddPlayer("Player has been added to the GameScene", addedPlayer);
         }
         for (const movedPlayer of this.remotePlayersRepository.getMovedPlayers()) {
             this.doUpdatePlayerPosition(movedPlayer);
         }
         for (const updatedPlayer of this.remotePlayersRepository.getUpdatedPlayers()) {
+            debugUpdatePlayer("Player will be update from GameScene", updatedPlayer);
             this.doUpdatePlayerDetails(updatedPlayer);
+            debugUpdatePlayer("Player has been updated from GameScene", updatedPlayer);
         }
         for (const removedPlayerId of this.remotePlayersRepository.getRemovedPlayers()) {
-            debugRemovePlayer("Player will be removed from GameScene", removedPlayerId);
+            debugRemovePlayer("Player will be remove from GameScene", removedPlayerId);
             this.doRemovePlayer(removedPlayerId);
             debugRemovePlayer("Player has been removed from GameScene", removedPlayerId);
         }
@@ -2739,7 +2744,7 @@ ${escapedMessage}
         if (addPlayerData.outlineColor !== undefined) {
             player.setApiOutlineColor(addPlayerData.outlineColor);
         }
-        if (addPlayerData.availabilityStatus !== undefined) {
+        if (addPlayerData.availabilityStatus !== 0) {
             player.setAvailabilityStatus(addPlayerData.availabilityStatus, true);
         }
         this.MapPlayersByKey.set(player.userId, player);
