@@ -1,5 +1,5 @@
 // eslint-disable @typescript-eslint/ban-ts-comment
-import { get, readable, Readable, Unsubscriber, Writable, writable } from "svelte/store";
+import { get, Readable, Unsubscriber, Writable, writable } from "svelte/store";
 // eslint-disable-next-line import/no-unresolved
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 // eslint-disable-next-line import/no-unresolved
@@ -7,7 +7,6 @@ import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 // eslint-disable-next-line import/no-unresolved
 import JitsiConference from "lib-jitsi-meet/types/hand-crafted/JitsiConference";
 import Debug from "debug";
-import { Result } from "@workadventure/map-editor";
 // eslint-disable-next-line import/no-unresolved
 import JitsiLocalTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiLocalTrack";
 // eslint-disable-next-line import/no-unresolved
@@ -37,8 +36,6 @@ export class JitsiConferenceWrapper {
 
     private readonly _broadcastDevicesStore: Writable<DeviceType[]>;
 
-    private localTracksStore: Readable<Result<JitsiLocalTracks, Error> | undefined>;
-
     private requestedCameraStateUnsubscriber: Unsubscriber | undefined;
     private requestedMicrophoneStateUnsubscriber: Unsubscriber | undefined;
     private cameraDeviceIdStoreUnsubscriber: Unsubscriber | undefined;
@@ -61,7 +58,6 @@ export class JitsiConferenceWrapper {
     constructor(private jitsiConference: JitsiConference) {
         this._streamStore = writable<Map<string, JitsiTrackWrapper>>(new Map<string, JitsiTrackWrapper>());
         this._broadcastDevicesStore = writable<DeviceType[]>([]);
-        this.localTracksStore = readable<Result<JitsiLocalTracks, Error> | undefined>(undefined);
     }
 
     public static join(connection: JitsiConnection, jitsiRoomName: string): Promise<JitsiConferenceWrapper> {

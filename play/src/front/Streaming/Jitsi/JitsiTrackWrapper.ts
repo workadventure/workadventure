@@ -13,9 +13,11 @@ export class JitsiTrackWrapper {
     private _audioStreamStore: Writable<MediaStream | null> = writable<MediaStream | null>(null);
     private readonly _volumeStore: Readable<number[] | undefined> | undefined;
     private volumeStoreSubscribe: Unsubscriber | undefined;
+    public readonly isLocal: boolean;
 
     constructor(readonly participantId: string, jitsiTrack: JitsiTrack) {
         this.setJitsiTrack(jitsiTrack);
+        this.isLocal = jitsiTrack.isLocal();
         this._volumeStore = readable<number[] | undefined>(undefined, (set) => {
             if (this.volumeStoreSubscribe) {
                 this.volumeStoreSubscribe();
