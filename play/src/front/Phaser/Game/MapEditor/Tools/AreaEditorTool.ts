@@ -89,19 +89,19 @@ export class AreaEditorTool extends MapEditorTool {
         this.drawinNewAreaStartPos = undefined;
         mapEditorSelectedAreaPreviewStore.set(undefined);
         this.setAreaPreviewsVisibility(false);
-        this.scene.input.setDefaultCursor("auto");
+        this.scene.input.setDefaultCursor("crosshair");
         this.unbindEventHandlers();
         this.scene.markDirty();
     }
 
     public activate(): void {
         this.active = true;
-        this.scene.input.topOnly = false;
+        this.scene.input.setTopOnly(false);
         this.updateAreaPreviews();
         this.setAreaPreviewsVisibility(true);
         this.bindEventHandlers();
         if (get(mapEditorAreaModeStore) === "ADD") {
-            this.scene.input.setDefaultCursor("copy");
+            this.scene.input.setDefaultCursor("crosshair");
         }
         this.scene.markDirty();
     }
@@ -109,7 +109,7 @@ export class AreaEditorTool extends MapEditorTool {
     public destroy(): void {
         this.selectedAreaPreviewStoreSubscriber();
         this.unbindEventHandlers();
-        this.scene.input.setDefaultCursor("auto");
+        this.scene.input.setDefaultCursor("crosshair");
     }
 
     public async handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
@@ -179,6 +179,9 @@ export class AreaEditorTool extends MapEditorTool {
                     .executeCommand(
                         new DeleteAreaFrontCommand(this.scene.getGameMap(), areaPreview.getId(), undefined, this, true)
                     )
+                    .then(() => {
+                        this.scene.input.setDefaultCursor("crosshair");
+                    })
                     .catch((e) => console.error(e));
                 break;
             }
@@ -204,7 +207,9 @@ export class AreaEditorTool extends MapEditorTool {
 
         this.scene.input.on(Phaser.Input.Events.POINTER_UP, this.pointerUpEventHandler);
         this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
+        this.scene.input.on(Phaser.Input.Events.POINTER_OVER, this.pointerHoverEventHandler);
         this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
+        this.scene.input.on(Phaser.Input.Events.POINTER_OUT, this.pointerOutEventHandler);
 
         this.shiftKey?.on(Phaser.Input.Keyboard.Events.DOWN, () => {
             if (this.drawingNewArea && this.drawinNewAreaStartPos) {
@@ -218,18 +223,47 @@ export class AreaEditorTool extends MapEditorTool {
             }
         });
         this.ctrlKey?.on(Phaser.Input.Keyboard.Events.DOWN, () => {
-            this.scene.input.setDefaultCursor("copy");
+            this.scene.input.setDefaultCursor("crosshair");
         });
         this.ctrlKey?.on(Phaser.Input.Keyboard.Events.UP, () => {
-            this.scene.input.setDefaultCursor("auto");
+            this.scene.input.setDefaultCursor("grab");
         });
     }
 
     private unbindEventHandlers(): void {
         this.scene.input.off(Phaser.Input.Events.POINTER_UP, this.pointerUpEventHandler);
         this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
+        this.scene.input.off(Phaser.Input.Events.POINTER_OVER, this.pointerHoverEventHandler);
         this.scene.input.off(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
+        this.scene.input.off(Phaser.Input.Events.POINTER_OUT, this.pointerOutEventHandler);
     }
+
+    private pointerHoverEventHandler = (
+        pointer: Phaser.Input.Pointer,
+        gameObjects: Phaser.GameObjects.GameObject[]
+    ) => {
+        if (!this.active) {
+            return;
+        }
+        const areaEditorToolObjects = this.getAreaEditorToolObjectsFromGameObjects(gameObjects);
+        if (areaEditorToolObjects.length === 1) {
+            if (this.isAreaPreview(areaEditorToolObjects[0])) {
+                this.scene.input.setDefaultCursor("grab");
+            }
+        }
+    };
+
+    private pointerOutEventHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+        if (!this.active) {
+            return;
+        }
+        const areaEditorToolObjects = this.getAreaEditorToolObjectsFromGameObjects(gameObjects);
+        if (areaEditorToolObjects.length === 1) {
+            if (this.isAreaPreview(areaEditorToolObjects[0])) {
+                this.scene.input.setDefaultCursor("crosshair");
+            }
+        }
+    };
 
     private handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
         const areaEditorToolObjects = this.getAreaEditorToolObjectsFromGameObjects(gameObjects);
@@ -259,6 +293,7 @@ export class AreaEditorTool extends MapEditorTool {
         if (areaEditorToolObjects.length === 1) {
             if (this.isAreaPreview(areaEditorToolObjects[0])) {
                 this.changeAreaMode("EDIT", areaEditorToolObjects[0]);
+                this.scene.input.setDefaultCursor("grabbing");
                 this.wasAreaMoved = true;
             }
         }
@@ -307,6 +342,7 @@ export class AreaEditorTool extends MapEditorTool {
                     if (this.wasAreaMoved) {
                         this.draggingdArea = false;
                         this.wasAreaMoved = false;
+                        this.scene.input.setDefaultCursor("grab");
                     } else {
                         const nextAreaIndex =
                             (sortedAreaPreviews.indexOf(currentlySelectedArea) + 1) % sortedAreaPreviews.length;
@@ -391,7 +427,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     private changeAreaMode(mode: MapEditorAreaToolMode, areaPreview?: AreaPreview): void {
         mapEditorAreaModeStore.set(mode);
-        this.scene.input.setDefaultCursor(mode === "ADD" ? "copy" : "auto");
+        this.scene.input.setDefaultCursor("crosshair");
         if (document.activeElement instanceof HTMLElement) {
             document.activeElement.blur();
         }
