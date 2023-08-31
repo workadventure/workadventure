@@ -107,7 +107,9 @@ export class BroadcastService {
                 this.broadcastSpaces.forEach((broadcastSpace) => {
                     if (broadcastSpace.jitsiConference) {
                         broadcastSpace.jitsiConference.broadcast(["video", "audio"]);
-                        void broadcastSpace.jitsiConference.firstLocalTrackInit();
+                        broadcastSpace.jitsiConference.firstLocalTrackInit().catch((e) => {
+                            console.error(e);
+                        });
                     }
                 });
             } else {

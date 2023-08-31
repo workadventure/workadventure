@@ -27,7 +27,7 @@
     bind:this={videoElement}
     class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
     class="tw-h-full tw-max-w-full tw-rounded-sm"
-    class:tw-scale-x-[-1]={isLocal && jitsiTrack.getVideoType() === 'camera'}
+    class:tw-scale-x-[-1]={isLocal && jitsiTrack.getVideoType() === "camera"}
     autoplay
     playsinline
 />

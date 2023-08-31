@@ -108,10 +108,7 @@ export class JitsiTrackWrapper {
                 this.screenSharingTrackWrapper.setVideoTrack(jitsiTrack);
 
                 // Let's notify the embedded store that a new screen-sharing has started
-                highlightedEmbedScreen.highlight({
-                    type: "streamable",
-                    embed: this.screenSharingTrackWrapper,
-                });
+                this.highlightScreenSharing();
             } else {
                 const oldVideoTrack = this.cameraTrackWrapper.getVideoTrack();
                 if (oldVideoTrack !== undefined) {
@@ -126,10 +123,7 @@ export class JitsiTrackWrapper {
                         this.screenSharingTrackWrapper.setVideoTrack(jitsiTrack);
 
                         // Let's notify the embedded store that a new screen-sharing has started
-                        highlightedEmbedScreen.highlight({
-                            type: "streamable",
-                            embed: this.screenSharingTrackWrapper,
-                        });
+                        this.highlightScreenSharing();
                     } else {
                         oldVideoTrack?.dispose();
                     }
@@ -159,10 +153,7 @@ export class JitsiTrackWrapper {
                         this.cameraTrackWrapper.setVideoTrack(undefined);
 
                         // Let's notify the embedded store that a new screen-sharing has started
-                        highlightedEmbedScreen.highlight({
-                            type: "streamable",
-                            embed: this.screenSharingTrackWrapper,
-                        });
+                        this.highlightScreenSharing();
                     }
                 }, 5000);
             }
@@ -198,11 +189,20 @@ export class JitsiTrackWrapper {
                 // With this trick, we can force the screen sharing to go full screen again.
 
                 // Let's notify the embedded store that a new screen-sharing has started
-                highlightedEmbedScreen.highlight({
-                    type: "streamable",
-                    embed: this.screenSharingTrackWrapper,
-                });
+                this.highlightScreenSharing();
             }
+        });
+    }
+
+    private highlightScreenSharing(): void {
+        if (this.isLocal) {
+            // Never highlight our own screen sharing
+            return;
+        }
+        // Let's notify the embedded store that a new screen-sharing has started
+        highlightedEmbedScreen.highlight({
+            type: "streamable",
+            embed: this.screenSharingTrackWrapper,
         });
     }
 

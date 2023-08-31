@@ -18,6 +18,7 @@ import {
     requestedMicrophoneState,
     usedCameraDeviceIdStore,
     usedMicrophoneDeviceIdStore,
+    videoConstraintStore,
 } from "../../Stores/MediaStore";
 import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
@@ -71,7 +72,9 @@ export class JitsiConferenceWrapper {
             //const localTracks: any[] = [];
             room.on(JitsiMeetJS.events.conference.CONFERENCE_JOINED, () => {
                 debug("CONFERENCE_JOINED");
-                void jitsiConferenceWrapper.firstLocalTrackInit();
+                jitsiConferenceWrapper.firstLocalTrackInit().catch((e) => {
+                    console.error(e);
+                });
                 resolve(jitsiConferenceWrapper);
             });
             room.on(JitsiMeetJS.events.conference.CONFERENCE_FAILED, (e) => {
@@ -174,7 +177,7 @@ export class JitsiConferenceWrapper {
                             (async (): Promise<JitsiLocalTracks> =>
                                 jitsiConferenceWrapper.handleLocalTrackState("desktop", requestedScreenSharingState_))()
                                 .then((newTracks) => {
-                                    debug("requestedScreenSharingState => subscribe => localTrack added");
+                                    debug("requestedScreenSharingState => subscribe => localTrack changed");
                                 })
                                 .catch((e) => {
                                     requestedScreenSharingState.disableScreenSharing();
@@ -274,6 +277,9 @@ export class JitsiConferenceWrapper {
 
     public async leave(reason?: string): Promise<void> {
         debug("JitsiConferenceWrapper => leaving ...");
+
+        requestedScreenSharingState.disableScreenSharing();
+
         if (this.requestedMicrophoneStateUnsubscriber) {
             this.requestedMicrophoneStateUnsubscriber();
         }
@@ -285,6 +291,9 @@ export class JitsiConferenceWrapper {
         }
         if (this.cameraDeviceIdStoreUnsubscriber) {
             this.cameraDeviceIdStoreUnsubscriber();
+        }
+        if (this.requestedScreenSharingStateUnsubscriber) {
+            this.requestedScreenSharingStateUnsubscriber();
         }
 
         await this.jitsiConference.leave(reason).then(async () => {
@@ -313,10 +322,15 @@ export class JitsiConferenceWrapper {
         this.cameraDeviceId = get(requestedCameraDeviceIdStore);
         this.microphoneDeviceId = get(requestedMicrophoneDeviceIdStore);
 
+        const videoConstraints = get(videoConstraintStore);
+
         const newTracks = await window.JitsiMeetJS.createLocalTracks({
             devices: types,
             cameraDeviceId: this.cameraDeviceId,
             micDeviceId: this.microphoneDeviceId,
+            constraints: {
+                video: videoConstraints,
+            },
         });
         if (!(newTracks instanceof Array)) {
             // newTracks is a JitsiConferenceError
