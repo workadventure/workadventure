@@ -523,7 +523,7 @@
                                 <div class="wa-message-body">
                                     {#each message.text as text}
                                         <div
-                                            class="tw-text-ellipsis tw-overflow-y-auto tw-break-words tw-whitespace-pre"
+                                            class="tw-text-ellipsis tw-overflow-y-auto tw-break-words tw-whitespace-pre-line"
                                         >
                                             {#await HtmlUtils.urlify(text)}
                                                 <p>...waiting</p>
