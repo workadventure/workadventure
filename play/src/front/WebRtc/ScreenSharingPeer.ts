@@ -1,10 +1,10 @@
 import { Buffer } from "buffer";
-import type { Readable, Writable } from "svelte/store";
-import { writable } from "svelte/store";
+import { get, Readable, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
 import type { RoomConnection } from "../Connection/RoomConnection";
-import { getIceServersConfig } from "../Components/Video/utils";
+import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
+import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
 import type { PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { StreamEndedMessage } from "./P2PMessages/StreamEndedMessage";
@@ -31,11 +31,13 @@ export class ScreenSharingPeer extends Peer {
         private connection: RoomConnection,
         stream: MediaStream | null
     ) {
+        const bandwidth = get(screenShareBandwidthStore);
         super({
             initiator,
             config: {
                 iceServers: getIceServersConfig(user),
             },
+            sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
         });
 
         this.userId = user.userId;

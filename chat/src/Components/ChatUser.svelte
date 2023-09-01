@@ -82,7 +82,7 @@
             case 2:
                 return "tw-bg-pop-red";
             case 3:
-                return "tw-bg-orange";
+                return "tw-bg-warning";
         }
     }
 
@@ -150,7 +150,7 @@
                 </span>
             {/if}
             {#if user.isAdmin}
-                <span class="tw-text-orange" title={$LL.role.admin()}>
+                <span class="tw-text-warning" title={$LL.role.admin()}>
                     <ShieldIcon size="13" />
                 </span>
             {/if}
@@ -226,13 +226,13 @@
                     >
                     {#if user.isAdmin}
                         <span
-                            class="rank-down wa-dropdown-item tw-text-orange"
+                            class="rank-down wa-dropdown-item tw-text-warning"
                             on:click|stopPropagation={() => mucRoom.sendRankDown(user.jid)}
                             ><ShieldOffIcon size="13" /> {$LL.rankDown()} (coming soon)</span
                         >
                     {:else}
                         <span
-                            class="rank-up wa-dropdown-item tw-text-orange"
+                            class="rank-up wa-dropdown-item tw-text-warning"
                             on:click|stopPropagation={() => mucRoom.sendRankUp(user.jid)}
                             ><ShieldIcon size="13" /> {$LL.rankUp()} (coming soon)</span
                         >

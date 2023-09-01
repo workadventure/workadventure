@@ -28,20 +28,17 @@ const menu: DeepPartial<Translation["menu"]> = {
         logout: "wotzjewić",
     },
     settings: {
-        videoQuality: {
-            title: "widejowa kwalita",
-            short: {
-                high: "wysoka (30 BpS)",
-                medium: "srjedźna (20 BpS)",
-                small: "snadna (10 BpS)",
-                minimum: "minimalna (5 BpS)",
-            },
-            long: {
-                high: "wysoka widejowa kwalita (30 BpS)",
-                medium: "srjedźna widejowa kwalita (20 BpS, doporučene)",
-                small: "snadna widejowa kwalita (10 BpS)",
-                minimum: "minimalna widejowa kwalita (5BpS)",
-            },
+        videoBandwidth: {
+            title: "Wideoqualität",
+            low: "Nisko",
+            recommended: "Zaležite",
+            unlimited: "Njepřećiwo",
+        },
+        shareScreenBandwidth: {
+            title: "Qualität předawki wobrazow",
+            low: "Nisko",
+            recommended: "Zaležite",
+            unlimited: "Njepřećiwo",
         },
         language: {
             title: "rěč",
@@ -52,10 +49,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             cameraToggle: "Kameru w„ modusu njepřitomnosće “ aktiwěrowanu wostajić.",
             microphoneToggle: "Mikrofon w„ modusu njepřitomnosće “aktiwěrowany wostajić.",
         },
-        save: {
-            warning: "(hra so po składowanju znowa startuje)",
-            button: "składować",
-        },
+        save: "składować",
         fullscreen: "połny wobraz",
         notifications: "powěsće",
         cowebsiteTrigger: "Kóždy raz so naprašować, prjedy hač so webstrony abo Jitsi Meet rumy wotewru",

@@ -28,20 +28,17 @@ const menu: DeepPartial<Translation["menu"]> = {
         logout: "登出",
     },
     settings: {
-        videoQuality: {
+        videoBandwidth: {
             title: "视频质量",
-            short: {
-                high: "高 (30 fps)",
-                medium: "中 (20 fps)",
-                small: "低 (10 fps)",
-                minimum: "最低 (5 fps)",
-            },
-            long: {
-                high: "高视频质量 (120 fps)",
-                medium: "中视频质量 (60 fps, 推荐)",
-                small: "低视频质量 (40 fps)",
-                minimum: "最低视频质量 (20 fps)",
-            },
+            low: "低",
+            recommended: "推荐",
+            unlimited: "无限制",
+        },
+        shareScreenBandwidth: {
+            title: "屏幕共享质量",
+            low: "低",
+            recommended: "推荐",
+            unlimited: "无限制",
         },
         language: {
             title: "语言",
@@ -53,10 +50,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             cameraToggle: "摄像头",
             microphoneToggle: "麦克风",
         },
-        save: {
-            warning: "(保存这些设置会重新加载游戏)",
-            button: "保存",
-        },
+        save: "保存",
         fullscreen: "全屏",
         notifications: "通知",
         cowebsiteTrigger: "在打开网页和Jitsi Meet会议前总是询问",

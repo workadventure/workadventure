@@ -228,7 +228,7 @@
 // Loading.svelte //
 ////////////////////
 #loading {
-    @apply tw-h-fit tw-flex tw-bg-orange tw-relative tw-rounded tw-py-2 tw-my-2;
+    @apply tw-h-fit tw-flex tw-bg-warning tw-relative tw-rounded tw-py-2 tw-my-2;
     transition: all 0.2s ease;
     .wrapper {
         @apply tw-flex tw-flex-wrap tw-justify-items-center tw-items-center tw-justify-center tw-text-brand-blue tw-text-center tw-mx-auto;
@@ -268,7 +268,7 @@
 // JitsiMediaBox.svelte //
 //////////////////////////
 .jitsi-video{
-    @apply tw-h-fit tw-min-h-fit tw-flex tw-w-full tw-border-orange tw-border-2 tw-border-solid tw-relative tw-rounded;
+    @apply tw-h-fit tw-min-h-fit tw-flex tw-w-full tw-border-warning tw-border-2 tw-border-solid tw-relative tw-rounded;
     transition: all 0.2s ease;
 
     video {

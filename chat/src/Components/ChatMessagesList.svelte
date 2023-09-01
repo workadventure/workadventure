@@ -240,7 +240,7 @@
             {:else if $showDisabledLoadOlderMessagesStore && $me && $me.isAdmin}
                 {#if ADMIN_API_URL}
                     <button
-                        class="tw-text-orange tw-font-bold tw-underline tw-m-auto tw-text-xs tw-cursor-pointer"
+                        class="tw-text-warning tw-font-bold tw-underline tw-m-auto tw-text-xs tw-cursor-pointer"
                         on:click={() => iframeListener.sendRedirectPricing()}
                     >
                         <img alt="Crown icon" src={crown} class="tw-mr-1" />

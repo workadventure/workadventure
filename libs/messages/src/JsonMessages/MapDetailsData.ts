@@ -5,11 +5,6 @@ import { isMetaTagManifestIcon } from "./MetaTagManifestIcon";
 import { OpidWokaNamePolicy } from "./OpidWokaNamePolicy";
 import { MucRoomDefinition } from "./MucRoomDefinition";
 
-/*
- * WARNING! The original file is in /messages/JsonMessages.
- * All other files are automatically copied from this file on container startup / build
- */
-
 const isBbbData = z.object({
     url: extendApi(z.string(), {
         description: 'The full URL to your BigBlueButton server. Do not forget the trailing "/bigbluebutton/".',

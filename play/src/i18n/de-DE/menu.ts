@@ -28,20 +28,17 @@ const menu: DeepPartial<Translation["menu"]> = {
         logout: "Ausloggen",
     },
     settings: {
-        videoQuality: {
-            title: "Video Qualität",
-            short: {
-                high: "Hoch (30 BpS)",
-                medium: "Mittel (20 BpS)",
-                small: "Gering (10 BpS)",
-                minimum: "Minimal (5 BpS)",
-            },
-            long: {
-                high: "Hohe Video Qualität (30 BpS)",
-                medium: "Mittlere Video Qualität (20 BpS, empfohlen)",
-                small: "Geringe Video Qualität (10 BpS)",
-                minimum: "Minimale Video Qualität (5 BpS)",
-            },
+        videoBandwidth: {
+            title: "Videoqualität",
+            low: "Niedrig",
+            recommended: "Empfohlen",
+            unlimited: "Unbegrenzt",
+        },
+        shareScreenBandwidth: {
+            title: "Bildschirmfreigabe-Qualität",
+            low: "Niedrig",
+            recommended: "Empfohlen",
+            unlimited: "Unbegrenzt",
         },
         language: {
             title: "Sprache",
@@ -52,10 +49,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             cameraToggle: "Kamera im „Abwesenheitsmodus“ aktiviert lassen.",
             microphoneToggle: "Mikrofon im „Abwesenheitsmodus“ aktiviert lassen.",
         },
-        save: {
-            warning: "(Das Spiel wird nach dem Speichern neugestartet)",
-            button: "Speichern",
-        },
+        save: "Speichern",
         fullscreen: "Vollbild",
         notifications: "Benachrichtigungen",
         cowebsiteTrigger: "Jedes mal nachfragen bevor Webseiten oder Jitsi Meet Räume geöffnet werden",

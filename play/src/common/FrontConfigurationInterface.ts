@@ -49,4 +49,8 @@ export interface FrontConfigurationInterface {
     GOOGLE_SHEETS_ENABLED: boolean;
     GOOGLE_SLIDES_ENABLED: boolean;
     ERASER_ENABLED: boolean;
+    PEER_VIDEO_LOW_BANDWIDTH: number;
+    PEER_VIDEO_RECOMMENDED_BANDWIDTH: number;
+    PEER_SCREEN_SHARE_LOW_BANDWIDTH: number;
+    PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: number;
 }

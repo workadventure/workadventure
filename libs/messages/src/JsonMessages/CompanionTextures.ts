@@ -1,11 +1,6 @@
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
 
-/*
- * WARNING! The original file is in /libs/messages/src/JsonMessages.
- * All other files are automatically copied from this file on container startup / build
- */
-
 //The list of all the companion textures
 
 export const CompanionBehavior = z.union([

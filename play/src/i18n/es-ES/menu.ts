@@ -28,20 +28,17 @@ const menu: DeepPartial<Translation["menu"]> = {
         logout: "Cerrar sesión",
     },
     settings: {
-        videoQuality: {
-            title: "Calidad del vídeo",
-            short: {
-                high: "Alta (30 fps)",
-                medium: "Media (20 fps)",
-                small: "Reducida (10 fps)",
-                minimum: "Mínima (5 fps)",
-            },
-            long: {
-                high: "Vídeo de calidad alta (30 fps)",
-                medium: "Vídeo de calidad media (20 fps, recomendado)",
-                small: "Vídeo de calidad reducida  (10 fps)",
-                minimum: "Vídeo de calidad mínima (5 fps)",
-            },
+        videoBandwidth: {
+            title: "Calidad de video",
+            low: "Baja",
+            recommended: "Recomendada",
+            unlimited: "Ilimitada",
+        },
+        shareScreenBandwidth: {
+            title: "Calidad de compartir pantalla",
+            low: "Baja",
+            recommended: "Recomendada",
+            unlimited: "Ilimitada",
         },
         language: {
             title: "Idioma",
@@ -53,10 +50,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             cameraToggle: 'Mantener la cámara activa en "modo no presente"',
             microphoneToggle: 'Mantener el micrófono activa en "modo no presente"',
         },
-        save: {
-            warning: "(Guardar esta configuración reiniciará el juego)",
-            button: "Guardar",
-        },
+        save: "Guardar",
         fullscreen: "Pantalla completa",
         notifications: "Notificaciones",
         cowebsiteTrigger: "Preguntar siempre antes de abrir sitios web y habitaciones Jitsi Meet",

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH, PEER_VIDEO_RECOMMENDED_BANDWIDTH } from "../Enum/EnvironmentVariable";
 import { arrayEmoji, Emoji } from "../Stores/Utils/emojiSchema";
 import type { LocalUser } from "./LocalUser";
 import { areCharacterTexturesValid, isUserNameValid } from "./LocalUser";
@@ -10,7 +11,6 @@ const requestedCameraStateKey = "requestedCameraStateKey";
 const requestedMicrophoneStateKey = "requestedMicrophoneStateKey";
 const characterTexturesKey = "characterTextures";
 const companionKey = "companion";
-const videoQualityKey = "videoQuality";
 const audioPlayerVolumeKey = "audioVolume";
 const audioPlayerMuteKey = "audioMute";
 const helpCameraSettingsShown = "helpCameraSettingsShown";
@@ -22,7 +22,8 @@ const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const notification = "notificationPermission";
 const chatSounds = "chatSounds";
-const cameraSetup = "cameraSetup";
+const preferredVideoInputDevice = "preferredVideoInputDevice";
+const preferredAudioInputDevice = "preferredAudioInputDevice";
 const cacheAPIIndex = "workavdenture-cache";
 const userProperties = "user-properties";
 const cameraPrivacySettings = "cameraPrivacySettings";
@@ -126,14 +127,6 @@ class LocalUserStore {
 
     wasCompanionSet(): boolean {
         return localStorage.getItem(companionKey) ? true : false;
-    }
-
-    setVideoQualityValue(value: number): void {
-        localStorage.setItem(videoQualityKey, "" + value);
-    }
-
-    getVideoQualityValue(): number {
-        return parseInt(localStorage.getItem(videoQualityKey) || "20");
     }
 
     setAudioPlayerVolume(value: number): void {
@@ -269,13 +262,43 @@ class LocalUserStore {
         return localStorage.getItem(chatSounds) !== "false";
     }
 
-    setCameraSetup(cameraId: string) {
-        localStorage.setItem(cameraSetup, cameraId);
+    setPreferredVideoInputDevice(deviceId?: string) {
+        console.log("setPreferredVideoInputDevice", deviceId);
+        if (deviceId === undefined) {
+            localStorage.removeItem(preferredVideoInputDevice);
+            return;
+        }
+
+        localStorage.setItem(preferredVideoInputDevice, deviceId);
     }
 
-    getCameraSetup(): { video: unknown; audio: unknown } | undefined {
-        const cameraSetupValues = localStorage.getItem(cameraSetup);
-        return cameraSetupValues != undefined ? JSON.parse(cameraSetupValues) : undefined;
+    setPreferredAudioInputDevice(deviceId?: string) {
+        if (deviceId === undefined) {
+            localStorage.removeItem(preferredAudioInputDevice);
+            return;
+        }
+
+        localStorage.setItem(preferredAudioInputDevice, deviceId);
+    }
+
+    getPreferredVideoInputDevice(): string | undefined {
+        const deviceId = localStorage.getItem(preferredVideoInputDevice);
+
+        if (deviceId === null) {
+            return undefined;
+        }
+
+        return deviceId;
+    }
+
+    getPreferredAudioInputDevice(): string | undefined {
+        const deviceId = localStorage.getItem(preferredAudioInputDevice);
+
+        if (deviceId === null) {
+            return undefined;
+        }
+
+        return deviceId;
     }
 
     setCameraPrivacySettings(option: boolean) {
@@ -420,6 +443,42 @@ class LocalUserStore {
 
     getSpeakerDeviceId() {
         return localStorage.getItem(speakerDeviceId);
+    }
+
+    setVideoBandwidth(value: number | "unlimited") {
+        localStorage.setItem("videoBandwidth", value.toString());
+    }
+
+    getVideoBandwidth(): number | "unlimited" {
+        const value = localStorage.getItem("videoBandwidth");
+
+        if (!value) {
+            return PEER_VIDEO_RECOMMENDED_BANDWIDTH;
+        }
+
+        if (value === "unlimited") {
+            return value;
+        }
+
+        return parseInt(value);
+    }
+
+    setScreenShareBandwidth(value: number | "unlimited") {
+        localStorage.setItem("screenShareBandwidth", value.toString());
+    }
+
+    getScreenShareBandwidth(): number | "unlimited" {
+        const value = localStorage.getItem("screenShareBandwidth");
+
+        if (!value) {
+            return PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH;
+        }
+
+        if (value === "unlimited") {
+            return value;
+        }
+
+        return parseInt(value);
     }
 }
 

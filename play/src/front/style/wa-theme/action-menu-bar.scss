@@ -68,13 +68,13 @@
                 @apply tw-pt-0;
             }
 
-            .border-top-orange {
+            .border-top-warning {
                 border-top: 4px solid theme("colors.orange");
                 @apply tw-pt-0;
             }
 
             .megaphone-confirm {
-                @apply tw-border-orange tw-border tw-border-solid;
+                @apply tw-border-warning tw-border tw-border-solid;
                 transform: translateX(-38%);
                 bottom: calc(100% + 1rem);
 
@@ -94,7 +94,7 @@
                     z-index: 1;
                 }
                 &::after {
-                    @apply tw-border-orange;
+                    @apply tw-border-warning;
                     width: 0;
                     height: 0;
                     border-style: solid;

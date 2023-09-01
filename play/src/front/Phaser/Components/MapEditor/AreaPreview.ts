@@ -56,21 +56,21 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         this.squareSelected = false;
 
         this.squares = [
-            new SizeAlteringSquare(this.scene, this.getTopLeft()),
-            new SizeAlteringSquare(this.scene, this.getTopCenter()),
-            new SizeAlteringSquare(this.scene, this.getTopRight()),
-            new SizeAlteringSquare(this.scene, this.getLeftCenter()),
-            new SizeAlteringSquare(this.scene, this.getRightCenter()),
-            new SizeAlteringSquare(this.scene, this.getBottomLeft()),
-            new SizeAlteringSquare(this.scene, this.getBottomCenter()),
-            new SizeAlteringSquare(this.scene, this.getBottomRight()),
+            new SizeAlteringSquare(this.scene, this.getTopLeft(), "nw-resize"),
+            new SizeAlteringSquare(this.scene, this.getTopCenter(), "n-resize"),
+            new SizeAlteringSquare(this.scene, this.getTopRight(), "ne-resize"),
+            new SizeAlteringSquare(this.scene, this.getLeftCenter(), "w-resize"),
+            new SizeAlteringSquare(this.scene, this.getRightCenter(), "e-resize"),
+            new SizeAlteringSquare(this.scene, this.getBottomLeft(), "sw-resize"),
+            new SizeAlteringSquare(this.scene, this.getBottomCenter(), "s-resize"),
+            new SizeAlteringSquare(this.scene, this.getBottomRight(), "se-resize"),
         ];
 
         this.squares.forEach((square) => square.setDepth(this.depth + 1));
 
         const bounds = this.getBounds();
         this.setSize(bounds.width, bounds.height);
-        this.setInteractive({ cursor: "pointer" });
+        this.setInteractive({ cursor: "grab" });
         this.scene.input.setDraggable(this);
 
         this.showSizeAlteringSquares(false);
