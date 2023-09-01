@@ -30,7 +30,6 @@ module.exports = {
       "error", { "args": "none", "caughtErrors": "all", "varsIgnorePattern": "_exhaustiveCheck" }
     ],
     "import/order": "error",
-    "@typescript-eslint/ban-ts-comment": "off",
   },
   "settings": {
     "typescript": true,
