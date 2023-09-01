@@ -79,3 +79,20 @@ Example:
 ```ts
 const coWebsites = await WA.nav.getCowebSites();
 ```
+
+### Redirecting user to the "login" page
+
+```ts
+WA.nav.goToLogin(): Promise<void>
+```
+
+Closes WorkAdventure and opens the login page in your browser.
+
+{.alert.alert-warning}
+If you are using the self-hosted version of WorkAdventure, the call will fail if no OpenID provider is configured.
+
+Example:
+
+```ts
+await WA.nav.goToLogin();
+```

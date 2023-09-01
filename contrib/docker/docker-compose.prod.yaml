@@ -234,7 +234,7 @@ services:
     restart: ${RESTART_POLICY}
 
   icon:
-    image: matthiasluedtke/iconserver:v3.13.0
+    image: matthiasluedtke/iconserver:v3.15.0
     labels:
       traefik.enable: "true"
       traefik.http.middlewares.strip-icon-prefix.stripprefix.prefixes: "/icon"

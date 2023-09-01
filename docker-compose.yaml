@@ -337,7 +337,7 @@ services:
             - "traefik.http.services.redisinsight.loadbalancer.server.port=8001"
 
     icon:
-        image: matthiasluedtke/iconserver:v3.13.0
+        image: matthiasluedtke/iconserver:v3.15.0
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.icon.rule=Host(`icon.workadventure.localhost`)"

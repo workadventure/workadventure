@@ -12,7 +12,7 @@ export const slugify = (...args: (string | number)[]): string => {
         .replace(/\s+/g, "-"); // separator
 };
 
-function slugifyJitsiRoomName(roomName: string, roomId: string, noPrefix = true): string {
+function slugifyJitsiRoomName(roomName: string, roomId: string, noPrefix = false): string {
     return slugify((noPrefix ? "" : shortHash(roomId) + "-") + roomName);
 }
 

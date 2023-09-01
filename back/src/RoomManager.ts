@@ -299,6 +299,15 @@ const roomManager = {
                     ${JSON.stringify(room?.roomUrl)}`,
                     "debug"
                 );
+                call.write({
+                    message: {
+                        $case: "errorMessage",
+                        errorMessage: {
+                            message:
+                                "Connection lost with user. The user did not send a pong message in time. You should never see this message in the browser.",
+                        },
+                    },
+                });
                 closeConnection();
             }, PONG_TIMEOUT);
         }, PING_INTERVAL);

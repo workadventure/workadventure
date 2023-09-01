@@ -120,6 +120,16 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
             data: undefined,
         });
     }
+
+    /**
+     * Redirect the user to the OIDC login page
+     */
+    goToLogin() {
+        return queryWorkadventure({
+            type: "goToLogin",
+            data: undefined,
+        });
+    }
 }
 
 export default new WorkadventureNavigationCommands();

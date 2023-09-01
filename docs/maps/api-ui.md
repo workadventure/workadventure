@@ -75,6 +75,7 @@ Add a custom menu item containing the text `commandDescriptor` in the navbar of 
 `options` attribute accepts an object with three properties :
 - `callback : (commandDescriptor: string) => void` : A click on the custom menu will trigger the `callback`.
 - `iframe: string` : A click on the custom menu will open the `iframe` inside the menu.
+- `key?: string` : A unique identifier for your menu item.
 - `allowApi?: boolean` : Allow the iframe of the custom menu to use the Scripting API.
 
 Important : `options` accepts only `callback` or `iframe` not both.
@@ -105,18 +106,42 @@ menu.remove();
 
 Please note that `registerMenuCommand` returns an object of the `Menu` class.
 
-The `Menu` class contains a single method: `remove(): void`. This will obviously remove the menu when called.
+The `Menu` class contains two methods: `remove(): void` and `open(): void`.
+
+`remove` will remove the menu when called.
+`open` will programmatically open the menu.
 
 ```ts
 class Menu {
-	/**
-	* Remove the menu
-	*/
-	remove() {};
+  /**
+   * Remove the menu
+   */
+  public remove(): void {/*...*/};
+
+  /**
+   * Programmatically open the menu
+   */
+  public open(): void {/*...*/};
 }
 ```
 
+## Fetching a custom menu
 
+```
+WA.ui.getMenuCommand(key: string): Promise<Menu>
+```
+
+You can retrieve a menu by its key using `WA.ui.getMenuCommand`.
+You can also access the list of default menu items provided by WA.
+
+Here is the full list of pre-registered keys: "settings", "profile", "invite", "credit", "globalMessages", "contact", "report".
+
+Example: open the "invite" page from a script:
+
+```ts
+const menu = await WA.ui.getMenuCommand("invite");
+menu.open();
+```
 
 ### Awaiting User Confirmation (with space bar)
 
@@ -292,6 +317,8 @@ If your code is running inside a UIWebsite iframe, you can use `WA.iframeId` to 
 ```ts
 const websiteId = WA.iframeId;
 const website = await WA.ui.website.getById(websiteId);
+```
+
 ## The modal iframe API
 ### Open the modal iframe
 
@@ -307,13 +334,7 @@ WA.ui.modal.openModal({
 ```
 
 
-### Close the chat window
-
-```ts
-WA.ui.modal.closeModal(): void
-```
-
-### Example of mofal opened
+### Example
 
 ```ts
 WA.ui.modal.openModal({
@@ -378,6 +399,12 @@ If the user is in mobile definition, the modal will open in full screen:
         <img src="images/modal/modal-mobile.png" class="figure-img img-fluid rounded" alt="" />
     </div>
 </div>
+
+### Closing a modal
+
+```ts
+WA.ui.modal.closeModal(): void
+```
 
 ## Action bar button API
 

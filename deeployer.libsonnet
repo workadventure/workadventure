@@ -215,7 +215,7 @@
       "ports": [6379]
     },
     "iconserver": {
-      "image": "matthiasluedtke/iconserver:v3.13.0",
+      "image": "matthiasluedtke/iconserver:v3.15.0",
       "host": {
         "url": "icon-"+url,
         "containerPort": 8080,

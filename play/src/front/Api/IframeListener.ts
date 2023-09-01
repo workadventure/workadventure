@@ -5,6 +5,7 @@ import {
     additionnalButtonsMenu,
     handleMenuRegistrationEvent,
     handleMenuUnregisterEvent,
+    handleOpenMenuEvent,
     warningContainerStore,
 } from "../Stores/MenuStore";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
@@ -411,11 +412,14 @@ class IframeListener {
                         handleMenuRegistrationEvent(
                             iframeEvent.data.name,
                             iframeEvent.data.iframe,
+                            iframeEvent.data.key,
                             foundSrc,
                             iframeEvent.data.options
                         );
                     } else if (iframeEvent.type == "unregisterMenu") {
-                        handleMenuUnregisterEvent(iframeEvent.data.name);
+                        handleMenuUnregisterEvent(iframeEvent.data.key);
+                    } else if (iframeEvent.type == "openMenu") {
+                        handleOpenMenuEvent(iframeEvent.data.key);
                     } else if (iframeEvent.type == "askPosition") {
                         this._askPositionStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "openInviteMenu") {

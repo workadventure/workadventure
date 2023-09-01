@@ -42,7 +42,7 @@ const mapEditor: BaseTranslation = {
             triggerOnClick: "Start as minimized in bottom bar",
             triggerOnAction: "Show action toast with message",
             closable: "Can be closed",
-            noPrefix: "No Jitsi room name prefix",
+            noPrefix: "Share with other rooms",
             jitsiRoomConfig: {
                 addConfig: "Add an option",
                 startWithAudioMuted: "Start with microphone muted",
@@ -77,7 +77,8 @@ const mapEditor: BaseTranslation = {
             policy: "iFrame Allow",
             policyPlaceholder: "fullscreen",
             errorEmbeddableLink: "The link is not embeddable",
-            warningEmbeddableLink: "The link is not embeddable. It will open in a new tab",
+            messageNotEmbeddableLink: "The link is not embeddable. It can only open in a new tab",
+            warningEmbeddableLink: "This link cannot be embedded.",
             errorInvalidUrl: 'Please enter a valid URL (starting with "https://")',
             findOutMoreHere: "Find out more here",
         },

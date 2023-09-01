@@ -275,10 +275,27 @@ export class AreasPropertiesListener {
 
             const closable = property.closable;
 
-            const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, closable);
+            const coWebsite = new JitsiCoWebsite(
+                new URL(domain),
+                false,
+                undefined,
+                undefined,
+                closable,
+                roomName,
+                gameManager.getPlayerName() ?? "unknown",
+                jwt,
+                property.jitsiRoomConfig,
+                undefined,
+                domainWithoutProtocol
+            );
 
             coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
-            this.scene.initialiseJitsi(coWebsite, roomName, jwt, domainWithoutProtocol);
+
+            coWebsiteManager.loadCoWebsite(coWebsite).catch((err) => {
+                console.error(err);
+            });
+
+            analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
             layoutManagerActionStore.removeAction("jitsi");
         };
@@ -402,7 +419,7 @@ export class AreasPropertiesListener {
         inOpenWebsite.set(true);
 
         // analytics event for open website
-        analyticsClient.openedWebsite();
+        analyticsClient.openedWebsite(coWebsite.getUrl());
     }
 
     private loadCoWebsiteFunction(coWebsite: CoWebsite, actionId: string): void {

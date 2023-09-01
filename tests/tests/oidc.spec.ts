@@ -36,5 +36,12 @@ test.describe('OpenID connect @oidc', () => {
     // Let's check the sign in button is back here when we signed out
     await page.click('#menuIcon img:first-child');
     await expect(page.locator('a:has-text("Sign in")')).toContainText("Sign in");
+
+    // Let's try to login using the scripting API
+    await evaluateScript(page, async () => {
+      await WA.onInit();
+      await WA.nav.goToLogin();
+    });
+    await expect(page.locator('#Input_Username')).toBeVisible();
   });
 });

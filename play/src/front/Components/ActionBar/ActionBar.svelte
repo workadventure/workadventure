@@ -54,7 +54,6 @@
         myCameraStore,
         myMicrophoneStore,
     } from "../../Stores/MyMediaStore";
-    import type { MenuItem, TranslatedMenu } from "../../Stores/MenuStore";
     import {
         activeSubMenuStore,
         menuVisiblilityStore,
@@ -93,6 +92,7 @@
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
+    import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -160,7 +160,7 @@
     function toggleChat() {
         if (!$chatVisibilityStore) {
             menuVisiblilityStore.set(false);
-            activeSubMenuStore.set(0);
+            activeSubMenuStore.activateByIndex(0);
         }
         chatVisibilityStore.set(!$chatVisibilityStore);
     }
@@ -269,19 +269,13 @@
     function showInvite() {
         modalVisibilityStore.set(false);
 
-        const indexInviteMenu = $subMenusStore.findIndex(
-            (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.invite
-        );
-        if (indexInviteMenu === -1) {
-            console.error(`Menu key: ${SubMenusInterface.invite} was not founded in subMenusStore: `, $subMenusStore);
-            return;
-        }
-        if ($menuVisiblilityStore && $activeSubMenuStore === indexInviteMenu) {
+        const inviteMenu = subMenusStore.findByKey(SubMenusInterface.invite);
+        if ($menuVisiblilityStore && activeSubMenuStore.isActive(inviteMenu)) {
             menuVisiblilityStore.set(false);
-            activeSubMenuStore.set(0);
+            activeSubMenuStore.activateByIndex(0);
             return;
         }
-        activeSubMenuStore.set(indexInviteMenu);
+        activeSubMenuStore.activateByMenuItem(inviteMenu);
         menuVisiblilityStore.set(true);
 
         resetChatVisibility();
@@ -289,19 +283,13 @@
     }
 
     function showMenu() {
-        const indexInviteMenu = $subMenusStore.findIndex(
-            (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.profile
-        );
-        if (indexInviteMenu === -1) {
-            console.error(`Menu key: ${SubMenusInterface.profile} was not founded in subMenusStore: `, $subMenusStore);
-            return;
-        }
-        if ($menuVisiblilityStore && $activeSubMenuStore === indexInviteMenu) {
+        const profileMenu = subMenusStore.findByKey(SubMenusInterface.profile);
+        if ($menuVisiblilityStore && activeSubMenuStore.isActive(profileMenu)) {
             menuVisiblilityStore.set(false);
-            activeSubMenuStore.set(0);
+            activeSubMenuStore.activateByIndex(0);
             return;
         }
-        activeSubMenuStore.set(indexInviteMenu);
+        activeSubMenuStore.activateByMenuItem(profileMenu);
         menuVisiblilityStore.set(true);
 
         resetChatVisibility();
@@ -309,7 +297,7 @@
     }
 
     function openBo() {
-        window.open(`https://workadventu.re/admin`, "_blanck");
+        window.open(ADMIN_URL, "_blank");
     }
 
     /*function register() {
@@ -820,7 +808,7 @@
                         <Tooltip text={$LL.actionbar.bo()} />
 
                         <button id="backOfficeIcon">
-                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-map-editor" />
+                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="open-back-office" />
                         </button>
                     </div>
                 {/if}
