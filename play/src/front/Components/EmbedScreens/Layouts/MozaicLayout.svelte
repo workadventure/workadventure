@@ -26,7 +26,7 @@
         class:tw-grid-cols-1={$streamableCollectionStore.size === 1}
         class:tw-grid-cols-2={$streamableCollectionStore.size >= 2}
     >
-        {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
+        {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
             <MediaBox
                 streamable={peer}
                 mozaicSolo={$streamableCollectionStore.size === 1}

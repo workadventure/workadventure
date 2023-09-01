@@ -67,8 +67,8 @@ export class Space implements CustomJsonReplacerInterface {
             if (spaceUser.visitCardUrl) {
                 user.visitCardUrl = spaceUser.visitCardUrl;
             }
-            if (spaceUser.screenSharing !== undefined) {
-                user.screenSharing = spaceUser.screenSharing;
+            if (spaceUser.screenSharingState !== undefined) {
+                user.screenSharingState = spaceUser.screenSharingState;
             }
             if (spaceUser.microphoneState !== undefined) {
                 user.microphoneState = spaceUser.microphoneState;

@@ -167,7 +167,7 @@ On your server, install the latest Docker version, along docker-compose.
 
 ### 2. Copy deployment files 
 
-Copy the [`.env.template`](.env.template) file on your server, and rename it to `.env`.
+Copy the [`.env.prod.template`](.env.prod.template) file on your server, and rename it to `.env`.
 Copy the [`docker-compose.prod.yaml`](docker-compose.prod.yaml) file on your server, and rename it to `docker-compose.yaml`.
 
 ### 3. Configure your environment

@@ -48,50 +48,60 @@
 <svelte:window on:keydown={onKeyDown} />
 
 {#if actionsMenuData}
-    <div class="actions-menu is-rounded">
-        <button type="button" class="close-window" on:click={closeActionsMenu}>×</button>
-        {#if actionsMenuData.menuName}
-            <h2 class="name">{actionsMenuData.menuName}</h2>
-        {/if}
-        {#if sortedActions}
-            <div class="actions tw-flex tw-justify-center tw-flex-col tw-items-center">
-                {#each sortedActions ?? [] as action}
-                    <button
-                        type="button"
-                        class="btn light tw-justify-center tw-font-bold tw-text-xs sm:tw-text-base tw-text-center tw-m-2 {action.style ??
-                            ''}"
-                        on:click|preventDefault={() => {
-                            action.callback();
-                        }}
-                    >
-                        {action.actionName}
-                    </button>
-                {/each}
-            </div>
-        {/if}
+    <div class="tw-flex tw-w-full tw-h-full tw-justify-center tw-items-center">
+        <div class="actions-menu tw-p-4 is-rounded tw-max-w-xs">
+            <button type="button" class="close-window" on:click={closeActionsMenu}>×</button>
+            {#if actionsMenuData.menuName}
+                <h2 class="name tw-mb-2 tw-mx-2 margin-close">{actionsMenuData.menuName}</h2>
+            {/if}
+            {#if sortedActions}
+                <div
+                    class="actions tw-flex tw tw-flex-col tw-items-center"
+                    class:margin-close={!actionsMenuData.menuName}
+                >
+                    {#each sortedActions ?? [] as action}
+                        <button
+                            type="button"
+                            class="btn light tw-justify-center tw-font-bold tw-text-xs sm:tw-text-base tw-text-center tw-h-fit tw-m-2 tw-w-full {action.style ??
+                                ''}"
+                            on:click|preventDefault={() => {
+                                action.callback();
+                            }}
+                        >
+                            {action.actionName}
+                        </button>
+                    {/each}
+                </div>
+            {/if}
+        </div>
     </div>
 {/if}
 
 <style lang="scss">
     .actions-menu {
-        position: absolute;
-        left: 50%;
-        transform: translate(-50%, 0);
-        width: 260px !important;
+        position: relative;
+        width: auto !important;
         height: max-content !important;
         max-height: 50vh;
         margin-top: 200px;
         overflow-y: auto;
         z-index: 425;
-
+        word-break: break-all;
         pointer-events: auto;
         color: whitesmoke;
         border-radius: 0.25rem;
         background-color: rgb(27 27 41 / 0.95);
 
         .close-window {
+            position: absolute;
             right: 0rem;
             top: 0rem;
+            margin-top: 0.3rem;
+            margin-right: 0.2rem;
+        }
+
+        .margin-close {
+            margin-top: 15px;
         }
 
         .actions {
@@ -99,10 +109,6 @@
             width: 100%;
             overflow-x: hidden;
             overflow-y: auto;
-            padding: 25px;
-            button {
-                width: fit-content;
-            }
         }
 
         .name {
@@ -117,7 +123,6 @@
 
         h2 {
             text-align: center;
-            margin: 20px;
         }
 
         .nes-btn.is-error.close {

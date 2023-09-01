@@ -134,7 +134,7 @@
     "google-protobuf": "^3.21.0",
     "hyper-express": "^6.4.11",
     "jsonwebtoken": "^9.0.0",
-    "lib-jitsi-meet": "github:jitsi/lib-jitsi-meet#jitsi-meet_8654",
+    "lib-jitsi-meet": "github:jitsi/lib-jitsi-meet#jitsi-meet_8924",
     "live-directory": "moufmouf/live-directory#hot_reload_param",
     "lodash": "^4.17.21",
     "mustache": "^4.2.0",

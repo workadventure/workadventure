@@ -334,7 +334,7 @@
                         <div
                             class={`error-hover tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-4 tw-py-2 ${
                                 fileUploaded.errorCode === 423 && $me && $me.isAdmin
-                                    ? "tw-text-orange"
+                                    ? "tw-text-warning"
                                     : "tw-text-pop-red"
                             } tw-absolute tw-w-full`}
                         >
@@ -360,7 +360,7 @@
                             {/if}
                             {#if fileUploaded.errorCode === 423 && $me && $me.isAdmin}
                                 <button
-                                    class="tw-text-orange tw-font-bold tw-underline tw-m-auto"
+                                    class="tw-text-warning tw-font-bold tw-underline tw-m-auto"
                                     on:click={() => iframeListener.sendRedirectPricing()}
                                 >
                                     <img alt="Crown logo" src={crown} class="tw-mr-1" />
@@ -401,10 +401,10 @@
             {/each}
             {#if informationMessage}
                 <div
-                    class="tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-py-2 tw-text-xs tw-items-center tw-px-4 tw-text-orange tw-w-full tw-mb-1 tw-cursor-pointer"
+                    class="tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-py-2 tw-text-xs tw-items-center tw-px-4 tw-text-warning tw-w-full tw-mb-1 tw-cursor-pointer"
                     on:click|preventDefault|stopPropagation={() => (informationMessage = null)}
                 >
-                    <div class="tw-text-orange tw-mr-1.5">
+                    <div class="tw-text-warning tw-mr-1.5">
                         <AlertCircleIcon size="16" />
                     </div>
                     <p class="tw-m-0">

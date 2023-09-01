@@ -42,4 +42,8 @@ export interface FrontConfigurationInterface {
     JITSI_MUC_DOMAIN: string | undefined;
     MAP_STORAGE_PATH_PREFIX: string | undefined;
     FEATURE_FLAG_BROADCAST_AREAS: boolean;
+    PEER_VIDEO_LOW_BANDWIDTH: number;
+    PEER_VIDEO_RECOMMENDED_BANDWIDTH: number;
+    PEER_SCREEN_SHARE_LOW_BANDWIDTH: number;
+    PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: number;
 }

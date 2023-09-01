@@ -119,7 +119,7 @@
                 bind:value={rights}
             />
             <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.settings.megaphone.inputs.rightsHelper()}</p>
-            <ButtonState promise={save} initialText={$LL.menu.settings.save.button()} loadingText="Saving" />
+            <ButtonState promise={save} initialText={$LL.menu.settings.save()} loadingText="Saving" />
         {:catch error}
             <p class="help-text">{error}</p>
         {/await}

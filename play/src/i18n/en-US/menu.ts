@@ -27,20 +27,17 @@ const menu: BaseTranslation = {
         logout: "Log out",
     },
     settings: {
-        videoQuality: {
+        videoBandwidth: {
             title: "Video quality",
-            short: {
-                high: "High (30 fps)",
-                medium: "Medium (20 fps)",
-                small: "Small (10 fps)",
-                minimum: "Minimum (5 fps)",
-            },
-            long: {
-                high: "High video quality (30 fps)",
-                medium: "Medium video quality (20 fps, recommended)",
-                small: "Small video quality (10 fps)",
-                minimum: "Minimum video quality (5 fps)",
-            },
+            low: "Low",
+            recommended: "Recommended",
+            unlimited: "Unlimited",
+        },
+        shareScreenBandwidth: {
+            title: "Screen sharing quality",
+            low: "Low",
+            recommended: "Recommended",
+            unlimited: "Unlimited",
         },
         language: {
             title: "Language",
@@ -52,10 +49,8 @@ const menu: BaseTranslation = {
             cameraToggle: 'Keep camera active in "away mode"',
             microphoneToggle: 'Keep microphone active in "away mode"',
         },
-        save: {
-            warning: "(Saving these settings will restart the game)",
-            button: "Save",
-        },
+        save: "Save",
+        otherSettings: "Other settings",
         fullscreen: "Fullscreen",
         notifications: "Notifications",
         chatSounds: "Sounds of chat",

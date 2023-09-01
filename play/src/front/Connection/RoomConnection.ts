@@ -1442,6 +1442,17 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitScreenSharingState(state: boolean) {
+        this.send({
+            message: {
+                $case: "screenSharingStateMessage",
+                screenSharingStateMessage: {
+                    value: state,
+                },
+            },
+        });
+    }
+
     public emitMegaphoneState(state: boolean) {
         const currentMegaphoneName = get(currentMegaphoneNameStore);
         this.send({

@@ -8,6 +8,7 @@ const megaphone: BaseTranslation = {
         goingToStream: "You are going to stream",
         yourMicrophone: "your microphone",
         yourCamera: "your camera",
+        yourScreen: "your screen",
         and: "and",
         toAll: "to all participants",
         confirm: "Confirm",

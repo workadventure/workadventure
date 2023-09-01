@@ -7,7 +7,7 @@
     import { isMediaBreakpointDown, isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
     import { myCameraStore } from "../../../Stores/MyMediaStore";
     import MyCamera from "../../MyCamera.svelte";
-    import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
+    import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import { megaphoneEnabledStore } from "../../../Stores/MegaphoneStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
@@ -107,6 +107,9 @@
                 {/if}
                 {#if $myCameraStore && !$megaphoneEnabledStore}
                     <MyCamera />
+                {/if}
+                {#if $myJitsiCameraStore}
+                    <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
                 {/if}
             </div>
         {/if}

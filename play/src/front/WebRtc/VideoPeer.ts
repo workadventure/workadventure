@@ -1,10 +1,9 @@
 import { Buffer } from "buffer";
 import type { Subscription } from "rxjs";
-import type { Readable, Writable, Unsubscriber } from "svelte/store";
-import { readable, writable } from "svelte/store";
+import { Readable, Writable, Unsubscriber, get, readable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
 import type { RoomConnection } from "../Connection/RoomConnection";
-import { localStreamStore, obtainedMediaConstraintStore } from "../Stores/MediaStore";
+import { localStreamStore, obtainedMediaConstraintStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
 import {
     chatMessagesStore,
@@ -12,7 +11,7 @@ import {
     newChatMessageWritingStatusSubject,
     writingStatusMessageStore,
 } from "../Stores/ChatStore";
-import { getIceServersConfig } from "../Components/Video/utils";
+import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { gameManager } from "../Phaser/Game/GameManager";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
@@ -56,11 +55,13 @@ export class VideoPeer extends Peer {
         public readonly userName: string,
         private connection: RoomConnection
     ) {
+        const bandwidth = get(videoBandwidthStore);
         super({
             initiator,
             config: {
                 iceServers: getIceServersConfig(user),
             },
+            sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
         });
 
         this.userId = user.userId;

@@ -132,6 +132,7 @@ import { megaphoneCanBeUsedStore, megaphoneEnabledStore } from "../../Stores/Meg
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
+import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -1304,6 +1305,10 @@ export class GameScene extends DirtyScene {
 
         requestedMicrophoneState.subscribe((state) => {
             this.connection?.emitMicrophoneState(state);
+        });
+
+        requestedScreenSharingState.subscribe((state) => {
+            this.connection?.emitScreenSharingState(state);
         });
 
         megaphoneEnabledStore.subscribe((state) => {

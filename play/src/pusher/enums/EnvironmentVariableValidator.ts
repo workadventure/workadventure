@@ -104,6 +104,12 @@ export const EnvironmentVariables = z.object({
     JITSI_XMPP_DOMAIN: z.string().optional(),
     JITSI_MUC_DOMAIN: z.string().optional(),
     MAP_STORAGE_PATH_PREFIX: z.string().optional(),
+
+    // Limit bandwidth environment variables
+    PEER_VIDEO_LOW_BANDWIDTH: PositiveIntAsString.optional(),
+    PEER_VIDEO_RECOMMENDED_BANDWIDTH: PositiveIntAsString.optional(),
+    PEER_SCREEN_SHARE_LOW_BANDWIDTH: PositiveIntAsString.optional(),
+    PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: PositiveIntAsString.optional(),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

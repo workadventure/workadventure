@@ -4,13 +4,14 @@ import { createNestedStore } from "@workadventure/store-utils";
 import type { RemotePeer } from "../WebRtc/SimplePeer";
 import { GameScene } from "../Phaser/Game/GameScene";
 import { JitsiTrackWrapper } from "../Streaming/Jitsi/JitsiTrackWrapper";
+import { JitsiTrackStreamWrapper } from "../Streaming/Jitsi/JitsiTrackStreamWrapper";
 import type { ScreenSharingLocalMedia } from "./ScreenSharingStore";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 import { peerStore, screenSharingStreamStore } from "./PeerStore";
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
 import { gameSceneStore } from "./GameSceneStore";
 
-export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackWrapper;
+export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
 
 const jitsiTracksStore = createNestedStore<GameScene | undefined, Map<string, JitsiTrackWrapper>>(
     gameSceneStore,
@@ -33,7 +34,20 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
             $screenSharingStreamStore.forEach(addPeer);
             $peerStore.forEach(addPeer);
-            $jitsiTracksStore.forEach((jitsiTrackStore) => addPeer(jitsiTrackStore));
+            console.warn("streamableCollectionStore triggerred");
+            $jitsiTracksStore.forEach((jitsiTrackWrapper) => {
+                const cameraTrackWrapper = jitsiTrackWrapper.cameraTrackWrapper;
+                if (!cameraTrackWrapper.isEmpty() && !jitsiTrackWrapper.isLocal) {
+                    addPeer(cameraTrackWrapper);
+                }
+                const screenSharingTrackWrapper = jitsiTrackWrapper.screenSharingTrackWrapper;
+                if (
+                    !screenSharingTrackWrapper.isEmpty() &&
+                    screenSharingTrackWrapper.jitsiTrackWrapper.spaceUser?.screenSharingState !== false
+                ) {
+                    addPeer(screenSharingTrackWrapper);
+                }
+            });
 
             if ($screenSharingLocalMedia?.stream) {
                 addPeer($screenSharingLocalMedia);
@@ -45,10 +59,22 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
                 highlightedEmbedScreen.removeHighlight();
             }
 
-            //set(peers);
             return peers;
         }
     );
 }
 
 export const streamableCollectionStore = createStreamableCollectionStore();
+
+export const myJitsiCameraStore = derived([jitsiTracksStore], ([$jitsiTracksStore]) => {
+    for (const jitsiTrackWrapper of $jitsiTracksStore.values()) {
+        if (jitsiTrackWrapper.isLocal) {
+            const cameraTrackWrapper = jitsiTrackWrapper.cameraTrackWrapper;
+            if (cameraTrackWrapper.isEmpty()) {
+                return null;
+            }
+            return cameraTrackWrapper;
+        }
+    }
+    return null;
+});

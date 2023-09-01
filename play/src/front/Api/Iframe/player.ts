@@ -185,7 +185,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     }
 
     /**
-     * Player will try to find shortest path to the destination point and proceed to move there.
+     * Player will try to find the shortest path to the destination point and proceed to move there.
      * {@link https://workadventu.re/map-building/api-player.md#move-player-to-position | Website documentation}
      *
      * @param {number} x Horizontal position

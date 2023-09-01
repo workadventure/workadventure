@@ -132,3 +132,44 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
         }
     }, 5000);
 }
+
+export function getSdpTransform(videoBandwidth = 0) {
+    return (sdp: string) => {
+        sdp = updateBandwidthRestriction(sdp, videoBandwidth, "video");
+
+        return sdp;
+    };
+}
+
+function updateBandwidthRestriction(sdp: string, bandwidth: integer, mediaType: string): string {
+    if (bandwidth <= 0) {
+        return sdp;
+    }
+
+    for (
+        let targetMediaPos = sdp.indexOf(`m=${mediaType}`);
+        targetMediaPos !== -1;
+        targetMediaPos = sdp.indexOf(`m=${mediaType}`, targetMediaPos + 1)
+    ) {
+        // offer TIAS and AS (in this order)
+        for (const modifier of ["AS", "TIAS"]) {
+            const nextMediaPos = sdp.indexOf(`m=`, targetMediaPos + 1);
+            const newBandwidth = modifier === "TIAS" ? (bandwidth >>> 0) * 1000 : bandwidth;
+            const nextBWPos = sdp.indexOf(`b=${modifier}:`, targetMediaPos + 1);
+
+            let mediaSlice = sdp.slice(targetMediaPos);
+            const bwFieldAlreadyExists = nextBWPos !== -1 && (nextBWPos < nextMediaPos || nextMediaPos === -1);
+            if (bwFieldAlreadyExists) {
+                // delete it
+                mediaSlice = mediaSlice.replace(new RegExp(`b=${modifier}:.*[\r?\n]`), "");
+            }
+            // insert b= after c= line.
+            mediaSlice = mediaSlice.replace(/c=IN (.*)(\r?\n)/, `c=IN $1$2b=${modifier}:${newBandwidth}$2`);
+
+            // update the sdp
+            sdp = sdp.slice(0, targetMediaPos) + mediaSlice;
+        }
+    }
+
+    return sdp;
+}
