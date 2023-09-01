@@ -20,13 +20,13 @@ export enum SizeAlteringSquareEvent {
 export class SizeAlteringSquare extends Phaser.GameObjects.Rectangle {
     private selected: boolean;
 
-    constructor(scene: Phaser.Scene, pos: { x: number; y: number }) {
+    constructor(scene: Phaser.Scene, pos: { x: number; y: number }, private cursor: string) {
         super(scene, pos.x, pos.y, 7, 7, 0xffffff);
 
         this.selected = false;
 
         this.setStrokeStyle(1, 0x000000);
-        this.setInteractive({ cursor: "pointer" });
+        this.setInteractive({ cursor });
         this.scene.input.setDraggable(this);
 
         this.bindEventHandlers();
