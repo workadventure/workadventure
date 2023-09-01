@@ -24,10 +24,6 @@ test.describe('Iframe API', () => {
 
     await login(page);
 
-    // wait some time for the scripting menu to be loaded
-    // eslint-disable-next-line playwright/no-wait-for-timeout
-    await page.waitForTimeout(2_000);
-    
     await page.click('#menuIcon img:first-child', { timeout: 10000 });
     await page.click('button:has-text("custom iframe menu")', { timeout: 10000 });
 
