@@ -4,6 +4,7 @@
     import { iframeListener } from "../../Api/IframeListener";
     import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     let modalIframe: HTMLIFrameElement;
     let mainModal: HTMLDivElement;
@@ -34,6 +35,10 @@
         }
     });
 
+    let modalUrl = $modalIframeStore
+        ? new URL($modalIframeStore.src, gameManager.currentStartedRoom.mapUrl).toString()
+        : undefined;
+
     let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
         isMobile = isMediaBreakpointUp("md");
@@ -45,7 +50,7 @@
 <div class="menu-container {isMobile ? 'mobile' : $modalIframeStore?.position}" bind:this={mainModal}>
     <div class="tw-w-full tw-bg-dark-purple/95 tw-rounded" transition:fly={{ x: 1000, duration: 500 }}>
         <button type="button" class="close-window" on:click={close}>&times</button>
-        {#if $modalIframeStore?.src != undefined}
+        {#if modalUrl != undefined}
             <iframe
                 id="modalIframe"
                 bind:this={modalIframe}
@@ -53,7 +58,7 @@
                 width="100%"
                 allow={$modalIframeStore?.allow}
                 title={$modalIframeStore?.title}
-                src={$modalIframeStore?.src}
+                src={modalUrl}
                 class="tw-border-0"
             />
         {/if}
