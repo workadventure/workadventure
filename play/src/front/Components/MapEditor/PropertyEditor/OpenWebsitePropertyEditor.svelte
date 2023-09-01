@@ -9,6 +9,8 @@
         KlaxoonException,
         KlaxoonService,
         YoutubeService,
+        EraserService,
+        EraserException,
     } from "@workadventure/shared-utils";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -17,6 +19,7 @@
     import googleDocsSvg from "../../images/applications/icon_google_docs.svg";
     import googleSheetsSvg from "../../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../../images/applications/icon_google_slides.svg";
+    import eraserSvg from "../../images/applications/icon_eraser.svg";
     import { KLAXOON_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
@@ -164,6 +167,25 @@
             onValueChange();
         }
 
+        if (property.application == "eraser") {
+            try {
+                EraserService.validateEraserLink(new URL(property.link as string));
+                embeddable = true;
+                optionAdvancedActivated = false;
+                property.newTab = oldNewTabValue;
+            } catch (e) {
+                embeddable = false;
+                error =
+                    e instanceof EraserException.EraserLinkException
+                        ? $LL.mapEditor.properties.eraserProperties.error()
+                        : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                console.info("Error to check embeddable website", e);
+                property.link = null;
+            }
+            embeddableLoading = false;
+            onValueChange();
+        }
+
         // allow to check if the link is embeddable
         checkEmbeddableLink();
     }
@@ -283,6 +305,9 @@
                 alt={$LL.mapEditor.properties.googleSlidesProperties.description()}
             />
             {$LL.mapEditor.properties.googleSlidesProperties.label()}
+        {:else if property.application === "eraser"}
+            <img class="tw-w-6 tw-mr-1" src={eraserSvg} alt={$LL.mapEditor.properties.eraserProperties.description()} />
+            {$LL.mapEditor.properties.eraserProperties.label()}
         {:else}
             <img class="tw-w-6 tw-mr-1" src={icon} alt={$LL.mapEditor.properties.linkProperties.description()} />
             {$LL.mapEditor.properties.linkProperties.label()}

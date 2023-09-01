@@ -137,6 +137,13 @@ const mapEditor: BaseTranslation = {
             error: "Please enter a valid Google Slides URL",
             disabled: "Google Slides integration is disabled.",
         },
+        eraserProperties: {
+            label: "Eraser",
+            description: "Erase all drawings on the map.",
+            defaultButtonLabel: "Erase",
+            error: "Please enter a valid Eraser URL",
+            disabled: "Eraser integration is disabled.",
+        },
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",

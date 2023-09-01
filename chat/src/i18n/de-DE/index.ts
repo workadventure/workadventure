@@ -86,6 +86,11 @@ const de_DE: Translation = {
                 description: "Senden Sie ein Google Sheets-Dokument in den Chat!",
                 error: "Die Google Sheets-URL ist nicht gültig",
             },
+            eraser: {
+                title: "Eraser",
+                description: "Senden Sie ein Eraser-Board in den Chat!",
+                error: "Die Eraser-URL ist nicht gültig",
+            },
             weblink: {
                 error: "Die URL ist nicht gültig",
             },

@@ -85,6 +85,11 @@ const en_US: BaseTranslation = {
                 description: "Send embedded google sheets in the chat!",
                 error: "Please enter a valid Google Sheets URL",
             },
+            eraser: {
+                title: "Eraser",
+                description: "Send embedded eraser in the chat!",
+                error: "Please enter a valid Eraser URL",
+            },
             weblink: {
                 error: "Please enter a valid URL",
             },

@@ -10,14 +10,9 @@
     import googleDocsSvg from "../images/applications/icon_google_docs.svg";
     import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
+    import eraserSvg from "../images/applications/icon_eraser.svg";
     import { emoteMenuSubStore } from "../../Stores/EmoteStore";
-    import {
-        GOOGLE_DOCS_ENABLED,
-        KLAXOON_CLIENT_ID,
-        KLAXOON_ENABLED,
-        GOOGLE_SHEETS_ENABLED,
-        GOOGLE_SLIDES_ENABLED,
-    } from "../../Enum/EnvironmentVariable";
+    import { KLAXOON_CLIENT_ID } from "../../Enum/EnvironmentVariable";
     import { helpSettingsPopupBlockedStore } from "../../Stores/HelpSettingsPopupBlockedStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { LL } from "../../../i18n/i18n-svelte";
@@ -50,7 +45,8 @@
             connectionManager.currentRoom?.klaxoonToolActivated ||
             connectionManager.currentRoom?.googleDocsToolActivated ||
             connectionManager.currentRoom?.googleSheetsToolActivated ||
-            connectionManager.currentRoom?.googleSlidesToolActivated
+            connectionManager.currentRoom?.googleSlidesToolActivated ||
+            connectionManager.currentRoom?.eraserToolActivated
         );
     }
 
@@ -104,7 +100,7 @@
         style="margin-bottom: 4.5rem; height: auto;"
     >
         <div class="bottom-action-bar">
-            {#if KLAXOON_ENABLED}
+            {#if connectionManager.currentRoom?.klaxoonToolActivated}
                 <div class="bottom-action-section tw-flex animate">
                     <div class="tw-transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.klaxoonProperties.label()} />
@@ -114,7 +110,7 @@
                                 appMenuOpened = false;
                             }}
                             id={`button-app-klaxoon`}
-                            disabled={!KLAXOON_ENABLED}
+                            disabled={!connectionManager.currentRoom?.klaxoonToolActivated}
                         >
                             <img draggable="false" src={klaxoonImg} style="padding: 2px" alt="Klaxoon" />
                         </button>
@@ -122,7 +118,7 @@
                 </div>
             {/if}
             <div class="bottom-action-section tw-flex animate">
-                {#if GOOGLE_DOCS_ENABLED}
+                {#if connectionManager.currentRoom?.googleDocsToolActivated}
                     <div class="tw-transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleDocsProperties.label()} />
                         <button
@@ -131,12 +127,13 @@
                                 appMenuOpened = false;
                             }}
                             id={`button-app-klaxoon`}
+                            disabled={!connectionManager.currentRoom?.googleDocsToolActivated}
                         >
                             <img draggable="false" src={googleDocsSvg} style="padding: 2px" alt="Klaxoon" />
                         </button>
                     </div>
                 {/if}
-                {#if GOOGLE_SHEETS_ENABLED}
+                {#if connectionManager.currentRoom?.googleSheetsToolActivated}
                     <div class="tw-transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleSheetsProperties.label()} />
                         <button
@@ -145,12 +142,13 @@
                                 appMenuOpened = false;
                             }}
                             id={`button-app-klaxoon`}
+                            disabled={!connectionManager.currentRoom?.googleSheetsToolActivated}
                         >
                             <img draggable="false" src={googleSheetsSvg} style="padding: 2px" alt="Klaxoon" />
                         </button>
                     </div>
                 {/if}
-                {#if GOOGLE_SLIDES_ENABLED}
+                {#if connectionManager.currentRoom?.googleSlidesToolActivated}
                     <div class="tw-transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleSlidesProperties.label()} />
                         <button
@@ -159,8 +157,24 @@
                                 appMenuOpened = false;
                             }}
                             id={`button-app-klaxoon`}
+                            disabled={!connectionManager.currentRoom?.googleSlidesToolActivated}
                         >
                             <img draggable="false" src={googleSlidesSvg} style="padding: 2px" alt="Klaxoon" />
+                        </button>
+                    </div>
+                {/if}
+                {#if connectionManager.currentRoom?.eraserToolActivated}
+                    <div class="tw-transition-all bottom-action-button">
+                        <Tooltip text={$LL.mapEditor.properties.eraserProperties.label()} />
+                        <button
+                            on:click={() => {
+                                window.open(`https://app.eraser.io/dashboard/all`, "_blanck");
+                                appMenuOpened = false;
+                            }}
+                            id={`button-app-klaxoon`}
+                            disabled={!connectionManager.currentRoom?.eraserToolActivated}
+                        >
+                            <img draggable="false" src={eraserSvg} style="padding: 2px" alt="Klaxoon" />
                         </button>
                     </div>
                 {/if}

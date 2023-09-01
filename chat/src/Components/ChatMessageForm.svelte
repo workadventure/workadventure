@@ -16,6 +16,8 @@
     import { ChatState } from "stanza/Constants";
     import { get, writable } from "svelte/store";
     import {
+        EraserException,
+        EraserService,
         GoogleWorkSpaceException,
         GoogleWorkSpaceService,
         KlaxoonEvent,
@@ -363,6 +365,18 @@
                     app.link = undefined;
                 }
                 break;
+            case "Eraser":
+                try {
+                    EraserService.validateEraserLink(new URL(app.link));
+                } catch (err) {
+                    if (err instanceof EraserException.EraserLinkException) {
+                        app.error = $LL.form.application.eraser.error();
+                    } else {
+                        app.error = $LL.form.application.weblink.error();
+                    }
+                    app.link = undefined;
+                }
+                break;
             default:
                 throw new Error("Application not found");
         }
@@ -471,6 +485,16 @@
                 return apps;
             });
         }
+        if (chatConnectionManager.eraserToolIsActivated) {
+            applications.update((apps) => {
+                apps.add({
+                    name: "Eraser",
+                    icon: "./static/images/applications/eraser.svg",
+                    example: "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU",
+                });
+                return apps;
+            });
+        }
     });
 </script>
 
@@ -550,6 +574,9 @@
                     {/if}
                     {#if app.name === "Google Slides"}
                         {$LL.form.application.googleSlides.description()}
+                    {/if}
+                    {#if app.name === "Eraser"}
+                        {$LL.form.application.eraser.description()}
                     {/if}
                 </label>
                 <button

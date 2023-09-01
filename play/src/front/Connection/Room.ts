@@ -13,6 +13,7 @@ import {
     GOOGLE_DOCS_ENABLED,
     GOOGLE_SHEETS_ENABLED,
     GOOGLE_SLIDES_ENABLED,
+    ERASER_ENABLED,
 } from "../Enum/EnvironmentVariable";
 import { ApiError } from "../Stores/Errors/ApiError";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
@@ -70,6 +71,7 @@ export class Room {
     private _googleDocsToolActivated: boolean | undefined;
     private _googleSheetsToolActivated: boolean | undefined;
     private _googleSlidesToolActivated: boolean | undefined;
+    private _eraserToolActivated: boolean | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -212,6 +214,7 @@ export class Room {
                 this._googleDocsToolActivated = data.thirdParty?.googleDocsToolActivated ?? GOOGLE_DOCS_ENABLED;
                 this._googleSheetsToolActivated = data.thirdParty?.googleSheetsToolActivated ?? GOOGLE_SHEETS_ENABLED;
                 this._googleSlidesToolActivated = data.thirdParty?.googleSlidesToolActivated ?? GOOGLE_SLIDES_ENABLED;
+                this._eraserToolActivated = data.thirdParty?.eraserToolActivated ?? ERASER_ENABLED;
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {
@@ -440,5 +443,8 @@ export class Room {
     }
     get googleSlidesToolActivated(): boolean {
         return this._googleSlidesToolActivated ?? false;
+    }
+    get eraserToolActivated(): boolean {
+        return this._eraserToolActivated ?? false;
     }
 }

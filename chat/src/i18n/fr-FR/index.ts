@@ -85,6 +85,11 @@ const fr_FR: Translation = {
                 description: "Envoyer un tableau google sheets dans le chat !",
                 error: "L'URL Google Sheets n'est pas valide",
             },
+            eraser: {
+                title: "Eraser",
+                description: "Envoyer un tableau eraser dans le chat !",
+                error: "L'URL Eraser n'est pas valide",
+            },
             weblink: {
                 error: "L'URL n'est pas valide",
             },

@@ -11,6 +11,8 @@
         YoutubeService,
         KlaxoonException,
         KlaxoonEvent,
+        EraserService,
+        EraserException,
     } from "@workadventure/shared-utils";
     import {
         chatMessagesStore,
@@ -217,6 +219,16 @@
                 return apps;
             });
         }
+        if (chatConnectionManager.eraserToolIsActivated) {
+            applications.update((apps) => {
+                apps.add({
+                    name: "Eraser",
+                    icon: "./static/images/applications/eraser.svg",
+                    example: "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU",
+                });
+                return apps;
+            });
+        }
     });
 
     function needHideHeader(authorName: string, date: Date, i: number) {
@@ -335,6 +347,18 @@
                 } catch (err) {
                     if (err instanceof GoogleWorkSpaceException.GoogleSlidesException) {
                         app.error = $LL.form.application.googleSlides.error();
+                    } else {
+                        app.error = $LL.form.application.weblink.error();
+                    }
+                    app.link = undefined;
+                }
+                break;
+            case "Eraser":
+                try {
+                    EraserService.validateEraserLink(new URL(app.link));
+                } catch (err) {
+                    if (err instanceof EraserException.EraserLinkException) {
+                        app.error = $LL.form.application.eraser.error();
                     } else {
                         app.error = $LL.form.application.weblink.error();
                     }

@@ -67,6 +67,10 @@ const isMapThirdPartyData = z.object({
         description: "Whether the google slides tool is activated or not on this room",
         example: true,
     }),
+    eraserToolActivated: extendApi(z.boolean().optional(), {
+        description: "Whether the eraser tool is activated or not on this room",
+        example: true,
+    }),
 });
 
 const MetaTagsData = z.object({

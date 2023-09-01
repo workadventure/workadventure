@@ -1,6 +1,6 @@
 import axios from "axios";
 import { v4 as uuid } from "uuid";
-import { GoogleWorkSpaceService, YoutubeService } from "@workadventure/shared-utils";
+import { EraserService, GoogleWorkSpaceService, YoutubeService } from "@workadventure/shared-utils";
 import { EMBEDLY_KEY } from "../Enum/EnvironmentVariable";
 import { HtmlUtils } from "../Utils/HtmlUtils";
 import { FileMessageManager } from "./FileMessageManager";
@@ -258,6 +258,15 @@ export class WebLink {
                 return GoogleWorkSpaceService.getGoogleSlidesEmbedUrl(urlLink);
             } catch (err) {
                 console.info("Google Slides link is not embedable", err);
+                return null;
+            }
+        } else if (EraserService.isEraserLink(urlLink)) {
+            // Return embedable Google Slides link
+            try {
+                EraserService.validateEraserLink(urlLink);
+                return urlLink.toString();
+            } catch (err) {
+                console.info("Eraser link is not embedable", err);
                 return null;
             }
         }

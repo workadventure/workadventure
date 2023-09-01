@@ -122,6 +122,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             error: "Veuillez entrer une URL Google Slides valide",
             disabled: "L'intégration Google Slides est désactivée.",
         },
+        eraserProperties: {
+            label: "Eraser",
+            description: "Ouvrir Eraser dans WorkAdventure ou dans un nouvel onglet.",
+            defaultButtonLabel: "Erase",
+            error: "Veuillez entrer une URL Eraser valide",
+            disabled: "L'intégration Eraser est désactivée.",
+        },
     },
     entityEditor: {
         itemPicker: {

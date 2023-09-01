@@ -71,6 +71,7 @@ class IframeListener {
                                 iframeEvent.data.googleDocsToolActivated,
                                 iframeEvent.data.googleSheetsToolActivated,
                                 iframeEvent.data.googleSlidesToolActivated,
+                                iframeEvent.data.eraserToolActivated,
                                 iframeEvent.data.authToken,
                                 iframeEvent.data.klaxoonToolClientId
                             );

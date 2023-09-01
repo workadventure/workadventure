@@ -110,6 +110,7 @@ export const EnvironmentVariables = z.object({
     GOOGLE_DOCS_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
     GOOGLE_SHEETS_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
     GOOGLE_SLIDES_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
+    ERASER_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

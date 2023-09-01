@@ -22,6 +22,7 @@
     import googleDocsSvg from "../images/applications/icon_google_docs.svg";
     import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
+    import eraserSvg from "../images/applications/icon_eraser.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
@@ -106,6 +107,10 @@
                         placeholder =
                             "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit";
                         buttonLabel = $LL.mapEditor.properties.googleSlidesProperties.label();
+                        break;
+                    case "eraser":
+                        placeholder = "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU";
+                        buttonLabel = $LL.mapEditor.properties.eraserProperties.label();
                         break;
                     default:
                         placeholder = "https://workadventu.re";
@@ -265,6 +270,18 @@
             disabled={!connectionManager.currentRoom?.googleSlidesToolActivated}
             on:click={() => {
                 onAddProperty("openWebsite", "googleSlides");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.eraserProperties.label()}
+            descriptionText={connectionManager.currentRoom?.eraserToolActivated
+                ? $LL.mapEditor.properties.eraserProperties.description()
+                : $LL.mapEditor.properties.eraserProperties.disabled()}
+            img={eraserSvg}
+            style="z-index: 1;"
+            disabled={!connectionManager.currentRoom?.eraserToolActivated}
+            on:click={() => {
+                onAddProperty("openWebsite", "eraser");
             }}
         />
     </div>

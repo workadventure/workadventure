@@ -8,3 +8,5 @@ export * as YoutubeService from "./Application/YoutubeService";
 export * as GoogleWorkSpaceException from "./Application/Exception/GoogleWorkSpaceException";
 export * as KlaxoonService from "./Application/KlaxoonService";
 export * as KlaxoonException from "./Application/Exception/KlaxoonException";
+export * as EraserService from "./Application/EraserService";
+export * as EraserException from "./Application/Exception/EraserException";
