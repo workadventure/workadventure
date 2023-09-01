@@ -116,7 +116,7 @@ test.describe('Map editor', () => {
     await AreaEditor.setListenerZoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
     await Menu.closeMapEditor(page);
     await Map.walkToPosition(page, 4*32, 2*32);
-    await expect(await page.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 20_000});
+    await expect(await page.locator('.jitsi-video')).toBeVisible({timeout: 20_000});
 
 
     // Second browser
