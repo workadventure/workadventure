@@ -218,12 +218,12 @@ export const cameraNoEnergySavingStore = writable<boolean>(false);
 export const streamingMegaphoneStore = writable<boolean>(false);
 
 export const requestedCameraDeviceIdStore: Writable<string | undefined> = writable(
-    localUserStore.getPreferredVideoInputDevice()
+    localUserStore.getPreferredVideoInputDevice() ? localUserStore.getPreferredVideoInputDevice() : undefined
 );
 
 export const frameRateStore: Writable<number | undefined> = writable();
 export const requestedMicrophoneDeviceIdStore: Writable<string | undefined> = writable(
-    localUserStore.getPreferredAudioInputDevice()
+    localUserStore.getPreferredAudioInputDevice() ? localUserStore.getPreferredAudioInputDevice() : undefined
 );
 
 export const usedCameraDeviceIdStore: Writable<string | undefined> = writable();
