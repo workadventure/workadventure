@@ -1,66 +1,44 @@
-import { readable, writable } from "svelte/store";
+import { get, readable, writable } from "svelte/store";
 import type { VideoPeer } from "../WebRtc/VideoPeer";
 import type { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
-import { analyticsClient } from "../Administration/AnalyticsClient";
 
 /**
- * A store that contains the list of (video) peers we are connected to.
+ * A generic store that contains the list of (video or screenSharing) peers we are connected to.
  */
-function createPeerStore() {
-    const { subscribe, set, update } = writable(new Map<number, VideoPeer>());
+function createPeerStore<T>() {
+    const { subscribe, set, update } = writable(new Map<number, T>());
 
     return {
         subscribe,
-        pushNewPeer(peer: VideoPeer) {
+        getPeer(userId: number): T | undefined {
+            return get({ subscribe }).get(userId);
+        },
+        addPeer(userId: number, peer: T) {
             update((users) => {
-                users.set(peer.userId, peer);
-
-                //send post hog notification
-                analyticsClient.addNewParticipant();
-
+                users.set(userId, peer);
                 return users;
             });
         },
         removePeer(userId: number) {
             update((users) => {
-                users.delete(userId);
+                const peerConnectionDeleted = users.delete(userId);
+                if (!peerConnectionDeleted) {
+                    throw new Error("Error deleting peer connection");
+                }
                 return users;
             });
         },
         cleanupStore() {
-            set(new Map<number, VideoPeer>());
+            set(new Map<number, T>());
+        },
+        getSize(): number {
+            return get({ subscribe }).size;
         },
     };
 }
 
-/**
- * A store that contains the list of screen sharing peers we are connected to.
- */
-function createScreenSharingPeerStore() {
-    const { subscribe, set, update } = writable(new Map<number, ScreenSharingPeer>());
-
-    return {
-        subscribe,
-        pushNewPeer(peer: ScreenSharingPeer) {
-            update((users) => {
-                users.set(peer.userId, peer);
-                return users;
-            });
-        },
-        removePeer(userId: number) {
-            update((users) => {
-                users.delete(userId);
-                return users;
-            });
-        },
-        cleanupStore() {
-            set(new Map<number, ScreenSharingPeer>());
-        },
-    };
-}
-
-export const peerStore = createPeerStore();
-export const screenSharingPeerStore = createScreenSharingPeerStore();
+export const peerStore = createPeerStore<VideoPeer>();
+export const screenSharingPeerStore = createPeerStore<ScreenSharingPeer>();
 
 /**
  * A store that contains ScreenSharingPeer, ONLY if those ScreenSharingPeer are emitting a stream towards us!
