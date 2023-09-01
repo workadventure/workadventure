@@ -567,7 +567,7 @@ export class IoSocketController {
                                 color: Color.getColorByString(name),
                                 tags: memberTags,
                                 cameraState: false,
-                                screenSharing: false,
+                                screenSharingState: false,
                                 microphoneState: false,
                                 megaphoneState: false,
                                 characterTextures: characterTextures.map((characterTexture) => ({
@@ -828,6 +828,13 @@ export class IoSocketController {
                             socketManager.handleMicrophoneState(client, message.message.microphoneStateMessage.value);
                             break;
                         }
+                        case "screenSharingStateMessage": {
+                            socketManager.handleScreenSharingState(
+                                client,
+                                message.message.screenSharingStateMessage.value
+                            );
+                            break;
+                        }
                         case "megaphoneStateMessage": {
                             socketManager.handleMegaphoneState(client, message.message.megaphoneStateMessage);
                             break;
@@ -955,6 +962,7 @@ export class IoSocketController {
         client.spacesFilters = new Map<string, SpaceFilterMessage[]>();
         client.cameraState = ws.cameraState;
         client.microphoneState = ws.microphoneState;
+        client.screenSharingState = ws.screenSharingState;
         return client;
     }
 }

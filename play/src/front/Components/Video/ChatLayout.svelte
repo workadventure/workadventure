@@ -29,7 +29,7 @@
 </script>
 
 <div class="chat-mode {cssClass}">
-    {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
+    {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
         <MediaBox streamable={peer} />
     {/each}
 </div>

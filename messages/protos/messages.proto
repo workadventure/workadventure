@@ -244,7 +244,8 @@ message ClientToServerMessage {
     CameraStateMessage cameraStateMessage = 30;
     MicrophoneStateMessage microphoneStateMessage = 31;
     MegaphoneStateMessage megaphoneStateMessage = 32;
-    JitsiParticipantIdSpaceMessage  jitsiParticipantIdSpaceMessage = 33;
+    ScreenSharingStateMessage screenSharingStateMessage = 33;
+    JitsiParticipantIdSpaceMessage  jitsiParticipantIdSpaceMessage = 34;
   }
 }
 
@@ -566,6 +567,10 @@ message CameraStateMessage {
 }
 
 message MicrophoneStateMessage {
+  bool value = 1;
+}
+
+message ScreenSharingStateMessage {
   bool value = 1;
 }
 
@@ -943,7 +948,7 @@ message SpaceUser{
   repeated string tags = 10;
   bool cameraState = 11; // used
   bool microphoneState = 12; // used
-  bool screenSharing = 13;
+  bool screenSharingState = 13; // used
   bool megaphoneState = 14; // used
   google.protobuf.StringValue jitsiParticipantId = 15; // used
   string uuid = 16; // used
@@ -962,7 +967,7 @@ message PartialSpaceUser{
   repeated string tags = 10;
   google.protobuf.BoolValue cameraState = 11;
   google.protobuf.BoolValue microphoneState = 12;
-  google.protobuf.BoolValue screenSharing = 13;
+  google.protobuf.BoolValue screenSharingState = 13;
   google.protobuf.BoolValue megaphoneState = 14;
   google.protobuf.StringValue jitsiParticipantId = 15;
   string uuid = 16;

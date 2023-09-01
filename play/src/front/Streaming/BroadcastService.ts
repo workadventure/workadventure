@@ -42,30 +42,26 @@ class BroadcastSpace extends Space {
                                 this.jitsiConference = undefined;
                             })
                             .catch((e) => {
+                                // TODO : Handle the error and retry to leave the conference
                                 console.error(e);
                             })
                             .finally(() => {
+                                jitsiLoadingStore.set(false);
                                 broadcastService.checkIfCanDisconnect();
                             });
                     }
                 } else {
-                    if (this.jitsiConference === undefined) {
-                        limit(async () => {
-                            if (this.jitsiConference === undefined) {
-                                jitsiLoadingStore.set(true);
-                                return await broadcastService.joinJitsiConference(spaceName, this);
-                            }
-                            throw new Error("Jitsi conference already exists");
-                        })
-                            .then((jitsiConference) => {
-                                this.jitsiConference = jitsiConference;
-                                broadcastService.emitJitsiParticipantIdSpace(spaceName, jitsiConference.participantId);
-                                jitsiLoadingStore.set(false);
-                            })
-                            .catch((e) => {
-                                console.error("Error while joining the conference", e);
-                            });
-                    }
+                    limit(async () => {
+                        if (this.jitsiConference === undefined) {
+                            jitsiLoadingStore.set(true);
+                            this.jitsiConference = await broadcastService.joinJitsiConference(spaceName, this);
+                            broadcastService.emitJitsiParticipantIdSpace(spaceName, this.jitsiConference.participantId);
+                            jitsiLoadingStore.set(false);
+                        }
+                    }).catch((e) => {
+                        // TODO : Handle the error and retry to join the conference
+                        console.error("Error while joining the conference", e);
+                    });
                 }
             })
         );
@@ -80,6 +76,7 @@ class BroadcastSpace extends Space {
             })
             .finally(() => {
                 this.broadcastService.checkIfCanDisconnect();
+                jitsiLoadingStore.set(false);
             });
         this.unsubscribes.forEach((unsubscribe) => unsubscribe());
         super.destroy();
@@ -110,7 +107,9 @@ export class BroadcastService {
                 this.broadcastSpaces.forEach((broadcastSpace) => {
                     if (broadcastSpace.jitsiConference) {
                         broadcastSpace.jitsiConference.broadcast(["video", "audio"]);
-                        void broadcastSpace.jitsiConference.firstLocalTrackInit();
+                        broadcastSpace.jitsiConference.firstLocalTrackInit().catch((e) => {
+                            console.error(e);
+                        });
                     }
                 });
             } else {
@@ -140,6 +139,7 @@ export class BroadcastService {
             this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.name !== spaceName);
             broadcastServiceLogger("BroadcastService => leaveSpace", spaceName);
         }
+        jitsiLoadingStore.set(false);
     }
 
     private async connect() {
@@ -166,7 +166,7 @@ export class BroadcastService {
             }
         }
 
-        debug("Joining Jitsi conference, jitsiConnecton is defined" + roomName);
+        debug("Joining Jitsi conference, jitsiConnection is defined " + roomName);
 
         const jitsiConference = await JitsiConferenceWrapper.join(this.jitsiConnection, roomName);
         jitsiConferencesStore.set(roomName, jitsiConference);
@@ -240,6 +240,7 @@ export class BroadcastService {
                 })
                 .catch((e) => {
                     console.error(e);
+                    jitsiLoadingStore.set(false);
                 });
         }
     }
