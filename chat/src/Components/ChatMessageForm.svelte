@@ -131,6 +131,13 @@
         } else {
             mucRoom.sendMessage(message);
         }
+        newMessageText = "";
+        htmlMessageText = "";
+        dispatch("scrollDown");
+        setTimeout(() => {
+            textarea.innerHTML = "";
+            dispatch("formHeight", messageForm.clientHeight);
+        }, 0);
 
         if ($applicationsSelected.size > 0) {
             for (const app of $applicationsSelected) {
