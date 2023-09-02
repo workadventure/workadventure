@@ -7,7 +7,7 @@
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { JitsiTrackWrapper } from "../../Streaming/Jitsi/JitsiTrackWrapper";
+    import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
@@ -87,7 +87,7 @@
             <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
         </div>
     </div>
-{:else if streamable instanceof JitsiTrackWrapper}
+{:else if streamable instanceof JitsiTrackStreamWrapper}
     <div
         class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
      media-box-shape-color tw-pointer-events-auto screen-blocker

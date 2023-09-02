@@ -19,7 +19,7 @@ import { isSetVariableEvent } from "./SetVariableEvent";
 import { isCreateEmbeddedWebsiteEvent, isEmbeddedWebsiteEvent } from "./EmbeddedWebsiteEvent";
 import { isLoadTilesetEvent } from "./LoadTilesetEvent";
 import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./Ui/TriggerActionMessageEvent";
-import { isMenuRegisterEvent, isUnregisterMenuEvent } from "./Ui/MenuRegisterEvent";
+import { isMenuRegisterEvent, isOpenMenuEvent, isUnregisterMenuEvent } from "./Ui/MenuEvents";
 import { isPlayerPosition } from "./PlayerPosition";
 import { isCameraSetEvent } from "./CameraSetEvent";
 import { isCameraFollowPlayerEvent } from "./CameraFollowPlayerEvent";
@@ -214,6 +214,10 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("unregisterMenu"),
         data: isUnregisterMenuEvent,
+    }),
+    z.object({
+        type: z.literal("openMenu"),
+        data: isOpenMenuEvent,
     }),
     z.object({
         type: z.literal("setTiles"),
@@ -493,6 +497,10 @@ export const iframeQueryMapTypeGuards = {
         answer: z.undefined(),
     },
     closeCoWebsites: {
+        query: z.undefined(),
+        answer: z.undefined(),
+    },
+    goToLogin: {
         query: z.undefined(),
         answer: z.undefined(),
     },

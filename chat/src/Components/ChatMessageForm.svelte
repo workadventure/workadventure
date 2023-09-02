@@ -122,20 +122,14 @@
         }
 
         mucRoom.updateComposingState(ChatState.Paused);
-        if (fileMessageManager.files.length > 0 || (htmlMessageText && htmlMessageText.replace(/\s/g, "").length > 0)) {
-            const message = htmlMessageText.replace(/<div>|<br>/g, "\r").replace(/(<([^>]+)>)/gi, "");
-            if ($selectedMessageToReply) {
-                sendReplyMessage(message);
-            } else {
-                mucRoom.sendMessage(message);
-            }
-            newMessageText = "";
-            htmlMessageText = "";
-            dispatch("scrollDown");
-            setTimeout(() => {
-                textarea.innerHTML = "";
-                dispatch("formHeight", messageForm.clientHeight);
-            }, 0);
+        const message = htmlMessageText
+            .replace(/<div>/g, "\n")
+            .replace(/(<([^>]+)>)/gi, "")
+            .replace(/&nbsp;/g, " ");
+        if ($selectedMessageToReply) {
+            sendReplyMessage(message);
+        } else {
+            mucRoom.sendMessage(message);
         }
 
         if ($applicationsSelected.size > 0) {

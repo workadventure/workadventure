@@ -69,5 +69,6 @@ export interface ExSocketInterface extends compressors.WebSocket, CustomJsonRepl
     spacesFilters: Map<string, SpaceFilterMessage[]>;
     cameraState?: boolean;
     microphoneState?: boolean;
+    screenSharingState?: boolean;
     megaphoneState?: boolean;
 }

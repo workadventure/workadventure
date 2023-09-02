@@ -76,6 +76,7 @@ export class SimpleCoWebsite implements CoWebsite {
             }
 
             this.iframe.classList.add("pixel");
+            this.iframe.style.backgroundColor = "white";
 
             const onloadPromise = new Promise<void>((resolve) => {
                 if (this.iframe) {

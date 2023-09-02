@@ -2,6 +2,7 @@ import { Subject } from "rxjs";
 import type { Readable, Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
+import { randomDelay } from "@workadventure/shared-utils/src/RandomDelay/RandomDelay";
 import { waScaleManager } from "../Phaser/Services/WaScaleManager";
 import { coWebsites, coWebsitesNotAsleep, mainCoWebsite } from "../Stores/CoWebsiteStore";
 import { embedScreenLayoutStore } from "../Stores/EmbedScreensStore";
@@ -688,7 +689,8 @@ class CoWebsiteManager {
 
         const coWebsiteLoading = coWebsite
             .load()
-            .then(() => {
+            .then(async () => {
+                await randomDelay();
                 const mainCoWebsite = this.getMainCoWebsite();
                 const highlightedEmbed = get(highlightedEmbedScreen);
                 if (mainCoWebsite) {
@@ -725,7 +727,9 @@ class CoWebsiteManager {
 
         return coWebsite
             .unload()
-            .then(() => {
+            .then(async () => {
+                await randomDelay();
+
                 coWebsites.remove(coWebsite);
                 const mainCoWebsite = this.getMainCoWebsite();
 

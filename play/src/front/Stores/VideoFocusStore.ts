@@ -1,5 +1,5 @@
 import { get, writable } from "svelte/store";
-import { JitsiTrackWrapper } from "../Streaming/Jitsi/JitsiTrackWrapper";
+import { JitsiTrackStreamWrapper } from "../Streaming/Jitsi/JitsiTrackStreamWrapper";
 import type { Streamable } from "./StreamableCollectionStore";
 import { peerStore } from "./PeerStore";
 
@@ -32,7 +32,7 @@ export const videoFocusStore = createVideoFocusStore();
 
 peerStore.subscribe((peers) => {
     const focusedMedia: Streamable | null = get(videoFocusStore);
-    if (focusedMedia instanceof JitsiTrackWrapper) {
+    if (focusedMedia instanceof JitsiTrackStreamWrapper) {
         return;
     }
     if (focusedMedia && focusedMedia.userId !== undefined && !peers.get(focusedMedia.userId)) {

@@ -101,9 +101,11 @@ export const jitsiLocalTracksStore = derived<Readable<Set<DeviceType>>, Result<J
                     if (track.isAudioTrack()) {
                         tracks.audio = track;
                     } else if (track.isVideoTrack()) {
-                        tracks.video = track;
-                    } else if (track.isScreenSharing()) {
-                        tracks.screenSharing = track;
+                        if (track.getVideoType() === "desktop") {
+                            tracks.screenSharing = track;
+                        } else {
+                            tracks.video = track;
+                        }
                     }
                 }
             }

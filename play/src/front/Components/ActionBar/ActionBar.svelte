@@ -19,6 +19,7 @@
         usedCameraDeviceIdStore,
         usedMicrophoneDeviceIdStore,
         streamingMegaphoneStore,
+        isSpeakerStore,
     } from "../../Stores/MediaStore";
     import cameraImg from "../images/camera.png";
     import cameraOffImg from "../images/camera-off.png";
@@ -33,6 +34,7 @@
     import mapBuilder from "../images/maps-builder.png";
     import screenshareOn from "../images/screenshare-on.png";
     import screenshareOff from "../images/screenshare-off.png";
+    import screenshareOffAlt from "../images/screenshare-off-alt.png";
     import emojiPickOn from "../images/emoji-on.png";
     import closeImg from "../images/close.png";
     import penImg from "../images/pen.png";
@@ -52,7 +54,6 @@
         myCameraStore,
         myMicrophoneStore,
     } from "../../Stores/MyMediaStore";
-    import type { MenuItem, TranslatedMenu } from "../../Stores/MenuStore";
     import {
         activeSubMenuStore,
         menuVisiblilityStore,
@@ -91,6 +92,7 @@
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
+    import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -158,7 +160,7 @@
     function toggleChat() {
         if (!$chatVisibilityStore) {
             menuVisiblilityStore.set(false);
-            activeSubMenuStore.set(0);
+            activeSubMenuStore.activateByIndex(0);
         }
         chatVisibilityStore.set(!$chatVisibilityStore);
     }
@@ -176,7 +178,7 @@
             streamingMegaphoneStore.set(false);
             return;
         }
-        if ($requestedMegaphoneStore) {
+        if ($requestedMegaphoneStore || $megaphoneEnabledStore) {
             analyticsClient.stopMegaphone();
             requestedMegaphoneStore.set(false);
             return;
@@ -271,19 +273,13 @@
     function showInvite() {
         modalVisibilityStore.set(false);
 
-        const indexInviteMenu = $subMenusStore.findIndex(
-            (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.invite
-        );
-        if (indexInviteMenu === -1) {
-            console.error(`Menu key: ${SubMenusInterface.invite} was not founded in subMenusStore: `, $subMenusStore);
-            return;
-        }
-        if ($menuVisiblilityStore && $activeSubMenuStore === indexInviteMenu) {
+        const inviteMenu = subMenusStore.findByKey(SubMenusInterface.invite);
+        if ($menuVisiblilityStore && activeSubMenuStore.isActive(inviteMenu)) {
             menuVisiblilityStore.set(false);
-            activeSubMenuStore.set(0);
+            activeSubMenuStore.activateByIndex(0);
             return;
         }
-        activeSubMenuStore.set(indexInviteMenu);
+        activeSubMenuStore.activateByMenuItem(inviteMenu);
         menuVisiblilityStore.set(true);
 
         resetChatVisibility();
@@ -291,19 +287,13 @@
     }
 
     function showMenu() {
-        const indexInviteMenu = $subMenusStore.findIndex(
-            (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.profile
-        );
-        if (indexInviteMenu === -1) {
-            console.error(`Menu key: ${SubMenusInterface.profile} was not founded in subMenusStore: `, $subMenusStore);
-            return;
-        }
-        if ($menuVisiblilityStore && $activeSubMenuStore === indexInviteMenu) {
+        const profileMenu = subMenusStore.findByKey(SubMenusInterface.profile);
+        if ($menuVisiblilityStore && activeSubMenuStore.isActive(profileMenu)) {
             menuVisiblilityStore.set(false);
-            activeSubMenuStore.set(0);
+            activeSubMenuStore.activateByIndex(0);
             return;
         }
-        activeSubMenuStore.set(indexInviteMenu);
+        activeSubMenuStore.activateByMenuItem(profileMenu);
         menuVisiblilityStore.set(true);
 
         resetChatVisibility();
@@ -311,7 +301,7 @@
     }
 
     function openBo() {
-        window.open(`https://workadventu.re/admin`, "_blanck");
+        window.open(ADMIN_URL, "_blank");
     }
 
     /*function register() {
@@ -680,6 +670,35 @@
                             {/if}
                         </div>
                     {/if}
+                {/if}
+
+                {#if $isSpeakerStore || $streamingMegaphoneStore || $megaphoneEnabledStore}
+                    <div
+                        class="tw-transition-all bottom-action-button"
+                        on:click={() => analyticsClient.screenSharing()}
+                        on:click={screenSharingClick}
+                        class:enabled={$requestedScreenSharingState}
+                    >
+                        <Tooltip text={$LL.actionbar.screensharing()} />
+
+                        <button class:border-top-light={$requestedScreenSharingState}>
+                            {#if $requestedScreenSharingState}
+                                <img
+                                    draggable="false"
+                                    src={screenshareOn}
+                                    style="padding: 2px;"
+                                    alt="Stop screen sharing"
+                                />
+                            {:else}
+                                <img
+                                    draggable="false"
+                                    src={screenshareOffAlt}
+                                    style="padding: 2px;"
+                                    alt="Start screen sharing"
+                                />
+                            {/if}
+                        </button>
+                    </div>
                 {/if}
 
                 <!-- svelte-ignore a11y-click-events-have-key-events -->

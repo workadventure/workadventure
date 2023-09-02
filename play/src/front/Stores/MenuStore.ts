@@ -71,6 +71,7 @@ export interface TranslatedMenu {
 interface ScriptingMenu {
     type: "scripting";
     label: string;
+    key: string;
 }
 
 export type MenuItem = TranslatedMenu | ScriptingMenu;
@@ -84,7 +85,7 @@ export const inviteUserActivated = writable(true);
 export const mapEditorActivated = writable(false);
 
 function createSubMenusStore() {
-    const { subscribe, update } = writable<MenuItem[]>([
+    const store = writable<MenuItem[]>([
         {
             type: "translated",
             key: SubMenusInterface.profile,
@@ -107,6 +108,7 @@ function createSubMenusStore() {
             key: SubMenusInterface.contact,
         },
     ]);
+    const { subscribe, update } = store;
 
     inviteUserActivated.subscribe((value) => {
         //update menu tab
@@ -145,20 +147,50 @@ function createSubMenusStore() {
                 return menuList;
             });
         },
-        addScriptingMenu(menuCommand: string) {
+        /**
+         * Returns a translated menu item by its key.
+         * Throw an error if the key was not found.
+         */
+        findByKey(key: MenuKeys | string): MenuItem {
+            const menuItem = get(store).find((menu) => menu.key === key);
+            if (menuItem === undefined) {
+                throw new Error(`Menu key: ${key} was not founded in menuStore`);
+            }
+            return menuItem;
+        },
+        /**
+         * Returns a custom menu item by its label.
+         * Throw an error if the label was not found.
+         */
+        findByLabel(label: string): MenuItem {
+            const menuItem = get(store).find((menu) => menu.type === "scripting" && menu.label === label);
+            if (menuItem === undefined) {
+                throw new Error(`Custom menu with label: ${label} was not founded in menuStore`);
+            }
+            return menuItem;
+        },
+        findMenuIndex(menuItem: MenuItem): number {
+            const index = get(store).findIndex((item) => menuItem === item);
+            if (index === -1) {
+                throw new Error("Menu not found in menu store");
+            }
+            return index;
+        },
+        addScriptingMenu(menuCommand: string, menuKey: string) {
             update((menuList) => {
-                if (!menuList.find((menu) => menu.type === "scripting" && menu.label === menuCommand)) {
+                if (!menuList.find((menu) => menu.type === "scripting" && menu.key === menuKey)) {
                     menuList.push({
                         type: "scripting",
                         label: menuCommand,
+                        key: menuKey,
                     });
                 }
                 return menuList;
             });
         },
-        removeScriptingMenu(menuCommand: string) {
+        removeScriptingMenu(key: string) {
             update((menuList) => {
-                const index = menuList.findIndex((menu) => menu.type === "scripting" && menu.label === menuCommand);
+                const index = menuList.findIndex((menu) => /*menu.type === "scripting" &&*/ menu.key === key);
                 if (index !== -1) {
                     menuList.splice(index, 1);
                 }
@@ -186,7 +218,27 @@ function createSubMenusStore() {
 
 export const subMenusStore = createSubMenusStore();
 
-export const activeSubMenuStore = writable<number>(0);
+function createActiveSubMenuStore() {
+    const activeSubMenuStore = writable<number>(0);
+    const { subscribe, set } = activeSubMenuStore;
+
+    return {
+        subscribe,
+        activateByIndex(index: number) {
+            set(index);
+        },
+        activateByMenuItem(menuItem: MenuItem) {
+            const index = subMenusStore.findMenuIndex(menuItem);
+            set(index);
+        },
+        isActive(menuItem: MenuItem): boolean {
+            const index = subMenusStore.findMenuIndex(menuItem);
+            return index === get(activeSubMenuStore);
+        },
+    };
+}
+
+export const activeSubMenuStore = createActiveSubMenuStore();
 
 export const contactPageStore = writable<string | undefined>(CONTACT_URL);
 
@@ -208,6 +260,7 @@ export const customMenuIframe = new Map<string, { url: string; allowApi: boolean
 export function handleMenuRegistrationEvent(
     menuName: string,
     iframeUrl: string | undefined = undefined,
+    key: string,
     source: string | undefined = undefined,
     options: { allowApi: boolean }
 ) {
@@ -216,17 +269,23 @@ export function handleMenuRegistrationEvent(
         return;
     }
 
-    subMenusStore.addScriptingMenu(menuName);
+    subMenusStore.addScriptingMenu(menuName, key);
 
     if (iframeUrl !== undefined) {
         const url = new URL(iframeUrl, source);
-        customMenuIframe.set(menuName, { url: url.toString(), allowApi: options.allowApi });
+        customMenuIframe.set(key, { url: url.toString(), allowApi: options.allowApi });
     }
 }
 
-export function handleMenuUnregisterEvent(menuName: string) {
-    subMenusStore.removeScriptingMenu(menuName);
-    customMenuIframe.delete(menuName);
+export function handleMenuUnregisterEvent(key: string) {
+    subMenusStore.removeScriptingMenu(key);
+    customMenuIframe.delete(key);
+}
+
+export function handleOpenMenuEvent(key: string) {
+    const menu = subMenusStore.findByKey(key);
+    activeSubMenuStore.activateByMenuItem(menu);
+    menuVisiblilityStore.set(true);
 }
 
 export function getProfileUrl() {

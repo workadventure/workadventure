@@ -14,6 +14,16 @@ class Menu {
         await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).toHaveClass(/border-top-light/);
     }
 
+    async openMenu(page: Page) {
+        await page.click('#menuIcon img:first-child');
+        await expect(await page.locator('#menuIcon')).toHaveClass(/border-top-light/);
+    }
+
+    async closeMenu(page: Page) {
+        await page.locator('.menu-container').getByRole('button', { name: '×' }).click();
+        await expect(await page.locator('#menuIcon')).not.toHaveClass(/border-top-light/);
+    }
+
     async closeMapEditor(page: Page) {
         await page.getByRole('button', {name: 'toggle-map-editor'}).click();
         await expect(await page.getByRole('button', {name: 'toggle-map-editor'}).first()).not.toHaveClass(/border-top-light/);
