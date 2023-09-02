@@ -22,12 +22,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             placeholder: "Saisissez ici le texte qui sera affiché lors de l'interaction avec l'objet",
         },
         focusableProperties: {
-            label: "Focusable",
-            description: "Focus de la caméra sur cette zone à l'entrée.",
-            zoomMarginLabel: "Marge de zoom",
-            defaultButtonLabel: "Focus sur",
-        },
-        focusableProperties: {
             label: "Focalisable",
             description: "Focaliser sur cette zone à l'entrée.",
             zoomMarginLabel: "Marge de Zoom",
