@@ -60,7 +60,8 @@
             border: solid 1px #c3c3c3;
             &.active {
                 background-color: #56eaff4f;
-                border: solid 1px #56eaff;
+                border: none;
+                backdrop-filter: blur(10px);
             }
             cursor: pointer;
             padding: 2px 3px;

@@ -44,6 +44,8 @@
         name: string;
         icon: string;
         example: string;
+        description: string;
+        image?: string;
         link?: string;
         error?: string;
     }
@@ -175,6 +177,7 @@
                     name: "Klaxoon",
                     icon: "./static/images/applications/klaxoon.svg",
                     example: "https://klaxoon.com/fr",
+                    description: $LL.form.application.klaxoon.description(),
                 });
                 return apps;
             });
@@ -185,6 +188,7 @@
                     name: "Youtube",
                     icon: "./static/images/applications/youtube.svg",
                     example: "https://www.youtube.com/watch?v=Y9ubBWf5w20",
+                    description: $LL.form.application.youtube.description(),
                 });
                 return apps;
             });
@@ -195,6 +199,7 @@
                     name: "Google Docs",
                     icon: "./static/images/applications/google-docs.svg",
                     example: "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit",
+                    description: $LL.form.application.googleDocs.description(),
                 });
                 return apps;
             });
@@ -205,6 +210,7 @@
                     name: "Google Sheets",
                     icon: "./static/images/applications/google-sheets.svg",
                     example: "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit",
+                    description: $LL.form.application.googleSheets.description(),
                 });
                 return apps;
             });
@@ -215,6 +221,7 @@
                     name: "Google Slides",
                     icon: "./static/images/applications/google-slides.svg",
                     example: "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit",
+                    description: $LL.form.application.googleSlides.description(),
                 });
                 return apps;
             });
@@ -225,6 +232,7 @@
                     name: "Eraser",
                     icon: "./static/images/applications/eraser.svg",
                     example: "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU",
+                    description: $LL.form.application.eraser.description(),
                 });
                 return apps;
             });
@@ -268,7 +276,7 @@
                     });
                     // Update app with Klaxoon's Activity Picker
                     app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(event.url));
-                    if (event.imageUrl) app.icon = event.imageUrl;
+                    if (event.imageUrl) app.image = event.imageUrl;
                     if (event.title) app.name = event.title;
                     // Add new app
                     applicationsSelected.update((apps) => {
@@ -625,26 +633,13 @@
         <form on:submit|preventDefault={saveMessage} class="tw-flex tw-flex-col">
             {#each [...$applicationsSelected] as app}
                 <div
-                    class="tw-mx-2 tw-mb-2 tw-px-6 tw-py-3 tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-xl tw-text-xxs tw-justify-between tw-items-center tw-bottom-12"
+                    class="tw-flex tw-flex-column tw-items-center tw-justify-center tw-mx-12 tw-mb-2 tw-p-3 tw-flex tw-flex-wrap tw-rounded-xl tw-text-xxs tw-bottom-12"
+                    style="backdrop-filter: blur(30px);border: solid 1px rgb(27 27 41);"
                 >
                     <div class="tw-flex tw-flex-row tw-justify-between tw-items-center tw-m-1 tw-w-full">
                         <label for="app" class="tw-m-0">
                             <img src={app.icon} alt={app.name} width="20px" />
-                            {#if app.name === "Klaxoon"}
-                                {$LL.form.application.klaxoon.description()}
-                            {/if}
-                            {#if app.name === "Youtube"}
-                                {$LL.form.application.youtube.description()}
-                            {/if}
-                            {#if app.name === "Google Docs"}
-                                {$LL.form.application.googleDocs.description()}
-                            {/if}
-                            {#if app.name === "Google Sheets"}
-                                {$LL.form.application.googleSheets.description()}
-                            {/if}
-                            {#if app.name === "Google Slides"}
-                                {$LL.form.application.googleSlides.description()}
-                            {/if}
+                            {app.description}
                         </label>
                         <button
                             on:click|preventDefault|stopPropagation={() => {
@@ -664,6 +659,9 @@
                         on:keypress={handlerKeyDownAppInput}
                         on:blur={() => checkWebsiteProperty(app)}
                     />
+                    {#if app.image}
+                        <img class="tw-m-4" src={app.image} alt={app.name} width="100px" />
+                    {/if}
                     {#if app.error}
                         <p class="tw-text-pop-red tw-text-xs tw-px-2 tw-mt-2 tw-my-0">{app.error}</p>
                     {/if}
@@ -798,8 +796,7 @@
                     width: max-content;
                     &::before {
                         @apply tw-absolute tw-border-lighter-purple;
-                        left: -18px;
-                        top: 40%;
+                        bottom: -10px;
                         content: "";
                         width: 0;
                         height: 0;
@@ -807,12 +804,10 @@
                         border-right: 9px solid transparent;
                         border-top-width: 6px;
                         border-top-style: solid;
-                        transform: rotate(90deg);
                     }
                     &::after {
                         @apply tw-absolute tw-border-dark-blue;
-                        left: -16px;
-                        top: 40%;
+                        bottom: -10px;
                         content: "";
                         width: 0;
                         height: 0;
@@ -820,7 +815,6 @@
                         border-right: 7px solid transparent;
                         border-top-width: 5px;
                         border-top-style: solid;
-                        transform: rotate(90deg);
                     }
                 }
                 &:hover {
