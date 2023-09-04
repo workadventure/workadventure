@@ -20,7 +20,7 @@
     import googleSheetsSvg from "../../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../../images/applications/icon_google_slides.svg";
     import eraserSvg from "../../images/applications/icon_eraser.svg";
-    import { KLAXOON_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
+    import { connectionManager } from "../../../Connection/ConnectionManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenWebsitePropertyData;
@@ -247,19 +247,26 @@
     }
 
     function openKlaxoonActivityPicker() {
-        if (!KLAXOON_CLIENT_ID || property.type !== "openWebsite" || property.application !== "klaxoon") {
+        if (
+            !connectionManager.currentRoom?.klaxoonToolClientId ||
+            property.type !== "openWebsite" ||
+            property.application !== "klaxoon"
+        ) {
             console.info("openKlaxoonActivityPicker: app is not a klaxoon app");
             return;
         }
-        KlaxoonService.openKlaxoonActivityPicker(KLAXOON_CLIENT_ID, (payload: KlaxoonEvent) => {
-            property.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(payload.url));
-            property.poster = payload.imageUrl;
-            property.buttonLabel = payload.title;
-            // check if the link is embeddable
-            checkWebsiteProperty().catch((e) => {
-                console.error("Error checking embeddable website", e);
-            });
-        });
+        KlaxoonService.openKlaxoonActivityPicker(
+            connectionManager.currentRoom?.klaxoonToolClientId,
+            (payload: KlaxoonEvent) => {
+                property.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(payload.url));
+                property.poster = payload.imageUrl;
+                property.buttonLabel = payload.title;
+                // check if the link is embeddable
+                checkWebsiteProperty().catch((e) => {
+                    console.error("Error checking embeddable website", e);
+                });
+            }
+        );
     }
 </script>
 
