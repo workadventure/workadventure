@@ -2,12 +2,81 @@ import *  as fs from "fs";
 import { APIResponse, expect, test } from '@playwright/test';
 import { login } from './utils/roles';
 import {createZipFromDirectory} from "./utils/zip";
+import { gotoWait200 } from "./utils/containers";
 
 test.use({
     baseURL: (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://john.doe:password@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost'),
 })
 
 test.describe('Map-storage Upload API', () => {
+    test('users are asked to reconnect when a map is updated', async ({
+        request, page, browser
+    }) => {
+        const uploadFile1 = await request.put("map1.wam", {
+            multipart: {
+                file: {
+                    name: "map1.wam",
+                    mimeType: "application/json",
+                    buffer: Buffer.from(JSON.stringify({
+                        version: "1.0.0",
+                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://maps.workadventure.localhost/tests/E2E/empty.json`,
+                        areas: [],
+                        entities: {},
+                        entityCollections: [],
+                    })),
+                }
+            }
+        });
+        await expect(uploadFile1.ok()).toBeTruthy();
+
+        const uploadFile2 = await request.put("map2.wam", {
+            multipart: {
+                file: {
+                    name: "map2.wam",
+                    mimeType: "application/json",
+                    buffer: Buffer.from(JSON.stringify({
+                        version: "1.0.0",
+                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://maps.workadventure.localhost/tests/E2E/empty.json`,
+                        areas: [],
+                        entities: {},
+                        entityCollections: [],
+                    })),
+                }
+            }
+        });
+        await expect(uploadFile2.ok()).toBeTruthy();
+
+        await gotoWait200(page, 'http://play.workadventure.localhost/~/map1.wam');
+        await login(page, 'Alice');
+
+        const newBrowser = await browser.browserType().launch();
+        const page2 = await newBrowser.newPage();
+        await gotoWait200(page2, 'http://play.workadventure.localhost/~/map2.wam');
+        await login(page2, 'Bob');
+
+        // Let's trigger a reload of map 1 only
+        const uploadFile3 = await request.put("map1.wam", {
+            multipart: {
+                file: {
+                    name: "map1.wam",
+                    mimeType: "application/json",
+                    buffer: Buffer.from(JSON.stringify({
+                        version: "1.0.0",
+                        mapUrl: "http://maps.workadventure.localhost/tests/E2E/empty.json",
+                        areas: [],
+                        entities: {},
+                        entityCollections: [],
+                    })),
+                }
+            }
+        });
+        await expect(uploadFile3.ok()).toBeTruthy();
+
+        // Now let's check the user in map1 did reload, but not on map2
+        await expect((await (page.locator(".test-class")).innerText())).toEqual("New version of map detected. Refresh needed");
+        await expect(page2.getByText("New version of map detected. Refresh needed")).toBeHidden();
+    });
+
     test('can upload ZIP file', async ({
         request,
     }) => {
@@ -491,82 +560,6 @@ test.describe('Map-storage Upload API', () => {
         await expect(maps2["single-map.wam"]).toBeUndefined();
 
     });
-
-    test('users are asked to reconnect when a map is updated', async ({
-        request, page, browser
-    }) => {
-        const uploadFile1 = await request.put("map1.wam", {
-            multipart: {
-                file: {
-                    name: "map1.wam",
-                    mimeType: "application/json",
-                    buffer: Buffer.from(JSON.stringify({
-                        version: "1.0.0",
-                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://maps.workadventure.localhost/tests/E2E/empty.json`,
-                        areas: [],
-                        entities: {},
-                        entityCollections: [],
-                    })),
-                }
-            }
-        });
-        await expect(uploadFile1.ok()).toBeTruthy();
-
-        const uploadFile2 = await request.put("map2.wam", {
-            multipart: {
-                file: {
-                    name: "map2.wam",
-                    mimeType: "application/json",
-                    buffer: Buffer.from(JSON.stringify({
-                        version: "1.0.0",
-                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://maps.workadventure.localhost/tests/E2E/empty.json`,
-                        areas: [],
-                        entities: {},
-                        entityCollections: [],
-                    })),
-                }
-            }
-        });
-        await expect(uploadFile2.ok()).toBeTruthy();
-
-        await page.goto(
-            'http://play.workadventure.localhost/~/map1.wam'
-          );
-        await login(page, 'Alice');
-
-        const newBrowser = await browser.browserType().launch();
-        const page2 = await newBrowser.newPage();
-
-        await page2.goto(
-          'http://play.workadventure.localhost/~/map2.wam'
-        );
-
-        await login(page2, 'Bob');
-
-        // Let's trigger a reload of map 1 only
-        const uploadFile3 = await request.put("map1.wam", {
-            multipart: {
-                file: {
-                    name: "map1.wam",
-                    mimeType: "application/json",
-                    buffer: Buffer.from(JSON.stringify({
-                        version: "1.0.0",
-                        mapUrl: "http://maps.workadventure.localhost/tests/E2E/empty.json",
-                        areas: [],
-                        entities: {},
-                        entityCollections: [],
-                    })),
-                }
-            }
-        });
-        await expect(uploadFile3.ok()).toBeTruthy();
-
-        // Now let's check the user in map1 did reload, but not on map2
-        await expect((await (page.locator(".test-class")).innerText())).toEqual("New version of map detected. Refresh needed");
-        await expect(page2.getByText("New version of map detected. Refresh needed")).toBeHidden();
-
-    });
-
 
     test('special characters support', async ({
         request,

@@ -5,19 +5,25 @@
         CopyIcon,
         CornerDownLeftIcon,
         CornerLeftUpIcon,
+        EyeIcon,
         RefreshCwIcon,
         SmileIcon,
         Trash2Icon,
+        DownloadCloudIcon,
+        LoaderIcon,
     } from "svelte-feather-icons";
     import { Writable } from "svelte/store";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { JID } from "stanza";
+    import { onMount } from "svelte";
     import { MucRoom } from "../../Xmpp/MucRoom";
     import { Message } from "../../Model/Message";
     import { LL, locale } from "../../i18n/i18n-svelte";
     import { selectedMessageToReact, selectedMessageToReply } from "../../Stores/ChatStore";
     import { HtmlUtils } from "../../Utils/HtmlUtils";
     import { User } from "../../Xmpp/AbstractRoom";
+    import { iframeListener } from "../../IframeListener";
+    import { FileMessageManager } from "../../Services/FileMessageManager";
     import HtmlMessage from "./HtmlMessage.svelte";
     import File from "./File.svelte";
     import Reactions from "./Reactions.svelte";
@@ -31,6 +37,10 @@
     export let woka: string;
     export let needHideHeader: boolean;
     export let me: Writable<User> | undefined;
+    let html: string;
+    let urlifyError: string;
+    let embedLink: string | undefined;
+    let loadingDownload = false;
 
     const deletedMessagesStore = mucRoom.getDeletedMessagesStore();
 
@@ -66,6 +76,69 @@
                 console.error("error copy message => ", err);
             });
     }
+
+    function scrollToMessage(messageId?: string) {
+        if (!messageId) return;
+        const messageElement = document.getElementById(`message_${messageId}`);
+        if (!messageElement) return;
+        messageElement.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+    }
+
+    function openCowebsite() {
+        if (embedLink) iframeListener.openCoWebsite(embedLink, true, "allowfullscreen");
+        if (message.links)
+            message.links.forEach((link) => iframeListener.openCoWebsite(link.url, true, "allowfullscreen"));
+    }
+
+    function downloadAllFile() {
+        if (message.links == undefined) return;
+        message.links.forEach((link) => {
+            download(link.url, link.description);
+        });
+    }
+
+    function download(url: string, name?: string) {
+        loadingDownload = true;
+        fetch(url, { method: "GET" })
+            .then((res) => {
+                return res.blob();
+            })
+            .then((blob) => {
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement("a");
+                a.href = url;
+                a.download = name ?? FileMessageManager.getName(url);
+                document.body.appendChild(a);
+                a.click();
+                setTimeout((_) => {
+                    URL.revokeObjectURL(url);
+                }, 60000);
+                a.remove();
+                loadingDownload = false;
+            })
+            .catch((err) => {
+                loadingDownload = false;
+                console.error("err: ", err);
+            });
+    }
+
+    onMount(() => {
+        HtmlUtils.urlify(message.body)
+            .then((htmlFromBody) => {
+                html = htmlFromBody;
+
+                // check if the message html body contains attribute embed-link
+                // if yes, capture the embed-link value and store it in embedLink variable
+                const embedLinkMatching = html.match(/embed-link="(.*)"/);
+                if (embedLinkMatching) {
+                    // if embed link add a new action in actions element to open the embed link into WorkAdventure
+                    embedLink = embedLinkMatching[1];
+                }
+            })
+            .catch((err) => {
+                urlifyError = err.message;
+            });
+    });
 </script>
 
 <div
@@ -104,6 +177,22 @@
                     }`}
                     style={($me && $me.isAdmin) || isMe ? "width: 92px;" : "width: 72px;"}
                 >
+                    {#if message.links != undefined && message.links.length > 0}
+                        <div class="action reply" on:click={() => downloadAllFile()}>
+                            {#if loadingDownload}
+                                <LoaderIcon size="17" />
+                            {:else}
+                                <DownloadCloudIcon size="17" />
+                            {/if}
+                            <div class="caption">{$LL.file.download()}</div>
+                        </div>
+                    {/if}
+                    {#if (message.links && message.links.length > 0) || embedLink != undefined}
+                        <div class="action reply" on:click={() => openCowebsite()}>
+                            <EyeIcon size="17" />
+                            <div class="caption">{$LL.open()}</div>
+                        </div>
+                    {/if}
                     <div class="action reply" on:click={() => selectMessage(message)}>
                         <CornerDownLeftIcon size="17" />
                         <div class="caption">{$LL.reply()}</div>
@@ -186,17 +275,26 @@
                     <div class="wa-message-body">
                         <!-- Body associated -->
                         <div class="tw-text-ellipsis tw-overflow-y-auto tw-whitespace-normal">
-                            {#await HtmlUtils.urlify(message.body)}
-                                <p>...waiting</p>
-                            {:then html}
+                            {#if html}
                                 <HtmlMessage {html} {message} />
-                            {/await}
+                            {:else if message.body}
+                                <p>{$LL.waiting()}...</p>
+                            {/if}
+                            {#if urlifyError}
+                                <p class="tw-text-red-500">{urlifyError}</p>
+                            {/if}
                         </div>
 
                         <!-- File associated -->
                         {#if message.links && message.links.length > 0}
                             {#each message.links as link}
-                                <File url={link.url} name={link.description} />
+                                <File
+                                    on:download={(event) => {
+                                        download(event.detail.url, event.detail?.name);
+                                    }}
+                                    url={link.url}
+                                    name={link.description}
+                                />
                             {/each}
                         {/if}
                     </div>
@@ -210,6 +308,9 @@
                     {#if message.targetMessageReply}
                         <div
                             class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mt-1 tw-mb-2 tw-text-left tw-cursor-pointer"
+                            on:click|preventDefault|stopPropagation={() => {
+                                scrollToMessage(message.targetMessageReply?.id);
+                            }}
                         >
                             <div class="icon-replied">
                                 <CornerLeftUpIcon size="14" />

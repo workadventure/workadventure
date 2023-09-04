@@ -5,6 +5,7 @@
     export let descriptionText;
     export let img;
     export let style;
+    export let disabled = false;
 
     const dispatch = createEventDispatcher();
 </script>
@@ -13,10 +14,15 @@
     class="add-property-button tooltip tw-p-4 tw-flex tw-justify-center tw-items-center"
     {style}
     on:click={() => {
+        if (disabled) return;
         dispatch("click");
     }}
+    {disabled}
 >
-    <div class="tw-w-10 tw-h-10 tw-flex tw-flex-wrap tw-items-center tw-justify-center">
+    <div
+        class="tw-w-10 tw-h-10 tw-flex tw-flex-wrap tw-items-center tw-justify-center"
+        style={disabled ? `opacity: 0.5;` : ""}
+    >
         <img draggable="false" class="tw-max-w-[75%] tw-max-h-[75%]" src={img} alt="info icon" />
     </div>
     <span class="tooltiptext tw-text-xs">
@@ -48,6 +54,23 @@
                 top: auto;
                 transform: rotate(180deg);
             }
+        }
+    }
+
+    button:disabled {
+        pointer-events: all;
+        cursor: default;
+
+        div {
+            cursor: default;
+        }
+
+        img {
+            opacity: 0.5;
+            cursor: default;
+        }
+        .tooltiptext {
+            cursor: default;
         }
     }
 </style>

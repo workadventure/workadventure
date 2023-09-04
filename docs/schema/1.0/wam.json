@@ -135,7 +135,10 @@
                           "const": "openWebsite"
                         },
                         "link": {
-                          "type": "string",
+                          "type": [
+                            "string",
+                            "null"
+                          ],
                           "default": "https://workadventu.re"
                         },
                         "newTab": {
@@ -168,6 +171,26 @@
                         },
                         "position": {
                           "type": "number"
+                        },
+                        "application": {
+                          "type": "string",
+                          "enum": [
+                            "website",
+                            "youtube",
+                            "klaxoon",
+                            "googleDocs",
+                            "googleSheets",
+                            "googleSlides",
+                            "googleForms",
+                            "eraser"
+                          ],
+                          "default": "website"
+                        },
+                        "poster": {
+                          "type": "string"
+                        },
+                        "placeholder": {
+                          "type": "string"
                         }
                       },
                       "required": [

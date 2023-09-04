@@ -804,7 +804,6 @@ export class GameScene extends DirtyScene {
             } else if (this.connection === undefined) {
                 // Let's wait 1 second before printing the "connecting" screen to avoid blinking
                 setTimeout(() => {
-                    console.log("this.room", this.room);
                     if (this.connection === undefined) {
                         try {
                             this.hide();
@@ -1020,7 +1019,7 @@ export class GameScene extends DirtyScene {
 
                 this.connection.onServerDisconnected(() => {
                     showConnectionIssueMessage();
-                    console.log("Player disconnected from server. Reloading scene.");
+                    console.info("Player disconnected from server. Reloading scene.");
                     this.cleanupClosingScene();
                     this.createSuccessorGameScene(true, true);
                 });
@@ -2932,7 +2931,7 @@ ${escapedMessage}
     doUpdatePlayerDetails(update: PlayerDetailsUpdate): void {
         const character = this.MapPlayersByKey.get(update.player.userId);
         if (character === undefined) {
-            console.log(
+            console.info(
                 "Could not set new details to character with ID ",
                 update.player.userId,
                 ". Did he/she left before te message was received?"

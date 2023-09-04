@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { KLAXOON_ACTIVITY_PICKER_EVENT, isKlaxoonEvent } from "@workadventure/shared-utils";
 import { isChatEvent, isChatMessage } from "./ChatEvent";
 import { isClosePopupEvent } from "./ClosePopupEvent";
 import { isGoToPageEvent } from "./GoToPageEvent";
@@ -294,6 +295,10 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("closeBanner"),
         data: z.undefined(),
     }),
+    z.object({
+        type: z.literal(KLAXOON_ACTIVITY_PICKER_EVENT),
+        payload: isKlaxoonEvent,
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;
@@ -451,6 +456,7 @@ export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
 export const isLookingLikeIframeEventWrapper = z.object({
     type: z.string(),
     data: z.unknown().optional(),
+    payload: z.unknown().optional(),
 });
 
 /**

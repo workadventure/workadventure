@@ -14,7 +14,17 @@
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { UserData } from "@workadventure/messages";
     import { ChatState } from "stanza/Constants";
-    import { get } from "svelte/store";
+    import { get, writable } from "svelte/store";
+    import {
+        EraserException,
+        EraserService,
+        GoogleWorkSpaceException,
+        GoogleWorkSpaceService,
+        KlaxoonEvent,
+        KlaxoonException,
+        KlaxoonService,
+        YoutubeService,
+    } from "@workadventure/shared-utils";
     import { MucRoom } from "../Xmpp/MucRoom";
     import { defaultWoka, User } from "../Xmpp/AbstractRoom";
     import { LL, locale } from "../i18n/i18n-svelte";
@@ -31,7 +41,9 @@
     import { FileExt, fileMessageManager, UploadedFile, uploadingState } from "../Services/FileMessageManager";
     import crown from "../../public/static/svg/icone-premium-crown.svg";
     import { iframeListener } from "../IframeListener";
+    import { chatConnectionManager } from "../Connection/ChatConnectionManager";
     import File from "./Content/File.svelte";
+    import ApplicationPicker from "./Content/ApplicationPicker.svelte";
 
     export let mucRoom: MucRoom;
 
@@ -46,6 +58,17 @@
     let newMessageText = "";
     let htmlMessageText = "";
     let usersSearching: User[] = [];
+    let applicationMenuIsOpenned = false;
+
+    interface Application {
+        name: string;
+        icon: string;
+        example: string;
+        link?: string;
+        error?: string;
+    }
+    const applicationsSelected = writable<Set<Application>>(new Set());
+    const applications = writable<Set<Application>>(new Set());
 
     const maxCharMessage = 10_000;
     $: isMessageTooLong = newMessageText.length > maxCharMessage;
@@ -92,7 +115,8 @@
         }
         if (
             fileMessageManager.files.length === 0 &&
-            (!htmlMessageText || htmlMessageText.replace(/\s/g, "").length === 0)
+            (!htmlMessageText || htmlMessageText.replace(/\s/g, "").length === 0) &&
+            $applicationsSelected.size === 0
         ) {
             return false;
         }
@@ -114,6 +138,19 @@
             textarea.innerHTML = "";
             dispatch("formHeight", messageForm.clientHeight);
         }, 0);
+
+        if ($applicationsSelected.size > 0) {
+            for (const app of $applicationsSelected) {
+                if (app.link != undefined) {
+                    mucRoom.sendMessage(app.link);
+                }
+                applicationsSelected.update((apps) => {
+                    apps.delete(app);
+                    return apps;
+                });
+            }
+        }
+
         return false;
     }
 
@@ -226,6 +263,138 @@
         textarea.focus();
     }
 
+    function toggleApplicationMenu() {
+        applicationMenuIsOpenned = !applicationMenuIsOpenned;
+    }
+
+    function addNewApp(app: Application) {
+        applicationsSelected.update((apps) => {
+            apps.add(app);
+            return apps;
+        });
+        if (app.name === "Klaxoon") {
+            if (!chatConnectionManager.klaxoonToolClientId) return;
+            KlaxoonService.openKlaxoonActivityPicker(
+                chatConnectionManager.klaxoonToolClientId,
+                (event: KlaxoonEvent) => {
+                    // Remove previous app
+                    applicationsSelected.update((apps) => {
+                        apps.delete(app);
+                        return apps;
+                    });
+                    // Update app with Klaxoon's Activity Picker
+                    app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(event.url));
+                    if (event.imageUrl) app.icon = event.imageUrl;
+                    if (event.title) app.name = event.title;
+                    // Add new app
+                    applicationsSelected.update((apps) => {
+                        apps.add(app);
+                        return apps;
+                    });
+                }
+            );
+        }
+        applicationMenuIsOpenned = false;
+    }
+
+    function deleteApplication(app: Application) {
+        applicationsSelected.update((apps) => {
+            apps.delete(app);
+            return apps;
+        });
+    }
+
+    async function checkWebsiteProperty(app: Application): Promise<void> {
+        app.error = undefined;
+        if (app.link == undefined) return;
+        switch (app.name) {
+            case "Klaxoon":
+                try {
+                    app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(app.link));
+                } catch (err) {
+                    if (err instanceof KlaxoonException.KlaxoonException) {
+                        app.error = $LL.form.application.klaxoon.error();
+                    } else {
+                        app.error = $LL.form.application.weblink.error();
+                    }
+                    app.link = undefined;
+                }
+                break;
+            case "Youtube":
+                try {
+                    app.link = await YoutubeService.getYoutubeEmbedUrl(new URL(app.link));
+                } catch (e) {
+                    console.info($LL.form.application.youtube.error(), e);
+                    app.error = $LL.form.application.youtube.error();
+                    app.link = undefined;
+                }
+                break;
+            case "Google Docs":
+                try {
+                    app.link = GoogleWorkSpaceService.getGoogleDocsEmbedUrl(new URL(app.link));
+                } catch (err) {
+                    if (err instanceof GoogleWorkSpaceException.GoogleDocsException) {
+                        app.error = $LL.form.application.googleDocs.error();
+                    } else {
+                        app.error = $LL.form.application.weblink.error();
+                    }
+                    app.link = undefined;
+                }
+                break;
+            case "Google Sheets":
+                try {
+                    app.link = GoogleWorkSpaceService.getGoogleSheetsEmbedUrl(new URL(app.link));
+                } catch (err) {
+                    console.error(err);
+                    if (err instanceof GoogleWorkSpaceException.GoogleSheetsException) {
+                        app.error = $LL.form.application.googleSheets.error();
+                    } else {
+                        app.error = $LL.form.application.weblink.error();
+                    }
+                    app.link = undefined;
+                }
+                break;
+            case "Google Slides":
+                try {
+                    app.link = GoogleWorkSpaceService.getGoogleSlidesEmbedUrl(new URL(app.link));
+                } catch (err) {
+                    if (err instanceof GoogleWorkSpaceException.GoogleSlidesException) {
+                        app.error = $LL.form.application.googleSlides.error();
+                    } else {
+                        app.error = $LL.form.application.weblink.error();
+                    }
+                    app.link = undefined;
+                }
+                break;
+            case "Eraser":
+                try {
+                    EraserService.validateEraserLink(new URL(app.link));
+                } catch (err) {
+                    if (err instanceof EraserException.EraserLinkException) {
+                        app.error = $LL.form.application.eraser.error();
+                    } else {
+                        app.error = $LL.form.application.weblink.error();
+                    }
+                    app.link = undefined;
+                }
+                break;
+            default:
+                throw new Error("Application not found");
+        }
+        applicationsSelected.update((apps) => {
+            apps.add(app);
+            return apps;
+        });
+    }
+
+    function handlerKeyDownAppInput(keyPressEvent: KeyboardEvent) {
+        if (keyPressEvent.key === "Enter" && !keyPressEvent.shiftKey) {
+            // blur element from keyPressEvent
+            (keyPressEvent.target as HTMLInputElement).blur();
+            keyPressEvent.preventDefault();
+        }
+    }
+
     onMount(() => {
         dispatch("formHeight", messageForm.clientHeight);
         picker = new EmojiButton({
@@ -266,6 +435,67 @@
         picker.on("hidden", () => {
             emojiOpened = false;
         });
+
+        if (chatConnectionManager.klaxoonToolIsActivated) {
+            applications.update((apps) => {
+                apps.add({
+                    name: "Klaxoon",
+                    icon: "./static/images/applications/klaxoon.svg",
+                    example: "https://klaxoon.com/fr",
+                });
+                return apps;
+            });
+        }
+        if (chatConnectionManager.youtubeToolIsActivated) {
+            applications.update((apps) => {
+                apps.add({
+                    name: "Youtube",
+                    icon: "./static/images/applications/youtube.svg",
+                    example: "https://www.youtube.com/watch?v=Y9ubBWf5w20",
+                });
+                return apps;
+            });
+        }
+        if (chatConnectionManager.googleDocsToolIsActivated) {
+            applications.update((apps) => {
+                apps.add({
+                    name: "Google Docs",
+                    icon: "./static/images/applications/google-docs.svg",
+                    example: "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit",
+                });
+                return apps;
+            });
+        }
+        if (chatConnectionManager.googleSheetsToolIsActivated) {
+            applications.update((apps) => {
+                apps.add({
+                    name: "Google Sheets",
+                    icon: "./static/images/applications/google-sheets.svg",
+                    example: "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit",
+                });
+                return apps;
+            });
+        }
+        if (chatConnectionManager.googleSlidesToolIsActivated) {
+            applications.update((apps) => {
+                apps.add({
+                    name: "Google Slides",
+                    icon: "./static/images/applications/google-slides.svg",
+                    example: "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit",
+                });
+                return apps;
+            });
+        }
+        if (chatConnectionManager.eraserToolIsActivated) {
+            applications.update((apps) => {
+                apps.add({
+                    name: "Eraser",
+                    icon: "./static/images/applications/eraser.svg",
+                    example: "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU",
+                });
+                return apps;
+            });
+        }
     });
 </script>
 
@@ -322,6 +552,60 @@
                 </span>
             {/each}
         </div>
+    {/if}
+
+    {#each [...$applicationsSelected] as app}
+        <div
+            class="tw-mx-2 tw-mb-2 tw-px-6 tw-py-3 tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-xl tw-text-xxs tw-justify-between tw-items-center tw-bottom-12"
+        >
+            <div class="tw-flex tw-flex-row tw-justify-between tw-items-center tw-m-1 tw-w-full">
+                <label for="app" class="tw-m-0">
+                    <img src={app.icon} alt={`App ${app.name} started in the chat`} width="20px" />
+                    {#if app.name === "Klaxoon"}
+                        {$LL.form.application.klaxoon.description()}
+                    {/if}
+                    {#if app.name === "Youtube"}
+                        {$LL.form.application.youtube.description()}
+                    {/if}
+                    {#if app.name === "Google Docs"}
+                        {$LL.form.application.googleDocs.description()}
+                    {/if}
+                    {#if app.name === "Google Sheets"}
+                        {$LL.form.application.googleSheets.description()}
+                    {/if}
+                    {#if app.name === "Google Slides"}
+                        {$LL.form.application.googleSlides.description()}
+                    {/if}
+                    {#if app.name === "Eraser"}
+                        {$LL.form.application.eraser.description()}
+                    {/if}
+                </label>
+                <button
+                    on:click|preventDefault|stopPropagation={() => {
+                        deleteApplication(app);
+                    }}
+                    class="delete tw-pr-0 tw-mr-0"
+                >
+                    <Trash2Icon size="14" />
+                </button>
+            </div>
+            <input
+                id="app"
+                type="text"
+                placeholder={app.example}
+                class="tw-bg-transparent tw-text-light-blue tw-w-full tw-py-1 tw-px-2 tw-mb-0 tw-text-sm tw-border-white"
+                bind:value={app.link}
+                on:keypress={handlerKeyDownAppInput}
+                on:blur={() => checkWebsiteProperty(app)}
+            />
+            {#if app.error}
+                <p class="tw-text-pop-red tw-text-xs tw-px-2 tw-mt-2 tw-my-0">{app.error}</p>
+            {/if}
+        </div>
+    {/each}
+
+    {#if applicationMenuIsOpenned}
+        <ApplicationPicker applications={$applications} on:addNewApp={(event) => addNewApp(event.detail)} />
     {/if}
 
     <form on:submit|preventDefault={sendMessage}>
@@ -412,7 +696,24 @@
                     </p>
                 </div>
             {/if}
-            <div class="tw-relative">
+
+            <div class="tw-w-full tw-px-2 tw-pb-2 tw-flex tw-flex-row tw-justify-center tw-items-center">
+                <div class="actions tw-px-2 tw-py-2">
+                    <div class="tw-flex tw-items-center tw-space-x-1">
+                        <button
+                            id="application"
+                            class="tw-bg-transparent tw-p-0 tw-m-0 tw-inline-flex tw-justify-center tw-items-center"
+                            on:click|preventDefault|stopPropagation={toggleApplicationMenu}
+                            disabled={$applications.size === 0}
+                        >
+                            <img
+                                src={`./static/images/applications/app${applicationMenuIsOpenned ? "On" : "Off"}.png`}
+                                alt="send"
+                                width="17px"
+                            />
+                        </button>
+                    </div>
+                </div>
                 <div
                     contenteditable="true"
                     bind:this={textarea}
@@ -423,7 +724,7 @@
                     on:keydown={onKeyDown}
                     on:keypress={onKeyPress}
                 />
-                <div class="actions tw-absolute tw-right-4">
+                <div class="actions tw-px-2 tw-py-2">
                     <div class="tw-flex tw-items-center tw-space-x-1">
                         <button
                             class={`tw-bg-transparent tw-p-0 tw-m-0 tw-inline-flex tw-justify-center tw-items-center ${
@@ -589,5 +890,9 @@
                 }
             }
         }
+    }
+
+    input#app {
+        margin-bottom: 0;
     }
 </style>

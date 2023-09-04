@@ -127,7 +127,7 @@ export class PathfindingManager {
     private logGridToTheConsole(grid: number[][]): void {
         let rowNumber = 0;
         for (const row of grid) {
-            console.log(`${rowNumber}:\t${row}`);
+            console.info(`${rowNumber}:\t${row}`);
             rowNumber += 1;
         }
     }

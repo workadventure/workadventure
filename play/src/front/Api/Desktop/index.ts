@@ -16,7 +16,7 @@ class DesktopApi {
             return;
         }
 
-        console.log("Yipee you are using the desktop app ;)");
+        console.info("Yipee you are using the desktop app ;)");
 
         window.WAD.onMuteToggle(() => {
             if (this.isSilent) return;

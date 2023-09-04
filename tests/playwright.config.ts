@@ -44,6 +44,9 @@ const config: PlaywrightTestConfig = {
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: process.env.CI ? 'on-first-retry' : 'retain-on-failure',
     navigationTimeout: 60_000,
+
+    // Emulates the user locale. See https://playwright.dev/docs/api/class-browsertype#browsertypelaunchoptions
+    locale: 'en-US',
   },
 
   /* Configure projects for major browsers */

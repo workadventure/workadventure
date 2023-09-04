@@ -8,7 +8,11 @@ class MapEditor {
     }
 
     async openAreaEditor(page: Page) {
-        await page.locator('section.side-bar-container .side-bar .tool-button button#AreaEditor').click();
+        await page.locator('section.side-bar-container .side-bar .tool-button button#AreaEditor').first().click();
+    }
+
+    async openEntityEditor(page: Page) {
+        await page.locator('section.side-bar-container .side-bar .tool-button button#EntityEditor').first().click();
     }
 }
 

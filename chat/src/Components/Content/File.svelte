@@ -1,40 +1,15 @@
 <script lang="ts">
-    import { FileIcon, EyeIcon, DownloadCloudIcon, LoaderIcon } from "svelte-feather-icons";
-    import { LL } from "../../i18n/i18n-svelte";
-    import { iframeListener } from "../../IframeListener";
+    import { FileIcon } from "svelte-feather-icons";
+    import { createEventDispatcher } from "svelte";
     import { FileMessageManager } from "../../Services/FileMessageManager";
+
+    const dispatch = createEventDispatcher();
 
     export let url: string;
     export let name: string | undefined;
 
-    function openCoWebsite() {
-        iframeListener.openCoWebsite(url, true, "allowfullscreen");
-    }
-
-    let loadingDownload = false;
     function download() {
-        loadingDownload = true;
-        fetch(url, { method: "GET" })
-            .then((res) => {
-                return res.blob();
-            })
-            .then((blob) => {
-                var url = URL.createObjectURL(blob);
-                var a = document.createElement("a");
-                a.href = url;
-                a.download = name ?? FileMessageManager.getName(url);
-                document.body.appendChild(a);
-                a.click();
-                setTimeout((_) => {
-                    URL.revokeObjectURL(url);
-                }, 60000);
-                a.remove();
-                loadingDownload = false;
-            })
-            .catch((err) => {
-                loadingDownload = false;
-                console.error("err: ", err);
-            });
+        dispatch("download", { url, name });
     }
 </script>
 
@@ -68,19 +43,4 @@
             </div>
         </div>
     {/if}
-
-    <div class="actions tw-mt-2">
-        <span class="action wa-dropdown-item" on:click={openCoWebsite}>
-            <EyeIcon size="14" />
-            <span class="tw-ml-1 tw-text-xxs">{$LL.file.openCoWebsite()}</span>
-        </span>
-        <span class="action wa-dropdown-item" on:click={download}>
-            {#if loadingDownload === true}
-                <LoaderIcon size="14" class="tw-animate-spin" />
-            {:else}
-                <DownloadCloudIcon size="14" />
-            {/if}
-            <span class="tw-ml-1 tw-text-xxs">{$LL.file.download()}</span>
-        </span>
-    </div>
 </div>

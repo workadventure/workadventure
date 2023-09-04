@@ -13,6 +13,13 @@ export const isUserData = z.object({
   roomName: z.optional(z.nullable(z.string())),
   userRoomToken: z.optional(z.nullable(z.string())),
   visitCardUrl: z.optional(z.nullable(z.string())),
+  klaxoonToolActivated: z.boolean().optional().default(false),
+  youtubeToolActivated: z.boolean().optional().default(false),
+  googleDocsToolActivated: z.boolean().optional().default(false),
+  googleSheetsToolActivated: z.boolean().optional().default(false),
+  googleSlidesToolActivated: z.boolean().optional().default(false),
+  eraserToolActivated: z.boolean().optional().default(false),
+  klaxoonToolClientId: z.string().optional(),
 });
 
 export type UserData = z.infer<typeof isUserData>;

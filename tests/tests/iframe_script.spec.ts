@@ -18,8 +18,8 @@ test.describe('Iframe API', () => {
   });
 
   test('can add a custom menu by scripting API', async ({
-                                                                 page,
-                                                               }) => {
+    page
+  }) => {
     await page.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
     );

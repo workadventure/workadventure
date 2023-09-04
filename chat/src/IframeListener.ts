@@ -1,5 +1,6 @@
 import { get } from "svelte/store";
 import Debug from "debug";
+import { KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
 import {
     isLookingLikeIframeEventWrapper,
     isIframeEventWrapper,
@@ -65,7 +66,14 @@ class IframeListener {
                             chatConnectionManager.initUser(
                                 iframeEvent.data.playUri,
                                 iframeEvent.data.uuid,
-                                iframeEvent.data.authToken
+                                iframeEvent.data.klaxoonToolActivated,
+                                iframeEvent.data.youtubeToolActivated,
+                                iframeEvent.data.googleDocsToolActivated,
+                                iframeEvent.data.googleSheetsToolActivated,
+                                iframeEvent.data.googleSlidesToolActivated,
+                                iframeEvent.data.eraserToolActivated,
+                                iframeEvent.data.authToken,
+                                iframeEvent.data.klaxoonToolClientId
                             );
                             if (chatConnectionManager.connection) {
                                 mucRoomsStore.sendUserInfos();
@@ -156,6 +164,12 @@ class IframeListener {
                         }
                         case "availabilityStatus": {
                             availabilityStatusStore.set(iframeEvent.data);
+                            break;
+                        }
+                        case KLAXOON_ACTIVITY_PICKER_EVENT: {
+                            // @ts-ignore
+                            const event = new MessageEvent("AcitivityPickerFromWorkAdventure", message);
+                            window.dispatchEvent(event);
                             break;
                         }
                     }

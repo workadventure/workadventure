@@ -1,4 +1,5 @@
 {
+  "name": "workadventure",
   "private": true,
   "devDependencies": {
     "husky": "^7.0.1"

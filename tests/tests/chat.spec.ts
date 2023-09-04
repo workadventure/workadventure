@@ -196,6 +196,69 @@ test.describe('Chat', () => {
   });
 });
 
+test.describe('Use application into TimeLine', () => {
+  test('main', async ({ page, browser, browserName }) => {
+
+    await page.goto(
+        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json'
+    );
+    const nickname = getUniqueNickname('A');
+    await login(page, nickname, 2);
+
+    if(browserName === "webkit"){
+      // Because webkit in playwright does not support Camera/Microphone Permission by settings
+      await hideNoCamera(page);
+    }
+
+    await Menu.openChat(page);
+    await Chat.openTimeline(page);
+
+    // Create test to use Docs application
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.actions').first().click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.wa-message-form .actions button.action:has-text("Google Docs")').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit').fill('https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit')
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#timeLine-messageList').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#send').click();
+
+    await expect(page.frameLocator('#chatWorkAdventure').getByRole('link', { name: 'https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit?embedded=true'})).toContainText('https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit?embedded=true');
+
+
+    // Create test to use Sheets application
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.actions').first().click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.wa-message-form .actions button.action:has-text("Google Sheets")').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit').fill('https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit')
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#timeLine-messageList').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#send').click();
+
+    await expect(page.frameLocator('#chatWorkAdventure').getByRole('link', { name: 'https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit?embedded=true' })).toContainText('https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit?embedded=true');
+
+
+    // Create test to use Slides application
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.actions').first().click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.wa-message-form .actions button.action:has-text("Google Slides")').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit').fill('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit')
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#timeLine-messageList').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#send').click();
+
+    await expect(page.frameLocator('#chatWorkAdventure').getByRole('link', { name: 'https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit?embedded=true' })).toContainText('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit?embedded=true');
+
+    // Create test to use Youtube application
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.actions').first().click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.wa-message-form .actions button.action:has-text("Youtube")').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://www.youtube.com/watch?v=Y9ubBWf5w20').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://www.youtube.com/watch?v=Y9ubBWf5w20').fill('https://www.youtube.com/embed/Y9ubBWf5w20?feature=oembed')
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#timeLine-messageList').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#send').click();
+
+    await expect(page.frameLocator('#chatWorkAdventure').getByRole('link', { name: 'https://www.youtube.com/embed/Y9ubBWf5w20?feature=oembed' })).toContainText('https://www.youtube.com/embed/Y9ubBWf5w20?feature=oembed');
+
+    // Create test to use Klaxoon application
+  });
+});
+
 function getUniqueNickname(name: string){
   return `${name}_${Date.now().toString().split("").reverse().join("")}`.substring(0, 8);
 }

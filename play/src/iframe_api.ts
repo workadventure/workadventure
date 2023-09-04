@@ -70,7 +70,6 @@ const initPromise = queryWorkadventure({
     type: "getState",
     data: undefined,
 }).then((gameState) => {
-    console.log({ gameState });
     setPlayerName(gameState.nickname);
     setPlayerLanguage(gameState.language);
     setRoomId(gameState.roomId);

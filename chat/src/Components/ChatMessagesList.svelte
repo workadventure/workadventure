@@ -309,7 +309,7 @@
             </div>
         {/each}
         {#if $unreads > 0}
-            <div class="tw-w-full tw-fixed tw-left-0 tw-bottom-14 tw-animate-bounce tw-cursor-pointer">
+            <div class="tw-w-full tw-fixed tw-left-0 tw-bottom-20 tw-animate-bounce tw-cursor-pointer">
                 <div
                     in:fly={{ y: 10, duration: 200 }}
                     style="margin: auto"

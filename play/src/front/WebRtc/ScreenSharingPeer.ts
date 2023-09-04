@@ -155,9 +155,7 @@ export class ScreenSharingPeer extends Peer {
             }
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
-            //console.log('Closing connection with '+userId);
             super.destroy(error);
-            //console.log('Nb users in peerConnectionArray '+this.PeerConnectionArray.size);
         } catch (err) {
             console.error("ScreenSharingPeer::destroy", err);
         }

@@ -398,8 +398,6 @@ export class SimplePeer {
             throw new Error("Weird, screen sharing connection to user " + userId + "not found");
         }
 
-        console.log("updatedScreenSharing => destroy", PeerConnectionScreenSharing);
-
         // Stop sending stream and close peer connection if peer is not sending stream too
         PeerConnectionScreenSharing.stopPushingScreenSharingToRemoteUser(stream);
 

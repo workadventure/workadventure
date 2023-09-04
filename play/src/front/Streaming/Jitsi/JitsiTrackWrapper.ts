@@ -42,7 +42,6 @@ export class JitsiTrackWrapper {
                 timeout = setInterval(() => {
                     try {
                         set(soundMeter?.getVolume());
-                        //console.log("Volume", soundMeter?.getVolume());
                     } catch (err) {
                         if (!error) {
                             console.error(err);

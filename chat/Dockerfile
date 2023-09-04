@@ -22,6 +22,7 @@ COPY libs/map-editor/package.json libs/map-editor/package.json
 COPY libs/math-utils/package.json libs/math-utils/package.json
 COPY libs/tailwind/package.json libs/tailwind/package.json
 COPY libs/store-utils/package.json libs/store-utils/package.json
+COPY libs/shared-utils/package.json libs/shared-utils/package.json
 RUN npm ci --workspace=workadventurechat
 COPY libs ./libs
 COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src

@@ -15,7 +15,7 @@
     import { iframeListener } from "../../Api/IframeListener";
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { CHAT_URL } from "../../Enum/EnvironmentVariable";
+    import { CHAT_URL, KLAXOON_CLIENT_ID } from "../../Enum/EnvironmentVariable";
     import { locale } from "../../../i18n/i18n-svelte";
     import { AdminMessageEventTypes, adminMessagesService } from "../../Connection/AdminMessagesService";
     import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
@@ -102,6 +102,15 @@
                                         roomName: connectionManager.currentRoom?.roomName ?? "default",
                                         visitCardUrl: gameManager.myVisitCardUrl,
                                         userRoomToken: gameManager.getCurrentGameScene().connection?.userRoomToken,
+                                        klaxoonToolActivated: connectionManager.currentRoom?.klaxoonToolActivated,
+                                        youtubeToolActivated: connectionManager.currentRoom?.youtubeToolActivated,
+                                        googleDocsToolActivated: connectionManager.currentRoom?.googleDocsToolActivated,
+                                        googleSheetsToolActivated:
+                                            connectionManager.currentRoom?.googleSheetsToolActivated,
+                                        googleSlidesToolActivated:
+                                            connectionManager.currentRoom?.googleSlidesToolActivated,
+                                        klaxoonToolClientId: KLAXOON_CLIENT_ID,
+                                        eraserTootlActivated: connectionManager.currentRoom?.eraserToolActivated,
                                     },
                                 },
                                 "*"

@@ -191,7 +191,7 @@ export class SocketManager implements ZoneEventListener {
             },
         };
 
-        console.log(
+        console.info(
             `Admin socket handle room ${roomId} connections for a client on ${Buffer.from(
                 client.getRemoteAddressAsText()
             ).toString()}`
@@ -1192,7 +1192,13 @@ export class SocketManager implements ZoneEventListener {
                 emitAnswerMessage(true, false);
             } else {
                 debug(`SocketManager => embeddableUrl : ${url} ${error}`);
-                emitAnswerMessage(false, false, "URL is not reachable");
+                // If the URL is not reachable, we send a message to the client
+                // Catch is used to avoid crash if the client is disconnected
+                try {
+                    emitAnswerMessage(false, false, "URL is not reachable");
+                } catch (e) {
+                    console.error(e);
+                }
             }
         };
 

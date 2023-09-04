@@ -1,11 +1,24 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
-    import { AreaDataProperty, AreaDataPropertiesKeys, AreaDataProperties } from "@workadventure/map-editor";
+    import {
+        AreaDataProperty,
+        AreaDataPropertiesKeys,
+        AreaDataProperties,
+        OpenWebsiteTypePropertiesKeys,
+    } from "@workadventure/map-editor";
+    import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import audioSvg from "../images/audio-white.svg";
-    import { FEATURE_FLAG_BROADCAST_AREAS } from "../../Enum/EnvironmentVariable";
+    import youtubeSvg from "../images/applications/icon_youtube.svg";
+    import klaxoonSvg from "../images/applications/icon_klaxoon.svg";
+    import googleDocsSvg from "../images/applications/icon_google_docs.svg";
+    import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
+    import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
+    import eraserSvg from "../images/applications/icon_eraser.svg";
+    import { FEATURE_FLAG_BROADCAST_AREAS, KLAXOON_CLIENT_ID } from "../../Enum/EnvironmentVariable";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { connectionManager } from "../../Connection/ConnectionManager";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
@@ -36,8 +49,12 @@
         }
     });
 
-    function getPropertyFromType(type: AreaDataPropertiesKeys): AreaDataProperty {
+    function getPropertyFromType(
+        type: AreaDataPropertiesKeys,
+        subtype?: OpenWebsiteTypePropertiesKeys
+    ): AreaDataProperty {
         const id = crypto.randomUUID();
+        let placeholder: string;
         switch (type) {
             case "start":
                 return {
@@ -64,16 +81,45 @@
                     closable: true,
                     jitsiRoomConfig: {},
                     hideButtonLabel: true,
-                    roomName: "JITSI ROOM",
+                    roomName: $LL.mapEditor.properties.jitsiProperties.label(),
                 };
             case "openWebsite":
+                // TODO refactore and use the same code than EntityPropertiesEditor
+                switch (subtype) {
+                    case "youtube":
+                        placeholder = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
+                        break;
+                    case "klaxoon":
+                        placeholder = "https://app.klaxoon.com/";
+                        break;
+                    case "googleDocs":
+                        placeholder =
+                            "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit";
+                        break;
+                    case "googleSheets":
+                        placeholder =
+                            "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit";
+                        break;
+                    case "googleSlides":
+                        placeholder =
+                            "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit";
+                        break;
+                    case "eraser":
+                        placeholder = "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU";
+                        break;
+                    default:
+                        placeholder = "https://workadventu.re";
+                        break;
+                }
                 return {
                     id,
                     type,
+                    link: "",
                     closable: true,
-                    link: "https://workadventu.re",
                     newTab: false,
                     hideButtonLabel: true,
+                    application: subtype ?? "website",
+                    placeholder,
                 };
             case "playAudio":
                 return {
@@ -102,6 +148,8 @@
                     url: "",
                     areaName: "",
                 };
+            default:
+                throw new Error(`Unknown property type ${type}`);
         }
     }
 
@@ -109,10 +157,17 @@
         selectedAreaPreviewUnsubscriber();
     });
 
-    function onAddProperty(type: AreaDataPropertiesKeys) {
+    function onAddProperty(type: AreaDataPropertiesKeys, subtype?: OpenWebsiteTypePropertiesKeys) {
         if ($mapEditorSelectedAreaPreviewStore) {
             analyticsClient.addMapEditorProperty("area", type || "unknown");
-            $mapEditorSelectedAreaPreviewStore.addProperty(getPropertyFromType(type));
+            const property = getPropertyFromType(type, subtype);
+            $mapEditorSelectedAreaPreviewStore.addProperty(property);
+
+            // if klaxoon, open Activity Picker
+            if (subtype === "klaxoon") {
+                openKlaxoonActivityPicker(property);
+            }
+
             // refresh properties
             properties = $mapEditorSelectedAreaPreviewStore.getProperties();
             refreshFlags();
@@ -158,6 +213,19 @@
         hasExitProperty = hasProperty("exit");
         hasplayAudioProperty = hasProperty("playAudio");
     }
+
+    function openKlaxoonActivityPicker(app: AreaDataProperty) {
+        if (!KLAXOON_CLIENT_ID || app.type !== "openWebsite" || app.application !== "klaxoon") {
+            console.info("openKlaxoonActivityPicker: app is not a klaxoon app");
+            return;
+        }
+        KlaxoonService.openKlaxoonActivityPicker(KLAXOON_CLIENT_ID, (payload: KlaxoonEvent) => {
+            app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(payload.url));
+            app.poster = payload.imageUrl;
+            app.buttonLabel = payload.title;
+            onUpdateProperty(app);
+        });
+    }
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
@@ -169,7 +237,7 @@
                 headerText={$LL.mapEditor.properties.focusableProperties.label()}
                 descriptionText={$LL.mapEditor.properties.focusableProperties.description()}
                 img={"resources/icons/icon_focus.png"}
-                style="z-index: 9;"
+                style="z-index: 14;"
                 on:click={() => {
                     onAddProperty("focusable");
                 }}
@@ -180,7 +248,7 @@
                 headerText={$LL.mapEditor.properties.silentProperty.label()}
                 descriptionText={$LL.mapEditor.properties.silentProperty.description()}
                 img={"resources/icons/icon_silent.png"}
-                style="z-index: 8;"
+                style="z-index: 13;"
                 on:click={() => {
                     onAddProperty("silent");
                 }}
@@ -191,7 +259,7 @@
                 headerText={$LL.mapEditor.properties.jitsiProperties.label()}
                 descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
                 img={"resources/icons/icon_meeting.png"}
-                style="z-index: 7;"
+                style="z-index: 12;"
                 on:click={() => {
                     onAddProperty("jitsiRoomProperty");
                 }}
@@ -203,7 +271,7 @@
                     headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
                     descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.description()}
                     img={"resources/icons/icon_speaker.png"}
-                    style="z-index: 6;"
+                    style="z-index: 11;"
                     on:click={() => {
                         onAddProperty("speakerMegaphone");
                     }}
@@ -214,7 +282,7 @@
                     headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
                     descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
                     img={"resources/icons/icon_listener.png"}
-                    style="z-index: 5;"
+                    style="z-index: 10;"
                     on:click={() => {
                         onAddProperty("listenerMegaphone");
                     }}
@@ -226,7 +294,7 @@
                 headerText={$LL.mapEditor.properties.startProperties.label()}
                 descriptionText={$LL.mapEditor.properties.startProperties.description()}
                 img={"resources/icons/icon_start.png"}
-                style="z-index: 4;"
+                style="z-index: 9;"
                 on:click={() => {
                     onAddProperty("start");
                 }}
@@ -237,7 +305,7 @@
                 headerText={$LL.mapEditor.properties.exitProperties.label()}
                 descriptionText={$LL.mapEditor.properties.exitProperties.description()}
                 img={"resources/icons/icon_exit.png"}
-                style="z-index: 3;"
+                style="z-index: 8;"
                 on:click={() => {
                     onAddProperty("exit");
                 }}
@@ -248,7 +316,7 @@
                 headerText={$LL.mapEditor.properties.audioProperties.label()}
                 descriptionText={$LL.mapEditor.properties.audioProperties.description()}
                 img={audioSvg}
-                style="z-index: 2;"
+                style="z-index: 7;"
                 on:click={() => {
                     onAddProperty("playAudio");
                 }}
@@ -258,9 +326,83 @@
             headerText={$LL.mapEditor.properties.linkProperties.label()}
             descriptionText={$LL.mapEditor.properties.linkProperties.description()}
             img={"resources/icons/icon_link.png"}
-            style="z-index: 1;"
+            style="z-index: 6;"
             on:click={() => {
                 onAddProperty("openWebsite");
+            }}
+        />
+    </div>
+    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.youtubeProperties.label()}
+            descriptionText={connectionManager.currentRoom?.youtubeToolActivated
+                ? $LL.mapEditor.properties.youtubeProperties.description()
+                : $LL.mapEditor.properties.youtubeProperties.disabled()}
+            img={youtubeSvg}
+            style="z-index: 5;"
+            disabled={!connectionManager.currentRoom?.youtubeToolActivated}
+            on:click={() => {
+                onAddProperty("openWebsite", "youtube");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.klaxoonProperties.label()}
+            descriptionText={connectionManager.currentRoom?.klaxoonToolActivated
+                ? $LL.mapEditor.properties.klaxoonProperties.description()
+                : $LL.mapEditor.properties.klaxoonProperties.disabled()}
+            img={klaxoonSvg}
+            style="z-index: 4;"
+            disabled={!connectionManager.currentRoom?.klaxoonToolActivated}
+            on:click={() => {
+                onAddProperty("openWebsite", "klaxoon");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.googleDocsProperties.label()}
+            descriptionText={connectionManager.currentRoom?.googleDocsToolActivated
+                ? $LL.mapEditor.properties.googleDocsProperties.description()
+                : $LL.mapEditor.properties.googleDocsProperties.disabled()}
+            img={googleDocsSvg}
+            style="z-index: 3;"
+            disabled={!connectionManager.currentRoom?.googleDocsToolActivated}
+            on:click={() => {
+                onAddProperty("openWebsite", "googleDocs");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.googleSheetsProperties.label()}
+            descriptionText={connectionManager.currentRoom?.googleSheetsToolActivated
+                ? $LL.mapEditor.properties.googleSheetsProperties.description()
+                : $LL.mapEditor.properties.googleSheetsProperties.disabled()}
+            img={googleSheetsSvg}
+            style="z-index: 2;"
+            disabled={!connectionManager.currentRoom?.googleSheetsToolActivated}
+            on:click={() => {
+                onAddProperty("openWebsite", "googleSheets");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.googleSlidesProperties.label()}
+            descriptionText={connectionManager.currentRoom?.googleSlidesToolActivated
+                ? $LL.mapEditor.properties.googleSlidesProperties.description()
+                : $LL.mapEditor.properties.googleSlidesProperties.disabled()}
+            img={googleSlidesSvg}
+            style="z-index: 1;"
+            disabled={!connectionManager.currentRoom?.googleSlidesToolActivated}
+            on:click={() => {
+                onAddProperty("openWebsite", "googleSlides");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.eraserProperties.label()}
+            descriptionText={connectionManager.currentRoom?.eraserToolActivated
+                ? $LL.mapEditor.properties.eraserProperties.description()
+                : $LL.mapEditor.properties.eraserProperties.disabled()}
+            img={eraserSvg}
+            style="z-index: 1;"
+            disabled={!connectionManager.currentRoom?.eraserToolActivated}
+            on:click={() => {
+                onAddProperty("openWebsite", "eraser");
             }}
         />
     </div>

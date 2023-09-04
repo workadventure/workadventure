@@ -18,6 +18,7 @@ const actionbar: BaseTranslation = {
         microphone: "Microphone",
         speaker: "Speaker",
     },
+    app: "Ouvrir / Fermer les applications",
 };
 
 export default actionbar;
