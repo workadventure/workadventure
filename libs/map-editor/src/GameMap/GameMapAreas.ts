@@ -229,6 +229,7 @@ export class GameMapAreas {
                     break;
                 }
                 case "openWebsite": {
+                    if (property.link == undefined) break;
                     if (property.newTab) {
                         flattenedProperties[GameMapProperties.OPEN_TAB] = property.link;
                     } else {

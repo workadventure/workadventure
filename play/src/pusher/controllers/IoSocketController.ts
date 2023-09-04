@@ -123,7 +123,9 @@ export class IoSocketController {
                 res.upgrade({}, websocketKey, websocketProtocol, websocketExtensions, context);
             },
             open: (ws) => {
-                console.log("Admin socket connect to client on " + Buffer.from(ws.getRemoteAddressAsText()).toString());
+                console.info(
+                    "Admin socket connect to client on " + Buffer.from(ws.getRemoteAddressAsText()).toString()
+                );
                 ws.disconnecting = false;
             },
             message: (ws, arrayBuffer): void => {
@@ -457,7 +459,7 @@ export class IoSocketController {
                             companionTexture = userData.companionTexture ?? undefined;
                             memberUserRoomToken = userData.userRoomToken;
                         } catch (e) {
-                            console.log(
+                            console.info(
                                 "access not granted for user " + (userIdentifier || "anonymous") + " and room " + roomId
                             );
                             Sentry.captureException(e);
@@ -485,7 +487,7 @@ export class IoSocketController {
                         }
 
                         if (upgradeAborted.aborted) {
-                            console.log("Ouch! Client disconnected before we could upgrade it!");
+                            console.info("Ouch! Client disconnected before we could upgrade it!");
                             /* You must not upgrade now */
                             return;
                         }
@@ -718,7 +720,6 @@ export class IoSocketController {
                         client.send(serverToClientMessage.serializeBinary().buffer, true);
                     }
                     const endTimestamp2 = Date.now();
-                    console.log("Time taken 2: " + (endTimestamp2 - startTimestamp2) + "ms");
 
                     const startTimestamp = Date.now();
                     for (let i = 0; i < 100000; i++) {
@@ -751,7 +752,6 @@ export class IoSocketController {
                         client.send(bytes);
                     }
                     const endTimestamp = Date.now();
-                    console.log("Time taken: " + (endTimestamp - startTimestamp) + "ms");
                     */
                 })().catch((e) => {
                     Sentry.captureException(e);
@@ -894,7 +894,7 @@ export class IoSocketController {
                 });
             },
             drain: (ws) => {
-                console.log("WebSocket backpressure: " + ws.getBufferedAmount());
+                console.info("WebSocket backpressure: " + ws.getBufferedAmount());
             },
             close: (ws) => {
                 const client = ws as ExSocketInterface;

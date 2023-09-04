@@ -21,7 +21,7 @@ class AdminMessagesService {
     public messageStream = this._messageStream.asObservable();
 
     constructor() {
-        this.messageStream.subscribe((event) => console.log("message", event));
+        this.messageStream.subscribe((event) => console.info("message", event));
     }
 
     onSendusermessage(message: SendUserMessage | BanUserMessage) {

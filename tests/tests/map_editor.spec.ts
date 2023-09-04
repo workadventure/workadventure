@@ -4,6 +4,7 @@ import {hideNoCamera, login} from "./utils/roles";
 import MapEditor from "./utils/mapeditor";
 import Megaphone from "./utils/map-editor/megaphone";
 import AreaEditor from "./utils/map-editor/areaEditor";
+import EntityEditor from "./utils/map-editor/entityEditor";
 import Map from "./utils/map";
 import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import {resetWamMaps} from "./utils/map-editor/uploader";
@@ -181,5 +182,170 @@ test.describe('Map editor', () => {
       }
       throw new Error(`Player is not at the correct position : ${position.x} ${position.y}`);
     });
+  });
+
+  // Test to set Klaxoon application in the area with the map editor
+  test('Successfully set Klaxoon\'s application in the area in the map editor', async ({ page, browser, request, browserName }) => {
+    await resetWamMaps(request);
+
+    await page.goto(url("empty"));
+    await login(page, "test", 3);
+    if(browserName === "webkit"){
+      // Because webkit in playwright does not support Camera/Microphone Permission by settings
+      await hideNoCamera(page);
+    }
+
+    //await Menu.openMapEditor(page);
+    await page.getByRole('button', {name: 'toggle-map-editor'}).click();
+    await MapEditor.openAreaEditor(page);
+    await AreaEditor.drawArea(page, {x: 13*32, y: 13*32}, {x: 15*32, y: 15*32});
+    await AreaEditor.setAreaName(page, 'My app zone');
+
+    // add property Klaxoon
+    await AreaEditor.addProperty(page, 'Open Klaxoon')
+
+    // insert klaxoon link
+    await page.getByPlaceholder('https://app.klaxoon.com/').first().fill('https://app.klaxoon.com/join/KXEWMSE3NF2M');
+    await page.locator('.map-editor').click();
+
+    // check if the iframe activity picker is opened
+    await Promise.all([
+      // It is important to call waitForEvent first.
+      page.waitForEvent('popup'),
+      // Opens the popup.
+      Map.walkToPosition(page, 9 * 32, 9 * 32)
+    ]);
+
+    // TODO make same test with object editor
+  });
+
+  test('Successfully set GoogleWorkspace\'s applications in the area in the map editor', async ({ page, browser, request, browserName }) => {
+    await resetWamMaps(request);
+
+    await page.goto(url("empty"));
+    await login(page, "test", 3);
+    if(browserName === "webkit"){
+      // Because webkit in playwright does not support Camera/Microphone Permission by settings
+      await hideNoCamera(page);
+    }
+
+    //await Menu.openMapEditor(page);
+    await page.getByRole('button', {name: 'toggle-map-editor'}).click();
+    await MapEditor.openAreaEditor(page);
+    await AreaEditor.drawArea(page, {x: 13*32, y: 13*32}, {x: 15*32, y: 15*32});
+
+    await AreaEditor.setAreaName(page, 'My app zone');
+
+    // add property Google Docs
+    await AreaEditor.addProperty(page, 'Open Google Docs');
+    // fill Google Docs link
+    await page.getByPlaceholder('https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit').first().fill('https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit');
+
+    // add property Google Sheets
+    await AreaEditor.addProperty(page, 'Open Google Sheets');
+    // fill Google Sheets link
+    await page.getByPlaceholder('https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit').first().fill('https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit');
+
+    // add property Google Slides
+    await AreaEditor.addProperty(page, 'Open Google Slides');
+    // fill Google Slides link
+    await page.getByPlaceholder('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit').first().fill('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit');
+
+    await Menu.closeMapEditor(page);
+
+    // wlak on the area position and open the popup
+    await Map.walkToPosition(page, 9 * 32, 9 * 32);
+
+    // check if the iframe was opened and button thumbnail is visible
+    await expect(page.locator('#cowebsite-thumbnail-0')).toBeVisible();
+    await expect(page.locator('#cowebsite-thumbnail-1')).toBeVisible();
+    await expect(page.locator('#cowebsite-thumbnail-2')).toBeVisible();
+  });
+
+  test('Successfully set GoogleWorkspace\'s application entity in the map editor', async ({ page, browser, request, browserName }) => {
+    await resetWamMaps(request);
+
+    await page.goto(url("empty"));
+    await login(page, "test", 3);
+    if(browserName === "webkit"){
+      // Because webkit in playwright does not support Camera/Microphone Permission by settings
+      await hideNoCamera(page);
+    }
+
+    // open map editor
+    await page.getByRole('button', {name: 'toggle-map-editor'}).click();
+    await MapEditor.openEntityEditor(page);
+
+    // select entity and push it into the map
+    await EntityEditor.selectEntity(page, 0, 'small table');
+    await EntityEditor.moveAndClick(page, 14*32, 14*32);
+
+    // quit object selector
+    await EntityEditor.quitEntitySelector(page);
+    await EntityEditor.moveAndClick(page, 14*32, 13*32);
+
+    // add property Google Docs
+    await EntityEditor.addProperty(page, 'Open Google Docs');
+    // fill Google Docs link
+    await page.getByPlaceholder('https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit').first().fill('https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit');
+
+    // add property Google Sheets
+    await EntityEditor.addProperty(page, 'Open Google Sheets');
+    // fill Google Sheets link
+    await page.getByPlaceholder('https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit').first().fill('https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit');
+
+    // add property Google Slides
+    await EntityEditor.addProperty(page, 'Open Google Slides');
+    // fill Google Slides link
+    await page.getByPlaceholder('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit').first().fill('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit');
+
+    // close object selector
+    await Menu.closeMapEditor(page);
+
+    // click on the object and open popup
+    await EntityEditor.moveAndClick(page, 14*32, 13*32);
+
+    // check if the popup with application is opened
+    await expect(page.locator('.actions-menu .actions button').nth(0)).toContainText('Open Google Docs');
+    await expect(page.locator('.actions-menu .actions button').nth(1)).toContainText('Open Google Sheets');
+    await expect(page.locator('.actions-menu .actions button').nth(2)).toContainText('Open Google Slides');
+  });
+
+  test('Successfully set Klaxoon\'s application entity in the map editor', async ({ page, browser, request, browserName }) => {
+    await resetWamMaps(request);
+
+    await page.goto(url("empty"));
+    await login(page, "test", 3);
+    if(browserName === "webkit"){
+      // Because webkit in playwright does not support Camera/Microphone Permission by settings
+      await hideNoCamera(page);
+    }
+
+    // open map editor
+    await page.getByRole('button', {name: 'toggle-map-editor'}).click();
+    await MapEditor.openEntityEditor(page);
+
+    // select entity and push it into the map
+    await EntityEditor.selectEntity(page, 0, 'small table');
+    await EntityEditor.moveAndClick(page, 14*32, 14*32);
+
+    // quit object selector
+    await EntityEditor.quitEntitySelector(page);
+    await EntityEditor.moveAndClick(page, 14*32, 13*32);
+
+    // add property Klaxoon
+    await EntityEditor.addProperty(page, 'Open Klaxoon')
+
+    // fill Klaxoon link
+    await page.getByPlaceholder('https://app.klaxoon.com/').first().fill('https://app.klaxoon.com/join/KXEWMSE3NF2M');
+
+    // close object selector
+    await Menu.closeMapEditor(page);
+
+    // click on the object and open popup
+    await EntityEditor.moveAndClick(page, 14*32, 13*32);
+
+    // check if the popup with application is opened
+    await expect(page.locator('.actions-menu .actions button').nth(0)).toContainText('Open Klaxoon');
   });
 });

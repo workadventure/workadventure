@@ -59,6 +59,41 @@ const fr_FR: Translation = {
     form: {
         placeholder: "Écrire votre message...",
         typing: " écrit...",
+        application: {
+            klaxoon: {
+                title: "Klaxoon",
+                description: "Envoyer un klaxoon dans le chat !",
+                error: "L'URL Klaxoon n'est pas valide",
+            },
+            youtube: {
+                title: "Youtube",
+                description: "Envoyer une vidéo youtube dans le chat !",
+                error: "L'URL Youtube n'est pas valide",
+            },
+            googleDocs: {
+                title: "Google Docs",
+                description: "Envoyer un document google docs dans le chat !",
+                error: "L'URL Google Docs n'est pas valide",
+            },
+            googleSlides: {
+                title: "Google Slides",
+                description: "Envoyer une présentation google slides dans le chat !",
+                error: "L'URL Google Slides n'est pas valide",
+            },
+            googleSheets: {
+                title: "Google Sheets",
+                description: "Envoyer un tableau google sheets dans le chat !",
+                error: "L'URL Google Sheets n'est pas valide",
+            },
+            eraser: {
+                title: "Eraser",
+                description: "Envoyer un tableau eraser dans le chat !",
+                error: "L'URL Eraser n'est pas valide",
+            },
+            weblink: {
+                error: "L'URL n'est pas valide",
+            },
+        },
     },
     notification: {
         discussion: "veut discuter avec toi",
@@ -111,6 +146,7 @@ const fr_FR: Translation = {
     disabledByAdmin: "Cette fonctionnalité est désactivée par l'administrateur.",
     anAdmin: "un administrateur",
     messageDeletedByYou: "Vous avez supprimé ce message",
+    waiting: "En attente",
 };
 
 export default fr_FR;

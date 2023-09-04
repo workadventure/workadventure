@@ -2,6 +2,9 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const mapEditor: DeepPartial<Translation["mapEditor"]> = {
+    map: {
+        refreshPrompt: "Nouvelle version de la carte détectée. Actualisation nécessaire",
+    },
     sideBar: {
         areaEditor: "Outil d'édition de zone",
         entityEditor: "Outil d'édition d'entités",
@@ -15,8 +18,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Ne permet pas les conversations à l'intérieur.",
         },
         textProperties: {
-            label: "Texte d'Entête",
-            placeholder: "Entrez ici le texte qui sera affiché lorsque l'on interagit avec l'objet.",
+            label: "Texte d'en-tête",
+            placeholder: "Saisissez ici le texte qui sera affiché lors de l'interaction avec l'objet",
         },
         focusableProperties: {
             label: "Focalisable",
@@ -32,7 +35,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabel: "Nom de Salle",
             roomNamePlaceholder: "Nom de la Salle",
             defaultButtonLabel: "Ouvrir la salle Jitsi",
-            audioMutedLabel: "Sourdine par défaut",
+            audioMutedLabel: "Désactivé par défaut",
             moreOptionsLabel: "Plus d'options",
             trigger: "Interaction",
             triggerMessage: "Message d'information",
@@ -43,8 +46,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             noPrefix: "Partager avec d'autres salles",
             jitsiRoomConfig: {
                 addConfig: "Ajouter une option",
-                startWithAudioMuted: "Démarrer avec le microphone coupé",
-                startWithVideoMuted: "Démarrer avec la vidéo coupée",
+                startWithAudioMuted: "Démarrer avec le microphone désactivé",
+                startWithVideoMuted: "Démarrer avec la vidéo désactivée",
                 cancel: "Annuler",
                 validate: "Valider",
             },
@@ -115,6 +118,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     entityEditor: {
         itemPicker: {
             searchPlaceholder: "Rechercher",
+            backToSelectObject: "Retour à la sélection d'objet",
         },
         trashTool: {
             delete: "Supprimer un item en cliquant dessus !",

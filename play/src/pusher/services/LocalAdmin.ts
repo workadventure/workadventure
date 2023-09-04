@@ -12,6 +12,13 @@ import {
     ENABLE_CHAT_ONLINE_LIST,
     ENABLE_CHAT_DISCONNECTED_LIST,
     MAP_EDITOR_ALLOWED_USERS,
+    KLAXOON_ENABLED,
+    KLAXOON_CLIENT_ID,
+    YOUTUBE_ENABLED,
+    GOOGLE_DOCS_ENABLED,
+    GOOGLE_SHEETS_ENABLED,
+    GOOGLE_SLIDES_ENABLED,
+    ERASER_ENABLED,
 } from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
@@ -129,6 +136,13 @@ class LocalAdmin implements AdminInterface {
             enableChatUpload: ENABLE_CHAT_UPLOAD,
             enableChatOnlineList: ENABLE_CHAT_ONLINE_LIST,
             enableChatDisconnectedList: ENABLE_CHAT_DISCONNECTED_LIST,
+            klaxoonToolActivated: KLAXOON_ENABLED,
+            klaxoonToolClientId: KLAXOON_CLIENT_ID,
+            youtubeToolActivated: YOUTUBE_ENABLED,
+            googleDocsToolActivated: GOOGLE_DOCS_ENABLED,
+            googleSheetsToolActivated: GOOGLE_SHEETS_ENABLED,
+            googleSlidesToolActivated: GOOGLE_SLIDES_ENABLED,
+            eraserToolActivated: ERASER_ENABLED,
             metatags: {
                 ...MetaTagsDefaultValue,
             },

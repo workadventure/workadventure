@@ -119,6 +119,14 @@
           "JITSI_DOMAIN": "coremeet.workadventu.re",
           "JITSI_XMPP_DOMAIN": "prosody.workadventu.re",
           "JITSI_MUC_DOMAIN": "muc.prosody.workadventu.re",
+          # Integration tools
+          "KLAXOON_ENABLED": "true",
+          "KLAXOON_CLIENT_ID": env.KLAXOON_CLIENT_ID,
+          "YOUTUBE_ENABLED": "true",
+          "GOOGLE_DOCS_ENABLED": "true",
+          "GOOGLE_SHEETS_ENABLED": "true",
+          "GOOGLE_SLIDES_ENABLED": "true",
+          "ERASER_ENABLED": "true",
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,

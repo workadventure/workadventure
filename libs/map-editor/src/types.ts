@@ -63,7 +63,7 @@ export const PlayAudioPropertyData = PropertyBase.extend({
 
 export const OpenWebsitePropertyData = PropertyBase.extend({
     type: z.literal("openWebsite"),
-    link: z.string().default("https://workadventu.re"),
+    link: z.string().nullable().default("https://workadventu.re"),
     newTab: z.boolean().optional().default(false),
     closable: z.boolean().optional(),
     allowAPI: z.boolean().optional(),
@@ -75,6 +75,20 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
         .default("fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture")
         .optional(),
     position: z.number().optional(),
+    application: z
+        .union([
+            z.literal("website"),
+            z.literal("youtube"),
+            z.literal("klaxoon"),
+            z.literal("googleDocs"),
+            z.literal("googleSheets"),
+            z.literal("googleSlides"),
+            z.literal("googleForms"),
+            z.literal("eraser"),
+        ])
+        .default("website"),
+    poster: z.string().optional(),
+    placeholder: z.string().optional(),
 });
 
 export const SpeakerMegaphonePropertyData = PropertyBase.extend({
@@ -234,6 +248,15 @@ export type EntityData = z.infer<typeof EntityData>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
 export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite";
+export type OpenWebsiteTypePropertiesKeys =
+    | "website"
+    | "youtube"
+    | "klaxoon"
+    | "googleDocs"
+    | "googleSheets"
+    | "googleSlides"
+    | "googleForms"
+    | "eraser";
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
 export type AreaDataProperty = z.infer<typeof AreaDataProperty>;

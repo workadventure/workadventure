@@ -11,8 +11,6 @@ export class PlayerMovement {
     ) {}
 
     public isOutdated(tick: number): boolean {
-        //console.log(tick, this.endTick, MAX_EXTRAPOLATION_TIME)
-
         // If the endPosition is NOT moving, no extrapolation needed.
         if (this.endPosition.moving === false && tick > this.endTick) {
             return true;
@@ -24,7 +22,6 @@ export class PlayerMovement {
     public getPosition(tick: number): HasPlayerMovedInterface {
         // Special case: end position reached and end position is not moving
         if (tick >= this.endTick && this.endPosition.moving === false) {
-            //console.log('Movement finished ', this.endPosition)
             return this.endPosition;
         }
 

@@ -15,7 +15,6 @@ concurrency:
 jobs:
   build-play:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -118,7 +117,6 @@ jobs:
 
   build-chat:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -194,7 +192,6 @@ jobs:
 
   build-back:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -295,7 +292,6 @@ jobs:
 
   build-uploader:
     runs-on: ubuntu-latest
-
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -356,7 +352,6 @@ jobs:
 
   build-maps:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -422,7 +417,6 @@ jobs:
 
   build-map-storage:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -516,7 +510,6 @@ jobs:
 
   build-ejabberd:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -651,51 +644,45 @@ jobs:
           sed -i "s/JITSI_DOMAIN=/JITSI_DOMAIN=coremeet.workadventu.re/g" .env
           sed -i "s/JITSI_MUC_DOMAIN=/JITSI_MUC_DOMAIN=muc.prosody.workadventu.re/g" .env
           sed -i "s/JITSI_XMPP_DOMAIN=/JITSI_XMPP_DOMAIN=prosody.workadventu.re/g" .env
+          sed -i "s/KLAXOON_ENABLED=false/KLAXOON_ENABLED=true/g" .env
+          sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
 
-      -
-        name: Download artifact
+      - name: Download artifact
         uses: actions/download-artifact@v3
         with:
           name: play
           path: /tmp
-      -
-        name: Download artifact
+      - name: Download artifact
         uses: actions/download-artifact@v3
         with:
           name: chat
           path: /tmp
-      -
-        name: Download artifact
+      - name: Download artifact
         uses: actions/download-artifact@v3
         with:
           name: back
           path: /tmp
-      -
-        name: Download artifact
+      - name: Download artifact
         uses: actions/download-artifact@v3
         with:
           name: maps
           path: /tmp
-      -
-        name: Download artifact
+      - name: Download artifact
         uses: actions/download-artifact@v3
         with:
           name: map-storage
           path: /tmp
-      -
-        name: Download artifact
+      - name: Download artifact
         uses: actions/download-artifact@v3
         with:
           name: uploader
           path: /tmp
-      -
-        name: Download artifact
+      - name: Download artifact
         uses: actions/download-artifact@v3
         with:
           name: ejabberd
           path: /tmp
-      -
-        name: Load image
+      - name: Load image
         run: |
           docker load --input /tmp/play.tar.gz
           docker load --input /tmp/chat.tar.gz
@@ -706,11 +693,13 @@ jobs:
           docker load --input /tmp/ejabberd.tar.gz
           docker image ls -a
       - name: Start WorkAdventure
-        run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d
+        run: |
+          docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml pull
+          docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
       - name: Upload test-map
-        run: sleep 10 && npm run upload-test-map
+        run: sleep 30 && npm run upload-test-map
         working-directory: map-storage
       - name: Run Playwright tests
         run: npm run test-prod-like -- --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }}
@@ -797,6 +786,8 @@ jobs:
           sed -i "s/JITSI_MUC_DOMAIN=/JITSI_MUC_DOMAIN=muc.prosody.workadventu.re/g" .env
           sed -i "s/JITSI_XMPP_DOMAIN=/JITSI_XMPP_DOMAIN=prosody.workadventu.re/g" .env
           sed -i "s/FEATURE_FLAG_BROADCAST_AREAS=/FEATURE_FLAG_BROADCAST_AREAS=true/g" .env
+          sed -i "s/KLAXOON_ENABLED=false/KLAXOON_ENABLED=true/g" .env
+          sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
           echo "WOKA_SPEED=3" >> .env
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
@@ -807,7 +798,10 @@ jobs:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
       - name: Upload test-map
-        run: sleep 10 && npm run upload-test-map-single-domain
+        run: |
+          sed -i "s/http:/https:/g" tests/assets/maps/empty.wam
+          sleep 10
+          npm run upload-test-map-single-domain
         working-directory: map-storage
       - name: Run Playwright tests
         # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
@@ -839,7 +833,6 @@ jobs:
           name: playwright-report-single-domain-${{ matrix.shard }}-${{ matrix.nbShards }}
           path: tests/playwright-report/
           retention-days: 30
-
 
   deeploy:
     needs:
@@ -912,6 +905,7 @@ jobs:
           ENABLE_REPORT_ISSUES_MENU: ${{ secrets.ENABLE_REPORT_ISSUES_MENU }}
           REPORT_ISSUES_URL: ${{ secrets.REPORT_ISSUES_URL }}
           LOGROCKET_ID: ${{ secrets.LOGROCKET_ID }}
+          KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
         with:
           namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
@@ -942,4 +936,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           msg: "Environment deployed at https://play-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re \nTests available at https://maps-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re/tests"
-
+          check_for_duplicate_msg: true

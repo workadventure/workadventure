@@ -55,7 +55,7 @@
             if (localStorage && localStorage.getItem("debug_throttle")) {
                 // This is a TEMPORARY TEST MODE that overloads setTimeout to detect when Chrome is throttling the page.
                 // If you see this message in the console, it means that Chrome is throttling the page.
-                console.log("Debug mode: setTimeout/setInterval are overloaded to detect when Chrome is throttling the page.")
+                console.info("Debug mode: setTimeout/setInterval are overloaded to detect when Chrome is throttling the page.")
 
                 // To test, see: https://docs.google.com/document/d/11FhKHRcABGS4SWPFGwoL6g0ALMqrFKapCk5ZTKKupEk/edit
                 // google-chrome --enable-features="IntensiveWakeUpThrottling:grace_period_seconds/10,OptOutZeroTimeoutTimersFromThrottling,AllowAggressiveThrottlingWithWebSocket"

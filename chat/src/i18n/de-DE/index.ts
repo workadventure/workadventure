@@ -60,6 +60,41 @@ const de_DE: Translation = {
     form: {
         placeholder: "Gib deine Nachricht ein...",
         typing: " tippt...",
+        application: {
+            klaxoon: {
+                title: "Klaxoon",
+                description: "Senden Sie eine Klaxoon-Umfrage in den Chat!",
+                error: "Die Klaxoon-Umfrage ist nicht gültig",
+            },
+            youtube: {
+                title: "Youtube",
+                description: "Senden Sie ein Youtube-Video in den Chat!",
+                error: "Die Youtube-URL ist nicht gültig",
+            },
+            googleDocs: {
+                title: "Google Docs",
+                description: "Senden Sie ein Google Docs-Dokument in den Chat!",
+                error: "Die Google Docs-URL ist nicht gültig",
+            },
+            googleSlides: {
+                title: "Google Slides",
+                description: "Senden Sie eine Google Slides-Präsentation in den Chat!",
+                error: "Die Google Slides-URL ist nicht gültig",
+            },
+            googleSheets: {
+                title: "Google Sheets",
+                description: "Senden Sie ein Google Sheets-Dokument in den Chat!",
+                error: "Die Google Sheets-URL ist nicht gültig",
+            },
+            eraser: {
+                title: "Eraser",
+                description: "Senden Sie ein Eraser-Board in den Chat!",
+                error: "Die Eraser-URL ist nicht gültig",
+            },
+            weblink: {
+                error: "Die URL ist nicht gültig",
+            },
+        },
     },
     notification: {
         discussion: "möchte mit dir diskutieren",
@@ -113,6 +148,7 @@ const de_DE: Translation = {
     disabledByAdmin: "Diese Funktion ist vom Administrator deaktiviert.",
     anAdmin: "ein Administrator",
     messageDeletedByYou: "Sie haben diese Nachricht gelöscht",
+    waiting: "Warten",
 };
 
 export default de_DE;

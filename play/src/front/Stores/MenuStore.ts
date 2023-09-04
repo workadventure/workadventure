@@ -302,7 +302,6 @@ function createAdditionalButtonsMenu() {
     return {
         subscribe,
         addAdditionnalButtonActionBar(button: AddButtonActionBarEvent) {
-            console.log("MenuStore => additionnalButtonsMenu => addAdditionnalButtonActionBar => button", button);
             update((additionnalButtonsMenu) => {
                 additionnalButtonsMenu.set(button.id, button);
                 return additionnalButtonsMenu;

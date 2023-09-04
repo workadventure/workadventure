@@ -17,6 +17,11 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLostSubtitle: "Reconectando",
     waitingConnectionTitle: "Aguardando a conexão",
     waitingConnectionSubtitle: "Conectando",
+    popupBlocked: {
+        title: "Bloqueador de pop-up",
+        content: "Por favor, permita pop-ups para este site nas configurações do seu navegador.",
+        done: "Ok",
+    },
 };
 
 export default warning;

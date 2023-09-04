@@ -68,7 +68,7 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
     }
 
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
-        console.log("EntityEditorTool subscribeToGameMapFrontWrapperEvents");
+        console.info("EntityEditorTool subscribeToGameMapFrontWrapperEvents");
     }
 
     public handleKeyDownEvent(event: KeyboardEvent): void {

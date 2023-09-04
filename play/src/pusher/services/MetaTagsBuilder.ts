@@ -287,7 +287,7 @@ export class MetaTagsBuilder {
         try {
             fetchedData = await mapFetcher.fetchFile(mapUrl);
         } catch (e) {
-            console.log(
+            console.info(
                 "Error on getting map file",
                 mapUrl,
                 "for room url",

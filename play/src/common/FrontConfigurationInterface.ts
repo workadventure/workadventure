@@ -42,6 +42,13 @@ export interface FrontConfigurationInterface {
     JITSI_MUC_DOMAIN: string | undefined;
     MAP_STORAGE_PATH_PREFIX: string | undefined;
     FEATURE_FLAG_BROADCAST_AREAS: boolean;
+    KLAXOON_ENABLED: boolean;
+    KLAXOON_CLIENT_ID: string | undefined;
+    YOUTUBE_ENABLED: boolean;
+    GOOGLE_DOCS_ENABLED: boolean;
+    GOOGLE_SHEETS_ENABLED: boolean;
+    GOOGLE_SLIDES_ENABLED: boolean;
+    ERASER_ENABLED: boolean;
     PEER_VIDEO_LOW_BANDWIDTH: number;
     PEER_VIDEO_RECOMMENDED_BANDWIDTH: number;
     PEER_SCREEN_SHARE_LOW_BANDWIDTH: number;

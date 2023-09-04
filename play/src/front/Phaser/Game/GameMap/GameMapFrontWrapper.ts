@@ -892,13 +892,13 @@ export class GameMapFrontWrapper {
                         properties.push({
                             name: GameMapProperties.OPEN_TAB,
                             type: "string",
-                            value: property.link,
+                            value: property.link ?? undefined,
                         });
                     } else {
                         properties.push({
                             name: GameMapProperties.OPEN_WEBSITE,
                             type: "string",
-                            value: property.link,
+                            value: property.link ?? undefined,
                         });
                     }
                     break;

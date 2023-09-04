@@ -108,7 +108,7 @@ export class GameMapPropertiesListener {
                 let jwt: string | undefined;
                 if (JITSI_PRIVATE_MODE && !jitsiUrl) {
                     if (!this.scene.connection) {
-                        console.log("Cannot connect to Jitsi. No connection to Pusher server.");
+                        console.info("Cannot connect to Jitsi. No connection to Pusher server.");
                         return;
                     }
                     const answer = await this.scene.connection.queryJitsiJwtToken(roomName);

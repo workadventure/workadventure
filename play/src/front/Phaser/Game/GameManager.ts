@@ -127,7 +127,7 @@ export class GameManager {
     }
 
     public goToStartingMap(): void {
-        console.log("starting " + (this.currentGameSceneName || this.startRoom.key));
+        console.info("starting " + (this.currentGameSceneName || this.startRoom.key));
         this.scenePlugin.start(this.currentGameSceneName || this.startRoom.key);
         this.activeMenuSceneAndHelpCameraSettings();
     }

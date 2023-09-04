@@ -108,6 +108,43 @@ const mapEditor: BaseTranslation = {
             exitMap: "Exit map",
             exitMapStartAreaName: "Start area name",
         },
+        youtubeProperties: {
+            label: "Open Youtube Video",
+            description: "Open Youtube video within WorkAdventure or as a new tab.",
+            error: "Please enter a valid Youtube URL",
+            disabled: "Youtube integration is disabled.",
+        },
+        googleDocsProperties: {
+            label: "Open Google Docs",
+            description: "Open Google Docs within WorkAdventure or as a new tab.",
+            error: "Please enter a valid Google Docs URL",
+            disabled: "Google Docs integration is disabled.",
+        },
+        klaxoonProperties: {
+            label: "Open Klaxoon",
+            description: "Open Klaxoon within WorkAdventure or as a new tab.",
+            error: "Please enter a valid Klaxoon URL",
+            disabled: "Klaxoon integration is disabled.",
+        },
+        googleSheetsProperties: {
+            label: "Open Google Sheets",
+            description: "Open Google Sheets within WorkAdventure or as a new tab.",
+            error: "Please enter a valid Google Sheets URL",
+            disabled: "Google Sheets integration is disabled.",
+        },
+        googleSlidesProperties: {
+            label: "Open Google Slides",
+            description: "Open Google Slides within WorkAdventure or as a new tab.",
+            error: "Please enter a valid Google Slides URL",
+            disabled: "Google Slides integration is disabled.",
+        },
+        eraserProperties: {
+            label: "Eraser",
+            description: "Erase all drawings on the map.",
+            defaultButtonLabel: "Erase",
+            error: "Please enter a valid Eraser URL",
+            disabled: "Eraser integration is disabled.",
+        },
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",
@@ -116,6 +153,7 @@ const mapEditor: BaseTranslation = {
     entityEditor: {
         itemPicker: {
             searchPlaceholder: "Search",
+            backToSelectObject: "Back to select object",
         },
         trashTool: {
             delete: "Click on the object to delete it!",

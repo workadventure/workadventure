@@ -32,7 +32,7 @@ axiosRetry(axiosWithRetry, {
         return error.code !== "ECONNABORTED" && (!error.response || error.response.status == 429);
     },
     onRetry: (retryCount, error: AxiosError, requestConfig: AxiosRequestConfig) => {
-        console.log(`Retry attempt #${retryCount} on URL '${requestConfig.url}':`, error.message);
+        console.info(`Retry attempt #${retryCount} on URL '${requestConfig.url}':`, error.message);
         showConnectionIssueMessage();
     },
 });

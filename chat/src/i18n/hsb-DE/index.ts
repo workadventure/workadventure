@@ -59,6 +59,36 @@ const hsb_DE: Translation = {
     form: {
         placeholder: "Zapodaj swoju powěsć...",
         typing: " napisa powěsć...",
+        application: {
+            klaxoon: {
+                title: "Klaxoon",
+                description: "Wužiwarjo maja Klaxoon wobkedźbować",
+                error: "Prošu zapodaj Klaxoon URL",
+            },
+            youtube: {
+                title: "Youtube",
+                description: "Wužiwarjo maja Youtube wobkedźbować",
+                error: "Prošu zapodaj Youtube URL",
+            },
+            googleDocs: {
+                title: "Google Docs",
+                description: "Wužiwarjo maja Google Docs wobkedźbować",
+                error: "Prošu zapodaj Google Docs URL",
+            },
+            googleSlides: {
+                title: "Google Slides",
+                description: "Wužiwarjo maja Google Slides wobkedźbować",
+                error: "Prošu zapodaj Google Slides URL",
+            },
+            googleSheets: {
+                title: "Google Sheets",
+                description: "Wužiwarjo maja Google Sheets wobkedźbować",
+                error: "Prošu zapodaj Google Sheets URL",
+            },
+            weblink: {
+                error: "Prošu zapodaj URL",
+            },
+        },
     },
     notification: {
         discussion: "chce z tobu diskutować",
@@ -111,6 +141,7 @@ const hsb_DE: Translation = {
     disabledByAdmin: "Tuta funkcija je wot administratora deaktiwěrowana.",
     anAdmin: "jen administrator",
     messageDeletedByYou: "Wy sće tutu powěsć zhašał.",
+    waiting: "Čaka se",
 };
 
 export default hsb_DE;

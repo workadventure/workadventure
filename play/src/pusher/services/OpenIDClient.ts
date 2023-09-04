@@ -25,7 +25,6 @@ class OpenIDClient {
 
     private initClient(): Promise<Client> {
         if (!this.issuerPromise) {
-            console.log("OIDC STARTING DISCOVERY!");
             this.issuerPromise = Issuer.discover(OPID_CLIENT_ISSUER)
                 .then((issuer) => {
                     return new issuer.Client({
@@ -37,7 +36,7 @@ class OpenIDClient {
                 })
                 .catch((e) => {
                     // If this fails, let's try with only the openid-configuration configuration.
-                    console.log(
+                    console.info(
                         "Failed to fetch OIDC configuration for both .well-known/openid-configuration and oauth-authorization-server. Trying .well-known/openid-configuration only."
                     );
                     this.issuerPromise = Issuer.discover(OPID_CLIENT_ISSUER + "/.well-known/openid-configuration")

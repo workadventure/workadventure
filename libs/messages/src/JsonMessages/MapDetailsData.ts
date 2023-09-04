@@ -37,6 +37,35 @@ const isMapThirdPartyData = z.object({
     jitsi: extendApi(isJitsiData.nullable().optional(), {
         description: "Use these settings to override default Jitsi settings.",
     }),
+    // The integration tool to use for the map
+    klaxoonToolActivated: extendApi(z.boolean().optional(), {
+        description: "Whether the klaxoon tool is activated or not on this room",
+        example: true,
+    }),
+    klaxoonToolClientId: extendApi(z.string().optional().nullable(), {
+        description: "The client id of the klaxoon tool",
+        example: "klaxoon-client-id",
+    }),
+    youtubeToolActivated: extendApi(z.boolean().optional(), {
+        description: "Whether the youtube tool is activated or not on this room",
+        example: true,
+    }),
+    googleDocsToolActivated: extendApi(z.boolean().optional(), {
+        description: "Whether the google docs tool is activated or not on this room",
+        example: true,
+    }),
+    googleSheetsToolActivated: extendApi(z.boolean().optional(), {
+        description: "Whether the google sheets tool is activated or not on this room",
+        example: true,
+    }),
+    googleSlidesToolActivated: extendApi(z.boolean().optional(), {
+        description: "Whether the google slides tool is activated or not on this room",
+        example: true,
+    }),
+    eraserToolActivated: extendApi(z.boolean().optional(), {
+        description: "Whether the eraser tool is activated or not on this room",
+        example: true,
+    }),
 });
 
 const MetaTagsData = z.object({
@@ -244,7 +273,7 @@ export const isMapDetailsData = z.object({
     errorSceneLogo: extendApi(z.string().nullable().optional(), {
         description: "The URL of the error image to be used on the ErrorScene",
         example: "https://example.com/error_logo_login.png",
-    }),
+    })
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;

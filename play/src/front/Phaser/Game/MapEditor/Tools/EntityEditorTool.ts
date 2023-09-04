@@ -80,7 +80,6 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 break;
             }
             case "deleteEntityMessage": {
-                console.log("Handle deleteEntityMessage");
                 const id = editMapCommandMessage.editMapMessage?.message.deleteEntityMessage.id;
                 await this.mapEditorModeManager.executeCommand(
                     new DeleteEntityFrontCommand(this.scene.getGameMap(), id, commandId, this.entitiesManager),

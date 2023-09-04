@@ -121,6 +121,16 @@ services:
             JITSI_MUC_DOMAIN: "$JITSI_MUC_DOMAIN"
             JITSI_XMPP_DOMAIN: "$JITSI_XMPP_DOMAIN"
             FEATURE_FLAG_BROADCAST_AREAS: "true"
+            # Integration tools
+            KLAXOON_ENABLED: "$KLAXOON_ENABLED"
+            KLAXOON_CLIENT_ID: "$KLAXOON_CLIENT_ID"
+            YOUTUBE_ENABLED: "$YOUTUBE_ENABLED"
+            GOOGLE_DOCS_ENABLED: "$GOOGLE_DOCS_ENABLED"
+            GOOGLE_SHEETS_ENABLED: "$GOOGLE_SHEETS_ENABLED"
+            GOOGLE_SLIDES_ENABLED: "$GOOGLE_SLIDES_ENABLED"
+            # Report issues menu
+            ACTIVE_REPORT_ISSUES_MENU: "true"
+            URL_REPORT_ISSUES: "https://github.com/workadventure/workadventure/issues"
             PEER_VIDEO_LOW_BANDWIDTH: "$PEER_VIDEO_LOW_BANDWIDTH"
             PEER_VIDEO_RECOMMENDED_BANDWIDTH: "$PEER_VIDEO_RECOMMENDED_BANDWIDTH"
             PEER_SCREEN_SHARE_LOW_BANDWIDTH: "$PEER_SCREEN_SHARE_LOW_BANDWIDTH"
@@ -149,7 +159,7 @@ services:
             STARTUP_COMMAND_3: npm run typesafe-i18n
             PUSHER_URL: http://play.workadventure.localhost
             UPLOADER_URL: http://uploader.workadventure.localhost
-            EMBEDLY_KEY: $EMBEDLY_KEY
+            EMBEDLY_KEY: "$EMBEDLY_KEY"
             ICON_URL: http://icon.workadventure.localhost
             EJABBERD_DOMAIN: $EJABBERD_DOMAIN
             EJABBERD_WS_URI: ws://xmpp.workadventure.localhost:5443/ws

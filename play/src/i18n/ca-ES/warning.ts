@@ -17,6 +17,12 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLostSubtitle: "Reconectant",
     waitingConnectionTitle: "Esperant a la conexió",
     waitingConnectionSubtitle: "Conectant",
+    popupBlocked: {
+        title: "Bloqueig de finestres emergents",
+        content:
+            "Si us plau, permeteu finestres emergents per a aquest lloc web en la configuració del vostre navegador.",
+        done: "Ok",
+    },
 };
 
 export default warning;

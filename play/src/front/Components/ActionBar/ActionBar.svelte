@@ -166,7 +166,11 @@
     }
 
     function toggleEmojiPicker() {
-        $emoteMenuSubStore == true ? emoteMenuSubStore.closeEmoteMenu() : emoteMenuSubStore.openEmoteMenu();
+        if ($emoteMenuSubStore == true) {
+            emoteMenuSubStore.closeEmoteMenu();
+        } else {
+            emoteMenuSubStore.openEmoteMenu();
+        }
     }
 
     function toggleMegaphone() {
@@ -792,7 +796,11 @@
                         class="bottom-action-button"
                     >
                         <Tooltip text={$LL.actionbar.mapEditor()} />
-                        <button id="mapEditorIcon" class:border-top-light={$mapEditorModeStore}>
+                        <button
+                            id="mapEditorIcon"
+                            class:border-top-light={$mapEditorModeStore}
+                            name="toggle-map-editor"
+                        >
                             <img draggable="false" src={mapBuilder} style="padding: 2px" alt="toggle-map-editor" />
                         </button>
                     </div>
@@ -808,7 +816,7 @@
                         <Tooltip text={$LL.actionbar.bo()} />
 
                         <button id="backOfficeIcon">
-                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="open-back-office" />
+                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-bo" />
                         </button>
                     </div>
                 {/if}

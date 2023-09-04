@@ -172,6 +172,14 @@ export class FrontController extends BaseHttpController {
 
         this.app.get("/*", (req: Request, res: Response) => {
             if (req.path.startsWith("/src") || req.path.startsWith("/node_modules") || req.path.startsWith("/@fs/")) {
+                // TODO check how this is used and if it is still needed for MacOs (it is not used in the current version)
+                /*if (
+                req.path.startsWith("/collections") ||
+                req.path.startsWith("/resources") ||
+                req.path.startsWith("/src") ||
+                req.path.startsWith("/node_modules") ||
+                req.path.startsWith("/@fs/")
+            ) {*/
                 res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
                 return;
             }
@@ -212,7 +220,7 @@ export class FrontController extends BaseHttpController {
         try {
             redirectUrl = await builder.getRedirectUrl();
         } catch (e) {
-            console.log(`Cannot get redirect URL ${url}`, e);
+            console.info(`Cannot get redirect URL ${url}`, e);
         }
 
         if (redirectUrl) {
@@ -248,6 +256,7 @@ export class FrontController extends BaseHttpController {
             }
             html = Mustache.render(this.indexFile, {
                 ...metaTagsData,
+                // TODO change it to push data from admin
                 msApplicationTileImage: metaTagsData.favIcons[metaTagsData.favIcons.length - 1].src,
                 url,
                 script: this.script,
@@ -255,7 +264,7 @@ export class FrontController extends BaseHttpController {
                 ...option,
             });
         } catch (e) {
-            console.log(`Cannot render metatags on ${url}`, e);
+            console.info(`Cannot render metatags on ${url}`, e);
         }
 
         return res.type("html").send(html);

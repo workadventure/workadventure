@@ -1,9 +1,8 @@
 import axios from "axios";
 import { v4 as uuid } from "uuid";
-import { get } from "svelte/store";
+import { EraserService, GoogleWorkSpaceService, YoutubeService } from "@workadventure/shared-utils";
 import { EMBEDLY_KEY } from "../Enum/EnvironmentVariable";
 import { HtmlUtils } from "../Utils/HtmlUtils";
-import { LL } from "../i18n/i18n-svelte";
 import { FileMessageManager } from "./FileMessageManager";
 
 const webLinkCaches = new Map();
@@ -18,7 +17,7 @@ export class WebLink {
     constructor(link: string) {
         this.link = HtmlUtils.htmlDecode(link);
     }
-    private rendererFromHtml(html: string): string {
+    private async rendererFromHtml(url: string, html: string): Promise<string> {
         const elementId = uuid();
         const virtualDom = new DOMParser().parseFromString(html, "text/html");
         const iframe = virtualDom.getElementsByTagName("iframe").item(0);
@@ -28,47 +27,17 @@ export class WebLink {
         iframe.width = "100%";
         iframe.height = "100%";
         iframe.allowFullscreen = true;
+        iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
         iframe.id = elementId;
+        iframe.loading = "lazy";
+        iframe.setAttribute("data-embed-link", iframe.src);
 
-        const linkOpenCowebsite = document.createElement("p");
-        linkOpenCowebsite.append(get(LL).file.openCoWebsite());
-        linkOpenCowebsite.classList.add(
-            "iframe-openwebsite",
-            "tw-text-light-purple-alt",
-            "tw-mt-1",
-            "tw-m-0",
-            "tw-text-xxs",
-            "tw-cursor-pointer"
-        );
-        linkOpenCowebsite.style.fontWeight = "bold";
-        linkOpenCowebsite.setAttribute("data-iframe-id", elementId);
-        linkOpenCowebsite.setAttribute("data-embed-link", iframe.src);
-        linkOpenCowebsite.setAttribute("data-allow", iframe.allow);
-        //use in HtmlMessage to open the iframe in co-website
-        linkOpenCowebsite.setAttribute("data-function", linkFunction.openCowebsite);
+        const embedableLink = await this.isEmbedableLink(url);
+        if (embedableLink) {
+            iframe.setAttribute("data-embed-link", embedableLink);
+        }
 
-        const linkCopy = document.createElement("p");
-        linkCopy.append(get(LL).file.copy());
-        linkCopy.classList.add(
-            "iframe-openwebsite",
-            "tw-text-light-purple-alt",
-            "tw-mt-1",
-            "tw-m-0",
-            "tw-text-xxs",
-            "tw-cursor-pointer"
-        );
-        linkCopy.style.fontWeight = "bold";
-        linkCopy.setAttribute("data-iframe-id", elementId);
-        linkCopy.setAttribute("data-embed-link", iframe.src);
-        //use in HtmlMessage to copy the link of iframe
-        linkCopy.setAttribute("data-function", linkFunction.copyLink);
-
-        const div = document.createElement("div");
-        div.append(iframe);
-        div.append(linkOpenCowebsite);
-        div.append(linkCopy);
-
-        return div.outerHTML;
+        return iframe.outerHTML;
     }
     private imageRendererHtml(id: string, name: string) {
         const image = document.createElement("img");
@@ -119,19 +88,19 @@ export class WebLink {
 
         return audio.outerHTML;
     }
-    private cardRenderer(
+    private async cardRenderer(
         title: string,
         description?: string,
         imageUrl?: string,
         provider_name?: string,
         author_name?: string
-    ): string {
+    ): Promise<string> {
         const div = document.createElement("div");
         div.classList.add("content-card", "tw-rounded-lg");
         div.style.border = "solid 1px rgb(77 75 103)";
         div.style.padding = "4px";
         div.style.overflow = "hidden";
-        div.appendChild(this.getHyperLinkHTMLElement(false));
+        div.appendChild(await this.getHyperLinkHTMLElement(false));
 
         const link = document.createElement("a");
         link.href = this.link;
@@ -178,7 +147,7 @@ export class WebLink {
 
         return div.outerHTML;
     }
-    private getHyperLinkHTMLElement(withEmbedly: boolean = true): HTMLAnchorElement {
+    private async getHyperLinkHTMLElement(withEmbedly = true): Promise<HTMLAnchorElement> {
         const link = document.createElement("a");
         link.href = this.link;
         link.target = "_blank";
@@ -188,9 +157,14 @@ export class WebLink {
             link.setAttribute("data-card-width", "100%");
             link.setAttribute("data-card-theme", "dark");
         }
+        const embedableLink = await this.isEmbedableLink(this.link);
+        if (embedableLink) {
+            link.setAttribute("data-embed-link", this.link);
+        }
         link.append(this.link);
         return link;
     }
+
     get contentWebsiteRenderer(): Promise<string> {
         return (async () => {
             if (EMBEDLY_KEY != undefined && EMBEDLY_KEY !== "") {
@@ -211,29 +185,29 @@ export class WebLink {
 
                     const data = result.data;
                     if (data.html) {
-                        return this.rendererFromHtml(data.html);
+                        return await this.rendererFromHtml(data.url, data.html);
                     } else if (data.type === "photo") {
                         return (
-                            this.getHyperLinkHTMLElement(false).outerHTML +
+                            (await this.getHyperLinkHTMLElement(false)).outerHTML +
                             this.imageRendererHtml(uuid(), data.provider_name)
                         );
                     } else {
                         const extension = FileMessageManager.getExtension(data.url);
                         if (extension != undefined && FileMessageManager.isImage(extension)) {
                             return (
-                                this.getHyperLinkHTMLElement(false).outerHTML +
+                                (await this.getHyperLinkHTMLElement(false)).outerHTML +
                                 this.imageRendererHtml(uuid(), data.provider_name)
                             );
                         }
                         if (extension != undefined && FileMessageManager.isVideo(extension)) {
                             return (
-                                this.getHyperLinkHTMLElement(false).outerHTML +
+                                (await this.getHyperLinkHTMLElement(false)).outerHTML +
                                 this.videoRendererHtml(uuid(), data.provider_name, extension)
                             );
                         }
                         if (extension != undefined && FileMessageManager.isSound(extension)) {
                             return (
-                                this.getHyperLinkHTMLElement(false).outerHTML +
+                                (await this.getHyperLinkHTMLElement(false)).outerHTML +
                                 this.audioRendererHtml(uuid(), data.provider_name)
                             );
                         }
@@ -244,11 +218,58 @@ export class WebLink {
                 } catch (err) {
                     console.error(err);
                     console.error("Error get data from website: ", this.link);
-                    return this.getHyperLinkHTMLElement(false).outerHTML;
+                    return (await this.getHyperLinkHTMLElement(false)).outerHTML;
                 }
             } else {
-                return this.getHyperLinkHTMLElement(false).outerHTML;
+                return (await this.getHyperLinkHTMLElement(false)).outerHTML;
             }
         })();
+    }
+
+    private async isEmbedableLink(link: string) {
+        const urlLink = new URL(link);
+        if (YoutubeService.isYoutubeLink(urlLink)) {
+            // Return embedable Youtube link
+            try {
+                return await YoutubeService.getYoutubeEmbedUrl(urlLink);
+            } catch (err) {
+                console.info("Youtube link is not embedable", err);
+                return null;
+            }
+        } else if (GoogleWorkSpaceService.isGoogleDocsLink(urlLink)) {
+            // Return embedable Google Docs link
+            try {
+                return GoogleWorkSpaceService.getGoogleDocsEmbedUrl(urlLink);
+            } catch (err) {
+                console.info("Google Docs link is not embedable", err);
+                return null;
+            }
+        } else if (GoogleWorkSpaceService.isGoogleSheetsLink(urlLink)) {
+            // Return embedable Google Sheets link
+            try {
+                return GoogleWorkSpaceService.getGoogleSheetsEmbedUrl(urlLink);
+            } catch (err) {
+                console.info("Google Sheets link is not embedable", err);
+                return null;
+            }
+        } else if (GoogleWorkSpaceService.isGoogleSlidesLink(urlLink)) {
+            // Return embedable Google Slides link
+            try {
+                return GoogleWorkSpaceService.getGoogleSlidesEmbedUrl(urlLink);
+            } catch (err) {
+                console.info("Google Slides link is not embedable", err);
+                return null;
+            }
+        } else if (EraserService.isEraserLink(urlLink)) {
+            // Return embedable Google Slides link
+            try {
+                EraserService.validateEraserLink(urlLink);
+                return urlLink.toString();
+            } catch (err) {
+                console.info("Eraser link is not embedable", err);
+                return null;
+            }
+        }
+        return false;
     }
 }

@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { EntityPrefab } from "@workadventure/map-editor";
     import { onDestroy, onMount } from "svelte";
+    import { ArrowLeftIcon } from "svelte-feather-icons";
     import { get } from "svelte/store";
     import { LL } from "../../../i18n/i18n-svelte";
     import {
@@ -128,7 +129,6 @@
         mapEditorSelectedEntityStore.set(undefined);
         mapEditorSelectedEntityPrefabStore.set(undefined);
         mapEditorEntityModeStore.set("ADD");
-        console.log("backToSelectObject");
     }
 </script>
 
@@ -149,6 +149,15 @@
     </div>
     <div class="item-variations">
         {#if pickedItem}
+            <p
+                on:click|preventDefault={backToSelectObject}
+                class="tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0"
+            >
+                <ArrowLeftIcon size="12" class="tw-cursor-pointer" />
+                <span class="tw-ml-1 tw-cursor-pointer"
+                    >{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span
+                >
+            </p>
             <div class="item-name">
                 {pickedItem?.name ?? "this entity"}
                 <img
@@ -221,6 +230,8 @@
         }
         .item-picker-container,
         .item-variant-picker-container {
+            display: flex;
+            justify-content: center;
             width: 19em;
             max-height: 80vh;
             padding: 0.5em;
@@ -232,6 +243,7 @@
                 flex: 0 0 4em;
                 height: 4em;
                 display: flex;
+                margin: 0 0.25rem;
                 cursor: pointer;
                 * {
                     cursor: pointer;

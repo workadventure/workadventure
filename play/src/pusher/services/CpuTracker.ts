@@ -31,13 +31,8 @@ class CpuTracker {
                 console.warn('CPU high threshold alert. Going in "overheat" mode');
             } else if (this.overHeating && this.cpuPercent <= CPU_OVERHEAT_THRESHOLD) {
                 this.overHeating = false;
-                console.log('CPU is back to normal. Canceling "overheat" mode');
+                console.info('CPU is back to normal. Canceling "overheat" mode');
             }
-
-            /*console.log('elapsed time ms:  ', elapTimeMS)
-            console.log('elapsed user ms:  ', elapUserMS)
-            console.log('elapsed system ms:', elapSystMS)
-            console.log('cpu percent:      ', this.cpuPercent)*/
         }, 100);
     }
 

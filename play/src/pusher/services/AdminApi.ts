@@ -105,7 +105,7 @@ class AdminApi implements AdminInterface {
             return this.capabilities;
         }
 
-        console.log(`Admin api is enabled at ${ADMIN_API_URL}. Will check connection and capabilities`);
+        console.info(`Admin api is enabled at ${ADMIN_API_URL}. Will check connection and capabilities`);
         let warnIssued = false;
         const queryCapabilities = async (resolve: (_v: unknown) => void): Promise<void> => {
             try {
@@ -143,7 +143,7 @@ class AdminApi implements AdminInterface {
         await new Promise((resolve) => {
             void queryCapabilities(resolve);
         });
-        console.log(`Remote admin api connection successful at ${ADMIN_API_URL}`);
+        console.info(`Remote admin api connection successful at ${ADMIN_API_URL}`);
         return this.capabilities;
     }
 

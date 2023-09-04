@@ -17,6 +17,11 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLostSubtitle: "重新连接中",
     waitingConnectionTitle: "等待连接",
     waitingConnectionSubtitle: "连接",
+    popupBlocked: {
+        title: "弹出窗口被阻止",
+        content: "请在您的浏览器设置中允许此网站的弹出窗口。",
+        done: "好的",
+    },
 };
 
 export default warning;
