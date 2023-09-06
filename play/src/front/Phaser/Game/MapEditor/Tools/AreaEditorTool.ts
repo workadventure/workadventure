@@ -89,7 +89,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.drawinNewAreaStartPos = undefined;
         mapEditorSelectedAreaPreviewStore.set(undefined);
         this.setAreaPreviewsVisibility(false);
-        this.scene.input.setDefaultCursor("crosshair");
+        this.scene.input.setDefaultCursor("auto");
         this.unbindEventHandlers();
         this.scene.markDirty();
     }
