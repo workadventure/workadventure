@@ -616,10 +616,6 @@ div.action.danger p.action-body {
     white-space: pre-line;
 }
 
-.popUpElement .nes-container {
-    padding: 1rem 1rem;
-}
-
 .popUpElement button {
     @apply tw-relative tw-text-xs tw-text-black tw-ml-1 tw-px-1;
     border-image-repeat: revert;
@@ -699,11 +695,6 @@ div.emoji-picker {
     -ms-user-select: none; /* Internet Explorer/Edge */
     user-select: none; /* Non-prefixed version, currently
                                     supported by Chrome, Edge, Opera and Firefox */
-}
-
-// TODO: remove once https://github.com/nostalgic-css/NES.css/pull/482 is released
-.nes-container.is-rounded {
-    border-image-repeat: stretch;
 }
 
 .emoji-picker__overlay {

@@ -127,7 +127,7 @@ export abstract class Character extends Container implements OutlineableInterfac
 
         // Todo: Replace the font family with a better one
         this.playerNameText = new Text(scene, 0, playerNameY, name, {
-            fontFamily: '"Press Start 2P"',
+            fontFamily: "Press Start 2P",
             fontSize: "8px",
             strokeThickness: 2,
             stroke: "#14304C",

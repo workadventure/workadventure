@@ -101,7 +101,7 @@
 
 <div
     id={"cowebsite-thumbnail-" + index}
-    class="cowebsite-thumbnail nes-pointer"
+    class="cowebsite-thumbnail"
     class:asleep={$state === "asleep"}
     class:loading={$state === "loading"}
     class:ready={$state === "ready"}
