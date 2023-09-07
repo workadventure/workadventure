@@ -219,7 +219,7 @@
     </div>
 
     <div
-        class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen"
+        class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-x-hidden tw-overflow-y-scroll tw-justify-end tw-h-auto tw-min-h-screen"
     >
         <div class="tw-mb-auto load-history">
             {#if $canLoadOlderMessagesStore}
