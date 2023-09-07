@@ -49,9 +49,9 @@
         dispatch("close");
     }}
 >
-    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+    <span slot="header" class="flex justify-center items-center">
         <img
-            class="tw-w-6 tw-mr-1"
+            class="w-6 mr-1"
             src="resources/icons/icon_exit.png"
             alt={$LL.mapEditor.properties.exitProperties.description()}
         />
@@ -62,7 +62,7 @@
             <label for="exitMapSelector">{$LL.mapEditor.properties.exitProperties.exitMap()}</label>
             <select
                 id="exitMapSelector"
-                class="tw-w-full"
+                class="w-full"
                 bind:value={property.url}
                 on:change={() => {
                     onValueChange();
@@ -81,7 +81,7 @@
                 >
                 <select
                     id="startAreaNameSelector"
-                    class="tw-w-full"
+                    class="w-full"
                     bind:value={property.areaName}
                     on:change={onValueChange}
                     on:blur={onValueChange}

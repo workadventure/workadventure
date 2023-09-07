@@ -504,23 +504,23 @@
         <div class="replyMessage" on:click={() => selectedMessageToReply.set(null)}>
             <div
                 style={`border-bottom-color:${getColor($selectedMessageToReply.name)}`}
-                class={`tw-mr-9 tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
-                    isMe($selectedMessageToReply.name) ? "tw-flex-row-reverse" : "tw-flex-row"
+                class={`mr-9 flex items-end justify-between mx-2 border-0 border-b border-solid text-light-purple-alt text-xxs pb-0.5 ${
+                    isMe($selectedMessageToReply.name) ? "flex-row-reverse" : "flex-row"
                 }`}
             >
-                <span class={`tw-text-lighter-purple ${isMe($selectedMessageToReply.name) ? "tw-ml-2" : "tw-mr-2"}`}
+                <span class={`text-lighter-purple ${isMe($selectedMessageToReply.name) ? "ml-2" : "mr-2"}`}
                     >{#if isMe($selectedMessageToReply.name)}{$LL.me()}{:else}{$selectedMessageToReply.name}{/if}</span
                 >
-                <span class="tw-text-xxxs"
+                <span class="text-xxxs"
                     >{$selectedMessageToReply.time.toLocaleTimeString($locale, {
                         hour: "2-digit",
                         minute: "2-digit",
                     })}</span
                 >
             </div>
-            <div class="tw-flex tw-flex-wrap tw-items-center tw-justify-between">
-                <div class="tw-w-11/12 message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left">
-                    <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
+            <div class="flex flex-wrap items-center justify-between">
+                <div class="w-11/12 message rounded-lg bg-dark text-xs px-3 py-2 text-left">
+                    <p class="mb-0 whitespace-pre-line break-words">
                         {$selectedMessageToReply.body}
                     </p>
                     {#if $selectedMessageToReply && $selectedMessageToReply.links && $selectedMessageToReply.links.length > 0}
@@ -556,10 +556,10 @@
 
     {#each [...$applicationsSelected] as app}
         <div
-            class="tw-mx-2 tw-mb-2 tw-px-6 tw-py-3 tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-xl tw-text-xxs tw-justify-between tw-items-center tw-bottom-12"
+            class="mx-2 mb-2 px-6 py-3 flex flex-wrap bg-dark-blue/95 rounded-xl text-xxs justify-between items-center bottom-12"
         >
-            <div class="tw-flex tw-flex-row tw-justify-between tw-items-center tw-m-1 tw-w-full">
-                <label for="app" class="tw-m-0">
+            <div class="flex flex-row justify-between items-center m-1 w-full">
+                <label for="app" class="m-0">
                     <img src={app.icon} alt={`App ${app.name} started in the chat`} width="20px" />
                     {#if app.name === "Klaxoon"}
                         {$LL.form.application.klaxoon.description()}
@@ -584,7 +584,7 @@
                     on:click|preventDefault|stopPropagation={() => {
                         deleteApplication(app);
                     }}
-                    class="delete tw-pr-0 tw-mr-0"
+                    class="delete pr-0 mr-0"
                 >
                     <Trash2Icon size="14" />
                 </button>
@@ -593,13 +593,13 @@
                 id="app"
                 type="text"
                 placeholder={app.example}
-                class="tw-bg-transparent tw-text-light-blue tw-w-full tw-py-1 tw-px-2 tw-mb-0 tw-text-sm tw-border-white"
+                class="bg-transparent text-light-blue w-full py-1 px-2 mb-0 text-sm border-white"
                 bind:value={app.link}
                 on:keypress={handlerKeyDownAppInput}
                 on:blur={() => checkWebsiteProperty(app)}
             />
             {#if app.error}
-                <p class="tw-text-pop-red tw-text-xs tw-px-2 tw-mt-2 tw-my-0">{app.error}</p>
+                <p class="text-pop-red text-xs px-2 mt-2 my-0">{app.error}</p>
             {/if}
         </div>
     {/each}
@@ -609,20 +609,20 @@
     {/if}
 
     <form on:submit|preventDefault={sendMessage}>
-        <div class="tw-w-full tw-p-2">
+        <div class="w-full p-2">
             {#each [...$filesUploadStore.values()] as fileUploaded}
                 <div
-                    class="upload-file tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1"
+                    class="upload-file flex flex-wrap bg-dark-blue/95 rounded-3xl text-xxs justify-between items-center px-3 mb-1"
                 >
                     {#if fileUploaded.errorMessage !== undefined}
                         <div
-                            class={`error-hover tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-4 tw-py-2 ${
+                            class={`error-hover flex flex-wrap bg-dark-blue/95 rounded-3xl text-xxs justify-between items-center px-4 py-2 ${
                                 fileUploaded.errorCode === 423 && $me && $me.isAdmin
-                                    ? "tw-text-warning"
-                                    : "tw-text-pop-red"
-                            } tw-absolute tw-w-full`}
+                                    ? "text-warning"
+                                    : "text-pop-red"
+                            } absolute w-full`}
                         >
-                            <p class="tw-m-0">
+                            <p class="m-0">
                                 {#if fileUploaded.errorMessage === "file-too-big"}
                                     {$LL.file.tooBig({
                                         fileName: fileUploaded.name,
@@ -636,7 +636,7 @@
                             </p>
                             {#if fileUploaded.errorMessage === "not-logged"}
                                 <div
-                                    class="tw-text-light-blue tw-cursor-pointer"
+                                    class="text-light-blue cursor-pointer"
                                     on:click|preventDefault|stopPropagation={() => iframeListener.sendLogin()}
                                 >
                                     <ArrowRightCircleIcon size="14" />
@@ -644,10 +644,10 @@
                             {/if}
                             {#if fileUploaded.errorCode === 423 && $me && $me.isAdmin}
                                 <button
-                                    class="tw-text-warning tw-font-bold tw-underline tw-m-auto"
+                                    class="text-warning font-bold underline m-auto"
                                     on:click={() => iframeListener.sendRedirectPricing()}
                                 >
-                                    <img alt="Crown logo" src={crown} class="tw-mr-1" />
+                                    <img alt="Crown logo" src={crown} class="mr-1" />
                                     {$LL.upgrade()}
                                 </button>
                             {/if}
@@ -655,21 +655,21 @@
                     {/if}
                     <div
                         style="max-width: 92%; display: flex; flex-wrap: nowrap;"
-                        class="tw-flex tw-flex-wrap tw-text-xxs tw-items-center"
+                        class="flex flex-wrap text-xxs items-center"
                     >
                         {#if fileUploaded.uploadState === uploadingState.finish}
-                            <CheckIcon size="14" class="tw-text-pop-green" />
+                            <CheckIcon size="14" class="text-pop-green" />
                         {:else if fileUploaded.uploadState === uploadingState.error}
                             <div
-                                class="alert-upload tw-cursor-pointer"
+                                class="alert-upload cursor-pointer"
                                 on:click|preventDefault|stopPropagation={() => resend()}
                             >
                                 <AlertCircleIcon size="14" />
                             </div>
                         {:else}
-                            <LoaderIcon size="14" class="tw-animate-spin" />
+                            <LoaderIcon size="14" class="animate-spin" />
                         {/if}
-                        <span class="tw-ml-1 tw-max-w-full tw-text-ellipsis tw-overflow-hidden tw-whitespace-nowrap">
+                        <span class="ml-1 max-w-full text-ellipsis overflow-hidden whitespace-nowrap">
                             {fileUploaded.name}
                         </span>
                     </div>
@@ -677,7 +677,7 @@
                         on:click|preventDefault|stopPropagation={() => {
                             handlerDeleteUploadedFile(fileUploaded);
                         }}
-                        class="delete tw-pr-0 tw-mr-0"
+                        class="delete pr-0 mr-0"
                     >
                         <Trash2Icon size="14" />
                     </button>
@@ -685,24 +685,24 @@
             {/each}
             {#if informationMessage}
                 <div
-                    class="tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-py-2 tw-text-xs tw-items-center tw-px-4 tw-text-warning tw-w-full tw-mb-1 tw-cursor-pointer"
+                    class="flex flex-wrap bg-dark-blue/95 rounded-3xl py-2 text-xs items-center px-4 text-warning w-full mb-1 cursor-pointer"
                     on:click|preventDefault|stopPropagation={() => (informationMessage = null)}
                 >
-                    <div class="tw-text-warning tw-mr-1.5">
+                    <div class="text-warning mr-1.5">
                         <AlertCircleIcon size="16" />
                     </div>
-                    <p class="tw-m-0">
+                    <p class="m-0">
                         {informationMessage}
                     </p>
                 </div>
             {/if}
 
-            <div class="tw-w-full tw-px-2 tw-pb-2 tw-flex tw-flex-row tw-justify-center tw-items-center">
-                <div class="actions tw-px-2 tw-py-2">
-                    <div class="tw-flex tw-items-center tw-space-x-1">
+            <div class="w-full px-2 pb-2 flex flex-row justify-center items-center">
+                <div class="actions px-2 py-2">
+                    <div class="flex items-center space-x-1">
                         <button
                             id="application"
-                            class="tw-bg-transparent tw-p-0 tw-m-0 tw-inline-flex tw-justify-center tw-items-center"
+                            class="bg-transparent p-0 m-0 inline-flex justify-center items-center"
                             on:click|preventDefault|stopPropagation={toggleApplicationMenu}
                             disabled={$applications.size === 0}
                         >
@@ -724,11 +724,11 @@
                     on:keydown={onKeyDown}
                     on:keypress={onKeyPress}
                 />
-                <div class="actions tw-px-2 tw-py-2">
-                    <div class="tw-flex tw-items-center tw-space-x-1">
+                <div class="actions px-2 py-2">
+                    <div class="flex items-center space-x-1">
                         <button
-                            class={`tw-bg-transparent tw-p-0 tw-m-0 tw-inline-flex tw-justify-center tw-items-center ${
-                                emojiOpened ? "tw-text-light-blue" : ""
+                            class={`bg-transparent p-0 m-0 inline-flex justify-center items-center ${
+                                emojiOpened ? "text-light-blue" : ""
                             }`}
                             on:click|preventDefault|stopPropagation={openEmoji}
                         >
@@ -739,15 +739,15 @@
                                 type="file"
                                 id="file"
                                 name="file"
-                                class="tw-hidden"
+                                class="hidden"
                                 on:input={handleInputFile}
                                 multiple
                             />
-                            <label for="file" class="tw-m-0 tw-cursor-pointer"><PaperclipIcon size="17" /></label>
+                            <label for="file" class="m-0 cursor-pointer"><PaperclipIcon size="17" /></label>
                         {:else}
                             <button
                                 id="file"
-                                class={`tw-bg-transparent tw-p-0 tw-m-0 tw-inline-flex tw-justify-center tw-items-center tw-opacity-50`}
+                                class={`bg-transparent p-0 m-0 inline-flex justify-center items-center opacity-50`}
                                 on:click|preventDefault|stopPropagation={() =>
                                     (informationMessage = $LL.disabledByAdmin())}
                             >
@@ -761,22 +761,22 @@
                                 !$hasErrorUploadingFile && !$hasInProgressUploadingFile && !isMessageTooLong
                                     ? "can-send"
                                     : "cant-send"
-                            } tw-bg-transparent tw-p-0 tw-m-0 tw-inline-flex tw-justify-center tw-items-center tw-text-light-blue`}
+                            } bg-transparent p-0 m-0 inline-flex justify-center items-center text-light-blue`}
                             on:mouseover={showErrorMessages}
                             on:focus={showErrorMessages}
                             on:click={sendMessage}
                         >
                             {#if $hasErrorUploadingFile || isMessageTooLong}
-                                <AlertCircleIcon size="17" class="tw-text-pop-red" />
+                                <AlertCircleIcon size="17" class="text-pop-red" />
                             {:else if $hasInProgressUploadingFile}
-                                <LoaderIcon size="17" class="tw-animate-spin" />
+                                <LoaderIcon size="17" class="animate-spin" />
                             {:else}
                                 <SendIcon size="17" />
                             {/if}
                         </button>
                     </div>
                     {#if isMessageTooLong}
-                        <div class="tw-text-pop-red tw-text-xs tw-font-bold tw-text-right tw-mt-5">
+                        <div class="text-pop-red text-xs font-bold text-right mt-5">
                             {maxCharMessage - newMessageText.length}
                         </div>
                     {/if}
@@ -843,8 +843,8 @@
             }
             &:active,
             &:focus {
-                --tw-bg-opacity: 1;
-                background-color: rgb(77 75 103 / var(--tw-bg-opacity));
+                --bg-opacity: 1;
+                background-color: rgb(77 75 103 / var(--bg-opacity));
             }
         }
     }
@@ -867,8 +867,8 @@
         }
 
         .alert-upload {
-            --tw-text-opacity: 1;
-            color: rgb(255 71 90 / var(--tw-text-opacity));
+            --text-opacity: 1;
+            color: rgb(255 71 90 / var(--text-opacity));
         }
         .upload-file {
             position: relative;

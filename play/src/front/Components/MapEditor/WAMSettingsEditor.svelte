@@ -41,7 +41,7 @@
                     )}
             >
                 <span>Megaphone</span>
-                <ChevronRightIcon class={`tw--mr-2`} />
+                <ChevronRightIcon class={`-mr-2`} />
             </li>
         </ul>
     </div>

@@ -20,8 +20,8 @@
         dispatch("close");
     }}
 >
-    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
-        <img class="tw-w-6 tw-mr-1" src={audioSvg} alt={$LL.mapEditor.properties.audioProperties.description()} />
+    <span slot="header" class="flex justify-center items-center">
+        <img class="w-6 mr-1" src={audioSvg} alt={$LL.mapEditor.properties.audioProperties.description()} />
         {$LL.mapEditor.properties.audioProperties.label()}
     </span>
     <span slot="content">
@@ -39,7 +39,7 @@
             <label for="advancedOption">{$LL.mapEditor.properties.advancedOptions()}</label>
             <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvancedActivated} />
         </div>
-        <div class:active={optionAdvancedActivated} class="advanced-option tw-px-2">
+        <div class:active={optionAdvancedActivated} class="advanced-option px-2">
             <div class="value-input">
                 <label for="volume">{$LL.mapEditor.properties.audioProperties.volumeLabel()}</label>
                 <input
@@ -120,14 +120,14 @@
         border-radius: 9999px;
         border-width: 1px;
         border-style: solid;
-        --tw-border-opacity: 1;
-        border-color: rgb(77 75 103 / var(--tw-border-opacity));
-        --tw-bg-opacity: 1;
-        background-color: rgb(15 31 45 / var(--tw-bg-opacity));
+        --border-opacity: 1;
+        border-color: rgb(77 75 103 / var(--border-opacity));
+        --bg-opacity: 1;
+        background-color: rgb(15 31 45 / var(--bg-opacity));
         background-image: none;
         padding: 0px;
-        --tw-text-opacity: 1;
-        color: rgb(242 253 255 / var(--tw-text-opacity));
+        --text-opacity: 1;
+        color: rgb(242 253 255 / var(--text-opacity));
         outline: 2px solid transparent;
         outline-offset: 2px;
         cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
@@ -139,27 +139,27 @@
         height: 1.25rem;
         width: 1.25rem;
         border-radius: 9999px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(146 142 187 / var(--tw-bg-opacity));
+        --bg-opacity: 1;
+        background-color: rgb(146 142 187 / var(--bg-opacity));
         transition-property: all;
         transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
         transition-duration: 150ms;
-        --tw-content: "";
-        content: var(--tw-content);
+        --content: "";
+        content: var(--content);
     }
     .input-switch:checked {
-        --tw-border-opacity: 1;
-        border-color: rgb(146 142 187 / var(--tw-border-opacity));
+        --border-opacity: 1;
+        border-color: rgb(146 142 187 / var(--border-opacity));
     }
     .input-switch:checked::before {
         left: 13px;
         top: -3px;
-        --tw-bg-opacity: 1;
-        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
-        content: var(--tw-content);
-        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
-        --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
-        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
+        --bg-opacity: 1;
+        background-color: rgb(65 86 246 / var(--bg-opacity));
+        content: var(--content);
+        /*--shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
+        --shadow-colored: 0 0 7px 0 var(--shadow-color);
+        box-shadow: var(--ring-offset-shadow, 0 0 #0000), var(--ring-shadow, 0 0 #0000), var(--shadow);*/
     }
     .input-switch:disabled {
         cursor: not-allowed;

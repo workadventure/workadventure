@@ -55,7 +55,7 @@
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     {#if $videoTrackStore}
-        <div class="tw-rounded-sm tw-overflow-hidden tw-flex tw-w-full tw-flex-col tw-h-full">
+        <div class="rounded-sm overflow-hidden flex w-full flex-col h-full">
             <JitsiVideoElement
                 jitsiTrack={$videoTrackStore}
                 isMobile={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
@@ -64,11 +64,11 @@
         </div>
     {/if}
     {#if peer.target === "video/audio"}
-        <div class={`tw-absolute ${$videoTrackStore ? "tw-top-0.5 tw-right-2" : "tw-top-1 tw-right-3"}`}>
+        <div class={`absolute ${$videoTrackStore ? "top-0.5 right-2" : "top-1 right-3"}`}>
             {#if $audioTrackStore}
                 <JitsiAudioElement jitsiTrack={$audioTrackStore} />
                 <SoundMeterWidgetWrapper
-                    classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                    classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
                     barColor={$videoTrackStore ? "blue" : "black"}
                     volume={peer.jitsiTrackWrapper.volumeStore}
                 />
@@ -76,10 +76,10 @@
                 <img
                     draggable="false"
                     src={microphoneOffImg}
-                    class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                    class="flex p-1 h-8 w-8 voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
                     alt="Mute"
-                    class:tw-brightness-0={textColor === "black" && !$videoTrackStore}
-                    class:tw-brightness-100={textColor === "white" && !$videoTrackStore}
+                    class:brightness-0={textColor === "black" && !$videoTrackStore}
+                    class:brightness-100={textColor === "white" && !$videoTrackStore}
                 />
             {/if}
         </div>

@@ -32,8 +32,10 @@
     });
 </script>
 
-<div bind:this={tooltipElement} class="tooltip tw-w-fit">
-    <span bind:this={textElement} class="tooltiptext {toolTipPosition}">{text}</span>
+<div bind:this={tooltipElement} class=" w-fit relative block">
+    <div bind:this={textElement} style="visibility: hidden" class="bg-contrast/80 backdrop-blur text-white absolute bottom-0 px-2 py-1 font-sm font-bold rounded">
+        {text}
+    </div>
 </div>
 
 <style lang="scss">
@@ -45,15 +47,15 @@
             position: absolute;
             align-items: center;
             border-radius: 0.25rem;
-            --tw-bg-opacity: 1;
-            background-color: rgb(56 56 74 / var(--tw-bg-opacity));
+            --bg-opacity: 1;
+            background-color: rgb(56 56 74 / var(--bg-opacity));
             padding-left: 0.75rem;
             padding-right: 0.75rem;
             padding-top: 0.25rem;
             padding-bottom: 0.25rem;
             text-align: center;
-            --tw-text-opacity: 1;
-            color: rgb(255 255 255 / var(--tw-text-opacity));
+            --text-opacity: 1;
+            color: rgb(255 255 255 / var(--text-opacity));
         }
 
         .right-tooltip {

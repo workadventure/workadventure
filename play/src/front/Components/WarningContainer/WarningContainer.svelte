@@ -16,13 +16,13 @@
     {#if $bannerStore != undefined}
         <p
             id={$bannerStore.id}
-            class="tw-m-0 tw-p-0 tw-h-10 tw-flex tw-justify-center tw-items-center"
+            class="m-0 p-0 h-10 flex justify-center items-center"
             style={`background-color:${$bannerStore.bgColor}; color: ${$bannerStore.textColor};`}
         >
             {$bannerStore.text}
             {#if $bannerStore.link}
                 <a
-                    class="tw-ml-2 tw-underline"
+                    class="ml-2 underline"
                     style={`color: ${$bannerStore.textColor};`}
                     href={$bannerStore.link.url}
                     target="_blank"
@@ -34,7 +34,7 @@
         </p>
         {#if $bannerStore.closable}
             <span
-                class="tw-absolute tw-right-4 tw-top-0 tw-flex tw-items-center tw-h-10 tw-text-xl tw-cursor-pointer"
+                class="absolute right-4 top-0 flex items-center h-10 text-xl cursor-pointer"
                 style={`color: ${$bannerStore.textColor ?? "red"};`}
                 on:click|preventDefault={closeBanner}>x</span
             >

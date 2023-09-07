@@ -162,7 +162,7 @@
 <svelte:window on:keydown={onKeyDown} on:click={onClick} />
 
 <aside class="chatWindow" bind:this={chatWindowElement}>
-    <section class="tw-p-0 tw-m-0">
+    <section class="p-0 m-0">
         {#if $showPart === "activeTimeline"}
             <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => timelineActiveStore.set(false)} />
         {:else if $showPart === "activeThread" && !["connectionNotAuthorized", "loading"].includes($showPart)}
@@ -170,13 +170,13 @@
                 <ChatActiveThread activeThread={$activeThreadStore} />
             {/if}
         {:else if ["home", "connectionNotAuthorized", "loading"].includes($showPart)}
-            <div class="wa-message-bg tw-pt-3">
+            <div class="wa-message-bg pt-3">
                 {#if $showPart === "connectionNotAuthorized"}
                     <NeedRefresh />
                 {:else if $showPart === "loading"}
                     <Loader
                         text={loadingText}
-                        height="tw-h-40 tw-border-solid tw-border-transparent tw-border-b-light-purple tw-border-b"
+                        height="h-40 border-solid border-transparent border-b-light-purple border-b"
                     />
                 {:else}
                     {#if $enableChatOnlineListStore}
@@ -190,10 +190,10 @@
                             </ul>
                         </nav>
                         <!-- searchbar -->
-                        <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
-                            <div class="tw-p-3">
+                        <div class="border border-transparent border-b-light-purple border-solid">
+                            <div class="p-3">
                                 <input
-                                    class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
+                                    class="wa-searchbar block text-white w-full placeholder:text-sm rounded-3xl px-3 py-1 border-light-purple border border-solid bg-transparent"
                                     placeholder={$navChat === "users" ? $LL.searchUser() : $LL.searchChat()}
                                     bind:value={searchValue}
                                 />
@@ -201,16 +201,16 @@
                         </div>
                     {:else}
                         <div
-                            class="tw-mt-11 tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid"
+                            class="mt-11 border border-transparent border-b-light-purple border-solid"
                         />
                     {/if}
                     {#if !userStore.get().isLogged && ENABLE_OPENID && $enableChat}
-                        <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
-                            <div class="tw-p-3 tw-text-sm tw-text-center">
+                        <div class="border border-transparent border-b-light-purple border-solid">
+                            <div class="p-3 text-sm text-center">
                                 <p>{$LL.signIn()}</p>
                                 <button
                                     type="button"
-                                    class="light tw-m-auto tw-cursor-pointer tw-px-3"
+                                    class="light m-auto cursor-pointer px-3"
                                     on:click={login}
                                 >
                                     {$LL.logIn()}

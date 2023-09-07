@@ -94,11 +94,14 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
+    import Woka from "../Woka/WokaFromUserId.svelte";
+    import Companion from "../Companion/Companion.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
     let cameraActive = false;
     let microphoneActive = false;
+    let profileIsDropped = false;
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -396,23 +399,314 @@
 
 <svelte:window on:keydown={onKeyDown} />
 
+<div class="grid grid-cols-3 justify-items-stretch absolute top-0 w-full p-4 pointer-events-auto">
+    <div class="justify-self-start">
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <div
+                on:click={() => analyticsClient.openedChat()}
+                on:click={toggleChat}
+                class="flex relative"
+        >
+            <Tooltip text={$LL.actionbar.chat()} />
+
+            <div class:border-top-light={$chatVisibilityStore} class="group/btn-chat relative bg-contrast/80 transition-all backdrop-blur rounded-xl p-2 aspect-square">
+                <div class="h-12 w-12 rounded-lg group-hover/btn-chat:bg-white/10 aspect-square flex items-center transition-all">
+                    <svg class="m-auto" width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M1 17L2.3 13.1C1.17644 11.4383 0.769993 9.47043 1.15622 7.56232C1.54244 5.65421 2.69506 3.93569 4.39977 2.72629C6.10447 1.51689 8.24526 0.898916 10.4241 0.987258C12.6029 1.0756 14.6715 1.86425 16.2453 3.20658C17.819 4.5489 18.7909 6.35356 18.9801 8.285C19.1693 10.2164 18.563 12.1432 17.2739 13.7071C15.9848 15.271 14.1007 16.3656 11.9718 16.7874C9.84293 17.2091 7.6142 16.9293 5.7 16L1 17Z" stroke="white" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                {#if $chatZoneLiveStore || $peerStore.size > 0}
+                    <div class="">
+                                <span
+                                        class={`w-4 h-4 ${
+                                        $peerStore.size > 0 ? "bg-pop-green" : "bg-pop-red"
+                                    } block rounded-full absolute top-0 right-0 animate-ping`}
+                                />
+                        <span
+                                class={`w-3 h-3 ${
+                                        $peerStore.size > 0 ? "bg-pop-green" : "bg-pop-red"
+                                    } block rounded-full absolute top-0.5 right-0.5`}
+                        />
+                    </div>
+                {:else if $totalMessagesToSee > 0}
+                    <div class="absolute -top-2 -right-2 aspect-square flex w-5 h-5 items-center justify-center text-sm font-bold leading-none text-contrast bg-success rounded-full ">
+                        {$totalMessagesToSee}
+                    </div>
+                {/if}
+            </div>
+        </div>
+    </div>
+    <div class="justify-self-center">
+        <div class="flex">
+            <div>
+                <div class="flex items-center mr-4">
+                    <div class="group/btn-more bg-contrast/80 transition-all backdrop-blur rounded-xl p-2 aspect-square">
+                        <div class="h-12 w-12 rounded-lg group-hover/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all">
+                            <svg width="9" height="17" viewBox="0 0 9 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M7.875 15.25L1.125 8.5L7.875 1.75" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <!-- ACTION WRAPPER : CAM & MIC -->
+                <div class="flex items-center">
+                    {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
+                        <!-- NAV : MICROPHONE START -->
+                        {#if $myMicrophoneStore}
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <div
+                                    class="group/btn-mic relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-xl last:rounded-r-xl aspect-square"
+                                    on:click={() => analyticsClient.microphone()}
+                                    on:click={microphoneClick}
+                                    class:disabled={!$requestedMicrophoneState || $silentStore}
+                            >
+                                <Tooltip text={$LL.actionbar.microphone()} />
+
+                                <div
+                                        class="h-12 w-12 p-1 m-0 rounded-lg group-[.disabled]/btn-mic:bg-danger hover:bg-white/10 flex items-center justify-center transition-all"
+                                        class:border-top-light={$requestedMicrophoneState}>
+                                    {#if $requestedMicrophoneState && !$silentStore}
+                                        <svg draggable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M8.125 4.625C8.125 3.72989 8.48058 2.87145 9.11351 2.23851C9.74645 1.60558 10.6049 1.25 11.5 1.25C12.3951 1.25 13.2536 1.60558 13.8865 2.23851C14.5194 2.87145 14.875 3.72989 14.875 4.625V10.25C14.875 11.1451 14.5194 12.0036 13.8865 12.6365C13.2536 13.2694 12.3951 13.625 11.5 13.625C10.6049 13.625 9.74645 13.2694 9.11351 12.6365C8.48058 12.0036 8.125 11.1451 8.125 10.25V4.625Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M3.625 10.25C3.625 12.3386 4.45469 14.3416 5.93153 15.8185C7.40838 17.2953 9.41142 18.125 11.5 18.125C13.5886 18.125 15.5916 17.2953 17.0685 15.8185C18.5453 14.3416 19.375 12.3386 19.375 10.25" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M7 22.625H16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M11.5 18.125V22.625" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    {:else}
+                                        <svg draggable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M1.375 2.375L21.625 22.625" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M8.125 4.625C8.125 3.72989 8.48058 2.87145 9.11351 2.23851C9.74645 1.60558 10.6049 1.25 11.5 1.25C12.3951 1.25 13.2536 1.60558 13.8865 2.23851C14.5194 2.87145 14.875 3.72989 14.875 4.625V10.25C14.875 10.5832 14.8258 10.9145 14.7287 11.2332M12.4788 13.4832C11.9744 13.6361 11.4412 13.6687 10.922 13.5784C10.4028 13.4882 9.9119 13.2776 9.4887 12.9635C9.06549 12.6494 8.72171 12.2406 8.48491 11.7698C8.2481 11.299 8.12484 10.7793 8.125 10.2522V9.12725" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M3.625 10.25C3.62475 11.6713 4.00915 13.0661 4.73742 14.2866C5.46568 15.5071 6.51068 16.5077 7.76159 17.1824C9.01249 17.8571 10.4227 18.1807 11.8426 18.1189C13.2625 18.0571 14.6392 17.6121 15.8267 16.8313M18.0767 14.5813C18.9248 13.2961 19.3756 11.7897 19.3727 10.25" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M7 22.625H16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M11.5 18.125V22.625" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    {/if}
+                                </div>
+
+                                {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 1}
+                                    <button
+                                            class="microphone absolute text-light-purple focus:outline-none m-0"
+                                            on:click|stopPropagation|preventDefault={() =>
+                            (microphoneActive = !microphoneActive)}
+                                    >
+                                        {#if microphoneActive}
+                                            <ChevronDownIcon size="13" />
+                                        {:else}
+                                            <ChevronUpIcon size="13" />
+                                        {/if}
+                                    </button>
+
+                                    <div
+                                            class={`wa-dropdown-menu ${microphoneActive ? "" : "invisible"}`}
+                                            style="bottom: 15px;right: 0;"
+                                            on:mouseleave={() => (microphoneActive = false)}
+                                    >
+                                        {#if $microphoneListStore.length > 0}
+                                            <!-- microphone list -->
+                                            <span class="underline font-bold text-xs p-1"
+                                            >{$LL.actionbar.subtitle.microphone()} 🎙️</span
+                                            >
+                                            {#each $microphoneListStore as microphone}
+                                <span
+                                        class="wa-dropdown-item"
+                                        on:click={() => {
+                                        analyticsClient.selectMicrophone();
+                                    }}
+                                        on:click|stopPropagation|preventDefault={() =>
+                                        selectMicrophone(microphone.deviceId)}
+                                >
+                                    {StringUtils.normalizeDeviceName(microphone.label)}
+                                    {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
+                                        <CheckIcon size="13" />
+                                    {/if}
+                                </span>
+                                            {/each}
+                                        {/if}
+
+                                        <!-- speaker list -->
+                                        {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
+                            <span class="underline font-bold text-xs p-1"
+                            >{$LL.actionbar.subtitle.speaker()} 🔈</span
+                            >
+                                            {#each $speakerListStore as speaker}
+                                <span
+                                        class="wa-dropdown-item"
+                                        on:click={() => {
+                                        analyticsClient.selectSpeaker();
+                                    }}
+                                        on:click|stopPropagation|preventDefault={() =>
+                                        selectSpeaker(speaker.deviceId)}
+                                >
+                                    {StringUtils.normalizeDeviceName(speaker.label)}
+                                    {#if $speakerSelectedStore === speaker.deviceId}
+                                        <CheckIcon size="13" />
+                                    {/if}
+                                </span>
+                                            {/each}
+                                        {/if}
+                                    </div>
+                                {/if}
+                            </div>
+                        {/if}
+                    {/if}
+                    <!-- NAV : MICROPHONE END -->
+
+                    <!-- NAV : CAMERA START -->
+                    {#if $myCameraStore}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <div class="group/btn-cam relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-xl last:rounded-r-xl aspect-square" on:click={() => analyticsClient.camera()} on:click={cameraClick} class:disabled={!$requestedCameraState || $silentStore}>
+                            <Tooltip text={$LL.actionbar.camera()} />
+                            <div class="h-12 w-12 p-1 m-0 rounded-lg group-[.disabled]/btn-cam:bg-danger hover:bg-white/10 flex items-center justify-center transition-all" class:border-top-light={$requestedCameraState}>
+                                {#if $requestedCameraState && !$silentStore}
+                                    <svg
+                                            draggable="false"
+                                            width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M14.875 10.25L19.9971 7.68951C20.1686 7.60383 20.3591 7.56338 20.5506 7.572C20.7421 7.58063 20.9282 7.63804 21.0913 7.73879C21.2544 7.83955 21.389 7.9803 21.4824 8.14769C21.5758 8.31509 21.6249 8.50357 21.625 8.69526V16.3048C21.6249 16.4965 21.5758 16.6849 21.4824 16.8523C21.389 17.0197 21.2544 17.1605 21.0913 17.2612C20.9282 17.362 20.7421 17.4194 20.5506 17.428C20.3591 17.4366 20.1686 17.3962 19.9971 17.3105L14.875 14.75V10.25Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M1.375 8C1.375 7.40326 1.61205 6.83097 2.03401 6.40901C2.45597 5.98705 3.02826 5.75 3.625 5.75H12.625C13.2217 5.75 13.794 5.98705 14.216 6.40901C14.6379 6.83097 14.875 7.40326 14.875 8V17C14.875 17.5967 14.6379 18.169 14.216 18.591C13.794 19.0129 13.2217 19.25 12.625 19.25H3.625C3.02826 19.25 2.45597 19.0129 2.03401 18.591C1.61205 18.169 1.375 17.5967 1.375 17V8Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                {:else}
+                                    <svg
+                                            draggable="false"
+                                            width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M1.375 2.375L21.625 22.625" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M14.875 11.375V10.25L19.9971 7.68951C20.1686 7.60383 20.3591 7.56338 20.5506 7.572C20.7421 7.58063 20.9282 7.63804 21.0913 7.73879C21.2544 7.83955 21.389 7.9803 21.4824 8.14769C21.5758 8.31509 21.6249 8.50357 21.625 8.69526V16.3048C21.6251 16.5392 21.5519 16.7677 21.4158 16.9585C21.2796 17.1493 21.0873 17.2928 20.8656 17.369" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M9.25 5.75H12.625C13.2217 5.75 13.794 5.98705 14.216 6.40901C14.6379 6.83097 14.875 7.40326 14.875 8V11.375M14.875 15.875V17C14.875 17.5967 14.6379 18.169 14.216 18.591C13.794 19.0129 13.2217 19.25 12.625 19.25H3.625C3.02826 19.25 2.45597 19.0129 2.03401 18.591C1.61205 18.169 1.375 17.5967 1.375 17V8C1.375 7.40326 1.61205 6.83097 2.03401 6.40901C2.45597 5.98705 3.02826 5.75 3.625 5.75H4.75" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                {/if}
+                            </div>
+
+                            {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
+                                <button class="camera absolute text-light-purple focus:outline-none m-0" on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}>
+                                    {#if cameraActive}
+                                        <ChevronDownIcon size="13" />
+                                    {:else}
+                                        <ChevronUpIcon size="13" />
+                                    {/if}
+                                </button>
+
+                                <!-- camera list -->
+                                <div class={`wa-dropdown-menu ${cameraActive ? "" : "invisible"}`} style="bottom: 15px;right: 0;" on:mouseleave={() => (cameraActive = false)}>
+                                    {#each $cameraListStore as camera}
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                        <span class="wa-dropdown-item flex"
+                                              on:click={() => {
+                                                    analyticsClient.selectCamera();
+                                                }}
+                                              on:click|stopPropagation|preventDefault={() =>
+                                                    selectCamera(camera.deviceId)
+                                                }>
+                                                {StringUtils.normalizeDeviceName(camera.label)}
+                                            {#if $usedCameraDeviceIdStore === camera.deviceId}
+                                                <CheckIcon size="13" class="ml-1" />
+                                            {/if}
+                                        </span>
+                                    {/each}
+                                </div>
+                            {/if}
+                        </div>
+                    {/if}
+                    <!-- NAV : CAMERA END -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="justify-self-end">
+        <div class="flex items-center relative">
+            <div class="bg-contrast/80 hover:bg-contrast transition-all backdrop-blur rounded-xl h-16" on:click={() => profileIsDropped = !profileIsDropped} on:blur={() => profileIsDropped = false } tabindex="0">
+                <div class="flex items center h-16">
+                    <div class="px-2 m-auto">
+                        <Woka userId={-1} placeholderSrc="" customWidth="42px" customHeight="42px" />
+                    </div>
+                    <div class="m-auto pt-1">
+                        <div class="font-bold text-white leading-3">Hugo</div>
+                        <div class="text-xs text-white/50">Edit preferences</div>
+                    </div>
+                    <div class="m-auto pl-4 pr-6">
+                        <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M1 1L7 7L13 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            {#if profileIsDropped}
+                <div class="absolute mt-2 top-16 bg-contrast/80 backdrop-blur rounded-xl py-2 w-full text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-4 before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80">
+                    <ul class="p-0 m-0">
+                        <li class="flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
+                            <div class="w-8 mr-1 text-center">
+                                <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M5.224 22.132C5.55401 21.0336 6.22929 20.0709 7.14966 19.3866C8.07003 18.7024 9.18646 18.333 10.3333 18.3333H15.6667C16.815 18.3329 17.9328 18.7032 18.8538 19.389C19.7749 20.0749 20.45 21.0397 20.7787 22.14M1 13C1 14.5759 1.31039 16.1363 1.91345 17.5922C2.5165 19.0481 3.40042 20.371 4.51472 21.4853C5.62902 22.5996 6.95189 23.4835 8.4078 24.0866C9.86371 24.6896 11.4241 25 13 25C14.5759 25 16.1363 24.6896 17.5922 24.0866C19.0481 23.4835 20.371 22.5996 21.4853 21.4853C22.5996 20.371 23.4835 19.0481 24.0866 17.5922C24.6896 16.1363 25 14.5759 25 13C25 11.4241 24.6896 9.86371 24.0866 8.4078C23.4835 6.95189 22.5996 5.62902 21.4853 4.51472C20.371 3.40042 19.0481 2.5165 17.5922 1.91345C16.1363 1.31039 14.5759 1 13 1C11.4241 1 9.86371 1.31039 8.4078 1.91345C6.95189 2.5165 5.62902 3.40042 4.51472 4.51472C3.40042 5.62902 2.5165 6.95189 1.91345 8.4078C1.31039 9.86371 1 11.4241 1 13ZM9 10.3333C9 11.3942 9.42143 12.4116 10.1716 13.1618C10.9217 13.9119 11.9391 14.3333 13 14.3333C14.0609 14.3333 15.0783 13.9119 15.8284 13.1618C16.5786 12.4116 17 11.3942 17 10.3333C17 9.27247 16.5786 8.25505 15.8284 7.50491C15.0783 6.75476 14.0609 6.33333 13 6.33333C11.9391 6.33333 10.9217 6.75476 10.1716 7.50491C9.42143 8.25505 9 9.27247 9 10.3333Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <div>Edit profil</div>
+                        </li>
+                        <li class="flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
+                            <div class="w-8 mr-1 text-center">
+                                <Woka userId={-1} placeholderSrc="" customWidth="26px" customHeight="26px" />
+                            </div>
+                            <div>Change skin</div>
+                        </li>
+                        <li class="flex px-4 py-2 items-center hover:bg-white/10 transition-all">
+                            <div class="w-8 mr-1 text-center">
+                                <Companion userId={-1} placeholderSrc="" width="26px" height="26px" />
+                            </div>
+                            <div>Add a companion</div>
+                        </li>
+                        <li class="flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
+                            <div class="w-8 mr-1 text-center">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9.46 18.846C6.44929 17.9127 3.92666 15.8324 2.43721 13.0545C0.947767 10.2765 0.611114 7.02411 1.5 4C4.61553 4.14257 7.66417 3.06658 10 1C12.3358 3.06658 15.3845 4.14257 18.5 4C19.1787 6.30911 19.1473 8.76894 18.41 11.06M13 17L15 19L19 15" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <div>Achievement</div>
+                        </li>
+                        <li class="h-[1px] w-full bg-white/20 my-2"></li>
+                        <li class="flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
+                            <div class="w-8 mr-1 text-center">
+                                <svg width="18" height="24" viewBox="0 0 18 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M4.33334 16.6667L1.89384 20.7337C1.78779 20.9106 1.73057 21.1126 1.72801 21.3189C1.72546 21.5252 1.77766 21.7285 1.8793 21.908C1.98093 22.0876 2.12836 22.237 2.30656 22.341C2.48476 22.445 2.68735 22.4998 2.89367 22.5H15.1063C15.3127 22.4998 15.5152 22.445 15.6934 22.341C15.8716 22.237 16.0191 22.0876 16.1207 21.908C16.2223 21.7285 16.2745 21.5252 16.272 21.3189C16.2694 21.1126 16.2122 20.9106 16.1062 20.7337L13.6667 16.6667M0.833336 9.66667C0.833336 10.7391 1.04457 11.8011 1.45499 12.7919C1.8654 13.7827 2.46695 14.683 3.2253 15.4414C3.98364 16.1997 4.88393 16.8013 5.87475 17.2117C6.86558 17.6221 7.92754 17.8333 9 17.8333C10.0725 17.8333 11.1344 17.6221 12.1253 17.2117C13.1161 16.8013 14.0164 16.1997 14.7747 15.4414C15.5331 14.683 16.1346 13.7827 16.545 12.7919C16.9554 11.8011 17.1667 10.7391 17.1667 9.66667C17.1667 8.5942 16.9554 7.53224 16.545 6.54142C16.1346 5.55059 15.5331 4.65031 14.7747 3.89196C14.0164 3.13362 13.1161 2.53206 12.1253 2.12165C11.1344 1.71124 10.0725 1.5 9 1.5C7.92754 1.5 6.86558 1.71124 5.87475 2.12165C4.88393 2.53206 3.98364 3.13362 3.2253 3.89196C2.46695 4.65031 1.8654 5.55059 1.45499 6.54142C1.04457 7.53224 0.833336 8.5942 0.833336 9.66667ZM5.5 9.66667C5.5 10.5949 5.86875 11.4852 6.52513 12.1415C7.18151 12.7979 8.07175 13.1667 9 13.1667C9.92826 13.1667 10.8185 12.7979 11.4749 12.1415C12.1313 11.4852 12.5 10.5949 12.5 9.66667C12.5 8.73841 12.1313 7.84817 11.4749 7.19179C10.8185 6.53542 9.92826 6.16667 9 6.16667C8.07175 6.16667 7.18151 6.53542 6.52513 7.19179C5.86875 7.84817 5.5 8.73841 5.5 9.66667Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <div>Change cam / mic</div>
+                        </li>
+                        <li class="flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
+                            <div class="w-8 mr-1 text-center">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M9.90625 2.39625C10.4388 0.20125 13.5612 0.20125 14.0938 2.39625C14.1736 2.726 14.3303 3.03222 14.5509 3.29C14.7715 3.54778 15.0499 3.74982 15.3633 3.87968C15.6768 4.00955 16.0165 4.06356 16.3547 4.03734C16.693 4.01111 17.0203 3.90538 17.31 3.72875C19.2387 2.55375 21.4475 4.76125 20.2725 6.69125C20.0961 6.98082 19.9906 7.30792 19.9644 7.64597C19.9382 7.98401 19.9922 8.32346 20.1219 8.63672C20.2516 8.94999 20.4534 9.22822 20.7109 9.44882C20.9684 9.66941 21.2743 9.82613 21.6038 9.90625C23.7988 10.4388 23.7988 13.5612 21.6038 14.0938C21.274 14.1736 20.9678 14.3303 20.71 14.5509C20.4522 14.7715 20.2502 15.0499 20.1203 15.3633C19.9905 15.6768 19.9364 16.0165 19.9627 16.3547C19.9889 16.693 20.0946 17.0203 20.2713 17.31C21.4463 19.2387 19.2388 21.4475 17.3088 20.2725C17.0192 20.0961 16.6921 19.9906 16.354 19.9644C16.016 19.9382 15.6765 19.9922 15.3633 20.1219C15.05 20.2516 14.7718 20.4534 14.5512 20.7109C14.3306 20.9684 14.1739 21.2743 14.0938 21.6038C13.5612 23.7988 10.4388 23.7988 9.90625 21.6038C9.82635 21.274 9.66972 20.9678 9.44911 20.71C9.2285 20.4522 8.95014 20.2502 8.63669 20.1203C8.32323 19.9905 7.98354 19.9364 7.64527 19.9627C7.30699 19.9889 6.97969 20.0946 6.69 20.2713C4.76125 21.4463 2.5525 19.2388 3.7275 17.3088C3.90388 17.0192 4.00944 16.6921 4.0356 16.354C4.06177 16.016 4.0078 15.6765 3.87809 15.3633C3.74838 15.05 3.54658 14.7718 3.28909 14.5512C3.03161 14.3306 2.7257 14.1739 2.39625 14.0938C0.20125 13.5612 0.20125 10.4388 2.39625 9.90625C2.726 9.82635 3.03222 9.66972 3.29 9.44911C3.54778 9.2285 3.74982 8.95014 3.87968 8.63669C4.00955 8.32323 4.06356 7.98354 4.03734 7.64527C4.01111 7.30699 3.90538 6.97969 3.72875 6.69C2.55375 4.76125 4.76125 2.5525 6.69125 3.7275C7.94125 4.4875 9.56125 3.815 9.90625 2.39625Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M8.25 12C8.25 12.9946 8.64509 13.9484 9.34835 14.6517C10.0516 15.3549 11.0054 15.75 12 15.75C12.9946 15.75 13.9484 15.3549 14.6517 14.6517C15.3549 13.9484 15.75 12.9946 15.75 12C15.75 11.0054 15.3549 10.0516 14.6517 9.34835C13.9484 8.64509 12.9946 8.25 12 8.25C11.0054 8.25 10.0516 8.64509 9.34835 9.34835C8.64509 10.0516 8.25 11.0054 8.25 12Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <div>Other settings</div>
+                        </li>
+                    </ul>
+                </div>
+            {/if}
+        </div>
+    </div>
+</div>
+
+
 <div
-    class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
+    class="flex flex-col justify-center m-auto absolute left-0 right-0 top-0 hidden"
     class:animated={$bottomActionBarVisibilityStore}
 >
-    <div class="bottom-action-bar tw-absolute">
+
+    <!-- ACTION WRAPPER : Follow, Share, etc. -->
+    <div class="items-center pointer-events-auto justify-center transition-transform duration-300">
         {#if $bottomActionBarVisibilityStore}
             <div
-                class="bottom-action-section tw-flex animate"
+                class="bottom-action-section flex animate"
                 id="bubble-menu"
                 in:fly={{ y: 70, duration: 100, delay: 200 }}
                 out:fly={{ y: 70, duration: 100, delay: 0 }}
-                class:tw-translate-x-0={$bottomActionBarVisibilityStore}
+                class:translate-x-0={$bottomActionBarVisibilityStore}
                 class:translate-right={!$bottomActionBarVisibilityStore}
             >
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
-                    class="tw-transition-all bottom-action-button"
+                    class="transition-all bottom-action-button"
                     class:disabled={$followStateStore !== "off"}
                     on:click={() => analyticsClient.follow()}
                     on:click={followClick}
@@ -426,7 +720,7 @@
 
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
-                    class="tw-transition-all bottom-action-button"
+                    class="transition-all bottom-action-button"
                     on:click={() => analyticsClient.layoutPresentChange()}
                     on:click={switchLayoutMode}
                 >
@@ -453,7 +747,7 @@
 
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
-                    class="tw-transition-all bottom-action-button"
+                    class="transition-all bottom-action-button"
                     class:disabled={$currentPlayerGroupLockStateStore}
                     on:click={() => analyticsClient.lockDiscussion()}
                     on:click={lockClick}
@@ -476,7 +770,7 @@
 
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
-                    class="tw-transition-all bottom-action-button"
+                    class="transition-all bottom-action-button"
                     on:click={() => analyticsClient.screenSharing()}
                     on:click={screenSharingClick}
                     class:enabled={$requestedScreenSharingState}
@@ -504,427 +798,229 @@
             </div>
         {/if}
 
-        <div class="tw-flex tw-flex-row base-section animated tw-flex-wrap tw-justify-center">
-            <div class="bottom-action-section tw-flex tw-flex-initial">
-                {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
-                    {#if $myCameraStore}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- ACTION WRAPPER : Follow, Screen Share, etc. -->
+            <div class="flex flex-row flex-wrap justify-center">
+                <div class="flex-row flex items-center mx-1 my-1 flex-initial md:mx-2 md:my-0">
+                    {#if $isSpeakerStore || $streamingMegaphoneStore || $megaphoneEnabledStore}
                         <div
-                            class="bottom-action-button tw-relative"
-                            on:click={() => analyticsClient.camera()}
-                            on:click={cameraClick}
-                            class:disabled={!$requestedCameraState || $silentStore}
+                            class="transition-all bottom-action-button"
+                            on:click={() => analyticsClient.screenSharing()}
+                            on:click={screenSharingClick}
+                            class:enabled={$requestedScreenSharingState}
                         >
-                            <Tooltip text={$LL.actionbar.camera()} />
+                            <Tooltip text={$LL.actionbar.screensharing()} />
+
+                            <button class:border-top-light={$requestedScreenSharingState}>
+                                {#if $requestedScreenSharingState}
+                                    <img
+                                        draggable="false"
+                                        src={screenshareOn}
+                                        style="padding: 2px;"
+                                        alt="Stop screen sharing"
+                                    />
+                                {:else}
+                                    <img
+                                        draggable="false"
+                                        src={screenshareOffAlt}
+                                        style="padding: 2px;"
+                                        alt="Start screen sharing"
+                                    />
+                                {/if}
+                            </button>
+                        </div>
+                    {/if}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div on:click={toggleEmojiPicker} class="bottom-action-button">
+                        <Tooltip text={$LL.actionbar.emoji()} />
+
+                        <button class:border-top-light={$emoteMenuSubStore}>
+                            <img draggable="false" src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
+                        </button>
+                    </div>
+                    {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <div on:click={toggleMegaphone} class="bottom-action-button relative">
+                            {#if $streamingMegaphoneStore}
+                                <MegaphoneConfirm />
+                            {:else}
+                                <Tooltip
+                                    text={$megaphoneEnabledStore
+                                        ? $LL.actionbar.disableMegaphone()
+                                        : $LL.actionbar.enableMegaphone()}
+                                />
+                            {/if}
 
                             <button
-                                class="tooltiptext sm:tw-w-56 md:tw-w-96"
-                                class:border-top-light={$requestedCameraState}
+                                class:border-top-warning={$megaphoneEnabledStore || $streamingMegaphoneStore}
+                                id="megaphone"
                             >
-                                {#if $requestedCameraState && !$silentStore}
-                                    <img
-                                        draggable="false"
-                                        src={cameraImg}
-                                        style="padding: 2px;"
-                                        alt="Turn off webcam"
-                                    />
-                                {:else}
-                                    <img
-                                        draggable="false"
-                                        src={cameraOffImg}
-                                        style="padding: 2px;"
-                                        alt="Turn on webcam"
-                                    />
-                                {/if}
+                                <img draggable="false" src={megaphoneImg} style="padding: 2px" alt="Toggle megaphone" />
                             </button>
-
-                            {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
-                                <button
-                                    class="camera tw-absolute tw-text-light-purple focus:outline-none tw-m-0"
-                                    on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
-                                >
-                                    {#if cameraActive}
-                                        <ChevronDownIcon size="13" />
-                                    {:else}
-                                        <ChevronUpIcon size="13" />
-                                    {/if}
-                                </button>
-
-                                <!-- camera list -->
-                                <div
-                                    class={`wa-dropdown-menu ${cameraActive ? "" : "tw-invisible"}`}
-                                    style="bottom: 15px;right: 0;"
-                                    on:mouseleave={() => (cameraActive = false)}
-                                >
-                                    {#each $cameraListStore as camera}
-                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                        <span
-                                            class="wa-dropdown-item tw-flex"
-                                            on:click={() => {
-                                                analyticsClient.selectCamera();
-                                            }}
-                                            on:click|stopPropagation|preventDefault={() =>
-                                                selectCamera(camera.deviceId)}
-                                        >
-                                            {StringUtils.normalizeDeviceName(camera.label)}
-                                            {#if $usedCameraDeviceIdStore === camera.deviceId}
-                                                <CheckIcon size="13" class="tw-ml-1" />
-                                            {/if}
-                                        </span>
-                                    {/each}
+                            {#if $megaphoneEnabledStore}
+                                <div class="absolute top-[1.05rem] right-1">
+                                    <span
+                                        class="w-3 h-3 bg-warning block rounded-full absolute top-0 right-0 animate-ping cursor-pointer"
+                                    />
+                                    <span
+                                        class="w-2 h-2 bg-warning block rounded-full absolute top-0.5 right-0.5 cursor-pointer"
+                                    />
                                 </div>
                             {/if}
                         </div>
                     {/if}
-
-                    {#if $myMicrophoneStore}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <div
-                            class="bottom-action-button tw-relative"
-                            on:click={() => analyticsClient.microphone()}
-                            on:click={microphoneClick}
-                            class:disabled={!$requestedMicrophoneState || $silentStore}
-                        >
-                            <Tooltip text={$LL.actionbar.microphone()} />
-
-                            <button class:border-top-light={$requestedMicrophoneState}>
-                                {#if $requestedMicrophoneState && !$silentStore}
-                                    <img
-                                        draggable="false"
-                                        src={microphoneImg}
-                                        style="padding: 2px;"
-                                        alt="Turn off microphone"
-                                    />
-                                {:else}
-                                    <img
-                                        draggable="false"
-                                        src={microphoneOffImg}
-                                        style="padding: 2px;"
-                                        alt="Turn on microphone"
-                                    />
-                                {/if}
-                            </button>
-
-                            {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 1}
-                                <button
-                                    class="microphone tw-absolute tw-text-light-purple focus:outline-none tw-m-0"
-                                    on:click|stopPropagation|preventDefault={() =>
-                                        (microphoneActive = !microphoneActive)}
-                                >
-                                    {#if microphoneActive}
-                                        <ChevronDownIcon size="13" />
-                                    {:else}
-                                        <ChevronUpIcon size="13" />
-                                    {/if}
-                                </button>
-
-                                <div
-                                    class={`wa-dropdown-menu ${microphoneActive ? "" : "tw-invisible"}`}
-                                    style="bottom: 15px;right: 0;"
-                                    on:mouseleave={() => (microphoneActive = false)}
-                                >
-                                    {#if $microphoneListStore.length > 0}
-                                        <!-- microphone list -->
-                                        <span class="tw-underline tw-font-bold tw-text-xs tw-p-1"
-                                            >{$LL.actionbar.subtitle.microphone()} 🎙️</span
-                                        >
-                                        {#each $microphoneListStore as microphone}
-                                            <span
-                                                class="wa-dropdown-item"
-                                                on:click={() => {
-                                                    analyticsClient.selectMicrophone();
-                                                }}
-                                                on:click|stopPropagation|preventDefault={() =>
-                                                    selectMicrophone(microphone.deviceId)}
-                                            >
-                                                {StringUtils.normalizeDeviceName(microphone.label)}
-                                                {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
-                                                    <CheckIcon size="13" />
-                                                {/if}
-                                            </span>
-                                        {/each}
-                                    {/if}
-
-                                    <!-- speaker list -->
-                                    {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
-                                        <span class="tw-underline tw-font-bold tw-text-xs tw-p-1"
-                                            >{$LL.actionbar.subtitle.speaker()} 🔈</span
-                                        >
-                                        {#each $speakerListStore as speaker}
-                                            <span
-                                                class="wa-dropdown-item"
-                                                on:click={() => {
-                                                    analyticsClient.selectSpeaker();
-                                                }}
-                                                on:click|stopPropagation|preventDefault={() =>
-                                                    selectSpeaker(speaker.deviceId)}
-                                            >
-                                                {StringUtils.normalizeDeviceName(speaker.label)}
-                                                {#if $speakerSelectedStore === speaker.deviceId}
-                                                    <CheckIcon size="13" />
-                                                {/if}
-                                            </span>
-                                        {/each}
-                                    {/if}
-                                </div>
-                            {/if}
-                        </div>
-                    {/if}
-                {/if}
-
-                {#if $isSpeakerStore || $streamingMegaphoneStore || $megaphoneEnabledStore}
-                    <div
-                        class="tw-transition-all bottom-action-button"
-                        on:click={() => analyticsClient.screenSharing()}
-                        on:click={screenSharingClick}
-                        class:enabled={$requestedScreenSharingState}
-                    >
-                        <Tooltip text={$LL.actionbar.screensharing()} />
-
-                        <button class:border-top-light={$requestedScreenSharingState}>
-                            {#if $requestedScreenSharingState}
-                                <img
-                                    draggable="false"
-                                    src={screenshareOn}
-                                    style="padding: 2px;"
-                                    alt="Stop screen sharing"
-                                />
-                            {:else}
-                                <img
-                                    draggable="false"
-                                    src={screenshareOffAlt}
-                                    style="padding: 2px;"
-                                    alt="Start screen sharing"
-                                />
-                            {/if}
-                        </button>
-                    </div>
-                {/if}
-
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    on:click={() => analyticsClient.openedChat()}
-                    on:click={toggleChat}
-                    class="bottom-action-button tw-relative"
-                >
-                    <Tooltip text={$LL.actionbar.chat()} />
-
-                    <button class:border-top-light={$chatVisibilityStore} class="chat-btn">
-                        <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
-                    </button>
-                    {#if $chatZoneLiveStore || $peerStore.size > 0}
-                        <div class="tw-absolute tw-top-1 tw-right-0.5">
-                            <span
-                                class={`tw-w-4 tw-h-4 ${
-                                    $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
-                                } tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping`}
-                            />
-                            <span
-                                class={`tw-w-3 tw-h-3 ${
-                                    $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
-                                } tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5`}
-                            />
-                        </div>
-                    {:else if $totalMessagesToSee > 0}
-                        <span
-                            class="tw-absolute tw-top-1.5 tw-right-1 tw-items-center tw-justify-center tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none tw-text-white tw-bg-pop-red tw-rounded-full"
-                        >
-                            {$totalMessagesToSee}
-                        </span>
-                    {/if}
                 </div>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div on:click={toggleEmojiPicker} class="bottom-action-button">
-                    <Tooltip text={$LL.actionbar.emoji()} />
 
-                    <button class:border-top-light={$emoteMenuSubStore}>
-                        <img draggable="false" src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
-                    </button>
-                </div>
-                {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div on:click={toggleMegaphone} class="bottom-action-button tw-relative">
-                        {#if $streamingMegaphoneStore}
-                            <MegaphoneConfirm />
-                        {:else}
-                            <Tooltip
-                                text={$megaphoneEnabledStore
-                                    ? $LL.actionbar.disableMegaphone()
-                                    : $LL.actionbar.enableMegaphone()}
-                            />
-                        {/if}
-
-                        <button
-                            class:border-top-warning={$megaphoneEnabledStore || $streamingMegaphoneStore}
-                            id="megaphone"
-                        >
-                            <img draggable="false" src={megaphoneImg} style="padding: 2px" alt="Toggle megaphone" />
-                        </button>
-                        {#if $megaphoneEnabledStore}
-                            <div class="tw-absolute tw-top-[1.05rem] tw-right-1">
-                                <span
-                                    class="tw-w-3 tw-h-3 tw-bg-warning tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping tw-cursor-pointer"
-                                />
-                                <span
-                                    class="tw-w-2 tw-h-2 tw-bg-warning tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5 tw-cursor-pointer"
-                                />
-                            </div>
-                        {/if}
-                    </div>
-                {/if}
-            </div>
-
-            <div class="bottom-action-section tw-flex tw-flex-initial">
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openedMenu()}
-                    on:click={showMenu}
-                    class="bottom-action-button"
-                >
-                    <Tooltip text={$LL.actionbar.menu()} />
-
-                    <button id="menuIcon" class:border-top-light={$menuVisiblilityStore}>
-                        <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
-                    </button>
-                </div>
-                {#if $mapEditorActivated}
+                <div class="bottom-action-section flex flex-initial">
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         on:dragstart|preventDefault={noDrag}
-                        on:click={toggleMapEditorMode}
+                        on:click={() => analyticsClient.openedMenu()}
+                        on:click={showMenu}
                         class="bottom-action-button"
                     >
-                        <Tooltip text={$LL.actionbar.mapEditor()} />
-                        <button
-                            id="mapEditorIcon"
-                            class:border-top-light={$mapEditorModeStore}
-                            name="toggle-map-editor"
-                        >
-                            <img draggable="false" src={mapBuilder} style="padding: 2px" alt="toggle-map-editor" />
+                        <Tooltip text={$LL.actionbar.menu()} />
+
+                        <button id="menuIcon" class:border-top-light={$menuVisiblilityStore}>
+                            <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
                         </button>
                     </div>
-                {/if}
-                {#if $userHasAccessToBackOfficeStore}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        on:dragstart|preventDefault={noDrag}
-                        on:click={() => analyticsClient.openBackOffice()}
-                        on:click={openBo}
-                        class="bottom-action-button"
-                    >
-                        <Tooltip text={$LL.actionbar.bo()} />
-
-                        <button id="backOfficeIcon">
-                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-bo" />
-                        </button>
-                    </div>
-                {/if}
-            </div>
-
-            {#if $addActionButtonActionBarEvent.length > 0}
-                <div class="bottom-action-section tw-flex tw-flex-initial">
-                    {#each $addActionButtonActionBarEvent as button}
+                    {#if $mapEditorActivated}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
-                            in:fly={{}}
                             on:dragstart|preventDefault={noDrag}
-                            on:click={() =>
-                                analyticsClient.clickOnCustomButton(
-                                    button.id,
-                                    undefined,
-                                    button.toolTip,
-                                    button.imageSrc
-                                )}
-                            on:click={() => {
-                                buttonActionBarTrigger(button.id);
-                            }}
+                            on:click={toggleMapEditorMode}
                             class="bottom-action-button"
                         >
-                            {#if button.toolTip}
-                                <Tooltip text={button.toolTip} />
-                            {/if}
-                            <button id={button.id}>
-                                <img
-                                    draggable="false"
-                                    src={button.imageSrc}
-                                    style="padding: 2px"
-                                    alt={button.toolTip}
-                                />
+                            <Tooltip text={$LL.actionbar.mapEditor()} />
+                            <button
+                                id="mapEditorIcon"
+                                class:border-top-light={$mapEditorModeStore}
+                                name="toggle-map-editor"
+                            >
+                                <img draggable="false" src={mapBuilder} style="padding: 2px" alt="toggle-map-editor" />
                             </button>
                         </div>
-                    {/each}
-                </div>
-            {/if}
+                    {/if}
+                    {#if $userHasAccessToBackOfficeStore}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <div
+                            on:dragstart|preventDefault={noDrag}
+                            on:click={() => analyticsClient.openBackOffice()}
+                            on:click={openBo}
+                            class="bottom-action-button"
+                        >
+                            <Tooltip text={$LL.actionbar.bo()} />
 
-            {#if $inviteUserActivated}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    class="bottom-action-section tw-flex tw-flex-initial"
-                    in:fly={{}}
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openInvite()}
-                    on:click={showInvite}
-                >
-                    <button
-                        class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
-                        id="invite-btn"
-                        class:border-top-light={$menuVisiblilityStore}
+                            <button id="backOfficeIcon">
+                                <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-bo" />
+                            </button>
+                        </div>
+                    {/if}
+                </div>
+
+                {#if $addActionButtonActionBarEvent.length > 0}
+                    <div class="bottom-action-section flex flex-initial">
+                        {#each $addActionButtonActionBarEvent as button}
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <div
+                                in:fly={{}}
+                                on:dragstart|preventDefault={noDrag}
+                                on:click={() =>
+                                    analyticsClient.clickOnCustomButton(
+                                        button.id,
+                                        undefined,
+                                        button.toolTip,
+                                        button.imageSrc
+                                    )}
+                                on:click={() => {
+                                    buttonActionBarTrigger(button.id);
+                                }}
+                                class="bottom-action-button"
+                            >
+                                {#if button.toolTip}
+                                    <Tooltip text={button.toolTip} />
+                                {/if}
+                                <button id={button.id}>
+                                    <img
+                                        draggable="false"
+                                        src={button.imageSrc}
+                                        style="padding: 2px"
+                                        alt={button.toolTip}
+                                    />
+                                </button>
+                            </div>
+                        {/each}
+                    </div>
+                {/if}
+
+                {#if $inviteUserActivated}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        class="bottom-action-section flex flex-initial"
+                        in:fly={{}}
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.openInvite()}
+                        on:click={showInvite}
                     >
-                        {$LL.menu.sub.invite()}
-                    </button>
-                </div>
-            {/if}
+                        <button
+                            class="btn light m-0 font-bold text-xs sm:text-base"
+                            id="invite-btn"
+                            class:border-top-light={$menuVisiblilityStore}
+                        >
+                            {$LL.menu.sub.invite()}
+                        </button>
+                    </div>
+                {/if}
 
-            <!-- TODO button must displayed by scripting API -->
-            <!--
-			{#if ENABLE_OPENID && !$userIsConnected && }
-				<div
-					class="bottom-action-section tw-flex tw-flex-initial"
-					in:fly={{}}
-					on:dragstart|preventDefault={noDrag}
-					on:click={() => analyticsClient.openRegister()}
-					on:click={register}
-				>
-					<button
-						class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
-						id="register-btn"
-						class:border-top-light={$menuVisiblilityStore}
-					>
-						{$LL.menu.icon.open.register()}
-					</button>
-				</div>
-			{/if}
-			-->
-            {#each $addClassicButtonActionBarEvent as button}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    class="bottom-action-section tw-flex tw-flex-initial"
-                    in:fly={{}}
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.clickOnCustomButton(button.id, button.label)}
-                    on:click={() => {
-                        buttonActionBarTrigger(button.id);
-                    }}
-                >
-                    <button class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base" id={button.id}>
-                        {button.label}
-                    </button>
-                </div>
-            {/each}
-        </div>
+                <!-- TODO button must displayed by scripting API -->
+                <!--
+                {#if ENABLE_OPENID && !$userIsConnected && }
+                    <div
+                        class="bottom-action-section flex flex-initial"
+                        in:fly={{}}
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.openRegister()}
+                        on:click={register}
+                    >
+                        <button
+                            class="btn light m-0 font-bold text-xs sm:text-base"
+                            id="register-btn"
+                            class:border-top-light={$menuVisiblilityStore}
+                        >
+                            {$LL.menu.icon.open.register()}
+                        </button>
+                    </div>
+                {/if}
+                -->
+                {#each $addClassicButtonActionBarEvent as button}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        class="bottom-action-section flex flex-initial"
+                        in:fly={{}}
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.clickOnCustomButton(button.id, button.label)}
+                        on:click={() => {
+                            buttonActionBarTrigger(button.id);
+                        }}
+                    >
+                        <button class="btn light m-0 font-bold text-xs sm:text-base" id={button.id}>
+                            {button.label}
+                        </button>
+                    </div>
+                {/each}
+            </div>
     </div>
 </div>
 
 {#if $emoteMenuSubStore}
     <div
-        class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
+        class="flex justify-center m-auto absolute left-0 right-0 bottom-0"
         style="margin-bottom: 4.5rem; height: auto;"
     >
         <div class="bottom-action-bar">
-            <div class="bottom-action-section tw-flex animate">
+            <div class="bottom-action-section flex animate">
                 {#each [...$emoteDataStore.keys()] as key}
-                    <div class="tw-transition-all bottom-action-button">
+                    <div class="transition-all bottom-action-button">
                         <button
                             on:click={() => {
                                 clickEmoji(key);
@@ -937,16 +1033,16 @@
                                 {$emoteDataStore.get(key)?.emoji}
                             </span>
                             {#if !isMobile}
-                                <span class="tw-text-white">{key}</span>
+                                <span class="text-white">{key}</span>
                             {/if}
                         </button>
                     </div>
                 {/each}
 
-                <div class="tw-transition-all bottom-action-button">
+                <div class="transition-all bottom-action-button">
                     <button on:click={() => analyticsClient.editEmote()} on:click|preventDefault={edit}>
                         {#if $emoteDataStoreLoading}
-                            <div class="tw-rounded-lg tw-bg-dark tw-text-xs">
+                            <div class="rounded-lg bg-dark text-xs">
                                 <!-- loading animation -->
                                 <div class="loading-group">
                                     <span class="loading-dot" />
@@ -964,7 +1060,7 @@
                         {/if}
                     </button>
                 </div>
-                <div class="tw-transition-all bottom-action-button">
+                <div class="transition-all bottom-action-button">
                     <button on:click|preventDefault={close}>
                         <img
                             draggable="false"
@@ -982,6 +1078,10 @@
 <style lang="scss">
     @import "../../style/breakpoints.scss";
 
+    * {
+      font-family: 'Roboto Condensed';
+    }
+
     button {
         justify-content: center;
     }
@@ -992,30 +1092,6 @@
 
     .translate-right {
         transform: translateX(2rem);
-    }
-
-    .bottom-action-section {
-        .bottom-action-button {
-            button.camera,
-            button.microphone {
-                top: 0;
-                width: 20px;
-                height: 20px;
-                background: none;
-                right: 0;
-                border-top-left-radius: 0.25rem;
-                border-bottom-left-radius: 0.25rem;
-                border-top-right-radius: 0.25rem;
-                border-bottom-right-radius: 0.25rem;
-                color: white;
-                padding: 0;
-                margin: 0;
-                display: block;
-                &:hover {
-                    background-color: rgb(56 56 74);
-                }
-            }
-        }
     }
 
     @include media-breakpoint-down(sm) {

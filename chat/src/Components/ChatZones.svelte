@@ -8,19 +8,19 @@
 </script>
 
 {#if chatZones.length > 0}
-    <div id="chatZones" class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
+    <div id="chatZones" class="border-b border-solid border-0 border-transparent border-b-light-purple">
         <div
-            class="tw-px-4 tw-py-1 tw-flex tw-items-center tw-cursor-pointer"
+            class="px-4 py-1 flex items-center cursor-pointer"
             on:click|stopPropagation={() => showChatZonesStore.set(!$showChatZonesStore)}
         >
             <span
-                class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+                class="bg-light-blue text-dark-purple w-5 h-5 mr-3 text-sm font-semibold flex items-center justify-center rounded"
             >
                 {chatZones.length}
             </span>
-            <p class="tw-text-light-blue tw-my-2 tw-text-sm tw-flex-auto">Chat zones</p>
-            <!--<button class="tw-text-lighter-purple">
-                <ChevronUpIcon class={`tw-transform tw-transition ${$showLivesStore ? "" : "tw-rotate-180"}`} />
+            <p class="text-light-blue my-2 text-sm flex-auto">Chat zones</p>
+            <!--<button class="text-lighter-purple">
+                <ChevronUpIcon class={`transform transition ${$showLivesStore ? "" : "rotate-180"}`} />
             </button>
             -->
         </div>

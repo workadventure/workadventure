@@ -1,10 +1,10 @@
 @layer components {
     .popUpElement {
-        @apply tw-bg-dark-purple/95 tw-rounded;
+        @apply bg-dark-purple/95 rounded;
     }
 
     .popUpElement div {
-        @apply tw-flex tw-text-white tw-text-sm tw-flex-col tw-text-center tw-px-1 tw-py-1.5;
+        @apply flex text-white text-sm flex-col text-center px-1 py-1.5;
     }
 
     .popUpElement div > * + * {
@@ -17,10 +17,10 @@
     }
 
     .popUpElement button {
-        @apply btn tw-bg-light-blue tw-text-dark-purple tw-mx-3 tw-font-medium tw-text-xs;
+        @apply btn bg-light-blue text-dark-purple mx-3 font-medium text-xs;
     }
 
     .popUpElement .buttonContainer {
-        @apply tw-flex-row tw-justify-center;
+        @apply flex-row justify-center;
     }
 }

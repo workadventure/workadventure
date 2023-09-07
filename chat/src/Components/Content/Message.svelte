@@ -63,12 +63,12 @@
             .then(() => {
                 const target = e.target as HTMLElement;
                 if (target) {
-                    target.classList.add("tw-text-pop-green");
+                    target.classList.add("text-pop-green");
                     const originalText = target.innerHTML;
                     target.innerHTML = originalText.replace($LL.copy(), $LL.copied());
                     setTimeout(() => {
                         target.innerHTML = originalText;
-                        target.classList.remove("tw-text-pop-green");
+                        target.classList.remove("text-pop-green");
                     }, 1_000);
                 }
             })
@@ -143,24 +143,24 @@
 
 <div
     id={`message_${message.id}`}
-    class={`wa-message tw-flex ${isMe ? "tw-justify-end" : "tw-justify-start"}
-            ${needHideHeader ? "tw-mt-0.5" : "tw-mt-2"}
+    class={`wa-message flex ${isMe ? "justify-end" : "justify-start"}
+            ${needHideHeader ? "mt-0.5" : "mt-2"}
             ${isMe ? ($delivered ? "sent" : "sending") : "received"}
             `}
 >
-    <div class="tw-flex tw-flex-row tw-items-center  tw-max-w-full">
-        <div class={`tw-flex tw-max-w-full tw-items-center ${isMe ? "tw-justify-end" : "tw-justify-start"}`}>
+    <div class="flex flex-row items-center  max-w-full">
+        <div class={`flex max-w-full items-center ${isMe ? "justify-end" : "justify-start"}`}>
             {#if !isMe}
                 <div
                     class={`${
-                        isMe || needHideHeader ? "tw-opacity-0" : "tw-mt-4"
-                    } tw-relative wa-avatar-mini tw-mr-2 tw-self-start`}
+                        isMe || needHideHeader ? "opacity-0" : "mt-4"
+                    } relative wa-avatar-mini mr-2 self-start`}
                     in:fade={{ duration: 100 }}
                     style={`background-color: ${color}`}
                 >
                     <div class="wa-container">
                         <img
-                            class="tw-w-full"
+                            class="w-full"
                             style="image-rendering: pixelated;"
                             src={woka}
                             alt="Avatar"
@@ -172,8 +172,8 @@
             {#if !$error && !$deletedMessagesStore.has(message.id)}
                 <!-- Action bar -->
                 <div
-                    class={`actions tw-rounded-lg tw-text-xs tw-text-left tw-flex ${needHideHeader ? "" : "tw-pt-4"} ${
-                        isMe ? "tw-pr-2 tw-flex-row-reverse" : "tw-order-3 tw-pl-2 tw-flex-row"
+                    class={`actions rounded-lg text-xs text-left flex ${needHideHeader ? "" : "pt-4"} ${
+                        isMe ? "pr-2 flex-row-reverse" : "order-3 pl-2 flex-row"
                     }`}
                     style={($me && $me.isAdmin) || isMe ? "width: 92px;" : "width: 72px;"}
                 >
@@ -207,7 +207,7 @@
                     </div>
                     {#if ($me && $me.isAdmin) || isMe}
                         <div
-                            class="action delete tw-text-pop-red"
+                            class="action delete text-pop-red"
                             on:click={() => mucRoom.sendRemoveMessage(message.id)}
                         >
                             <Trash2Icon size="17" />
@@ -226,17 +226,17 @@
             >
                 <div
                     style={`border-bottom-color:${color}`}
-                    class={`tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
-                        !message.targetMessageReply && needHideHeader ? "tw-hidden" : ""
-                    } ${isMe ? "tw-flex-row-reverse" : "tw-flex-row"}`}
+                    class={`flex items-end justify-between mx-2 border-0 border-b border-solid text-light-purple-alt text-xxs pb-0.5 ${
+                        !message.targetMessageReply && needHideHeader ? "hidden" : ""
+                    } ${isMe ? "flex-row-reverse" : "flex-row"}`}
                 >
-                    <span class={`tw-text-lighter-purple ${isMe ? "tw-ml-2" : "tw-mr-2"}`}
+                    <span class={`text-lighter-purple ${isMe ? "ml-2" : "mr-2"}`}
                         >{#if isMe}{$LL.me()}{:else}
                             {message.name.match(/\[\d*]/)
                                 ? message.name.substring(0, message.name.search(/\[\d*]/))
                                 : message.name}
                             {#if message.name.match(/\[\d*]/)}
-                                <span class="tw-font-light tw-text-xxs tw-text-gray">
+                                <span class="font-light text-xxs text-gray">
                                     #{message.name
                                         .match(/\[\d*]/)
                                         ?.join()
@@ -246,7 +246,7 @@
                             {/if}
                         {/if}</span
                     >
-                    <span class="tw-text-xxxs"
+                    <span class="text-xxxs"
                         >{message.time.toLocaleTimeString($locale, {
                             hour: "2-digit",
                             minute: "2-digit",
@@ -257,7 +257,7 @@
                 <!-- Delete message -->
                 {#if $deletedMessagesStore.has(message.id)}
                     <div class="wa-message-body">
-                        <p class="tw-italic">
+                        <p class="italic">
                             {#if JID.toBare(message.jid) === $deletedMessagesStore.get(message.id)}
                                 {#if isMe}
                                     {$LL.messageDeletedByYou()}.
@@ -274,14 +274,14 @@
                 {:else}
                     <div class="wa-message-body">
                         <!-- Body associated -->
-                        <div class="tw-text-ellipsis tw-overflow-y-auto tw-whitespace-normal">
+                        <div class="text-ellipsis overflow-y-auto whitespace-normal">
                             {#if html}
                                 <HtmlMessage {html} {message} />
                             {:else if message.body}
                                 <p>{$LL.waiting()}...</p>
                             {/if}
                             {#if urlifyError}
-                                <p class="tw-text-red-500">{urlifyError}</p>
+                                <p class="text-red-500">{urlifyError}</p>
                             {/if}
                         </div>
 
@@ -307,7 +307,7 @@
                     <!-- Reply associated -->
                     {#if message.targetMessageReply}
                         <div
-                            class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mt-1 tw-mb-2 tw-text-left tw-cursor-pointer"
+                            class="message-replied text-xs rounded-lg bg-dark px-3 py-2 mt-1 mb-2 text-left cursor-pointer"
                             on:click|preventDefault|stopPropagation={() => {
                                 scrollToMessage(message.targetMessageReply?.id);
                             }}
@@ -315,13 +315,13 @@
                             <div class="icon-replied">
                                 <CornerLeftUpIcon size="14" />
                             </div>
-                            <p class="tw-mb-0 tw-text-xxxs tw-whitespace-pre-line tw-break-words">
+                            <p class="mb-0 text-xxxs whitespace-pre-line break-words">
                                 {message.targetMessageReply.senderName}
                                 {$LL.said()}
                             </p>
 
                             <!-- Reply message body render -->
-                            <p class="tw-mb-0 tw-text-xxs tw-whitespace-pre-line tw-break-words">
+                            <p class="mb-0 text-xxs whitespace-pre-line break-words">
                                 {@html HtmlUtils.replaceEmojy(message.targetMessageReply.body)}
                             </p>
 
@@ -339,31 +339,31 @@
         {#if $error}
             <div
                 class="wa-error-message"
-                on:mouseleave={() => document.getElementById(`error_${message.id}`)?.classList.add("tw-invisible")}
+                on:mouseleave={() => document.getElementById(`error_${message.id}`)?.classList.add("invisible")}
             >
                 <div
-                    class={`tw-cursor-pointer tw-text-pop-red tw-ml-1 tw-flex ${needHideHeader ? "" : "tw-mt-4"}`}
-                    on:click={() => document.getElementById(`error_${message.id}`)?.classList.remove("tw-invisible")}
+                    class={`cursor-pointer text-pop-red ml-1 flex ${needHideHeader ? "" : "mt-4"}`}
+                    on:click={() => document.getElementById(`error_${message.id}`)?.classList.remove("invisible")}
                 >
                     <AlertCircleIcon size="16" />
                 </div>
-                <div id={`error_${message.id}`} class={`wa-dropdown-menu tw-invisible`}>
+                <div id={`error_${message.id}`} class={`wa-dropdown-menu invisible`}>
                     <span
                         class="wa-dropdown-item"
                         on:click={() =>
                             mucRoom.sendBack(message.id) &&
-                            document.getElementById(`error_${message.id}`)?.classList.add("tw-invisible")}
+                            document.getElementById(`error_${message.id}`)?.classList.add("invisible")}
                     >
-                        <RefreshCwIcon size="13" class="tw-mr-1" />
+                        <RefreshCwIcon size="13" class="mr-1" />
                         {$LL.sendBack()}
                     </span>
                     <span
-                        class="wa-dropdown-item tw-text-pop-red"
+                        class="wa-dropdown-item text-pop-red"
                         on:click={() =>
                             mucRoom.deleteMessage(message.id) &&
-                            document.getElementById(`error_${message.id}`)?.classList.add("tw-invisible")}
+                            document.getElementById(`error_${message.id}`)?.classList.add("invisible")}
                     >
-                        <Trash2Icon size="13" class="tw-mr-1" />
+                        <Trash2Icon size="13" class="mr-1" />
                         {$LL.delete()}
                     </span>
                 </div>

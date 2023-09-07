@@ -24,16 +24,16 @@
 </script>
 
 <form
-    class="helpCameraSettings tw-z-[600] tw-bg-dark-purple tw-rounded tw-text-white tw-self-center tw-p-3 tw-pointer-events-auto tw-flex tw-flex-col tw-m-auto tw-w-full md:tw-w-2/3 2xl:tw-w-1/4 tw-text-sm md:tw-text-base"
+    class="helpCameraSettings z-[600] bg-dark-purple rounded text-white self-center p-3 pointer-events-auto flex flex-col m-auto w-full md:w-2/3 2xl:w-1/4 text-sm md:text-base"
     style={getBackgroundColor() ? `background-color: ${getBackgroundColor()};` : ""}
     on:submit|preventDefault={close}
     transition:fly={{ y: -50, duration: 500 }}
 >
-    <section class="tw-mb-0">
-        <h2 class="tw-mb-0">{$LL.camera.help.title()}</h2>
+    <section class="mb-0">
+        <h2 class="mb-0">{$LL.camera.help.title()}</h2>
         <p class="err blue-title">{$LL.camera.help.permissionDenied()}</p>
         <p>{$LL.camera.help.content()}</p>
-        <p class="tw-mb-0 tw-flex tw-justify-center tw-flex-col">
+        <p class="mb-0 flex justify-center flex-col">
             {#if isFirefox}
                 <p class="err">
                     {$LL.camera.help.firefoxContent()}
@@ -41,18 +41,18 @@
                 <img
                     src={$LL.camera.help.screen.firefox()}
                     alt="help camera setup"
-                    class="tw-rounded-lg tw-w-5/6 md:tw-w-80 tw-m-auto"
+                    class="rounded-lg w-5/6 md:w-80 m-auto"
                 />
             {:else if isChrome && !isAndroid}
                 <img
                     src={$LL.camera.help.screen.chrome()}
                     alt="help camera setup"
-                    class="tw-rounded-lg tw-w-5/6 md:tw-w-80 tw-m-auto"
+                    class="rounded-lg w-5/6 md:w-80 m-auto"
                 />
             {/if}
         </p>
     </section>
-    <section class="tw-flex tw-row tw-justify-center">
+    <section class="flex row justify-center">
         <button class="light" on:click|preventDefault={refresh}>{$LL.camera.help.refresh()}</button>
         <button type="submit" class="outline" on:click|preventDefault={close}>{$LL.camera.help.continue()}</button>
     </section>

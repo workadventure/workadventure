@@ -44,7 +44,7 @@ export class WebLink {
         image.setAttribute("width", "100%");
         image.setAttribute("height", "100%");
         image.alt = name;
-        image.classList.add("tw-mt-2");
+        image.classList.add("mt-2");
         image.id = id;
         image.src = this.link;
 
@@ -55,7 +55,7 @@ export class WebLink {
         video.setAttribute("width", "100%");
         video.setAttribute("height", "100%");
         video.setAttribute("alt", name);
-        video.classList.add("tw-mt-2");
+        video.classList.add("mt-2");
         video.id = id;
         video.controls = true;
 
@@ -79,7 +79,7 @@ export class WebLink {
         audio.setAttribute("width", "100%");
         audio.setAttribute("height", "100%");
         audio.setAttribute("alt", name);
-        audio.classList.add("tw-mt-2");
+        audio.classList.add("mt-2");
         audio.id = id;
         audio.controls = true;
         audio.src = this.link;
@@ -96,7 +96,7 @@ export class WebLink {
         author_name?: string
     ): Promise<string> {
         const div = document.createElement("div");
-        div.classList.add("content-card", "tw-rounded-lg");
+        div.classList.add("content-card", "rounded-lg");
         div.style.border = "solid 1px rgb(77 75 103)";
         div.style.padding = "4px";
         div.style.overflow = "hidden";
@@ -113,21 +113,21 @@ export class WebLink {
             image.src = HtmlUtils.htmlDecode(imageUrl);
             image.setAttribute("width", "100%");
             image.setAttribute("height", "auto");
-            image.classList.add("tw-mt-1");
+            image.classList.add("mt-1");
             div.appendChild(image);
         }
 
         if (title != undefined) {
             const titleElement = document.createElement("p");
             titleElement.append(HtmlUtils.htmlDecode(title));
-            titleElement.classList.add("tw-mt-1");
+            titleElement.classList.add("mt-1");
             div.appendChild(titleElement);
         }
 
         if (description != undefined) {
             const descriptionElement = document.createElement("p");
             descriptionElement.append(HtmlUtils.htmlDecode(description.substring(0, 100) + "..."));
-            descriptionElement.classList.add("tw-text-light-purple-alt", "tw-mt-1", "tw-m-0", "tw-text-xxs");
+            descriptionElement.classList.add("text-light-purple-alt", "mt-1", "m-0", "text-xxs");
             div.appendChild(descriptionElement);
         }
 
@@ -141,7 +141,7 @@ export class WebLink {
             if (author_name) {
                 origin.append(` - ${author_name}`);
             }
-            origin.classList.add("tw-text-light-purple-alt", "tw-mt-1", "tw-m-0", "tw-text-xxs");
+            origin.classList.add("text-light-purple-alt", "mt-1", "m-0", "text-xxs");
             div.appendChild(origin);
         }
 

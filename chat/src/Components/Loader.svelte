@@ -1,15 +1,15 @@
 <script lang="ts">
     export let text: string;
-    export let height: string = "tw-h-screen";
+    export let height: string = "h-screen";
 </script>
 
-<div class={`tw-grid tw-place-items-center ${height} loader`}>
-    <div class="tw-flex tw-items-center tw-flex-col">
+<div class={`grid place-items-center ${height} loader`}>
+    <div class="flex items-center flex-col">
         <div
             style="border-top-color:transparent"
-            class="tw-w-16 tw-h-16 tw-border-2 tw-border-white tw-border-solid tw-rounded-full tw-animate-spin tw-mb-5"
+            class="w-16 h-16 border-2 border-white border-solid rounded-full animate-spin mb-5"
         />
-        <div class="tw-animate-pulse">{text}</div>
+        <div class="animate-pulse">{text}</div>
     </div>
 </div>
 

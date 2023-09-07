@@ -13,18 +13,18 @@
 </script>
 
 {#if forums.length > 0}
-    <div id="forumRooms" class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
-        <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
+    <div id="forumRooms" class="border-b border-solid border-0 border-transparent border-b-light-purple">
+        <div class="px-4 py-1 flex items-center">
             {#if $unread > 0}
                 <span
-                    class="tw-bg-pop-red tw-text-white tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded tw-animate-pulse"
+                    class="bg-pop-red text-white w-5 h-5 mr-3 text-sm font-semibold flex items-center justify-center rounded animate-pulse"
                 >
                     {$unread}
                 </span>
             {/if}
-            <p class="tw-text-light-blue tw-text-sm tw-flex-auto tw-my-2">Forums</p>
-            <!--<button class="tw-text-lighter-purple">
-                <ChevronUpIcon class={`tw-transform tw-transition ${$showForumsStore ? "" : "tw-rotate-180"}`} />
+            <p class="text-light-blue text-sm flex-auto my-2">Forums</p>
+            <!--<button class="text-lighter-purple">
+                <ChevronUpIcon class={`transform transition ${$showForumsStore ? "" : "rotate-180"}`} />
             </button>-->
         </div>
         <div>

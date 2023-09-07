@@ -5,7 +5,7 @@ module.exports = {
     corePlugins: {
         preflight: false,
     },
-    prefix: "tw-", //Prefixes every tailwind class with tw- to prevent incompatibilities with existing css
+    prefix: "", //Prefixes every tailwind class with  to prevent incompatibilities with existing css
     theme: {
         colors: {
             //UI colors

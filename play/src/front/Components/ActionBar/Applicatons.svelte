@@ -96,13 +96,13 @@
 
 {#if appMenuOpened}
     <div
-        class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
+        class="flex justify-center m-auto absolute left-0 right-0 bottom-0"
         style="margin-bottom: 4.5rem; height: auto;"
     >
         <div class="bottom-action-bar">
             {#if connectionManager.currentRoom?.klaxoonToolActivated}
-                <div class="bottom-action-section tw-flex animate">
-                    <div class="tw-transition-all bottom-action-button">
+                <div class="bottom-action-section flex animate">
+                    <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.klaxoonProperties.label()} />
                         <button
                             on:click={() => {
@@ -117,9 +117,9 @@
                     </div>
                 </div>
             {/if}
-            <div class="bottom-action-section tw-flex animate">
+            <div class="bottom-action-section flex animate">
                 {#if connectionManager.currentRoom?.googleDocsToolActivated}
-                    <div class="tw-transition-all bottom-action-button">
+                    <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleDocsProperties.label()} />
                         <button
                             on:click={() => {
@@ -134,7 +134,7 @@
                     </div>
                 {/if}
                 {#if connectionManager.currentRoom?.googleSheetsToolActivated}
-                    <div class="tw-transition-all bottom-action-button">
+                    <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleSheetsProperties.label()} />
                         <button
                             on:click={() => {
@@ -149,7 +149,7 @@
                     </div>
                 {/if}
                 {#if connectionManager.currentRoom?.googleSlidesToolActivated}
-                    <div class="tw-transition-all bottom-action-button">
+                    <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleSlidesProperties.label()} />
                         <button
                             on:click={() => {
@@ -164,7 +164,7 @@
                     </div>
                 {/if}
                 {#if connectionManager.currentRoom?.eraserToolActivated}
-                    <div class="tw-transition-all bottom-action-button">
+                    <div class="transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.eraserProperties.label()} />
                         <button
                             on:click={() => {

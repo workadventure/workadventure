@@ -176,11 +176,11 @@
     <div class="header-container">
         <h2>Editing: {$mapEditorSelectedEntityStore.getPrefab().name}</h2>
     </div>
-    <p on:click|preventDefault={backToSelectObject} class="tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0">
-        <ArrowLeftIcon size="12" class="tw-cursor-pointer" />
-        <span class="tw-ml-1 tw-cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
+    <p on:click|preventDefault={backToSelectObject} class="flex flex-row items-center text-xs m-0">
+        <ArrowLeftIcon size="12" class="cursor-pointer" />
+        <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
     </p>
-    <div class="properties-buttons tw-flex tw-flex-row">
+    <div class="properties-buttons flex flex-row">
         {#if !hasJitsiRoomProperty}
             <AddPropertyButton
                 headerText={$LL.mapEditor.properties.jitsiProperties.label()}
@@ -211,7 +211,7 @@
             }}
         />
     </div>
-    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+    <div class="properties-buttons flex flex-row flex-wrap">
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.youtubeProperties.label()}
             descriptionText={connectionManager.currentRoom?.youtubeToolActivated

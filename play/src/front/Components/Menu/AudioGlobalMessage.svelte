@@ -84,7 +84,7 @@
 
 <section class="section-input-send-audio centered-column">
     <img
-        class="clickable tw-w-1/4"
+        class="clickable w-1/4"
         draggable="false"
         src={uploadFile}
         alt={$LL.menu.globalAudio.uploadInfo()}
@@ -102,7 +102,7 @@
         <p class="err">{$LL.menu.globalAudio.errorUpload()}</p>
     {/if}
     <input
-        class="tw-hidden"
+        class="hidden"
         type="file"
         id="input-send-audio"
         bind:this={fileInput}
