@@ -341,18 +341,6 @@
     </div>
     <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
         <AddPropertyButton
-            headerText={$LL.mapEditor.properties.youtubeProperties.label()}
-            descriptionText={connectionManager.currentRoom?.youtubeToolActivated
-                ? $LL.mapEditor.properties.youtubeProperties.description()
-                : $LL.mapEditor.properties.youtubeProperties.disabled()}
-            img={youtubeSvg}
-            style="z-index: 5;"
-            disabled={!connectionManager.currentRoom?.youtubeToolActivated}
-            on:click={() => {
-                onAddProperty("openWebsite", "youtube");
-            }}
-        />
-        <AddPropertyButton
             headerText={$LL.mapEditor.properties.klaxoonProperties.label()}
             descriptionText={connectionManager.currentRoom?.klaxoonToolActivated
                 ? $LL.mapEditor.properties.klaxoonProperties.description()
@@ -362,6 +350,18 @@
             disabled={!connectionManager.currentRoom?.klaxoonToolActivated}
             on:click={() => {
                 onAddProperty("openWebsite", "klaxoon");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.youtubeProperties.label()}
+            descriptionText={connectionManager.currentRoom?.youtubeToolActivated
+                ? $LL.mapEditor.properties.youtubeProperties.description()
+                : $LL.mapEditor.properties.youtubeProperties.disabled()}
+            img={youtubeSvg}
+            style="z-index: 5;"
+            disabled={!connectionManager.currentRoom?.youtubeToolActivated}
+            on:click={() => {
+                onAddProperty("openWebsite", "youtube");
             }}
         />
         <AddPropertyButton
