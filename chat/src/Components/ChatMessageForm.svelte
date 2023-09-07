@@ -129,20 +129,19 @@
             .replace(/(<([^>]+)>)/gi, "")
             .replace(/&nbsp;/g, " ")
             .trim();
-        if (message.length > 0) {
-            if ($selectedMessageToReply) {
-                sendReplyMessage(message);
-            } else {
-                mucRoom.sendMessage(message);
-            }
-            newMessageText = "";
-            htmlMessageText = "";
-            dispatch("scrollDown");
-            setTimeout(() => {
-                textarea.innerHTML = "";
-                dispatch("formHeight", messageForm.clientHeight);
-            }, 0);
+
+        if ($selectedMessageToReply) {
+            sendReplyMessage(message);
+        } else {
+            mucRoom.sendMessage(message);
         }
+        newMessageText = "";
+        htmlMessageText = "";
+        dispatch("scrollDown");
+        setTimeout(() => {
+            textarea.innerHTML = "";
+            dispatch("formHeight", messageForm.clientHeight);
+        }, 0);
 
         if ($applicationsSelected.size > 0) {
             for (const app of $applicationsSelected) {
