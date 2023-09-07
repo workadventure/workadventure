@@ -16,7 +16,7 @@
     import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
     import eraserSvg from "../images/applications/icon_eraser.svg";
-    import { FEATURE_FLAG_BROADCAST_AREAS, KLAXOON_CLIENT_ID } from "../../Enum/EnvironmentVariable";
+    import { FEATURE_FLAG_BROADCAST_AREAS } from "../../Enum/EnvironmentVariable";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
@@ -215,16 +215,23 @@
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
-        if (!KLAXOON_CLIENT_ID || app.type !== "openWebsite" || app.application !== "klaxoon") {
+        if (
+            !connectionManager.currentRoom?.klaxoonToolClientId ||
+            app.type !== "openWebsite" ||
+            app.application !== "klaxoon"
+        ) {
             console.info("openKlaxoonActivityPicker: app is not a klaxoon app");
             return;
         }
-        KlaxoonService.openKlaxoonActivityPicker(KLAXOON_CLIENT_ID, (payload: KlaxoonEvent) => {
-            app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(payload.url));
-            app.poster = payload.imageUrl;
-            app.buttonLabel = payload.title;
-            onUpdateProperty(app);
-        });
+        KlaxoonService.openKlaxoonActivityPicker(
+            connectionManager.currentRoom?.klaxoonToolClientId,
+            (payload: KlaxoonEvent) => {
+                app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(payload.url));
+                app.poster = payload.imageUrl;
+                app.buttonLabel = payload.title;
+                onUpdateProperty(app);
+            }
+        );
     }
 </script>
 
