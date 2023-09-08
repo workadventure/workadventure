@@ -45,6 +45,7 @@
         icon: string;
         example: string;
         description: string;
+        label?: string;
         image?: string;
         link?: string;
         error?: string;
@@ -74,7 +75,7 @@
         }
         if ($applicationsSelected.size > 0) {
             for (const app of $applicationsSelected) {
-                if (app.link != undefined) {
+                if (app.link != undefined && app.link != "") {
                     chatMessagesStore.addPersonalMessage(app.link);
                 }
                 applicationsSelected.update((apps) => {
@@ -269,6 +270,7 @@
             KlaxoonService.openKlaxoonActivityPicker(
                 chatConnectionManager.klaxoonToolClientId,
                 (event: KlaxoonEvent) => {
+                    console.log("KlaxoonService.openKlaxoonActivityPicker => event", event);
                     // Remove previous app
                     applicationsSelected.update((apps) => {
                         apps.delete(app);
@@ -277,7 +279,7 @@
                     // Update app with Klaxoon's Activity Picker
                     app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(event.url));
                     if (event.imageUrl) app.image = event.imageUrl;
-                    if (event.title) app.name = event.title;
+                    if (event.title) app.label = event.title;
                     // Add new app
                     applicationsSelected.update((apps) => {
                         apps.add(app);
