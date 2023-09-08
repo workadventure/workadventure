@@ -55,6 +55,7 @@
     ): AreaDataProperty {
         const id = crypto.randomUUID();
         let placeholder: string;
+        let policy: string | undefined;
         switch (type) {
             case "start":
                 return {
@@ -88,6 +89,8 @@
                 switch (subtype) {
                     case "youtube":
                         placeholder = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
+                        policy =
+                            "fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share;";
                         break;
                     case "klaxoon":
                         placeholder = "https://app.klaxoon.com/";
@@ -120,6 +123,7 @@
                     hideButtonLabel: true,
                     application: subtype ?? "website",
                     placeholder,
+                    policy,
                 };
             case "playAudio":
                 return {
