@@ -86,10 +86,24 @@ export const getKlaxoonEmbedUrl = (url: URL): string => {
         throw new KlaxoonException();
     }
 
-    if (url.searchParams.get("from") === "embedded") {
+    if (url.searchParams.has("from")) {
         return url.toString();
     }
     url.searchParams.set("from", "embedded");
+    return url.toString();
+};
+
+// Create function to get url without embedded parameter
+export const getKlaxoonBasicUrl = (url: URL): string => {
+    // if the link is not a klaxoon link, throw an exception
+    if (!isKlaxoonLink(url)) {
+        throw new KlaxoonException();
+    }
+
+    if (url.searchParams.has("from")) {
+        url.searchParams.delete("from");
+        return url.toString();
+    }
     return url.toString();
 };
 

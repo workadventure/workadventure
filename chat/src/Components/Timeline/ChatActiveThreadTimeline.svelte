@@ -45,7 +45,6 @@
         icon: string;
         example: string;
         description: string;
-        label?: string;
         image?: string;
         link?: string;
         error?: string;
@@ -279,7 +278,6 @@
                     // Update app with Klaxoon's Activity Picker
                     app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(event.url));
                     if (event.imageUrl) app.image = event.imageUrl;
-                    if (event.title) app.label = event.title;
                     // Add new app
                     applicationsSelected.update((apps) => {
                         apps.add(app);

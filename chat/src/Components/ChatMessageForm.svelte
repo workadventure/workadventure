@@ -289,7 +289,6 @@
                     // Update app with Klaxoon's Activity Picker
                     app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(event.url));
                     if (event.imageUrl) app.image = event.imageUrl;
-                    if (event.title) app.name = event.title;
                     // Add new app
                     applicationsSelected.update((apps) => {
                         apps.add(app);
