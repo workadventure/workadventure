@@ -36,17 +36,17 @@
 
 <form class="selectCompanionScene">
     <section class="text-center">
-        <h2 class="tw-text-white tw-text-2xl">{$LL.companion.select.title()}</h2>
+        <h2 class="text-white text-2xl">{$LL.companion.select.title()}</h2>
         {#if $collectionsSizeStore > 1 && $selectedCollection}
             <button
-                class="outline tw-mr-2 selectCompanionCollectionButton selectCharacterButtonLeft"
+                class="outline mr-2 selectCompanionCollectionButton selectCharacterButtonLeft"
                 on:click|preventDefault={selectLeftCollection}
             >
                 &lt;
             </button>
             <strong class="category-text">{$selectedCollection}</strong>
             <button
-                class="outline tw-ml-2 selectCompanionCollectionButton selectCompanionButtonRight"
+                class="outline ml-2 selectCompanionCollectionButton selectCompanionButtonRight"
                 on:click|preventDefault={selectRightCollection}
             >
                 &gt;
@@ -59,13 +59,13 @@
             &gt;
         </button>
     </section>
-    <section class="action tw-flex tw-flex-row tw-justify-center">
-        <button href="/" class="outline tw-mr-2 selectCompanionSceneFormBack" on:click|preventDefault={noCompanion}
+    <section class="action flex flex-row justify-center">
+        <button href="/" class="outline mr-2 selectCompanionSceneFormBack" on:click|preventDefault={noCompanion}
             >{$LL.companion.select.any()}</button
         >
         <button
             type="submit"
-            class="light tw-ml-2 selectCompanionSceneFormSubmit"
+            class="light ml-2 selectCompanionSceneFormSubmit"
             on:click|preventDefault={selectCompanion}>{$LL.companion.select.continue()}</button
         >
     </section>

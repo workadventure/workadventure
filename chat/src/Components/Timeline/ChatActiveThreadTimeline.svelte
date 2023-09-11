@@ -392,38 +392,34 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     id="activeTimeline"
-    class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full"
+    class="flex flex-col h-full min-h-full over w-full"
     transition:fly={{ x: 500, duration: 400 }}
     on:click={() => (applicationMenuIsOpenned = false)}
 >
     <div class="wa-thread-head">
         <div class="title">
-            <div class="tw-py-1 tw-w-14 tw-self-stretch tw-flex tw-justify-center tw-align-middle">
-                <button class="exit tw-text-lighter-purple tw-m-0" on:click={backToThreadList}>
+            <div class="py-1 w-14 self-stretch flex justify-center align-middle">
+                <button class="exit text-lighter-purple m-0" on:click={backToThreadList}>
                     <ArrowLeftIcon />
                 </button>
             </div>
-            <div class="tw-text-center tw-pt-2 tw-pb-3">
-                <div class="tw-flex tw-justify-center">
+            <div class="text-center pt-2 pb-3">
+                <div class="flex justify-center">
                     <b>{$LL.timeLine.title()}</b>
                     {#if $chatPeerConnectionInProgress}
-                        <div class="tw-block tw-relative tw-ml-7 tw-mt-1">
-                            <span
-                                class="tw-w-4 tw-h-4 tw-bg-pop-green tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-animate-ping"
-                            />
-                            <span
-                                class="tw-w-3 tw-h-3 tw-bg-pop-green tw-block tw-rounded-full tw-absolute tw-right-0.5 tw-top-0.5"
-                            />
+                        <div class="block relative ml-7 mt-1">
+                            <span class="w-4 h-4 bg-pop-green block rounded-full absolute right-0 top-0 animate-ping" />
+                            <span class="w-3 h-3 bg-pop-green block rounded-full absolute right-0.5 top-0.5" />
                         </div>
                     {/if}
                 </div>
-                <div class="tw-flex tw-flex-wrap tw-gap-x-1 tw-items-center tw-text-xs tw-text-lighter-purple">
+                <div class="flex flex-wrap gap-x-1 items-center text-xs text-lighter-purple">
                     {$LL.timeLine.description()}
                 </div>
             </div>
-            <div id="settings" class="tw-py-1 tw-w-14 tw-self-stretch tw-flex tw-justify-center tw-align-middle">
+            <div id="settings" class="py-1 w-14 self-stretch flex justify-center align-middle">
                 <!--
-            <button class="tw-text-lighter-purple tw-m-0">
+            <button class="text-lighter-purple m-0">
                 {#if $settingsViewStore}
                     <MessageCircleIcon />
                 {:else}
@@ -433,45 +429,36 @@
             -->
             </div>
         </div>
-        <div class="tw-flex tw-flex-col tw-flex-auto tw-w-full">
-            <div
-                class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5"
-            >
+        <div class="flex flex-col flex-auto w-full">
+            <div class="wa-message-bg border border-transparent border-b-light-purple border-solid px-5 pb-0.5">
                 <button class="wa-action" type="button" on:click|stopPropagation={reInitialize}
-                    ><RefreshCwIcon size="13" class="tw-mr-2" /> {$LL.reinit()}
+                    ><RefreshCwIcon size="13" class="mr-2" /> {$LL.reinit()}
                 </button>
             </div>
         </div>
     </div>
 
     <!-- MESSAGE LIST-->
-    <div
-        id="timeLine-messageList"
-        class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-py-24 tw-justify-end tw-h-auto tw-min-h-screen"
-    >
+    <div id="timeLine-messageList" class="flex flex-col flex-auto px-5 py-24 justify-end h-auto min-h-screen">
         {#each $chatMessagesStore as message, i}
             {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
                 <div
                     class={`${
                         needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)
-                            ? "tw-mt-0.5"
-                            : "tw-mt-2"
+                            ? "mt-0.5"
+                            : "mt-2"
                     }`}
                 >
-                    <div
-                        class={`tw-flex ${
-                            message.type === ChatMessageTypes.me ? "tw-justify-end" : "tw-justify-start"
-                        }`}
-                    >
+                    <div class={`flex ${message.type === ChatMessageTypes.me ? "justify-end" : "justify-start"}`}>
                         <div
                             class={`${
-                                message.type === ChatMessageTypes.me ? "tw-opacity-0" : "tw-mt-4"
-                            } tw-relative wa-avatar-mini tw-mr-2`}
+                                message.type === ChatMessageTypes.me ? "opacity-0" : "mt-4"
+                            } relative wa-avatar-mini mr-2`}
                             style={`background-color: ${message.author?.color ?? "#56eaff"}`}
                         >
                             <div class="wa-container">
                                 <img
-                                    class="tw-w-full"
+                                    class="w-full"
                                     style="image-rendering: pixelated;"
                                     src={`${message.author?.woka ? message.author?.woka : defaultWoka}`}
                                     alt="Avatar"
@@ -479,15 +466,15 @@
                                 />
                             </div>
                         </div>
-                        <div class="tw-w-3/4">
+                        <div class="w-3/4">
                             {#if !needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)}
                                 <div
                                     style={`border-bottom-color:${message.author?.color}`}
-                                    class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-1 ${
-                                        message.type === ChatMessageTypes.me ? "tw-flex-row-reverse" : ""
+                                    class={`flex justify-between mx-2 border-0 border-b border-solid text-light-purple-alt text-xxs pb-1 ${
+                                        message.type === ChatMessageTypes.me ? "flex-row-reverse" : ""
                                     }`}
                                 >
-                                    <span class="tw-text-lighter-purple">
+                                    <span class="text-lighter-purple">
                                         {#if message.type === ChatMessageTypes.me}
                                             {$LL.me()}
                                         {:else if message.author}
@@ -498,7 +485,7 @@
                                                   )
                                                 : message.author?.name}
                                             {#if message.author?.name.match(/\[\d*]/)}
-                                                <span class="tw-font-light tw-text-xs tw-text-gray">
+                                                <span class="font-light text-xs text-gray">
                                                     #{message.author?.name
                                                         .match(/\[\d*]/)
                                                         ?.join()
@@ -522,9 +509,7 @@
                             {#if message.text}
                                 <div class="wa-message-body">
                                     {#each message.text as text}
-                                        <div
-                                            class="tw-text-ellipsis tw-overflow-y-auto tw-break-words tw-whitespace-pre-line"
-                                        >
+                                        <div class="text-ellipsis overflow-y-auto break-words whitespace-pre-line">
                                             {#await HtmlUtils.urlify(text)}
                                                 <p>...waiting</p>
                                             {:then html}
@@ -542,15 +527,15 @@
             {#if message.targets && message.targets.length > 0}
                 {#if message.type === ChatMessageTypes.userIncoming}
                     {#each message.targets as target}
-                        <div class="event tw-text-center tw-mt-2" style="white-space: nowrap;">
+                        <div class="event text-center mt-2" style="white-space: nowrap;">
                             <span
-                                class="tw-w-fit tag tw-bg-dark tw-mx-2 tw-px-3 tw-py-1 tw-border tw-border-solid tw-rounded-full tw-text-xs tw-border-lighter-purple"
+                                class="w-fit tag bg-dark mx-2 px-3 py-1 border border-solid rounded-full text-xs border-lighter-purple"
                                 ><b style={target.color ? `color: ${target.color};` : ""}
                                     >{target.name.match(/\[\d*]/)
                                         ? target.name.substring(0, target.name.search(/\[\d*]/))
                                         : target.name}
                                     {#if target.name.match(/\[\d*]/)}
-                                        <span class="tw-font-light tw-text-xs tw-text-gray">
+                                        <span class="font-light text-xs text-gray">
                                             #{target.name
                                                 .match(/\[\d*]/)
                                                 ?.join()
@@ -559,7 +544,7 @@
                                         </span>
                                     {/if}</b
                                 >{$LL.timeLine.incoming()}
-                                <span class="tw-text-xss tw-text-lighter-purple">
+                                <span class="text-xss text-lighter-purple">
                                     - {message.date.toLocaleTimeString($locale, {
                                         hour: "2-digit",
                                         minute: "2-digit",
@@ -571,15 +556,15 @@
                 {/if}
                 {#if message.type === ChatMessageTypes.userOutcoming}
                     {#each message.targets as target}
-                        <div class="event tw-text-center tw-mt-2" style="white-space: nowrap;">
+                        <div class="event text-center mt-2" style="white-space: nowrap;">
                             <span
-                                class="tw-w-fit tag tw-bg-dark tw-mx-2 tw-px-3 tw-py-1 tw-border tw-border-solid tw-rounded-full tw-text-xs tw-border-lighter-purple"
+                                class="w-fit tag bg-dark mx-2 px-3 py-1 border border-solid rounded-full text-xs border-lighter-purple"
                                 ><b style={target.color ? `color: ${target.color};` : ""}
                                     >{target.name.match(/\[\d*]/)
                                         ? target.name.substring(0, target.name.search(/\[\d*]/))
                                         : target.name}
                                     {#if target.name.match(/\[\d*]/)}
-                                        <span class="tw-font-light tw-text-xs tw-text-gray">
+                                        <span class="font-light text-xs text-gray">
                                             #{target.name
                                                 .match(/\[\d*]/)
                                                 ?.join()
@@ -588,7 +573,7 @@
                                         </span>
                                     {/if}</b
                                 >{$LL.timeLine.outcoming()}
-                                <span class="tw-text-xss tw-text-lighter-purple">
+                                <span class="text-xss text-lighter-purple">
                                     - {message.date.toLocaleTimeString($locale, {
                                         hour: "2-digit",
                                         minute: "2-digit",
@@ -618,17 +603,17 @@
             <ApplicationPicker
                 applications={$applications}
                 on:addNewApp={(event) => addNewApp(event.detail)}
-                _class="tw-mb-9 tw-left-6"
+                _class="mb-9 left-6"
             />
         {/if}
 
-        <form on:submit|preventDefault={saveMessage} class="tw-flex tw-flex-col">
+        <form on:submit|preventDefault={saveMessage} class="flex flex-col">
             {#each [...$applicationsSelected] as app}
                 <div
-                    class="tw-mx-2 tw-mb-2 tw-px-6 tw-py-3 tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-xl tw-text-xxs tw-justify-between tw-items-center tw-bottom-12"
+                    class="mx-2 mb-2 px-6 py-3 flex flex-wrap bg-dark-blue/95 rounded-xl text-xxs justify-between items-center bottom-12"
                 >
-                    <div class="tw-flex tw-flex-row tw-justify-between tw-items-center tw-m-1 tw-w-full">
-                        <label for="app" class="tw-m-0">
+                    <div class="flex flex-row justify-between items-center m-1 w-full">
+                        <label for="app" class="m-0">
                             <img src={app.icon} alt={app.name} width="20px" />
                             {#if app.name === "Klaxoon"}
                                 {$LL.form.application.klaxoon.description()}
@@ -650,7 +635,7 @@
                             on:click|preventDefault|stopPropagation={() => {
                                 deleteApplication(app);
                             }}
-                            class="delete tw-pr-0 tw-mr-0"
+                            class="delete pr-0 mr-0"
                         >
                             <Trash2Icon size="14" />
                         </button>
@@ -659,23 +644,23 @@
                         id="app"
                         type="text"
                         placeholder={app.example}
-                        class="tw-bg-transparent tw-text-light-blue tw-w-full tw-py-1 tw-px-2 tw-mb-0 tw-text-sm tw-border-white"
+                        class="bg-transparent text-light-blue w-full py-1 px-2 mb-0 text-sm border-white"
                         bind:value={app.link}
                         on:keypress={handlerKeyDownAppInput}
                         on:blur={() => checkWebsiteProperty(app)}
                     />
                     {#if app.error}
-                        <p class="tw-text-pop-red tw-text-xs tw-px-2 tw-mt-2 tw-my-0">{app.error}</p>
+                        <p class="text-pop-red text-xs px-2 mt-2 my-0">{app.error}</p>
                     {/if}
                 </div>
             {/each}
 
-            <div class="tw-w-full tw-px-2 tw-pb-2 tw-flex tw-flex-row tw-justify-center tw-items-center">
-                <div class="actions tw-px-2 tw-py-2">
-                    <div class="tw-flex tw-items-center tw-space-x-1">
+            <div class="w-full px-2 pb-2 flex flex-row justify-center items-center">
+                <div class="actions px-2 py-2">
+                    <div class="flex items-center space-x-1">
                         <button
                             id="application"
-                            class="tw-bg-transparent tw-p-0 tw-m-0 tw-inline-flex tw-justify-center tw-items-center"
+                            class="bg-transparent p-0 m-0 inline-flex justify-center items-center"
                             on:click|preventDefault|stopPropagation={toggleApplicationMenu}
                             disabled={$applications.size === 0}
                         >
@@ -697,11 +682,11 @@
                     on:focus={onFocus}
                     on:blur={onBlur}
                 />
-                <div class="actions tw-px-2 tw-py-2">
-                    <div class="tw-flex tw-items-center tw-space-x-1">
+                <div class="actions px-2 py-2">
+                    <div class="flex items-center space-x-1">
                         <button
-                            class={`tw-bg-transparent tw-p-0 tw-m-0 tw-inline-flex tw-justify-center tw-items-center ${
-                                emojiOpened ? "tw-text-light-blue" : ""
+                            class={`bg-transparent p-0 m-0 inline-flex justify-center items-center ${
+                                emojiOpened ? "text-light-blue" : ""
                             }`}
                             on:click|preventDefault|stopPropagation={openEmoji}
                         >
@@ -710,7 +695,7 @@
                         <button
                             id="send"
                             type="submit"
-                            class="can-send tw-bg-transparent tw-p-0 tw-m-0 tw-inline-flex tw-justify-center tw-items-center tw-text-light-blue"
+                            class="can-send bg-transparent p-0 m-0 inline-flex justify-center items-center text-light-blue"
                             on:click|stopPropagation={saveMessage}
                         >
                             <SendIcon size="17" />
@@ -719,8 +704,8 @@
                 </div>
             </div>
             <!--
-                <div class="tw-w-full tw-p-2">
-                    <div class="tw-flex tw-items-center tw-relative">
+                <div class="w-full p-2">
+                    <div class="flex items-center relative">
                         <textarea
                             type="text"
                             bind:value={htmlMessageText}
@@ -732,8 +717,8 @@
                             rows="1"
                         />
                         <button
-                            class={`tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 ${
-                                emojiOpened ? "tw-text-light-blue" : ""
+                            class={`bg-transparent h-8 w-8 p-0 inline-flex justify-center items-center right-0 ${
+                                emojiOpened ? "text-light-blue" : ""
                             }`}
                             on:click|preventDefault|stopPropagation={openEmoji}
                         >
@@ -741,7 +726,7 @@
                         </button>
                         <button
                             type="submit"
-                            class="tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue"
+                            class="bg-transparent h-8 w-8 p-0 inline-flex justify-center items-center right-0 text-light-blue"
                             on:click|stopPropagation={saveMessage}
                         >
                             <SendIcon size="17" />
@@ -790,14 +775,14 @@
                 opacity: 0.8;
                 position: relative;
                 .caption {
-                    @apply tw-absolute tw-bg-dark-blue tw-text-sm tw-px-2 tw-py-1 tw-rounded-xl tw-border-lighter-purple tw-border tw-border-solid;
+                    @apply absolute bg-dark-blue text-sm px-2 py-1 rounded-xl border-lighter-purple border border-solid;
                     display: none;
                     top: 5px;
                     left: 54px;
                     z-index: 10;
                     width: max-content;
                     &::before {
-                        @apply tw-absolute tw-border-lighter-purple;
+                        @apply absolute border-lighter-purple;
                         left: -18px;
                         top: 40%;
                         content: "";
@@ -810,7 +795,7 @@
                         transform: rotate(90deg);
                     }
                     &::after {
-                        @apply tw-absolute tw-border-dark-blue;
+                        @apply absolute border-dark-blue;
                         left: -16px;
                         top: 40%;
                         content: "";

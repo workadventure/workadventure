@@ -19,13 +19,10 @@
     }
 </script>
 
-<div
-    class={`actions tw-absolute tw-bottom-0 tw-mb-16 tw-flex tw-flex-col tw-items-center tw-w-auto tw-left-4 ${_class}`}
-    style={_style}
->
+<div class={`actions absolute bottom-0 mb-16 flex flex-col items-center w-auto left-4 ${_class}`} style={_style}>
     {#each [...applications] as app}
         <button
-            class="action btn-app tw-cursor-pointer tw-flex tw-flex-row tw-justify-center"
+            class="action btn-app cursor-pointer flex flex-row justify-center"
             on:keydown
             on:keyup
             on:click|stopPropagation|preventDefault={() => addNewApp(app)}
@@ -64,14 +61,14 @@
             opacity: 0.8;
             position: relative;
             .caption {
-                @apply tw-absolute tw-bg-dark-blue tw-text-sm tw-px-2 tw-py-1 tw-rounded-xl tw-border-lighter-purple tw-border tw-border-solid;
+                @apply absolute bg-dark-blue text-sm px-2 py-1 rounded-xl border-lighter-purple border border-solid;
                 display: none;
                 top: 5px;
                 left: 54px;
                 z-index: 10;
                 width: max-content;
                 &::before {
-                    @apply tw-absolute tw-border-lighter-purple;
+                    @apply absolute border-lighter-purple;
                     left: -18px;
                     top: 40%;
                     content: "";
@@ -84,7 +81,7 @@
                     transform: rotate(90deg);
                 }
                 &::after {
-                    @apply tw-absolute tw-border-dark-blue;
+                    @apply absolute border-dark-blue;
                     left: -16px;
                     top: 40%;
                     content: "";

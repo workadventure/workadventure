@@ -33,31 +33,27 @@
 </script>
 
 <div class={`wa-chat-item`} on:mouseleave={closeChatUserMenu}>
-    <div class="tw-relative" on:click|stopPropagation={() => open()}>
+    <div class="relative" on:click|stopPropagation={() => open()}>
         <img class={``} src="./static/images/logo-wa-2.png" alt="Send" width="35" />
-        <div class="tw-block tw-absolute tw-right-0 tw-top-0 tw-transform tw-translate-x-2 -tw-translate-y-1">
+        <div class="block absolute right-0 top-0 transform translate-x-2 -translate-y-1">
             {#if mucRoom.type === "live"}
-                <div class="tw-block tw-relative">
-                    <span
-                        class="tw-w-4 tw-h-4 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-animate-ping"
-                    />
-                    <span
-                        class="tw-w-3 tw-h-3 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0.5 tw-top-0.5"
-                    />
+                <div class="block relative">
+                    <span class="w-4 h-4 bg-pop-red block rounded-full absolute right-0 top-0 animate-ping" />
+                    <span class="w-3 h-3 bg-pop-red block rounded-full absolute right-0.5 top-0.5" />
                 </div>
             {/if}
         </div>
     </div>
-    <div class="tw-flex-auto tw-ml-2" on:click|stopPropagation={() => open()}>
-        <h1 class="tw-text-sm tw-font-bold tw-mb-0">
+    <div class="flex-auto ml-2" on:click|stopPropagation={() => open()}>
+        <h1 class="text-sm font-bold mb-0">
             {#each chunks as chunk (chunk.key)}
-                <span class={`${chunk.match ? "tw-text-light-blue" : ""}`}>{chunk.text}</span>
+                <span class={`${chunk.match ? "text-light-blue" : ""}`}>{chunk.text}</span>
             {/each}
         </h1>
         {#if $readyStore}
             <OnlineUsers {presenceStore} />
         {:else}
-            <div class={`tw-text-xs tw-text-lighter-purple tw-mt-0 tw-animate-pulse`}>
+            <div class={`text-xs text-lighter-purple mt-0 animate-pulse`}>
                 {$LL.loading()} ...
             </div>
         {/if}
@@ -65,7 +61,7 @@
 
     {#if $unreads}
         <span
-            class="tw-bg-pop-red tw-text-white tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded tw-animate-pulse"
+            class="bg-pop-red text-white w-5 h-5 mr-3 text-sm font-semibold flex items-center justify-center rounded animate-pulse"
         >
             {$unreads}
         </span>
@@ -73,18 +69,18 @@
 
     <div class="wa-dropdown">
         <!-- toggle -->
-        <button class="tw-text-light-purple tw-m-0" on:click={openChatForumMenu}>
+        <button class="text-light-purple m-0" on:click={openChatForumMenu}>
             <MoreHorizontalIcon />
         </button>
 
         <!-- menu -->
-        <div class={`wa-dropdown-menu ${forumMenuActive ? "" : "tw-invisible"}`} on:mouseleave={closeChatUserMenu}>
+        <div class={`wa-dropdown-menu ${forumMenuActive ? "" : "invisible"}`} on:mouseleave={closeChatUserMenu}>
             <span class="open wa-dropdown-item" on:click|stopPropagation={() => open()}
-                ><EyeIcon size="12" class="tw-mr-1" /> {$LL.open()}
+                ><EyeIcon size="12" class="mr-1" /> {$LL.open()}
             </span>
             {#if $me && $me.isAdmin}
-                <span class="wa-dropdown-item tw-text-pop-red" on:click|stopPropagation={() => mucRoom.reInitialize()}
-                    ><RefreshCwIcon size="13" class="tw-mr-1" /> {$LL.reinit()}</span
+                <span class="wa-dropdown-item text-pop-red" on:click|stopPropagation={() => mucRoom.reInitialize()}
+                    ><RefreshCwIcon size="13" class="mr-1" /> {$LL.reinit()}</span
                 >
             {/if}
             <!--<div class="wa-dropdown-item">Delete forum</div>-->

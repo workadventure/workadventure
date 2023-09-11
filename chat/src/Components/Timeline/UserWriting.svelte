@@ -15,30 +15,30 @@
 </script>
 
 {#if userData}
-    <div class={`tw-mt-2`}>
-        <div class={`tw-flex tw-justify-start`}>
+    <div class={`mt-2`}>
+        <div class={`flex justify-start`}>
             <div
-                class={`tw-mt-4 tw-relative wa-avatar-mini tw-mr-2 tw-z-10`}
+                class={`mt-4 relative wa-avatar-mini mr-2 z-10`}
                 style={`background-color: ${userData.color}`}
                 in:fade={{ duration: 100 }}
                 out:fade={{ delay: 200, duration: 100 }}
             >
                 <div class="wa-container">
-                    <img class="tw-w-full" src={userData.woka} alt="Avatar" />
+                    <img class="w-full" src={userData.woka} alt="Avatar" />
                 </div>
             </div>
-            <div class={`tw-w-3/4`} in:fly={{ x: -10, delay: 100, duration: 200 }} out:fly={{ x: -10, duration: 200 }}>
-                <div class="tw-w-fit">
+            <div class={`w-3/4`} in:fly={{ x: -10, delay: 100, duration: 200 }} out:fly={{ x: -10, duration: 200 }}>
+                <div class="w-fit">
                     <div
                         style={`border-bottom-color:${userData.color}`}
-                        class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-pb-1`}
+                        class={`flex justify-between mx-2 border-0 border-b border-solid text-light-purple-alt pb-1`}
                     >
-                        <span class="tw-text-lighter-purple tw-text-xxs">
+                        <span class="text-lighter-purple text-xxs">
                             {userData.name.match(/\[\d*]/)
                                 ? userData.name.substring(0, userData.name.search(/\[\d*]/))
                                 : userData.name}
                             {#if userData.name.match(/\[\d*]/)}
-                                <span class="tw-font-light tw-text-xs tw-text-gray">
+                                <span class="font-light text-xs text-gray">
                                     #{userData.name
                                         .match(/\[\d*]/)
                                         ?.join()
@@ -48,7 +48,7 @@
                             {/if}</span
                         >
                     </div>
-                    <div class="tw-rounded-lg tw-bg-dark tw-text-xs tw-p-3">
+                    <div class="rounded-lg bg-dark text-xs p-3">
                         <!-- loading animation -->
                         <div class="loading-group">
                             <span class="loading-dot" />

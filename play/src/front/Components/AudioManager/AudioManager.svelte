@@ -156,11 +156,9 @@
             <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
         </section>
     </div>
-    <div class:hidden={isAudioAllowed} class="tw-text-center tw-flex tw-justify-center">
-        <button
-            type="button"
-            class="btn light tw-justify-center tw-font-bold tw-text-xs sm:tw-text-base tw-w-fit"
-            on:click={tryPlay}>{$LL.audio.manager.allow()}</button
+    <div class:hidden={isAudioAllowed} class="text-center flex justify-center">
+        <button type="button" class="btn light justify-center font-bold text-xs sm:text-base w-fit" on:click={tryPlay}
+            >{$LL.audio.manager.allow()}</button
         >
     </div>
 </div>

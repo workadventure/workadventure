@@ -69,31 +69,29 @@
 </script>
 
 {#if $presenceStore.filter((user) => !get(user).isMe && get(user).active).length === 0}
-    <div
-        class="tw-px-5 tw-py-4 tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple tw-text-sm tw-text-center"
-    >
+    <div class="px-5 py-4 border-b border-solid border-0 border-transparent border-b-light-purple text-sm text-center">
         <p>{$LL.roomEmpty()}</p>
-        <button type="button" class="light tw-m-auto tw-cursor-pointer tw-px-3" on:click={showInviteMenu}>
+        <button type="button" class="light m-auto cursor-pointer px-3" on:click={showInviteMenu}>
             {$LL.invite()}
         </button>
     </div>
 {/if}
 {#if $loadingSubscribersStore}
-    <Loader text={$LL.loadingUsers()} height="tw-h-40" />
+    <Loader text={$LL.loadingUsers()} height="h-40" />
 {:else}
     {#each roomSorted as room}
-        <div class="users tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
-            <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
+        <div class="users border-b border-solid border-0 border-transparent border-b-light-purple">
+            <div class="px-4 py-1 flex items-center">
                 {#if !$loadingSubscribersStore}
                     <span
                         class="{room !== 'disconnected'
-                            ? 'tw-bg-light-blue'
-                            : 'tw-bg-gray'} tw-text-dark-purple tw-min-w-[20px] tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+                            ? 'bg-light-blue'
+                            : 'bg-gray'} text-dark-purple min-w-[20px] h-5 mr-3 text-sm font-semibold flex items-center justify-center rounded"
                     >
                         {usersByMaps.get(room)?.length}
                     </span>
                 {/if}
-                <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
+                <p class="text-light-blue mb-0 text-sm flex-auto">
                     {#if $me && $me.roomName === room}
                         {$LL.userList.isHere()}
                     {:else}
@@ -101,18 +99,16 @@
                     {/if}
                 </p>
                 <button
-                    class="tw-text-lighter-purple"
+                    class="text-lighter-purple"
                     on:click={() => shownRoomListStore.set($shownRoomListStore === room ? "" : room)}
                 >
-                    <ChevronUpIcon
-                        class={`tw-transform tw-transition ${$shownRoomListStore === room ? "" : "tw-rotate-180"}`}
-                    />
+                    <ChevronUpIcon class={`transform transition ${$shownRoomListStore === room ? "" : "rotate-180"}`} />
                 </button>
             </div>
             {#if $shownRoomListStore === room}
                 <div transition:fly={{ y: -30, duration: 100 }}>
                     {#if $loadingSubscribersStore}
-                        <Loader text={$LL.loadingUsers()} height="tw-h-40" />
+                        <Loader text={$LL.loadingUsers()} height="h-40" />
                     {:else}
                         {#if $me && room === $me.roomName && $me.name.toLocaleLowerCase().includes(searchValue)}
                             <ChatUser {mucRoom} user={$me} {searchValue} />

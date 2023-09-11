@@ -219,31 +219,29 @@
     </div>
 
     <div
-        class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen"
+        class="wa-messages-list flex flex-col flex-auto px-5 overflow-y-scroll justify-end overflow-y-scroll h-auto min-h-screen"
     >
-        <div class="tw-mb-auto load-history">
+        <div class="mb-auto load-history">
             {#if $canLoadOlderMessagesStore}
                 {#if !$loadingStore}
-                    <button
-                        class="tw-m-auto tw-cursor-pointer tw-text-xs"
-                        on:click={() => mucRoom.sendRetrieveLastMessages()}
+                    <button class="m-auto cursor-pointer text-xs" on:click={() => mucRoom.sendRetrieveLastMessages()}
                         >{$LL.load()}
                         {$LL.more()}
-                        <ArrowUpIcon size="13" class="tw-ml-1" /></button
+                        <ArrowUpIcon size="13" class="ml-1" /></button
                     >
                 {:else}
                     <div
                         style="border-top-color:transparent"
-                        class="tw-w-5 tw-h-5 tw-border-2 tw-border-white tw-border-solid tw-rounded-full tw-animate-spin tw-m-auto"
+                        class="w-5 h-5 border-2 border-white border-solid rounded-full animate-spin m-auto"
                     />
                 {/if}
             {:else if $showDisabledLoadOlderMessagesStore && $me && $me.isAdmin}
                 {#if ADMIN_API_URL}
                     <button
-                        class="tw-text-warning tw-font-bold tw-underline tw-m-auto tw-text-xs tw-cursor-pointer"
+                        class="text-warning font-bold underline m-auto text-xs cursor-pointer"
                         on:click={() => iframeListener.sendRedirectPricing()}
                     >
-                        <img alt="Crown icon" src={crown} class="tw-mr-1" />
+                        <img alt="Crown icon" src={crown} class="mr-1" />
                         {$LL.upgradeToSeeMore()}
                     </button>
                 {/if}
@@ -274,28 +272,28 @@
         {#each $usersStore
             .filter((userFilter) => !get(userFilter).isMe && get(userFilter).chatState === ChatState.Composing)
             .map((user) => get(user)) as user (user.jid)}
-            <div class={`tw-mt-2`}>
-                <div class={`tw-flex tw-justify-start`}>
+            <div class={`mt-2`}>
+                <div class={`flex justify-start`}>
                     <div
-                        class={`tw-mt-4 tw-relative wa-avatar-mini tw-mr-2 tw-z-10`}
+                        class={`mt-4 relative wa-avatar-mini mr-2 z-10`}
                         style={`background-color: ${getColor(user.jid)}`}
                         in:fade={{ duration: 100 }}
                     >
                         <div class="wa-container">
-                            <img class="tw-w-full" src={getWoka(user.jid)} alt="Avatar" />
+                            <img class="w-full" src={getWoka(user.jid)} alt="Avatar" />
                         </div>
                     </div>
-                    <div class={`tw-w-3/4`} in:fly={{ x: -10, delay: 100, duration: 200 }}>
-                        <div class="tw-w-fit">
+                    <div class={`w-3/4`} in:fly={{ x: -10, delay: 100, duration: 200 }}>
+                        <div class="w-fit">
                             <div
                                 style={`border-bottom-color:${getColor(user.jid)}`}
-                                class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-pb-1`}
+                                class={`flex justify-between mx-2 border-0 border-b border-solid text-light-purple-alt pb-1`}
                             >
-                                <span class="tw-text-lighter-purple tw-text-xxs">
+                                <span class="text-lighter-purple text-xxs">
                                     {user.name}
                                 </span>
                             </div>
-                            <div class="tw-rounded-lg tw-bg-dark tw-text-xs tw-p-3">
+                            <div class="rounded-lg bg-dark text-xs p-3">
                                 <!-- loading animation -->
                                 <div class="loading-group">
                                     <span class="loading-dot" />
@@ -309,17 +307,17 @@
             </div>
         {/each}
         {#if $unreads > 0}
-            <div class="tw-w-full tw-fixed tw-left-0 tw-bottom-20 tw-animate-bounce tw-cursor-pointer">
+            <div class="w-full fixed left-0 bottom-20 animate-bounce cursor-pointer">
                 <div
                     in:fly={{ y: 10, duration: 200 }}
                     style="margin: auto"
-                    class="tw-bg-lighter-purple tw-rounded-xl tw-h-5 tw-px-2 tw-w-fit tw-text-xs tw-flex tw-justify-center tw-items-center tw-shadow-grey"
+                    class="bg-lighter-purple rounded-xl h-5 px-2 w-fit text-xs flex justify-center items-center shadow-grey"
                     role="button"
                     tabindex="0"
                     on:click={scrollDownAndRead}
                 >
                     <ArrowDownIcon size="14" />
-                    <p class="tw-m-0">
+                    <p class="m-0">
                         {$unreads}
                         {$unreads > 1 ? "nouveaux messages" : "nouveau message"}
                     </p>

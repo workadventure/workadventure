@@ -48,7 +48,7 @@
 <svelte:window on:keydown={onKeyDown} />
 
 <div class="menu-container {isMobile ? 'mobile' : $modalIframeStore?.position}" bind:this={mainModal}>
-    <div class="tw-w-full tw-bg-dark-purple/95 tw-rounded" transition:fly={{ x: 1000, duration: 500 }}>
+    <div class="w-full bg-dark-purple/95 rounded" transition:fly={{ x: 1000, duration: 500 }}>
         <button type="button" class="close-window" on:click={close}>&times</button>
         {#if modalUrl != undefined}
             <iframe
@@ -59,7 +59,7 @@
                 allow={$modalIframeStore?.allow}
                 title={$modalIframeStore?.title}
                 src={modalUrl}
-                class="tw-border-0"
+                class="border-0"
             />
         {/if}
     </div>

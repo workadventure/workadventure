@@ -78,11 +78,11 @@
         switch (status) {
             case 1:
             default:
-                return "tw-bg-pop-green";
+                return "bg-pop-green";
             case 2:
-                return "tw-bg-pop-red";
+                return "bg-pop-red";
             case 3:
-                return "tw-bg-warning";
+                return "bg-warning";
         }
     }
 
@@ -104,20 +104,20 @@
     });
 </script>
 
-<!-- TODO All 'tw-cursor-default' will be deleted when Chat 1to1 will be released -->
+<!-- TODO All 'cursor-default' will be deleted when Chat 1to1 will be released -->
 <div
-    class={`wa-chat-item ${user.isAdmin ? "admin" : "user"}  tw-cursor-default`}
+    class={`wa-chat-item ${user.isAdmin ? "admin" : "user"}  cursor-default`}
     on:click|stopPropagation={() => openChat(user)}
     on:mouseleave={closeChatUserMenu}
 >
     <div
-        class={`tw-relative wa-avatar ${!user.active && "tw-opacity-50"}  tw-cursor-default`}
+        class={`relative wa-avatar ${!user.active && "opacity-50"}  cursor-default`}
         style={`background-color: ${getColor(user.jid)}`}
         on:click|stopPropagation={() => openChat(user)}
     >
-        <div class="wa-container  tw-cursor-default">
+        <div class="wa-container  cursor-default">
             <img
-                class="tw-w-full  tw-cursor-default"
+                class="w-full  cursor-default"
                 style="image-rendering: pixelated;"
                 src={getWoka(user.jid)}
                 alt="Avatar"
@@ -126,22 +126,22 @@
         {#if user.active && user.availabilityStatus}
             <span
                 title={getNameOfAvailabilityStatus(user.availabilityStatus)}
-                class={`tw-w-4 tw-h-4 ${getColorOfAvailabilityStatus(
+                class={`w-4 h-4 ${getColorOfAvailabilityStatus(
                     user.availabilityStatus
-                )}  tw-cursor-default tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-transform tw-translate-x-2 -tw-translate-y-1 tw-border-solid tw-border-2 tw-border-light-purple`}
+                )}  cursor-default block rounded-full absolute right-0 top-0 transform translate-x-2 -translate-y-1 border-solid border-2 border-light-purple`}
             />
         {/if}
     </div>
     <div
-        class={`tw-flex-auto tw-ml-3 ${!user.active && "tw-opacity-50"}  tw-cursor-default`}
+        class={`flex-auto ml-3 ${!user.active && "opacity-50"}  cursor-default`}
         on:click|stopPropagation={() => openChat(user)}
     >
-        <h1 class={`tw-text-sm tw-font-bold tw-mb-0  tw-cursor-default`}>
+        <h1 class={`text-sm font-bold mb-0  cursor-default`}>
             {#each chunks as chunk (chunk.key)}
-                <span class={`${chunk.match ? "tw-text-light-blue" : ""}  tw-cursor-default`}>{chunk.text}</span>
+                <span class={`${chunk.match ? "text-light-blue" : ""}  cursor-default`}>{chunk.text}</span>
             {/each}
             {#if user.name.match(/\[\d*]/)}
-                <span class="tw-font-light tw-text-xs tw-text-gray  tw-cursor-default">
+                <span class="font-light text-xs text-gray  cursor-default">
                     #{user.name
                         .match(/\[\d*]/)
                         ?.join()
@@ -150,7 +150,7 @@
                 </span>
             {/if}
             {#if user.isAdmin}
-                <span class="tw-text-warning" title={$LL.role.admin()}>
+                <span class="text-warning" title={$LL.role.admin()}>
                     <ShieldIcon size="13" />
                 </span>
             {/if}
@@ -162,14 +162,14 @@
                     <!--
                 // If it's not a member
                 {:else}
-                    <span class="tw-text-pop-red" title={$LL.role.visitor()}>
+                    <span class="text-pop-red" title={$LL.role.visitor()}>
                         <UserXIcon size="13" />
                     </span>
                     -->
                 {/if}
             {/if}
         </h1>
-        <p class="tw-text-xs tw-mb-0 tw-font-condensed tw-opacity-75  tw-cursor-default">
+        <p class="text-xs mb-0 font-condensed opacity-75  cursor-default">
             {#if user.isMe}
                 {$LL.you()}
             {:else if user.active}
@@ -182,7 +182,7 @@
 
     {#if user.unreads}
         <span
-            class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+            class="bg-light-blue text-dark-purple w-5 h-5 mr-3 text-sm font-semibold flex items-center justify-center rounded"
         >
             {user.unreads}
         </span>
@@ -190,11 +190,11 @@
 
     {#if user.active && !user.isMe}
         <div class="wa-dropdown">
-            <button class="tw-text-light-purple focus:outline-none tw-m-0" on:click|stopPropagation={openChatUserMenu}>
+            <button class="text-light-purple focus:outline-none m-0" on:click|stopPropagation={openChatUserMenu}>
                 <MoreHorizontalIcon />
             </button>
             <!-- on:mouseleave={closeChatUserMenu} -->
-            <div class={`wa-dropdown-menu ${chatMenuActive ? "" : "tw-invisible"}`} on:mouseleave={closeChatUserMenu}>
+            <div class={`wa-dropdown-menu ${chatMenuActive ? "" : "invisible"}`} on:mouseleave={closeChatUserMenu}>
                 {#if user.isInSameMap}
                     <span
                         class="walk-to wa-dropdown-item"
@@ -220,19 +220,19 @@
                 {/if}
                 {#if $me && $me.isAdmin}
                     <span
-                        class="ban wa-dropdown-item tw-text-pop-red"
+                        class="ban wa-dropdown-item text-pop-red"
                         on:click|stopPropagation={() => mucRoom.sendBan(user.jid, user.name, user.playUri ?? "")}
                         ><SlashIcon size="13" /> {$LL.ban.title()} (coming soon)</span
                     >
                     {#if user.isAdmin}
                         <span
-                            class="rank-down wa-dropdown-item tw-text-warning"
+                            class="rank-down wa-dropdown-item text-warning"
                             on:click|stopPropagation={() => mucRoom.sendRankDown(user.jid)}
                             ><ShieldOffIcon size="13" /> {$LL.rankDown()} (coming soon)</span
                         >
                     {:else}
                         <span
-                            class="rank-up wa-dropdown-item tw-text-warning"
+                            class="rank-up wa-dropdown-item text-warning"
                             on:click|stopPropagation={() => mucRoom.sendRankUp(user.jid)}
                             ><ShieldIcon size="13" /> {$LL.rankUp()} (coming soon)</span
                         >

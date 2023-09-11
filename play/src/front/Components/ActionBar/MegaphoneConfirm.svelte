@@ -11,8 +11,8 @@
     }
 </script>
 
-<div class="megaphone-confirm tw-py-2 tw-px-4 tw-w-60 tw-bg-dark-purple/95 tw-rounded-lg tw-absolute">
-    <p class="tw-text-white tw-text-sm">
+<div class="megaphone-confirm py-2 px-4 w-60 bg-dark-purple/95 rounded-lg absolute">
+    <p class="text-white text-sm">
         {#if !$requestedCameraState && !$requestedMicrophoneState && !$requestedScreenSharingState}
             {$LL.warning.megaphoneNeeds()}
         {:else}
@@ -30,7 +30,7 @@
             {$LL.megaphone.modal.toAll()}.
         {/if}
     </p>
-    <div class="tw-flex tw-flex-wrap tw-items-center tw-justify-between">
+    <div class="flex flex-wrap items-center justify-between">
         <button type="button" class="dark">{$LL.megaphone.modal.cancel()}</button>
         <button
             type="button"

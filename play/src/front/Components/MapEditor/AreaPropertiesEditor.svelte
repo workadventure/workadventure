@@ -231,7 +231,7 @@
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
     {$LL.mapEditor.areaEditor.editInstructions()}
 {:else}
-    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+    <div class="properties-buttons flex flex-row flex-wrap">
         {#if !hasFocusableProperty}
             <AddPropertyButton
                 headerText={$LL.mapEditor.properties.focusableProperties.label()}
@@ -332,7 +332,7 @@
             }}
         />
     </div>
-    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+    <div class="properties-buttons flex flex-row flex-wrap">
         <AddPropertyButton
             headerText={$LL.mapEditor.properties.youtubeProperties.label()}
             descriptionText={connectionManager.currentRoom?.youtubeToolActivated

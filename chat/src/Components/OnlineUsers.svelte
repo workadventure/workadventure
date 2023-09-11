@@ -7,7 +7,7 @@
     const usersCount = derived(presenceStore, () => $presenceStore.filter((user) => get(user).active).length);
 </script>
 
-<div class={`tw-text-xs ${$usersCount > 0 ? "tw-text-pop-green" : "tw-text-lighter-purple"} tw-mt-0`}>
+<div class={`text-xs ${$usersCount > 0 ? "text-pop-green" : "text-lighter-purple"} mt-0`}>
     <b>{$usersCount}</b>
     {$usersCount > 1 ? $LL.usersOnline() : $LL.userOnline()}
 </div>

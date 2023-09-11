@@ -14,7 +14,7 @@
 </script>
 
 <MapEditorSideBar />
-<div class={`map-editor tw-bg-dark-blue/95 ${$mapEditorSelectedToolStore}`}>
+<div class={`map-editor bg-dark-blue/95 ${$mapEditorSelectedToolStore}`}>
     {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
         <ConfigureMyRoom />
     {:else}

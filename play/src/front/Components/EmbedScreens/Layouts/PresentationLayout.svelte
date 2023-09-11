@@ -55,7 +55,7 @@
 
 <div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias}>
     {#if displayFullMedias}
-        <div id="full-medias" class="tw-z-[300] tw-relative tw-mx-auto tw-top-8 tw-h-1/2 tw-overflow-y-auto">
+        <div id="full-medias" class="z-[300] relative mx-auto top-8 h-1/2 overflow-y-auto">
             <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
             {#if $myCameraStore}
                 <MyCamera />
@@ -98,7 +98,7 @@
             </div>
         </div>
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div class="tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4">
+            <div class="relative self-end z-[300] bottom-6 md:bottom-4">
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}

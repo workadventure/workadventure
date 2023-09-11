@@ -127,9 +127,9 @@ class Chat {
     }
 
     async expandUsers(page: Page){
-        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).toHaveClass(/tw-rotate-180/);
+        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).toHaveClass(/rotate-180/);
         await this.get(page).locator('#users div:has-text("Users") button > .feather-chevron-up').click();
-        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).not.toHaveClass(/tw-rotate-180/);
+        //await expect(page.locator('#users div:has-text("Users") button .feather-chevron-up')).not.toHaveClass(/rotate-180/);
     }
 
     async forumExist(page: Page, name: string) {

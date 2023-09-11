@@ -168,22 +168,22 @@
 <div>
     <section class="bottom-separator">
         <h3 class="blue-title">{$LL.menu.settings.videoBandwidth.title()}</h3>
-        <div class="tw-flex tw-w-full tw-justify-center">
-            <div class="tw-flex tw-flex-col tw-w-10/12 lg:tw-w-6/12">
-                <ul class="tw-flex tw-justify-between tw-w-full tw-px-[10px] tw-mb-5">
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">{$LL.menu.settings.videoBandwidth.low()}</span>
+        <div class="flex w-full justify-center">
+            <div class="flex flex-col w-10/12 lg:w-6/12">
+                <ul class="flex justify-between w-full px-[10px] mb-5">
+                    <li class="flex justify-center relative">
+                        <span class="absolute">{$LL.menu.settings.videoBandwidth.low()}</span>
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">{$LL.menu.settings.videoBandwidth.recommended()}</span>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">{$LL.menu.settings.videoBandwidth.recommended()}</span>
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">{$LL.menu.settings.videoBandwidth.unlimited()}</span>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">{$LL.menu.settings.videoBandwidth.unlimited()}</span>
                     </li>
                 </ul>
                 <input
                     type="range"
-                    class="tw-w-full tw-bg-pop-blue"
+                    class="w-full bg-pop-blue"
                     min="1"
                     max="3"
                     step="1"
@@ -194,22 +194,22 @@
         </div>
 
         <h3 class="blue-title">{$LL.menu.settings.shareScreenBandwidth.title()}</h3>
-        <div class="tw-flex tw-w-full tw-justify-center">
-            <div class="tw-flex tw-flex-col tw-w-10/12 lg:tw-w-6/12">
-                <ul class="tw-flex tw-justify-between tw-w-full tw-px-[10px] tw-mb-5">
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">{$LL.menu.settings.shareScreenBandwidth.low()}</span>
+        <div class="flex w-full justify-center">
+            <div class="flex flex-col w-10/12 lg:w-6/12">
+                <ul class="flex justify-between w-full px-[10px] mb-5">
+                    <li class="flex justify-center relative">
+                        <span class="absolute">{$LL.menu.settings.shareScreenBandwidth.low()}</span>
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">{$LL.menu.settings.shareScreenBandwidth.recommended()}</span>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">{$LL.menu.settings.shareScreenBandwidth.recommended()}</span>
                     </li>
-                    <li class="tw-flex tw-justify-center tw-relative">
-                        <span class="tw-absolute">{$LL.menu.settings.shareScreenBandwidth.unlimited()}</span>
+                    <li class="flex justify-center relative">
+                        <span class="absolute">{$LL.menu.settings.shareScreenBandwidth.unlimited()}</span>
                     </li>
                 </ul>
                 <input
                     type="range"
-                    class="tw-w-full"
+                    class="w-full"
                     min="1"
                     max="3"
                     step="1"
@@ -220,7 +220,7 @@
         </div>
 
         <h3 class="blue-title">{$LL.menu.settings.language.title()}</h3>
-        <select class="tw-w-full languages-switcher" bind:value={valueLocale} on:change={updateLocale}>
+        <select class="w-full languages-switcher" bind:value={valueLocale} on:change={updateLocale}>
             {#each displayableLocales as locale (locale.id)}
                 <option value={locale.id}>
                     {`${locale.language ? locale.language.charAt(0).toUpperCase() + locale.language.slice(1) : ""} (${
@@ -230,13 +230,13 @@
             {/each}
         </select>
     </section>
-    <section class="bottom-separator tw-flex tw-flex-col">
-        <div class="tooltip tw-w-fit">
-            <h3 class="blue-title tw-underline tw-decoration-light-blue tw-decoration-dotted">
+    <section class="bottom-separator flex flex-col">
+        <div class="tooltip w-fit">
+            <h3 class="blue-title underline decoration-light-blue decoration-dotted">
                 {$LL.menu.settings.privacySettings.title()}
                 <img draggable="false" src={infoImg} alt="info icon" width="18px" height="18px" />
             </h3>
-            <span class="tooltiptext sm:tw-w-56 md:tw-w-96">{$LL.menu.settings.privacySettings.explanation()}</span>
+            <span class="tooltiptext sm:w-56 md:w-96">{$LL.menu.settings.privacySettings.explanation()}</span>
         </div>
         <label>
             <input type="checkbox" bind:checked={valueCameraPrivacySettings} on:change={changeCameraPrivacySettings} />
@@ -251,7 +251,7 @@
             {$LL.menu.settings.privacySettings.microphoneToggle()}
         </label>
     </section>
-    <section class="tw-flex tw-flex-col">
+    <section class="flex flex-col">
         <h3 class="blue-title">{$LL.menu.settings.otherSettings()}</h3>
         <label>
             <input type="checkbox" bind:checked={fullscreen} on:change={changeFullscreen} />

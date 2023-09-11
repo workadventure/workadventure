@@ -19,7 +19,7 @@
             }}
         />
     </div>
-    <div class="content tw-p-2">
+    <div class="content p-2">
         <slot name="content">No content</slot>
     </div>
 </div>

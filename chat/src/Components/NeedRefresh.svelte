@@ -3,13 +3,11 @@
     import { iframeListener } from "../IframeListener";
 </script>
 
-<div class="tw-grid tw-place-items-center tw-h-screen refresh">
-    <div class="tw-px-5 tw-flex tw-items-center tw-flex-col">
-        <p class="tw-text-center">{$LL.needRefresh()}</p>
-        <button
-            type="button"
-            class="light tw-m-auto tw-cursor-pointer tw-px-3"
-            on:click={() => iframeListener.sendRefresh()}>{$LL.refresh()}</button
+<div class="grid place-items-center h-screen refresh">
+    <div class="px-5 flex items-center flex-col">
+        <p class="text-center">{$LL.needRefresh()}</p>
+        <button type="button" class="light m-auto cursor-pointer px-3" on:click={() => iframeListener.sendRefresh()}
+            >{$LL.refresh()}</button
         >
     </div>
 </div>

@@ -48,21 +48,18 @@
 <svelte:window on:keydown={onKeyDown} />
 
 {#if actionsMenuData}
-    <div class="tw-flex tw-w-full tw-h-full tw-justify-center tw-items-center">
-        <div class="actions-menu tw-p-4 is-rounded tw-max-w-xs">
+    <div class="flex w-full h-full justify-center items-center">
+        <div class="actions-menu p-4 is-rounded max-w-xs">
             <button type="button" class="close-window" on:click={closeActionsMenu}>×</button>
             {#if actionsMenuData.menuName}
-                <h2 class="name tw-mb-2 tw-mx-2 margin-close">{actionsMenuData.menuName}</h2>
+                <h2 class="name mb-2 mx-2 margin-close">{actionsMenuData.menuName}</h2>
             {/if}
             {#if sortedActions}
-                <div
-                    class="actions tw-flex tw tw-flex-col tw-items-center"
-                    class:margin-close={!actionsMenuData.menuName}
-                >
+                <div class="actions flex tw flex-col items-center" class:margin-close={!actionsMenuData.menuName}>
                     {#each sortedActions ?? [] as action}
                         <button
                             type="button"
-                            class="btn light tw-justify-center tw-font-bold tw-text-xs sm:tw-text-base tw-text-center tw-h-fit tw-m-2 tw-w-full {action.style ??
+                            class="btn light justify-center font-bold text-xs sm:text-base text-center h-fit m-2 w-full {action.style ??
                                 ''}"
                             on:click|preventDefault={() => {
                                 action.callback();

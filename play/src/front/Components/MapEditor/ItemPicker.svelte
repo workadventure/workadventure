@@ -135,13 +135,13 @@
 <div class="item-picker">
     <div class="item-filter">
         <input
-            class="filter-input tw-h-8"
+            class="filter-input h-8"
             type="search"
             bind:value={filter}
             on:input={onNameChange}
             placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
         />
-        <select class="tag-selector tw-h-8" bind:value={selectedTag} on:change={() => onTagPick()}>
+        <select class="tag-selector h-8" bind:value={selectedTag} on:change={() => onTagPick()}>
             {#each tags as tag}
                 <option>{tag}</option>
             {/each}
@@ -149,26 +149,21 @@
     </div>
     <div class="item-variations">
         {#if pickedItem}
-            <p
-                on:click|preventDefault={backToSelectObject}
-                class="tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0"
-            >
-                <ArrowLeftIcon size="12" class="tw-cursor-pointer" />
-                <span class="tw-ml-1 tw-cursor-pointer"
-                    >{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span
-                >
+            <p on:click|preventDefault={backToSelectObject} class="flex flex-row items-center text-xs m-0">
+                <ArrowLeftIcon size="12" class="cursor-pointer" />
+                <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
             </p>
             <div class="item-name">
                 {pickedItem?.name ?? "this entity"}
                 <img
-                    class="tw-absolute tw-h-2 tw-mx-2 tw-mt-2 tw-cursor-pointer"
+                    class="absolute h-2 mx-2 mt-2 cursor-pointer"
                     src={closeImg}
                     alt="Unselect object picked"
                     on:keyup
                     on:click={backToSelectObject}
                 />
             </div>
-            <div class="item-variant-picker-container tw-h-28">
+            <div class="item-variant-picker-container h-28">
                 {#each currentVariants as item}
                     <div
                         class="pickable-item {item.imagePath === pickedVariant?.imagePath ? 'active' : ''}"
@@ -191,7 +186,7 @@
             </div>
         {:else}
             <div class="item-name">{$LL.mapEditor.entityEditor.selectObject()}</div>
-            <div class="item-variant-picker-container tw-h-28" />
+            <div class="item-variant-picker-container h-28" />
         {/if}
     </div>
     <div class="item-picker-container">

@@ -11,7 +11,7 @@
 </script>
 
 <button
-    class="add-property-button tooltip tw-p-4 tw-flex tw-justify-center tw-items-center"
+    class="add-property-button tooltip p-4 flex justify-center items-center"
     {style}
     on:click={() => {
         if (disabled) return;
@@ -19,25 +19,22 @@
     }}
     {disabled}
 >
-    <div
-        class="tw-w-10 tw-h-10 tw-flex tw-flex-wrap tw-items-center tw-justify-center"
-        style={disabled ? `opacity: 0.5;` : ""}
-    >
-        <img draggable="false" class="tw-max-w-[75%] tw-max-h-[75%]" src={img} alt="info icon" />
+    <div class="w-10 h-10 flex flex-wrap items-center justify-center" style={disabled ? `opacity: 0.5;` : ""}>
+        <img draggable="false" class="max-w-[75%] max-h-[75%]" src={img} alt="info icon" />
     </div>
-    <span class="tooltiptext tw-text-xs">
-        <p class="tw-text-sm tw-mb-2">{headerText}</p>
+    <span class="tooltiptext text-xs">
+        <p class="text-sm mb-2">{headerText}</p>
         {descriptionText}
     </span>
 </button>
 
 <style lang="scss">
     .add-property-button {
-        --tw-border-opacity: 1;
-        border-color: rgb(77 75 103 / var(--tw-border-opacity));
-        --tw-bg-opacity: 1;
-        background-color: rgb(27 27 41 / var(--tw-bg-opacity));
-        --tw-text-opacity: 1;
+        --border-opacity: 1;
+        border-color: rgb(77 75 103 / var(--border-opacity));
+        --bg-opacity: 1;
+        background-color: rgb(27 27 41 / var(--bg-opacity));
+        --text-opacity: 1;
         color: gray;
         border-radius: 10px;
         position: relative;
