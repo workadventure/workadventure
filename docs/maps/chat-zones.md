@@ -1,4 +1,10 @@
-{.section-title.accent.text-primary}
+---
+
+sidebar_position: 100
+title: Chat zones
+
+---
+
 # Working with chat
 
 ## Chat zones

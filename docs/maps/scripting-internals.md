@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # Scripting internals
 
 Internally, scripts are always loaded inside `iframes`.

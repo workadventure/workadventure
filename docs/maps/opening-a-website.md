@@ -1,7 +1,19 @@
-{.section-title.accent.text-primary}
+---
+
+sidebar_position: 40
+
+---
+
 # Opening a website when walking on the map
 
-[Building your map - Opening a website](https://www.youtube.com/watch?v=Me8cu5lLN3A)
+:::caution Important
+While the information below is still valid, we recommend you to use the new [inline map editor](editor/) to define areas
+that trigger opening a website.
+The inline map editor is easier to use and can be accessed directly from WorkAdventure.
+:::
+
+
+<iframe width="100%" height="480" src="https://www.youtube.com/embed/Me8cu5lLN3A" title="Building your map - Opening a website" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
 
 ## The openWebsite property
 
@@ -17,20 +29,22 @@ In order to create a zone that opens websites:
 * You may also use "`openTab`" property (of type "`string`") to open in a new tab instead.
 * You can decide if the website should be closable with "`openWebsiteClosable`" property (of type "`bool`")
 
-{.alert.alert-warning}
+:::warning Forbidden iframes
 A website can explicitly forbid another website from loading it in an iFrame using
 the [X-Frame-Options HTTP header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options). You can
 read more about this common issue and possible workaround the [troubleshooting guide](troubleshooting.md#embedding-an-iframe-is-forbidden).
+:::
 
-{.alert.alert-info}
+:::info
 As an alternative, you may also put the `openWebsite` properties on a layer (rather than putting them on an "area" object)
 but we advise sticking with "area" objects for better performance!
+:::
 
-{.alert.alert-warning}
+:::caution
 If the website you are embedding is using cookies, those cookies must be configured with the `SameSite=none` attribute. Otherwise,
 they will be ignored by the browser. If you manage to see the website you embed but cannot log into it, the `SameSite` attribute is most
 likely the culprit. You can read more about this common issue and possible workaround the [troubleshooting guide](troubleshooting.md#i-cannot-log-into-my-embedded-website).
-
+:::
 
 ## Integrating a Youtube video
 
@@ -40,15 +54,14 @@ The global Youtube page cannot be embedded into an iFrame (it has the `X-Frame-O
 
 To embed a Youtube video, be sure to **use the "embed" link**. You can get this link be clicking "Share > Embed" in Youtube.
 
-<figure class="figure">
-    <img src="images/youtube.jpg" class="figure-img img-fluid rounded" alt="" />
-    <figcaption class="figure-caption">Find the URL of your video in the "embed Video" HTML snippet on Youtube</figcaption>
-</figure>
+![Find the URL of your video in the "embed Video" HTML snippet on Youtube](images/youtube.jpg)
 
-<figure class="figure">
-    <img src="images/open_website.jpg" class="figure-img img-fluid rounded" alt="" />
-    <figcaption class="figure-caption">Put this URL in the "openWebsite" property</figcaption>
-</figure>
+<div class="text--center text--italic">Find the URL of your video in the "embed Video" HTML snippet on Youtube</div>
+
+![Put this URL in the "openWebsite" property](images/open_website.png)
+
+<div class="text--center text--italic">Put this URL in the "openWebsite" property</div>
+
 
 ### Triggering of the "open website" action
 
@@ -58,19 +71,17 @@ It is however possible to trigger the iFrame only on user action. You can do thi
 
 If you set `openWebsiteTrigger: onaction`, when the user walks on the area, an alert message will be displayed at the bottom of the screen:
 
-<figure class="figure">
-    <img src="images/click_space_open_website.jpg" class="figure-img img-fluid rounded" alt="" />
-    <figcaption class="figure-caption">The iFrame will only open if the user clicks Space</figcaption>
-</figure>
+![The iFrame will only open if the user clicks Space](images/click_space_open_website.png)
+
+<div class="text--center text--italic">The iFrame will only open if the user clicks Space</div>
 
 If you set `openWebsiteTriggerMessage: your message action` you can edit alert message displayed. If is not defined, the default message displayed is 'Press on SPACE to open the web site'.
 
 If you set `openWebsiteTrigger: onicon`, when the user walks on the area, an icon will be displayed at the bottom of the screen:
 
-<figure class="figure">
-    <img src="images/icon_open_website.png" class="figure-img img-fluid rounded" alt="" />
-    <figcaption class="figure-caption">The iFrame will only open if the user clicks on icon</figcaption>
-</figure>
+![The iFrame will only open if the user clicks on icon](images/icon_open_website.png)
+
+<div class="text--center text--italic">The iFrame will only open if the user clicks on icon</div>
 
 ### Setting the iFrame "allow" attribute
 
@@ -80,10 +91,9 @@ If you want to grant additional access rights to your iFrame, you should use the
 
 For instance, if you want an iFrame to be able to go in fullscreen, you will use the property `openWebsitePolicy: fullscreen`
 
-<figure class="figure">
-    <img src="images/open_website_policy.jpg" class="figure-img img-fluid rounded" alt="" />
-    <figcaption class="figure-caption">The generated iFrame will have the allow attribute set to: <code>&lt;iframe allow="fullscreen"&gt;</code></figcaption>
-</figure>
+![](images/open_website_policy.png)
+
+<div class="text--center text--italic">The generated iFrame will have the allow attribute set to: <code>&lt;iframe allow="fullscreen"&gt;</code></div>
 
 ### Open a Jitsi with a co-website
 

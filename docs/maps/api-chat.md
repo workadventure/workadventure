@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # API Chat functions reference
 
 ### Open the chat window

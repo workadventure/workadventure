@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # API Reference - Deprecated functions
 
 The list of functions below is **deprecated**. You should not use those but. use the replacement functions.

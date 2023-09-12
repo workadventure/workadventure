@@ -1,7 +1,13 @@
-{.section-title.accent.text-primary}
+---
+
+sidebar_position: 50
+title: Meeting rooms
+
+---
+
 # Meeting rooms with Jitsi
 
-[Building your map - Meeting room](https://www.youtube.com/watch?v=cN9VMWHN0eo)
+<iframe width="100%" height="480" src="https://www.youtube.com/embed/cN9VMWHN0eo" title="Building your map - Meeting room" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
 
 ## Opening a Jitsi meet when walking on the map
 
@@ -16,9 +22,10 @@ In order to create Jitsi meet zones:
 
 You can have this object (i.e. your meeting area) to be selectable as the precise location for your meeting using the [Google Calendar integration for Work Adventure](/integrations/google-calendar). To do so, you must set the `meetingRoomLabel` property. You can provide any name that you would like your meeting room to have (as a string).
 
-{.alert.alert-info}
+:::info
 As an alternative, you may also put the `jitsiRoom` properties on a layer (rather than putting them on an "area" object)
 but we advise to stick with "area" objects for better performance!
+:::
 
 ## Triggering of the "Jitsi meet" action
 
@@ -28,10 +35,9 @@ It is however possible to trigger Jitsi only on user action. You can do this wit
 
 If you set `jitsiTrigger: onaction`, when the user walks on the area, an alert message will be displayed at the bottom of the screen:
 
-<figure class="figure">
-    <img src="images/click_space_jitsi.png" class="figure-img img-fluid rounded" alt="" />
-    <figcaption class="figure-caption">Jitsi meet will only open if the user clicks Space</figcaption>
-</figure>
+![](images/click_space_jitsi.png)
+
+<div class="text--center text--italic">Jitsi meet will only open if the user clicks Space</div>
 
 If you set `jitsiTriggerMessage: your message action` you can edit alert message displayed. If is not defined, the default message displayed is 'Press on SPACE to enter in jitsi meet room'.
 
@@ -49,12 +55,11 @@ The `jitsiConfig` property will override the Jitsi [config.js](https://github.co
 
 The `jitsiInterfaceConfig` property will override the Jitsi [interface_config.js](https://github.com/jitsi/jitsi-meet/blob/master/interface_config.js) file
 
-<div class="alert alert-warning">If your customizations are not working:
-<ul>
-<li>First, check that the JSON you are entering is valid. Take a look at the console in your browser. If the JSON string is invalid, you should see a warning.</li>
-<li>Then, check that the JSON you are using is matching the version of Jitsi used.</li>
-</ul>
-</div>
+:::warning Troubleshooting
+If your customizations are not working:
+ * First, check that the JSON you are entering is valid. Take a look at the console in your browser. If the JSON string is invalid, you should see a warning.
+ * Then, check that the JSON you are using is matching the version of Jitsi used.
+:::
 
 ## Granting moderator controls in Jitsi
 
@@ -85,12 +90,9 @@ You can read more about [managing member tags in the admin documentation](/admin
 
 If you are using the online version at `workadventu.re`, we are handling a Jitsi meet cluster for you. In the very specific case where you would like to use your own Jitsi server, you can configure the Jitsi credentials to your third-party vendor in the world edit form.
 
-<div class="text-center">
-    <figure class="figure">
-        <img src="images/admin_meeting_server_editing_jitsi.png" class="figure-img img-fluid rounded w-75" alt="" />
-        <figcaption class="figure-caption">Screenshot of world edit page</figcaption>
-    </figure>
-</div>
+![Screenshot of world edit page](images/admin_meeting_server_editing_jitsi.png)
+
+<div class="text--center text--italic">Screenshot of world edit page</div>
 
 Please note that the Jitsi server you are using MUST be configured to [support JWT authentication](https://github.com/jitsi/lib-jitsi-meet/blob/master/doc/tokens.md).
 
@@ -105,9 +107,10 @@ Use the `jitsiUrl` property to in the Jitsi object to specify the Jitsi instance
 and not
 `jitsiUrl: https://meet.jit.si`
 
-{.alert.alert-info}
+:::info
 When you use `jitsiUrl`, the targeted Jitsi instance must be public. You cannot use moderation features or the JWT
 tokens authentication with maps configured using the `jitsiUrl` property.
+:::
 
 ## Full control over the Jitsi room name
 
@@ -142,13 +145,15 @@ In order to create a BigBlueButton session zone:
     * `userdata-bbb_skip_video_preview=true`: webcam preview won't be displayed before sharing
     * `userdata-bbb_show_participants_on_login=false`: users list won't be displayed
 
-{.alert.alert-info}
+:::info
 All participants join BigBlueButton as moderators.
+:::
 
 ## Granting moderator controls in Big Blue Button
 
-{.alert.alert-info}
+:::info
 By default, all users are moderators. If you want to configure who gets moderator controls, you will need to configure tags. You need a pro account to edit member tags.
+:::
 
 In order to grant moderator rights to users with other tags, you can add a `bbbMeetingAdminTag` property to your BBB object. For instance, if you write a property:
 
@@ -170,12 +175,9 @@ As of now, your WorkAdventure online subscription does not come with a Big Blue 
 to get this from a third-party vendor. You can configure the Big Blue Button credentials to your third-party vendor
 in world edit form.
 
-<div class="text-center">
-    <figure class="figure">
-        <img src="images/admin_meeting_server_editing_bbb.png" class="figure-img img-fluid rounded w-75" alt="" />
-        <figcaption class="figure-caption">Screenshot of world edit page</figcaption>
-    </figure>
-</div>
+![Screenshot of world edit page](images/admin_meeting_server_editing_bbb.png)
+
+<div class="text--center text--italic">Screenshot of world edit page</div>
 
 ### Self-hosted version
 
@@ -199,5 +201,6 @@ BBB_URL: YOUR-SERVER
 BBB_SECRET: YOUR-SECRET
 ```
 
-{.alert.alert-info}
+:::info
 Make sure BBB_URL ends with `/bigbluebutton/`.
+:::

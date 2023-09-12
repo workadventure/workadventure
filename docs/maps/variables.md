@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # Variables
 
 WorkAdventure offers several options for storing data. In WorkAdventure as in many programming languages, data

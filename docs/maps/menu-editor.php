@@ -15,9 +15,9 @@ return [
     ],
     [
         'title' => 'Placing objects',
-        'url' => '/map-building/editor/entity-editor.md',
+        'url' => '/map-building/editor/entity-editor/index.md',
         'markdown' => 'maps.editor.entity-editor',
-        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/editor/entity-editor.md',
+        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/editor/entity-editor/index.md',
         'children' => [
             [
                 'title' => 'Jitsi',

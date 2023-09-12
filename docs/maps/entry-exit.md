@@ -1,11 +1,17 @@
-{.section-title.accent.text-primary}
+---
+
+sidebar_position: 30
+
+---
+
 # Entries and exits
 
-{.alert.alert-warning}
+:::caution Important
 While the information below is still valid, we recommend you to use the new [inline map editor](editor/) to define entries and exits.
 The inline map editor is easier to use and can be accessed directly from WorkAdventure.
+:::
 
-[Building your map - Defined entries and exits](https://www.youtube.com/watch?v=MuhVgu8H7U0)
+<iframe width="100%" height="480" src="https://www.youtube.com/embed/MuhVgu8H7U0" title="Building your map - Defined entries and exits" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
 
 ## Defining a default entry point
 
@@ -15,8 +21,9 @@ In order to define a default start position, you MUST create a layer named "`sta
 
 In the screenshot above, the start layer is made of the 2 white tiles. These tiles are not visible to the end user because they are hidden below the "bottom" layer that displays the floor of the map.
 
-{.alert.alert-info}
-**Pro tip**: if you expect many people to connect to your map at the same time (for instance, if you are organizing a big event), consider making a large start zone. This way, users will not all appear at the same position and will not pop randomly in a chat with someone connecting at the same moment.
+:::info Pro tip
+If you expect many people to connect to your map at the same time (for instance, if you are organizing a big event), consider making a large start zone. This way, users will not all appear at the same position and will not pop randomly in a chat with someone connecting at the same moment.
+:::
 
 ## Defining exits
 
@@ -28,8 +35,9 @@ In order to place an exit on your scene that leads to another scene:
 
 ![](images/exit_layer_map.png)
 
-{.alert.alert-warning}
-**Note:** in older releases of WorkAdventure, you could link to a map file directly using properties `exitSceneUrl` and `exitInstance`. Those properties are now **deprecated**. Use "`exitUrl`" instead.
+:::caution Note
+In older releases of WorkAdventure, you could link to a map file directly using properties `exitSceneUrl` and `exitInstance`. Those properties are now **deprecated**. Use "`exitUrl`" instead.
+:::
 
 ## Understanding map URLs in WorkAdventure
 

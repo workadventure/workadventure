@@ -1,11 +1,17 @@
-{.section-title.accent.text-primary}
+---
+
+sidebar_position: 10
+
+---
+
 # Create your map
 
 This document will guide you through the process of creating your own map for WorkAdventure using the **Tiled** editor.
 
-{.alert.alert-info}
+:::info
 If you are looking to do a simple customization of an existing map, like placing furniture or editing entries and
 exits, you should read the [Customize your map](editor/access.md) guide instead.
+:::
 
 ## Tools you will need
 
@@ -17,10 +23,11 @@ In order to build your own map for WorkAdventure, you need:
 
 WorkAdventure comes with a "map starter kit" that we recommend using to start designing your map quickly. It contains **a good default tileset** for building an office and it proposes to **use Github static pages as a web-server** which is both free and performant. It also comes with a local webserver for testing purpose and with Typescript support (if you are looking to use the [map scripting API](scripting.md).
 
-{.alert.alert-info}
+:::info
 If you are looking to host your maps on your own webserver, be sure to read the [Self-hosting your map](hosting.md) guide.
+:::
 
-[Building your map - Create your map](https://www.youtube.com/watch?v=lu1IZgBJJD4)
+<iframe width="100%" height="480" src="https://www.youtube.com/embed/lu1IZgBJJD4" title="Building your map - Create your map" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
 
 ## Getting started
 
@@ -28,36 +35,25 @@ Start by [creating a GitHub account](https://github.com/join) if you don't alrea
 
 Then, go to the [Github map starter kit repository page](https://github.com/workadventure/map-starter-kit) and click the **"Use this template"** button.
 
-<figure class="figure my-5">
-    <img src="images/use_this_template.png" class="figure-img img-fluid rounded" alt="" style="width: 70%" />
-    <figcaption class="figure-caption">The "Use this template" button</figcaption>
-</figure>
+![The "Use this template" button](images/use_this_template.png)
 
 You will be prompted to enter a repository name for your map.
 
-<figure class="figure my-5">
-    <img src="images/create_repo.png" class="figure-img img-fluid rounded" alt="" style="width: 70%" />
-    <figcaption class="figure-caption">The "create a new repository" page</figcaption>
-</figure>
+![The "create a new repository" page](images/create_repo.png)
 
 **Make sure to check the "Include all branches" checkbox, otherwise the Github Pages deployment process will not be setup automatically.**
 
 If you miss that step, don't worry, you can always fix that by clicking on the **Settings tab** of your repository and scroll down to the **GitHub Pages** section. Then select the **gh-pages** branch. It might already be selected, but please be sure to click on it nonetheless (otherwise GitHub will not enable GitHub pages).
 
-{.alert.alert-info}
+:::info
 If you only see a "master" branch and if the **gh-pages** branch does not appear here, simply wait a few minutes and refresh your page. When you created the project, Github Actions triggered a job that is in charge of creating the **gh-pages** branch. Maybe the job is not finished yet.
+:::
 
-<figure class="figure my-5">
-    <img src="images/github_pages.png" class="figure-img img-fluid rounded" alt="" style="width: 70%" />
-    <figcaption class="figure-caption">The GitHub pages configuration section</figcaption>
-</figure>
+![The GitHub pages configuration section](images/github_pages.png)
 
 Wait a few minutes... Github will deploy a new website with the content of the repository. The address of the website is visible in the "GitHub Pages" section.
 
-<figure class="figure my-5">
-    <img src="images/website_address.png" class="figure-img img-fluid rounded" alt="" style="width: 70%" />
-    <figcaption class="figure-caption">Your website is ready!</figcaption>
-</figure>
+![Your website is ready!](images/website_address.png)
 
 Click on the link. You should be redirected directly to WorkAdventure, on your map!
 
@@ -98,15 +94,13 @@ This will install the local webserver.
 
 This command will start the webserver and open the welcome page. You should see a page looking like this:
 
-<figure class="figure my-5">
-    <img src="images/start_kit_start_screen.png" class="figure-img img-fluid rounded" alt="" style="width: 70%" />
-    <figcaption class="figure-caption">The welcome page of the "map start kit"</figcaption>
-</figure>
+![The welcome page of the "map start kit"](images/start_kit_start_screen.png)
 
 From here, you simply need to click the "Test this map" button to test your map in WorkAdventure.
 
-{.alert.alert-warning}
+:::warning
 The local web server can only be used to test your map locally. In particular, the link will only work on your computer. You cannot share it with other people.
+:::
 
 ### Pushing the map
 

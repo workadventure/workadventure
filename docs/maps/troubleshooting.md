@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # Troubleshooting
 
 ## Look at the browser console

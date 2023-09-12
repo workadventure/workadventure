@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 
 # API Camera functions Reference
 

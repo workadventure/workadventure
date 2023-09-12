@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # API Reference
 
 - [Start / Init functions](api-start.md)

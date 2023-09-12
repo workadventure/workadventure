@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # Writing text on a map
 
 ## Solution 1: design a specific tileset (recommended)

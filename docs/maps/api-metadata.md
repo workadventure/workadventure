@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # API Metadata Reference
 
 ### Getting metadata

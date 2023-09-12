@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # Using Typescript with the scripting API
 
 {.alert.alert-info}

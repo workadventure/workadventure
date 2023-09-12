@@ -8,7 +8,7 @@ export const isApplicationDefinitionInterface = z.object({
   }),
   script: extendApi(z.string(), {
     description: "The url of the application",
-    example: "http://example.com/@/teamSLug/worldSlug",
+    example: "http://example.com/my/script.js",
   }),
 });
 export type ApplicationDefinitionInterface = z.infer<

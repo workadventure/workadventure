@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # API UI functions Reference
 
 ### Opening a popup

@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # API start functions Reference
 
 ### Waiting for WorkAdventure API to be available

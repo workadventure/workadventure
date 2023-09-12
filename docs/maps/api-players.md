@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # API Players functions Reference
 
 Functions in the `WA.players` namespace can be used to listen to nearby users.

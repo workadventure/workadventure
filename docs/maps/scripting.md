@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # Scripting WorkAdventure maps
 
 Do you want to add a bit of intelligence to your map? Scripts allow you to create maps with special features.

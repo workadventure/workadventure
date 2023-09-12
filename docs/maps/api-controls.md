@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # API Controls functions Reference
 
 ### Disabling / restoring controls

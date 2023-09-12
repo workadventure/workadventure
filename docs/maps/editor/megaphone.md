@@ -1,11 +1,17 @@
-{.section-title.accent.text-primary}
+---
+
+sidebar_position: 40
+
+---
+
 # Megaphone
 
 Use the megaphone feature to stream your video / audio / screen to anyone from anywhere in the map.
 
-{.alert.alert-info}
+:::info
 This feature will typically be reserved to administrators and moderators that will be able to broadcast a message
 to all participants in the map.
+:::
 
 ## Configuring the megaphone
 
@@ -14,11 +20,7 @@ Please note that [access to the map editor](access.md) is required to perform th
 
 Megaphone settings will affect the entire map.
 
-<div class="row">
-    <div class="col">
-        <img src="../images/editor/megaphone_general.png" class="figure-img img-fluid rounded" alt="" />
-    </div>
-</div>
+![](../images/editor/megaphone_general.png)
 
 1. Open the map editor.
 2. Click the "configure my room" icon. A configuration modal will appear.
@@ -33,12 +35,8 @@ Megaphone settings will affect the entire map.
 Click the megaphone icon in the action bar.
 One click will enable the megaphone, and a second click will disable it.
 
-<div class="text-center">
-    <figure class="figure">
-        <img src="../images/editor/megaphone-icon.png" class="figure-img img-fluid rounded w-75" alt="" />
-        <figcaption class="figure-caption">Megaphone icon</figcaption>
-    </figure>
-</div>
+![](../images/editor/megaphone-icon.png)
+
 
 ## Frequently Asked Questions
 

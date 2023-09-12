@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # API Sound functions Reference
 
 ### Load a sound from an url

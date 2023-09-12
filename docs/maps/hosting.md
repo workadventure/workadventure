@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # Hosting your map
 
 The [Getting Started](.) page proposes to use a "starter kit" that is relying on GitHub pages for hosting the map. This is a fairly good solution as GitHub pages offers a free and performant hosting.

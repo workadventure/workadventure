@@ -1,13 +1,13 @@
 # Placing objects and furniture
 
-Are you moving into your new virtual office? Or are you organizing a conference? In any case, you will need to place 
+Are you moving into your new virtual office? Or are you organizing a conference? In any case, you will need to place
 objects and furniture in your map.
 
 ## The entity editor
 
 Use the entity editor to drag'n'drop objects from the right panel into the map.
 
-[Map editor - placing objects](https://www.youtube.com/watch?v=WfGBxyVctgY)
+<iframe width="100%" height="480" src="https://www.youtube.com/embed/WfGBxyVctgY?si=-PP8ymTmDRXmWXGd" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
 
 Some objects can be rotated (top, left, bottom, right).
 Some objects can have different colors.
@@ -27,7 +27,7 @@ When a user clicks on the object, a pop-up is displayed with the list of possibl
 Possible actions are:
 
 - **[Opening a link](property/open-link.md)**: Opens a webpage, either inside WorkAdventure or in a new tab of the browser.
-- **[Opening a videoconference](property/jitsi.md)**: Opens a Jitsi videoconference inside WorkAdventure. You could for instance attach 
+- **[Opening a videoconference](property/jitsi.md)**: Opens a Jitsi videoconference inside WorkAdventure. You could for instance attach
   a videoconference to a phone or a phonebooth inside your map that would connect you to a Jitsi room in another
   part of the map.
 - **[Play an audio file](property/play-sound.md)**: Plays an audio file. Useful for Jukeboxes!
@@ -44,7 +44,7 @@ used internally by WorkAdventure.
 ## Deleting an object
 
 You can delete an object by selecting it and pressing the `Delete` key on your keyboard.
-Alternatively, if you have many objects to delete, you can select the "delete tool" (the bin icon) in the toolbar and 
+Alternatively, if you have many objects to delete, you can select the "delete tool" (the bin icon) in the toolbar and
 click on the objects you want to delete.
 
 ## Frequently Asked Questions
@@ -54,8 +54,8 @@ click on the objects you want to delete.
 As of now, it is not possible to import your own objects in the inline map editor using a graphical interface.
 This will come in future releases, as we extend the capabilities of the inline map editor.
 
-However, if you are a die-hard fan and are not afraid of doing some technical work, you can define your own object 
-collections by writing a JSON file and then manually modifying the map file (with the `.wam` extension) to add a 
+However, if you are a die-hard fan and are not afraid of doing some technical work, you can define your own object
+collections by writing a JSON file and then manually modifying the map file (with the `.wam` extension) to add a
 reference to your JSON object collection.
 
 You can read more about the entity collection format in the [documentation](entity-collection-file-format.md).

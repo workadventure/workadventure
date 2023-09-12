@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # API Navigation functions reference
 
 ### Opening a web page in a new tab

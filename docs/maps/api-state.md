@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # API state related functions Reference
 
 ## Saving / loading state

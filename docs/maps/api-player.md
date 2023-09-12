@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+
 # API Player functions Reference
 
 ### Get the player name

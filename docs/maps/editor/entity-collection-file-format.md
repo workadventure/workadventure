@@ -1,3 +1,9 @@
+---
+
+sidebar_position: 50
+
+---
+
 # Entity collections file format
 
 Entity collections are JSON files that describe a collection of entities that can be placed on a map using the inline
