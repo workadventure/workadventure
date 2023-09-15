@@ -115,35 +115,27 @@
             showErrorMessages();
             return false;
         }
-        if (
-            fileMessageManager.files.length === 0 &&
-            (!htmlMessageText || htmlMessageText.replace(/\s/g, "").length === 0) &&
-            $applicationsSelected.size === 0
-        ) {
-            return false;
-        }
+        if (fileMessageManager.files.length > 0 || (htmlMessageText && htmlMessageText.replace(/\s/g, "").length > 0)) {
+            mucRoom.updateComposingState(ChatState.Paused);
+            const message = htmlMessageText
+                .replace(/<div>/g, "\n")
+                .replace(/(<([^>]+)>)/gi, "")
+                .replace(/&nbsp;/g, " ")
+                .trim();
 
-        mucRoom.updateComposingState(ChatState.Paused);
-        const message = htmlMessageText
-            .replace(/<div>/g, "\n")
-            .replace(/(<([^>]+)>)/gi, "")
-            .replace(/&nbsp;/g, " ")
-            .trim();
-
-        if (message && message != "") {
             if ($selectedMessageToReply) {
                 sendReplyMessage(message);
             } else {
                 mucRoom.sendMessage(message);
             }
+            newMessageText = "";
+            htmlMessageText = "";
+            dispatch("scrollDown");
+            setTimeout(() => {
+                textarea.innerHTML = "";
+                dispatch("formHeight", messageForm.clientHeight);
+            }, 0);
         }
-        newMessageText = "";
-        htmlMessageText = "";
-        dispatch("scrollDown");
-        setTimeout(() => {
-            textarea.innerHTML = "";
-            dispatch("formHeight", messageForm.clientHeight);
-        }, 0);
 
         if ($applicationsSelected.size > 0) {
             for (const app of $applicationsSelected) {
@@ -318,10 +310,7 @@
         switch (app.name) {
             case "Klaxoon":
                 try {
-                    app.link = KlaxoonService.getKlaxoonEmbedUrl(
-                        new URL(app.link),
-                        chatConnectionManager.klaxoonToolClientId
-                    );
+                    app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(app.link));
                 } catch (err) {
                     if (err instanceof KlaxoonException.KlaxoonException) {
                         app.error = $LL.form.application.klaxoon.error();
