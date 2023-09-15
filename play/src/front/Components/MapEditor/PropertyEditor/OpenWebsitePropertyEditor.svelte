@@ -102,6 +102,9 @@
                 const link = await YoutubeService.getYoutubeEmbedUrl(new URL(property.link));
                 embeddable = true;
                 optionAdvancedActivated = false;
+                property.buttonLabel =
+                    YoutubeService.getTitleFromYoutubeUrl(new URL(property.link)) ??
+                    $LL.mapEditor.properties.youtubeProperties.label();
                 property.link = link;
                 property.newTab = oldNewTabValue;
             } catch (e: unknown) {

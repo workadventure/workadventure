@@ -30,6 +30,7 @@
     import { defaultWoka } from "../../Xmpp/AbstractRoom";
     import { chatConnectionManager } from "../../Connection/ChatConnectionManager";
     import ApplicationPicker from "../Content/ApplicationPicker.svelte";
+    import { iframeListener } from "../../IframeListener";
     import UserWriting from "./UserWriting.svelte";
 
     const dispatch = createEventDispatcher();
@@ -116,6 +117,16 @@
     let emojiContainer: HTMLElement;
     let picker: EmojiButton;
 
+    let elements: NodeListOf<Element>;
+    const aListner = (event: Event) => {
+        event.stopPropagation();
+        event.preventDefault();
+
+        // Open link in new tab
+        const target = event.target as HTMLAnchorElement;
+        iframeListener.openTab(target.href);
+    };
+
     onMount(() => {
         subscribers.push(
             chatMessagesStore.subscribe(() => {
@@ -127,6 +138,14 @@
                     if (messageList) {
                         document.scrollingElement?.scrollTo(0, messageList.scrollHeight);
                     }
+
+                    // for each all messages in chatMessagesStore
+                    elements = document.querySelectorAll(`div.wa-message-body a`);
+                    elements.forEach((element) => {
+                        // clear previous event listner
+                        element.removeEventListener("click", aListner);
+                        element.addEventListener("click", aListner);
+                    });
                 }, 100);
             })
         );
@@ -399,6 +418,11 @@
 
     onDestroy(() => {
         subscribers.forEach((subscriber) => subscriber());
+
+        // Unsubscribe element event listner click
+        elements.forEach((element) => {
+            element.removeEventListener("click", aListner);
+        });
     });
 </script>
 
@@ -466,6 +490,7 @@
         {#each $chatMessagesStore as message, i}
             {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
                 <div
+                    id={`message_${message.id}`}
                     class={`${
                         needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)
                             ? "tw-mt-0.5"
