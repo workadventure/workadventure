@@ -130,10 +130,12 @@
             .replace(/&nbsp;/g, " ")
             .trim();
 
-        if ($selectedMessageToReply) {
-            sendReplyMessage(message);
-        } else {
-            mucRoom.sendMessage(message);
+        if (message && message != "") {
+            if ($selectedMessageToReply) {
+                sendReplyMessage(message);
+            } else {
+                mucRoom.sendMessage(message);
+            }
         }
         newMessageText = "";
         htmlMessageText = "";
@@ -287,7 +289,10 @@
                         return apps;
                     });
                     // Update app with Klaxoon's Activity Picker
-                    app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(event.url));
+                    app.link = KlaxoonService.getKlaxoonEmbedUrl(
+                        new URL(event.url),
+                        chatConnectionManager.klaxoonToolClientId
+                    );
                     if (event.imageUrl) app.image = event.imageUrl;
                     // Add new app
                     applicationsSelected.update((apps) => {
@@ -313,7 +318,10 @@
         switch (app.name) {
             case "Klaxoon":
                 try {
-                    app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(app.link));
+                    app.link = KlaxoonService.getKlaxoonEmbedUrl(
+                        new URL(app.link),
+                        chatConnectionManager.klaxoonToolClientId
+                    );
                 } catch (err) {
                     if (err instanceof KlaxoonException.KlaxoonException) {
                         app.error = $LL.form.application.klaxoon.error();

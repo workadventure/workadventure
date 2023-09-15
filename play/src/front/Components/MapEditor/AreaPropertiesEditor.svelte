@@ -230,7 +230,10 @@
         KlaxoonService.openKlaxoonActivityPicker(
             connectionManager.currentRoom?.klaxoonToolClientId,
             (payload: KlaxoonEvent) => {
-                app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(payload.url));
+                app.link = KlaxoonService.getKlaxoonEmbedUrl(
+                    new URL(payload.url),
+                    connectionManager.currentRoom?.klaxoonToolClientId
+                );
                 app.poster = payload.imageUrl;
                 app.buttonLabel = payload.title;
                 onUpdateProperty(app);
