@@ -41,7 +41,7 @@ import type { ExSocketInterface, BackSpaceConnection } from "../models/Websocket
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
-import { EJABBERD_DOMAIN, PUSHER_URL } from "../enums/EnvironmentVariable";
+import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
 import { emitInBatch } from "./IoSocketHelpers";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
@@ -1204,13 +1204,7 @@ export class SocketManager implements ZoneEventListener {
 
         await axios
             .head(url, { timeout: 5_000 })
-            .then((response) =>
-                emitAnswerMessage(
-                    true,
-                    !response.headers["x-frame-options"] ||
-                        response.headers["content-security-policy"].indexOf(PUSHER_URL) !== -1
-                )
-            )
+            .then((response) => emitAnswerMessage(true, !response.headers["x-frame-options"]))
             .catch(async (error) => {
                 // If response from server is "Method not allowed", we try to do a GET request
                 if (isAxiosError(error) && error.response?.status === 405) {
