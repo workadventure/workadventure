@@ -80,16 +80,30 @@ export const openKlaxoonActivityPicker = (clientId: string, successCallback: (ar
 };
 
 // Create function to get url with embedded parameter
-export const getKlaxoonEmbedUrl = (url: URL): string => {
+export const getKlaxoonEmbedUrl = (url: URL, klaxoonId = "embedded"): string => {
     // if the link is not a klaxoon link, throw an exception
     if (!isKlaxoonLink(url)) {
         throw new KlaxoonException();
     }
 
-    if (url.searchParams.get("from") === "embedded") {
+    if (url.searchParams.has("from")) {
         return url.toString();
     }
-    url.searchParams.set("from", "embedded");
+    url.searchParams.set("from", klaxoonId);
+    return url.toString();
+};
+
+// Create function to get url without embedded parameter
+export const getKlaxoonBasicUrl = (url: URL): string => {
+    // if the link is not a klaxoon link, throw an exception
+    if (!isKlaxoonLink(url)) {
+        throw new KlaxoonException();
+    }
+
+    if (url.searchParams.has("from")) {
+        url.searchParams.delete("from");
+        return url.toString();
+    }
     return url.toString();
 };
 

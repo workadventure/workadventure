@@ -64,6 +64,8 @@
         name: string;
         icon: string;
         example: string;
+        description: string;
+        image?: string;
         link?: string;
         error?: string;
     }
@@ -113,31 +115,27 @@
             showErrorMessages();
             return false;
         }
-        if (
-            fileMessageManager.files.length === 0 &&
-            (!htmlMessageText || htmlMessageText.replace(/\s/g, "").length === 0) &&
-            $applicationsSelected.size === 0
-        ) {
-            return false;
-        }
+        if (fileMessageManager.files.length > 0 || (htmlMessageText && htmlMessageText.replace(/\s/g, "").length > 0)) {
+            mucRoom.updateComposingState(ChatState.Paused);
+            const message = htmlMessageText
+                .replace(/<div>/g, "\n")
+                .replace(/(<([^>]+)>)/gi, "")
+                .replace(/&nbsp;/g, " ")
+                .trim();
 
-        mucRoom.updateComposingState(ChatState.Paused);
-        const message = htmlMessageText
-            .replace(/<div>/g, "\n")
-            .replace(/(<([^>]+)>)/gi, "")
-            .replace(/&nbsp;/g, " ");
-        if ($selectedMessageToReply) {
-            sendReplyMessage(message);
-        } else {
-            mucRoom.sendMessage(message);
+            if ($selectedMessageToReply) {
+                sendReplyMessage(message);
+            } else {
+                mucRoom.sendMessage(message);
+            }
+            newMessageText = "";
+            htmlMessageText = "";
+            dispatch("scrollDown");
+            setTimeout(() => {
+                textarea.innerHTML = "";
+                dispatch("formHeight", messageForm.clientHeight);
+            }, 0);
         }
-        newMessageText = "";
-        htmlMessageText = "";
-        dispatch("scrollDown");
-        setTimeout(() => {
-            textarea.innerHTML = "";
-            dispatch("formHeight", messageForm.clientHeight);
-        }, 0);
 
         if ($applicationsSelected.size > 0) {
             for (const app of $applicationsSelected) {
@@ -283,9 +281,11 @@
                         return apps;
                     });
                     // Update app with Klaxoon's Activity Picker
-                    app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(event.url));
-                    if (event.imageUrl) app.icon = event.imageUrl;
-                    if (event.title) app.name = event.title;
+                    app.link = KlaxoonService.getKlaxoonEmbedUrl(
+                        new URL(event.url),
+                        chatConnectionManager.klaxoonToolClientId
+                    );
+                    if (event.imageUrl) app.image = event.imageUrl;
                     // Add new app
                     applicationsSelected.update((apps) => {
                         apps.add(app);
@@ -442,6 +442,7 @@
                     name: "Klaxoon",
                     icon: "./static/images/applications/klaxoon.svg",
                     example: "https://klaxoon.com/fr",
+                    description: $LL.form.application.klaxoon.description(),
                 });
                 return apps;
             });
@@ -452,6 +453,7 @@
                     name: "Youtube",
                     icon: "./static/images/applications/youtube.svg",
                     example: "https://www.youtube.com/watch?v=Y9ubBWf5w20",
+                    description: $LL.form.application.youtube.description(),
                 });
                 return apps;
             });
@@ -462,6 +464,7 @@
                     name: "Google Docs",
                     icon: "./static/images/applications/google-docs.svg",
                     example: "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit",
+                    description: $LL.form.application.googleDocs.description(),
                 });
                 return apps;
             });
@@ -472,6 +475,7 @@
                     name: "Google Sheets",
                     icon: "./static/images/applications/google-sheets.svg",
                     example: "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit",
+                    description: $LL.form.application.googleSheets.description(),
                 });
                 return apps;
             });
@@ -482,6 +486,7 @@
                     name: "Google Slides",
                     icon: "./static/images/applications/google-slides.svg",
                     example: "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit",
+                    description: $LL.form.application.googleSlides.description(),
                 });
                 return apps;
             });
@@ -492,6 +497,7 @@
                     name: "Eraser",
                     icon: "./static/images/applications/eraser.svg",
                     example: "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU",
+                    description: $LL.form.application.eraser.description(),
                 });
                 return apps;
             });
@@ -556,29 +562,13 @@
 
     {#each [...$applicationsSelected] as app}
         <div
-            class="tw-mx-2 tw-mb-2 tw-px-6 tw-py-3 tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-xl tw-text-xxs tw-justify-between tw-items-center tw-bottom-12"
+            class="tw-flex tw-flex-column tw-items-center tw-justify-center tw-mx-12 tw-mb-2 tw-p-3 tw-flex tw-flex-wrap tw-rounded-xl tw-text-xxs tw-bottom-12"
+            style="backdrop-filter: blur(30px);border: solid 1px rgb(27 27 41);"
         >
             <div class="tw-flex tw-flex-row tw-justify-between tw-items-center tw-m-1 tw-w-full">
                 <label for="app" class="tw-m-0">
                     <img src={app.icon} alt={`App ${app.name} started in the chat`} width="20px" />
-                    {#if app.name === "Klaxoon"}
-                        {$LL.form.application.klaxoon.description()}
-                    {/if}
-                    {#if app.name === "Youtube"}
-                        {$LL.form.application.youtube.description()}
-                    {/if}
-                    {#if app.name === "Google Docs"}
-                        {$LL.form.application.googleDocs.description()}
-                    {/if}
-                    {#if app.name === "Google Sheets"}
-                        {$LL.form.application.googleSheets.description()}
-                    {/if}
-                    {#if app.name === "Google Slides"}
-                        {$LL.form.application.googleSlides.description()}
-                    {/if}
-                    {#if app.name === "Eraser"}
-                        {$LL.form.application.eraser.description()}
-                    {/if}
+                    {app.description}
                 </label>
                 <button
                     on:click|preventDefault|stopPropagation={() => {
@@ -598,6 +588,9 @@
                 on:keypress={handlerKeyDownAppInput}
                 on:blur={() => checkWebsiteProperty(app)}
             />
+            {#if app.image}
+                <img class="tw-m-4" src={app.image} alt={`App ${app.name} preview`} width="100px" />
+            {/if}
             {#if app.error}
                 <p class="tw-text-pop-red tw-text-xs tw-px-2 tw-mt-2 tw-my-0">{app.error}</p>
             {/if}
@@ -612,7 +605,8 @@
         <div class="tw-w-full tw-p-2">
             {#each [...$filesUploadStore.values()] as fileUploaded}
                 <div
-                    class="upload-file tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1"
+                    class="upload-file tw-flex tw-flex-wrap tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-mx-6 tw-px-3 tw-mb-1"
+                    style="backdrop-filter: blur(30px);border: solid 1px rgb(27 27 41);"
                 >
                     {#if fileUploaded.errorMessage !== undefined}
                         <div

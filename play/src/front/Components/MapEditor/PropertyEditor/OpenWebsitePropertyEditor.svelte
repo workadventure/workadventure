@@ -20,7 +20,7 @@
     import googleSheetsSvg from "../../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../../images/applications/icon_google_slides.svg";
     import eraserSvg from "../../images/applications/icon_eraser.svg";
-    import { KLAXOON_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
+    import { connectionManager } from "../../../Connection/ConnectionManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenWebsitePropertyData;
@@ -56,6 +56,34 @@
             if (property.trigger === "onicon") {
                 property.trigger = undefined;
             }
+            // remove embed link
+            if (property.link) {
+                if (property.application == "googleDocs") {
+                    property.link = GoogleWorkSpaceService.getGoogleWorkSpaceBasicUrl(new URL(property.link));
+                } else if (property.application == "googleSheets") {
+                    property.link = GoogleWorkSpaceService.getGoogleWorkSpaceBasicUrl(new URL(property.link));
+                } else if (property.application == "googleSlides") {
+                    property.link = GoogleWorkSpaceService.getGoogleWorkSpaceBasicUrl(new URL(property.link));
+                } else if (property.application == "klaxoon") {
+                    property.link = KlaxoonService.getKlaxoonBasicUrl(new URL(property.link));
+                }
+            }
+        } else {
+            // remove embed link
+            if (property.link) {
+                if (property.application == "googleDocs") {
+                    property.link = GoogleWorkSpaceService.getGoogleDocsEmbedUrl(new URL(property.link));
+                } else if (property.application == "googleSheets") {
+                    property.link = GoogleWorkSpaceService.getGoogleSheetsEmbedUrl(new URL(property.link));
+                } else if (property.application == "googleSlides") {
+                    property.link = GoogleWorkSpaceService.getGoogleSlidesEmbedUrl(new URL(property.link));
+                } else if (property.application == "klaxoon") {
+                    property.link = KlaxoonService.getKlaxoonEmbedUrl(
+                        new URL(property.link),
+                        connectionManager.currentRoom?.klaxoonToolClientId
+                    );
+                }
+            }
         }
         dispatch("change");
     }
@@ -74,6 +102,9 @@
                 const link = await YoutubeService.getYoutubeEmbedUrl(new URL(property.link));
                 embeddable = true;
                 optionAdvancedActivated = false;
+                property.buttonLabel =
+                    YoutubeService.getTitleFromYoutubeUrl(new URL(property.link)) ??
+                    $LL.mapEditor.properties.youtubeProperties.label();
                 property.link = link;
                 property.newTab = oldNewTabValue;
             } catch (e: unknown) {
@@ -149,7 +180,10 @@
 
         if (property.application == "klaxoon") {
             try {
-                const link = KlaxoonService.getKlaxoonEmbedUrl(new URL(property.link as string));
+                const link = KlaxoonService.getKlaxoonEmbedUrl(
+                    new URL(property.link as string),
+                    connectionManager.currentRoom?.klaxoonToolClientId
+                );
                 embeddable = true;
                 optionAdvancedActivated = false;
                 property.link = link;
@@ -247,19 +281,29 @@
     }
 
     function openKlaxoonActivityPicker() {
-        if (!KLAXOON_CLIENT_ID || property.type !== "openWebsite" || property.application !== "klaxoon") {
+        if (
+            !connectionManager.currentRoom?.klaxoonToolClientId ||
+            property.type !== "openWebsite" ||
+            property.application !== "klaxoon"
+        ) {
             console.info("openKlaxoonActivityPicker: app is not a klaxoon app");
             return;
         }
-        KlaxoonService.openKlaxoonActivityPicker(KLAXOON_CLIENT_ID, (payload: KlaxoonEvent) => {
-            property.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(payload.url));
-            property.poster = payload.imageUrl;
-            property.buttonLabel = payload.title;
-            // check if the link is embeddable
-            checkWebsiteProperty().catch((e) => {
-                console.error("Error checking embeddable website", e);
-            });
-        });
+        KlaxoonService.openKlaxoonActivityPicker(
+            connectionManager.currentRoom?.klaxoonToolClientId,
+            (payload: KlaxoonEvent) => {
+                property.link = KlaxoonService.getKlaxoonEmbedUrl(
+                    new URL(payload.url),
+                    connectionManager.currentRoom?.klaxoonToolClientId
+                );
+                property.poster = payload.imageUrl;
+                property.buttonLabel = payload.title;
+                // check if the link is embeddable
+                checkWebsiteProperty().catch((e) => {
+                    console.error("Error checking embeddable website", e);
+                });
+            }
+        );
     }
 </script>
 

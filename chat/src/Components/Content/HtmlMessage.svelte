@@ -1,9 +1,10 @@
 <script lang="ts">
-    import { onMount, beforeUpdate } from "svelte";
+    import { onMount, beforeUpdate, afterUpdate, onDestroy } from "svelte";
     import { marked } from "marked";
     import { HtmlUtils } from "../../Utils/HtmlUtils";
     import { settingsViewStore } from "../../Stores/ActiveThreadStore";
     import { Message } from "../../Model/Message";
+    import { iframeListener } from "../../IframeListener";
 
     export let html: string;
     export let message: Message;
@@ -36,6 +37,29 @@
                 }, 100);
             });
         }
+    });
+
+    let elements: NodeListOf<Element>;
+    const aListner = (event: Event) => {
+        event.stopPropagation();
+        event.preventDefault();
+
+        // Open link in new tab
+        const target = event.target as HTMLAnchorElement;
+        iframeListener.openTab(target.href);
+    };
+    afterUpdate(() => {
+        elements = document.querySelectorAll(`#message_${message.id} div a`);
+        elements.forEach((element) => {
+            element.addEventListener("click", aListner);
+        });
+    });
+
+    onDestroy(() => {
+        // Unsubscribe element event listner click
+        elements.forEach((element) => {
+            element.removeEventListener("click", aListner);
+        });
     });
 </script>
 
