@@ -296,8 +296,8 @@
                     new URL(payload.url),
                     connectionManager.currentRoom?.klaxoonToolClientId
                 );
-                property.poster = payload.imageUrl;
-                property.buttonLabel = payload.title;
+                property.poster = payload.imageUrl ?? undefined;
+                property.buttonLabel = payload.title ?? undefined;
                 // check if the link is embeddable
                 checkWebsiteProperty().catch((e) => {
                     console.error("Error checking embeddable website", e);
