@@ -322,10 +322,7 @@ services:
 
     messages:
         image: thecodingmachine/nodejs:v2-18-bullseye-build
-        platform:
-          linux/amd64
         environment:
-            #STARTUP_COMMAND_0: sudo apt-get install -y inotify-tools
             STARTUP_COMMAND_1: npm install
             STARTUP_COMMAND_2: npm run proto:watch
         volumes:
