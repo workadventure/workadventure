@@ -30,6 +30,7 @@
     import { defaultWoka } from "../../Xmpp/AbstractRoom";
     import { chatConnectionManager } from "../../Connection/ChatConnectionManager";
     import ApplicationPicker from "../Content/ApplicationPicker.svelte";
+    import { iframeListener } from "../../IframeListener";
     import UserWriting from "./UserWriting.svelte";
 
     const dispatch = createEventDispatcher();
@@ -74,7 +75,7 @@
         }
         if ($applicationsSelected.size > 0) {
             for (const app of $applicationsSelected) {
-                if (app.link != undefined) {
+                if (app.link != undefined && app.link != "") {
                     chatMessagesStore.addPersonalMessage(app.link);
                 }
                 applicationsSelected.update((apps) => {
@@ -116,6 +117,16 @@
     let emojiContainer: HTMLElement;
     let picker: EmojiButton;
 
+    let elements: NodeListOf<Element>;
+    const aListner = (event: Event) => {
+        event.stopPropagation();
+        event.preventDefault();
+
+        // Open link in new tab
+        const target = event.target as HTMLAnchorElement;
+        iframeListener.openTab(target.href);
+    };
+
     onMount(() => {
         subscribers.push(
             chatMessagesStore.subscribe(() => {
@@ -127,6 +138,14 @@
                     if (messageList) {
                         document.scrollingElement?.scrollTo(0, messageList.scrollHeight);
                     }
+
+                    // for each all messages in chatMessagesStore
+                    elements = document.querySelectorAll(`div.wa-message-body a`);
+                    elements.forEach((element) => {
+                        // clear previous event listner
+                        element.removeEventListener("click", aListner);
+                        element.addEventListener("click", aListner);
+                    });
                 }, 100);
             })
         );
@@ -269,15 +288,18 @@
             KlaxoonService.openKlaxoonActivityPicker(
                 chatConnectionManager.klaxoonToolClientId,
                 (event: KlaxoonEvent) => {
+                    console.log("KlaxoonService.openKlaxoonActivityPicker => event", event);
                     // Remove previous app
                     applicationsSelected.update((apps) => {
                         apps.delete(app);
                         return apps;
                     });
                     // Update app with Klaxoon's Activity Picker
-                    app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(event.url));
+                    app.link = KlaxoonService.getKlaxoonEmbedUrl(
+                        new URL(event.url),
+                        chatConnectionManager.klaxoonToolClientId
+                    );
                     if (event.imageUrl) app.image = event.imageUrl;
-                    if (event.title) app.name = event.title;
                     // Add new app
                     applicationsSelected.update((apps) => {
                         apps.add(app);
@@ -302,7 +324,10 @@
         switch (app.name) {
             case "Klaxoon":
                 try {
-                    app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(app.link));
+                    app.link = KlaxoonService.getKlaxoonEmbedUrl(
+                        new URL(app.link),
+                        chatConnectionManager.klaxoonToolClientId
+                    );
                 } catch (err) {
                     if (err instanceof KlaxoonException.KlaxoonException) {
                         app.error = $LL.form.application.klaxoon.error();
@@ -393,6 +418,11 @@
 
     onDestroy(() => {
         subscribers.forEach((subscriber) => subscriber());
+
+        // Unsubscribe element event listner click
+        elements.forEach((element) => {
+            element.removeEventListener("click", aListner);
+        });
     });
 </script>
 
@@ -460,6 +490,7 @@
         {#each $chatMessagesStore as message, i}
             {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
                 <div
+                    id={`message_${message.id}`}
                     class={`${
                         needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)
                             ? "tw-mt-0.5"

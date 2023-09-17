@@ -115,33 +115,27 @@
             showErrorMessages();
             return false;
         }
-        if (
-            fileMessageManager.files.length === 0 &&
-            (!htmlMessageText || htmlMessageText.replace(/\s/g, "").length === 0) &&
-            $applicationsSelected.size === 0
-        ) {
-            return false;
-        }
+        if (fileMessageManager.files.length > 0 || (htmlMessageText && htmlMessageText.replace(/\s/g, "").length > 0)) {
+            mucRoom.updateComposingState(ChatState.Paused);
+            const message = htmlMessageText
+                .replace(/<div>/g, "\n")
+                .replace(/(<([^>]+)>)/gi, "")
+                .replace(/&nbsp;/g, " ")
+                .trim();
 
-        mucRoom.updateComposingState(ChatState.Paused);
-        const message = htmlMessageText
-            .replace(/<div>/g, "\n")
-            .replace(/(<([^>]+)>)/gi, "")
-            .replace(/&nbsp;/g, " ")
-            .trim();
-
-        if ($selectedMessageToReply) {
-            sendReplyMessage(message);
-        } else {
-            mucRoom.sendMessage(message);
+            if ($selectedMessageToReply) {
+                sendReplyMessage(message);
+            } else {
+                mucRoom.sendMessage(message);
+            }
+            newMessageText = "";
+            htmlMessageText = "";
+            dispatch("scrollDown");
+            setTimeout(() => {
+                textarea.innerHTML = "";
+                dispatch("formHeight", messageForm.clientHeight);
+            }, 0);
         }
-        newMessageText = "";
-        htmlMessageText = "";
-        dispatch("scrollDown");
-        setTimeout(() => {
-            textarea.innerHTML = "";
-            dispatch("formHeight", messageForm.clientHeight);
-        }, 0);
 
         if ($applicationsSelected.size > 0) {
             for (const app of $applicationsSelected) {
@@ -287,9 +281,11 @@
                         return apps;
                     });
                     // Update app with Klaxoon's Activity Picker
-                    app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(event.url));
+                    app.link = KlaxoonService.getKlaxoonEmbedUrl(
+                        new URL(event.url),
+                        chatConnectionManager.klaxoonToolClientId
+                    );
                     if (event.imageUrl) app.image = event.imageUrl;
-                    if (event.title) app.name = event.title;
                     // Add new app
                     applicationsSelected.update((apps) => {
                         apps.add(app);

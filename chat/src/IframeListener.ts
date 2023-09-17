@@ -266,6 +266,13 @@ class IframeListener {
         });
     }
 
+    openTab(url: string) {
+        this.sendToParent({
+            type: "openTab",
+            data: { url },
+        });
+    }
+
     sendToParent(message: lookingLikeIframeEventWrapper) {
         debug(`iFrameListener => message sent to parent => ${JSON.stringify(message)}`);
         window.parent.postMessage(message, "*");

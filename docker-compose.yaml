@@ -128,6 +128,7 @@ services:
             GOOGLE_DOCS_ENABLED: "$GOOGLE_DOCS_ENABLED"
             GOOGLE_SHEETS_ENABLED: "$GOOGLE_SHEETS_ENABLED"
             GOOGLE_SLIDES_ENABLED: "$GOOGLE_SLIDES_ENABLED"
+            WHITE_LISTE_EMBEDAABLE_DOMAINS: "$WHITE_LISTE_EMBEDAABLE_DOMAINS"
             # Report issues menu
             ACTIVE_REPORT_ISSUES_MENU: "true"
             URL_REPORT_ISSUES: "https://github.com/workadventure/workadventure/issues"

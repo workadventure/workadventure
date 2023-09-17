@@ -16,7 +16,7 @@
     import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
     import eraserSvg from "../images/applications/icon_eraser.svg";
-    import { FEATURE_FLAG_BROADCAST_AREAS, KLAXOON_CLIENT_ID } from "../../Enum/EnvironmentVariable";
+    import { FEATURE_FLAG_BROADCAST_AREAS } from "../../Enum/EnvironmentVariable";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
@@ -55,6 +55,7 @@
     ): AreaDataProperty {
         const id = crypto.randomUUID();
         let placeholder: string;
+        let policy: string | undefined;
         switch (type) {
             case "start":
                 return {
@@ -88,6 +89,8 @@
                 switch (subtype) {
                     case "youtube":
                         placeholder = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
+                        policy =
+                            "fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share;";
                         break;
                     case "klaxoon":
                         placeholder = "https://app.klaxoon.com/";
@@ -120,6 +123,7 @@
                     hideButtonLabel: true,
                     application: subtype ?? "website",
                     placeholder,
+                    policy,
                 };
             case "playAudio":
                 return {
@@ -215,16 +219,26 @@
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
-        if (!KLAXOON_CLIENT_ID || app.type !== "openWebsite" || app.application !== "klaxoon") {
+        if (
+            !connectionManager.currentRoom?.klaxoonToolClientId ||
+            app.type !== "openWebsite" ||
+            app.application !== "klaxoon"
+        ) {
             console.info("openKlaxoonActivityPicker: app is not a klaxoon app");
             return;
         }
-        KlaxoonService.openKlaxoonActivityPicker(KLAXOON_CLIENT_ID, (payload: KlaxoonEvent) => {
-            app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(payload.url));
-            app.poster = payload.imageUrl;
-            app.buttonLabel = payload.title;
-            onUpdateProperty(app);
-        });
+        KlaxoonService.openKlaxoonActivityPicker(
+            connectionManager.currentRoom?.klaxoonToolClientId,
+            (payload: KlaxoonEvent) => {
+                app.link = KlaxoonService.getKlaxoonEmbedUrl(
+                    new URL(payload.url),
+                    connectionManager.currentRoom?.klaxoonToolClientId
+                );
+                app.poster = payload.imageUrl;
+                app.buttonLabel = payload.title;
+                onUpdateProperty(app);
+            }
+        );
     }
 </script>
 
@@ -334,18 +348,6 @@
     </div>
     <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
         <AddPropertyButton
-            headerText={$LL.mapEditor.properties.youtubeProperties.label()}
-            descriptionText={connectionManager.currentRoom?.youtubeToolActivated
-                ? $LL.mapEditor.properties.youtubeProperties.description()
-                : $LL.mapEditor.properties.youtubeProperties.disabled()}
-            img={youtubeSvg}
-            style="z-index: 5;"
-            disabled={!connectionManager.currentRoom?.youtubeToolActivated}
-            on:click={() => {
-                onAddProperty("openWebsite", "youtube");
-            }}
-        />
-        <AddPropertyButton
             headerText={$LL.mapEditor.properties.klaxoonProperties.label()}
             descriptionText={connectionManager.currentRoom?.klaxoonToolActivated
                 ? $LL.mapEditor.properties.klaxoonProperties.description()
@@ -355,6 +357,18 @@
             disabled={!connectionManager.currentRoom?.klaxoonToolActivated}
             on:click={() => {
                 onAddProperty("openWebsite", "klaxoon");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.youtubeProperties.label()}
+            descriptionText={connectionManager.currentRoom?.youtubeToolActivated
+                ? $LL.mapEditor.properties.youtubeProperties.description()
+                : $LL.mapEditor.properties.youtubeProperties.disabled()}
+            img={youtubeSvg}
+            style="z-index: 5;"
+            disabled={!connectionManager.currentRoom?.youtubeToolActivated}
+            on:click={() => {
+                onAddProperty("openWebsite", "youtube");
             }}
         />
         <AddPropertyButton

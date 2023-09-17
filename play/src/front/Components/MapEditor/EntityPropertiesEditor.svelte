@@ -73,6 +73,7 @@
         const id = crypto.randomUUID();
         let placeholder: string;
         let buttonLabel: string;
+        let policy: string | undefined;
         switch (type) {
             case "jitsiRoomProperty":
                 return {
@@ -88,6 +89,8 @@
                     case "youtube":
                         placeholder = "https://www.youtube.com/watch?v=Y9ubBWf5w20";
                         buttonLabel = $LL.mapEditor.properties.youtubeProperties.label();
+                        policy =
+                            "fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share;";
                         break;
                     case "klaxoon":
                         placeholder = "https://app.klaxoon.com/";
@@ -125,6 +128,7 @@
                     newTab: false,
                     application: subtype ?? "website",
                     placeholder,
+                    policy,
                 };
             case "playAudio":
                 return {
