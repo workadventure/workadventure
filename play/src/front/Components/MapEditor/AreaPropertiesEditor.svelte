@@ -234,8 +234,8 @@
                     new URL(payload.url),
                     connectionManager.currentRoom?.klaxoonToolClientId
                 );
-                app.poster = payload.imageUrl;
-                app.buttonLabel = payload.title;
+                app.poster = payload.imageUrl ?? undefined;
+                app.buttonLabel = payload.title ?? undefined;
                 onUpdateProperty(app);
             }
         );
