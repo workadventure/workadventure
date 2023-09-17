@@ -1,18 +1,19 @@
 import { z } from "zod";
 
 export const isKlaxoonEvent = z.object({
-    access_code: z.string().optional(),
+    access_code: z.string().optional().nullable(),
     url: z.string(),
     author: z
         .object({
-            firstname: z.string(),
-            lastname: z.string(),
+            firstname: z.string().nullable(),
+            lastname: z.string().nullable(),
         })
-        .optional(),
-    imageUrl: z.string().optional(),
-    lang: z.string().optional(),
-    title: z.string().optional(),
-    type: z.string().optional(),
+        .optional()
+        .nullable(),
+    imageUrl: z.string().optional().nullable(),
+    lang: z.string().optional().nullable(),
+    title: z.string().optional().nullable(),
+    type: z.string().optional().nullable(),
 });
 
 export type KlaxoonEvent = z.infer<typeof isKlaxoonEvent>;
