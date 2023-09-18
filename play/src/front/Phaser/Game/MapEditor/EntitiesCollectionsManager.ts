@@ -129,7 +129,10 @@ export class EntitiesCollectionsManager {
         const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
-        } else if (response.headers.get("Content-Type") !== "application/json") {
+        } else if (
+            response.headers.get("Content-Type") !== "application/json" &&
+            !response.headers.get("Content-Type")?.startsWith("application/json;")
+        ) {
             throw new Error(`Failed to fetch ${url}: invalid content type`);
         }
         return response.json();
