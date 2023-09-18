@@ -8,7 +8,6 @@ import { ApiError } from "./Errors/ApiError";
 
 const errorLogo = new Image();
 errorLogo.src = logoImg;
-
 export const errorLogoStore = readable<HTMLImageElement>(errorLogo);
 
 const errorImage = new Image();
