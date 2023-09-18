@@ -58,7 +58,14 @@ const config: PlaywrightTestConfig = {
         permissions: ["microphone","camera"],
         ignoreHTTPSErrors: true,
         launchOptions: {
-          args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
+          args: [
+            '--use-fake-ui-for-media-stream',
+            '--use-fake-device-for-media-stream',
+            // force GPU hardware acceleration
+            // (even in headless mode)
+            '--use-gl=egl',
+            '--ignore-gpu-blocklist',
+          ],
         },
       },
     },
