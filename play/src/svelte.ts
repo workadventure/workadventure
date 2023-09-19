@@ -44,32 +44,32 @@ if (SENTRY_DSN_FRONT != undefined) {
 }
 
 const { width, height } = coWebsiteManager.getGameSize();
-const fps: Phaser.Types.Core.FPSConfig = {
-    /**
-     * The minimum acceptable rendering rate, in frames per second.
-     */
-    min: 60,
-    /**
-     * The optimum rendering rate, in frames per second.
-     */
-    target: 60,
-    /**
-     * Use setTimeout instead of requestAnimationFrame to run the game loop.
-     */
-    forceSetTimeOut: false,
-    /**
-     * Calculate the average frame delta from this many consecutive frame intervals.
-     */
-    deltaHistory: 120,
-    /**
-     * The amount of frames the time step counts before we trust the delta values again.
-     */
-    panicMax: 20,
-    /**
-     * Apply delta smoothing during the game update to help avoid spikes?
-     */
-    smoothStep: false,
-};
+// const fps: Phaser.Types.Core.FPSConfig = {
+//     /**
+//      * The minimum acceptable rendering rate, in frames per second.
+//      */
+//     min: 60,
+//     /**
+//      * The optimum rendering rate, in frames per second.
+//      */
+//     target: 60,
+//     /**
+//      * Use setTimeout instead of requestAnimationFrame to run the game loop.
+//      */
+//     forceSetTimeOut: false,
+//     /**
+//      * Calculate the average frame delta from this many consecutive frame intervals.
+//      */
+//     deltaHistory: 120,
+//     /**
+//      * The amount of frames the time step counts before we trust the delta values again.
+//      */
+//     panicMax: 20,
+//     /**
+//      * Apply delta smoothing during the game update to help avoid spikes?
+//      */
+//     smoothStep: false,
+// };
 
 // the ?phaserMode=canvas parameter can be used to force Canvas usage
 const params = new URLSearchParams(document.location.search.substring(1));
@@ -115,7 +115,7 @@ const config: Phaser.Types.Core.GameConfig = {
         CustomizeScene,
     ],
     //resolution: window.devicePixelRatio / 2,
-    fps: fps,
+    //fps: fps,
     dom: {
         createContainer: true,
     },

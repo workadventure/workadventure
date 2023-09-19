@@ -75,7 +75,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             linkPlaceholder: "https://example.com",
             defaultButtonLabel: "Ouvrir le lien",
             width: "Largeur",
-            policy: "iFrame Autorisé",
+            policy: "iFrame Autorisée",
             policyPlaceholder: "fullscreen",
             errorEmbeddableLink: "Le lien ne peut pas être intégré",
             messageNotEmbeddableLink:
