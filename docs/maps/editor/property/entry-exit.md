@@ -23,6 +23,10 @@ To do that, you must follow those instructions :
 {.alert.alert-info}
 **Pro tip**: if you expect many people to connect to your map at the same time (for instance, if you are organizing a big event), consider making a large start area. This way, users will not all appear at the same position and will not pop randomly in a chat with someone connecting at the same moment.
 
+:::info
+If your map already has start positions defined in Tiled, areas defined in the map editor will take precedence. 
+:::
+
 ## Create an exit area
 In order to let user leave your map in a defined area you will need to create an exit area.
 To do that, you must follow those instructions :
