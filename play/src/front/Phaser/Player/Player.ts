@@ -9,6 +9,7 @@ import { Character } from "../Entity/Character";
 import { userMovingStore } from "../../Stores/GameStore";
 import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
 import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
+import { visibilityStore } from "../../Stores/VisibilityStore";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -31,6 +32,13 @@ export class Player extends Character {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companionTexturePromise, "me");
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
+
+        visibilityStore.subscribe((isVisible) => {
+            if (!isVisible) {
+                this.stop();
+                this.finishFollowingPath(true);
+            }
+        });
     }
 
     public moveUser(delta: number, activeUserInputEvents: ActiveEventList): void {
