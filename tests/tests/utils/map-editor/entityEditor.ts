@@ -1,4 +1,4 @@
-import {Page} from "@playwright/test";
+import {expect, Page} from "@playwright/test";
 
 class EntityEditor {
     async selectEntity(page: Page, nb: number, search?: string){
@@ -17,6 +17,7 @@ class EntityEditor {
 
     async quitEntitySelector(page: Page){
         await page.locator('.map-editor .item-picker .item-variations img[alt="Unselect object picked"]').click();
+        await expect(page.locator('.map-editor .item-picker .item-variations img[alt="Unselect object picked"]')).toHaveCount(0);
     }
 
     async addProperty(page: Page, property: string) {
