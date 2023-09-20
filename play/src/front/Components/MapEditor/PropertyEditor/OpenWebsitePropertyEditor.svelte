@@ -27,7 +27,7 @@
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
     export let icon = "resources/icons/icon_link.png";
     export let isArea = false;
-    let optionAdvancedActivated = false;
+    let optionAdvancedActivated = shouldDisplayAdvancedOption();
     let embeddable = true;
     let embeddableLoading = false;
     let error = "";
@@ -36,6 +36,11 @@
 
     const dispatch = createEventDispatcher();
 
+    function shouldDisplayAdvancedOption(): boolean {
+        return !!(property.policy || property.allowAPI || !property.closable || property.width || property.newTab);
+    }
+
+    console.log("property", property);
     onMount(() => {
         // if klaxoon, open Activity Picker
         if (property.application === "klaxoon" && (property.link == undefined || property.link === "")) {
@@ -246,13 +251,14 @@
                     property.newTab = oldNewTabValue;
                     if (answer.embeddable) {
                         if (!oldNewTabValue) {
-                            optionAdvancedActivated = false;
+                            //optionAdvancedActivated = false;
                         }
                     } else {
-                        optionAdvancedActivated = true;
+                        //optionAdvancedActivated = true;
                         property.newTab = true;
                         embeddable = false;
                     }
+                    optionAdvancedActivated = shouldDisplayAdvancedOption();
                 }
             })
             .catch((e: unknown) => {
@@ -468,37 +474,37 @@
                         on:change={onValueChange}
                     />
                 </div>
+                <div class="value-switch">
+                    <label for="closable">{$LL.mapEditor.properties.linkProperties.closable()}</label>
+                    <input
+                        id="closable"
+                        type="checkbox"
+                        class="input-switch"
+                        bind:checked={property.closable}
+                        on:change={onValueChange}
+                    />
+                </div>
+                <div class="value-switch">
+                    <label for="allowAPI">{$LL.mapEditor.properties.linkProperties.allowAPI()}</label>
+                    <input
+                        id="allowAPI"
+                        type="checkbox"
+                        class="input-switch"
+                        bind:checked={property.allowAPI}
+                        on:change={onValueChange}
+                    />
+                </div>
+                <div class="value-input tw-flex tw-flex-col">
+                    <label for="policy">{$LL.mapEditor.properties.linkProperties.policy()}</label>
+                    <input
+                        id="policy"
+                        type="text"
+                        placeholder={$LL.mapEditor.properties.linkProperties.policyPlaceholder()}
+                        bind:value={property.policy}
+                        on:change={onValueChange}
+                    />
+                </div>
             {/if}
-            <div class="value-switch">
-                <label for="closable">{$LL.mapEditor.properties.linkProperties.closable()}</label>
-                <input
-                    id="closable"
-                    type="checkbox"
-                    class="input-switch"
-                    bind:checked={property.closable}
-                    on:change={onValueChange}
-                />
-            </div>
-            <div class="value-switch">
-                <label for="allowAPI">{$LL.mapEditor.properties.linkProperties.allowAPI()}</label>
-                <input
-                    id="allowAPI"
-                    type="checkbox"
-                    class="input-switch"
-                    bind:checked={property.allowAPI}
-                    on:change={onValueChange}
-                />
-            </div>
-            <div class="value-input tw-flex tw-flex-col">
-                <label for="policy">{$LL.mapEditor.properties.linkProperties.policy()}</label>
-                <input
-                    id="policy"
-                    type="text"
-                    placeholder={property.placeholder ?? $LL.mapEditor.properties.linkProperties.policyPlaceholder()}
-                    bind:value={property.policy}
-                    on:change={onValueChange}
-                />
-            </div>
         </div>
     </span>
 </PropertyEditorBase>
