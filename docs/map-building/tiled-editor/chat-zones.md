@@ -11,6 +11,8 @@ title: Chat zones
 
 It is possible to define special regions (zones) on the map that can allow any user who is inside to access a specified chat. We call them "chat zones". When player gets inside, a new room will be added in his chat :
 
+import ReactPlayer from 'react-player'
+
 <ReactPlayer width="100%" loop={true} playing controls url='/docs/map-building/images/chat/zones/0_chat_zones.mp4' />
 
 ### Adding new **chat zone**
