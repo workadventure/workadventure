@@ -41,7 +41,7 @@ import type { ExSocketInterface, BackSpaceConnection } from "../models/Websocket
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
-import { EJABBERD_DOMAIN, WHITE_LISTE_EMBEDAABLE_DOMAINS } from "../enums/EnvironmentVariable";
+import { EJABBERD_DOMAIN, EMBEDDED_DOMAINS_WHITELIST } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
 import { emitInBatch } from "./IoSocketHelpers";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
@@ -1222,9 +1222,9 @@ export class SocketManager implements ZoneEventListener {
     }
 }
 
-// Verify that the domain of the url in parameter is in the white list of embeddable domains defined in the .env file (WHITE_LISTE_EMBEDAABLE_DOMAINS)
+// Verify that the domain of the url in parameter is in the white list of embeddable domains defined in the .env file (EMBEDDED_DOMAINS_WHITELIST)
 const verifyUrlAsDomainInWhiteList = (url: string) => {
-    return WHITE_LISTE_EMBEDAABLE_DOMAINS.some((domain) => url.includes(domain));
+    return EMBEDDED_DOMAINS_WHITELIST.some((domain) => url.includes(domain));
 };
 
 export const socketManager = new SocketManager();
