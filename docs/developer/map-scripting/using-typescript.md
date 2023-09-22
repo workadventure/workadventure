@@ -185,20 +185,9 @@ Final step, you must reference the script inside your map, by adding a `script` 
 
 ### Building the final script
 
-We now have a correct development setup. But we still need to be able to build the production script from Typescript files. We are not going to use the development server in production. To do this, we will add an additional `webpack.prod.js` file.
+We now have a correct development setup. But we still need to be able to build the production script from Typescript files.
 
-**webpack.prod.js**
-```javascript
-const { merge } = require('webpack-merge');
-const common = require('./webpack.config.js');
-
-module.exports = merge(common, {
-  mode: 'production',
-  devtool: 'source-map'
-});
-```
-
-This file will simply switch the Webpack config file in "production" mode. You can simply run:
+You can simply run:
 
 ```console
 $ npm run build
