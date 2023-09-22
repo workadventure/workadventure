@@ -9,7 +9,7 @@ Internally, scripts are always loaded inside `iframes`.
 You can load a script:
 
 1. Using the [`script` property in your map properties](index.md#adding-a-script-in-the-map)
-2. or from an iframe [opened as a co-website](index.md#adding-a-script-in-an-iframe) or [embedded in the map](../../map-building/tiled-editor/website-in-map.md#allowing-the-scripting-api-in-your-iframe)
+2. or from an iframe [opened as a co-website](index.md#adding-a-script-in-an-iframe) or [embedded in the map](/map-building/tiled-editor/website-in-map)
 
 ## Script restrictions
 

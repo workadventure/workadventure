@@ -11,7 +11,7 @@ of interest within your map.
 
 :::info
 The inline map editor is very user-friendly but lacks some advanced features (like placing floor, walls, or adding
-scripts). If you want to create a map from scratch, you should start using [Tiled](../build-your-map.md) first
+scripts). If you want to create a map from scratch, you should start using [Tiled](../tiled-editor/) first
 and then use the inline map editor for finishing.
 :::
 
@@ -37,7 +37,7 @@ The map editor provides a set of tools that can be accessed from the toolbar on 
   Those objects (we call them "entities") can be made interactive. When clicking an interactive entity, a dialog box
   will appear proposing a number of options (opening a website, entering a Jitsi room, etc...)
 - The **delete** tool allows you to easily delete any entity places on the map using the entity editor tool.
-- The **[area editor tool](area-editor.md)** allows you to define areas that will be triggered when the player walks on them. Those areas
+- The **[area editor tool](area-editor/)** allows you to define areas that will be triggered when the player walks on them. Those areas
   can also be used to trigger actions (like opening a website, entering a Jitsi room, etc...).
 - Use **[configure my room](megaphone.md)** to modify global settings of the room you are currently in.
   As of now, it only allows configuring the megaphone.

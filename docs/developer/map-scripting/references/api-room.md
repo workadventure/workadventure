@@ -291,7 +291,7 @@ WA.room.loadTileset("Assets/Tileset.json").then((firstId) => {
 ## Embedding websites in a map
 
 You can use the scripting API to embed websites in a map, or to edit websites that are already embedded (using
-the ["website" objects](../../../map-building//tiled-editor/website-in-map.md)).
+the ["website" objects](/map-building/tiled-editor/website-in-map)).
 
 ### Getting an instance of a website already embedded in the map
 

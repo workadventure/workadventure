@@ -208,7 +208,7 @@ setTimeout(
 
 ## Manage fixed iframes
 
-You can use the scripting API to display an iframe (so any HTML element) above the game. The iframe is positionned relative to the browser window (so unlike [embedded websites](website-in-map.md), the position of the iframe does not move when someone walks on the map).
+You can use the scripting API to display an iframe (so any HTML element) above the game. The iframe is positionned relative to the browser window (so unlike [embedded websites](/map-building/tiled-editor/website-in-map), the position of the iframe does not move when someone walks on the map).
 
 ![Fixed iframe](../images/ui-website.png)
 

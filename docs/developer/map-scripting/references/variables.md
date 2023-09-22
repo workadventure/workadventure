@@ -64,12 +64,12 @@ Trying to set a variable to a value that is not compatible with the schema will 
 There are plenty of ways to use variables in WorkAdventure:
 
 - Using the [scripting API](api-state.md), you can read, edit or track the content of variables.
-- Using the [Action zones](/developer/map-scripting/scripting-api-extra/generic-action-zones.md), you can set the value of a variable when someone is entering or leaving a zone
-- By [binding variable values to properties in the map](/developer/map-scripting/scripting-api-extra//variable-to-property-binding.md)
-- By [using automatically generated configuration screens](/developer/map-scripting/scripting-api-extra//automatic-configuration.md) to create forms to edit the value of variables
+- Using the [Action zones](/developer/map-scripting/scripting-api-extra/generic-action-zones), you can set the value of a variable when someone is entering or leaving a zone
+- By [binding variable values to properties in the map](/developer/map-scripting/scripting-api-extra/variable-to-property-binding)
+- By [using automatically generated configuration screens](/developer/map-scripting/scripting-api-extra/automatic-configuration) to create forms to edit the value of variables
 
 In general, variables can be used by third party libraries that you can embed in your map to add extra features.
-A good example of such a library is the ["Scripting API Extra" library](/developer/map-scripting/scripting-api-extra//about.md)
+A good example of such a library is the ["Scripting API Extra" library](/developer/map-scripting/scripting-api-extra/)
 
 ## Player variables
 
