@@ -1,4 +1,4 @@
 position: 1
-label: 'Api References'
+label: 'Api Reference'
 collapsible: true # make the category collapsible
 collapsed: true # keep the category open by default
