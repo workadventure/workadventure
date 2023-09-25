@@ -1,24 +1,59 @@
 <script lang="ts">
     import { errorStore, hasClosableMessagesInErrorStore } from "../../Stores/ErrorStore";
     import { LL } from "../../../i18n/i18n-svelte";
+    import { connectionManager } from "../../Connection/ConnectionManager";
+    import ImgVirtualhugsvirtualhug from "../images/virtual-hugs-virtual-hug.gif";
 
-    function close(): boolean {
+    function close(): void {
         errorStore.clearClosableMessages();
-        return false;
+        return;
+    }
+
+    function refresh(): void {
+        window.location.reload();
+        return;
     }
 </script>
 
-<div class="error-div is-dark is-rounded tw-flex tw-flex-col tw-items-center tw-justify-center" open>
-    <p class="is-error title">{$LL.error.error()}</p>
-    <div class="body">
+<div
+    class="error-div tw-text-center tw-absolute tw-left-0 tw-right-0 tw-bg-dark-purple/95 tw-rounded tw-text-white tw-p-3 tw-pointer-events-auto md:tw-top-14 tw-w-full md:tw-w-1/2 tw-m-auto tw-z-[650]"
+>
+    <section class="header">
+        {#if $hasClosableMessagesInErrorStore}
+            <button type="button" class="close-window" on:click|preventDefault={close}>&times;</button>
+        {/if}
+        <h2 class="is-error title">{$LL.error.errorDialog.title()}</h2>
+    </section>
+    <section class="body">
+        <p><img src={ImgVirtualhugsvirtualhug} alt="Funny gif to send your virtual hug" class="tw-m-auto tw-h-60" /></p>
         {#each $errorStore as error}
             <p>{error.message}</p>
         {/each}
-    </div>
+        {#if connectionManager.currentRoom?.reportIssuesUrl}
+            <p class="tw-text-xs">
+                {$LL.error.errorDialog.hasReportIssuesUrl()}
+                <a href={connectionManager.currentRoom.reportIssuesUrl}
+                    >{connectionManager.currentRoom.reportIssuesUrl}</a
+                >
+            </p>
+        {:else}
+            <p class="tw-text-xs">
+                {$LL.error.errorDialog.noReportIssuesUrl()}
+                <a href="mailto:hello@workadventu.re?subject=WorkAdventure Error" rel="noreferrer" target="_blank"
+                    >hello@workadventu.re</a
+                >
+            </p>
+            <p class="tw-text-xs">
+                {$LL.error.errorDialog.messageFAQ()}
+                <a href="https://workadventu.re/faq" rel="noreferrer" target="_blank">FAQ</a>
+            </p>
+        {/if}
+    </section>
     {#if $hasClosableMessagesInErrorStore}
-        <div class="button-bar">
-            <button class="light" on:click={close}>Close</button>
-        </div>
+        <section class="foote tw-w-full tw-flex tw-flex-row tw-justify-center tw-backdrop-blur-sm">
+            <button class="light" on:click={close}>{$LL.error.errorDialog.close()}</button>
+            <button class="light outline" on:click={refresh}>{$LL.error.errorDialog.reload()}</button>
+        </section>
     {/if}
 </div>
 
@@ -37,18 +72,8 @@
         height: auto !important;
         background-clip: padding-box;
 
-        .button-bar {
-            text-align: center;
-        }
-
         .body {
             max-height: 50vh;
-        }
-
-        p {
-            &.title {
-                text-align: center;
-            }
         }
     }
 </style>
