@@ -59,26 +59,26 @@ flowchart LR
     Browser1-->Coturn
 ```
 
-> **Warning**:
+> [!WARNING]  
 > In the rest of this document, we will describe how to install the WorkAdventure server. We will leave Jitsi
 > and Coturn installs out of scope.
 
-Jitsi install guide: https://jitsi.github.io/handbook/docs/devops-guide/
+Jitsi install guide: https://jitsi.github.io/handbook/docs/devops-guide/  
 Coturn install guide: https://meetrix.io/blog/webrtc/coturn/installation.html
 
 ## Installation method for the WorkAdventure server
 
 WorkAdventure is a set of different programs. There are countless ways of hosting WorkAdventure. In the past, we have
 seen people using Ansible, NixOS or Kubernetes to host WorkAdventure. You can host each component on a different
-domain name of run a "single-domain" install. The core maintainers of this project cannot possibly support all possible 
+domain name or run a "single-domain" install. The core maintainers of this project cannot possibly support all possible 
 installation methods.
 
 So we are maintaining ONE installation method:
 
-**WorkAdventure works as a set of Docker containers.**
-**We provide Docker images for each container in the Docker hub registry, and a docker-compose file to easily start the containers.**
-**The proposed install runs on a single domain (you will still need 2 additional domain names for Jitsi and Coturn).**
-**We assume you have one physical server with root access and Docker installed. The server has a public IP address.**
+- **WorkAdventure works as a set of Docker containers.**
+- **We provide Docker images for each container in the Docker hub registry, and a docker-compose file to easily start the containers.**
+- **The proposed install runs on a single domain (you will still need 2 additional domain names for Jitsi and Coturn).**
+- **We assume you have one physical server with root access and Docker installed. The server has a public IP address.**
 
 The installation below is well tested on each release and is known to work.
 
@@ -102,7 +102,7 @@ The WorkAdventure server itself does not need many resources. However, the Cotur
 much more powerful, as they are handling the video streams. See the Jitsi and Coturn documentation for correctly
 sizing those servers.
 
-> **Warning**:
+> [!WARNING]  
 > WorkAdventure uses WebRTC for audio/video connections. WebRTC in turns, require an HTTPS connection with a valid
 > certificate. As a result, you need a domain name pointing on your server. You cannot access WorkAdventure directly
 > by the server IP address, as the HTTPS certificate can only be issued for a domain name.

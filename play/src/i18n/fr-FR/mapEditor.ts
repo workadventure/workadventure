@@ -70,7 +70,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             triggerOnClick: "Démarrer en mode réduit dans la barre inférieure",
             triggerOnAction: "Afficher un message d'information avec le message",
             closable: "Peut être fermé",
-            allowAPI: "",
+            allowAPI: "Autoriser la Scripting API",
             newTabLabel: "Ouvrir dans un nouvel onglet",
             linkPlaceholder: "https://example.com",
             defaultButtonLabel: "Ouvrir le lien",

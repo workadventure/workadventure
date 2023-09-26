@@ -70,7 +70,7 @@ const mapEditor: BaseTranslation = {
             triggerOnClick: "Start as minimized in bottom bar",
             triggerOnAction: "Show action toast with message",
             closable: "Can be closed",
-            allowAPI: "Allow API",
+            allowAPI: "Allow Scripting API",
             linkPlaceholder: "https://example.com",
             defaultButtonLabel: "Open Link",
             width: "Width",
