@@ -1,6 +1,8 @@
 import path from "path";
 import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
 import { OpidWokaNamePolicy } from "@workadventure/messages";
+import axios from "axios";
+import { MapsCacheFileFormat } from "@workadventure/map-editor";
 import {
     DISABLE_ANONYMOUS,
     ENABLE_CHAT,
@@ -25,6 +27,7 @@ import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi"
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 import { localCompanionService } from "./LocalCompanionSevice";
+import { ShortMapDescription, ShortMapDescriptionList } from "./ShortMapDescription";
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -180,7 +183,23 @@ class LocalAdmin implements AdminInterface {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 
-    async getUrlRoomsFromSameWorld(roomUrl: string, locale?: string): Promise<string[]> {
+    async getUrlRoomsFromSameWorld(roomUrl: string, locale?: string): Promise<ShortMapDescriptionList> {
+        const url = new URL(roomUrl);
+        const match = /\/~\/(.+)/.exec(url.pathname);
+        if (match) {
+            //let wamUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
+            const response = await axios.get(`${PUBLIC_MAP_STORAGE_URL}/maps`);
+            const maps = MapsCacheFileFormat.parse(response.data);
+
+            const mapDescriptions: ShortMapDescription[] = [];
+            for (const [path, value] of Object.entries(maps.maps)) {
+                const wamUrl = new URL(path, PUBLIC_MAP_STORAGE_URL).toString();
+                const name = value?.metadata?.name ?? path;
+                mapDescriptions.push({ name, roomUrl: "/~/" + path, wamUrl });
+            }
+            return mapDescriptions;
+        }
+
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 
