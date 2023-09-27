@@ -1,29 +1,30 @@
-import axios, { isAxiosError } from "axios";
 import type { AxiosResponse } from "axios";
+import axios, { isAxiosError } from "axios";
+import type { AdminApiData, MapDetailsData, RoomRedirect } from "@workadventure/messages";
 import {
-    isMapDetailsData,
-    isRoomRedirect,
-    isAdminApiData,
-    WokaDetail,
-    MucRoomDefinition,
-    isApplicationDefinitionInterface,
-    isCapabilities,
     Capabilities,
     CompanionDetail,
+    isAdminApiData,
+    isApplicationDefinitionInterface,
+    isCapabilities,
+    isMapDetailsData,
+    isRoomRedirect,
+    MucRoomDefinition,
+    WokaDetail,
 } from "@workadventure/messages";
-import type { MapDetailsData, RoomRedirect, AdminApiData } from "@workadventure/messages";
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
 import * as Sentry from "@sentry/node";
 import {
+    ADMIN_API_RETRY_DELAY,
     ADMIN_API_TOKEN,
     ADMIN_API_URL,
     OPID_PROFILE_SCREEN_PROVIDER,
-    ADMIN_API_RETRY_DELAY,
 } from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
-import { jwtTokenManager } from "./JWTTokenManager";
 import type { AuthTokenData } from "./JWTTokenManager";
+import { jwtTokenManager } from "./JWTTokenManager";
+import { ShortMapDescriptionList } from "./ShortMapDescription";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -574,7 +575,7 @@ class AdminApi implements AdminInterface {
             });
     }
 
-    async getUrlRoomsFromSameWorld(roomUrl: string, locale?: string): Promise<string[]> {
+    async getUrlRoomsFromSameWorld(roomUrl: string, locale?: string): Promise<ShortMapDescriptionList> {
         /**
          * @openapi
          * /api/room/sameWorld:
@@ -598,20 +599,27 @@ class AdminApi implements AdminInterface {
          *         schema:
          *             type: array
          *             items:
-         *                 type: string
-         *                 description: URL of a room
-         *                 example: "http://example.com/@/teamSlug/worldSlug/room2Slug"
+         *                 type: object
+         *                 properties:
+         *                   name:
+         *                     type: string
+         *                     description: Name of a room
+         *                     example: "My office"
+         *                   url:
+         *                     type: string
+         *                     description: URL of a room
+         *                     example: "http://example.com/@/teamSlug/worldSlug/room2Slug"
          *       404:
          *         description: Error while retrieving the data
          *         schema:
          *             $ref: '#/definitions/ErrorApiErrorData'
          */
         return axios
-            .get(ADMIN_API_URL + "/api/room/sameWorld" + "?roomUrl=" + encodeURIComponent(roomUrl), {
+            .get<unknown>(ADMIN_API_URL + "/api/room/sameWorld" + "?roomUrl=" + encodeURIComponent(roomUrl), {
                 headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
             })
             .then((data) => {
-                return data.data;
+                return ShortMapDescriptionList.parse(data.data);
             });
     }
 

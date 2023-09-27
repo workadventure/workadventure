@@ -81,9 +81,9 @@ export class AreasPropertiesListener {
                         break;
                     }
                     case "exit": {
-                        let url = `/~/${property.url}`;
+                        let url = `${property.url}`;
                         if (property.areaName && property.areaName !== "") {
-                            url = `/~/${property.url}#${property.areaName}`;
+                            url = `${property.url}#${property.areaName}`;
                         }
                         this.handleExitPropertyOnEnter(url);
                         break;
