@@ -110,8 +110,7 @@
             <!-- If we do not have a video to display-->
         {:else if !$requestedCameraState && !$cameraEnergySavingStore}
             <div
-                style="background-color: {backgroundColor}; color: {textColor}"
-                class="w-full rounded px-3 flex flex-row items-center media-box-camera-off-size h-12"
+                class="bg-secondary text-white w-full rounded-xl px-3 flex flex-row items-center media-box-camera-off-size h-12"
             >
                 <Woka userId={-1} placeholderSrc={""} customHeight="32px" customWidth="32px" />
                 <span
