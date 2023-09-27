@@ -42,6 +42,7 @@ export const VITE_URL = env.VITE_URL || "http://front.workadventure.localhost"; 
 export const ALLOWED_CORS_ORIGIN = env.ALLOWED_CORS_ORIGIN; // Use "*" to allow any domain
 export const PUSHER_URL = env.PUSHER_URL || "";
 export const PUBLIC_MAP_STORAGE_URL = env.PUBLIC_MAP_STORAGE_URL || "";
+export const INTERNAL_MAP_STORAGE_URL = env.INTERNAL_MAP_STORAGE_URL;
 export const OPID_CLIENT_ID = env.OPID_CLIENT_ID || "";
 export const OPID_CLIENT_SECRET = env.OPID_CLIENT_SECRET || "";
 export const OPID_CLIENT_ISSUER = env.OPID_CLIENT_ISSUER || "";
