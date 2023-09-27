@@ -40,13 +40,7 @@
         <div class="rtc-error" />
     {/if}
     {#if $streamStore !== null}
-        <video
-            use:srcObject={$streamStore}
-            autoplay
-            playsinline
-            class="h-full max-w-full mx-auto rounded"
-            muted
-        />
+        <video use:srcObject={$streamStore} autoplay playsinline class="h-full max-w-full mx-auto rounded" muted />
         <div
             class="nametag-screenshare-container container-end flex media-box-camera-on-size video-on-responsive-height"
         >

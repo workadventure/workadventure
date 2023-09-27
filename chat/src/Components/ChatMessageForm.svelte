@@ -617,9 +617,7 @@
                     {#if fileUploaded.errorMessage !== undefined}
                         <div
                             class={`error-hover flex flex-wrap bg-dark-blue/95 rounded-3xl text-xxs justify-between items-center px-4 py-2 ${
-                                fileUploaded.errorCode === 423 && $me && $me.isAdmin
-                                    ? "text-warning"
-                                    : "text-pop-red"
+                                fileUploaded.errorCode === 423 && $me && $me.isAdmin ? "text-warning" : "text-pop-red"
                             } absolute w-full`}
                         >
                             <p class="m-0">

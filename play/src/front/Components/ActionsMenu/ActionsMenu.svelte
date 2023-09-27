@@ -55,10 +55,7 @@
                 <h2 class="name mb-2 mx-2 margin-close">{actionsMenuData.menuName}</h2>
             {/if}
             {#if sortedActions}
-                <div
-                    class="actions flex tw flex-col items-center"
-                    class:margin-close={!actionsMenuData.menuName}
-                >
+                <div class="actions flex tw flex-col items-center" class:margin-close={!actionsMenuData.menuName}>
                     {#each sortedActions ?? [] as action}
                         <button
                             type="button"

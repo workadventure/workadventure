@@ -408,12 +408,8 @@
                     <b>{$LL.timeLine.title()}</b>
                     {#if $chatPeerConnectionInProgress}
                         <div class="block relative ml-7 mt-1">
-                            <span
-                                class="w-4 h-4 bg-pop-green block rounded-full absolute right-0 top-0 animate-ping"
-                            />
-                            <span
-                                class="w-3 h-3 bg-pop-green block rounded-full absolute right-0.5 top-0.5"
-                            />
+                            <span class="w-4 h-4 bg-pop-green block rounded-full absolute right-0 top-0 animate-ping" />
+                            <span class="w-3 h-3 bg-pop-green block rounded-full absolute right-0.5 top-0.5" />
                         </div>
                     {/if}
                 </div>
@@ -434,9 +430,7 @@
             </div>
         </div>
         <div class="flex flex-col flex-auto w-full">
-            <div
-                class="wa-message-bg border border-transparent border-b-light-purple border-solid px-5 pb-0.5"
-            >
+            <div class="wa-message-bg border border-transparent border-b-light-purple border-solid px-5 pb-0.5">
                 <button class="wa-action" type="button" on:click|stopPropagation={reInitialize}
                     ><RefreshCwIcon size="13" class="mr-2" /> {$LL.reinit()}
                 </button>
@@ -445,10 +439,7 @@
     </div>
 
     <!-- MESSAGE LIST-->
-    <div
-        id="timeLine-messageList"
-        class="flex flex-col flex-auto px-5 py-24 justify-end h-auto min-h-screen"
-    >
+    <div id="timeLine-messageList" class="flex flex-col flex-auto px-5 py-24 justify-end h-auto min-h-screen">
         {#each $chatMessagesStore as message, i}
             {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
                 <div
@@ -458,11 +449,7 @@
                             : "mt-2"
                     }`}
                 >
-                    <div
-                        class={`flex ${
-                            message.type === ChatMessageTypes.me ? "justify-end" : "justify-start"
-                        }`}
-                    >
+                    <div class={`flex ${message.type === ChatMessageTypes.me ? "justify-end" : "justify-start"}`}>
                         <div
                             class={`${
                                 message.type === ChatMessageTypes.me ? "opacity-0" : "mt-4"
@@ -522,9 +509,7 @@
                             {#if message.text}
                                 <div class="wa-message-body">
                                     {#each message.text as text}
-                                        <div
-                                            class="text-ellipsis overflow-y-auto break-words whitespace-pre-line"
-                                        >
+                                        <div class="text-ellipsis overflow-y-auto break-words whitespace-pre-line">
                                             {#await HtmlUtils.urlify(text)}
                                                 <p>...waiting</p>
                                             {:then html}

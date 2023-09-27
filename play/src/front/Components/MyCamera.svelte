@@ -74,8 +74,7 @@
                 <i class="flex">
                     <span
                         style="background-color: {backgroundColor}; color: {textColor};"
-                        class="nametag-text nametag-shape pr-3 pl-5 h-4 max-h-8"
-                        >{$LL.camera.my.nameTag()}</span
+                        class="nametag-text nametag-shape pr-3 pl-5 h-4 max-h-8">{$LL.camera.my.nameTag()}</span
                     >
                 </i>
             </div>
@@ -110,11 +109,11 @@
             <!-- If we do not have a video to display-->
         {:else if !$requestedCameraState && !$cameraEnergySavingStore}
             <div
-                class="bg-secondary text-white w-full rounded-xl px-3 flex flex-row items-center media-box-camera-off-size h-12"
+                style="background-color: {backgroundColor}; color: {textColor}"
+                class="w-full rounded px-3 flex flex-row items-center media-box-camera-off-size h-12"
             >
                 <Woka userId={-1} placeholderSrc={""} customHeight="32px" customWidth="32px" />
-                <span
-                    class="font-semibold text-sm not-italic break-words px-2 overflow-y-auto max-h-10"
+                <span class="font-semibold text-sm not-italic break-words px-2 overflow-y-auto max-h-10"
                     >{$LL.camera.my.nameTag()}</span
                 >
                 {#if $mediaStreamConstraintsStore.audio}

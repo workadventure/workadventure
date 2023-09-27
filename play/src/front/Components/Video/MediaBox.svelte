@@ -112,9 +112,7 @@
         class:mozaic-full-width={mozaicSolo}
         class:mozaic-quarter={mozaicQuarter}
     >
-        <div
-            class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'}   w-full h-full flex screen-blocker"
-        >
+        <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'}   w-full h-full flex screen-blocker">
             <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
         </div>
     </div>

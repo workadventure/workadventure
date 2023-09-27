@@ -224,9 +224,7 @@
         <div class="mb-auto load-history">
             {#if $canLoadOlderMessagesStore}
                 {#if !$loadingStore}
-                    <button
-                        class="m-auto cursor-pointer text-xs"
-                        on:click={() => mucRoom.sendRetrieveLastMessages()}
+                    <button class="m-auto cursor-pointer text-xs" on:click={() => mucRoom.sendRetrieveLastMessages()}
                         >{$LL.load()}
                         {$LL.more()}
                         <ArrowUpIcon size="13" class="ml-1" /></button

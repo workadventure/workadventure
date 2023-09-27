@@ -131,9 +131,7 @@
                 </div>
             {/if}
 
-            <section
-                class="selectWebcamForm flex flex-col justify-center items-center content-center m-2"
-            >
+            <section class="selectWebcamForm flex flex-col justify-center items-center content-center m-2">
                 <div class="control-group">
                     <img src={cinemaImg} alt="Camera" />
                     <div class="is-dark">

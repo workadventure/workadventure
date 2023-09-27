@@ -19,10 +19,7 @@
     }
 </script>
 
-<div
-    class={`actions absolute bottom-0 mb-16 flex flex-col items-center w-auto left-4 ${_class}`}
-    style={_style}
->
+<div class={`actions absolute bottom-0 mb-16 flex flex-col items-center w-auto left-4 ${_class}`} style={_style}>
     {#each [...applications] as app}
         <button
             class="action btn-app cursor-pointer flex flex-row justify-center"

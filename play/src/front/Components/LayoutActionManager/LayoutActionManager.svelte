@@ -6,9 +6,7 @@
     }
 </script>
 
-<div
-    class="layout-manager-list flex flex-col m-auto right-0 left-0 absolute bottom-12 mb-12 z-[155] justify-end"
->
+<div class="layout-manager-list flex flex-col m-auto right-0 left-0 absolute bottom-12 mb-12 z-[155] justify-end">
     {#each $layoutManagerActionStore as action}
         {#if action.type === "warning"}
             <div

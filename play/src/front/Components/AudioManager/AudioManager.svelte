@@ -157,10 +157,8 @@
         </section>
     </div>
     <div class:hidden={isAudioAllowed} class="text-center flex justify-center">
-        <button
-            type="button"
-            class="btn light justify-center font-bold text-xs sm:text-base w-fit"
-            on:click={tryPlay}>{$LL.audio.manager.allow()}</button
+        <button type="button" class="btn light justify-center font-bold text-xs sm:text-base w-fit" on:click={tryPlay}
+            >{$LL.audio.manager.allow()}</button
         >
     </div>
 </div>

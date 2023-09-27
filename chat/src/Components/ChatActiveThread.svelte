@@ -50,12 +50,8 @@
                     <b>{activeThread.name}</b>
                     {#if activeThread.type === "live"}
                         <div class="block relative ml-7 mt-1">
-                            <span
-                                class="w-4 h-4 bg-pop-red block rounded-full absolute right-0 top-0 animate-ping"
-                            />
-                            <span
-                                class="w-3 h-3 bg-pop-red block rounded-full absolute right-0.5 top-0.5"
-                            />
+                            <span class="w-4 h-4 bg-pop-red block rounded-full absolute right-0 top-0 animate-ping" />
+                            <span class="w-3 h-3 bg-pop-red block rounded-full absolute right-0.5 top-0.5" />
                         </div>
                     {/if}
                 </div>
@@ -81,9 +77,7 @@
         </div>
         {#if $me && $me.isAdmin}
             <div class="flex flex-col flex-auto w-full">
-                <div
-                    class="wa-message-bg border border-transparent border-b-light-purple border-solid px-5 pb-0.5"
-                >
+                <div class="wa-message-bg border border-transparent border-b-light-purple border-solid px-5 pb-0.5">
                     <button class="wa-action" type="button" on:click|stopPropagation={() => activeThread.reInitialize()}
                         ><RefreshCwIcon size="13" class="mr-2" /> {$LL.reinit()}
                     </button>

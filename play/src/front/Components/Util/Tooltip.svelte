@@ -32,10 +32,8 @@
     });
 </script>
 
-<div bind:this={tooltipElement} class=" w-fit relative block">
-    <div bind:this={textElement} style="visibility: hidden" class="bg-contrast/80 backdrop-blur text-white absolute bottom-0 px-2 py-1 font-sm font-bold rounded">
-        {text}
-    </div>
+<div bind:this={tooltipElement} class="tooltip w-fit">
+    <span bind:this={textElement} class="tooltiptext {toolTipPosition}">{text}</span>
 </div>
 
 <style lang="scss">

@@ -19,10 +19,7 @@
     }}
     {disabled}
 >
-    <div
-        class="w-10 h-10 flex flex-wrap items-center justify-center"
-        style={disabled ? `opacity: 0.5;` : ""}
-    >
+    <div class="w-10 h-10 flex flex-wrap items-center justify-center" style={disabled ? `opacity: 0.5;` : ""}>
         <img draggable="false" class="max-w-[75%] max-h-[75%]" src={img} alt="info icon" />
     </div>
     <span class="tooltiptext text-xs">

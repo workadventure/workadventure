@@ -152,9 +152,7 @@
         <div class={`flex max-w-full items-center ${isMe ? "justify-end" : "justify-start"}`}>
             {#if !isMe}
                 <div
-                    class={`${
-                        isMe || needHideHeader ? "opacity-0" : "mt-4"
-                    } relative wa-avatar-mini mr-2 self-start`}
+                    class={`${isMe || needHideHeader ? "opacity-0" : "mt-4"} relative wa-avatar-mini mr-2 self-start`}
                     in:fade={{ duration: 100 }}
                     style={`background-color: ${color}`}
                 >
@@ -206,10 +204,7 @@
                         <div class="caption">{$LL.copy()}</div>
                     </div>
                     {#if ($me && $me.isAdmin) || isMe}
-                        <div
-                            class="action delete text-pop-red"
-                            on:click={() => mucRoom.sendRemoveMessage(message.id)}
-                        >
+                        <div class="action delete text-pop-red" on:click={() => mucRoom.sendRemoveMessage(message.id)}>
                             <Trash2Icon size="17" />
                             <div class="caption">{$LL.delete()}</div>
                         </div>

@@ -69,9 +69,7 @@
 </script>
 
 {#if $presenceStore.filter((user) => !get(user).isMe && get(user).active).length === 0}
-    <div
-        class="px-5 py-4 border-b border-solid border-0 border-transparent border-b-light-purple text-sm text-center"
-    >
+    <div class="px-5 py-4 border-b border-solid border-0 border-transparent border-b-light-purple text-sm text-center">
         <p>{$LL.roomEmpty()}</p>
         <button type="button" class="light m-auto cursor-pointer px-3" on:click={showInviteMenu}>
             {$LL.invite()}
@@ -104,9 +102,7 @@
                     class="text-lighter-purple"
                     on:click={() => shownRoomListStore.set($shownRoomListStore === room ? "" : room)}
                 >
-                    <ChevronUpIcon
-                        class={`transform transition ${$shownRoomListStore === room ? "" : "rotate-180"}`}
-                    />
+                    <ChevronUpIcon class={`transform transition ${$shownRoomListStore === room ? "" : "rotate-180"}`} />
                 </button>
             </div>
             {#if $shownRoomListStore === room}

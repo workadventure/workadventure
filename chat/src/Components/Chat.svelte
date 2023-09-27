@@ -200,19 +200,13 @@
                             </div>
                         </div>
                     {:else}
-                        <div
-                            class="mt-11 border border-transparent border-b-light-purple border-solid"
-                        />
+                        <div class="mt-11 border border-transparent border-b-light-purple border-solid" />
                     {/if}
                     {#if !userStore.get().isLogged && ENABLE_OPENID && $enableChat}
                         <div class="border border-transparent border-b-light-purple border-solid">
                             <div class="p-3 text-sm text-center">
                                 <p>{$LL.signIn()}</p>
-                                <button
-                                    type="button"
-                                    class="light m-auto cursor-pointer px-3"
-                                    on:click={login}
-                                >
+                                <button type="button" class="light m-auto cursor-pointer px-3" on:click={login}>
                                     {$LL.logIn()}
                                 </button>
                             </div>

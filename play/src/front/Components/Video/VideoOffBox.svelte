@@ -106,8 +106,7 @@
             style={$embedScreenLayoutStore === LayoutMode.VideoChat
                 ? `background-color: ${backGroundColor}; color: ${textColor}`
                 : ""}
-            class="font-semibold text-sm not-italic break-words px-2 overflow-y-auto max-h-10"
-            >{name}</span
+            class="font-semibold text-sm not-italic break-words px-2 overflow-y-auto max-h-10">{name}</span
         >
         {#if $constraintStore && $constraintStore.audio !== false}
             <SoundMeterWidget

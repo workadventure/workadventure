@@ -14,7 +14,7 @@
     .menu-container {
         @apply flex h-3/4 w-full text-white pointer-events-auto z-[900] right-0 left-0 m-auto absolute top-14;
         @apply md:w-4/5;
-        
+
         &.right{
             @apply w-1/3 top-0 left-auto right-0 h-full
         }
@@ -134,7 +134,7 @@
         &.light {
             @apply bg-light-blue text-dark-purple;
         }
-        
+
         &.dark {
             @apply bg-dark-purple text-light-blue;
         }

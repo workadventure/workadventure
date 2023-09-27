@@ -149,14 +149,9 @@
     </div>
     <div class="item-variations">
         {#if pickedItem}
-            <p
-                on:click|preventDefault={backToSelectObject}
-                class="flex flex-row items-center text-xs m-0"
-            >
+            <p on:click|preventDefault={backToSelectObject} class="flex flex-row items-center text-xs m-0">
                 <ArrowLeftIcon size="12" class="cursor-pointer" />
-                <span class="ml-1 cursor-pointer"
-                    >{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span
-                >
+                <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
             </p>
             <div class="item-name">
                 {pickedItem?.name ?? "this entity"}
