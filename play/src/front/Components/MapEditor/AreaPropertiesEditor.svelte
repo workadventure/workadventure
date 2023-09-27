@@ -485,6 +485,7 @@
                     />
                 {:else if property.type === "start"}
                     <StartPropertyEditor
+                        {property}
                         on:close={() => {
                             onDeleteProperty(property.id);
                         }}
