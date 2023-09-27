@@ -309,6 +309,7 @@ message QueryMessage {
     JoinBBBMeetingQuery joinBBBMeetingQuery = 20;
     RoomTagsQuery roomTagsQuery = 3;
     EmbeddableWebsiteQuery embeddableWebsiteQuery = 4;
+    RoomsFromSameWorldQuery roomsFromSameWorldQuery = 5;
   }
 }
 
@@ -331,6 +332,8 @@ message EmbeddableWebsiteQuery {
   string url = 1;
 }
 
+message RoomsFromSameWorldQuery {
+}
 
 message AnswerMessage {
   int32 id = 1;
@@ -340,6 +343,7 @@ message AnswerMessage {
     JoinBBBMeetingAnswer joinBBBMeetingAnswer = 4;
     RoomTagsAnswer roomTagsAnswer = 5;
     EmbeddableWebsiteAnswer embeddableWebsiteAnswer = 6;
+    RoomsFromSameWorldAnswer roomsFromSameWorldAnswer = 7;
   }
 }
 
@@ -362,6 +366,16 @@ message EmbeddableWebsiteAnswer {
   bool state = 2;
   bool embeddable = 3;
   optional string message = 4;
+}
+
+message RoomShortDescription {
+  string name = 1;
+  string roomUrl = 2;
+  optional string wamUrl = 3;
+}
+
+message RoomsFromSameWorldAnswer {
+  repeated RoomShortDescription roomDescriptions = 1;
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/

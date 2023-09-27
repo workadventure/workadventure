@@ -48,6 +48,7 @@ import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
 import { adminService } from "./AdminService";
+import { ShortMapDescription } from "./ShortMapDescription";
 
 const debug = Debug("socket");
 
@@ -907,7 +908,8 @@ export class SocketManager implements ZoneEventListener {
         let tabUrlRooms: string[];
 
         if (playGlobalMessageEvent.broadcastToWorld) {
-            tabUrlRooms = await adminService.getUrlRoomsFromSameWorld(clientRoomUrl, "en");
+            const shortDescriptions = await adminService.getUrlRoomsFromSameWorld(clientRoomUrl, "en");
+            tabUrlRooms = shortDescriptions.map((shortDescription) => shortDescription.roomUrl);
         } else {
             tabUrlRooms = [clientRoomUrl];
         }
@@ -1137,6 +1139,52 @@ export class SocketManager implements ZoneEventListener {
                             $case: "roomTagsAnswer",
                             roomTagsAnswer: {
                                 tags,
+                            },
+                        },
+                    },
+                },
+            }).finish(),
+            true
+        );
+    }
+
+    async handleRoomsFromSameWorldQuery(client: ExSocketInterface, queryMessage: QueryMessage) {
+        let roomDescriptions: ShortMapDescription[];
+        try {
+            roomDescriptions = await adminService.getUrlRoomsFromSameWorld(client.roomId);
+        } catch (e) {
+            console.warn("SocketManager => handleRoomsFromSameWorldQuery => error while getting other rooms list", e);
+            // Nothing to do with the error
+            Sentry.captureException(e);
+            client.send(
+                ServerToClientMessage.encode({
+                    message: {
+                        $case: "answerMessage",
+                        answerMessage: {
+                            id: queryMessage.id,
+                            answer: {
+                                $case: "error",
+                                error: {
+                                    message: e instanceof Error ? e.message + e.stack : "Unknown error",
+                                },
+                            },
+                        },
+                    },
+                }).finish(),
+                true
+            );
+            return;
+        }
+        client.send(
+            ServerToClientMessage.encode({
+                message: {
+                    $case: "answerMessage",
+                    answerMessage: {
+                        id: queryMessage.id,
+                        answer: {
+                            $case: "roomsFromSameWorldAnswer",
+                            roomsFromSameWorldAnswer: {
+                                roomDescriptions,
                             },
                         },
                     },
