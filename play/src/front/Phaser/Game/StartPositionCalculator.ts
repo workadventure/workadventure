@@ -1,11 +1,6 @@
 import { GameMapProperties } from "@workadventure/map-editor";
 import { MathUtils } from "@workadventure/math-utils";
-import type {
-    ITiledMap,
-    ITiledMapLayer,
-    ITiledMapObject,
-    ITiledMapTileLayer,
-} from "@workadventure/tiled-map-type-guard";
+import type { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import type { PositionInterface } from "../../Connection/ConnexionModels";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 export class StartPositionCalculator {
@@ -69,17 +64,23 @@ export class StartPositionCalculator {
                 this.startPositionName = startPositionName;
             }
             // try to get custom starting position from Area object
-            if (!this.initPositionFromTiledArea(this.startPositionName, true)) {
+            if (!this.initPositionFromArea(this.startPositionName, true)) {
                 // try to get custom starting position from Area object
-                if (!this.initPositionFromArea(this.startPositionName, true)) {
+                if (!this.initPositionFromTiledArea(this.startPositionName, true)) {
                     // if cannot, look for custom name Layers
                     if (!this.initPositionFromLayerName(this.startPositionName)) {
                         // if cannot, look for Tile
-                        if (!this.initPositionFromTile()) {
+                        if (!this.initPositionFromTile(this.startPositionName)) {
                             // if cannot, look for Area with DEFAULT start name
                             if (!this.initPositionFromArea(this.DEFAULT_START_NAME)) {
-                                // default name layer
-                                this.initPositionFromLayerName();
+                                // try to get custom starting position from Area object
+                                if (!this.initPositionFromTiledArea(this.DEFAULT_START_NAME, false)) {
+                                    // if cannot, look for Tile
+                                    if (!this.initPositionFromTile(this.DEFAULT_START_NAME)) {
+                                        // default name layer
+                                        this.initPositionFromLayerName();
+                                    }
+                                }
                             }
                         }
                     }
@@ -189,13 +190,15 @@ export class StartPositionCalculator {
         return false;
     }
 
-    private initPositionFromTile(): boolean {
+    private initPositionFromTile(startPositionName: string): boolean {
         if (!this.gameMapFrontWrapper.hasStartTile()) {
             return false;
         }
-        const layer = (this.gameMapFrontWrapper.findLayer(this.startPositionName) ||
-            this.gameMapFrontWrapper.findLayer(this.DEFAULT_START_NAME)) as ITiledMapTileLayer | undefined;
+        const layer = this.gameMapFrontWrapper.findLayer(startPositionName);
         if (!layer) {
+            return false;
+        }
+        if (layer.type !== "tilelayer") {
             return false;
         }
         const tiles = layer.data;
@@ -213,7 +216,7 @@ export class StartPositionCalculator {
             const properties = this.gameMapFrontWrapper.getPropertiesForIndex(objectKey);
             if (
                 !properties.length ||
-                !properties.some((property) => property.name == "start" && property.value == this.startPositionName)
+                !properties.some((property) => property.name == "start" && property.value == startPositionName)
             ) {
                 return;
             }
