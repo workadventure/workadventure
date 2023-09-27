@@ -156,7 +156,7 @@ export const isMapDetailsData = z.object({
     }),
     wamUrl: extendApi(z.string().url().optional(), {
         description: "The full URL to the WAM map file",
-        example: "https://myuser.github.io/myrepo/map.wam",
+        example: "https://map-storage.myworkadventure.com/myrepo/map.wam",
     }),
     authenticationMandatory: extendApi(z.boolean().nullable().optional(), {
         description: "Whether the authentication is mandatory or not for this map",
