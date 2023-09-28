@@ -69,15 +69,15 @@ export class Player extends Character {
     }
 
     public rotate(): void {
-        const direction = (this.lastDirection + 1) % (PositionMessage_Direction.LEFT + 1);
+        const direction = (this._lastDirection + 1) % (PositionMessage_Direction.LEFT + 1);
         this.emit(hasMovedEventName, {
             moving: false,
-            direction: (this.lastDirection + 1) % (PositionMessage_Direction.LEFT + 1),
+            direction: (this._lastDirection + 1) % (PositionMessage_Direction.LEFT + 1),
             x: this.x,
             y: this.y,
         });
-        this.lastDirection = direction;
-        this.playAnimation(this.lastDirection, false);
+        this._lastDirection = direction;
+        this.playAnimation(this._lastDirection, false);
     }
 
     public sendFollowRequest() {
@@ -154,7 +154,7 @@ export class Player extends Character {
         const moving = x !== 0 || y !== 0 || joystickMovement;
 
         // Compute direction
-        let direction = this.lastDirection;
+        let direction = this._lastDirection;
         if (moving && !joystickMovement) {
             if (Math.abs(x) > Math.abs(y)) {
                 direction = x < 0 ? PositionMessage_Direction.LEFT : PositionMessage_Direction.RIGHT;

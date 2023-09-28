@@ -111,6 +111,7 @@ import {
     chatVisibilityStore,
     _newChatMessageSubject,
     _newChatMessageWritingStatusSubject,
+    forceRefreshChatStore,
 } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
@@ -2204,6 +2205,7 @@ ${escapedMessage}
             this.scene.stop();
             this.scene.start(targetRoom.key);
             this.scene.remove(this.scene.key);
+            forceRefreshChatStore.forceRefresh();
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
             this.startPositionCalculator.initStartXAndStartY(urlManager.getStartPositionNameFromUrl());
@@ -2213,6 +2215,16 @@ ${escapedMessage}
             // clear properties in case we are moved on the same layer / area in order to trigger them
             this.gameMapFrontWrapper.clearCurrentProperties();
             this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
+
+            // TODO: we should have a "teleport" parameter to explicitly say the user teleports and should not be moved in 200ms to the new place.
+            this.handleCurrentPlayerHasMovedEvent({
+                x: this.CurrentPlayer.x,
+                y: this.CurrentPlayer.y,
+                direction: this.CurrentPlayer.lastDirection,
+                moving: false,
+            });
+
+            this.markDirty();
             setTimeout(() => (this.mapTransitioning = false), 500);
         }
     }

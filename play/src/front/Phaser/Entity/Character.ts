@@ -38,7 +38,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     protected readonly megaphoneIcon: MegaphoneIcon;
     public playerName: string;
     public sprites: Map<string, Sprite>;
-    protected lastDirection: PositionMessage_Direction = PositionMessage_Direction.DOWN;
+    protected _lastDirection: PositionMessage_Direction = PositionMessage_Direction.DOWN;
     //private teleportation: Sprite;
     private invisible: boolean;
     private clickable: boolean;
@@ -203,7 +203,7 @@ export abstract class Character extends Container implements OutlineableInterfac
      * @param shift How far from player should the point of interest be.
      */
     public getDirectionalActivationPosition(shift: number): { x: number; y: number } {
-        switch (this.lastDirection) {
+        switch (this._lastDirection) {
             case PositionMessage_Direction.DOWN: {
                 return { x: this.x, y: this.y + shift };
             }
@@ -331,29 +331,29 @@ export abstract class Character extends Container implements OutlineableInterfac
 
         if (Math.abs(body.velocity.x) > Math.abs(body.velocity.y)) {
             if (body.velocity.x < 0) {
-                this.lastDirection = PositionMessage_Direction.LEFT;
+                this._lastDirection = PositionMessage_Direction.LEFT;
             } else if (body.velocity.x > 0) {
-                this.lastDirection = PositionMessage_Direction.RIGHT;
+                this._lastDirection = PositionMessage_Direction.RIGHT;
             }
         } else {
             if (body.velocity.y < 0) {
-                this.lastDirection = PositionMessage_Direction.UP;
+                this._lastDirection = PositionMessage_Direction.UP;
             } else if (body.velocity.y > 0) {
-                this.lastDirection = PositionMessage_Direction.DOWN;
+                this._lastDirection = PositionMessage_Direction.DOWN;
             }
         }
-        this.playAnimation(this.lastDirection, true);
+        this.playAnimation(this._lastDirection, true);
 
         this.setDepth(this.y + 16);
 
         if (this.companion) {
-            this.companion.setTarget(this.x, this.y, this.lastDirection);
+            this.companion.setTarget(this.x, this.y, this._lastDirection);
         }
     }
 
     stop() {
         this.getBody().setVelocity(0, 0);
-        this.playAnimation(this.lastDirection, false);
+        this.playAnimation(this._lastDirection, false);
     }
 
     say(text: string) {
@@ -512,5 +512,9 @@ export abstract class Character extends Container implements OutlineableInterfac
      */
     public getTextureLoadedPromise(): PromiseLike<void> {
         return this.textureLoadedDeferred.promise;
+    }
+
+    public get lastDirection(): PositionMessage_Direction {
+        return this._lastDirection;
     }
 }

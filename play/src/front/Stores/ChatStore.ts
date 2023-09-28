@@ -18,6 +18,20 @@ export const newChatMessageSubject = _newChatMessageSubject.asObservable();
 export const _newChatMessageWritingStatusSubject = new Subject<number>();
 export const newChatMessageWritingStatusSubject = _newChatMessageWritingStatusSubject.asObservable();
 
+// Call "forceRefresh" to force the refresh of the chat iframe.
+function createForceRefreshChatStore() {
+    const { subscribe, update } = writable({});
+    return {
+        subscribe,
+        forceRefresh() {
+            update((list) => {
+                return {};
+            });
+        },
+    };
+}
+export const forceRefreshChatStore = createForceRefreshChatStore();
+
 function getAuthor(authorId: number): PlayerInterface {
     const author = playersStore.getPlayerById(authorId);
     if (!author) {
