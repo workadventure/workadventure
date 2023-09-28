@@ -274,6 +274,7 @@ services:
             SENTRY_DSN: $SENTRY_DSN_MAPSTORAGE
             SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
             SENTRY_RELEASE: $SENTRY_RELEASE
+            PATH_PREFIX: ""
         volumes:
             - .:/usr/src/app
         ports:

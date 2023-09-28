@@ -194,7 +194,11 @@ class LocalAdmin implements AdminInterface {
 
             const mapDescriptions: ShortMapDescription[] = [];
             for (const [path, value] of Object.entries(maps.maps)) {
-                const wamUrl = new URL(path, PUBLIC_MAP_STORAGE_URL).toString();
+                let publicMapStorageUrl = PUBLIC_MAP_STORAGE_URL;
+                if (!publicMapStorageUrl.endsWith("/")) {
+                    publicMapStorageUrl += "/";
+                }
+                const wamUrl = new URL(path, publicMapStorageUrl).toString();
                 const name = value?.metadata?.name ?? path;
                 mapDescriptions.push({ name, roomUrl: "/~/" + path, wamUrl });
             }
