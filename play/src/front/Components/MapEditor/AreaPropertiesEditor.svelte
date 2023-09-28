@@ -61,6 +61,7 @@
                 return {
                     id,
                     type,
+                    isDefault: true,
                 };
             case "silent":
                 return {

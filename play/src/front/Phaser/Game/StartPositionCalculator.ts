@@ -1,4 +1,4 @@
-import { GameMapProperties } from "@workadventure/map-editor";
+import { AreaData, GameMapProperties } from "@workadventure/map-editor";
 import { MathUtils } from "@workadventure/math-utils";
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import type { PositionInterface } from "../../Connection/ConnexionModels";
@@ -63,28 +63,64 @@ export class StartPositionCalculator {
             if (startPositionName) {
                 this.startPositionName = startPositionName;
             }
-            // try to get custom starting position from Area object
-            if (!this.initPositionFromArea(this.startPositionName, true)) {
-                // try to get custom starting position from Area object
-                if (!this.initPositionFromTiledArea(this.startPositionName, true)) {
-                    // if cannot, look for custom name Layers
-                    if (!this.initPositionFromLayerName(this.startPositionName)) {
-                        // if cannot, look for Tile
-                        if (!this.initPositionFromTile(this.startPositionName)) {
-                            // if cannot, look for Area with DEFAULT start name
-                            if (!this.initPositionFromArea(this.DEFAULT_START_NAME)) {
-                                // try to get custom starting position from Area object
-                                if (!this.initPositionFromTiledArea(this.DEFAULT_START_NAME, false)) {
-                                    // if cannot, look for Tile
-                                    if (!this.initPositionFromTile(this.DEFAULT_START_NAME)) {
-                                        // default name layer
-                                        this.initPositionFromLayerName();
-                                    }
-                                }
-                            }
-                        }
-                    }
+            let startPosition: PositionInterface | undefined = undefined;
+
+            if (this.startPositionName) {
+                // try to get custom starting position from a map-editor area object with the correct area name
+                startPosition = this.getStartPositionFromArea(this.startPositionName);
+                if (startPosition) {
+                    this.startPosition = startPosition;
+                    return;
                 }
+
+                // try to get custom starting position from Area object
+                startPosition = this.getStartPositionFromTiledArea(this.startPositionName, true);
+                if (startPosition) {
+                    this.startPosition = startPosition;
+                    return;
+                }
+
+                // if not found, look for custom name Layers
+                startPosition = this.getStartPositionFromLayerName(this.startPositionName);
+                if (startPosition) {
+                    this.startPosition = startPosition;
+                    return;
+                }
+
+                // if not found, look for Tile
+                startPosition = this.getStartPositionFromTile(this.startPositionName);
+                if (startPosition) {
+                    this.startPosition = startPosition;
+                    return;
+                }
+            }
+
+            // if not found, look for map-editor areas with DEFAULT property set
+            startPosition = this.getStartPositionFromDefaultStartArea();
+            if (startPosition) {
+                this.startPosition = startPosition;
+                return;
+            }
+
+            // try to get custom starting position from Area object
+            startPosition = this.getStartPositionFromTiledArea(this.DEFAULT_START_NAME, false);
+            if (startPosition) {
+                this.startPosition = startPosition;
+                return;
+            }
+
+            // if not found, look for Tile
+            startPosition = this.getStartPositionFromTile(this.DEFAULT_START_NAME);
+            if (startPosition) {
+                this.startPosition = startPosition;
+                return;
+            }
+
+            // default name layer
+            startPosition = this.getStartPositionFromLayerName();
+            if (startPosition) {
+                this.startPosition = startPosition;
+                return;
             }
         }
         // Still no start position? Something is wrong with the map, we need a "start" layer.
@@ -100,7 +136,10 @@ export class StartPositionCalculator {
         }
     }
 
-    private initPositionFromTiledArea(startPositionName: string, needStartProperty = false): boolean {
+    private getStartPositionFromTiledArea(
+        startPositionName: string,
+        needStartProperty = false
+    ): PositionInterface | undefined {
         const tiledAreas = this.gameMapFrontWrapper.dynamicAreas;
         for (const [name, tiledArea] of tiledAreas.entries()) {
             if (!tiledArea || name !== startPositionName) {
@@ -109,7 +148,7 @@ export class StartPositionCalculator {
             const properties = tiledArea.properties;
             if (needStartProperty && properties) {
                 if (!properties["start"]) {
-                    return false;
+                    return undefined;
                 }
             }
             const tiledAreaRect: { x: number; y: number; width: number; height: number } = {
@@ -118,27 +157,57 @@ export class StartPositionCalculator {
                 width: tiledArea.width ?? 0,
                 height: tiledArea.height ?? 0,
             };
-            this.startPosition = MathUtils.randomPositionFromRect(tiledAreaRect, 16);
-            return true;
+            return MathUtils.randomPositionFromRect(tiledAreaRect, 16);
         }
-        return false;
+        return undefined;
     }
 
-    private initPositionFromArea(startPositionName: string, needStartProperty = false): boolean {
+    /**
+     * Look in the map-editor areas for an area with the name "startPositionName" and a property "start".
+     */
+    private getStartPositionFromArea(startPositionName: string): PositionInterface | undefined {
         const area = this.gameMapFrontWrapper.getAreaByName(startPositionName);
         if (area) {
-            if (needStartProperty) {
-                if (!area.properties.find((property) => property.type === "start")) {
-                    return false;
-                }
+            if (!area.properties.find((property) => property.type === "start")) {
+                return undefined;
             }
-            this.startPosition = MathUtils.randomPositionFromRect(area, 16);
-            return true;
+            return MathUtils.randomPositionFromRect(area, 16);
         }
-        return false;
+        return undefined;
     }
 
-    private initPositionFromLayerName(startPositionName?: string): boolean {
+    private getStartPositionFromDefaultStartArea(): PositionInterface | undefined {
+        const areas = this.gameMapFrontWrapper.getAreas();
+
+        const defaultStartAreas: AreaData[] = [];
+
+        for (const area of areas?.values() ?? []) {
+            for (const properties of area.properties) {
+                if (properties.type === "start" && properties.isDefault === true) {
+                    defaultStartAreas.push(area);
+                }
+            }
+        }
+
+        if (defaultStartAreas.length === 0) {
+            return undefined;
+        }
+
+        return StartPositionCalculator.randomPositionFromRects(defaultStartAreas);
+    }
+
+    /**
+     * Return a random position in one of the rectangles passed in parameter
+     */
+    private static randomPositionFromRects(
+        rectangles: { x: number; y: number; width: number; height: number }[],
+        margin = 0
+    ): { x: number; y: number } {
+        const rectangle = rectangles[Math.floor(Math.random() * rectangles.length)];
+        return MathUtils.randomPositionFromRect(rectangle, margin);
+    }
+
+    private getStartPositionFromLayerName(startPositionName?: string): PositionInterface | undefined {
         let foundLayer: ITiledMapLayer | undefined = undefined;
 
         const tileLayers = this.gameMapFrontWrapper.getFlatLayers().filter((layer) => layer.type === "tilelayer");
@@ -152,11 +221,10 @@ export class StartPositionCalculator {
                 ) {
                     try {
                         const startPosition = this.gameMapFrontWrapper.getRandomPositionFromLayer(layer.name);
-                        this.startPosition = {
+                        return {
                             x: startPosition.x * (this.mapFile.tilewidth ?? 0) + (this.mapFile.tilewidth ?? 0) / 2,
                             y: startPosition.y * (this.mapFile.tileheight ?? 0) + (this.mapFile.tileheight ?? 0) / 2,
                         };
-                        return true;
                     } catch (e: unknown) {
                         console.error("Error while finding start position: ", e);
                     }
@@ -178,32 +246,31 @@ export class StartPositionCalculator {
         if (foundLayer) {
             try {
                 const startPosition = this.gameMapFrontWrapper.getRandomPositionFromLayer(foundLayer.name);
-                this.startPosition = {
+                return {
                     x: startPosition.x * (this.mapFile.tilewidth ?? 0) + (this.mapFile.tilewidth ?? 0) / 2,
                     y: startPosition.y * (this.mapFile.tileheight ?? 0) + (this.mapFile.tileheight ?? 0) / 2,
                 };
             } catch (e: unknown) {
                 console.error("Error while finding start position: ", e);
             }
-            return true;
         }
-        return false;
+        return undefined;
     }
 
-    private initPositionFromTile(startPositionName: string): boolean {
+    private getStartPositionFromTile(startPositionName: string): PositionInterface | undefined {
         if (!this.gameMapFrontWrapper.hasStartTile()) {
-            return false;
+            return undefined;
         }
         const layer = this.gameMapFrontWrapper.findLayer(startPositionName);
         if (!layer) {
-            return false;
+            return undefined;
         }
         if (layer.type !== "tilelayer") {
-            return false;
+            return undefined;
         }
         const tiles = layer.data;
         if (typeof tiles === "string") {
-            return false;
+            return undefined;
         }
         const possibleStartPositions: PositionInterface[] = [];
         tiles.forEach((objectKey: number, key: number) => {
@@ -227,11 +294,10 @@ export class StartPositionCalculator {
         });
         // Get a value at random amongst allowed values
         if (possibleStartPositions.length === 0) {
-            return false;
+            return undefined;
         }
         // Choose one of the available start positions at random amongst the list of available start positions.
-        this.startPosition = possibleStartPositions[Math.floor(Math.random() * possibleStartPositions.length)];
-        return true;
+        return possibleStartPositions[Math.floor(Math.random() * possibleStartPositions.length)];
     }
 
     private isStartObject(obj: ITiledMapLayer | ITiledMapObject): boolean {
