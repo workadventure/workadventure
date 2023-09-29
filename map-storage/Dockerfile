@@ -52,6 +52,7 @@ COPY libs ./libs
 COPY --from=proto-builder /usr/libs/messages/src ./libs/messages/src
 COPY --from=builder /usr/src/map-storage/dist-ui ./map-storage/dist-ui
 COPY --chown=node:node map-storage map-storage
+RUN chown node:node -R /usr/src/map-storage/dist-ui
 WORKDIR /usr/src/map-storage
 RUN mkdir ./dist
 
