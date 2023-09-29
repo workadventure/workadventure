@@ -209,12 +209,9 @@ test.describe('Map editor', () => {
     await page.locator('.map-editor').click();
 
     // check if the iframe activity picker is opened
-    await Promise.all([
-      // It is important to call waitForEvent first.
-      page.waitForEvent('popup'),
-      // Opens the popup.
-      Map.teleportToPosition(page, 9 * 32, 9 * 32)
-    ]);
+    const popupPromise = page.waitForEvent('popup');
+    await Map.teleportToPosition(page, 9 * 32, 9 * 32)
+    /*const popup =*/ await popupPromise;
 
     // TODO make same test with object editor
   });
