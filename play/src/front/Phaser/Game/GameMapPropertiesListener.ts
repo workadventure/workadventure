@@ -27,7 +27,6 @@ import {
     requestedMicrophoneState,
     isSpeakerStore,
 } from "../../Stores/MediaStore";
-import { urlManager } from "../../Url/UrlManager";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { currentMegaphoneNameStore, requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
@@ -299,7 +298,7 @@ export class GameMapPropertiesListener {
                 return;
             }
 
-            const playUri = urlManager.getPlayUri() + "/";
+            const playUri = this.scene.roomUrl + "/";
 
             if (oldValue !== undefined) {
                 iframeListener.sendLeaveMucEventToChatIframe(playUri + oldValue);
