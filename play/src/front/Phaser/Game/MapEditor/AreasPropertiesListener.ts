@@ -487,12 +487,7 @@ export class AreasPropertiesListener {
     }
 
     private handleJoinMucRoom(name: string, type: string) {
-        iframeListener.sendJoinMucEventToChatIframe(
-            `${this.scene.roomUrl}/${slugify(name)}`,
-            name,
-            type,
-            false
-        );
+        iframeListener.sendJoinMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`, name, type, false);
         chatZoneLiveStore.set(true);
     }
 
