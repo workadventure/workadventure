@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import {chromium, expect, test} from '@playwright/test';
 import { createRoomApiClient } from '../../libs/room-api-clients/room-api-client-js/src';
 import { Value } from '../../libs/room-api-clients/room-api-client-js/src/compiled_proto/google/protobuf/struct';
 import { gotoWait200 } from './utils/containers';
@@ -18,7 +18,14 @@ const roomUrl = protocol + "://play.workadventure.localhost/_/global/maps.workad
 const variableName = "textField";
 
 test.describe('Room API', async () => {
-    test("With a bad API key", async () => {
+    test("With a bad API key", async ({ browser }) => {
+        // This test does not depend on the browser. Let's only run it in Chromium.
+        if(browser.browserType() !== chromium) {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         const badClient = createRoomApiClient("BAD KEY", process.env.ROOM_API_HOSTNAME ?? "room-api.workadventure.localhost", process.env.ROOM_API_PORT ? Number(process.env.ROOM_API_PORT) : 80);
 
         try {
@@ -34,7 +41,14 @@ test.describe('Room API', async () => {
         }
     });
 
-    test("Save & read a variable", async ({ page }) => {
+    test("Save & read a variable", async ({ page, browser }) => {
+        // This test does not depend on the browser. Let's only run it in Chromium.
+        if(browser.browserType() !== chromium) {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         const newValue =  "New Value - " + Math.random().toString(36).substring(2,7);
 
         await gotoWait200(page, roomUrl);
@@ -60,7 +74,14 @@ test.describe('Room API', async () => {
         })).resolves.toEqual(Value.wrap(newValue));
     });
 
-    test("Listen a variable", async ({ page }) => {
+    test("Listen a variable", async ({ page, browser }) => {
+        // This test does not depend on the browser. Let's only run it in Chromium.
+        if(browser.browserType() !== chromium) {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         const newValue =  "New Value - " + Math.random().toString(36).substring(2,7);
 
         const listenVariable = client.listenVariable({
