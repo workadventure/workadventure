@@ -1,4 +1,4 @@
-import { get } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
 import { PositionMessage_Direction } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
@@ -18,6 +18,7 @@ export class Player extends Character {
     private pathToFollow?: { x: number; y: number }[];
     private followingPathPromiseResolve?: (result: { x: number; y: number; cancelled: boolean }) => void;
     private pathWalkingSpeed?: number;
+    private readonly unsubscribeVisibilityStore: Unsubscriber;
 
     constructor(
         Scene: GameScene,
@@ -33,7 +34,7 @@ export class Player extends Character {
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
 
-        visibilityStore.subscribe((isVisible) => {
+        this.unsubscribeVisibilityStore = visibilityStore.subscribe((isVisible) => {
             if (!isVisible) {
                 this.stop();
                 this.finishFollowingPath(true);
@@ -217,5 +218,10 @@ export class Player extends Character {
 
     private getMovementDirection(xDistance: number, yDistance: number, distance: number): [number, number] {
         return [xDistance / Math.sqrt(distance), yDistance / Math.sqrt(distance)];
+    }
+
+    destroy(): void {
+        this.unsubscribeVisibilityStore();
+        super.destroy();
     }
 }
