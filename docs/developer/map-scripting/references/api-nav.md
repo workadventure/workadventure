@@ -38,10 +38,10 @@ WA.nav.goToPage('https://www.wikipedia.org/');
 WA.nav.goToRoom(url: string): void
 ```
 
-Load the map at url without unloading workadventure
+Move the user to another room.
 
-relative urls: "../subFolder/map.json[#start-layer-name]"
-global urls: "/_/global/domain/path/map.json[#start-layer-name]"
+* Relative urls: "../subFolder/map.json[#start-layer-name]"
+* Global urls: "/_/global/domain/path/map.json[#start-layer-name]"
 
 Example:
 
@@ -50,6 +50,16 @@ WA.nav.goToRoom("/@/tcm/workadventure/floor0")  // workadventure urls
 WA.nav.goToRoom('../otherMap/map.json');
 WA.nav.goToRoom("/_/global/<path to global map>.json#start-layer-2")
 ```
+
+:::info
+You can also teleport a player to a specific entry point of the current map using a hash:
+:::
+
+```typescript
+// Let's teleport the player to the entry named "my-entry-point"
+WA.nav.goToRoom("#my-entry-point");
+```
+
 
 ### Opening/closing web page in Co-Websites
 

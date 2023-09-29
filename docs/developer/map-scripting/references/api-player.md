@@ -375,6 +375,28 @@ const result = await WA.player.moveTo(250, 250, 10);
 // result: { x: number, y: number, cancelled: boolean }
 ```
 
+## Teleport player to position
+
+```typescript
+WA.player.teleport(x: number, y: number): Promise<void>;
+```
+
+Player will be teleported to the destination point.
+
+```typescript
+// Let's teleport player to x: 250 y: 250
+WA.player.teleport(250, 250);
+```
+
+:::info
+You can also teleport a player to a specific entry point of the current map using the `WA.nav.goToRoom` function:
+:::
+
+```typescript
+// Let's teleport the player to the entry named "my-entry-point"
+WA.nav.goToRoom("#my-entry-point");
+```
+
 ## Set the outline color of the player
 ```
 WA.player.setOutlineColor(red: number, green: number, blue: number): Promise<void>;

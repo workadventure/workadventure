@@ -29,7 +29,7 @@ test.describe('Map editor', () => {
     if(browserName === "webkit"){
       await hideNoCamera(page);
     }
-    await Map.walkToPosition(page, 5*32, 5*32);
+    await Map.teleportToPosition(page, 5*32, 5*32);
 
     // Second browser
     const newBrowser = await browser.browserType().launch();
@@ -116,7 +116,7 @@ test.describe('Map editor', () => {
     await AreaEditor.addProperty(page, 'ListenerZone for megaphone');
     await AreaEditor.setListenerZoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
     await Menu.closeMapEditor(page);
-    await Map.walkToPosition(page, 4*32, 2*32);
+    await Map.teleportToPosition(page, 4*32, 2*32);
     await expect(await page.locator('.jitsi-video')).toBeVisible({timeout: 20_000});
 
 
@@ -127,7 +127,7 @@ test.describe('Map editor', () => {
     //await page2.evaluate(() => { localStorage.setItem('debug', '*'); });
     //await page2.reload();
     await login(page2, "test2", 5);
-    await Map.walkToPosition(page2, 4*32, 7*32);
+    await Map.teleportToPosition(page2, 4*32, 7*32);
 
     await expect(await page2.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 20_000});
   });
@@ -167,7 +167,7 @@ test.describe('Map editor', () => {
     await Menu.closeMapEditor(page);
 
     try {
-      await Map.walkToPosition(page, 9 * 32, 9 * 32);
+      await Map.teleportToPosition(page, 9 * 32, 9 * 32);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_) {
       // evaluateScript will throw an error if the script frame unloaded because of page change
@@ -213,7 +213,7 @@ test.describe('Map editor', () => {
       // It is important to call waitForEvent first.
       page.waitForEvent('popup'),
       // Opens the popup.
-      Map.walkToPosition(page, 9 * 32, 9 * 32)
+      Map.teleportToPosition(page, 9 * 32, 9 * 32)
     ]);
 
     // TODO make same test with object editor
@@ -253,7 +253,7 @@ test.describe('Map editor', () => {
 
     await Menu.closeMapEditor(page);
 
-    // wlak on the area position and open the popup
+    // walk on the area position and open the popup
     await Map.walkToPosition(page, 9 * 32, 9 * 32);
 
     // check if the iframe was opened and button thumbnail is visible
