@@ -582,25 +582,37 @@ jobs:
         include:
           - browser: chromium
             shard: 1
-            nbShards: 2
+            nbShards: 3
           - browser: chromium
             shard: 2
-            nbShards: 2
-          - browser: firefox
-            shard: 1
-            nbShards: 2
-          - browser: firefox
-            shard: 2
-            nbShards: 2
-          - browser: webkit
-            shard: 1
             nbShards: 3
-          - browser: webkit
-            shard: 2
-            nbShards: 3
-          - browser: webkit
+          - browser: chromium
             shard: 3
             nbShards: 3
+          - browser: firefox
+            shard: 1
+            nbShards: 3
+          - browser: firefox
+            shard: 2
+            nbShards: 3
+          - browser: firefox
+            shard: 3
+            nbShards: 3
+          - browser: webkit
+            shard: 1
+            nbShards: 5
+          - browser: webkit
+            shard: 2
+            nbShards: 5
+          - browser: webkit
+            shard: 3
+            nbShards: 5
+          - browser: webkit
+            shard: 4
+            nbShards: 5
+          - browser: webkit
+            shard: 5
+            nbShards: 5
     needs:
       - build-play
       - build-chat
