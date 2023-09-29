@@ -457,7 +457,7 @@ export class AreasPropertiesListener {
     private handleListenerMegaphonePropertyOnEnter(property: ListenerMegaphonePropertyData): void {
         if (property.speakerZoneName !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
-                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas()?.getAreas(),
+                this.scene.getGameMap().getGameMapAreas()?.getAreas(),
                 property.speakerZoneName
             );
             if (speakerZoneName) {
@@ -473,7 +473,7 @@ export class AreasPropertiesListener {
     private handleListenerMegaphonePropertyOnLeave(property: ListenerMegaphonePropertyData): void {
         if (property.speakerZoneName !== undefined) {
             const speakerZoneName = getSpeakerMegaphoneAreaName(
-                gameManager.getCurrentGameScene().getGameMap().getGameMapAreas()?.getAreas(),
+                this.scene.getGameMap().getGameMapAreas()?.getAreas(),
                 property.speakerZoneName
             );
             if (speakerZoneName) {
@@ -487,17 +487,12 @@ export class AreasPropertiesListener {
     }
 
     private handleJoinMucRoom(name: string, type: string) {
-        iframeListener.sendJoinMucEventToChatIframe(
-            `${gameManager.getCurrentGameScene().roomUrl}/${slugify(name)}`,
-            name,
-            type,
-            false
-        );
+        iframeListener.sendJoinMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`, name, type, false);
         chatZoneLiveStore.set(true);
     }
 
     private handleLeaveMucRoom(name: string) {
-        iframeListener.sendLeaveMucEventToChatIframe(`${gameManager.getCurrentGameScene().roomUrl}/${slugify(name)}`);
+        iframeListener.sendLeaveMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`);
         chatZoneLiveStore.set(false);
     }
 

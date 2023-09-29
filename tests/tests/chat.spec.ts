@@ -60,12 +60,12 @@ test.describe('Chat', () => {
       // Enter in liveZone
       await Chat.slideToChat(page);
       await page.locator('#game canvas').click();
-      await Map.walkToPosition(page, 12*32, 1*32);
+      await Map.goToRoom(page, '#LiveZone_a');
       await Chat.chatZoneExist(page, 'liveZone');
 
       await Chat.slideToChat(page2);
       await page2.locator('#game canvas').click();
-      await Map.walkToPosition(page2, 12*32, 7*32);
+      await Map.goToRoom(page2, '#LiveZone_b');
       await Chat.chatZoneExist(page2, 'liveZone');
 
 
@@ -78,6 +78,7 @@ test.describe('Chat', () => {
       await Chat.AT_sendMessage(page, 'Hello, how are you ?');
       await Chat.AT_checkLastMessageSent(page);
       // Receive the message
+      await page2.pause();
       await Chat.AT_lastMessageContain(page2, 'Hello, how are you ?');
 
 
@@ -155,11 +156,11 @@ test.describe('Chat', () => {
 
       // Exit of liveZone
       await page.locator('#game canvas').click();
-      await Map.walkToPosition(page, 5*32, 1*32);
+      await Map.goToRoom(page, '#Out_LiveZone_a');
       await Chat.slideToChat(page);
       await Chat.noChatZone(page);
       await page2.locator('#game canvas').click();
-      await Map.walkToPosition(page2, 5*32, 7*32);
+      await Map.goToRoom(page2, '#Out_LiveZone_b');
       await Chat.slideToChat(page2);
       await Chat.noChatZone(page2);
     });

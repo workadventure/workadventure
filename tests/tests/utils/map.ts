@@ -19,6 +19,14 @@ class Map {
             y,
         });
     }
+
+    async goToRoom(page: Page, room: string){
+        await evaluateScript(page, async ({ room }) => {
+            WA.nav.goToRoom(room);
+        }, {
+            room,
+        });
+    }
 }
 
 export default new Map();

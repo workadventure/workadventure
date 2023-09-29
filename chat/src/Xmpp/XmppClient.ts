@@ -369,6 +369,12 @@ export class XmppClient {
         }));
     }
 
+    public get readyPromise(): Promise<void> {
+        return this.clientPromise.then(() => {
+            return;
+        });
+    }
+
     private xmlRestrictionsToEjabberd(element: string): void {
         // TODO IMPLEMENT RESTRICTIONS
         // Test body message length
