@@ -61,6 +61,7 @@
                 return {
                     id,
                     type,
+                    isDefault: true,
                 };
             case "silent":
                 return {
@@ -485,6 +486,7 @@
                     />
                 {:else if property.type === "start"}
                     <StartPropertyEditor
+                        {property}
                         on:close={() => {
                             onDeleteProperty(property.id);
                         }}
