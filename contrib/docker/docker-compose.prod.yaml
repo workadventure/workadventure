@@ -52,6 +52,7 @@ services:
       - API_URL=back:50051
       - FRONT_URL=/
       - CHAT_URL=/chat/
+      - INTERNAL_MAP_STORAGE_URL=http://map-storage:3000
       - PUBLIC_MAP_STORAGE_URL=https://${DOMAIN}/map-storage
       - START_ROOM_URL
       - OPID_PROMPT=login

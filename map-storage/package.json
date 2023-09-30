@@ -27,7 +27,7 @@
     "prebuild": "rimraf dist",
     "typecheck": "tsc --project tsconfig-node.json --noEmit",
     "format": "prettier --write \"src/**/*.ts\" vite.config.ts",
-    "start": "ESBK_TSCONFIG_PATH=tsconfig-node.json tsx ./src/index.ts",
+    "start": "if [ $PATH_PREFIX ]; then npm run front:build; fi && ESBK_TSCONFIG_PATH=tsconfig-node.json tsx ./src/index.ts",
     "back:start:dev": "ESBK_TSCONFIG_PATH=tsconfig-node.json tsx watch --clear-screen=false --inspect=0.0.0.0:9229 ./src/index.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "precommit": "lint-staged",

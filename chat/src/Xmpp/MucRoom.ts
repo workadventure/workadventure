@@ -60,10 +60,12 @@ export class MucRoom extends AbstractRoom {
         return this.roomJid.bare;
     }
 
-    public getUserByJid(jid: string): User {
+    public getUserByJid(jid: string): User | undefined {
         const user = this.presenceStore.get(jid);
         if (!user) {
-            throw new Error("No user found for this JID");
+            //throw new Error("No user found for this JID");
+            console.error("No user found for this JID");
+            return undefined;
         }
         return get(user);
     }

@@ -27,9 +27,7 @@ import {
     requestedMicrophoneState,
     isSpeakerStore,
 } from "../../Stores/MediaStore";
-import { urlManager } from "../../Url/UrlManager";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
-import { connectionManager } from "../../Connection/ConnectionManager";
 import { currentMegaphoneNameStore, requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
@@ -293,13 +291,11 @@ export class GameMapPropertiesListener {
 
         // Muc zone
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.CHAT_NAME, (newValue, oldValue, allProps) => {
-            if (!connectionManager.currentRoom) {
-                throw new Error("Race condition : Current room is not defined yet");
-            } else if (!connectionManager.currentRoom.enableChat) {
+            if (!this.scene.room.enableChat) {
                 return;
             }
 
-            const playUri = urlManager.getPlayUri() + "/";
+            const playUri = this.scene.roomUrl + "/";
 
             if (oldValue !== undefined) {
                 iframeListener.sendLeaveMucEventToChatIframe(playUri + oldValue);

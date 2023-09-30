@@ -272,6 +272,9 @@
                         "type": {
                           "type": "string",
                           "const": "start"
+                        },
+                        "isDefault": {
+                          "type": "boolean"
                         }
                       },
                       "required": [

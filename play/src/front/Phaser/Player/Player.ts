@@ -1,4 +1,4 @@
-import { get } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
 import { PositionMessage_Direction } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
@@ -18,6 +18,7 @@ export class Player extends Character {
     private pathToFollow?: { x: number; y: number }[];
     private followingPathPromiseResolve?: (result: { x: number; y: number; cancelled: boolean }) => void;
     private pathWalkingSpeed?: number;
+    private readonly unsubscribeVisibilityStore: Unsubscriber;
 
     constructor(
         Scene: GameScene,
@@ -33,7 +34,7 @@ export class Player extends Character {
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
 
-        visibilityStore.subscribe((isVisible) => {
+        this.unsubscribeVisibilityStore = visibilityStore.subscribe((isVisible) => {
             if (!isVisible) {
                 this.stop();
                 this.finishFollowingPath(true);
@@ -69,15 +70,15 @@ export class Player extends Character {
     }
 
     public rotate(): void {
-        const direction = (this.lastDirection + 1) % (PositionMessage_Direction.LEFT + 1);
+        const direction = (this._lastDirection + 1) % (PositionMessage_Direction.LEFT + 1);
         this.emit(hasMovedEventName, {
             moving: false,
-            direction: (this.lastDirection + 1) % (PositionMessage_Direction.LEFT + 1),
+            direction: (this._lastDirection + 1) % (PositionMessage_Direction.LEFT + 1),
             x: this.x,
             y: this.y,
         });
-        this.lastDirection = direction;
-        this.playAnimation(this.lastDirection, false);
+        this._lastDirection = direction;
+        this.playAnimation(this._lastDirection, false);
     }
 
     public sendFollowRequest() {
@@ -154,7 +155,7 @@ export class Player extends Character {
         const moving = x !== 0 || y !== 0 || joystickMovement;
 
         // Compute direction
-        let direction = this.lastDirection;
+        let direction = this._lastDirection;
         if (moving && !joystickMovement) {
             if (Math.abs(x) > Math.abs(y)) {
                 direction = x < 0 ? PositionMessage_Direction.LEFT : PositionMessage_Direction.RIGHT;
@@ -217,5 +218,10 @@ export class Player extends Character {
 
     private getMovementDirection(xDistance: number, yDistance: number, distance: number): [number, number] {
         return [xDistance / Math.sqrt(distance), yDistance / Math.sqrt(distance)];
+    }
+
+    destroy(): void {
+        this.unsubscribeVisibilityStore();
+        super.destroy();
     }
 }

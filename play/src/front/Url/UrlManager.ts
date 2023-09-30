@@ -89,10 +89,6 @@ class UrlManager {
             history.pushState("", document.title, window.location.pathname + window.location.search);
         }
     }
-
-    getPlayUri(): string {
-        return document.location.toString();
-    }
 }
 
 export const urlManager = new UrlManager();

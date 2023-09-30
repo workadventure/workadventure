@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { afterUpdate } from "svelte";
     import type { Game } from "../Phaser/Game/Game";
     import { errorStore } from "../Stores/ErrorStore";
     import { errorScreenStore } from "../Stores/ErrorScreenStore";
@@ -13,6 +12,7 @@
     import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { refreshPromptStore } from "../Stores/RefreshPromptStore";
+    import { forceRefreshChatStore } from "../Stores/ChatStore";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
@@ -28,13 +28,9 @@
 
     /**
      * When changing map from an exit on the current map, the Chat and the MainLayout are not really destroyed
-     * due to an internal issue of Svelte, this is a work-around to force the component to be reloaded
+     * due to an internal issue of Svelte, we use a #key directive to force the destruction of the components.
      * https://github.com/sveltejs/svelte/issues/5268
      */
-    let unique = {};
-    afterUpdate(() => {
-        unique = {};
-    });
 </script>
 
 {#if $errorScreenStore !== undefined}
@@ -65,7 +61,7 @@
     {#if $refreshPromptStore}
         <RefreshPrompt />
     {/if}
-    {#key unique}
+    {#key $forceRefreshChatStore}
         <Chat />
         {#if $mapEditorModeStore}
             <MapEditor />

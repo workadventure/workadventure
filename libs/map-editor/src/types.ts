@@ -36,6 +36,7 @@ export const SilentPropertyData = PropertyBase.extend({
 
 export const StartPropertyData = PropertyBase.extend({
     type: z.literal("start"),
+    isDefault: z.boolean().optional(),
 });
 
 export const ExitPropertyData = PropertyBase.extend({
