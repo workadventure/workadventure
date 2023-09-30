@@ -13,6 +13,7 @@ import {
     OPID_WOKA_NAME_POLICY,
     ENABLE_CHAT_ONLINE_LIST,
     ENABLE_CHAT_DISCONNECTED_LIST,
+    INTERNAL_MAP_STORAGE_URL,
     MAP_EDITOR_ALLOWED_USERS,
     KLAXOON_ENABLED,
     KLAXOON_CLIENT_ID,
@@ -188,12 +189,16 @@ class LocalAdmin implements AdminInterface {
         const match = /\/~\/(.+)/.exec(url.pathname);
         if (match) {
             //let wamUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
-            const response = await axios.get(`${PUBLIC_MAP_STORAGE_URL}/maps`);
+            const response = await axios.get(`${INTERNAL_MAP_STORAGE_URL}/maps`);
             const maps = MapsCacheFileFormat.parse(response.data);
 
             const mapDescriptions: ShortMapDescription[] = [];
             for (const [path, value] of Object.entries(maps.maps)) {
-                const wamUrl = new URL(path, PUBLIC_MAP_STORAGE_URL).toString();
+                let publicMapStorageUrl = PUBLIC_MAP_STORAGE_URL;
+                if (!publicMapStorageUrl.endsWith("/")) {
+                    publicMapStorageUrl += "/";
+                }
+                const wamUrl = new URL(path, publicMapStorageUrl).toString();
                 const name = value?.metadata?.name ?? path;
                 mapDescriptions.push({ name, roomUrl: "/~/" + path, wamUrl });
             }

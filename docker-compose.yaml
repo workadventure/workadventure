@@ -88,6 +88,7 @@ services:
             API_URL: back:50051
             DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
             PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
+            INTERNAL_MAP_STORAGE_URL: "http://map-storage:3000"
             ENABLE_OPENAPI_ENDPOINT: "true"
             START_ROOM_URL: "$START_ROOM_URL"
             # Only used if you set up a JWT authentication mechanism in Ejabberd
@@ -273,6 +274,7 @@ services:
             SENTRY_DSN: $SENTRY_DSN_MAPSTORAGE
             SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
             SENTRY_RELEASE: $SENTRY_RELEASE
+            PATH_PREFIX: ""
         volumes:
             - .:/usr/src/app
         ports:
