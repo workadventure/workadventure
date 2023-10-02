@@ -103,6 +103,15 @@ export class GameMapPropertiesListener {
                 const isJitsiUrl = z.string().optional().safeParse(allProps.get(GameMapProperties.JITSI_URL));
                 let jitsiUrl = isJitsiUrl.success ? isJitsiUrl.data : undefined;
 
+                const isJitsiWidth = z
+                    .number()
+                    .min(1)
+                    .max(100)
+                    .default(50)
+                    .optional()
+                    .safeParse(allProps.get(GameMapProperties.JITSI_WIDTH));
+                const jitsiWidth = isJitsiWidth.success ? isJitsiWidth.data : 50;
+
                 let jwt: string | undefined;
                 if (JITSI_PRIVATE_MODE && !jitsiUrl) {
                     if (!this.scene.connection) {
@@ -154,9 +163,7 @@ export class GameMapPropertiesListener {
 
                 const coWebsite = new JitsiCoWebsite(
                     new URL(domain),
-                    false,
-                    undefined,
-                    undefined,
+                    jitsiWidth,
                     true,
                     roomName,
                     gameManager.getPlayerName() ?? "unknown",
