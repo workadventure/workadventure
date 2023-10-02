@@ -43,6 +43,7 @@ const mapEditor: BaseTranslation = {
             triggerOnAction: "Show action toast with message",
             closable: "Can be closed",
             noPrefix: "Share with other rooms",
+            width: "Width",
             jitsiRoomConfig: {
                 addConfig: "Add an option",
                 startWithAudioMuted: "Start with microphone muted",

@@ -273,14 +273,10 @@ export class AreasPropertiesListener {
 
             inJitsiStore.set(true);
 
-            const closable = property.closable;
-
             const coWebsite = new JitsiCoWebsite(
                 new URL(domain),
-                false,
-                undefined,
-                undefined,
-                closable,
+                property.width,
+                property.closable,
                 roomName,
                 gameManager.getPlayerName() ?? "unknown",
                 jwt,

@@ -44,6 +44,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             triggerOnAction: "Afficher un message d'information avec le message",
             closable: "Peut être fermé",
             noPrefix: "Partager avec d'autres salles",
+            width: "Largeur",
             jitsiRoomConfig: {
                 addConfig: "Ajouter une option",
                 startWithAudioMuted: "Démarrer avec le microphone désactivé",
