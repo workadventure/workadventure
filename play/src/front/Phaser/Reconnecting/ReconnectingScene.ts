@@ -48,12 +48,14 @@ export class ReconnectingScene extends Phaser.Scene {
         );
 
         const cat = this.add.sprite(this.game.renderer.width / 2, this.game.renderer.height / 2 - 32, "cat");
-        this.anims.create({
-            key: "right",
-            frames: this.anims.generateFrameNumbers("cat", { start: 6, end: 8 }),
-            frameRate: 10,
-            repeat: -1,
-        });
+        if (!this.anims.exists("right")) {
+            this.anims.create({
+                key: "right",
+                frames: this.anims.generateFrameNumbers("cat", { start: 6, end: 8 }),
+                frameRate: 10,
+                repeat: -1,
+            });
+        }
         cat.play("right");
 
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
