@@ -12,7 +12,8 @@ class SoundManager {
         soundPromise = new Promise<BaseSound>((res) => {
             const sound = soundManager.get(soundUrl);
             if (sound !== null) {
-                return res(sound);
+                res(sound);
+                return;
             }
             loadPlugin.audio(soundUrl, soundUrl);
             loadPlugin.once("filecomplete-audio-" + soundUrl, () => {

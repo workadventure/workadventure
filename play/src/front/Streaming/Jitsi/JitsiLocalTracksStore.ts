@@ -59,14 +59,14 @@ const tracks: JitsiLocalTracks = {
     video: undefined,
     screenSharing: undefined,
 };
-let oldDevices: Set<DeviceType> = new Set();
+let oldDevicesPromise: Promise<Set<DeviceType>> = Promise.resolve(new Set());
 
 export const jitsiLocalTracksStore = derived<Readable<Set<DeviceType>>, Result<JitsiLocalTracks, Error> | undefined>(
     jitsiDevicesStore,
     ($jitsiDevicesStore, set) => {
         const JitsiMeetJS = window.JitsiMeetJS;
 
-        (async (): Promise<JitsiLocalTracks> => {
+        oldDevicesPromise = oldDevicesPromise.then(async (oldDevices) => {
             const requestedDevices: DeviceType[] = [];
 
             if (oldDevices.has("audio") && !$jitsiDevicesStore.has("audio")) {
@@ -77,15 +77,24 @@ export const jitsiLocalTracksStore = derived<Readable<Set<DeviceType>>, Result<J
             }
 
             if (oldDevices.has("video") && !$jitsiDevicesStore.has("video")) {
+                const oldVideoTrack = tracks.video;
                 await tracks.video?.dispose();
-                tracks.video = undefined;
+                // Because of "await", we need to check again if the track is still the same
+                if (oldVideoTrack === tracks.video) {
+                    tracks.video = undefined;
+                }
             } else if (!oldDevices.has("video") && $jitsiDevicesStore.has("video")) {
                 requestedDevices.push("video");
             }
 
             if (oldDevices.has("desktop") && !$jitsiDevicesStore.has("desktop")) {
+                const oldScreenSharingTrack = tracks.screenSharing;
                 await tracks.screenSharing?.dispose();
-                tracks.screenSharing = undefined;
+
+                // Because of "await", we need to check again if the track is still the same
+                if (oldScreenSharingTrack === tracks.screenSharing) {
+                    tracks.screenSharing = undefined;
+                }
             } else if (!oldDevices.has("desktop") && $jitsiDevicesStore.has("desktop")) {
                 requestedDevices.push("desktop");
             }
@@ -94,7 +103,10 @@ export const jitsiLocalTracksStore = derived<Readable<Set<DeviceType>>, Result<J
                 const newTracks = await JitsiMeetJS.createLocalTracks({ devices: requestedDevices });
                 if (!(newTracks instanceof Array)) {
                     // newTracks is a JitsiConferenceError
-                    throw newTracks;
+                    console.error("jitsiLocalTracksStore", newTracks);
+                    set(failure(new Error("Error when creating Jitsi local track: " + newTracks)));
+                    oldDevices = structuredClone($jitsiDevicesStore);
+                    return oldDevices;
                 }
 
                 for (const track of newTracks) {
@@ -110,13 +122,9 @@ export const jitsiLocalTracksStore = derived<Readable<Set<DeviceType>>, Result<J
                 }
             }
             oldDevices = structuredClone($jitsiDevicesStore);
-            return tracks;
-        })()
-            .then((newTracks) => set(success(newTracks)))
-            .catch((e) => {
-                console.error("jitsiLocalTracksStore", e);
-                set(failure(e));
-            });
+            set(success(tracks));
+            return oldDevices;
+        });
     }
 );
 

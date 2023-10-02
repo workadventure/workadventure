@@ -53,6 +53,12 @@ module.exports = {
         "@typescript-eslint/ban-ts-comment": "off",
         "@typescript-eslint/ban-ts-ignore": "off",
         "import/order": "error",
+
+        "no-async-promise-executor": "error",
+        "no-await-in-loop": "error",
+        "no-promise-executor-return": "error",
+        "require-atomic-updates": "error",
+        "prefer-promise-reject-errors": "error",
     },
     "settings": {
         "svelte3/typescript": () => require('typescript'),
