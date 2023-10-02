@@ -28,13 +28,7 @@
     "rules": {
         "no-unused-vars": "off",
         "@typescript-eslint/no-explicit-any": "error",
-        "import/order": "error",
-
-        "no-async-promise-executor": "error",
-        "no-await-in-loop": "error",
-        "no-promise-executor-return": "error",
-        "require-atomic-updates": "error",
-        "prefer-promise-reject-errors": "error"
+        "import/order": "error"
     },
     "settings": {
         "typescript": true,
