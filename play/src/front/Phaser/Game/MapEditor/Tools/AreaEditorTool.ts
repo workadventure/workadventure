@@ -100,16 +100,14 @@ export class AreaEditorTool extends MapEditorTool {
         this.updateAreaPreviews();
         this.setAreaPreviewsVisibility(true);
         this.bindEventHandlers();
-        if (get(mapEditorAreaModeStore) === "ADD") {
-            this.scene.input.setDefaultCursor("crosshair");
-        }
+        this.changeAreaMode("ADD");
         this.scene.markDirty();
     }
 
     public destroy(): void {
         this.selectedAreaPreviewStoreSubscriber();
         this.unbindEventHandlers();
-        this.scene.input.setDefaultCursor("crosshair");
+        this.scene.input.setDefaultCursor("auto");
     }
 
     public async handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
