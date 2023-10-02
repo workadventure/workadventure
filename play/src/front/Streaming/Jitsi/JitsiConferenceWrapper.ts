@@ -391,20 +391,31 @@ export class JitsiConferenceWrapper {
             }
 
             if (requestedDevices.length > 0) {
+                const promises: Promise<void>[] = [];
                 for (const track of newTracks) {
                     if (track.isAudioTrack()) {
-                        await this.handleTrack(this.tracks.audio, track);
-                        this.tracks.audio = track;
+                        promises.push(
+                            this.handleTrack(this.tracks.audio, track).then(() => {
+                                this.tracks.audio = track;
+                            })
+                        );
                     } else if (track.isVideoTrack()) {
                         if (track.getVideoType() === "desktop") {
-                            await this.handleTrack(this.tracks.screenSharing, track);
-                            this.tracks.screenSharing = track;
+                            promises.push(
+                                this.handleTrack(this.tracks.screenSharing, track).then(() => {
+                                    this.tracks.screenSharing = track;
+                                })
+                            );
                         } else {
-                            await this.handleTrack(this.tracks.video, track);
-                            this.tracks.video = track;
+                            promises.push(
+                                this.handleTrack(this.tracks.video, track).then(() => {
+                                    this.tracks.video = track;
+                                })
+                            );
                         }
                     }
                 }
+                await Promise.all(promises);
             }
             debug("JitsiConferenceWrapper => handleFirstLocalTrack => success");
             this.firstLocalTrackInitialization = true;

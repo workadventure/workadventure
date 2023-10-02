@@ -48,6 +48,7 @@ export class MucManager {
                     }
                 });
             }
+            const promises: Promise<void>[] = [];
             if (allMucRoomsOfWorld) {
                 for (const mucRoom of allMucRoomsOfWorld) {
                     let found = false;
@@ -61,7 +62,7 @@ export class MucManager {
                         }
                     });
                     if (!found) {
-                        await ejabberdClient.destroyMucRoom(mucRoom);
+                        promises.push(ejabberdClient.destroyMucRoom(mucRoom));
                     }
                 }
             }
@@ -69,11 +70,12 @@ export class MucManager {
                 for (const [, chatZone] of this.chatZones) {
                     if (chatZone.mucCreated) return;
                     if (chatZone.mucUrl) {
-                        await ejabberdClient.createMucRoom(chatZone);
+                        promises.push(ejabberdClient.createMucRoom(chatZone));
                         chatZone.mucCreated = true;
                     }
                 }
             }
+            await Promise.all(promises);
         }
     }
 

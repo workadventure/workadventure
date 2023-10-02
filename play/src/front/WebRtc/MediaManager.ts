@@ -123,14 +123,6 @@ export class MediaManager {
         }
     }
 
-    public requestNotification() {
-        if (window.Notification && Notification.permission !== "granted") {
-            return Notification.requestPermission();
-        } else {
-            return Promise.reject();
-        }
-    }
-
     public createNotification(userName: string, notificationType: NotificationType, forum: string | null = null) {
         if (document.hasFocus()) {
             return;
