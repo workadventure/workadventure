@@ -91,6 +91,7 @@ export class Room {
         let redirectCount = 0;
         while (redirectCount < 32) {
             const room = new Room(roomUrl);
+            //eslint-disable-next-line no-await-in-loop
             const result = await room.getMapDetail();
             if (result instanceof MapDetail) {
                 return room;

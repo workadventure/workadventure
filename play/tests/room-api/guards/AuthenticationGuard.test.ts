@@ -16,7 +16,8 @@ describe("AuthenticationGuard", () => {
             return {
                 default: () => {
                     return new Promise((resolve) => {
-                        return resolve({ success: true });
+                        resolve({ success: true });
+                        return;
                     });
                 },
             };

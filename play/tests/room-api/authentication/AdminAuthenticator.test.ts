@@ -29,68 +29,82 @@ describe("AdminAuthenticator", () => {
                     ) => {
                         return new Promise((resolve, reject) => {
                             if (!options.headers || !options.headers["X-API-Key"]) {
-                                return reject({
+                                // eslint-disable-next-line prefer-promise-reject-errors
+                                reject({
                                     response: {
                                         status: 401,
                                         data: "X-API-Key header not found",
                                     },
                                 });
+                                return;
                             }
 
                             if (!options.params || !options.params.roomUrl) {
-                                return reject({
+                                // eslint-disable-next-line prefer-promise-reject-errors
+                                reject({
                                     response: {
                                         status: 400,
                                         data: "roomUrl parameter not found",
                                     },
                                 });
+                                return;
                             }
 
                             if (options.headers["X-API-Key"] !== apiKey) {
-                                return reject({
+                                // eslint-disable-next-line prefer-promise-reject-errors
+                                reject({
                                     response: {
                                         status: 401,
                                         data: "Unknown API key",
                                     },
                                 });
+                                return;
                             }
 
                             if (options.params.roomUrl === roomUrl + "weird-return") {
-                                return resolve({
+                                resolve({
                                     status: 200,
                                     data: {
                                         success: false,
                                     },
                                 });
+                                return;
                             } else if (options.params.roomUrl === roomUrl + "internal-error") {
-                                return reject({
+                                // eslint-disable-next-line prefer-promise-reject-errors
+                                reject({
                                     response: {
                                         status: 500,
                                         data: "Internal error! Please contact us!",
                                     },
                                 });
+                                return;
                             } else if (options.params.roomUrl === roomUrl + "undefined") {
-                                return reject({
+                                // eslint-disable-next-line prefer-promise-reject-errors
+                                reject({
                                     response: {
                                         status: 404,
                                         data: "Room not found",
                                     },
                                 });
+                                return;
                             } else if (options.params.roomUrl !== roomUrl) {
-                                return reject({
+                                // eslint-disable-next-line prefer-promise-reject-errors
+                                reject({
                                     response: {
                                         status: 403,
                                         data: "You cannot interact with this room!",
                                     },
                                 });
+                                return;
                             }
 
-                            return resolve({
+                            resolve({
                                 status: 200,
                                 data: {
                                     success: true,
                                 },
                             });
+                            return;
                         });
                     },
                 }),

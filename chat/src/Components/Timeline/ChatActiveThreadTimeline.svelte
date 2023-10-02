@@ -339,7 +339,11 @@
                 break;
             case "Youtube":
                 try {
-                    app.link = await YoutubeService.getYoutubeEmbedUrl(new URL(app.link));
+                    const oldLink = app.link;
+                    const newLink = await YoutubeService.getYoutubeEmbedUrl(new URL(app.link));
+                    if (app.link === oldLink) {
+                        app.link = newLink;
+                    }
                 } catch (err) {
                     if (err instanceof GoogleWorkSpaceException.YoutubeException) {
                         app.error = $LL.form.application.youtube.error();

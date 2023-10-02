@@ -61,7 +61,7 @@ class LibJitsiFactory {
 
             //const conference = connection.initJitsiConference("foo", {});
 
-            return connection;
+            return;
         });
     }
 

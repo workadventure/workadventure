@@ -546,6 +546,7 @@ export class GameScene extends DirtyScene {
 
             switch (itemType) {
                 case "computer": {
+                    //eslint-disable-next-line no-await-in-loop
                     const module = await import("../Items/Computer/computer");
                     itemFactory = module.default;
                     break;
@@ -2025,9 +2026,11 @@ ${escapedMessage}
                             resolve(newFirstgid);
                         });
                     });
-                    this.load.on("loaderror", () => {
-                        console.error("Error while loading " + eventTileset.url + ".");
-                        reject(-1);
+                    this.load.on("loaderror", (file: Phaser.Loader.File) => {
+                        if (file.src === eventTileset.url) {
+                            console.error("Error while loading " + eventTileset.url + ".");
+                            reject(new Error("Error while loading " + eventTileset.url + "."));
+                        }
                     });
 
                     this.load.json(eventTileset.url, eventTileset.url);

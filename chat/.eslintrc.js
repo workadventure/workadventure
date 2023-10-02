@@ -48,6 +48,12 @@ module.exports = {
         "@typescript-eslint/restrict-template-expressions": "off",
         "@typescript-eslint/no-unsafe-argument": "off",
         "import/order": "error",
+
+        "no-async-promise-executor": "error",
+        "no-await-in-loop": "error",
+        "no-promise-executor-return": "error",
+        "require-atomic-updates": "error",
+        "prefer-promise-reject-errors": "error",
     },
     "settings": {
         "svelte3/typescript": () => require('typescript'),
