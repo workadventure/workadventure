@@ -1,5 +1,5 @@
 import type { Direction } from "phaser3-rex-plugins/plugins/virtualjoystick.js";
-import { get } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { MobileJoystick } from "../Components/MobileJoystick";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
@@ -63,6 +63,7 @@ export class UserInputManager {
     private joystickForceAccuY = 0;
 
     private userInputHandler: UserInputHandlerInterface;
+    private enableUserInputsStoreUnsubscribe: Unsubscriber;
 
     constructor(scene: Phaser.Scene, userInputHandler: UserInputHandlerInterface) {
         this.scene = scene;
@@ -75,7 +76,7 @@ export class UserInputManager {
             this.initVirtualJoystick();
         }
 
-        enableUserInputsStore.subscribe((enable) => {
+        this.enableUserInputsStoreUnsubscribe = enableUserInputsStore.subscribe((enable) => {
             enable ? this.restoreControls() : this.disableControls();
         });
     }
@@ -244,6 +245,7 @@ export class UserInputManager {
     }
 
     destroy(): void {
+        this.enableUserInputsStoreUnsubscribe();
         this.joystick?.destroy();
         this.joystick = undefined;
     }
