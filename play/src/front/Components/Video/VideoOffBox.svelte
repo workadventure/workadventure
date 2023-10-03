@@ -89,7 +89,7 @@
         class="tw-items-center tw-px-3 tw-w-full tw-rounded tw-flex tw-flex-row tw-relative"
     >
         <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
-        <!-- svelte-ignore a11y-media-has-caption &ndash;&gt;-->
+        <!-- svelte-ignore a11y-media-has-caption -->
         {#if $streamStore}
             <video
                 bind:this={videoElement}

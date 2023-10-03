@@ -13,6 +13,7 @@ module.exports = {
         "plugin:import/recommended",
         "plugin:import/typescript",
         "plugin:rxjs/recommended",
+        "plugin:svelte/recommended",
     ],
     "globals": {
         "Atomics": "readonly",
@@ -27,13 +28,15 @@ module.exports = {
     },
     "plugins": [
         "@typescript-eslint",
-        "svelte3",
         "rxjs",
     ],
     "overrides": [
         {
             "files": ["*.svelte"],
-            "processor": "svelte3/svelte3"
+            "parser": "svelte-eslint-parser",
+            "parserOptions": {
+                "parser": '@typescript-eslint/parser'
+            }
         }
     ],
     "ignorePatterns": ["**/generated/*.ts"],
@@ -63,13 +66,19 @@ module.exports = {
         "prefer-promise-reject-errors": "error",
 
         "rxjs/no-ignored-subscription": "error",
+
+        "svelte/require-each-key": "error",
+        "svelte/valid-compile": [ "error", { 'ignoreWarnings': true } ],
+        "import/default": "off",
+        "import/no-named-as-default": "off",
+        "import/no-named-as-default-member": "off",
     },
     "settings": {
-        "svelte3/typescript": () => require('typescript'),
+        /*"svelte3/typescript": () => require('typescript'),
         "svelte3/ignore-styles": () => true,
         "svelte3/ignore-warnings": (warning) => {
             return  (warning.code === "a11y-click-events-have-key-events" || warning.code === "security-anchor-rel-noreferrer");
-        },
+        },*/
         "typescript": true,
         "node": true,
     }

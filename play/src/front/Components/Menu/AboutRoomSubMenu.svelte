@@ -80,7 +80,7 @@
             {$LL.menu.about.copyrights.tileset.title()}
         </h3>
         <section hidden={!expandedTilesetCopyright}>
-            {#each tilesetCopyright as copyright}
+            {#each tilesetCopyright as copyright (copyright)}
                 <p class="tw-whitespace-pre-line">{copyright}</p>
             {:else}
                 <p>{$LL.menu.about.copyrights.tileset.empty()}</p>
@@ -90,7 +90,7 @@
             {$LL.menu.about.copyrights.audio.title()}
         </h3>
         <section hidden={!expandedAudioCopyright}>
-            {#each audioCopyright as copyright}
+            {#each audioCopyright as copyright (copyright)}
                 <p class="tw-whitespace-pre-line">{copyright}</p>
             {:else}
                 <p>{$LL.menu.about.copyrights.audio.empty()}</p>
