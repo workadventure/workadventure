@@ -3001,6 +3001,9 @@ ${escapedMessage}
 
     public sendViewportToServer(margin = 300): void {
         const camera = this.cameras.main;
+        if (!camera) {
+            return;
+        }
         this.connection?.setViewport({
             left: Math.max(0, camera.scrollX - margin),
             top: Math.max(0, camera.scrollY - margin),
