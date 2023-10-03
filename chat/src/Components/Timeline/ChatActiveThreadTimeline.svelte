@@ -428,6 +428,8 @@
             element.removeEventListener("click", aListner);
         });
     });
+
+    /* eslint-disable svelte/no-at-html-tags */
 </script>
 
 <!-- thread -->
@@ -491,7 +493,7 @@
         id="timeLine-messageList"
         class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-py-24 tw-justify-end tw-h-auto tw-min-h-screen"
     >
-        {#each $chatMessagesStore as message, i}
+        {#each $chatMessagesStore as message, i (message.id)}
             {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
                 <div
                     id={`message_${message.id}`}
@@ -564,7 +566,7 @@
                             {/if}
                             {#if message.text}
                                 <div class="wa-message-body">
-                                    {#each message.text as text}
+                                    {#each message.text as text (text)}
                                         <div
                                             class="tw-text-ellipsis tw-overflow-y-auto tw-break-words tw-whitespace-pre-line"
                                         >
@@ -584,7 +586,7 @@
 
             {#if message.targets && message.targets.length > 0}
                 {#if message.type === ChatMessageTypes.userIncoming}
-                    {#each message.targets as target}
+                    {#each message.targets as target (target.jid)}
                         <div class="event tw-text-center tw-mt-2" style="white-space: nowrap;">
                             <span
                                 class="tw-w-fit tag tw-bg-dark tw-mx-2 tw-px-3 tw-py-1 tw-border tw-border-solid tw-rounded-full tw-text-xs tw-border-lighter-purple"
@@ -613,7 +615,7 @@
                     {/each}
                 {/if}
                 {#if message.type === ChatMessageTypes.userOutcoming}
-                    {#each message.targets as target}
+                    {#each message.targets as target (target.jid)}
                         <div class="event tw-text-center tw-mt-2" style="white-space: nowrap;">
                             <span
                                 class="tw-w-fit tag tw-bg-dark tw-mx-2 tw-px-3 tw-py-1 tw-border tw-border-solid tw-rounded-full tw-text-xs tw-border-lighter-purple"
@@ -645,7 +647,7 @@
         {/each}
 
         {#if defaultMucRoom}
-            {#each [...$writingStatusMessageStore] as userJid}
+            {#each [...$writingStatusMessageStore] as userJid (userJid)}
                 <UserWriting {defaultMucRoom} {userJid} />
             {/each}
         {/if}
@@ -666,7 +668,7 @@
         {/if}
 
         <form on:submit|preventDefault={saveMessage} class="tw-flex tw-flex-col">
-            {#each [...$applicationsSelected] as app}
+            {#each [...$applicationsSelected] as app (app.name)}
                 <div
                     class="tw-flex tw-flex-column tw-items-center tw-justify-center tw-mx-12 tw-mb-2 tw-p-3 tw-flex tw-flex-wrap tw-rounded-xl tw-text-xxs tw-bottom-12"
                     style="backdrop-filter: blur(30px);border: solid 1px rgb(27 27 41);"

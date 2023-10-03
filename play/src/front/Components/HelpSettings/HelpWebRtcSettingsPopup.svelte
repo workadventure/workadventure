@@ -16,6 +16,8 @@
         if (!gameManager.currentStartedRoom) return undefined;
         return gameManager.currentStartedRoom.backgroundColor;
     }
+
+    /* eslint-disable svelte/no-at-html-tags */
 </script>
 
 <form

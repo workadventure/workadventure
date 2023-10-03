@@ -561,7 +561,7 @@
                                     style="bottom: 15px;right: 0;"
                                     on:mouseleave={() => (cameraActive = false)}
                                 >
-                                    {#each $cameraListStore as camera}
+                                    {#each $cameraListStore as camera (camera.deviceId)}
                                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <span
                                             class="wa-dropdown-item tw-flex"
@@ -633,7 +633,7 @@
                                         <span class="tw-underline tw-font-bold tw-text-xs tw-p-1"
                                             >{$LL.actionbar.subtitle.microphone()} 🎙️</span
                                         >
-                                        {#each $microphoneListStore as microphone}
+                                        {#each $microphoneListStore as microphone (microphone.deviceId)}
                                             <span
                                                 class="wa-dropdown-item"
                                                 on:click={() => {
@@ -655,7 +655,7 @@
                                         <span class="tw-underline tw-font-bold tw-text-xs tw-p-1"
                                             >{$LL.actionbar.subtitle.speaker()} 🔈</span
                                         >
-                                        {#each $speakerListStore as speaker}
+                                        {#each $speakerListStore as speaker (speaker.deviceId)}
                                             <span
                                                 class="wa-dropdown-item"
                                                 on:click={() => {
@@ -829,7 +829,7 @@
 
             {#if $addActionButtonActionBarEvent.length > 0}
                 <div class="bottom-action-section tw-flex tw-flex-initial">
-                    {#each $addActionButtonActionBarEvent as button}
+                    {#each $addActionButtonActionBarEvent as button (button.id)}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             in:fly={{}}
@@ -901,7 +901,7 @@
 				</div>
 			{/if}
 			-->
-            {#each $addClassicButtonActionBarEvent as button}
+            {#each $addClassicButtonActionBarEvent as button (button.id)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
@@ -928,7 +928,7 @@
     >
         <div class="bottom-action-bar">
             <div class="bottom-action-section tw-flex animate">
-                {#each [...$emoteDataStore.keys()] as key}
+                {#each [...$emoteDataStore.keys()] as key (key)}
                     <div class="tw-transition-all bottom-action-button">
                         <button
                             on:click={() => {

@@ -67,7 +67,7 @@
         <button type="button" class="close-window" on:click={close}>&times</button>
         <select class="tag-selector" bind:value={selectedKey} on:change={() => onSelectedKey()}>
             <option value="">{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.addConfig()}</option>
-            {#each defaultConfigKeys as configKey}
+            {#each defaultConfigKeys as configKey (configKey)}
                 {#if currentConfig[configKey] === undefined}
                     <option value={configKey}
                         >{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig[configKey]()}</option
@@ -76,7 +76,7 @@
             {/each}
         </select>
         <div class="config-element-container">
-            {#each defaultConfigKeys as configKey}
+            {#each defaultConfigKeys as configKey (configKey)}
                 <div class="config-element">
                     <button on:click={() => onDeleteConfig(configKey)}><div class="delete-button">&times</div></button>
                     <label class="config-element-label" for={configKey}>
