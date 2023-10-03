@@ -121,11 +121,5 @@
         h2 {
             text-align: center;
         }
-
-        .nes-btn.is-error.close {
-            position: absolute;
-            top: -20px;
-            right: -20px;
-        }
     }
 </style>

@@ -41,7 +41,10 @@
     />
     {#if !hidden}
         <div class="buttonContainer">
-            <button class="nes-btn is-popUpElement" on:click={closeCard}>{$LL.menu.visitCard.close()}</button>
+            <button
+                class="btn danger light tw-justify-center tw-font-bold tw-text-xs sm:tw-text-base tw-text-center tw-h-fit"
+                on:click={closeCard}>{$LL.menu.visitCard.close()}</button
+            >
         </div>
     {/if}
 </section>

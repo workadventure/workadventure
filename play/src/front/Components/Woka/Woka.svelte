@@ -13,7 +13,7 @@
 <img
     {src}
     alt=""
-    class="nes-pointer noselect"
+    class="noselect"
     style="--theme-width: {customWidth ?? width}; --theme-height: {customHeight ?? height} image-rendering: pixalated"
     draggable="false"
     on:dragstart|preventDefault={noDrag}
