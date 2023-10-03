@@ -17,13 +17,13 @@ import { ResizableScene } from "./ResizableScene";
 export const SelectCompanionSceneName = "SelectCompanionScene";
 
 export class SelectCompanionScene extends ResizableScene {
-    private selectedCompanion!: Phaser.Physics.Arcade.Sprite | null;
+    private selectedCompanion?: Phaser.Physics.Arcade.Sprite;
     private companions: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
-    private companionModels!: CompanionTextureDescriptionInterface[];
-    private companionCurrentCollection!: CompanionTextureDescriptionInterface[];
-    private currentCompanionId!: string | null;
+    private companionModels?: CompanionTextureDescriptionInterface[];
+    private companionCurrentCollection?: CompanionTextureDescriptionInterface[];
+    private currentCompanionId?: string;
 
-    private selectedCollectionIndex!: number;
+    private selectedCollectionIndex?: number;
     private companionTextures: CompanionTextures;
     private companionCollectionKeys: string[] = [];
     private currentCompanion = 0;
@@ -110,8 +110,17 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     public selectCompanion(): void {
-        localUserStore.setCompanionTextureId(this.companionCurrentCollection[this.currentCompanion].id);
-        gameManager.setCompanionTextureId(this.companionCurrentCollection[this.currentCompanion].id);
+        if (this.companionCurrentCollection) {
+            const companion = this.companionCurrentCollection[this.currentCompanion];
+            if (companion) {
+                localUserStore.setCompanionTextureId(companion.id);
+                gameManager.setCompanionTextureId(companion.id);
+            } else {
+                console.error("No companion found");
+            }
+        } else {
+            console.error("No companion collection found");
+        }
 
         this.closeScene();
     }
@@ -167,7 +176,19 @@ export class SelectCompanionScene extends ResizableScene {
     private updateSelectedCompanion(): void {
         this.selectedCompanion?.anims.pause();
         const companion = this.companions[this.currentCompanion];
-        companion.play(this.companionCurrentCollection[this.currentCompanion].id);
+        if (!this.companionCurrentCollection || !companion) {
+            console.error("No companion collection found");
+            return;
+        }
+
+        const companionResource = this.companionCurrentCollection[this.currentCompanion];
+
+        if (!companionResource) {
+            console.error("No companion found");
+            return;
+        }
+
+        companion.play(companionResource.id);
         this.selectedCompanion = companion;
     }
 
@@ -196,10 +217,18 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     public getSelectedCollectionName(): string {
+        if (this.companionCollectionKeys.length === 0 || this.selectedCollectionIndex === undefined) {
+            return "";
+        }
+
         return this.companionCollectionKeys[this.selectedCollectionIndex] ?? "";
     }
 
     public selectPreviousCompanionCollection() {
+        if (this.selectedCollectionIndex === undefined) {
+            console.error("No selected collection index");
+            return;
+        }
         this.selectedCollectionIndex = (this.selectedCollectionIndex + 1) % this.companionCollectionKeys.length;
         selectedCollection.set(this.getSelectedCollectionName());
         this.populateCompanionCollection();
@@ -209,6 +238,12 @@ export class SelectCompanionScene extends ResizableScene {
         if (this.companionCollectionKeys.length === 1) {
             return;
         }
+
+        if (this.selectedCollectionIndex === undefined) {
+            console.error("No selected collection index");
+            return;
+        }
+
         this.selectedCollectionIndex =
             this.selectedCollectionIndex - 1 < 0
                 ? this.companionCollectionKeys.length - 1
@@ -220,7 +255,7 @@ export class SelectCompanionScene extends ResizableScene {
     public populateCompanionCollection() {
         this.companions.forEach((companion) => companion.destroy());
         this.companions = [];
-        this.selectedCompanion = null;
+        this.selectedCompanion = undefined;
         this.currentCompanion = 0;
         this.createCurrentCompanion();
         this.moveCompanion();
