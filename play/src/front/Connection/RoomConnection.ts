@@ -866,7 +866,7 @@ export class RoomConnection implements RoomConnection {
 
     public onServerDisconnected(callback: () => void): void {
         this.socket.addEventListener("close", (event) => {
-            // FIXME: technically incorrect: if we call onServerDisconnected several times, we will run several times the code (and we probably want to run only callback() serveral times).
+            // FIXME: technically incorrect: if we call onServerDisconnected several times, we will run several times the code (and we probably want to run only callback() several times).
             // FIXME: call to query.reject and this.completeStreams should probably be stored somewhere else.
 
             // Cleanup queries:
@@ -917,6 +917,11 @@ export class RoomConnection implements RoomConnection {
         this._playerDetailsUpdatedMessageStream.complete();
         this._connectionErrorStream.complete();
         this._moveToPositionMessageStream.complete();
+        this._joinMucRoomMessageStream.complete();
+        this._leaveMucRoomMessageStream.complete();
+        this._xmppSettingsMessageStream.complete();
+        this._megaphoneSettingsMessageStream.complete();
+        this._editMapCommandMessageStream.complete();
     }
 
     public getUserId(): number {

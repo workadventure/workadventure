@@ -4,6 +4,7 @@
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { writable } from "svelte/store";
+    import { Subscription } from "rxjs";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
         cameraListStore,
@@ -357,14 +358,18 @@
     }
 
     let subscribers = new Array<Unsubscriber>();
+    let chatTotalMessagesSubscription: Subscription | undefined;
     let totalMessagesToSee = writable<number>(0);
     onMount(() => {
-        iframeListener.chatTotalMessagesToSeeStream.subscribe((total) => totalMessagesToSee.set(total));
+        chatTotalMessagesSubscription = iframeListener.chatTotalMessagesToSeeStream.subscribe((total) =>
+            totalMessagesToSee.set(total)
+        );
     });
 
     onDestroy(() => {
         subscribers.map((subscriber) => subscriber());
         unsubscribeLocalStreamStore();
+        chatTotalMessagesSubscription?.unsubscribe();
     });
 
     let stream: MediaStream | null;

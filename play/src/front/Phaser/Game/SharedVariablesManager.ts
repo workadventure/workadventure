@@ -42,6 +42,8 @@ export class SharedVariablesManager {
             this._variables.set(name, value);
         }
 
+        // The variableMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+        //eslint-disable-next-line rxjs/no-ignored-subscription
         roomConnection.variableMessageStream.subscribe(({ name, value }) => {
             if (JSON.stringify(value) === JSON.stringify(this._variables.get(name))) {
                 return;

@@ -60,14 +60,16 @@ export class SimplePeer {
 
         this.initialise();
 
-        blackListManager.onBlockStream.subscribe((userUuid) => {
-            const user = playersStore.getPlayerByUuid(userUuid);
-            if (!user) {
-                return;
-            }
+        this.rxJsUnsubscribers.push(
+            blackListManager.onBlockStream.subscribe((userUuid) => {
+                const user = playersStore.getPlayerByUuid(userUuid);
+                if (!user) {
+                    return;
+                }
 
-            this.closeConnection(user.userId);
-        });
+                this.closeConnection(user.userId);
+            })
+        );
     }
 
     /**

@@ -6,6 +6,8 @@ import { uiWebsitesStore } from "../../../Stores/UIWebsiteStore";
 
 class UIWebsiteManager {
     constructor() {
+        // This is a singleton, so we subscribe to iframeListener only once and never unsubscribe.
+        //eslint-disable-next-line rxjs/no-ignored-subscription
         iframeListener.modifyUIWebsiteStream.subscribe((websiteEvent: ModifyUIWebsiteEvent) => {
             const website = get(uiWebsitesStore).find((currentWebsite) => currentWebsite.id === websiteEvent.id);
             if (!website) {
