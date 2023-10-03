@@ -41,13 +41,14 @@ import type { ExSocketInterface, BackSpaceConnection } from "../models/Websocket
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
-import { EJABBERD_DOMAIN } from "../enums/EnvironmentVariable";
+import { EJABBERD_DOMAIN, EMBEDDED_DOMAINS_WHITELIST } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
 import { emitInBatch } from "./IoSocketHelpers";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
 import { adminService } from "./AdminService";
+import { ShortMapDescription } from "./ShortMapDescription";
 
 const debug = Debug("socket");
 
@@ -67,7 +68,10 @@ export interface AdminSocketData {
 export class SocketManager implements ZoneEventListener {
     private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();
     private spaces: Map<string, Space> = new Map<string, Space>();
-    private spaceStreamsToPusher: Map<number, BackSpaceConnection> = new Map<number, BackSpaceConnection>();
+    private spaceStreamsToPusher: Map<number, Promise<BackSpaceConnection>> = new Map<
+        number,
+        Promise<BackSpaceConnection>
+    >();
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -326,95 +330,104 @@ export class SocketManager implements ZoneEventListener {
     ): Promise<void> {
         try {
             const backId = apiClientRepository.getIndex(spaceName);
-            let spaceStreamToPusher = this.spaceStreamsToPusher.get(backId);
-            if (!spaceStreamToPusher) {
-                const apiSpaceClient = await apiClientRepository.getSpaceClient(spaceName);
-                spaceStreamToPusher = apiSpaceClient.watchSpace() as BackSpaceConnection;
-                spaceStreamToPusher
-                    .on("data", (message: BackToPusherSpaceMessage) => {
-                        if (!message.message) {
-                            console.warn("spaceStreamToPusher => Empty message received.", message);
-                            return;
-                        }
-                        switch (message.message.$case) {
-                            case "addSpaceUserMessage": {
-                                const addSpaceUserMessage = message.message.addSpaceUserMessage;
-                                const space = this.spaces.get(addSpaceUserMessage.spaceName);
-                                if (space && addSpaceUserMessage.user) {
-                                    space.localAddUser(addSpaceUserMessage.user);
-                                }
-                                break;
+            let spaceStreamToPusherPromise = this.spaceStreamsToPusher.get(backId);
+            const isNewSpaceStream = spaceStreamToPusherPromise === undefined;
+            if (!spaceStreamToPusherPromise) {
+                spaceStreamToPusherPromise = (async () => {
+                    const apiSpaceClient = await apiClientRepository.getSpaceClient(spaceName);
+                    const spaceStreamToPusher = apiSpaceClient.watchSpace() as BackSpaceConnection;
+                    spaceStreamToPusher
+                        .on("data", (message: BackToPusherSpaceMessage) => {
+                            if (!message.message) {
+                                console.warn("spaceStreamToPusher => Empty message received.", message);
+                                return;
                             }
-                            case "updateSpaceUserMessage": {
-                                const updateSpaceUserMessage = message.message.updateSpaceUserMessage;
-                                const space = this.spaces.get(updateSpaceUserMessage.spaceName);
-                                if (space && updateSpaceUserMessage.user) {
-                                    space.localUpdateUser(updateSpaceUserMessage.user);
-                                }
-                                break;
-                            }
-                            case "removeSpaceUserMessage": {
-                                const removeSpaceUserMessage = message.message.removeSpaceUserMessage;
-                                const space = this.spaces.get(removeSpaceUserMessage.spaceName);
-                                if (space) {
-                                    space.localRemoveUser(removeSpaceUserMessage.userId);
-                                }
-                                break;
-                            }
-                            case "pingMessage": {
-                                if (spaceStreamToPusher) {
-                                    if (spaceStreamToPusher.pingTimeout) {
-                                        clearTimeout(spaceStreamToPusher.pingTimeout);
-                                        spaceStreamToPusher.pingTimeout = undefined;
+                            switch (message.message.$case) {
+                                case "addSpaceUserMessage": {
+                                    const addSpaceUserMessage = message.message.addSpaceUserMessage;
+                                    const space = this.spaces.get(addSpaceUserMessage.spaceName);
+                                    if (space && addSpaceUserMessage.user) {
+                                        space.localAddUser(addSpaceUserMessage.user);
                                     }
-                                    const pusherToBackMessage: PusherToBackSpaceMessage = {
-                                        message: {
-                                            $case: "pongMessage",
-                                            pongMessage: {},
-                                        },
-                                    } as PusherToBackSpaceMessage;
-                                    spaceStreamToPusher.write(pusherToBackMessage);
-
-                                    spaceStreamToPusher.pingTimeout = setTimeout(() => {
-                                        if (spaceStreamToPusher) {
-                                            debug("[space] spaceStreamToPusher closed, no ping received");
-                                            spaceStreamToPusher.end();
-                                        }
-                                    }, 1000 * 60);
-                                } else {
-                                    throw new Error("spaceStreamToPusher => Message received but can't answer to it");
+                                    break;
                                 }
-                                break;
+                                case "updateSpaceUserMessage": {
+                                    const updateSpaceUserMessage = message.message.updateSpaceUserMessage;
+                                    const space = this.spaces.get(updateSpaceUserMessage.spaceName);
+                                    if (space && updateSpaceUserMessage.user) {
+                                        space.localUpdateUser(updateSpaceUserMessage.user);
+                                    }
+                                    break;
+                                }
+                                case "removeSpaceUserMessage": {
+                                    const removeSpaceUserMessage = message.message.removeSpaceUserMessage;
+                                    const space = this.spaces.get(removeSpaceUserMessage.spaceName);
+                                    if (space) {
+                                        space.localRemoveUser(removeSpaceUserMessage.userId);
+                                    }
+                                    break;
+                                }
+                                case "pingMessage": {
+                                    if (spaceStreamToPusher) {
+                                        if (spaceStreamToPusher.pingTimeout) {
+                                            clearTimeout(spaceStreamToPusher.pingTimeout);
+                                            spaceStreamToPusher.pingTimeout = undefined;
+                                        }
+                                        const pusherToBackMessage: PusherToBackSpaceMessage = {
+                                            message: {
+                                                $case: "pongMessage",
+                                                pongMessage: {},
+                                            },
+                                        } as PusherToBackSpaceMessage;
+                                        spaceStreamToPusher.write(pusherToBackMessage);
+
+                                        spaceStreamToPusher.pingTimeout = setTimeout(() => {
+                                            if (spaceStreamToPusher) {
+                                                debug("[space] spaceStreamToPusher closed, no ping received");
+                                                spaceStreamToPusher.end();
+                                            }
+                                        }, 1000 * 60);
+                                    } else {
+                                        throw new Error(
+                                            "spaceStreamToPusher => Message received but can't answer to it"
+                                        );
+                                    }
+                                    break;
+                                }
+                                default: {
+                                    const _exhaustiveCheck: never = message.message;
+                                }
                             }
-                            default: {
-                                const _exhaustiveCheck: never = message.message;
-                            }
-                        }
-                    })
-                    .on("end", () => {
-                        debug("[space] spaceStreamsToPusher ended");
-                        this.spaceStreamsToPusher.delete(backId);
-                        this.spaces.delete(spaceName);
-                    })
-                    .on("error", (err: Error) => {
-                        console.error(
-                            "Error in connection to back server '" +
-                                apiSpaceClient.getChannel().getTarget() +
-                                "' for space '" +
-                                spaceName +
-                                "':",
-                            err
-                        );
-                        Sentry.captureException(
-                            "Error in connection to back server '" +
-                                apiSpaceClient.getChannel().getTarget() +
-                                "' for space '" +
-                                spaceName +
-                                "':" +
+                        })
+                        .on("end", () => {
+                            debug("[space] spaceStreamsToPusher ended");
+                            this.spaceStreamsToPusher.delete(backId);
+                            this.spaces.delete(spaceName);
+                        })
+                        .on("error", (err: Error) => {
+                            console.error(
+                                "Error in connection to back server '" +
+                                    apiSpaceClient.getChannel().getTarget() +
+                                    "' for space '" +
+                                    spaceName +
+                                    "':",
                                 err
-                        );
-                    });
+                            );
+                            Sentry.captureException(
+                                "Error in connection to back server '" +
+                                    apiSpaceClient.getChannel().getTarget() +
+                                    "' for space '" +
+                                    spaceName +
+                                    "':" +
+                                    err
+                            );
+                        });
+                    return spaceStreamToPusher;
+                })();
+                this.spaceStreamsToPusher.set(backId, spaceStreamToPusherPromise);
             }
+
+            const spaceStreamToPusher = await spaceStreamToPusherPromise;
 
             if (filter) {
                 client.spacesFilters.set(spaceName, [filter]);
@@ -436,10 +449,9 @@ export class SocketManager implements ZoneEventListener {
             //         .setSpacefiltercontainname(new SpaceFilterContainName().setValue("test")),
             // ];
 
-            if (this.spaceStreamsToPusher.has(backId)) {
+            if (!isNewSpaceStream) {
                 space.addUser(client.spaceUser);
             } else {
-                this.spaceStreamsToPusher.set(backId, spaceStreamToPusher);
                 spaceStreamToPusher.write({
                     message: {
                         $case: "watchSpaceMessage",
@@ -620,7 +632,9 @@ export class SocketManager implements ZoneEventListener {
             if ([...this.spaces.values()].filter((_space) => _space.backId === space.backId).length === 0) {
                 const spaceStreamPusher = this.spaceStreamsToPusher.get(space.backId);
                 if (spaceStreamPusher) {
-                    spaceStreamPusher.end();
+                    spaceStreamPusher
+                        .then((connection) => connection.end())
+                        .catch((e) => console.error("ERROR WHILE CLOSING CONNECTION", e));
                     this.spaceStreamsToPusher.delete(space.backId);
                     debug("Connection to back %d useless. Ending.", space.backId);
                 }
@@ -907,12 +921,14 @@ export class SocketManager implements ZoneEventListener {
         let tabUrlRooms: string[];
 
         if (playGlobalMessageEvent.broadcastToWorld) {
-            tabUrlRooms = await adminService.getUrlRoomsFromSameWorld(clientRoomUrl, "en");
+            const shortDescriptions = await adminService.getUrlRoomsFromSameWorld(clientRoomUrl, "en");
+            tabUrlRooms = shortDescriptions.map((shortDescription) => shortDescription.roomUrl);
         } else {
             tabUrlRooms = [clientRoomUrl];
         }
 
         for (const roomUrl of tabUrlRooms) {
+            //eslint-disable-next-line no-await-in-loop
             const apiRoom = await apiClientRepository.getClient(roomUrl);
             const roomMessage: AdminRoomMessage = {
                 message: playGlobalMessageEvent.content,
@@ -1146,6 +1162,52 @@ export class SocketManager implements ZoneEventListener {
         );
     }
 
+    async handleRoomsFromSameWorldQuery(client: ExSocketInterface, queryMessage: QueryMessage) {
+        let roomDescriptions: ShortMapDescription[];
+        try {
+            roomDescriptions = await adminService.getUrlRoomsFromSameWorld(client.roomId);
+        } catch (e) {
+            console.warn("SocketManager => handleRoomsFromSameWorldQuery => error while getting other rooms list", e);
+            // Nothing to do with the error
+            Sentry.captureException(e);
+            client.send(
+                ServerToClientMessage.encode({
+                    message: {
+                        $case: "answerMessage",
+                        answerMessage: {
+                            id: queryMessage.id,
+                            answer: {
+                                $case: "error",
+                                error: {
+                                    message: e instanceof Error ? e.message + e.stack : "Unknown error",
+                                },
+                            },
+                        },
+                    },
+                }).finish(),
+                true
+            );
+            return;
+        }
+        client.send(
+            ServerToClientMessage.encode({
+                message: {
+                    $case: "answerMessage",
+                    answerMessage: {
+                        id: queryMessage.id,
+                        answer: {
+                            $case: "roomsFromSameWorldAnswer",
+                            roomsFromSameWorldAnswer: {
+                                roomDescriptions,
+                            },
+                        },
+                    },
+                },
+            }).finish(),
+            true
+        );
+    }
+
     handleLeaveSpace(client: ExSocketInterface, spaceName: string) {
         const space = this.spaces.get(spaceName);
         if (space) {
@@ -1204,7 +1266,10 @@ export class SocketManager implements ZoneEventListener {
 
         await axios
             .head(url, { timeout: 5_000 })
-            .then((response) => emitAnswerMessage(true, !response.headers["x-frame-options"]))
+            // Klaxoon
+            .then((response) =>
+                emitAnswerMessage(true, !response.headers["x-frame-options"] || verifyUrlAsDomainInWhiteList(url))
+            )
             .catch(async (error) => {
                 // If response from server is "Method not allowed", we try to do a GET request
                 if (isAxiosError(error) && error.response?.status === 405) {
@@ -1218,5 +1283,10 @@ export class SocketManager implements ZoneEventListener {
             });
     }
 }
+
+// Verify that the domain of the url in parameter is in the white list of embeddable domains defined in the .env file (EMBEDDED_DOMAINS_WHITELIST)
+const verifyUrlAsDomainInWhiteList = (url: string) => {
+    return EMBEDDED_DOMAINS_WHITELIST.some((domain) => url.includes(domain));
+};
 
 export const socketManager = new SocketManager();

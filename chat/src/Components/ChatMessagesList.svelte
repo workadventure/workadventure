@@ -219,7 +219,7 @@
     </div>
 
     <div
-        class="wa-messages-list flex flex-col flex-auto px-5 overflow-y-scroll justify-end overflow-y-scroll h-auto min-h-screen"
+        class="wa-messages-list flex flex-col flex-auto px-5 overflow-x-hidden overflow-y-scroll justify-end tw-h-auto min-h-screen"
     >
         <div class="mb-auto load-history">
             {#if $canLoadOlderMessagesStore}
@@ -307,7 +307,7 @@
             </div>
         {/each}
         {#if $unreads > 0}
-            <div class="w-full fixed left-0 bottom-20 animate-bounce cursor-pointer">
+            <div class="w-full fixed left-0 bottom-28 animate-bounce cursor-pointer">
                 <div
                     in:fly={{ y: 10, duration: 200 }}
                     style="margin: auto"

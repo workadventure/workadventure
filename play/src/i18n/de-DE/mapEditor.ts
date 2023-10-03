@@ -67,7 +67,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             triggerOnClick: "Als minimiert in der unteren Leiste starten",
             triggerOnAction: "Aktionstoast mit Nachricht anzeigen",
             closable: "Kann geschlossen werden",
-            allowAPI: "API erlauben",
+            allowAPI: "Scripting API erlauben",
             linkPlaceholder: "https://example.com",
             defaultButtonLabel: "Link öffnen",
             width: "Breite",

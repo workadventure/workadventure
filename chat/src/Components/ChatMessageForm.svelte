@@ -64,6 +64,8 @@
         name: string;
         icon: string;
         example: string;
+        description: string;
+        image?: string;
         link?: string;
         error?: string;
     }
@@ -113,31 +115,27 @@
             showErrorMessages();
             return false;
         }
-        if (
-            fileMessageManager.files.length === 0 &&
-            (!htmlMessageText || htmlMessageText.replace(/\s/g, "").length === 0) &&
-            $applicationsSelected.size === 0
-        ) {
-            return false;
-        }
+        if (fileMessageManager.files.length > 0 || (htmlMessageText && htmlMessageText.replace(/\s/g, "").length > 0)) {
+            mucRoom.updateComposingState(ChatState.Paused);
+            const message = htmlMessageText
+                .replace(/<div>/g, "\n")
+                .replace(/(<([^>]+)>)/gi, "")
+                .replace(/&nbsp;/g, " ")
+                .trim();
 
-        mucRoom.updateComposingState(ChatState.Paused);
-        const message = htmlMessageText
-            .replace(/<div>/g, "\n")
-            .replace(/(<([^>]+)>)/gi, "")
-            .replace(/&nbsp;/g, " ");
-        if ($selectedMessageToReply) {
-            sendReplyMessage(message);
-        } else {
-            mucRoom.sendMessage(message);
+            if ($selectedMessageToReply) {
+                sendReplyMessage(message);
+            } else {
+                mucRoom.sendMessage(message);
+            }
+            newMessageText = "";
+            htmlMessageText = "";
+            dispatch("scrollDown");
+            setTimeout(() => {
+                textarea.innerHTML = "";
+                dispatch("formHeight", messageForm.clientHeight);
+            }, 0);
         }
-        newMessageText = "";
-        htmlMessageText = "";
-        dispatch("scrollDown");
-        setTimeout(() => {
-            textarea.innerHTML = "";
-            dispatch("formHeight", messageForm.clientHeight);
-        }, 0);
 
         if ($applicationsSelected.size > 0) {
             for (const app of $applicationsSelected) {
@@ -283,9 +281,11 @@
                         return apps;
                     });
                     // Update app with Klaxoon's Activity Picker
-                    app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(event.url));
-                    if (event.imageUrl) app.icon = event.imageUrl;
-                    if (event.title) app.name = event.title;
+                    app.link = KlaxoonService.getKlaxoonEmbedUrl(
+                        new URL(event.url),
+                        chatConnectionManager.klaxoonToolClientId
+                    );
+                    if (event.imageUrl) app.image = event.imageUrl;
                     // Add new app
                     applicationsSelected.update((apps) => {
                         apps.add(app);
@@ -322,7 +322,11 @@
                 break;
             case "Youtube":
                 try {
-                    app.link = await YoutubeService.getYoutubeEmbedUrl(new URL(app.link));
+                    const oldLink = app.link;
+                    const newLink = await YoutubeService.getYoutubeEmbedUrl(new URL(app.link));
+                    if (app.link === oldLink) {
+                        app.link = newLink;
+                    }
                 } catch (e) {
                     console.info($LL.form.application.youtube.error(), e);
                     app.error = $LL.form.application.youtube.error();
@@ -442,6 +446,7 @@
                     name: "Klaxoon",
                     icon: "./static/images/applications/klaxoon.svg",
                     example: "https://klaxoon.com/fr",
+                    description: $LL.form.application.klaxoon.description(),
                 });
                 return apps;
             });
@@ -452,6 +457,7 @@
                     name: "Youtube",
                     icon: "./static/images/applications/youtube.svg",
                     example: "https://www.youtube.com/watch?v=Y9ubBWf5w20",
+                    description: $LL.form.application.youtube.description(),
                 });
                 return apps;
             });
@@ -462,6 +468,7 @@
                     name: "Google Docs",
                     icon: "./static/images/applications/google-docs.svg",
                     example: "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit",
+                    description: $LL.form.application.googleDocs.description(),
                 });
                 return apps;
             });
@@ -472,6 +479,7 @@
                     name: "Google Sheets",
                     icon: "./static/images/applications/google-sheets.svg",
                     example: "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit",
+                    description: $LL.form.application.googleSheets.description(),
                 });
                 return apps;
             });
@@ -482,6 +490,7 @@
                     name: "Google Slides",
                     icon: "./static/images/applications/google-slides.svg",
                     example: "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit",
+                    description: $LL.form.application.googleSlides.description(),
                 });
                 return apps;
             });
@@ -492,6 +501,7 @@
                     name: "Eraser",
                     icon: "./static/images/applications/eraser.svg",
                     example: "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU",
+                    description: $LL.form.application.eraser.description(),
                 });
                 return apps;
             });
@@ -556,29 +566,13 @@
 
     {#each [...$applicationsSelected] as app}
         <div
-            class="mx-2 mb-2 px-6 py-3 flex flex-wrap bg-dark-blue/95 rounded-xl text-xxs justify-between items-center bottom-12"
+            class="flex flex-column items-center justify-center mx-12 mb-2 p-3 flex flex-wrap rounded-xl text-xxs bottom-12"
+            style="backdrop-filter: blur(30px);border: solid 1px rgb(27 27 41);"
         >
             <div class="flex flex-row justify-between items-center m-1 w-full">
                 <label for="app" class="m-0">
                     <img src={app.icon} alt={`App ${app.name} started in the chat`} width="20px" />
-                    {#if app.name === "Klaxoon"}
-                        {$LL.form.application.klaxoon.description()}
-                    {/if}
-                    {#if app.name === "Youtube"}
-                        {$LL.form.application.youtube.description()}
-                    {/if}
-                    {#if app.name === "Google Docs"}
-                        {$LL.form.application.googleDocs.description()}
-                    {/if}
-                    {#if app.name === "Google Sheets"}
-                        {$LL.form.application.googleSheets.description()}
-                    {/if}
-                    {#if app.name === "Google Slides"}
-                        {$LL.form.application.googleSlides.description()}
-                    {/if}
-                    {#if app.name === "Eraser"}
-                        {$LL.form.application.eraser.description()}
-                    {/if}
+                    {app.description}
                 </label>
                 <button
                     on:click|preventDefault|stopPropagation={() => {
@@ -598,6 +592,9 @@
                 on:keypress={handlerKeyDownAppInput}
                 on:blur={() => checkWebsiteProperty(app)}
             />
+            {#if app.image}
+                <img class="tw-m-4" src={app.image} alt={`App ${app.name} preview`} width="100px" />
+            {/if}
             {#if app.error}
                 <p class="text-pop-red text-xs px-2 mt-2 my-0">{app.error}</p>
             {/if}
@@ -612,7 +609,8 @@
         <div class="w-full p-2">
             {#each [...$filesUploadStore.values()] as fileUploaded}
                 <div
-                    class="upload-file flex flex-wrap bg-dark-blue/95 rounded-3xl text-xxs justify-between items-center px-3 mb-1"
+                    class="upload-file flex flex-wrap rounded-3xl text-xxs justify-between items-center mx-6 px-3 mb-1"
+                    style="backdrop-filter: blur(30px);border: solid 1px rgb(27 27 41);"
                 >
                     {#if fileUploaded.errorMessage !== undefined}
                         <div

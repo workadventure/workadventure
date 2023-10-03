@@ -45,3 +45,10 @@ export const isGoogleSlidesLink = (url: URL): boolean => {
 export const isEmbedableGooglWorkSapceLink = (url: URL): boolean => {
     return url.searchParams.get("embedded") === "true";
 };
+
+// create function get basic url of Google WorkSpace link
+export const getGoogleWorkSpaceBasicUrl = (url: URL): string => {
+    if (!isEmbedableGooglWorkSapceLink(url)) return url.toString();
+    url.searchParams.delete("embedded");
+    return url.toString();
+};

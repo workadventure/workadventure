@@ -30,6 +30,7 @@
     import { defaultWoka } from "../../Xmpp/AbstractRoom";
     import { chatConnectionManager } from "../../Connection/ChatConnectionManager";
     import ApplicationPicker from "../Content/ApplicationPicker.svelte";
+    import { iframeListener } from "../../IframeListener";
     import UserWriting from "./UserWriting.svelte";
 
     const dispatch = createEventDispatcher();
@@ -44,6 +45,8 @@
         name: string;
         icon: string;
         example: string;
+        description: string;
+        image?: string;
         link?: string;
         error?: string;
     }
@@ -72,7 +75,7 @@
         }
         if ($applicationsSelected.size > 0) {
             for (const app of $applicationsSelected) {
-                if (app.link != undefined) {
+                if (app.link != undefined && app.link != "") {
                     chatMessagesStore.addPersonalMessage(app.link);
                 }
                 applicationsSelected.update((apps) => {
@@ -114,6 +117,16 @@
     let emojiContainer: HTMLElement;
     let picker: EmojiButton;
 
+    let elements: NodeListOf<Element>;
+    const aListner = (event: Event) => {
+        event.stopPropagation();
+        event.preventDefault();
+
+        // Open link in new tab
+        const target = event.target as HTMLAnchorElement;
+        iframeListener.openTab(target.href);
+    };
+
     onMount(() => {
         subscribers.push(
             chatMessagesStore.subscribe(() => {
@@ -125,6 +138,14 @@
                     if (messageList) {
                         document.scrollingElement?.scrollTo(0, messageList.scrollHeight);
                     }
+
+                    // for each all messages in chatMessagesStore
+                    elements = document.querySelectorAll(`div.wa-message-body a`);
+                    elements.forEach((element) => {
+                        // clear previous event listner
+                        element.removeEventListener("click", aListner);
+                        element.addEventListener("click", aListner);
+                    });
                 }, 100);
             })
         );
@@ -175,6 +196,7 @@
                     name: "Klaxoon",
                     icon: "./static/images/applications/klaxoon.svg",
                     example: "https://klaxoon.com/fr",
+                    description: $LL.form.application.klaxoon.description(),
                 });
                 return apps;
             });
@@ -185,6 +207,7 @@
                     name: "Youtube",
                     icon: "./static/images/applications/youtube.svg",
                     example: "https://www.youtube.com/watch?v=Y9ubBWf5w20",
+                    description: $LL.form.application.youtube.description(),
                 });
                 return apps;
             });
@@ -195,6 +218,7 @@
                     name: "Google Docs",
                     icon: "./static/images/applications/google-docs.svg",
                     example: "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit",
+                    description: $LL.form.application.googleDocs.description(),
                 });
                 return apps;
             });
@@ -205,6 +229,7 @@
                     name: "Google Sheets",
                     icon: "./static/images/applications/google-sheets.svg",
                     example: "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit",
+                    description: $LL.form.application.googleSheets.description(),
                 });
                 return apps;
             });
@@ -215,6 +240,7 @@
                     name: "Google Slides",
                     icon: "./static/images/applications/google-slides.svg",
                     example: "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit",
+                    description: $LL.form.application.googleSlides.description(),
                 });
                 return apps;
             });
@@ -225,6 +251,7 @@
                     name: "Eraser",
                     icon: "./static/images/applications/eraser.svg",
                     example: "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU",
+                    description: $LL.form.application.eraser.description(),
                 });
                 return apps;
             });
@@ -261,15 +288,18 @@
             KlaxoonService.openKlaxoonActivityPicker(
                 chatConnectionManager.klaxoonToolClientId,
                 (event: KlaxoonEvent) => {
+                    console.log("KlaxoonService.openKlaxoonActivityPicker => event", event);
                     // Remove previous app
                     applicationsSelected.update((apps) => {
                         apps.delete(app);
                         return apps;
                     });
                     // Update app with Klaxoon's Activity Picker
-                    app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(event.url));
-                    if (event.imageUrl) app.icon = event.imageUrl;
-                    if (event.title) app.name = event.title;
+                    app.link = KlaxoonService.getKlaxoonEmbedUrl(
+                        new URL(event.url),
+                        chatConnectionManager.klaxoonToolClientId
+                    );
+                    if (event.imageUrl) app.image = event.imageUrl;
                     // Add new app
                     applicationsSelected.update((apps) => {
                         apps.add(app);
@@ -294,7 +324,10 @@
         switch (app.name) {
             case "Klaxoon":
                 try {
-                    app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(app.link));
+                    app.link = KlaxoonService.getKlaxoonEmbedUrl(
+                        new URL(app.link),
+                        chatConnectionManager.klaxoonToolClientId
+                    );
                 } catch (err) {
                     if (err instanceof KlaxoonException.KlaxoonException) {
                         app.error = $LL.form.application.klaxoon.error();
@@ -306,7 +339,11 @@
                 break;
             case "Youtube":
                 try {
-                    app.link = await YoutubeService.getYoutubeEmbedUrl(new URL(app.link));
+                    const oldLink = app.link;
+                    const newLink = await YoutubeService.getYoutubeEmbedUrl(new URL(app.link));
+                    if (app.link === oldLink) {
+                        app.link = newLink;
+                    }
                 } catch (err) {
                     if (err instanceof GoogleWorkSpaceException.YoutubeException) {
                         app.error = $LL.form.application.youtube.error();
@@ -385,6 +422,11 @@
 
     onDestroy(() => {
         subscribers.forEach((subscriber) => subscriber());
+
+        // Unsubscribe element event listner click
+        elements.forEach((element) => {
+            element.removeEventListener("click", aListner);
+        });
     });
 </script>
 
@@ -443,6 +485,7 @@
         {#each $chatMessagesStore as message, i}
             {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
                 <div
+                    id={`message_${message.id}`}
                     class={`${
                         needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)
                             ? "mt-0.5"
@@ -610,26 +653,13 @@
         <form on:submit|preventDefault={saveMessage} class="flex flex-col">
             {#each [...$applicationsSelected] as app}
                 <div
-                    class="mx-2 mb-2 px-6 py-3 flex flex-wrap bg-dark-blue/95 rounded-xl text-xxs justify-between items-center bottom-12"
+                    class="flex flex-column items-center justify-center mx-12 mb-2 p-3 flex flex-wrap rounded-xl text-xxs bottom-12"
+                    style="backdrop-filter: blur(30px);border: solid 1px rgb(27 27 41);"
                 >
                     <div class="flex flex-row justify-between items-center m-1 w-full">
                         <label for="app" class="m-0">
                             <img src={app.icon} alt={app.name} width="20px" />
-                            {#if app.name === "Klaxoon"}
-                                {$LL.form.application.klaxoon.description()}
-                            {/if}
-                            {#if app.name === "Youtube"}
-                                {$LL.form.application.youtube.description()}
-                            {/if}
-                            {#if app.name === "Google Docs"}
-                                {$LL.form.application.googleDocs.description()}
-                            {/if}
-                            {#if app.name === "Google Sheets"}
-                                {$LL.form.application.googleSheets.description()}
-                            {/if}
-                            {#if app.name === "Google Slides"}
-                                {$LL.form.application.googleSlides.description()}
-                            {/if}
+                            {app.description}
                         </label>
                         <button
                             on:click|preventDefault|stopPropagation={() => {
@@ -649,6 +679,9 @@
                         on:keypress={handlerKeyDownAppInput}
                         on:blur={() => checkWebsiteProperty(app)}
                     />
+                    {#if app.image}
+                        <img class="tw-m-4" src={app.image} alt={app.name} width="100px" />
+                    {/if}
                     {#if app.error}
                         <p class="text-pop-red text-xs px-2 mt-2 my-0">{app.error}</p>
                     {/if}
@@ -783,8 +816,7 @@
                     width: max-content;
                     &::before {
                         @apply absolute border-lighter-purple;
-                        left: -18px;
-                        top: 40%;
+                        bottom: -10px;
                         content: "";
                         width: 0;
                         height: 0;
@@ -792,12 +824,10 @@
                         border-right: 9px solid transparent;
                         border-top-width: 6px;
                         border-top-style: solid;
-                        transform: rotate(90deg);
                     }
                     &::after {
                         @apply absolute border-dark-blue;
-                        left: -16px;
-                        top: 40%;
+                        bottom: -10px;
                         content: "";
                         width: 0;
                         height: 0;
@@ -805,7 +835,6 @@
                         border-right: 7px solid transparent;
                         border-top-width: 5px;
                         border-top-style: solid;
-                        transform: rotate(90deg);
                     }
                 }
                 &:hover {

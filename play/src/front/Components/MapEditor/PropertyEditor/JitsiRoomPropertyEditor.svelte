@@ -67,6 +67,20 @@
                     on:change={onValueChange}
                 />
             </div>
+            <div>
+                <label for="jitsiWidth"
+                    >{$LL.mapEditor.properties.jitsiProperties.width()}: {property.width ?? 50}%</label
+                >
+                <input
+                    class="jitsiWidth"
+                    type="range"
+                    min="0"
+                    max="100"
+                    placeholder="50"
+                    bind:value={property.width}
+                    on:change={onValueChange}
+                />
+            </div>
             <div class="value-switch">
                 <label for="noPrefix">{$LL.mapEditor.properties.jitsiProperties.noPrefix()}</label>
                 <input

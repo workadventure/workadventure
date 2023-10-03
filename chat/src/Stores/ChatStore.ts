@@ -1,5 +1,6 @@
 import { derived, writable } from "svelte/store";
 import { Subject } from "rxjs";
+import { v4 as uuid } from "uuid";
 import { FileExt, UploadedFile, uploadingState } from "../Services/FileMessageManager";
 import { User } from "../Xmpp/AbstractRoom";
 import { Message } from "../Model/Message";
@@ -28,6 +29,7 @@ export enum ChatMessageTypes {
 }
 
 export interface ChatMessage {
+    id: string;
     type: ChatMessageTypes;
     date: Date;
     author?: User;
@@ -44,6 +46,7 @@ function createChatMessagesStore() {
         addIncomingUser(user: User) {
             update((list) => {
                 list.push({
+                    id: uuid(),
                     type: ChatMessageTypes.userIncoming,
                     targets: [user],
                     date: new Date(),
@@ -54,6 +57,7 @@ function createChatMessagesStore() {
         addOutcomingUser(user: User) {
             update((list) => {
                 list.push({
+                    id: uuid(),
                     type: ChatMessageTypes.userOutcoming,
                     targets: [user],
                     date: new Date(),
@@ -66,6 +70,7 @@ function createChatMessagesStore() {
             update((list) => {
                 const defaultRoom = mucRoomsStore.getDefaultRoom();
                 list.push({
+                    id: uuid(),
                     type: ChatMessageTypes.me,
                     text: [text],
                     author: defaultRoom ? defaultRoom.getUserByJid(defaultRoom.myJID) : undefined,
@@ -81,6 +86,7 @@ function createChatMessagesStore() {
         addExternalMessage(user: User | undefined, text: string, authorName?: string, origin?: Window) {
             update((list) => {
                 list.push({
+                    id: uuid(),
                     type: ChatMessageTypes.text,
                     text: [text],
                     author: user,

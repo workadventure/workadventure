@@ -111,6 +111,7 @@ import {
     chatVisibilityStore,
     _newChatMessageSubject,
     _newChatMessageWritingStatusSubject,
+    forceRefreshChatStore,
 } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
@@ -282,21 +283,21 @@ export class GameScene extends DirtyScene {
     private playersDebugLogAlreadyDisplayed = false;
     private _broadcastService: BroadcastService | undefined;
 
-    constructor(private room: Room, customKey?: string | undefined) {
+    constructor(private _room: Room, customKey?: string | undefined) {
         super({
-            key: customKey ?? room.key,
+            key: customKey ?? _room.key,
         });
 
         this.Terrains = [];
         this.groups = new Map<number, Sprite>();
 
         // TODO: How to get mapUrl from WAM here?
-        if (room.mapUrl) {
-            this.mapUrlFile = room.mapUrl;
-        } else if (room.wamUrl) {
-            this.wamUrlFile = room.wamUrl;
+        if (_room.mapUrl) {
+            this.mapUrlFile = _room.mapUrl;
+        } else if (_room.wamUrl) {
+            this.wamUrlFile = _room.wamUrl;
         }
-        this.roomUrl = room.key;
+        this.roomUrl = _room.key;
 
         this.entitiesCollectionsManager = new EntitiesCollectionsManager();
 
@@ -545,6 +546,7 @@ export class GameScene extends DirtyScene {
 
             switch (itemType) {
                 case "computer": {
+                    //eslint-disable-next-line no-await-in-loop
                     const module = await import("../Items/Computer/computer");
                     itemFactory = module.default;
                     break;
@@ -603,9 +605,9 @@ export class GameScene extends DirtyScene {
 
         this.outlineManager = new OutlineManager(this);
         gameManager.gameSceneIsCreated(this);
-        urlManager.pushRoomIdToUrl(this.room);
-        analyticsClient.enteredRoom(this.room.id, this.room.group);
-        contactPageStore.set(this.room.contactPage);
+        urlManager.pushRoomIdToUrl(this._room);
+        analyticsClient.enteredRoom(this._room.id, this._room.group);
+        contactPageStore.set(this._room.contactPage);
 
         if (touchScreenManager.supportTouchScreen) {
             this.pinchManager = new PinchManager(this);
@@ -773,7 +775,7 @@ export class GameScene extends DirtyScene {
         this.initCirclesCanvas();
 
         // Let's pause the scene if the connection is not established yet
-        if (!this.room.isDisconnected()) {
+        if (!this._room.isDisconnected()) {
             if (this.isReconnecting) {
                 setTimeout(() => {
                     if (this.connection === undefined) {
@@ -796,7 +798,7 @@ export class GameScene extends DirtyScene {
                                 code: "CONNECTION_LOST",
                                 title: get(LL).warning.connectionLostTitle(),
                                 details: get(LL).warning.connectionLostSubtitle(),
-                                image: this.room.errorSceneLogo,
+                                image: this._room.errorSceneLogo,
                             })
                         );
                     }
@@ -853,7 +855,7 @@ export class GameScene extends DirtyScene {
 
         new GameMapPropertiesListener(this, this.gameMapFrontWrapper).register();
 
-        if (!this.room.isDisconnected()) {
+        if (!this._room.isDisconnected()) {
             try {
                 this.hide();
             } catch (err) {
@@ -1088,9 +1090,9 @@ export class GameScene extends DirtyScene {
                 const playerVariables: Map<string, unknown> = onConnect.room.playerVariables;
                 // If the user is not logged, we initialize the variables with variables from the local storage
                 if (!localUserStore.isLogged()) {
-                    if (this.room.group) {
+                    if (this._room.group) {
                         for (const [key, { isPublic, value }] of localUserStore
-                            .getAllUserProperties(this.room.group)
+                            .getAllUserProperties(this._room.group)
                             .entries()) {
                             if (isPublic) {
                                 this.connection?.emitPlayerSetVariable({
@@ -1106,7 +1108,7 @@ export class GameScene extends DirtyScene {
                     }
 
                     for (const [key, { isPublic, value }] of localUserStore
-                        .getAllUserProperties(this.room.id)
+                        .getAllUserProperties(this._room.id)
                         .entries()) {
                         if (isPublic) {
                             this.connection?.emitPlayerSetVariable({
@@ -1124,8 +1126,8 @@ export class GameScene extends DirtyScene {
                     this.connection,
                     this.playersEventDispatcher,
                     playerVariables,
-                    this.room.id,
-                    this.room.group ?? undefined
+                    this._room.id,
+                    this._room.group ?? undefined
                 );
 
                 this.connection.xmppSettingsMessageStream.subscribe((xmppSettingsMessage) => {
@@ -1907,7 +1909,7 @@ ${escapedMessage}
                 //playerVariables: localUserStore.getAllUserProperties(),
                 playerVariables: this.playerVariablesManager.variables,
                 userRoomToken: this.connection ? this.connection.userRoomToken : "",
-                metadata: this.room.metadata,
+                metadata: this._room.metadata,
                 iframeId: source ? iframeListener.getUIWebsiteIframeIdFromSource(source) : undefined,
                 isLogged: localUserStore.isLogged(),
             };
@@ -2024,9 +2026,11 @@ ${escapedMessage}
                             resolve(newFirstgid);
                         });
                     });
-                    this.load.on("loaderror", () => {
-                        console.error("Error while loading " + eventTileset.url + ".");
-                        reject(-1);
+                    this.load.on("loaderror", (file: Phaser.Loader.File) => {
+                        if (file.src === eventTileset.url) {
+                            console.error("Error while loading " + eventTileset.url + ".");
+                            reject(new Error("Error while loading " + eventTileset.url + "."));
+                        }
                     });
 
                     this.load.json(eventTileset.url, eventTileset.url);
@@ -2114,6 +2118,22 @@ ${escapedMessage}
             return this.CurrentPlayer.setPathToFollow(path, message.speed);
         });
 
+        iframeListener.registerAnswerer("teleportPlayerTo", (message) => {
+            this.CurrentPlayer.x = message.x;
+            this.CurrentPlayer.y = message.y;
+            this.CurrentPlayer.finishFollowingPath(true);
+            // clear properties in case we are moved on the same layer / area in order to trigger them
+            //this.gameMapFrontWrapper.clearCurrentProperties();
+
+            this.handleCurrentPlayerHasMovedEvent({
+                x: message.x,
+                y: message.y,
+                direction: this.CurrentPlayer.lastDirection,
+                moving: false,
+            });
+            this.markDirty();
+        });
+
         iframeListener.registerAnswerer("getWoka", () => {
             return new Promise((res, rej) => {
                 const woka = get(currentPlayerWokaStore);
@@ -2193,7 +2213,7 @@ ${escapedMessage}
 
         urlManager.pushStartLayerNameToUrl(roomUrl.hash);
 
-        if (!targetRoom.isEqual(this.room)) {
+        if (!targetRoom.isEqual(this._room)) {
             if (this.scene.get(targetRoom.key) === null) {
                 console.error("next room not loaded", targetRoom.key);
                 // Try to load next game room from exit URL
@@ -2204,6 +2224,7 @@ ${escapedMessage}
             this.scene.stop();
             this.scene.start(targetRoom.key);
             this.scene.remove(this.scene.key);
+            forceRefreshChatStore.forceRefresh();
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
             this.startPositionCalculator.initStartXAndStartY(urlManager.getStartPositionNameFromUrl());
@@ -2213,6 +2234,16 @@ ${escapedMessage}
             // clear properties in case we are moved on the same layer / area in order to trigger them
             this.gameMapFrontWrapper.clearCurrentProperties();
             this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
+
+            // TODO: we should have a "teleport" parameter to explicitly say the user teleports and should not be moved in 200ms to the new place.
+            this.handleCurrentPlayerHasMovedEvent({
+                x: this.CurrentPlayer.x,
+                y: this.CurrentPlayer.y,
+                direction: this.CurrentPlayer.lastDirection,
+                moving: false,
+            });
+
+            this.markDirty();
             setTimeout(() => (this.mapTransitioning = false), 500);
         }
     }
@@ -3057,7 +3088,7 @@ ${escapedMessage}
 
     public createSuccessorGameScene(autostart: boolean, reconnecting: boolean) {
         const gameSceneKey = "somekey" + Math.round(Math.random() * 10000);
-        const game = new GameScene(this.room, gameSceneKey);
+        const game = new GameScene(this._room, gameSceneKey);
         this.scene.add(gameSceneKey, game, autostart, {
             initPosition: {
                 x: this.CurrentPlayer.x,
@@ -3116,5 +3147,9 @@ ${escapedMessage}
             throw new Error("BroadcastService not initialized yet.");
         }
         return this._broadcastService;
+    }
+
+    get room(): Room {
+        return this._room;
     }
 }

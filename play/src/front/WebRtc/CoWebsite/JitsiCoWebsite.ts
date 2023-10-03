@@ -8,6 +8,7 @@ import { jitsiExternalApiFactory } from "../JitsiExternalApiFactory";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
+import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 
 const JitsiConfig = z
@@ -16,6 +17,12 @@ const JitsiConfig = z
         startWithVideoMuted: z.boolean().optional(),
         prejoinPageEnabled: z.boolean().optional(),
         disableDeepLinking: z.boolean().optional(),
+        gravatar: z
+            .object({
+                baseUrl: z.string().optional(),
+                disabled: z.boolean().optional(),
+            })
+            .optional(),
     })
     .passthrough();
 
@@ -52,6 +59,9 @@ const getDefaultConfig = (): JitsiConfig => {
         startWithVideoMuted: !get(requestedCameraState),
         prejoinPageEnabled: false,
         disableDeepLinking: false,
+        gravatar: {
+            disabled: true,
+        },
     };
 };
 
@@ -128,8 +138,6 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
 
     constructor(
         url: URL,
-        allowApi: boolean | undefined,
-        allowPolicy: string | undefined,
         widthPercent: number | undefined,
         closable: boolean | undefined,
         private roomName: string,
@@ -139,7 +147,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         private jitsiInterfaceConfig: object | undefined,
         private domain: string
     ) {
-        super(url, allowApi, allowPolicy, widthPercent, closable);
+        super(url, false, undefined, widthPercent, closable);
     }
 
     private loadPromise: CancelablePromise | undefined;
@@ -185,6 +193,8 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
 
                         this.jitsiApi.addListener("videoConferenceJoined", () => {
                             this.jitsiApi?.executeCommand("displayName", this.playerName);
+                            this.jitsiApi?.executeCommand("avatarUrl", get(currentPlayerWokaStore));
+
                             this.updateParticipantsCountStore();
                         });
 

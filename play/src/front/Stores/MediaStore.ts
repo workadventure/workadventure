@@ -467,8 +467,6 @@ export const mediaStreamConstraintsStore = derived(
                 audio: currentAudioConstraint,
             });
         }
-
-        console.info("Media constraints changed", currentVideoConstraint, currentAudioConstraint);
     },
     {
         video: false,

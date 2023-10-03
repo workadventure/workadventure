@@ -155,7 +155,9 @@ export class Companion extends Container {
         this.add(sprite);
 
         this.getAnimations(resource).forEach((animation) => {
-            this.scene.anims.create(animation);
+            if (!animation.key || !this.scene.anims.exists(animation.key)) {
+                this.scene.anims.create(animation);
+            }
         });
 
         this.scene.sys.updateList.add(sprite);

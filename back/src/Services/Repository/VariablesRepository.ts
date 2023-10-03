@@ -3,18 +3,26 @@ import { RedisVariablesRepository } from "./RedisVariablesRepository";
 import { VoidVariablesRepository } from "./VoidVariablesRepository";
 import { VariablesRepositoryInterface } from "./VariablesRepositoryInterface";
 
-let variablesRepository: VariablesRepositoryInterface | undefined;
+let variablesRepositoryPromise: Promise<VariablesRepositoryInterface> | undefined;
 
 export async function getVariablesRepository(): Promise<VariablesRepositoryInterface> {
-    if (variablesRepository) {
-        return variablesRepository;
+    if (variablesRepositoryPromise) {
+        return variablesRepositoryPromise;
     }
 
-    const redisClient = await getRedisClient();
-    if (!redisClient) {
-        console.warn("WARNING: Redis is not configured. No variables will be persisted.");
-        return (variablesRepository = new VoidVariablesRepository());
-    } else {
-        return (variablesRepository = new RedisVariablesRepository(redisClient));
-    }
+    variablesRepositoryPromise = new Promise<VariablesRepositoryInterface>((resolve, reject) => {
+        getRedisClient()
+            .then((redisClient) => {
+                if (!redisClient) {
+                    console.warn("WARNING: Redis is not configured. No variables will be persisted.");
+                    resolve(new VoidVariablesRepository());
+                } else {
+                    resolve(new RedisVariablesRepository(redisClient));
+                }
+            })
+            .catch((err) => {
+                reject(err);
+            });
+    });
+    return variablesRepositoryPromise;
 }

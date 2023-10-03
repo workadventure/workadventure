@@ -53,7 +53,7 @@ export class UploadController {
 
     private index() {
         this.app.get("/", passportAuthenticator, (req, res) => {
-            res.redirect("/ui/");
+            res.redirect(`${process.env.PATH_PREFIX || ""}/ui/`);
         });
     }
 
@@ -122,6 +122,8 @@ export class UploadController {
                         const extension = path.extname(zipEntry.name);
                         if (
                             extension === ".json" &&
+                            // We handle one zip entry at a time on purpose
+                            // eslint-disable-next-line no-await-in-loop
                             mapValidator.doesStringLooksLikeMap((await zip.entryData(zipEntry)).toString())
                         ) {
                             // We forbid Maps in JSON format.
@@ -138,6 +140,8 @@ export class UploadController {
                             continue;
                         }
                         if (extension === ".wam") {
+                            // We handle one zip entry at a time on purpose
+                            // eslint-disable-next-line no-await-in-loop
                             const result = mapValidator.validateWAMFile((await zip.entryData(zipEntry)).toString());
                             if (!result.ok) {
                                 errors[zipEntry.name] = {
@@ -157,6 +161,8 @@ export class UploadController {
                             continue;
                         }
 
+                        // We handle one zip entry at a time on purpose
+                        // eslint-disable-next-line no-await-in-loop
                         const result = await mapValidator.validateStringMap((await zip.entryData(zipEntry)).toString());
                         if (!result.ok) {
                             errors[zipEntry.name] = result.error;
@@ -685,6 +691,37 @@ export class UploadController {
     }
 
     private getMaps() {
+        /**
+         * @openapi
+         * /maps:
+         *   get:
+         *     description: Returns the list of maps
+         *     produces:
+         *      - "application/json"
+         *     responses:
+         *      200:
+         *         description: The details of the logged user
+         *         content:
+         *           application/json:
+         *             schema:
+         *               type: object
+         *               properties:
+         *                 version:
+         *                   type: string
+         *                 maps:
+         *                   type: object
+         *                   properties:
+         *                     mapUrl: string
+         *                     metadata:
+         *                       type: object
+         *                       properties:
+         *                         name: string
+         *                         description: string
+         *                         copyright: string
+         *                         thumbnail: string
+         *                     vendor:
+         *                       type: object
+         */
         this.app.get("/maps", (req, res, next) => {
             (async () => {
                 try {

@@ -21,7 +21,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Replace version number
-        run: 'sed -i "s#VERSION_PLACEHOLDER#${GITHUB_REF/refs\/tags\//}#g" package.json'
+        run: 'sed -i "s#VERSION_PLACEHOLDER#${{ github.ref_name }}#g" package.json'
         working-directory: "play/packages/iframe-api-typings"
 
       - name: Debug package.json

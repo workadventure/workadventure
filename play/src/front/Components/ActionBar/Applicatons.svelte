@@ -12,7 +12,6 @@
     import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
     import eraserSvg from "../images/applications/icon_eraser.svg";
     import { emoteMenuSubStore } from "../../Stores/EmoteStore";
-    import { KLAXOON_CLIENT_ID } from "../../Enum/EnvironmentVariable";
     import { helpSettingsPopupBlockedStore } from "../../Stores/HelpSettingsPopupBlockedStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { LL } from "../../../i18n/i18n-svelte";
@@ -30,14 +29,17 @@
     }
 
     function klaxoonButtonHandler() {
-        if (!KLAXOON_CLIENT_ID) return;
-        KlaxoonService.openKlaxoonActivityPicker(KLAXOON_CLIENT_ID, (payload: KlaxoonEvent) => {
-            if (!payload.url) return;
-            const openNewTab = window.open(payload.url, "_blank");
-            if (!openNewTab || openNewTab.closed || typeof openNewTab.closed == "undefined") {
-                helpSettingsPopupBlockedStore.set(true);
+        if (!connectionManager.currentRoom?.klaxoonToolClientId) return;
+        KlaxoonService.openKlaxoonActivityPicker(
+            connectionManager.currentRoom?.klaxoonToolClientId,
+            (payload: KlaxoonEvent) => {
+                if (!payload.url) return;
+                const openNewTab = window.open(payload.url, "_blank");
+                if (!openNewTab || openNewTab.closed || typeof openNewTab.closed == "undefined") {
+                    helpSettingsPopupBlockedStore.set(true);
+                }
             }
-        });
+        );
     }
 
     function oneApplicationIsActivated() {

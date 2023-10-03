@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 import type { AxiosResponse } from "axios";
 import { CompanionTextureCollection } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
@@ -57,7 +57,7 @@ class AdminCompanionService implements CompanionServiceInterface {
                 return CompanionTextureCollection.array().parse(res.data);
             })
             .catch((err) => {
-                if (axios.isAxiosError(err)) {
+                if (isAxiosError(err)) {
                     console.error(err.response);
                 }
                 console.error(`Cannot get companion collection list from admin API with token: ${token}`, err);

@@ -89,7 +89,7 @@ export class AreaEditorTool extends MapEditorTool {
         this.drawinNewAreaStartPos = undefined;
         mapEditorSelectedAreaPreviewStore.set(undefined);
         this.setAreaPreviewsVisibility(false);
-        this.scene.input.setDefaultCursor("crosshair");
+        this.scene.input.setDefaultCursor("auto");
         this.unbindEventHandlers();
         this.scene.markDirty();
     }
@@ -100,16 +100,14 @@ export class AreaEditorTool extends MapEditorTool {
         this.updateAreaPreviews();
         this.setAreaPreviewsVisibility(true);
         this.bindEventHandlers();
-        if (get(mapEditorAreaModeStore) === "ADD") {
-            this.scene.input.setDefaultCursor("crosshair");
-        }
+        this.changeAreaMode("ADD");
         this.scene.markDirty();
     }
 
     public destroy(): void {
         this.selectedAreaPreviewStoreSubscriber();
         this.unbindEventHandlers();
-        this.scene.input.setDefaultCursor("crosshair");
+        this.scene.input.setDefaultCursor("auto");
     }
 
     public async handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {

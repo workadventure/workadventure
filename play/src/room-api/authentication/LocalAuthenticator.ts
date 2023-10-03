@@ -6,14 +6,17 @@ import { AuthenticatorInterface } from "./AuthenticatorInterface";
 const authenticator: AuthenticatorInterface = (apiKey, room) => {
     return new Promise((resolve, reject) => {
         if (apiKey !== ROOM_API_SECRET_KEY) {
-            return reject(new GuardError(Status.UNAUTHENTICATED, "Wrong API key"));
+            reject(new GuardError(Status.UNAUTHENTICATED, "Wrong API key"));
+            return;
         }
 
         if (PUSHER_URL !== "/" && !room.startsWith(PUSHER_URL)) {
-            return reject(new GuardError(Status.PERMISSION_DENIED, "You cannot interact with this room!"));
+            reject(new GuardError(Status.PERMISSION_DENIED, "You cannot interact with this room!"));
+            return;
         }
 
-        return resolve();
+        resolve();
+        return;
     });
 };
 

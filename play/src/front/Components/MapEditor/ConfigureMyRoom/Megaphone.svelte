@@ -77,6 +77,7 @@
 
             return $LL.mapEditor.settings.megaphone.inputs.error.save.success();
         } finally {
+            // eslint-disable-next-line require-atomic-updates
             loading = false;
         }
     }

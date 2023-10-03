@@ -57,6 +57,7 @@ import { isModalEvent } from "./ModalEvent";
 import { isXmppSettingsMessageEvent } from "./XmppSettingsMessageEvent";
 import { isAddButtonActionBarEvent, isRemoveButtonActionBarEvent } from "./Ui/ButtonActionBarEvent";
 import { isBannerEvent } from "./Ui/BannerEvent";
+import { isTeleportPlayerToEventConfig } from "./TeleportPlayerToEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -555,6 +556,10 @@ export const iframeQueryMapTypeGuards = {
     movePlayerTo: {
         query: isMovePlayerToEventConfig,
         answer: isMovePlayerToEventAnswer,
+    },
+    teleportPlayerTo: {
+        query: isTeleportPlayerToEventConfig,
+        answer: z.undefined(),
     },
     openUIWebsite: {
         query: isCreateUIWebsiteEvent,

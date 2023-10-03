@@ -271,7 +271,13 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                                     propertyValue: link,
                                 });
                             } else {
-                                const coWebsite = new SimpleCoWebsite(new URL(link));
+                                const coWebsite = new SimpleCoWebsite(
+                                    new URL(link),
+                                    property.allowAPI,
+                                    property.policy,
+                                    property.width,
+                                    property.closable
+                                );
                                 coWebsiteManager.addCoWebsiteToStore(coWebsite, undefined);
                                 coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
                                     console.error("Error during loading a co-website: " + coWebsite.getUrl());

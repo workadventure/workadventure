@@ -860,6 +860,13 @@ export class IoSocketController {
                                     );
                                     break;
                                 }
+                                case "roomsFromSameWorldQuery": {
+                                    void socketManager.handleRoomsFromSameWorldQuery(
+                                        client,
+                                        message.message.queryMessage
+                                    );
+                                    break;
+                                }
                                 default: {
                                     socketManager.forwardMessageToBack(client, message.message);
                                 }

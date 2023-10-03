@@ -4,7 +4,7 @@
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import MediaBox from "../../Video/MediaBox.svelte";
     import MyCamera from "../../MyCamera.svelte";
-    import { myCameraStore } from "../../../Stores/MyMediaStore";
+    import { myCameraStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 
     let layoutDom: HTMLDivElement;
@@ -34,7 +34,7 @@
                 mozaicQuarter={$streamableCollectionStore.size === 3 || $streamableCollectionStore.size >= 4}
             />
         {/each}
-        {#if $myCameraStore && displayFullMedias}
+        {#if $myCameraStore && displayFullMedias && $proximityMeetingStore === true}
             <MyCamera />
         {/if}
     </div>

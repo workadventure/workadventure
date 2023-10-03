@@ -339,6 +339,9 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     private createWokaAnimation(key: string): void {
+        if (this.anims.exists(key)) {
+            return;
+        }
         this.anims.create({
             key,
             frames: this.anims.generateFrameNumbers(key, { start: 0, end: 11 }),

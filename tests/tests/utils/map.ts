@@ -19,6 +19,24 @@ class Map {
             y,
         });
     }
+
+    async teleportToPosition(page: Page, x: number, y: number){
+        await evaluateScript(page, async ({x, y}) => {
+            await WA.player.teleport(x, y);
+            return;
+        }, {
+            x,
+            y,
+        });
+    }
+
+    async goToRoom(page: Page, room: string){
+        await evaluateScript(page, async ({ room }) => {
+            WA.nav.goToRoom(room);
+        }, {
+            room,
+        });
+    }
 }
 
 export default new Map();

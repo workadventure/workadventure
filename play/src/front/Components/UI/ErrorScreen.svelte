@@ -27,7 +27,7 @@
     logoError.style.maxHeight = "25vh";
     logoError.style.maxWidth = "80%";
 
-    const errorImage = $errorImageStore;
+    const errorImage: HTMLImageElement = $errorImageStore;
     errorImage.style.height = "125px";
     errorImage.style.maxWidth = "100%";
 

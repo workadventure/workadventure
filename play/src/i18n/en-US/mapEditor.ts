@@ -43,6 +43,7 @@ const mapEditor: BaseTranslation = {
             triggerOnAction: "Show action toast with message",
             closable: "Can be closed",
             noPrefix: "Share with other rooms",
+            width: "Width",
             jitsiRoomConfig: {
                 addConfig: "Add an option",
                 startWithAudioMuted: "Start with microphone muted",
@@ -70,7 +71,7 @@ const mapEditor: BaseTranslation = {
             triggerOnClick: "Start as minimized in bottom bar",
             triggerOnAction: "Show action toast with message",
             closable: "Can be closed",
-            allowAPI: "Allow API",
+            allowAPI: "Allow Scripting API",
             linkPlaceholder: "https://example.com",
             defaultButtonLabel: "Open Link",
             width: "Width",
@@ -101,6 +102,9 @@ const mapEditor: BaseTranslation = {
             description: "Where people can start in the map.",
             nameLabel: "Start name",
             namePlaceholder: "Enter1",
+            type: "Start position type",
+            defaultMenuItem: "Use by default",
+            hashMenuItem: "Use if URL contains #[area name]",
         },
         exitProperties: {
             label: "Exit area",

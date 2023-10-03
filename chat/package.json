@@ -35,8 +35,8 @@
     "svelte-feather-icons": "^4.0.0",
     "svelte-preprocess": "^4.10.7",
     "tailwindcss": "^3.0.23",
-    "ts-node": "^10.8.0",
     "tsconfig-paths": "^3.14.1",
+    "tsx": "^3.12.10",
     "typescript": "^4.7.2",
     "vite": "^3.2.7",
     "vite-plugin-rewrite-all": "^1.0.1"
@@ -75,7 +75,7 @@
     "start": "run-p serve svelte-check-watch typesafe-i18n-watch",
     "serve": "cross-env vite --host",
     "build": "cross-env vite build",
-    "test": "cross-env TS_NODE_PROJECT=\"tsconfig-for-jasmine.json\" ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
+    "test": "cross-env ESBK_TSCONFIG_PATH=\"tsconfig-for-jasmine.json\" tsx node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "lint": "eslint src/ tests/ --ext .ts,.svelte",
     "fix": "eslint --fix src/ tests/ --ext .ts,.svelte",
     "precommit": "lint-staged",

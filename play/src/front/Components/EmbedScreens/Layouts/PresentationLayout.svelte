@@ -5,7 +5,7 @@
     import MediaBox from "../../Video/MediaBox.svelte";
     import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
     import { isMediaBreakpointDown, isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
-    import { myCameraStore } from "../../../Stores/MyMediaStore";
+    import { myCameraStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import MyCamera from "../../MyCamera.svelte";
     import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import { megaphoneEnabledStore } from "../../../Stores/MegaphoneStore";
@@ -57,7 +57,7 @@
     {#if displayFullMedias}
         <div id="full-medias" class="z-[300] relative mx-auto top-8 h-1/2 overflow-y-auto">
             <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
-            {#if $myCameraStore}
+            {#if $myCameraStore && $proximityMeetingStore === true}
                 <MyCamera />
             {/if}
         </div>

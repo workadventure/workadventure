@@ -4,31 +4,48 @@
     import axios from "axios";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { MAP_STORAGE_PATH_PREFIX } from "../../../Enum/EnvironmentVariable";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     export let property: ExitPropertyData;
     const dispatch = createEventDispatcher();
-    let mapsUrl: string[] = [];
+    // Key: room URL
+    let mapsUrl = new Map<
+        string,
+        {
+            name: string;
+            wamUrl: string | undefined;
+        }
+    >();
     let startAreas: string[] = [];
     function onValueChange() {
         dispatch("change");
     }
 
     const connection = gameManager.getCurrentGameScene().connection;
-    const wamUrl = new URL(gameManager.getCurrentGameScene().wamUrlFile || "");
-
-    const baseUrl = MAP_STORAGE_PATH_PREFIX ? `${wamUrl.origin}${MAP_STORAGE_PATH_PREFIX}` : wamUrl.origin;
 
     async function fetchMaps(): Promise<void> {
-        const response = await axios.get(`${baseUrl}/maps`);
-        if (response.data && response.data.maps) {
-            mapsUrl = Object.keys(response.data.maps);
+        const response = await gameManager.getCurrentGameScene().connection?.queryRoomsFromSameWorld();
+
+        if (response) {
+            for (const room of response) {
+                //const url = new URL(room.url);
+                mapsUrl.set(room.roomUrl, {
+                    name: room.name,
+                    wamUrl: room.wamUrl,
+                });
+            }
+            mapsUrl = mapsUrl;
         }
     }
 
     async function fetchStartAreasName(): Promise<void> {
         if (connection && property.url) {
-            const response = await axios.get(`${baseUrl}/${property.url}`);
+            const wamUrl = mapsUrl.get(property.url)?.wamUrl;
+
+            if (!wamUrl) {
+                return;
+            }
+
+            const response = await axios.get(wamUrl);
             const result = WAMFileFormat.safeParse(response.data);
             if (result.success && result.data && result.data.areas) {
                 startAreas = result.data.areas
@@ -39,8 +56,11 @@
     }
 
     onMount(() => {
-        void fetchMaps();
-        void fetchStartAreasName();
+        fetchMaps()
+            .then(() => {
+                return fetchStartAreasName();
+            })
+            .catch((e) => console.error(e));
     });
 </script>
 
@@ -66,11 +86,11 @@
                 bind:value={property.url}
                 on:change={() => {
                     onValueChange();
-                    void fetchStartAreasName();
+                    fetchStartAreasName().catch((e) => console.error(e));
                 }}
             >
-                {#each mapsUrl as map}
-                    <option value={map}>{map}</option>
+                {#each [...mapsUrl.entries()] as map}
+                    <option value={map[0]}>{map[1].name}</option>
                 {/each}
             </select>
         </div>
