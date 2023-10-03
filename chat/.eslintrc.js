@@ -11,6 +11,7 @@ module.exports = {
         "plugin:@typescript-eslint/recommended-requiring-type-checking",
         "plugin:import/recommended",
         "plugin:import/typescript",
+        "plugin:rxjs/recommended",
     ],
     "globals": {
         "Atomics": "readonly",
@@ -26,6 +27,7 @@ module.exports = {
     "plugins": [
         "@typescript-eslint",
         "svelte3",
+        "rxjs",
     ],
     "overrides": [
         {
@@ -54,6 +56,8 @@ module.exports = {
         "no-promise-executor-return": "error",
         "require-atomic-updates": "error",
         "prefer-promise-reject-errors": "error",
+
+        "rxjs/no-ignored-subscription": "error",
     },
     "settings": {
         "svelte3/typescript": () => require('typescript'),

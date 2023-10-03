@@ -21,6 +21,7 @@
     "eslint": "^8.16.0",
     "eslint-import-resolver-typescript": "^3.5.3",
     "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-rxjs": "^5.0.3",
     "eslint-plugin-svelte3": "^4.0.0",
     "jasmine": "^3.5.0",
     "lint-staged": "^12.3.7",
