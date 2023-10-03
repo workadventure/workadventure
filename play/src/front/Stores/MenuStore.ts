@@ -58,7 +58,7 @@ export enum SubMenusInterface {
     report = "report",
 }
 
-type MenuKeys = keyof Translation["menu"]["sub"];
+export type MenuKeys = keyof Translation["menu"]["sub"];
 
 export interface TranslatedMenu {
     type: "translated";
