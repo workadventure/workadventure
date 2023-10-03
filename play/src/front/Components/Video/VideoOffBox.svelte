@@ -38,12 +38,7 @@
         };
     }
 
-    const resizeObserver = new ResizeObserver(() => {
-        return;
-    });
-
     onMount(() => {
-        resizeObserver.observe(videoContainer);
         subscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
             if (deviceId != undefined) setAudioOutPut(deviceId);
         });
