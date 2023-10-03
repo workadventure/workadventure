@@ -20,7 +20,8 @@ function createPlayersStore() {
         connectToRoomConnection: (roomConnection: RoomConnection) => {
             players = new Map<number, PlayerInterface>();
             set(players);
-            // TODO: it would be cool to unsubscribe properly here
+            // The userJoinedMessageStream and userLeftMessageStream streams are completed in the RoomConnection. No need to unsubscribe.
+            //eslint-disable-next-line rxjs/no-ignored-subscription
             roomConnection.userJoinedMessageStream.subscribe((message) => {
                 update((users) => {
                     users.set(message.userId, {
@@ -38,6 +39,7 @@ function createPlayersStore() {
                     return users;
                 });
             });
+            //eslint-disable-next-line rxjs/no-ignored-subscription
             roomConnection.userLeftMessageStream.subscribe((message) => {
                 update((users) => {
                     users.delete(message.userId);

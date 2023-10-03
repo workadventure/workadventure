@@ -44,6 +44,7 @@
     "@typescript-eslint/parser": "^5.56.0",
     "eslint": "^8.36.0",
     "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-rxjs": "^5.0.3",
     "grpc-tools": "^1.12.4",
     "lint-staged": "^13.2.0",
     "prettier": "^2.8.6",

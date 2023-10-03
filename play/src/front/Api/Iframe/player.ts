@@ -1,4 +1,4 @@
-import { Subject } from "rxjs";
+import { Subject, Subscription } from "rxjs";
 import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events/HasPlayerMovedEvent";
 import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
@@ -175,13 +175,16 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
      * {@link https://workadventu.re/map-building/api-player.md#listen-to-player-movement | Website documentation}
      *
      * @param {HasPlayerMovedEventCallback} callback Function that will be called when the current player is moving. It contains the event
+     * @return {Subscription} Subscription to the stream. Use ".unsubscribe()" to stop listening.
      */
-    onPlayerMove(callback: HasPlayerMovedEventCallback): void {
-        moveStream.subscribe(callback);
+    onPlayerMove(callback: HasPlayerMovedEventCallback): Subscription {
+        const subscription = moveStream.subscribe(callback);
         sendToWorkadventure({
             type: "onPlayerMove",
             data: undefined,
         });
+        // TODO: we should instead return an object with an unsubscribe method that unsubscribes from the stream and sends the message to the iframe (with a counter WA side to avoid stopping the stream for other listeners)
+        return subscription;
     }
 
     /**

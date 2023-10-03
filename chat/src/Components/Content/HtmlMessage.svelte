@@ -61,6 +61,8 @@
             element.removeEventListener("click", aListner);
         });
     });
+
+    /* eslint-disable svelte/no-at-html-tags */
 </script>
 
 {@html html}

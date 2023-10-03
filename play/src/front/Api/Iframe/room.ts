@@ -1,5 +1,5 @@
 import type { Observable } from "rxjs";
-import { Subject } from "rxjs";
+import { Subject, Subscription } from "rxjs";
 
 import type { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import type { EnterLeaveEvent } from "../Events/EnterLeaveEvent";
@@ -69,25 +69,25 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
     /**
      * @deprecated Use onEnterLayer instead
      */
-    onEnterZone(name: string, callback: () => void): void {
+    onEnterZone(name: string, callback: () => void): Subscription {
         let subject = enterStreams.get(name);
         if (subject === undefined) {
             subject = new Subject<EnterLeaveEvent>();
             enterStreams.set(name, subject);
         }
-        subject.subscribe(callback);
+        return subject.subscribe(callback);
     }
 
     /**
      * @deprecated Use onLeaveLayer instead
      */
-    onLeaveZone(name: string, callback: () => void): void {
+    onLeaveZone(name: string, callback: () => void): Subscription {
         let subject = leaveStreams.get(name);
         if (subject === undefined) {
             subject = new Subject<EnterLeaveEvent>();
             leaveStreams.set(name, subject);
         }
-        subject.subscribe(callback);
+        return subject.subscribe(callback);
     }
 
     /**

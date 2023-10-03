@@ -11,7 +11,7 @@
 <div class="error-div is-dark is-rounded tw-flex tw-flex-col tw-items-center tw-justify-center" open>
     <p class="is-error title">{$LL.error.error()}</p>
     <div class="body">
-        {#each $errorStore as error}
+        {#each $errorStore as error (error.id)}
             <p>{error.message}</p>
         {/each}
     </div>

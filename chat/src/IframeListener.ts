@@ -284,16 +284,19 @@ class IframeListener {
 export const iframeListener = new IframeListener();
 
 /* @deprecated with new service chat messagerie */
-//publis new message when user send message in chat timeline
-newChatMessageSubject.subscribe((messgae) => {
+//publish new message when user send message in chat timeline
+//eslint-disable-next-line rxjs/no-ignored-subscription
+newChatMessageSubject.subscribe((message) => {
     window.parent.postMessage(
         {
             type: "addPersonnalMessage",
-            data: messgae,
+            data: message,
         },
         "*"
     );
 });
+
+//eslint-disable-next-line rxjs/no-ignored-subscription
 newChatMessageWritingStatusSubject.subscribe((status) => {
     window.parent.postMessage(
         {

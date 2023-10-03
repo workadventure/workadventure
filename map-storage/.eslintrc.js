@@ -5,15 +5,19 @@ module.exports = {
     tsconfigRootDir : __dirname,
     sourceType: 'module',
   },
-  plugins: ['@typescript-eslint/eslint-plugin'],
+  plugins: [
+      "@typescript-eslint/eslint-plugin",
+      "rxjs",
+  ],
   extends: [
-    'eslint:recommended',
+    "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     'plugin:@typescript-eslint/recommended',
     "plugin:@typescript-eslint/recommended-requiring-type-checking",
     'plugin:prettier/recommended',
     "plugin:import/recommended",
-    "plugin:import/typescript"
+    "plugin:import/typescript",
+    "plugin:rxjs/recommended",
   ],
   root: true,
   env: {
@@ -36,6 +40,8 @@ module.exports = {
     "no-promise-executor-return": "error",
     "require-atomic-updates": "error",
     "prefer-promise-reject-errors": "error",
+
+    "rxjs/no-ignored-subscription": "error",
   },
   "settings": {
     "typescript": true,

@@ -80,7 +80,7 @@
                 updateInputFieldValue();
             }}
         >
-            {#each $startLayerNamesStore as entryPointName}
+            {#each $startLayerNamesStore as entryPointName (entryPointName)}
                 <option value={entryPointName}>{entryPointName}</option>
             {/each}
         </select>

@@ -17,6 +17,8 @@
             barClass = "tw-bg-white";
         }
     }
+
+    /* eslint-disable svelte/require-each-key */
 </script>
 
 <div class="tw-flex tw-justify-between tw-w-10 tw-h-10 tw-items-center {classcss ?? ''}" class:active={display}>

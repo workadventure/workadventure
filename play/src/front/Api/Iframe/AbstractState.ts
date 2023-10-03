@@ -11,6 +11,8 @@ export abstract class AbstractWorkadventureStateCommands {
     protected constructor() {
         //super();
 
+        // Not unsubscribing is ok, this is two singletons never destroyed.
+        //eslint-disable-next-line rxjs/no-ignored-subscription
         this.setVariableResolvers.subscribe((event) => {
             // const oldValue = this.variables.get(event.key);
             // If we are setting the same value, no need to do anything.

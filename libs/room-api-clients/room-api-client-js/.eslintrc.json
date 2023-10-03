@@ -3,14 +3,17 @@
         "es2022": true,
         "node": true
     },
-    "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"],
+    "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier", "plugin:rxjs/recommended"],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
         "ecmaVersion": 2022,
         "sourceType": "module",
         "project": "./tsconfig.json"
     },
-    "plugins": ["@typescript-eslint"],
+    "plugins": [
+        "@typescript-eslint",
+        "rxjs"
+    ],
     "rules": {
         "linebreak-style": ["error", "unix"],
         "quotes": ["error", "double"],
@@ -25,6 +28,8 @@
         "no-await-in-loop": "error",
         "no-promise-executor-return": "error",
         "require-atomic-updates": "error",
-        "prefer-promise-reject-errors": "error"
+        "prefer-promise-reject-errors": "error",
+
+        "rxjs/no-ignored-subscription": "error"
     }
 }

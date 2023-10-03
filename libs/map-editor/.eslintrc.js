@@ -5,7 +5,9 @@ module.exports = {
     tsconfigRootDir : __dirname,
     sourceType: 'module',
   },
-  plugins: ['@typescript-eslint/eslint-plugin'],
+  plugins: [
+      '@typescript-eslint/eslint-plugin',
+  ],
   extends: [
     'eslint:recommended',
     "plugin:@typescript-eslint/eslint-recommended",
@@ -13,7 +15,7 @@ module.exports = {
     "plugin:@typescript-eslint/recommended-requiring-type-checking",
     'plugin:prettier/recommended',
     "plugin:import/recommended",
-    "plugin:import/typescript"
+    "plugin:import/typescript",
   ],
   root: true,
   env: {
@@ -35,7 +37,7 @@ module.exports = {
     "no-await-in-loop": "error",
     "no-promise-executor-return": "error",
     "require-atomic-updates": "error",
-    "prefer-promise-reject-errors": "error"
+    "prefer-promise-reject-errors": "error",
   },
   "settings": {
     "typescript": true,

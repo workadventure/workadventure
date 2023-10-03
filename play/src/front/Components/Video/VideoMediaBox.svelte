@@ -101,7 +101,7 @@
         {:else if $statusStore === "error"}
             <div class="rtc-error" />
         {/if}
-        <!-- svelte-ignore a11y-media-has-caption &ndash;&gt;-->
+        <!-- svelte-ignore a11y-media-has-caption -->
         {#if $streamStore}
             <video
                 bind:this={videoElement}
