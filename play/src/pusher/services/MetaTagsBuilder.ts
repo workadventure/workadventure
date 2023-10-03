@@ -10,7 +10,6 @@ import {
     ErrorApiData,
 } from "@workadventure/messages";
 import { AxiosResponse } from "axios";
-import * as Sentry from "@sentry/node";
 import { ADMIN_API_URL } from "../enums/EnvironmentVariable";
 import { adminService } from "./AdminService";
 
@@ -334,7 +333,6 @@ export class MetaTagsBuilder {
         try {
             mapFile = await this.fetchMapFile(this.url);
         } catch (e) {
-            Sentry.captureException(`Error on getting map file ${e}`);
             console.error(`Error on getting map file ${e}`);
         }
 
