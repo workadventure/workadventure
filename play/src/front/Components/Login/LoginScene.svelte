@@ -23,17 +23,17 @@
     let legalStrings: string[] = [];
     if (legals?.termsOfUseUrl) {
         legalStrings.push(
-            '<a href="' + encodeURI(legals.termsOfUseUrl) + '" target="_blank">' + $LL.login.termsOfUse() + "</a>"
+            '<a href="' + encodeURI(legals.termsOfUseUrl) + '" target="_blank" class="text-white underline text-bold">' + $LL.login.termsOfUse() + "</a>"
         );
     }
     if (legals?.privacyPolicyUrl) {
         legalStrings.push(
-            '<a href="' + encodeURI(legals.privacyPolicyUrl) + '" target="_blank">' + $LL.login.privacyPolicy() + "</a>"
+            '<a href="' + encodeURI(legals.privacyPolicyUrl) + '" target="_blank" class="text-white underline text-bold">' + $LL.login.privacyPolicy() + "</a>"
         );
     }
     if (legals?.cookiePolicyUrl) {
         legalStrings.push(
-            '<a href="' + encodeURI(legals.cookiePolicyUrl) + '" target="_blank">' + $LL.login.cookiePolicy() + "</a>"
+            '<a href="' + encodeURI(legals.cookiePolicyUrl) + '" target="_blank" class="text-white underline bold hover:text-secondary">' + $LL.login.cookiePolicy() + "</a>"
         );
     }
 
@@ -88,7 +88,7 @@
             <input
                 type="text"
                 name="loginSceneName"
-                class="w-52 md:w-96 text-center border-white"
+                class="w-52 md:w-96 text-center border-white !bg-contrast rounded border border-solid border-white/20"
                 autofocus
                 maxlength={MAX_USERNAME_LENGTH}
                 bind:value={name}
@@ -103,20 +103,20 @@
                 </p>
             {/if}
         </section>
+        <section class="action flex h-fit justify-center">
+            <button type="submit" class="btn btn-secondary btn-lg loginSceneFormSubmit">{$LL.login.continue()}</button>
+        </section>
 
         {#if legalString}
             <section class="terms-and-conditions flex h-fit">
                 <a style="display: none;" href="traduction">Need for traduction</a>
-                <p class="text-white">
+                <p class="text-white text-xs italic">
                     {@html $LL.login.terms({
                         links: legalString,
                     })}
                 </p>
             </section>
         {/if}
-        <section class="action flex h-fit justify-center">
-            <button type="submit" class="light loginSceneFormSubmit">{$LL.login.continue()}</button>
-        </section>
     </div>
     {#if logo !== logoImg && gameManager.currentStartedRoom.showPoweredBy !== false}
         <section class="text-right flex powered-by justify-center items-end">

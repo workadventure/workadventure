@@ -374,8 +374,8 @@
                 class="flex relative"
         >
             <Tooltip text={$LL.actionbar.chat()} />
-            <div class="group/btn-chat relative bg-contrast/80 transition-all backdrop-blur rounded-lg p-2 aspect-square">
-                <div class="h-12 w-12 rounded group-hover/btn-chat:bg-white/10 aspect-square flex items-center transition-all">
+            <div class="group/btn-chat relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square">
+                <div class="h-12 w-12 rounded group-hover/btn-chat:bg-white/10 aspect-square flex items-center justify-center transition-all">
                     <svg class="m-auto" width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M1 17L2.3 13.1C1.17644 11.4383 0.769993 9.47043 1.15622 7.56232C1.54244 5.65421 2.69506 3.93569 4.39977 2.72629C6.10447 1.51689 8.24526 0.898916 10.4241 0.987258C12.6029 1.0756 14.6715 1.86425 16.2453 3.20658C17.819 4.5489 18.7909 6.35356 18.9801 8.285C19.1693 10.2164 18.563 12.1432 17.2739 13.7071C15.9848 15.271 14.1007 16.3656 11.9718 16.7874C9.84293 17.2091 7.6142 16.9293 5.7 16L1 17Z" stroke="white" stroke-width="1.83333" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
@@ -398,6 +398,17 @@
                         {$totalMessagesToSee}
                     </div>
                 {/if}
+            </div>
+            <div class="group/btn-chat relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square">
+                <div class="h-12 w-12 rounded group-hover/btn-chat:bg-white/10 aspect-square flex items-center justify-center  transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                        <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+                    </svg>
+                </div>
             </div>
         </div>
     </div>
@@ -617,7 +628,7 @@
             {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
                 <div class="flex items-center relative">
                     <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2 mr-4" on:click={() =>
-				adminMenuIsDropped = !adminMenuIsDropped} on:blur={() => adminMenuIsDropped = false } tabindex="0">
+				adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false } tabindex="0">
                         <div class="flex items center h-full group-hover:bg-white/10 transition-all group-hover:rounded">
                             <div class="px-2 m-auto">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -660,8 +671,7 @@
                                     <div>Back-office</div>
                                 </li>
                             {/if}
-                            <li on:click={showMenuItem(SubMenusInterface.globalMessages)}
-                                className="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
+                            <li on:click={showMenuItem(SubMenusInterface.globalMessages)} class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
                                 <div className="group-hover:mr-2 transition-all w-8 mr-1 text-center">
                                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
                                          xmlns="http://www.w3.org/2000/svg">
@@ -759,10 +769,10 @@
 </div>
 {#if $emoteMenuSubStore}
     <div
-            class="flex justify-center m-auto absolute left-0 right-0 top-24 w-auto bg-contrast/80 transition-all backdrop-blur"
+            class="flex justify-center m-auto absolute left-0 right-0 top-24 w-auto z-50"
     >
-        <div class="bottom-action-bar">
-            <div class="bottom-action-section flex animate">
+        <div class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg pl-4 flex flex-col items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 sm:flex-row">
+            <div class="bottom-action-section flex animate flex-row flex items-center">
                 {#each [...$emoteDataStore.keys()] as key}
                     <div class="transition-all bottom-action-button">
                         <button
@@ -770,19 +780,19 @@
 				clickEmoji(key);
 				}}
                                 id={`button-${$emoteDataStore.get(key)?.name}`}
-                                class="emoji"
+                                class="emoji py-4 px-2 hover:bg-white/20 block m-0 rounded-none"
                                 class:focus={$emoteMenuStore && $emoteMenuSubCurrentEmojiSelectedStore === key}
                         >
 				<span class="emoji" style="margin:auto" id={`icon-${$emoteDataStore.get(key)?.name}`}>
 				{$emoteDataStore.get(key)?.emoji}
 				</span>
                             {#if !isMobile}
-                                <span class="text-white">{key}</span>
+                                <span class="text-white/50 font-xxs pl-2">{key}</span>
                             {/if}
                         </button>
                     </div>
                 {/each}
-                <div class="transition-all bottom-action-button">
+                <div class="transition-all bottom-action-button flex items-center h-full">
                     <button on:click={() =>
 					analyticsClient.editEmote()} on:click|preventDefault={edit}>
                         {#if $emoteDataStoreLoading}
@@ -803,7 +813,7 @@
                         {/if}
                     </button>
                 </div>
-                <div class="transition-all bottom-action-button">
+                <div class="transition-all bottom-action-button flex items-center bg-contrast rounded-r-lg h-full">
                     <button on:click|preventDefault={close}>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <g>

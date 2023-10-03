@@ -5,37 +5,8 @@
     }
 
     .bottom-action-bar {
-        @apply flex flex-col items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300;
-        @apply sm:flex-row;
 
         .bottom-action-section {
-            @apply flex-row flex items-center mx-1 my-1;
-            @apply md:mx-2 md:my-0;
-
-            .bottom-action-button {
-                button {
-                    @apply rounded-none bg-dark-purple/95 w-10 h-10 px-2 m-0 outline-none;
-                    @apply sm:w-12 sm:h-12;
-
-                    &.focus,
-                    &.hover,
-                    &:hover,
-                    &:has(+ *:hover){
-                        @apply bg-medium-purple/95;
-                        filter: brightness(1.25);
-                    }
-
-                    img {
-                        @apply select-none w-7 h-7;
-                        @apply sm:w-8 sm:h-8;
-                    }
-
-                    &.emoji {
-                        @apply w-11 h-10;
-                        @apply sm:w-14 sm:h-12;
-                    }
-                }
-            }
 
             #invite-btn {
                 @apply min-h-[2rem] h-8 sm:h-10 outline-none;

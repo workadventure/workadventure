@@ -89,25 +89,6 @@
 }
 
 @layer utilities {
-    input[type="text"],
-    input[type="password"],
-    input[type="email"],
-    input[type="number"],
-    input[type="url"],
-    input[type="date"],
-    input[type="datetime-local"],
-    input[type="month"],
-    input[type="week"],
-    input[type="time"],
-    input[type="search"],
-    input[type="tel"],
-    select,
-    textarea,
-    textarea[type="text"] {
-        @apply bg-dark-blue text-white border-light-purple rounded-lg focus:border-lighter-purple focus:ring-lighter-purple mb-5 transition-all duration-300;
-        @apply placeholder:text-lighter-purple;
-    }
-
     input[type="checkbox"],
     input[type="radio"] {
         @apply border-light-purple text-light-purple focus:border-lighter-purple focus:ring-lighter-purple transition-all duration-150;
