@@ -275,7 +275,7 @@ export class MapEditorModeManager {
     public subscribeToRoomConnection(connection: RoomConnection): void {
         const limit = pLimit(1);
         // The editMapCommandMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
-        //eslint-disable-next-line rxjs/no-ignored-subscription
+        //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
         connection.editMapCommandMessageStream.subscribe((editMapCommandMessage) => {
             limit(async () => {
                 if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {

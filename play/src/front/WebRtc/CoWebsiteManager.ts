@@ -1,5 +1,5 @@
 import { Subject } from "rxjs";
-import type { Readable, Writable } from "svelte/store";
+import type { Readable, Unsubscriber, Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
 import { randomDelay } from "@workadventure/shared-utils/src/RandomDelay/RandomDelay";
@@ -71,6 +71,9 @@ class CoWebsiteManager {
         }
     });
 
+    private mainCoWebsiteUnsubscriber: Unsubscriber;
+    private highlightedEmbedScreenUnsubscriber: Unsubscriber;
+
     public getMainState() {
         return get(this.openedMain);
     }
@@ -135,7 +138,7 @@ class CoWebsiteManager {
             trails: undefined,
         };
 
-        mainCoWebsite.subscribe((coWebsite) => {
+        this.mainCoWebsiteUnsubscriber = mainCoWebsite.subscribe((coWebsite) => {
             this.buttonCloseCoWebsite.hidden = !coWebsite?.isClosable() ?? false;
         });
 
@@ -172,7 +175,7 @@ class CoWebsiteManager {
 
         const buttonSwipe = HtmlUtils.getElementByIdOrFail(cowebsiteSwipeButtonId);
 
-        highlightedEmbedScreen.subscribe((value) => {
+        this.highlightedEmbedScreenUnsubscriber = highlightedEmbedScreen.subscribe((value) => {
             if (!value || value.type !== "cowebsite") {
                 buttonSwipe.style.display = "none";
                 return;
@@ -200,6 +203,8 @@ class CoWebsiteManager {
 
     public cleanup(): void {
         this.closeCoWebsites();
+        this.mainCoWebsiteUnsubscriber();
+        this.highlightedEmbedScreenUnsubscriber();
     }
 
     public getCoWebsiteBuffer(): HTMLDivElement {

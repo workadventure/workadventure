@@ -17,7 +17,6 @@
     import BanReportBox from "./BanReportBox.svelte";
     import { srcObject } from "./utils";
 
-    let videoContainer: HTMLDivElement;
     let videoElement: HTMLVideoElement;
     export let peer: VideoPeer;
     export let clickable = false;
@@ -76,7 +75,6 @@
 
 <div
     class="video-container video-off"
-    bind:this={videoContainer}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     <div
