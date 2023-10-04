@@ -2216,8 +2216,11 @@ ${escapedMessage}
         this.gameMapFrontWrapper.setDynamicAreaProperty(areaName, propertyName, propertyValue);
     }
 
-    public getMapDirUrl(): string {
-        return this.mapUrlFile.substring(0, this.mapUrlFile.lastIndexOf("/"));
+    public getMapUrl(): string {
+        if (!this.mapUrlFile) {
+            throw new Error("Trying to access mapUrl before it was fetched");
+        }
+        return this.mapUrlFile;
     }
 
     public async onMapExit(roomUrl: URL) {
