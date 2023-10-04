@@ -529,8 +529,15 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                         return stream;
                     })
                     .catch((e) => {
-                        console.error("BAAAAAAAAAAAAAAAAAAAA", e);
-                        if (constraints.video !== false /* || constraints.audio !== false*/) {
+                        if (e instanceof OverconstrainedError && e.constraint === "deviceId") {
+                            console.info(
+                                "Could not access the requested microphone or webcam. Falling back to default microphone and webcam",
+                                constraints,
+                                e
+                            );
+                            requestedCameraDeviceIdStore.set(undefined);
+                            requestedMicrophoneDeviceIdStore.set(undefined);
+                        } else if (constraints.video !== false /* || constraints.audio !== false*/) {
                             console.info(
                                 "Error. Unable to get microphone and/or camera access. Trying audio only.",
                                 constraints,
