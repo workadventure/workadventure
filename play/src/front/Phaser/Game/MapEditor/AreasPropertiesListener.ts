@@ -141,7 +141,7 @@ export class AreasPropertiesListener {
 
     private handlePlayAudioPropertyOnEnter(property: PlayAudioPropertyData): void {
         // playAudioLoop is supposedly deprecated. Should we ignore it?
-        audioManagerFileStore.playAudio(property.audioLink, this.scene.getMapDirUrl(), property.volume);
+        audioManagerFileStore.playAudio(property.audioLink, this.scene.getMapUrl(), property.volume);
         audioManagerVisibilityStore.set(true);
     }
 
