@@ -72,6 +72,7 @@ module.exports = {
         "import/default": "off",
         "import/no-named-as-default": "off",
         "import/no-named-as-default-member": "off",
+        "svelte/no-ignored-unsubscribe": "error",
     },
     "settings": {
         /*"svelte3/typescript": () => require('typescript'),

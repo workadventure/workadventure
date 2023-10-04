@@ -65,6 +65,8 @@ export const emoteDataStore = createEmoteDataStore();
 export const emoteDataStoreLoading = writable<boolean>(false);
 
 //subscribe to update localstorage favorite emoji
+// This is a singleton, so we don't need to unsubscribe.
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
 emoteDataStore.subscribe((map: Map<number, Emoji>) => {
     localUserStore.setEmojiFavorite(map);
 });

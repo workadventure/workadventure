@@ -285,7 +285,7 @@ export const iframeListener = new IframeListener();
 
 /* @deprecated with new service chat messagerie */
 //publish new message when user send message in chat timeline
-//eslint-disable-next-line rxjs/no-ignored-subscription
+//eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
 newChatMessageSubject.subscribe((message) => {
     window.parent.postMessage(
         {
@@ -296,7 +296,7 @@ newChatMessageSubject.subscribe((message) => {
     );
 });
 
-//eslint-disable-next-line rxjs/no-ignored-subscription
+//eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
 newChatMessageWritingStatusSubject.subscribe((status) => {
     window.parent.postMessage(
         {

@@ -1,17 +1,21 @@
-import { derived, writable } from "svelte/store";
+import { derived, Unsubscriber, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 
 function createCoWebsiteStore() {
     const { subscribe, set, update } = writable(Array<CoWebsite>());
 
     set(Array<CoWebsite>());
+    const unsubscribers = new Map<string, Unsubscriber>();
 
     return {
         subscribe,
         add: (coWebsite: CoWebsite, position?: number) => {
-            coWebsite.getStateSubscriber().subscribe(() => {
-                update((currentArray) => currentArray);
-            });
+            unsubscribers.set(
+                coWebsite.getId(),
+                coWebsite.getStateSubscriber().subscribe(() => {
+                    update((currentArray) => currentArray);
+                })
+            );
 
             if (position || position === 0) {
                 update((currentArray) => {
@@ -29,11 +33,15 @@ function createCoWebsiteStore() {
             update((currentArray) => [...currentArray, coWebsite]);
         },
         remove: (coWebsite: CoWebsite) => {
+            unsubscribers.get(coWebsite.getId())?.();
+            unsubscribers.delete(coWebsite.getId());
             update((currentArray) => [
                 ...currentArray.filter((currentCoWebsite) => currentCoWebsite.getId() !== coWebsite.getId()),
             ]);
         },
         empty: () => {
+            unsubscribers.forEach((unsubscriber) => unsubscriber());
+            unsubscribers.clear();
             set(Array<CoWebsite>());
         },
     };

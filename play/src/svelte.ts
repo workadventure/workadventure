@@ -177,7 +177,7 @@ window.addEventListener("resize", function () {
 });
 
 // coWebsiteManager.onResize is a singleton. No need to unsubscribe.
-//eslint-disable-next-line rxjs/no-ignored-subscription
+//eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
 coWebsiteManager.onResize.subscribe(() => {
     waScaleManager.applyNewSize();
     waScaleManager.refreshFocusOnTarget();

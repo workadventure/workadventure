@@ -12,7 +12,7 @@ export abstract class AbstractWorkadventureStateCommands {
         //super();
 
         // Not unsubscribing is ok, this is two singletons never destroyed.
-        //eslint-disable-next-line rxjs/no-ignored-subscription
+        //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
         this.setVariableResolvers.subscribe((event) => {
             // const oldValue = this.variables.get(event.key);
             // If we are setting the same value, no need to do anything.

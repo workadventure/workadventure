@@ -296,7 +296,7 @@ class ConnectionManager {
             });
 
             // The roomJoinedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
-            //eslint-disable-next-line rxjs/no-ignored-subscription
+            //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
             connection.connectionErrorStream.subscribe((event: CloseEvent) => {
                 console.info(
                     "An error occurred while connecting to socket server. Retrying => Event: ",
@@ -335,7 +335,7 @@ class ConnectionManager {
             });
 
             // The roomJoinedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
-            //eslint-disable-next-line rxjs/no-ignored-subscription
+            //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
             connection.roomJoinedMessageStream.subscribe((connect: OnConnectInterface) => {
                 resolve(connect);
             });

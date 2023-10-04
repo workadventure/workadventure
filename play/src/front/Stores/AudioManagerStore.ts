@@ -105,6 +105,8 @@ export const audioManagerVolumeStore = createAudioManagerVolumeStore();
 
 export const audioManagerFileStore = createAudioManagerFileStore();
 
+// Not unsubscribing is ok, this is a singleton.
+//eslint-disable-next-line svelte/no-ignored-unsubscribe
 peerStore.subscribe((peers) => {
     audioManagerVolumeStore.setTalking(peers.size > 0);
 });

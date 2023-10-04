@@ -1,6 +1,6 @@
 import { EntityData, EntityDataProperties, EntityPrefabRef, WAMEntityData } from "@workadventure/map-editor";
 import { Observable, Subject } from "rxjs";
-import { get } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 import { z } from "zod";
 import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
 import {
@@ -57,6 +57,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
     private activatableEntities: Entity[];
 
     private properties: Map<string, string | boolean | number>;
+    private actionsMenuStoreUnsubscriber: Unsubscriber;
 
     /**
      * Firing on map change, containing newest collision grid array
@@ -75,7 +76,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         this.properties = new Map<string, string | boolean | number>();
 
         // clear properties immediately on every ActionsMenu change
-        actionsMenuStore.subscribe((data) => {
+        this.actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((data) => {
             this.clearProperties();
             this.gameMapFrontWrapper.handleEntityActionTrigger();
         });
@@ -409,5 +410,9 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     public clearProperties(): void {
         this.properties.clear();
+    }
+
+    public close() {
+        this.actionsMenuStoreUnsubscriber();
     }
 }

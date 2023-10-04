@@ -64,6 +64,7 @@ module.exports = {
 
         "svelte/require-each-key": "error",
         "svelte/valid-compile": [ "error", { 'ignoreWarnings': true } ],
+        "svelte/no-ignored-unsubscribe": "error",
     },
     "settings": {
         "typescript": true,
