@@ -9,6 +9,7 @@
     "adm-zip": "^0.5.10",
     "axios": "^1.3.2",
     "dockerode": "^3.3.4",
+    "dotenv-cli": "^6.0.0",
     "eslint": "^8.26.0",
     "eslint-import-resolver-typescript": "^3.5.3",
     "eslint-plugin-import": "^2.27.5",
@@ -19,13 +20,13 @@
   "scripts": {
     "lint": "eslint tests/ . --ext .ts",
     "fix": "eslint --fix tests/ . --ext .ts",
-    "test": "NODE_OPTIONS=--env-file=../.env -- playwright test",
-    "test-headed": "NODE_OPTIONS=--env-file=../.env -- playwright test --headed",
-    "test-headed-chrome": "NODE_OPTIONS=--env-file=../.env -- playwright test --headed --project=chromium",
-    "test-headed-firefox": "NODE_OPTIONS=--env-file=../.env -- playwright test --headed --project=firefox",
-    "test-headed-webkit": "NODE_OPTIONS=--env-file=../.env -- playwright test --headed --project=webkit",
+    "test": "dotenv -e ../.env -- playwright test",
+    "test-headed": "dotenv -e ../.env -- playwright test --headed",
+    "test-headed-chrome": "dotenv -e ../.env -- playwright test --headed --project=chromium",
+    "test-headed-firefox": "dotenv -e ../.env -- playwright test --headed --project=firefox",
+    "test-headed-webkit": "dotenv -e ../.env -- playwright test --headed --project=webkit",
     "test-prod-like": "OVERRIDE_DOCKER_COMPOSE=docker-compose.e2e.yml npm run test -- ",
-    "test-single-domain-install": "NODE_TLS_REJECT_UNAUTHORIZED=0 ROOM_API_HOSTNAME=https://play.workadventure.localhost ROOM_API_PORT=50051 MAP_STORAGE_PROTOCOL=https MAP_STORAGE_ENDPOINT=play.workadventure.localhost/map-storage/ NODE_OPTIONS=--env-file=../contrib/docker/.env -- playwright test --project=chromium --grep-invert \"@docker|@oidc|@selfsigned\"",
+    "test-single-domain-install": "NODE_TLS_REJECT_UNAUTHORIZED=0 ROOM_API_HOSTNAME=https://play.workadventure.localhost ROOM_API_PORT=50051 MAP_STORAGE_PROTOCOL=https MAP_STORAGE_ENDPOINT=play.workadventure.localhost/map-storage/ dotenv -e ../contrib/docker/.env -- playwright test --project=chromium --grep-invert \"@docker|@oidc|@selfsigned\"",
     "precommit": "lint-staged"
   },
   "lint-staged": {

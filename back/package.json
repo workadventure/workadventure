@@ -64,7 +64,7 @@
     "source-map-support": "^0.5.21",
     "tsx": "^3.12.10",
     "uuidv4": "^6.0.7",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.10.0",
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.32.0",
     "zod": "^3.19.1"
   },
   "devDependencies": {

@@ -133,7 +133,7 @@
     "easystarjs": "^0.4.4",
     "fast-deep-equal": "^3.1.3",
     "google-protobuf": "^3.21.0",
-    "hyper-express": "^6.4.11",
+    "hyper-express": "^6.8.6",
     "jsonwebtoken": "^9.0.0",
     "lib-jitsi-meet": "github:jitsi/lib-jitsi-meet#jitsi-meet_8924",
     "live-directory": "moufmouf/live-directory#hot_reload_param",
