@@ -31,8 +31,10 @@
     }
 </script>
 
-<section class="text-center">
-    <h2 class="text-white text-2xl">{$LL.woka.selectWoka.title()}</h2>
+<section class="text-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[calc(50%+20vh)] h-16">
+    <span class="text-white text-lg bold">
+        {$LL.woka.selectWoka.title()}
+    </span>
 </section>
 <section class="category flex flex-row justify-center">
     {#if $collectionsSizeStore > 1 && $selectedCollection}
@@ -41,67 +43,25 @@
         <button class="outline ml-2 selectCharacterButton" on:click|preventDefault={selectRight}> &gt; </button>
     {/if}
 </section>
-<section class="action flex flex-row justify-center">
+<section class="action flex flex-row justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[calc(50%-35vh)] h-20">
+    {#if $customizeAvailableStore}
+        <button
+                type="submit"
+                class="btn btn-lg btn-light btn-border mr-4 selectCharacterSceneFormCustomYourOwnSubmit"
+                on:click={() => analyticsClient.selectCustomWoka()}
+                on:click={customizeScene}>{$LL.woka.selectWoka.customize()}</button
+        >
+    {/if}
     <button
         type="submit"
-        class="light mr-2 selectCharacterSceneFormSubmit"
+        class="btn btn-lg btn-secondary selectCharacterSceneFormSubmit"
         on:click={() => analyticsClient.selectWoka()}
         on:click={cameraScene}>{$LL.woka.selectWoka.continue()}</button
     >
-    {#if $customizeAvailableStore}
-        <button
-            type="submit"
-            class="outline ml-2 selectCharacterSceneFormCustomYourOwnSubmit"
-            on:click={() => analyticsClient.selectCustomWoka()}
-            on:click={customizeScene}>{$LL.woka.selectWoka.customize()}</button
-        >
-    {/if}
 </section>
 
 <style lang="scss">
     @import "../../style/breakpoints.scss";
-
-    section {
-        color: #ebeeee;
-        height: auto;
-        margin: 5px;
-
-        &.category {
-            text-align: center;
-            margin-top: 8vh;
-            .category-text {
-                display: inline-block;
-                width: 65%;
-            }
-        }
-
-        &.action {
-            position: absolute;
-            margin-top: 80vh;
-            top: 0;
-            width: 100%;
-            text-align: center;
-        }
-        h2 {
-            margin: 1px;
-        }
-
-        &.text-center {
-            text-align: center;
-        }
-
-        button.selectCharacterButton {
-            margin: 0;
-        }
-    }
-
-    @media all and (max-device-width: 480px) {
-        section {
-            &.action {
-                margin-top: 75vh;
-            }
-        }
-    }
 
     button {
         pointer-events: auto;

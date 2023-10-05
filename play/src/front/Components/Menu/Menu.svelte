@@ -124,8 +124,8 @@
 
 <svelte:window on:keydown={onKeyDown} />
 
-<div class="menu-container">
-    <div class="menu-nav-sidebar min-w-[160px]" transition:fly={{ x: -1000, duration: 500 }}>
+<div class="menu-container" transition:fly={{ y: 1000, duration: 500 }}>
+    <div class="menu-nav-sidebar min-w-[160px]">
         <h2 class="p-5 blue-title">{$LL.menu.title()}</h2>
         <nav>
             {#each $subMenusStore as submenu, i}
@@ -141,7 +141,7 @@
             {/each}
         </nav>
     </div>
-    <div class="menu-submenu-container bg-dark-purple/95 rounded" transition:fly={{ y: -1000, duration: 500 }}>
+    <div class="menu-submenu-container bg-dark-purple/95 rounded">
         <button type="button" class="close-window" on:click={closeMenu}>&times;</button>
         <h2>{activeSubMenuTranslation}</h2>
         <svelte:component this={activeComponent} {...props} />
