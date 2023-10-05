@@ -185,6 +185,7 @@
             return;
         }
 
+        analyticsClient.startMegaphone();
         streamingMegaphoneStore.set(true);
     }
 
