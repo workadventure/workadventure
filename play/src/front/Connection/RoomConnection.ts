@@ -48,6 +48,7 @@ import {
     EmbeddableWebsiteAnswer,
     CompanionTextureMessage,
     RoomShortDescription,
+    ReceivedEventMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
@@ -201,6 +202,9 @@ export class RoomConnection implements RoomConnection {
     public readonly removeSpaceUserMessageStream = this._removeSpaceUserMessageStream.asObservable();
     private readonly _megaphoneSettingsMessageStream = new BehaviorSubject<MegaphoneSettings | undefined>(undefined);
     public readonly megaphoneSettingsMessageStream = this._megaphoneSettingsMessageStream.asObservable();
+
+    private readonly _receivedEventMessageStream = new Subject<ReceivedEventMessage>();
+    public readonly receivedEventMessageStream = this._receivedEventMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -388,6 +392,10 @@ export class RoomConnection implements RoomConnection {
                             }
                             case "megaphoneSettingsMessage": {
                                 this._megaphoneSettingsMessageStream.next(subMessage.megaphoneSettingsMessage);
+                                break;
+                            }
+                            case "receivedEventMessage": {
+                                this._receivedEventMessageStream.next(subMessage.receivedEventMessage);
                                 break;
                             }
                             default: {
@@ -914,14 +922,18 @@ export class RoomConnection implements RoomConnection {
         this._itemEventMessageStream.complete();
         this._emoteEventMessageStream.complete();
         this._variableMessageStream.complete();
+        this._editMapCommandMessageStream.complete();
         this._playerDetailsUpdatedMessageStream.complete();
         this._connectionErrorStream.complete();
+        this._xmppSettingsMessageStream.complete();
         this._moveToPositionMessageStream.complete();
         this._joinMucRoomMessageStream.complete();
         this._leaveMucRoomMessageStream.complete();
-        this._xmppSettingsMessageStream.complete();
+        this._addSpaceUserMessageStream.complete();
+        this._updateSpaceUserMessageStream.complete();
+        this._removeSpaceUserMessageStream.complete();
         this._megaphoneSettingsMessageStream.complete();
-        this._editMapCommandMessageStream.complete();
+        this._receivedEventMessageStream.complete();
     }
 
     public getUserId(): number {
@@ -953,6 +965,21 @@ export class RoomConnection implements RoomConnection {
                 },
             },
         });
+    }
+
+    public async emitScriptableEvent(name: string, value: unknown, targetUserIds: number[] | undefined): Promise<void> {
+        const answer = await this.query({
+            $case: "sendEventQuery",
+            sendEventQuery: {
+                name,
+                value: JSON.stringify(value),
+                targetUserIds: targetUserIds ?? [],
+            },
+        });
+        if (answer.$case !== "sendEventAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return;
     }
 
     public uploadAudio(file: FormData) {

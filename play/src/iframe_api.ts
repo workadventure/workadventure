@@ -12,6 +12,7 @@ import nav from "./front/Api/Iframe/nav";
 import controls from "./front/Api/Iframe/controls";
 import ui from "./front/Api/Iframe/ui";
 import sound from "./front/Api/Iframe/sound";
+import event from "./front/Api/Iframe/event";
 import room, { setMapURL, setRoomId } from "./front/Api/Iframe/room";
 import { createState } from "./front/Api/Iframe/state";
 import player, {
@@ -95,6 +96,7 @@ const wa = {
     players,
     camera,
     state: globalState,
+    event,
 
     /**
      * When your script / iFrame loads WorkAdventure, it takes a few milliseconds for your

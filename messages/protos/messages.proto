@@ -249,6 +249,11 @@ message ClientToServerMessage {
   }
 }
 
+message ReceivedEventMessage {
+  string name = 1;
+  string value = 2;
+  optional int32 senderId = 3;
+}
 
 /************ BI-DIRECTIONAL MESSAGES **************/
 
@@ -310,6 +315,7 @@ message QueryMessage {
     RoomTagsQuery roomTagsQuery = 3;
     EmbeddableWebsiteQuery embeddableWebsiteQuery = 4;
     RoomsFromSameWorldQuery roomsFromSameWorldQuery = 5;
+    SendEventQuery sendEventQuery = 6;
   }
 }
 
@@ -335,6 +341,12 @@ message EmbeddableWebsiteQuery {
 message RoomsFromSameWorldQuery {
 }
 
+message SendEventQuery {
+  string name = 1;
+  string value = 2;
+  repeated int32 targetUserIds = 3;
+}
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
@@ -344,6 +356,7 @@ message AnswerMessage {
     RoomTagsAnswer roomTagsAnswer = 5;
     EmbeddableWebsiteAnswer embeddableWebsiteAnswer = 6;
     RoomsFromSameWorldAnswer roomsFromSameWorldAnswer = 7;
+    SendEventAnswer sendEventAnswer = 8;
   }
 }
 
@@ -378,6 +391,9 @@ message RoomsFromSameWorldAnswer {
   repeated RoomShortDescription roomDescriptions = 1;
 }
 
+message SendEventAnswer {
+}
+
 /*********** SERVER TO CLIENT MESSAGES *************/
 
 message UserMovedMessage {
@@ -409,6 +425,7 @@ message SubMessage {
     UpdateSpaceUserMessage updateSpaceUserMessage = 17;
     RemoveSpaceUserMessage removeSpaceUserMessage = 18;
     MegaphoneSettings megaphoneSettingsMessage = 19;
+    ReceivedEventMessage receivedEventMessage = 20;
   }
 }
 
@@ -770,6 +787,7 @@ message SubToPusherRoomMessage {
     EditMapCommandMessage editMapCommandMessage = 3;
     JoinMucRoomMessage joinMucRoomMessage = 4;
     LeaveMucRoomMessage leaveMucRoomMessage = 5;
+    ReceivedEventMessage receivedEventMessage = 6;
   }
 }
 

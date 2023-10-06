@@ -43,6 +43,8 @@ import {
     UpdateSpaceUserMessage,
     AddSpaceUserMessage,
     RemoveSpaceUserMessage,
+    SendEventQuery,
+    ReceivedEventMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -769,6 +771,15 @@ export class SocketManager {
                     };
                     break;
                 }
+                case "sendEventQuery": {
+                    // TODO: in the future, if the event system is abused, we can throttle message by user id, here.
+                    this.handleSendEventQuery(gameRoom, user, queryMessage.query.sendEventQuery);
+                    answerMessage.answer = {
+                        $case: "sendEventAnswer",
+                        sendEventAnswer: {},
+                    };
+                    break;
+                }
                 case "embeddableWebsiteQuery":
                 case "roomTagsQuery":
                 case "roomsFromSameWorldQuery": {
@@ -1432,6 +1443,38 @@ export class SocketManager {
         const space = this.spaces.get(removeSpaceUserMessage.spaceName);
         if (space) {
             space.removeUser(pusher, removeSpaceUserMessage.userId);
+        }
+    }
+
+    private handleSendEventQuery(gameRoom: GameRoom, user: User, sendEventQuery: SendEventQuery) {
+        const targetUserIds = sendEventQuery.targetUserIds;
+
+        const receivedEventMessage: ReceivedEventMessage = {
+            name: sendEventQuery.name,
+            value: sendEventQuery.value,
+            senderId: user.id,
+        };
+
+        if (targetUserIds.length === 0) {
+            gameRoom.sendSubMessageToRoom({
+                message: {
+                    $case: "receivedEventMessage",
+                    receivedEventMessage: receivedEventMessage,
+                },
+            });
+        } else {
+            for (const targetUserId of targetUserIds) {
+                const targetUser = gameRoom.getUserById(targetUserId);
+                if (targetUser) {
+                    targetUser.emitInBatch({
+                        message: {
+                            $case: "receivedEventMessage",
+                            receivedEventMessage: receivedEventMessage,
+                        },
+                    });
+                }
+            }
+            throw new Error("Sending events to specific users is not yet implemented");
         }
     }
 }
