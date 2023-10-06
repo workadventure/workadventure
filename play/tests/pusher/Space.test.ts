@@ -8,7 +8,8 @@ import {
     SubMessage,
 } from "@workadventure/messages";
 import { Space } from "../../src/pusher/models/Space";
-import { BackSpaceConnection, ExSocketInterface } from "../../src/pusher/models/Websocket/ExSocketInterface";
+import { BackSpaceConnection, UserSocketData } from "../../src/pusher/models/websocket/SocketData";
+import { Socket } from "../../src/pusher/services/SocketManager";
 describe("Space", () => {
     let eventsWatcher: PusherToBackSpaceMessage[] = [];
     const backSpaceConnection = mock<BackSpaceConnection>({
@@ -18,26 +19,30 @@ describe("Space", () => {
         },
     });
     let eventsClient: SubMessage[] = [];
-    const client = mock<ExSocketInterface>({
-        emitInBatch: (payload: SubMessage) => {
-            eventsClient.push(payload);
+    const client = mock<Socket>({
+        getUserData() {
+            return {
+                emitInBatch: (payload: SubMessage) => {
+                    eventsClient.push(payload);
+                },
+                spacesFilters: new Map<string, SpaceFilterMessage[]>([
+                    [
+                        "test",
+                        [
+                            {
+                                filterName: "default",
+                                spaceName: "test",
+                                filter: {
+                                    $case: "spaceFilterEverybody",
+                                    spaceFilterEverybody: {},
+                                },
+                            },
+                        ],
+                    ],
+                ]),
+            } as UserSocketData;
         },
     });
-    client.spacesFilters = new Map<string, SpaceFilterMessage[]>([
-        [
-            "test",
-            [
-                {
-                    filterName: "default",
-                    spaceName: "test",
-                    filter: {
-                        $case: "spaceFilterEverybody",
-                        spaceFilterEverybody: {},
-                    },
-                },
-            ],
-        ],
-    ]);
     const space = new Space("test", backSpaceConnection, 1, client);
     it("should return true because Space is empty", () => {
         expect(space.isEmpty()).toBe(true);
@@ -124,7 +129,7 @@ describe("Space", () => {
                 },
             },
         };
-        client.spacesFilters.set("test", [filter]);
+        client.getUserData().spacesFilters.set("test", [filter]);
         space.handleAddFilter(client, { spaceFilterMessage: filter });
         expect(eventsClient.length).toBe(0);
     });
@@ -140,7 +145,7 @@ describe("Space", () => {
             },
         };
         space.handleUpdateFilter(client, { spaceFilterMessage });
-        client.spacesFilters.set("test", [spaceFilterMessage]);
+        client.getUserData().spacesFilters.set("test", [spaceFilterMessage]);
         expect(eventsClient.some((message) => message.message?.$case === "removeSpaceUserMessage")).toBe(true);
         const message = eventsClient.find((message) => message.message?.$case === "removeSpaceUserMessage");
         expect(message).toBeDefined();
@@ -185,7 +190,7 @@ describe("Space", () => {
         expect(user?.name).toBe("johnny");
     });
     it("should remove the name filter and send me the delta (add userMessage)", () => {
-        client.spacesFilters = new Map<string, SpaceFilterMessage[]>([
+        client.getUserData().spacesFilters = new Map<string, SpaceFilterMessage[]>([
             [
                 "test",
                 [

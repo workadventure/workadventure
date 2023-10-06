@@ -36,11 +36,9 @@ import {
 import * as Sentry from "@sentry/node";
 import axios, { isAxiosError } from "axios";
 import { PusherRoom } from "../models/PusherRoom";
-import type { ExSocketInterface, BackSpaceConnection } from "../models/Websocket/ExSocketInterface";
-
-import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
+import { ProtobufUtils } from "../models/websocket/ProtobufUtils";
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
-import type { AdminConnection, ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
+import type { AdminConnection, AdminSocketData } from "../models/websocket/AdminSocketData";
 import { EJABBERD_DOMAIN, EMBEDDED_DOMAINS_WHITELIST } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -49,23 +47,19 @@ import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
 import { adminService } from "./AdminService";
 import { ShortMapDescription } from "./ShortMapDescription";
+import { BackSpaceConnection, SocketData } from "../models/websocket/SocketData";
+import { Socket } from "socket.io";
+import { AdminRoomClientToServerEvents, AdminRoomServerToClientEvents } from "../models/websocket/namespaces/admin-room/AdminRoomNamespace";
 
 const debug = Debug("socket");
 
-interface AdminSocketRoomsList {
-    [index: string]: number;
-}
-
-interface AdminSocketUsersList {
-    [index: string]: boolean;
-}
-
-export interface AdminSocketData {
-    rooms: AdminSocketRoomsList;
-    users: AdminSocketUsersList;
-}
+// export type AdminSocket = compressors.WebSocket<AdminSocketData>;
+// export type Socket = compressors.WebSocket<SocketData>;
+// export type WASocket = Socket | AdminSocket;
 
 export class SocketManager implements ZoneEventListener {
+    private adminConnections: Map<string, Map<string, AdminConnection>> = new Map<string, Map<string, AdminConnection>>();
+    private users: Map<string, UserData> = new Map<string, UserData>();
     private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();
     private spaces: Map<string, Space> = new Map<string, Space>();
     private spaceStreamsToPusher: Map<number, BackSpaceConnection> = new Map<number, BackSpaceConnection>();
@@ -79,16 +73,18 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    async handleAdminRoom(client: ExAdminSocketInterface, roomId: string): Promise<void> {
+    async handleAdminRoom(client: Socket<AdminRoomClientToServerEvents, AdminRoomServerToClientEvents>, roomId: string): Promise<void> {
         const apiClient = await apiClientRepository.getClient(roomId);
+        let adminConnections = this.adminConnections.get(client.id);
         const adminRoomStream = apiClient.adminRoom();
-        if (!client.adminConnections) {
-            client.adminConnections = new Map<string, AdminConnection>();
+        if (!adminConnections) {
+            adminConnections = new Map<string, AdminConnection>();
         }
-        if (client.adminConnections.has(roomId)) {
-            client.adminConnections.get(roomId)?.end();
+        if (adminConnections.has(roomId)) {
+            adminConnections.get(roomId)?.end();
         }
-        client.adminConnections.set(roomId, adminRoomStream);
+        adminConnections.set(roomId, adminRoomStream);
+        this.adminConnections.set(client.id, adminConnections);
 
         adminRoomStream
             .on("data", (message: ServerToAdminClientMessage) => {
@@ -99,49 +95,28 @@ export class SocketManager implements ZoneEventListener {
                 switch (message.message.$case) {
                     case "userJoinedRoom": {
                         const userJoinedRoomMessage = message.message.userJoinedRoom;
-                        if (!client.disconnecting) {
-                            client.send(
-                                JSON.stringify({
-                                    type: "MemberJoin",
-                                    data: {
-                                        uuid: userJoinedRoomMessage.uuid,
-                                        name: userJoinedRoomMessage.name,
-                                        ipAddress: userJoinedRoomMessage.ipAddress,
-                                        roomId: roomId,
-                                    },
-                                })
-                            );
-                        }
+                        client.emit("member-joined", {
+                            uuid: userJoinedRoomMessage.uuid,
+                            name: userJoinedRoomMessage.name,
+                            ipAddress: userJoinedRoomMessage.ipAddress,
+                            roomId: roomId,
+                        });
                         break;
                     }
                     case "userLeftRoom": {
                         const userLeftRoomMessage = message.message.userLeftRoom;
-                        if (!client.disconnecting) {
-                            client.send(
-                                JSON.stringify({
-                                    type: "MemberLeave",
-                                    data: {
-                                        uuid: userLeftRoomMessage.uuid,
-                                    },
-                                })
-                            );
-                        }
+                        client.emit("member-left", {
+                            uuid: userLeftRoomMessage.uuid,
+                        });
                         break;
                     }
                     case "errorMessage": {
                         const errorMessage = message.message.errorMessage;
                         console.error("Error message received from adminRoomStream: " + errorMessage.message);
                         Sentry.captureException("Error message received from adminRoomStream: " + errorMessage.message);
-                        if (!client.disconnecting) {
-                            client.send(
-                                JSON.stringify({
-                                    type: "Error",
-                                    data: {
-                                        message: errorMessage.message,
-                                    },
-                                })
-                            );
-                        }
+                        client.emit("error", {
+                            message: errorMessage.message,
+                        });
                         break;
                     }
                     default: {
@@ -151,16 +126,14 @@ export class SocketManager implements ZoneEventListener {
             })
             .on("end", () => {
                 // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
-                if (!client.disconnecting) {
-                    console.warn(
-                        "Admin connection lost to back server '" +
-                            apiClient.getChannel().getTarget() +
-                            "' for room '" +
-                            roomId +
-                            "'"
-                    );
-                    this.closeWebsocketConnection(client, 1011, "Admin Connection lost to back server");
-                }
+                console.warn(
+                    "Admin connection lost to back server '" +
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        roomId +
+                        "'"
+                );
+                this.closeWebsocketConnection(client, 1011, "Admin Connection lost to back server");
             })
             .on("error", (err: Error) => {
                 console.error(
@@ -180,9 +153,7 @@ export class SocketManager implements ZoneEventListener {
                         err,
                     "debug"
                 );
-                if (!client.disconnecting) {
-                    this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
-                }
+                this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
             });
 
         const message: AdminPusherToBackMessage = {
@@ -193,49 +164,48 @@ export class SocketManager implements ZoneEventListener {
         };
 
         console.info(
-            `Admin socket handle room ${roomId} connections for a client on ${Buffer.from(
-                client.getRemoteAddressAsText()
-            ).toString()}`
+            `Admin socket handle room ${roomId} connections for a client on ${client.handshake.address}`
         );
 
         adminRoomStream.write(message);
     }
 
-    leaveAdminRoom(socket: ExAdminSocketInterface): void {
-        for (const adminConnection of socket.adminConnections?.values() ?? []) {
+    leaveAdminRoom(socket: Socket<AdminRoomClientToServerEvents, AdminRoomServerToClientEvents>): void {
+        for (const adminConnection of this.adminConnections.get(socket.id)?.values() ?? []) {
             adminConnection.end();
         }
     }
 
-    async handleJoinRoom(client: ExSocketInterface): Promise<void> {
-        const viewport = client.viewport;
+    async handleJoinRoom(client: Socket): Promise<void> {
+        const clientData = client.getUserData();
+        const viewport = clientData.viewport;
         try {
             const joinRoomMessage: JoinRoomMessage = {
-                userUuid: client.userUuid,
-                userJid: client.userJid,
-                IPAddress: client.IPAddress,
-                roomId: client.roomId,
-                name: client.name,
-                availabilityStatus: client.availabilityStatus,
-                positionMessage: ProtobufUtils.toPositionMessage(client.position),
-                tag: client.tags,
-                isLogged: client.isLogged,
-                companionTexture: client.companionTexture,
-                activatedInviteUser: client.activatedInviteUser != undefined ? client.activatedInviteUser : true,
-                canEdit: client.canEdit,
-                characterTextures: client.characterTextures,
-                applications: client.applications ? client.applications : [],
-                visitCardUrl: client.visitCardUrl ?? "", // TODO: turn this into an optional field
-                userRoomToken: client.userRoomToken ?? "", // TODO: turn this into an optional field
-                lastCommandId: client.lastCommandId ?? "", // TODO: turn this into an optional field
+                userUuid: clientData.userUuid,
+                userJid: clientData.userJid,
+                IPAddress: clientData.IPAddress,
+                roomId: clientData.roomId,
+                name: clientData.name,
+                availabilityStatus: clientData.availabilityStatus,
+                positionMessage: ProtobufUtils.toPositionMessage(clientData.position),
+                tag: clientData.tags,
+                isLogged: clientData.isLogged,
+                companionTexture: clientData.companionTexture,
+                activatedInviteUser: clientData.activatedInviteUser != undefined ? clientData.activatedInviteUser : true,
+                canEdit: clientData.canEdit,
+                characterTextures: clientData.characterTextures,
+                applications: clientData.applications ? clientData.applications : [],
+                visitCardUrl: clientData.visitCardUrl ?? "", // TODO: turn this into an optional field
+                userRoomToken: clientData.userRoomToken ?? "", // TODO: turn this into an optional field
+                lastCommandId: clientData.lastCommandId ?? "", // TODO: turn this into an optional field
             };
 
-            debug("Calling joinRoom '" + client.roomId + "'");
-            const apiClient = await apiClientRepository.getClient(client.roomId);
+            debug("Calling joinRoom '" + clientData.roomId + "'");
+            const apiClient = await apiClientRepository.getClient(clientData.roomId);
             const streamToPusher = apiClient.joinRoom();
-            clientEventsEmitter.emitClientJoin(client.userUuid, client.roomId);
+            clientEventsEmitter.emitClientJoin(clientData.userUuid, clientData.roomId);
 
-            client.backConnection = streamToPusher;
+            clientData.backConnection = streamToPusher;
 
             streamToPusher
                 .on("data", (message: ServerToClientMessage) => {
@@ -245,8 +215,8 @@ export class SocketManager implements ZoneEventListener {
                     }
                     switch (message.message.$case) {
                         case "roomJoinedMessage": {
-                            client.userId = message.message.roomJoinedMessage.currentUserId;
-                            client.spaceUser.id = message.message.roomJoinedMessage.currentUserId;
+                            clientData.userId = message.message.roomJoinedMessage.currentUserId;
+                            clientData.spaceUser.id = message.message.roomJoinedMessage.currentUserId;
 
                             // If this is the first message sent, send back the viewport.
                             this.handleViewport(client, viewport);
@@ -260,18 +230,18 @@ export class SocketManager implements ZoneEventListener {
                     }
 
                     // Let's pass data over from the back to the client.
-                    if (!client.disconnecting) {
+                    if (!clientData.disconnecting) {
                         client.send(ServerToClientMessage.encode(message).finish(), true);
                     }
                 })
                 .on("end", () => {
                     // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
-                    if (!client.disconnecting) {
+                    if (!clientData.disconnecting) {
                         console.warn(
                             "Connection lost to back server '" +
                                 apiClient.getChannel().getTarget() +
                                 "' for room '" +
-                                client.roomId +
+                                clientData.roomId +
                                 "'"
                         );
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
@@ -283,7 +253,7 @@ export class SocketManager implements ZoneEventListener {
                         "Error in connection to back server '" +
                             apiClient.getChannel().getTarget() +
                             "' for room '" +
-                            client.roomId +
+                            clientData.roomId +
                             "'at :" +
                             date.toLocaleString("en-GB"),
                         err
@@ -292,13 +262,13 @@ export class SocketManager implements ZoneEventListener {
                         "Error in connection to back server '" +
                             apiClient.getChannel().getTarget() +
                             "' for room '" +
-                            client.roomId +
+                            clientData.roomId +
                             "': " +
-                            client.userUuid +
+                            clientData.userUuid +
                             err,
                         "debug"
                     );
-                    if (!client.disconnecting) {
+                    if (!clientData.disconnecting) {
                         this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
                     }
                 });
@@ -311,8 +281,8 @@ export class SocketManager implements ZoneEventListener {
             };
             streamToPusher.write(pusherToBackMessage);
 
-            const pusherRoom = await this.getOrCreateRoom(client.roomId);
-            pusherRoom.mucRooms = client.mucRooms;
+            const pusherRoom = await this.getOrCreateRoom(clientData.roomId);
+            pusherRoom.mucRooms = clientData.mucRooms;
             pusherRoom.join(client);
         } catch (e) {
             Sentry.captureException(`An error occurred on "join_room" event ${e}`);
@@ -321,10 +291,11 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public async handleJoinSpace(
-        client: ExSocketInterface,
+        client: Socket,
         spaceName: string,
         filter: SpaceFilterMessage | undefined = undefined
     ): Promise<void> {
+        const clientData = client.getUserData();
         try {
             const backId = apiClientRepository.getIndex(spaceName);
             let spaceStreamToPusher = this.spaceStreamsToPusher.get(backId);
@@ -418,7 +389,7 @@ export class SocketManager implements ZoneEventListener {
             }
 
             if (filter) {
-                client.spacesFilters.set(spaceName, [filter]);
+                clientData.spacesFilters.set(spaceName, [filter]);
             }
 
             let space: Space | undefined = this.spaces.get(spaceName);
@@ -428,17 +399,10 @@ export class SocketManager implements ZoneEventListener {
             } else {
                 space.addClientWatcher(client);
             }
-            client.spaces.push(space);
-
-            // client.spacesFilters = [
-            //     new SpaceFilterMessage()
-            //         .setSpacename(spaceName)
-            //         .setFiltername(new StringValue().setValue(uuid()))
-            //         .setSpacefiltercontainname(new SpaceFilterContainName().setValue("test")),
-            // ];
+            clientData.spaces.push(space);
 
             if (this.spaceStreamsToPusher.has(backId)) {
-                space.addUser(client.spaceUser);
+                space.addUser(clientData.spaceUser);
             } else {
                 this.spaceStreamsToPusher.set(backId, spaceStreamToPusher);
                 spaceStreamToPusher.write({
@@ -446,11 +410,11 @@ export class SocketManager implements ZoneEventListener {
                         $case: "watchSpaceMessage",
                         watchSpaceMessage: WatchSpaceMessage.fromPartial({
                             spaceName,
-                            user: client.spaceUser,
+                            user: clientData.spaceUser,
                         }),
                     },
                 });
-                space.localAddUser(client.spaceUser);
+                space.localAddUser(clientData.spaceUser);
             }
         } catch (e) {
             Sentry.captureException(`An error occurred on "join_space" event ${e}`);
@@ -459,40 +423,40 @@ export class SocketManager implements ZoneEventListener {
     }
 
     private closeWebsocketConnection(
-        client: ExSocketInterface | ExAdminSocketInterface,
+        client: Socket | AdminSocket,
         code: number,
         reason: string
     ): void {
-        client.disconnecting = true;
-        //this.leaveRoom(client);
-        //client.close();
+        client.getUserData().disconnecting = true;
         client.end(code, reason);
     }
 
-    handleViewport(client: ExSocketInterface, viewport: ViewportMessage): void {
+    handleViewport(client: Socket, viewport: ViewportMessage): void {
         try {
-            client.viewport = viewport;
+            const clientData = client.getUserData();
+            clientData.viewport = viewport;
 
-            const room = this.rooms.get(client.roomId);
+            const room = this.rooms.get(clientData.roomId);
             if (!room) {
-                console.error("In SET_VIEWPORT, could not find world with id '", client.roomId, "'");
-                Sentry.captureException("In SET_VIEWPORT, could not find world with id ' " + client.roomId);
+                console.error("In SET_VIEWPORT, could not find world with id '", clientData.roomId, "'");
+                Sentry.captureException("In SET_VIEWPORT, could not find world with id ' " + clientData.roomId);
                 return;
             }
-            room.setViewport(client, client.viewport);
+            room.setViewport(client, clientData.viewport);
         } catch (e) {
             Sentry.captureException(`An error occurred on "SET_VIEWPORT" event ${e}`);
             console.error(`An error occurred on "SET_VIEWPORT" event ${e}`);
         }
     }
 
-    handleUserMovesMessage(client: ExSocketInterface, userMovesMessage: UserMovesMessage): void {
-        if (!client.backConnection) {
+    handleUserMovesMessage(client: Socket, userMovesMessage: UserMovesMessage): void {
+        const clientData = client.getUserData();
+        if (!clientData.backConnection) {
             Sentry.captureException("Client has no back connection");
             throw new Error("Client has no back connection");
         }
 
-        client.backConnection.write({
+        clientData.backConnection.write({
             message: {
                 $case: "userMovesMessage",
                 userMovesMessage,
@@ -508,7 +472,7 @@ export class SocketManager implements ZoneEventListener {
         this.handleViewport(client, viewport);
     }
 
-    onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void {
+    onEmote(emoteMessage: EmoteEventMessage, listener: Socket): void {
         emitInBatch(listener, {
             message: {
                 $case: "emoteEventMessage",
@@ -519,7 +483,7 @@ export class SocketManager implements ZoneEventListener {
 
     onPlayerDetailsUpdated(
         playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage,
-        listener: ExSocketInterface
+        listener: Socket
     ): void {
         emitInBatch(listener, {
             message: {
@@ -529,7 +493,7 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    onError(errorMessage: ErrorMessage, listener: ExSocketInterface): void {
+    onError(errorMessage: ErrorMessage, listener: Socket): void {
         emitInBatch(listener, {
             message: {
                 $case: "errorMessage",
@@ -539,32 +503,35 @@ export class SocketManager implements ZoneEventListener {
     }
 
     // Useless now, will be useful again if we allow editing details in game
-    handleSetPlayerDetails(client: ExSocketInterface, playerDetailsMessage: SetPlayerDetailsMessage): void {
+    handleSetPlayerDetails(client: Socket, playerDetailsMessage: SetPlayerDetailsMessage): void {
         const pusherToBackMessage: PusherToBackMessage["message"] = {
             $case: "setPlayerDetailsMessage",
             setPlayerDetailsMessage: playerDetailsMessage,
         };
         socketManager.forwardMessageToBack(client, pusherToBackMessage);
 
-        if (client.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus) {
-            client.spaceUser.availabilityStatus = playerDetailsMessage.availabilityStatus;
+        const clientData = client.getUserData();
+
+        if (clientData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus) {
+            clientData.spaceUser.availabilityStatus = playerDetailsMessage.availabilityStatus;
             const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
                 availabilityStatus: playerDetailsMessage.availabilityStatus,
-                id: client.userId,
+                id: clientData.userId,
             });
-            client.spaces.forEach((space) => {
+            clientData.spaces.forEach((space) => {
                 space.updateUser(partialSpaceUser);
             });
         }
     }
 
-    async handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage): Promise<void> {
+    async handleReportMessage(client: Socket, reportPlayerMessage: ReportPlayerMessage): Promise<void> {
+        const clientData = client.getUserData();
         try {
             await adminService.reportPlayer(
                 reportPlayerMessage.reportedUserUuid,
                 reportPlayerMessage.reportComment,
-                client.userUuid,
-                client.roomId,
+                clientData.userUuid,
+                clientData.roomId,
                 "en"
             );
         } catch (e) {
@@ -573,15 +540,16 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    leaveRoom(socket: ExSocketInterface): void {
+    leaveRoom(socket: Socket): void {
         // leave previous room and world
+        const clientData = socket.getUserData();
         try {
-            if (socket.roomId) {
+            if (clientData.roomId) {
                 try {
                     //user leaves room
-                    const room: PusherRoom | undefined = this.rooms.get(socket.roomId);
+                    const room: PusherRoom | undefined = this.rooms.get(clientData.roomId);
                     if (room) {
-                        debug("Leaving room %s.", socket.roomId);
+                        debug("Leaving room %s.", clientData.roomId);
 
                         room.leave(socket);
                         this.deleteRoomIfEmpty(room);
@@ -593,25 +561,26 @@ export class SocketManager implements ZoneEventListener {
                     //Client.leave(Client.roomId);
                 } finally {
                     //delete Client.roomId;
-                    clientEventsEmitter.emitClientLeave(socket.userUuid, socket.roomId);
-                    debug("User ", socket.name, " left: ", socket.userUuid);
+                    clientEventsEmitter.emitClientLeave(clientData.userUuid, clientData.roomId);
+                    debug("User ", clientData.name, " left: ", clientData.userUuid);
                 }
             }
         } finally {
-            if (socket.backConnection) {
-                socket.backConnection.end();
+            if (clientData.backConnection) {
+                clientData.backConnection.end();
             }
         }
     }
 
-    leaveSpaces(socket: ExSocketInterface) {
-        socket.spacesFilters = new Map<string, SpaceFilterMessage[]>();
-        (socket.spaces ?? []).forEach((space) => {
+    leaveSpaces(socket: Socket) {
+        const clientData = socket.getUserData();
+        clientData.spacesFilters = new Map<string, SpaceFilterMessage[]>();
+        (clientData.spaces ?? []).forEach((space) => {
             space.removeClientWatcher(socket);
-            space.removeUser(socket.spaceUser.id);
+            space.removeUser(clientData.spaceUser.id);
             this.deleteSpaceIfEmpty(space);
         });
-        socket.spaces = [];
+        clientData.spaces = [];
     }
 
     private deleteSpaceIfEmpty(space: Space) {
@@ -713,7 +682,7 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    public onUserEnters(user: UserDescriptor, listener: ExSocketInterface): void {
+    public onUserEnters(user: UserDescriptor, listener: Socket): void {
         emitInBatch(listener, {
             message: {
                 $case: "userJoinedMessage",
@@ -722,7 +691,7 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    public onUserMoves(user: UserDescriptor, listener: ExSocketInterface): void {
+    public onUserMoves(user: UserDescriptor, listener: Socket): void {
         emitInBatch(listener, {
             message: {
                 $case: "userMovedMessage",
@@ -731,7 +700,7 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    public onUserLeaves(userId: number, listener: ExSocketInterface): void {
+    public onUserLeaves(userId: number, listener: Socket): void {
         emitInBatch(listener, {
             message: {
                 $case: "userLeftMessage",
@@ -742,7 +711,7 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    public onGroupEnters(group: GroupDescriptor, listener: ExSocketInterface): void {
+    public onGroupEnters(group: GroupDescriptor, listener: Socket): void {
         emitInBatch(listener, {
             message: {
                 $case: "groupUpdateMessage",
@@ -751,11 +720,11 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    public onGroupMoves(group: GroupDescriptor, listener: ExSocketInterface): void {
+    public onGroupMoves(group: GroupDescriptor, listener: Socket): void {
         this.onGroupEnters(group, listener);
     }
 
-    public onGroupLeaves(groupId: number, listener: ExSocketInterface): void {
+    public onGroupLeaves(groupId: number, listener: Socket): void {
         emitInBatch(listener, {
             message: {
                 $case: "groupDeleteMessage",
@@ -766,8 +735,8 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    public emitWorldFullMessage(client: compressors.WebSocket): void {
-        if (!client.disconnecting) {
+    public emitWorldFullMessage(client: WASocket): void {
+        if (!client.getUserData().disconnecting) {
             client.send(
                 ServerToClientMessage.encode({
                     message: {
@@ -780,8 +749,8 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitTokenExpiredMessage(client: compressors.WebSocket): void {
-        if (!client.disconnecting) {
+    public emitTokenExpiredMessage(client: WASocket): void {
+        if (!client.getUserData().disconnecting) {
             client.send(
                 ServerToClientMessage.encode({
                     message: {
@@ -794,8 +763,8 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitInvalidCharacterTextureMessage(client: compressors.WebSocket): void {
-        if (!client.disconnecting) {
+    public emitInvalidCharacterTextureMessage(client: WASocket): void {
+        if (!client.getUserData().disconnecting) {
             client.send(
                 ServerToClientMessage.encode({
                     message: {
@@ -810,8 +779,8 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitInvalidCompanionTextureMessage(client: compressors.WebSocket): void {
-        if (!client.disconnecting) {
+    public emitInvalidCompanionTextureMessage(client: WASocket): void {
+        if (!client.getUserData().disconnecting) {
             client.send(
                 ServerToClientMessage.encode({
                     message: {
@@ -826,7 +795,7 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitConnectionErrorMessage(client: compressors.WebSocket, message: string): void {
+    public emitConnectionErrorMessage(client: WASocket, message: string): void {
         client.send(
             ServerToClientMessage.encode({
                 message: {
@@ -840,7 +809,7 @@ export class SocketManager implements ZoneEventListener {
         );
     }
 
-    public emitErrorScreenMessage(client: compressors.WebSocket, errorApi: ErrorApiData): void {
+    public emitErrorScreenMessage(client: WASocket, errorApi: ErrorApiData): void {
         // FIXME: improve typing of ErrorScreenMessage
         const errorScreenMessage: ErrorScreenMessage = {
             type: errorApi.type,
@@ -897,14 +866,15 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public async emitPlayGlobalMessage(
-        client: ExSocketInterface,
+        client: Socket,
         playGlobalMessageEvent: PlayGlobalMessage
     ): Promise<void> {
-        if (!client.tags.includes("admin")) {
+        const clientData = client.getUserData();
+        if (!clientData.tags.includes("admin")) {
             throw new Error("Client is not an admin!");
         }
 
-        const clientRoomUrl = client.roomId;
+        const clientRoomUrl = clientData.roomId;
         let tabUrlRooms: string[];
 
         if (playGlobalMessageEvent.broadcastToWorld) {
@@ -927,20 +897,21 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    forwardMessageToBack(client: ExSocketInterface, message: PusherToBackMessage["message"]): void {
+    forwardMessageToBack(client: Socket, message: PusherToBackMessage["message"]): void {
+        const clientData = client.getUserData();
         const pusherToBackMessage: PusherToBackMessage = {
             message: message,
         };
 
-        if (!client.backConnection) {
+        if (!clientData.backConnection) {
             Sentry.captureException(new Error("forwardMessageToBack => client.backConnection is undefined"));
             throw new Error("forwardMessageToBack => client.backConnection is undefined");
         }
 
-        client.backConnection.write(pusherToBackMessage);
+        clientData.backConnection.write(pusherToBackMessage);
     }
 
-    handleBanUserByUuidMessage(client: ExSocketInterface, banUserByUuidMessage: BanUserByUuidMessage): void {
+    handleBanUserByUuidMessage(client: Socket, banUserByUuidMessage: BanUserByUuidMessage): void {
         try {
             adminService
                 .banUserByUuid(
@@ -969,10 +940,11 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    emitXMPPSettings(client: ExSocketInterface): void {
+    emitXMPPSettings(client: Socket): void {
+        const userData = client.getUserData();
         const xmppSettings: XmppSettingsMessage = {
             conferenceDomain: "conference." + EJABBERD_DOMAIN,
-            rooms: client.mucRooms.map((definition: MucRoomDefinition) => {
+            rooms: userData.mucRooms.map((definition: MucRoomDefinition) => {
                 if (!definition.name || !definition.url || !definition.type) {
                     throw new Error("Name URL and type cannot be empty!");
                 }
@@ -983,11 +955,11 @@ export class SocketManager implements ZoneEventListener {
                     subscribe: definition.subscribe,
                 };
             }),
-            jabberId: client.jabberId,
-            jabberPassword: client.jabberPassword ?? "",
+            jabberId: userData.jabberId,
+            jabberPassword: userData.jabberPassword ?? "",
         };
 
-        if (!client.disconnecting) {
+        if (!userData.disconnecting) {
             client.send(
                 ServerToClientMessage.encode({
                     message: {
@@ -1000,32 +972,34 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    handleAddSpaceFilterMessage(client: ExSocketInterface, addSpaceFilterMessage: AddSpaceFilterMessage) {
+    handleAddSpaceFilterMessage(client: Socket, addSpaceFilterMessage: AddSpaceFilterMessage) {
+        const userData = client.getUserData();
         const newFilter = addSpaceFilterMessage.spaceFilterMessage;
         if (newFilter) {
-            const space = client.spaces.find((space) => space.name === newFilter.spaceName);
+            const space = userData.spaces.find((space) => space.name === newFilter.spaceName);
             if (space) {
                 space.handleAddFilter(client, addSpaceFilterMessage);
-                let spacesFilter = client.spacesFilters.get(space.name);
+                let spacesFilter = userData.spacesFilters.get(space.name);
                 if (!spacesFilter) {
                     spacesFilter = [newFilter];
                 } else {
                     spacesFilter.push(newFilter);
                 }
-                client.spacesFilters.set(space.name, spacesFilter);
+                userData.spacesFilters.set(space.name, spacesFilter);
             }
         }
     }
 
-    handleUpdateSpaceFilterMessage(client: ExSocketInterface, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
+    handleUpdateSpaceFilterMessage(client: Socket, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
+        const userData = client.getUserData();
         const newFilter = updateSpaceFilterMessage.spaceFilterMessage;
         if (newFilter) {
-            const space = client.spaces.find((space) => space.name === newFilter.spaceName);
+            const space = userData.spaces.find((space) => space.name === newFilter.spaceName);
             if (space) {
                 space.handleUpdateFilter(client, updateSpaceFilterMessage);
-                const spacesFilter = client.spacesFilters.get(space.name);
+                const spacesFilter = userData.spacesFilters.get(space.name);
                 if (spacesFilter) {
-                    client.spacesFilters.set(
+                    userData.spacesFilters.set(
                         space.name,
                         spacesFilter.map((filter) => (filter.filterName === newFilter.filterName ? newFilter : filter))
                     );
@@ -1038,15 +1012,16 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    handleRemoveSpaceFilterMessage(client: ExSocketInterface, removeSpaceFilterMessage: RemoveSpaceFilterMessage) {
+    handleRemoveSpaceFilterMessage(client: Socket, removeSpaceFilterMessage: RemoveSpaceFilterMessage) {
+        const userData = client.getUserData();
         const oldFilter = removeSpaceFilterMessage.spaceFilterMessage;
         if (oldFilter) {
-            const space = client.spaces.find((space) => space.name === oldFilter.spaceName);
+            const space = userData.spaces.find((space) => space.name === oldFilter.spaceName);
             if (space) {
                 space.handleRemoveFilter(client, removeSpaceFilterMessage);
-                const spacesFilter = client.spacesFilters.get(space.name);
+                const spacesFilter = userData.spacesFilters.get(space.name);
                 if (spacesFilter) {
-                    client.spacesFilters.set(
+                    userData.spacesFilters.set(
                         space.name,
                         spacesFilter.filter((filter) => filter.filterName !== oldFilter.filterName)
                     );
@@ -1059,71 +1034,77 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    handleCameraState(client: ExSocketInterface, state: boolean) {
-        client.cameraState = state;
-        client.spaceUser.cameraState = state;
+    handleCameraState(client: Socket, state: boolean) {
+        const clientData = client.getUserData();
+        clientData.cameraState = state;
+        clientData.spaceUser.cameraState = state;
         const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
             cameraState: state,
-            id: client.userId,
+            id: clientData.userId,
         });
-        client.spaces.forEach((space) => {
+        clientData.spaces.forEach((space) => {
             space.updateUser(partialSpaceUser);
         });
     }
 
-    handleMicrophoneState(client: ExSocketInterface, state: boolean) {
-        client.microphoneState = state;
-        client.spaceUser.microphoneState = state;
+    handleMicrophoneState(client: Socket, state: boolean) {
+        const clientData = client.getUserData();
+        clientData.microphoneState = state;
+        clientData.spaceUser.microphoneState = state;
         const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
             microphoneState: state,
-            id: client.userId,
+            id: clientData.userId,
         });
-        client.spaces.forEach((space) => {
+        clientData.spaces.forEach((space) => {
             space.updateUser(partialSpaceUser);
         });
     }
 
-    handleScreenSharingState(client: ExSocketInterface, state: boolean) {
-        client.screenSharingState = state;
-        client.spaceUser.screenSharingState = state;
+    handleScreenSharingState(client: Socket, state: boolean) {
+        const clientData = client.getUserData();
+        clientData.screenSharingState = state;
+        clientData.spaceUser.screenSharingState = state;
         const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
             screenSharingState: state,
-            id: client.userId,
+            id: clientData.userId,
         });
-        client.spaces.forEach((space) => {
+        clientData.spaces.forEach((space) => {
             space.updateUser(partialSpaceUser);
         });
     }
 
-    handleMegaphoneState(client: ExSocketInterface, megaphoneStateMessage: MegaphoneStateMessage) {
-        client.megaphoneState = megaphoneStateMessage.value;
-        client.spaceUser.megaphoneState = megaphoneStateMessage.value;
+    handleMegaphoneState(client: Socket, megaphoneStateMessage: MegaphoneStateMessage) {
+        const clientData = client.getUserData();
+        clientData.megaphoneState = megaphoneStateMessage.value;
+        clientData.spaceUser.megaphoneState = megaphoneStateMessage.value;
         const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
             megaphoneState: megaphoneStateMessage.value,
-            id: client.userId,
+            id: clientData.userId,
         });
-        client.spaces
+        clientData.spaces
             .filter((space) => !megaphoneStateMessage.spaceName || space.name === megaphoneStateMessage.spaceName)
             .forEach((space) => {
                 space.updateUser(partialSpaceUser);
             });
     }
 
-    handleJitsiParticipantIdSpace(client: ExSocketInterface, spaceName: string, jitsiParticipantId: string) {
-        const space = client.spaces.find((space) => space.name === spaceName);
+    handleJitsiParticipantIdSpace(client: Socket, spaceName: string, jitsiParticipantId: string) {
+        const clientData = client.getUserData();
+        const space = clientData.spaces.find((space) => space.name === spaceName);
         if (space) {
             const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
                 jitsiParticipantId,
-                id: client.userId,
+                id: clientData.userId,
             });
             space.updateUser(partialSpaceUser);
         }
     }
 
-    async handleRoomTagsQuery(client: ExSocketInterface, queryMessage: QueryMessage) {
+    async handleRoomTagsQuery(client: Socket, queryMessage: QueryMessage) {
+        const clientData = client.getUserData();
         let tags: string[];
         try {
-            tags = await adminService.getTagsList(client.roomId);
+            tags = await adminService.getTagsList(clientData.roomId);
         } catch (e) {
             console.warn("SocketManager => handleRoomTagsQuery => error while getting tags list", e);
             // Nothing to do with the error
@@ -1148,10 +1129,10 @@ export class SocketManager implements ZoneEventListener {
         );
     }
 
-    async handleRoomsFromSameWorldQuery(client: ExSocketInterface, queryMessage: QueryMessage) {
+    async handleRoomsFromSameWorldQuery(client: Socket, queryMessage: QueryMessage) {
         let roomDescriptions: ShortMapDescription[];
         try {
-            roomDescriptions = await adminService.getUrlRoomsFromSameWorld(client.roomId);
+            roomDescriptions = await adminService.getUrlRoomsFromSameWorld(client.getUserData().roomId);
         } catch (e) {
             console.warn("SocketManager => handleRoomsFromSameWorldQuery => error while getting other rooms list", e);
             // Nothing to do with the error
@@ -1194,17 +1175,18 @@ export class SocketManager implements ZoneEventListener {
         );
     }
 
-    handleLeaveSpace(client: ExSocketInterface, spaceName: string) {
+    handleLeaveSpace(client: Socket, spaceName: string) {
+        const clientData = client.getUserData();
         const space = this.spaces.get(spaceName);
         if (space) {
             space.removeClientWatcher(client);
-            space.removeUser(client.spaceUser.id);
-            client.spaces = client.spaces.filter((space) => space.name !== spaceName);
+            space.removeUser(clientData.spaceUser.id);
+            clientData.spaces = clientData.spaces.filter((space) => space.name !== spaceName);
             this.deleteSpaceIfEmpty(space);
         }
     }
 
-    async handleEmbeddableWebsiteQuery(client: ExSocketInterface, queryMessage: QueryMessage) {
+    async handleEmbeddableWebsiteQuery(client: Socket, queryMessage: QueryMessage) {
         if (queryMessage.query?.$case !== "embeddableWebsiteQuery") {
             return;
         }

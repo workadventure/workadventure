@@ -1,10 +1,9 @@
 import type { AdminPusherToBackMessage, ServerToAdminClientMessage } from "@workadventure/messages";
-import type { compressors } from "hyper-express";
 import type { ClientDuplexStream } from "@grpc/grpc-js";
+import { WASocketData } from "./WASocketData";
 
 export type AdminConnection = ClientDuplexStream<AdminPusherToBackMessage, ServerToAdminClientMessage>;
 
-export interface ExAdminSocketInterface extends compressors.WebSocket {
+export interface AdminSocketData extends WASocketData {
     adminConnections: Map<string, AdminConnection> | undefined;
-    disconnecting: boolean;
-}
+};

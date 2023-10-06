@@ -17,7 +17,15 @@ export type AdminSocketTokenData = z.infer<typeof AdminSocketTokenData>;
 export const tokenInvalidException = "tokenInvalid";
 
 export class JWTTokenManager {
-    public verifyAdminSocketToken(token: string): AdminSocketTokenData {
+    public verifyAdminSocketToken(token: string): void {
+        if (!ADMIN_SOCKETS_TOKEN) {
+            throw new Error("Missing environment variable ADMIN_SOCKETS_TOKEN");
+        }
+
+        Jwt.verify(token, ADMIN_SOCKETS_TOKEN);
+    }
+
+    public getTokenPayload(token: string): AdminSocketTokenData {
         if (!ADMIN_SOCKETS_TOKEN) {
             throw new Error("Missing environment variable ADMIN_SOCKETS_TOKEN");
         }

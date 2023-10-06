@@ -21,16 +21,18 @@ import { adminApi } from "./services/AdminApi";
 import { jwtTokenManager } from "./services/JWTTokenManager";
 import { CompanionService } from "./services/CompanionService";
 import { WokaService } from "./services/WokaService";
+import { Server as SocketServer } from "socket.io";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LiveDirectory = require("live-directory");
 
 class App {
-    private app: HyperExpress.compressors.TemplatedApp;
     private webserver: Server;
+    private socketServer: SocketServer;
 
     constructor() {
         this.webserver = new HyperExpress.Server();
-        this.app = this.webserver.uws_instance;
+        this.socketServer = new SocketServer();
+        this.socketServer.attachApp(this.webserver.uws_instance);
 
         // Global middlewares
         this.webserver.use(cors);
@@ -79,7 +81,7 @@ class App {
         });
 
         // Socket controllers
-        new IoSocketController(this.app);
+        new IoSocketController(this.socketServer);
 
         // Http controllers
         new AuthenticateController(this.webserver);
