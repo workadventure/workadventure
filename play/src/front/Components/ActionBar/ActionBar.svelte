@@ -408,6 +408,7 @@
 			analyticsClient.openedChat()}
                 on:click={toggleChat}
                 class="flex relative"
+                class:hidden={$chatVisibilityStore}
         >
             <Tooltip text={$LL.actionbar.chat()} />
             <div class="group/btn-chat relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square">
@@ -545,14 +546,14 @@
                                         on:click={microphoneClick}
                                 >
                                     {#if $requestedMicrophoneState && !$silentStore}
-                                        <svg draggable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M8.125 4.625C8.125 3.72989 8.48058 2.87145 9.11351 2.23851C9.74645 1.60558 10.6049 1.25 11.5 1.25C12.3951 1.25 13.2536 1.60558 13.8865 2.23851C14.5194 2.87145 14.875 3.72989 14.875 4.625V10.25C14.875 11.1451 14.5194 12.0036 13.8865 12.6365C13.2536 13.2694 12.3951 13.625 11.5 13.625C10.6049 13.625 9.74645 13.2694 9.11351 12.6365C8.48058 12.0036 8.125 11.1451 8.125 10.25V4.625Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                             <path d="M3.625 10.25C3.625 12.3386 4.45469 14.3416 5.93153 15.8185C7.40838 17.2953 9.41142 18.125 11.5 18.125C13.5886 18.125 15.5916 17.2953 17.0685 15.8185C18.5453 14.3416 19.375 12.3386 19.375 10.25" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                             <path d="M7 22.625H16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                             <path d="M11.5 18.125V22.625" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                         </svg>
                                     {:else}
-                                        <svg draggable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M1.375 2.375L21.625 22.625" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                             <path d="M8.125 4.625C8.125 3.72989 8.48058 2.87145 9.11351 2.23851C9.74645 1.60558 10.6049 1.25 11.5 1.25C12.3951 1.25 13.2536 1.60558 13.8865 2.23851C14.5194 2.87145 14.875 3.72989 14.875 4.625V10.25C14.875 10.5832 14.8258 10.9145 14.7287 11.2332M12.4788 13.4832C11.9744 13.6361 11.4412 13.6687 10.922 13.5784C10.4028 13.4882 9.9119 13.2776 9.4887 12.9635C9.06549 12.6494 8.72171 12.2406 8.48491 11.7698C8.2481 11.299 8.12484 10.7793 8.125 10.2522V9.12725" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                             <path d="M3.625 10.25C3.62475 11.6713 4.00915 13.0661 4.73742 14.2866C5.46568 15.5071 6.51068 16.5077 7.76159 17.1824C9.01249 17.8571 10.4227 18.1807 11.8426 18.1189C13.2625 18.0571 14.6392 17.6121 15.8267 16.8313M18.0767 14.5813C18.9248 13.2961 19.3756 11.78ƒbtn)97 19.3727 10.25" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -589,16 +590,12 @@
                                     on:click={cameraClick}
                             >
                                 {#if $requestedCameraState && !$silentStore}
-                                    <svg
-                                            draggable="false"
-                                            width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M14.875 10.25L19.9971 7.68951C20.1686 7.60383 20.3591 7.56338 20.5506 7.572C20.7421 7.58063 20.9282 7.63804 21.0913 7.73879C21.2544 7.83955 21.389 7.9803 21.4824 8.14769C21.5758 8.31509 21.6249 8.50357 21.625 8.69526V16.3048C21.6249 16.4965 21.5758 16.6849 21.4824 16.8523C21.389 17.0197 21.2544 17.1605 21.0913 17.2612C20.9282 17.362 20.7421 17.4194 20.5506 17.428C20.3591 17.4366 20.1686 17.3962 19.9971 17.3105L14.875 14.75V10.25Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                         <path d="M1.375 8C1.375 7.40326 1.61205 6.83097 2.03401 6.40901C2.45597 5.98705 3.02826 5.75 3.625 5.75H12.625C13.2217 5.75 13.794 5.98705 14.216 6.40901C14.6379 6.83097 14.875 7.40326 14.875 8V17C14.875 17.5967 14.6379 18.169 14.216 18.591C13.794 19.0129 13.2217 19.25 12.625 19.25H3.625C3.02826 19.25 2.45597 19.0129 2.03401 18.591C1.61205 18.169 1.375 17.5967 1.375 17V8Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                     </svg>
                                 {:else}
-                                    <svg
-                                            draggable="false"
-                                            width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M1.375 2.375L21.625 22.625" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                         <path d="M14.875 11.375V10.25L19.9971 7.68951C20.1686 7.60383 20.3591 7.56338 20.5506 7.572C20.7421 7.58063 20.9282 7.63804 21.0913 7.73879C21.2544 7.83955 21.389 7.9803 21.4824 8.14769C21.5758 8.31509 21.6249 8.50357 21.625 8.69526V16.3048C21.6251 16.5392 21.5519 16.7677 21.4158 16.9585C21.2796 17.1493 21.0873 17.2928 20.8656 17.369" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                         <path d="M9.25 5.75H12.625C13.2217 5.75 13.794 5.98705 14.216 6.40901C14.6379 6.83097 14.875 7.40326 14.875 8V11.375M14.875 15.875V17C14.875 17.5967 14.6379 18.169 14.216 18.591C13.794 19.0129 13.2217 19.25 12.625 19.25H3.625C3.02826 19.25 2.45597 19.0129 2.03401 18.591C1.61205 18.169 1.375 17.5967 1.375 17V8C1.375 7.40326 1.61205 6.83097 2.03401 6.40901C2.45597 5.98705 3.02826 5.75 3.625 5.75H4.75" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -699,7 +696,7 @@
                                 </li>
                             {/if}
                             <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
-                                <div className="group-hover:mr-2 transition-all w-8 mr-1 text-center">
+                                <div class="group-hover:mr-2 transition-all w-8 mr-1 text-center">
                                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
                                          xmlns="http://www.w3.org/2000/svg">
                                         <path d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z"
@@ -824,9 +821,9 @@
                             <div class="rounded-lg bg-dark text-xs">
                                 <!-- loading animation -->
                                 <div class="loading-group">
-                                    <span class="loading-dot" />
-                                    <span class="loading-dot" />
-                                    <span class="loading-dot" />
+                                    <span class="loading-dot"></span>
+                                    <span class="loading-dot"></span>
+                                    <span class="loading-dot"></span>
                                 </div>
                             </div>
                         {:else}

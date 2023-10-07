@@ -223,7 +223,7 @@
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
-<div id="chatWindow" class:show={$chatVisibilityStore}>
+<div id="chatWindow" class:show={$chatVisibilityStore} class="bg-contrast/50 backdrop-blur">
     <input type="text" bind:this={searchElement} on:keydown={search} style="display: none;" />
     {#if $chatVisibilityStore}<div class="hide">
             <button class="close-window" on:click={closeChat}>&#215;</button>
@@ -250,7 +250,6 @@
     #chatWindow {
         z-index: 1000;
         position: absolute;
-        background-color: transparent;
         top: 0;
         left: -100%;
         height: 100%;
