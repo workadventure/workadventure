@@ -78,7 +78,7 @@
     "eslint-plugin-svelte3": "^4.0.0",
     "jsdom": "^20.0.1",
     "lint-staged": "^12.3.7",
-    "postcss": "^8.4.17",
+    "postcss": "^8.4.31",
     "prettier": "^2.8.1",
     "prettier-plugin-svelte": "^2.9.0",
     "sass": "^1.55.0",
