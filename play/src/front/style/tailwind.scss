@@ -12,18 +12,11 @@
 @layer components {
     //Menus - Main one uses theses classes
     .menu-container {
-        @apply flex h-3/4 w-full text-white pointer-events-auto z-[900] right-0 left-0 m-auto absolute top-14;
-        @apply md:w-4/5;
-
         &.right{
             @apply w-1/3 top-0 left-auto right-0 h-full
         }
         &.left{
             @apply w-1/3 top-0 left-0 right-auto h-full
-        }
-
-        .menu-nav-sidebar {
-            @apply bg-dark-purple/95 rounded overflow-auto w-1/5;
         }
 
         .menu-submenu-container {

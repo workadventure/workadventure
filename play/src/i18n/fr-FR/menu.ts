@@ -60,6 +60,7 @@ const menu: DeepPartial<Translation["menu"]> = {
     invite: {
         description: "Partager le lien de la salle!",
         copy: "Copier",
+        copied: "Copié",
         share: "Partager",
         walkAutomaticallyToPosition: "Marcher automatiquement jusqu'à ma position",
         selectEntryPoint: "Selectionner la zone de départ",

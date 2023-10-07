@@ -124,27 +124,38 @@
 
 <svelte:window on:keydown={onKeyDown} />
 
-<div class="menu-container" transition:fly={{ y: 1000, duration: 500 }}>
-    <div class="menu-nav-sidebar min-w-[160px]">
-        <h2 class="p-5 blue-title">{$LL.menu.title()}</h2>
-        <nav>
+<!-- TODO HUGO : REMOVE !important -->
+<div class="close-window pointer-events-auto absolute flex bg-contrast/50 right-0 left-0 top-24 bottom-0 z-[900] h-3/4 container m-auto rounded-xl backdrop-blur overflow-hidden font-main" transition:fly={{ y: 1000, duration: 150 }} on:blur={closeMenu}>
+    <div class="menu-nav-sidebar bg-transparent rounded-none min-w-[200px]">
+        <!--<h2 class="p-8 text-white/10 h-5 tracking-[1rem] mb-8">{$LL.menu.title()}</h2>-->
+        <nav class="mt-24">
             {#each $subMenusStore as submenu, i}
                 <div
-                    class="menu-item-container {activeSubMenu === submenu ? 'active' : ''}"
+                    class="menu-item-container group flex py-4 px-4 relative transition-all hover:pl-6 hover:opacity-100 cursor-pointer before:z-1 before:transition-all before:content-[''] before:absolute before:h-full before:w-0 before:top-0 before:right-0 before:bg-contrast/80 {activeSubMenu === submenu ? 'active before:w-full opacity-100 hover:pl-4' : 'opacity-60'}"
                     on:click|preventDefault={() => switchMenu(submenu)}
+                    transition:fly={{delay: i*75, x: 200, duration: 150 }}
                 >
-                    <button type="button" class="flex menu-item">
+                    <button type="button" class="flex menu-item m-0 relative z-10">
                         {subMenuTranslations[i]}
                     </button>
-                    <img src={chevronImg} class="menu-icon" alt="open submenu" draggable="false" />
+                    <img src={chevronImg} class="absolute transition-all right-4 group-hover:right-6 top-0 bottom-0 m-auto w-4 z-10 {activeSubMenu === submenu ? 'opacity-100 group-hover:right-4' : 'opacity-30'}"  alt="open submenu" draggable="false" />
+                    <div class="bg-secondary h-full transition-all left-0 top-0 absolute {activeSubMenu === submenu ? 'w-1' : 'w-0'}"></div>
                 </div>
             {/each}
         </nav>
     </div>
-    <div class="menu-submenu-container bg-dark-purple/95 rounded">
-        <button type="button" class="close-window" on:click={closeMenu}>&times;</button>
-        <h2>{activeSubMenuTranslation}</h2>
-        <svelte:component this={activeComponent} {...props} />
+    <div class="menu-submenu-container w-full !rounded-r-xl overflow-y relative">
+        <button type="button" class="btn btn-lg btn-ghost btn-light absolute right-0 top-0 !p-[1.15rem] !rounded-none cursor-pointer m-0" on:click={closeMenu}> <!-- TODO HUGO : I REMOVE class close-window -->
+            <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g>
+                    <path d="M33 11L11 33M11 11L33 33" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </g>
+            </svg>
+        </button>
+        <h2 class="py-5 px-8 text-white h5 border-b border-white/20 absolute top-0 left-0">{activeSubMenuTranslation}</h2>
+        <div class="bg-contrast/80 h-[calc(100%-5rem)] mt-20 overflow-y-auto text-white pb-8 rounded-tl">
+            <svelte:component this={activeComponent} {...props} />
+        </div>
     </div>
 </div>
 
