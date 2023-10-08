@@ -23,7 +23,7 @@
     {#if volume}
         {#each volume as bar}
             <div
-                class="h-4 voice-meter-bar {barClass}"
+                class="h-4 voice-meter-bar rounded flex w-[1px] transition-transform {barClass}"
                 class:scale-y-[3%]={bar < 10}
                 class:scale-y-[10%]={bar > 20 && bar < 30}
                 class:scale-y-[20%]={bar > 30 && bar < 40}

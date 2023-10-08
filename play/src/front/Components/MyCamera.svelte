@@ -15,6 +15,7 @@
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";
+    import loaderImg from "./images/loader.svg";
 
     let stream: MediaStream | null;
     let userName = localUserStore.getName();
@@ -50,12 +51,11 @@
     });
 </script>
 
-<div class="transition-all self-end" bind:this={cameraContainer}>
+<div class="transition-all self-end relative" bind:this={cameraContainer}>
     <!--If we are in a silent zone-->
     {#if $silentStore}
         <div
-            class="z-[250] h-12 bg-dark-blue rounded py-4 px-3 text-pop-red border-2 border-solid border-pop-red flex flex-row items-center content-center justify-between media-box-camera-off-size"
-        >
+            class="z-[250] h-12 rounded py-4 px-3 text-pop-red border-2 border-solid border-pop-red flex flex-row items-center content-center justify-between media-box-camera-off-size bg-no-repeat bg-center bg-contrast/80 backdrop-blur rounded-xl">
             <div class="flex flex-row">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M1.375 2.375L21.625 22.625" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -76,27 +76,23 @@
         <!--If we have a video to display-->
     {:else if $localStreamStore.type === "success" && !$inExternalServiceStore}
         {#if $requestedCameraState && $mediaStreamConstraintsStore.video}
-            <div
-                class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height z-[251]"
-            >
-                <i class="flex">
-                    <span
-                        style="background-color: {backgroundColor}; color: {textColor};"
-                        class="nametag-text nametag-shape pr-3 pl-5 h-4 max-h-8">{$LL.camera.my.nameTag()}</span
-                    >
-                </i>
-            </div>
-            <div class="woka-webcam-container container-end video-on-responsive-height pb-1 z-[251]">
+            <div class="absolute bottom-4 left-4 z-30">
                 <div class="flex">
-                    <Woka
-                        userId={-1}
-                        placeholderSrc={""}
-                        customHeight="20&& !$cameraEnergySavingStorepx"
-                        customWidth="20px"
-                    />
+                    <span class="rounded-lg bg-contrast/90 backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-4 bold">
+                        <div class="absolute left-1 -top-1" style="image-rendering:pixelated">
+                            <Woka
+                                    userId={-1}
+                                    placeholderSrc={""}
+                                    customHeight="42&& !$cameraEnergySavingStorepx"
+                                    customWidth="42px"
+                            />
+                        </div>
+                        {$LL.camera.my.nameTag()}
+                    </span>
                 </div>
             </div>
-            <div class="my-webcam-container z-[250] bg-dark-blue/50 rounded transition-all">
+
+            <div class="my-webcam-container z-40 rounded transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur rounded-xl" style="background-image: url({loaderImg})">
                 <video
                     class="h-full w-full rounded md:object-cover"
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
@@ -104,11 +100,11 @@
                     autoplay
                     muted
                     playsinline
-                />
+                ></video>
 
                 <div class="voice-meter-my-container justify-end z-[251] pr-2 absolute">
                     {#if $mediaStreamConstraintsStore.audio}
-                        <SoundMeterWidget volume={$localVolumeStore} classcss="absolute" barColor="blue" />
+                        <SoundMeterWidget volume={$localVolumeStore} classcss="absolute" barColor="white" />
                     {:else}
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M1.375 2.375L21.625 22.625" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
