@@ -401,16 +401,15 @@
 </script>
 <svelte:window on:keydown={onKeyDown} />
 <div class="grid grid-cols-3 justify-items-stretch absolute top-0 w-full p-4 pointer-events-auto">
-    <div class="justify-self-start">
+    <div class="justify-self-start" transition:fly={{delay: 500, y: -200, duration: 1500 }}>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
                 on:click={() =>
 			analyticsClient.openedChat()}
                 on:click={toggleChat}
-                class="flex relative"
-                class:hidden={$chatVisibilityStore}
+                class="flex relative transition-all duration-150 {chatVisibilityStore ? 'translate-x-0 opacity-100 visible' : 'translate-x-64 opacity-0 invisible'}"
         >
-            <Tooltip text={$LL.actionbar.chat()} />
+
             <div class="group/btn-chat relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square">
                 <div class="h-12 w-12 rounded group-hover/btn-chat:bg-white/10 aspect-square flex items-center justify-center transition-all">
                     <svg class="m-auto" width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -428,6 +427,7 @@
                     </div>
                 {/if}
             </div>
+
             <div class="group/btn-chat relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square">
                 <div class="h-12 w-12 rounded group-hover/btn-chat:bg-white/10 aspect-square flex items-center justify-center  transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" class="" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -441,7 +441,7 @@
             </div>
         </div>
     </div>
-    <div class="justify-self-center">
+    <div class="justify-self-center" transition:fly={{delay: 1000, y: -200, duration: 1500 }}>
         <div class="flex relative">
             <div class={menuExpand ? "group menuExpand" : ""}>
                 <div class="flex items-center mr-4 absolute right-28">
@@ -629,7 +629,7 @@
             </div>
         </div>
     </div>
-    <div class="justify-self-end">
+    <div class="justify-self-end" transition:fly={{delay: 1500, y: -200, duration: 1500 }}>
         <div class="flex">
             {#if $inviteUserActivated}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->

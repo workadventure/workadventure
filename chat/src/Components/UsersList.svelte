@@ -69,9 +69,9 @@
 </script>
 
 {#if $presenceStore.filter((user) => !get(user).isMe && get(user).active).length === 0}
-    <div class="px-5 py-4 border-b border-solid border-0 border-transparent border-b-light-purple text-sm text-center">
-        <p>{$LL.roomEmpty()}</p>
-        <button type="button" class="light m-auto cursor-pointer px-3" on:click={showInviteMenu}>
+    <div class="bg-contrast/80">
+        <div class="text-center font-bold">{$LL.roomEmpty()}</div>
+        <button type="button" class="m-auto btn btn-secondary mt-3" on:click={showInviteMenu}>
             {$LL.invite()}
         </button>
     </div>
@@ -80,7 +80,7 @@
     <Loader text={$LL.loadingUsers()} height="h-40" />
 {:else}
     {#each roomSorted as room}
-        <div class="users border-b border-solid border-0 border-transparent border-b-light-purple">
+        <div class="users bg-contrast/80">
             <div class="px-4 py-1 flex items-center">
                 {#if !$loadingSubscribersStore}
                     <span

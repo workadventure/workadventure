@@ -161,8 +161,8 @@
 
 <svelte:window on:keydown={onKeyDown} on:click={onClick} />
 
-<aside class="chatWindow" bind:this={chatWindowElement}>
-    <section class="p-0 m-0">
+<aside class="chatWindow h-full" bind:this={chatWindowElement}>
+    <section class="p-0 m-0 h-full">
         {#if $showPart === "activeTimeline"}
             <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => timelineActiveStore.set(false)} />
         {:else if $showPart === "activeThread" && !["connectionNotAuthorized", "loading"].includes($showPart)}
@@ -170,47 +170,45 @@
                 <ChatActiveThread activeThread={$activeThreadStore} />
             {/if}
         {:else if ["home", "connectionNotAuthorized", "loading"].includes($showPart)}
-            <div class="wa-message-bg pt-3">
+            <div class="flex flex-col items-stretch">
                 {#if $showPart === "connectionNotAuthorized"}
                     <NeedRefresh />
                 {:else if $showPart === "loading"}
                     <Loader
                         text={loadingText}
-                        height="h-40 border-solid border-transparent border-b-light-purple border-b"
+                        class="h-full bg-contrast/80"
                     />
                 {:else}
                     {#if $enableChatOnlineListStore}
                         <nav class="nav">
-                            <div class="background" class:chat={$navChat === "chat"} />
-                            <ul>
-                                <li class:active={$navChat === "users"} on:click={() => navChat.set("users")}>
+                            <div class:chat={$navChat === "chat"}></div>
+                            <ul class="list-none flex justify-between">
+                                <li class="w-1/2 py-4 text-center cursor-pointer bold {$navChat === 'chat' ? 'bg-contrast/80 text-white' : ''}" on:click={() => navChat.set("chat")}>
+                                    Chat
+                                </li>
+                                <li class="w-1/2 py-4 text-center cursor-pointer bold {$navChat === 'users' ? 'bg-contrast/80 text-white' : ''}" on:click={() => navChat.set("users")}>
                                     {$LL.users()}
                                 </li>
-                                <li class:active={$navChat === "chat"} on:click={() => navChat.set("chat")}>Chat</li>
                             </ul>
                         </nav>
                         <!-- searchbar -->
-                        <div class="border border-transparent border-b-light-purple border-solid">
-                            <div class="p-3">
+                        <div class="bg-contrast/80">
+                            <div class="p-3 relative">
                                 <input
-                                    class="wa-searchbar block text-white w-full placeholder:text-sm rounded-3xl px-3 py-1 border-light-purple border border-solid bg-transparent"
-                                    placeholder={$navChat === "users" ? $LL.searchUser() : $LL.searchChat()}
-                                    bind:value={searchValue}
+                                        class="wa-searchbar block text-white w-full placeholder:text-sm rounded-full pr-4 py-4 pl-12 border-light-purple border border-solid hover:bg-contrast/80 transition-all focus:placeholder:text-white focus:bg-contrast focus:outline-secondary bg-transparent peer"
+                                        placeholder={$navChat === "users" ? $LL.searchUser() : $LL.searchChat()}
+                                        bind:value={searchValue}
+                                        autofocus
                                 />
+                                <svg width="16" height="16" viewBox="0 0 16 16" class="absolute left-8 top-0 bottom-0 m-auto peer-focus:opacity-100 opacity-50 transition-all peer-focus:translate-x-1" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <g>
+                                        <path d="M14 14L10 10M2 6.66667C2 7.2795 2.12071 7.88634 2.35523 8.45252C2.58975 9.01871 2.9335 9.53316 3.36684 9.9665C3.80018 10.3998 4.31463 10.7436 4.88081 10.9781C5.447 11.2126 6.05383 11.3333 6.66667 11.3333C7.2795 11.3333 7.88634 11.2126 8.45252 10.9781C9.01871 10.7436 9.53316 10.3998 9.9665 9.9665C10.3998 9.53316 10.7436 9.01871 10.9781 8.45252C11.2126 7.88634 11.3333 7.2795 11.3333 6.66667C11.3333 6.05383 11.2126 5.447 10.9781 4.88081C10.7436 4.31463 10.3998 3.80018 9.9665 3.36684C9.53316 2.9335 9.01871 2.58975 8.45252 2.35523C7.88634 2.12071 7.2795 2 6.66667 2C6.05383 2 5.447 2.12071 4.88081 2.35523C4.31463 2.58975 3.80018 2.9335 3.36684 3.36684C2.9335 3.80018 2.58975 4.31463 2.35523 4.88081C2.12071 5.447 2 6.05383 2 6.66667Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </g>
+                                </svg>
                             </div>
                         </div>
                     {:else}
-                        <div class="mt-11 border border-transparent border-b-light-purple border-solid" />
-                    {/if}
-                    {#if !userStore.get().isLogged && ENABLE_OPENID && $enableChat}
-                        <div class="border border-transparent border-b-light-purple border-solid">
-                            <div class="p-3 text-sm text-center">
-                                <p>{$LL.signIn()}</p>
-                                <button type="button" class="light m-auto cursor-pointer px-3" on:click={login}>
-                                    {$LL.logIn()}
-                                </button>
-                            </div>
-                        </div>
+                        <div class="bg-contrast/80"></div>
                     {/if}
                     {#if $enableChatOnlineListStore && $navChat === "users"}
                         <!-- chat users -->
@@ -233,15 +231,26 @@
                         />
                     {/if}
                 {/if}
-                {#if $navChat !== "users"}
+                {#if $navChat !== "users" || $showPart !== "loading" || $showPart !== "connectionNotAuthorized" }
                     <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
                 {/if}
+                {#if !userStore.get().isLogged && ENABLE_OPENID && $enableChat}
+                    <div class="bg-contrast/80">
+                        <div class="p-3 text-sm text-center">
+                            <div class="text-sm italic">{$LL.signIn()}</div>
+                            <button type="button" class="m-auto btn btn-sm btn-border btn-light cursor-pointer mt-3" on:click={login}>
+                                {$LL.logIn()}
+                            </button>
+                        </div>
+                    </div>
+                {/if}
+                <div class="h-full bg-contrast/80"></div>
             </div>
         {/if}
     </section>
 </aside>
 
-<audio id="newMessageSound" src="./static/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
+<audio id="newMessageSound" src="./static/new-message.mp3" class="w-0 h-0 opacity-0" />
 
 <style lang="scss">
     aside.chatWindow {

@@ -180,10 +180,6 @@
 }
 
 
-aside.chatWindow nav{
-    @apply bg-dark-purple p-1 mx-3 mb-1 rounded-2xl border-solid border border-light-purple relative;
-    width: calc( 100% - 65px );
-}
 aside.chatWindow nav .background{
     @apply rounded-xl transition-transform transform bg-light-blue absolute;
     height: 26px;
@@ -194,16 +190,4 @@ aside.chatWindow nav .background.chat{
 }
 aside.chatWindow nav ul{
     @apply flex list-none justify-between w-full p-0 m-0;
-}
-aside.chatWindow nav ul li{
-    @apply text-center rounded font-bold transition-transform transform cursor-pointer rounded-2xl;
-    padding: 1px 0;
-    width: 48.5%;
-}
-aside.chatWindow nav ul li:not(.active):hover{
-    background-color: rgba(146, 142, 187, .3);
-}
-
-aside.chatWindow nav ul li.active{
-    @apply text-black cursor-default;
 }

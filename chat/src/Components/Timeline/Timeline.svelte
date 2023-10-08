@@ -12,7 +12,7 @@
     $: unreadMessages = $timelineMessagesToSee;
 </script>
 
-<div id="timeline" class="border-b border-solid border-0 border-transparent border-b-light-purple">
+<div id="timeline" class="bg-contrast/80">
     <div class="px-4 py-1 flex items-center" on:click={() => showTimelineStore.set(!$showTimelineStore)}>
         {#if unreadMessages}
             <span

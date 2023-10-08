@@ -225,17 +225,26 @@
 <svelte:window on:keydown={onKeyDown} />
 <div id="chatWindow" class:show={$chatVisibilityStore} class="bg-contrast/50 backdrop-blur">
     <input type="text" bind:this={searchElement} on:keydown={search} style="display: none;" />
-    {#if $chatVisibilityStore}<div class="hide">
-            <button class="close-window" on:click={closeChat}>&#215;</button>
-        </div>{/if}
     <iframe
         id="chatWorkAdventure"
         bind:this={chatIframe}
         allow="fullscreen; clipboard-read; clipboard-write"
         title="WorkAdventureChat"
         src={CHAT_URL}
-        class="border-0"
-    />
+        class="border-0 h-full"
+    ></iframe>
+    {#if $chatVisibilityStore}
+        <div class="group/btn-chat absolute bg-contrast/80 ml-2 -right-20 top-4 transition-all backdrop-blur rounded-lg ounded-r-lg p-2 aspect-square">
+            <div class="h-12 w-12 rounded group-hover/btn-chat:bg-danger aspect-square flex items-center justify-center  transition-all" on:click={closeChat}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g>
+                        <path d="M18 6L6 18M6 6L18 18" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </g>
+                </svg>
+
+            </div>
+        </div>
+    {/if}
 </div>
 
 <style lang="scss">

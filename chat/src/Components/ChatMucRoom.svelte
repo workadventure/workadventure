@@ -32,9 +32,13 @@
     const readyStore = mucRoom.getRoomReadyStore();
 </script>
 
-<div class={`wa-chat-item`} on:mouseleave={closeChatUserMenu}>
+<div class="wa-chat-item flex rounded bg-contrast px-4 py-2 items-center" on:mouseleave={closeChatUserMenu}>
     <div class="relative" on:click|stopPropagation={() => open()}>
-        <img class={``} src="./static/images/logo-wa-2.png" alt="Send" width="35" />
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-messages" width="36" height="36" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <path d="M21 14l-3 -3h-7a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1h9a1 1 0 0 1 1 1v10" />
+            <path d="M14 15v2a1 1 0 0 1 -1 1h-7l-3 3v-10a1 1 0 0 1 1 -1h2" />
+        </svg>
         <div class="block absolute right-0 top-0 transform translate-x-2 -translate-y-1">
             {#if mucRoom.type === "live"}
                 <div class="block relative">
@@ -45,11 +49,11 @@
         </div>
     </div>
     <div class="flex-auto ml-2" on:click|stopPropagation={() => open()}>
-        <h1 class="text-sm font-bold mb-0">
+        <div class="text-lg font-bold mb-0">
             {#each chunks as chunk (chunk.key)}
                 <span class={`${chunk.match ? "text-light-blue" : ""}`}>{chunk.text}</span>
             {/each}
-        </h1>
+        </div>
         {#if $readyStore}
             <OnlineUsers {presenceStore} />
         {:else}
