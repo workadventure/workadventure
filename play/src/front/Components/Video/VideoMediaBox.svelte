@@ -107,7 +107,7 @@
                 bind:this={videoElement}
                 class:no-video={!$constraintStore || $constraintStore.video === false}
                 class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
-                class="h-full max-w-full rounded"
+                class="h-full max-w-full rounded-lg"
                 style={$embedScreenLayoutStore === LayoutMode.Presentation
                     ? `border: solid 2px ${backGroundColor}`
                     : ""}
@@ -117,7 +117,7 @@
             />
         {/if}
 
-        <div class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height">
+        <div class="aspect-video">
             <i class="flex">
                 <span
                     style="background-color: {backGroundColor}; color: {textColor};"
@@ -125,17 +125,17 @@
                 >
             </i>
         </div>
-        <div class="woka-webcam-container container-end video-on-responsive-height pb-1 left-0">
+        <div class="aspect-video pb-1 left-0">
             <div class="flex {($constraintStore && $constraintStore.video !== false) || minimized ? '' : 'no-video'}">
                 <Woka userId={peer.userId} placeholderSrc={""} customHeight="20px" customWidth="20px" />
             </div>
         </div>
         {#if $constraintStore && $constraintStore.audio !== false}
-            <div class="voice-meter-webcam-container media-box-camera-off-size flex flex-col absolute items-end pr-2">
+            <div class="aspect-video flex flex-col absolute items-end pr-2">
                 <SoundMeterWidget volume={$volumeStore} classcss="absolute" barColor="blue" />
             </div>
         {:else}
-            <div class="voice-meter-webcam-container media-box-camera-off-size flex flex-col absolute items-end pr-2">
+            <div class="aspect-video flex flex-col absolute items-end pr-2">
                 <img draggable="false" src={microphoneOffImg} class="flex p-1 h-8 w-8" alt="Mute" />
             </div>
         {/if}

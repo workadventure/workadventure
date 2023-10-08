@@ -51,7 +51,7 @@
     });
 </script>
 
-<div class="transition-all self-end relative" bind:this={cameraContainer}>
+<div class="transition-all self-end relative aspect-video w-[350px]" bind:this={cameraContainer}>
     <!--If we are in a silent zone-->
     {#if $silentStore}
         <div
@@ -92,17 +92,16 @@
                 </div>
             </div>
 
-            <div class="my-webcam-container z-40 rounded transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur rounded-xl" style="background-image: url({loaderImg})">
+            <div class="aspect-video w-full absolute top-0 left-0 overflow-hidden z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur rounded-xl" style="background-image: url({loaderImg})">
                 <video
                     class="h-full w-full rounded md:object-cover"
-                    style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay
                     muted
                     playsinline
                 ></video>
 
-                <div class="voice-meter-my-container justify-end z-[251] pr-2 absolute">
+                <div class="z-[251] pr-2 absolute h-12 right-12 bottom-0">
                     {#if $mediaStreamConstraintsStore.audio}
                         <SoundMeterWidget volume={$localVolumeStore} classcss="absolute" barColor="white" />
                     {:else}
