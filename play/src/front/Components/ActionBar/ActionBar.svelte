@@ -18,6 +18,7 @@
         localStreamStore,
         localVolumeStore,
         speakerListStore,
+        addActionButtonActionBarEvent,
         requestedCameraState,
         requestedMicrophoneState,
         silentStore,
