@@ -87,7 +87,7 @@ fit all use cases. The file is yours. Fill free to modify it. Fill free to use i
 solution on Kubernetes if you want.
 
 If you have specific needs for a custom deployment, the WorkAdventure company can offer paid support. Don't hesitate to
-contact us at hello@workadventu.re. We also provide support to integrate WorkAdventure in your existing application.
+contact us at hello@workadventu.re. We also provide support to integrate WorkAdventure in your existing application or use this Helm chart: https://github.com/klauserber/workadventure-k8s.
 
 Alternatively, for any question related to non-standard deployments, you can ask the community on the "self-hosting" Discord
 channel: [![Discord](https://img.shields.io/discord/821338762134290432?label=Discord)](https://discord.gg/G6Xh9ZM9aR)
