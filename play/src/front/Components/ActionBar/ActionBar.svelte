@@ -4,7 +4,6 @@
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { writable } from "svelte/store";
-    import { Subscription } from "rxjs";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import { myJitsiCameraStore, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     //import { jitsiLoadingStore } from "../../Streaming/BroadcastService";
@@ -18,7 +17,6 @@
         localStreamStore,
         localVolumeStore,
         speakerListStore,
-        addActionButtonActionBarEvent,
         requestedCameraState,
         requestedMicrophoneState,
         silentStore,
@@ -182,7 +180,6 @@
             return;
         }
 
-        analyticsClient.startMegaphone();
         streamingMegaphoneStore.set(true);
     }
 
@@ -369,18 +366,14 @@
         }
     */
     let subscribers = new Array<Unsubscriber>();
-    let chatTotalMessagesSubscription: Subscription | undefined;
     let totalMessagesToSee = writable<number>(0);
     onMount(() => {
-        chatTotalMessagesSubscription = iframeListener.chatTotalMessagesToSeeStream.subscribe((total) =>
-            totalMessagesToSee.set(total)
-        );
+        iframeListener.chatTotalMessagesToSeeStream.subscribe((total) => totalMessagesToSee.set(total));
     });
 
     onDestroy(() => {
         subscribers.map((subscriber) => subscriber());
         unsubscribeLocalStreamStore();
-        chatTotalMessagesSubscription?.unsubscribe();
     });
 
     let stream: MediaStream | null;
@@ -640,146 +633,96 @@
                     {/if}
                     <!-- NAV : CAMERA END -->
                 </div>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div on:click={toggleEmojiPicker} class="bottom-action-button">
-                    <Tooltip text={$LL.actionbar.emoji()} />
-
-                    <button class:border-top-light={$emoteMenuSubStore}>
-                        <img draggable="false" src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
-                    </button>
-                </div>
-                {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div on:click={toggleMegaphone} class="bottom-action-button tw-relative">
-                        {#if $streamingMegaphoneStore}
-                            <MegaphoneConfirm />
-                        {:else}
-                            <Tooltip
-                                text={$megaphoneEnabledStore
-                                    ? $LL.actionbar.disableMegaphone()
-                                    : $LL.actionbar.enableMegaphone()}
-                            />
-                        {/if}
-
-                        <button
-                            class:border-top-warning={$megaphoneEnabledStore || $streamingMegaphoneStore}
-                            id="megaphone"
-                        >
-                            <img draggable="false" src={megaphoneImg} style="padding: 2px" alt="Toggle megaphone" />
-                        </button>
-                        {#if $megaphoneEnabledStore}
-                            <div class="tw-absolute tw-top-[1.05rem] tw-right-1">
-                                <span
-                                    class="tw-w-3 tw-h-3 tw-bg-warning tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping tw-cursor-pointer"
-                                />
-                                <span
-                                    class="tw-w-2 tw-h-2 tw-bg-warning tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5 tw-cursor-pointer"
-                                />
-                            </div>
-                        {/if}
-                    </div>
-                {/if}
             </div>
-
-            <div class="bottom-action-section tw-flex tw-flex-initial">
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openedMenu()}
-                    on:click={showMenu}
-                    class="bottom-action-button"
-                >
-                    <Tooltip text={$LL.actionbar.menu()} />
-
-                    <button id="menuIcon" class:border-top-light={$menuVisiblilityStore}>
-                        <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
-                    </button>
-                </div>
-                {#if $mapEditorActivated}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        on:dragstart|preventDefault={noDrag}
-                        on:click={toggleMapEditorMode}
-                        class="bottom-action-button"
-                    >
-                        <Tooltip text={$LL.actionbar.mapEditor()} />
-                        <button
-                            id="mapEditorIcon"
-                            class:border-top-light={$mapEditorModeStore}
-                            name="toggle-map-editor"
-                        >
-                            <img draggable="false" src={mapBuilder} style="padding: 2px" alt="toggle-map-editor" />
-                        </button>
-                    </div>
-                {/if}
-                {#if $userHasAccessToBackOfficeStore}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        on:dragstart|preventDefault={noDrag}
-                        on:click={() => analyticsClient.openBackOffice()}
-                        on:click={openBo}
-                        class="bottom-action-button"
-                    >
-                        <Tooltip text={$LL.actionbar.bo()} />
-
-                        <button id="backOfficeIcon">
-                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-bo" />
-                        </button>
-                    </div>
-                {/if}
-            </div>
-
-            {#if $addActionButtonActionBarEvent.length > 0}
-                <div class="bottom-action-section tw-flex tw-flex-initial">
-                    {#each $addActionButtonActionBarEvent as button}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <div
-                            in:fly={{}}
-                            on:dragstart|preventDefault={noDrag}
-                            on:click={() =>
-                                analyticsClient.clickOnCustomButton(
-                                    button.id,
-                                    undefined,
-                                    button.toolTip,
-                                    button.imageSrc
-                                )}
-                            on:click={() => {
-                                buttonActionBarTrigger(button.id);
-                            }}
-                            class="bottom-action-button"
-                        >
-                            {#if button.toolTip}
-                                <Tooltip text={button.toolTip} />
-                            {/if}
-                            <button id={button.id}>
-                                <img
-                                    draggable="false"
-                                    src={button.imageSrc}
-                                    style="padding: 2px"
-                                    alt={button.toolTip}
-                                />
-                            </button>
-                        </div>
-                    {/each}
-                </div>
-            {/if}
-
+        </div>
+    </div>
+    <div class="justify-self-end" transition:fly={{delay: 1500, y: -200, duration: 1500 }}>
+        <div class="flex">
             {#if $inviteUserActivated}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    class="bottom-action-section tw-flex tw-flex-initial"
-                    in:fly={{}}
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openInvite()}
-                    on:click={showInvite}
-                >
-                    <button
-                        class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
-                        id="invite-btn"
-                        class:border-top-light={$menuVisiblilityStore}
-                    >
-                        {$LL.menu.sub.invite()}
-                    </button>
+                <div>
+                    <div class="flex items-center mr-4">
+                        <div class="bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg ">
+                            <button
+                                    in:fly={{}}
+                                    on:dragstart|preventDefault={noDrag}
+                                    on:click={() => analyticsClient.openInvite()}
+                                    on:click={() => showMenuItem(SubMenusInterface.invite)}
+                                    class="btn btn-secondary rounded h-12"
+                            >
+                                {$LL.menu.sub.invite()}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {/if}
+            {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
+                <div class="flex items-center relative">
+                    <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2 mr-4" on:click={() =>
+				adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false } tabindex="0">
+                        <div class="flex items center h-full group-hover:bg-white/10 transition-all group-hover:rounded">
+                            <div class="px-2 m-auto">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M10 19H3C2.46957 19 1.96086 18.7893 1.58579 18.4142C1.21071 18.0391 1 17.5304 1 17V3C1 2.46957 1.21071 1.96086 1.58579 1.58579C1.96086 1.21071 2.46957 1 3 1H17C17.5304 1 18.0391 1.21071 18.4142 1.58579C18.7893 1.96086 19 2.46957 19 3V10M1 8H19M8 1V19M17.001 19C16.4706 19 15.9619 18.7893 15.5868 18.4142C15.2117 18.0391 15.001 17.5304 15.001 17C15.001 16.4696 15.2117 15.9609 15.5868 15.5858C15.9619 15.2107 16.4706 15 17.001 15M17.001 19C17.5314 19 18.0401 18.7893 18.4152 18.4142C18.7903 18.0391 19.001 17.5304 19.001 17C19.001 16.4696 18.7903 15.9609 18.4152 15.5858C18.0401 15.2107 17.5314 15 17.001 15M17.001 19V20.5M17.001 15V13.5M20.032 15.25L18.733 16M15.27 18L13.97 18.75M13.97 15.25L15.27 16M18.733 18L20.033 18.75" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </svg>
+                            </div>
+                            <div class="m-auto pt-1">
+                                <div class="font-bold text-white leading-3">Admin menu</div>
+                            </div>
+                            <div class="m-auto pl-4 pr-6">
+                                <svg class="transition-all" class:rotate-180={adminMenuIsDropped} width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M1 1L7 7L13 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div  class="absolute mt-2 top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-full text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-4 before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all {adminMenuIsDropped ? '' : '-translate-y-4 opacity-0 '}">
+                        <ul class="p-0 m-0">
+                            {#if $mapEditorActivated}
+                                <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => toggleMapEditorMode()}>
+                                    <div class="group-hover:mr-2 transition-all w-8 mr-1 text-center">
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </div>
+                                    <div>Map editor</div>
+                                </li>
+                            {/if}
+                            {#if $userHasAccessToBackOfficeStore}
+                                <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openBo()}>
+                                    <div class="group-hover:mr-2 transition-all w-8 mr-1 text-center">
+                                        <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M3 1V5M3 9V17M9 1V11M9 15V17M15 1V2M15 6V17M1 5H5V9H1V5ZM7 11H11V15H7V11ZM13 2H17V6H13V2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </svg>
+                                    </div>
+                                    <div>Back-office</div>
+                                </li>
+                            {/if}
+                            <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
+                                <div class="group-hover:mr-2 transition-all w-8 mr-1 text-center">
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z"
+                                              stroke="white" stroke-width="2" stroke-linecap="round"
+                                              stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                                <div>Envoyer message global</div>
+                            </li>
+                            <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
+                                <div class="group-hover:mr-2 transition-all w-8 mr-1 text-center">
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                                <div>Utiliser le mégaphone</div>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             {/if}
             <div class="flex items-center relative">
@@ -859,7 +802,7 @@
     >
         <div class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg pl-4 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 sm:flex-row">
             <div class="bottom-action-section flex animate flex-row flex items-center">
-                {#each [...$emoteDataStore.keys()] as key (key)}
+                {#each [...$emoteDataStore.keys()] as key}
                     <div class="transition-all bottom-action-button">
                         <button
                                 on:click={() => {
