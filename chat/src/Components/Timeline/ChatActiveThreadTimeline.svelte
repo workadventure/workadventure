@@ -428,6 +428,8 @@
             element.removeEventListener("click", aListner);
         });
     });
+
+    /* eslint-disable svelte/no-at-html-tags */
 </script>
 
 <!-- thread -->
@@ -482,7 +484,7 @@
 
     <!-- MESSAGE LIST-->
     <div id="timeLine-messageList" class="flex flex-col flex-auto px-5 py-24 justify-end h-auto min-h-screen">
-        {#each $chatMessagesStore as message, i}
+        {#each $chatMessagesStore as message, i (message.id)}
             {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
                 <div
                     id={`message_${message.id}`}
@@ -551,7 +553,7 @@
                             {/if}
                             {#if message.text}
                                 <div class="wa-message-body">
-                                    {#each message.text as text}
+                                    {#each message.text as text (text)}
                                         <div class="text-ellipsis overflow-y-auto break-words whitespace-pre-line">
                                             {#await HtmlUtils.urlify(text)}
                                                 <p>...waiting</p>
@@ -569,7 +571,7 @@
 
             {#if message.targets && message.targets.length > 0}
                 {#if message.type === ChatMessageTypes.userIncoming}
-                    {#each message.targets as target}
+                    {#each message.targets as target (target.jid)}
                         <div class="event text-center mt-2" style="white-space: nowrap;">
                             <span
                                 class="w-fit tag bg-dark mx-2 px-3 py-1 border border-solid rounded-full text-xs border-lighter-purple"
@@ -598,7 +600,7 @@
                     {/each}
                 {/if}
                 {#if message.type === ChatMessageTypes.userOutcoming}
-                    {#each message.targets as target}
+                    {#each message.targets as target (target.jid)}
                         <div class="event text-center mt-2" style="white-space: nowrap;">
                             <span
                                 class="w-fit tag bg-dark mx-2 px-3 py-1 border border-solid rounded-full text-xs border-lighter-purple"
@@ -630,7 +632,7 @@
         {/each}
 
         {#if defaultMucRoom}
-            {#each [...$writingStatusMessageStore] as userJid}
+            {#each [...$writingStatusMessageStore] as userJid (userJid)}
                 <UserWriting {defaultMucRoom} {userJid} />
             {/each}
         {/if}
@@ -651,7 +653,7 @@
         {/if}
 
         <form on:submit|preventDefault={saveMessage} class="flex flex-col">
-            {#each [...$applicationsSelected] as app}
+            {#each [...$applicationsSelected] as app (app.name)}
                 <div
                     class="flex flex-column items-center justify-center mx-12 mb-2 p-3 flex flex-wrap rounded-xl text-xxs bottom-12"
                     style="backdrop-filter: blur(30px);border: solid 1px rgb(27 27 41);"

@@ -4,6 +4,8 @@
     import type { Message } from "../../Stores/TypeMessageStore/MessageStore";
     import { textMessageStore } from "../../Stores/TypeMessageStore/TextMessageStore";
 
+    /* eslint-disable svelte/no-at-html-tags */
+
     export let message: Message;
 
     const content = JSON.parse(message.text);

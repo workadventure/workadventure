@@ -4,6 +4,9 @@
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import { LL } from "../../../i18n/i18n-svelte";
     import { warningContainerStore } from "../../Stores/MenuStore";
+
+    /* eslint-disable svelte/no-at-html-tags */
+
     const registerLink = ADMIN_URL + "/second-step-register";
 
     function closeBanner() {
@@ -48,7 +51,9 @@
         </p>
     {:else}
         <h2>{$LL.warning.title()}</h2>
-        <p>{@html $LL.warning.content({ upgradeLink: ADMIN_URL + "/pricing" })}</p>
+        <p>
+            {@html $LL.warning.content({ upgradeLink: ADMIN_URL + "/pricing" })}
+        </p>
     {/if}
 </main>
 

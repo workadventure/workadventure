@@ -129,7 +129,7 @@
     <div class="menu-nav-sidebar bg-transparent rounded-none min-w-[200px]">
         <!--<h2 class="p-8 text-white/10 h-5 tracking-[1rem] mb-8">{$LL.menu.title()}</h2>-->
         <nav class="mt-24">
-            {#each $subMenusStore as submenu, i}
+            {#each $subMenusStore as submenu, i (submenu.key + "_" + submenu.type)}
                 <div
                     class="menu-item-container group flex py-4 px-4 relative transition-all hover:pl-6 hover:opacity-100 cursor-pointer before:z-1 before:transition-all before:content-[''] before:absolute before:h-full before:w-0 before:top-0 before:right-0 before:bg-contrast/80 {activeSubMenu === submenu ? 'active before:w-full opacity-100 hover:pl-4' : 'opacity-60'}"
                     on:click|preventDefault={() => switchMenu(submenu)}

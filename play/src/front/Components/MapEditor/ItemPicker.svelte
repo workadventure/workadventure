@@ -142,7 +142,7 @@
             placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
         />
         <select class="tag-selector h-8" bind:value={selectedTag} on:change={() => onTagPick()}>
-            {#each tags as tag}
+            {#each tags as tag (tag)}
                 <option>{tag}</option>
             {/each}
         </select>
@@ -164,7 +164,7 @@
                 />
             </div>
             <div class="item-variant-picker-container h-28">
-                {#each currentVariants as item}
+                {#each currentVariants as item (item.id)}
                     <div
                         class="pickable-item {item.imagePath === pickedVariant?.imagePath ? 'active' : ''}"
                         on:click={() => onPickItemVariant(item)}
@@ -174,7 +174,7 @@
                 {/each}
             </div>
             <div class="color-container">
-                {#each variantColors as color}
+                {#each variantColors as color (color)}
                     <div class={currentColor === color ? "active" : ""}>
                         <button
                             class="color-selector"

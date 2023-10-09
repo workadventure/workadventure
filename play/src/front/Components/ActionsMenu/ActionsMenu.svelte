@@ -56,7 +56,7 @@
             {/if}
             {#if sortedActions}
                 <div class="actions flex tw flex-col items-center" class:margin-close={!actionsMenuData.menuName}>
-                    {#each sortedActions ?? [] as action}
+                    {#each sortedActions ?? [] as action (action.actionName)}
                         <button
                             type="button"
                             class="btn light justify-center font-bold text-xs sm:text-base text-center h-fit m-2 w-full {action.style ??

@@ -13,11 +13,5 @@
     class="report-ban-btn bg-pop-red flex justify-center h-7 w-7 md:h-5 md:w-5 p-1 min-h-[1px]"
     on:click|stopPropagation={() => openReport(peer)}
 >
-    <img
-        alt="Report this user"
-        draggable="false"
-        on:dragstart|preventDefault={false}
-        src={reportImg}
-        class="w-3 h-3 flex"
-    />
+    <img alt="Report this user" draggable="false" src={reportImg} class="w-3 h-3 flex" />
 </button>

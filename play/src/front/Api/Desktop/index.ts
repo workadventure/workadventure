@@ -36,6 +36,8 @@ class DesktopApi {
             }
         });
 
+        // Not unsubscribing is ok, this is a singleton.
+        //eslint-disable-next-line svelte/no-ignored-unsubscribe
         silentStore.subscribe((silent) => {
             this.isSilent = silent;
         });

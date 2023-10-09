@@ -72,6 +72,8 @@
         if (!gameManager.currentStartedRoom) return undefined;
         return gameManager.currentStartedRoom.backgroundColor;
     }
+
+    /* eslint-disable svelte/no-at-html-tags */
 </script>
 
 <section class="self-center absolute z-30 top-0 text-center w-full block">

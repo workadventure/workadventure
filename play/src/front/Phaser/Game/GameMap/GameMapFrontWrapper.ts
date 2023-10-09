@@ -1169,4 +1169,8 @@ export class GameMapFrontWrapper {
         }
         return properties;
     }
+
+    public close() {
+        this.entitiesManager.close();
+    }
 }

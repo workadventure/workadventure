@@ -110,6 +110,8 @@ function createSubMenusStore() {
     ]);
     const { subscribe, update } = store;
 
+    // It is ok to not unsubscribe to this store because the function is called only once
+    // eslint-disable-next-line svelte/no-ignored-unsubscribe
     inviteUserActivated.subscribe((value) => {
         //update menu tab
         update((valuesSubMenusStore) => {
@@ -318,6 +320,9 @@ function createAdditionalButtonsMenu() {
 export const additionnalButtonsMenu = createAdditionalButtonsMenu();
 export const addClassicButtonActionBarEvent = writable<AddClassicButtonActionBarEvent[]>([]);
 export const addActionButtonActionBarEvent = writable<AddActionButtonActionBarEvent[]>([]);
+
+// It is ok to not unsubscribe to this store because it is a singleton.
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
 additionnalButtonsMenu.subscribe((map) => {
     addClassicButtonActionBarEvent.set(
         [...map.values()].filter((c) => c.type === "button") as AddClassicButtonActionBarEvent[]

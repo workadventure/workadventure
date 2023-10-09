@@ -57,7 +57,7 @@
                 bind:value={property.speakerZoneName}
                 on:change={onValueChange}
             >
-                {#each [...getSpeakerZoneNames()] as [id, speakerZoneName]}
+                {#each [...getSpeakerZoneNames()] as [id, speakerZoneName] (id)}
                     <option value={id}>{speakerZoneName}</option>
                 {/each}
             </select>

@@ -79,7 +79,7 @@
 {#if $loadingSubscribersStore}
     <Loader text={$LL.loadingUsers()} height="h-40" />
 {:else}
-    {#each roomSorted as room}
+    {#each roomSorted as room (room)}
         <div class="users bg-contrast/80">
             <div class="px-4 py-1 flex items-center">
                 {#if !$loadingSubscribersStore}

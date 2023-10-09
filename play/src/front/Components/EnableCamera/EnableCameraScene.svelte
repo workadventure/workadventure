@@ -139,7 +139,7 @@
                             <!-- start with camera off -->
                             <option value={undefined}>{$LL.camera.disable()}</option>
 
-                            {#each $cameraListStore ?? [] as camera}
+                            {#each $cameraListStore ?? [] as camera (camera.deviceId)}
                                 <option value={camera.deviceId}>
                                     {StringUtils.normalizeDeviceName(camera.label)}
                                 </option>
@@ -155,7 +155,7 @@
                             <!-- start with microphone off -->
                             <option value={undefined}>{$LL.audio.disable()}</option>
 
-                            {#each $microphoneListStore ?? [] as microphone}
+                            {#each $microphoneListStore ?? [] as microphone (microphone.deviceId)}
                                 <option value={microphone.deviceId}>
                                     {StringUtils.normalizeDeviceName(microphone.label)}
                                 </option>

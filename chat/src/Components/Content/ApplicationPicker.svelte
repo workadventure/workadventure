@@ -20,7 +20,7 @@
 </script>
 
 <div class={`actions absolute bottom-0 mb-16 flex flex-col items-center w-auto left-4 ${_class}`} style={_style}>
-    {#each [...applications] as app}
+    {#each [...applications] as app (app.name)}
         <button
             class="action btn-app cursor-pointer flex flex-row justify-center"
             on:keydown

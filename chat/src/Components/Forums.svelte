@@ -28,7 +28,7 @@
             </button>-->
         </div>
         <div class="px-4">
-            {#each forums as forum}
+            {#each forums as forum (forum.url)}
                 <ChatMucRoom mucRoom={forum} {searchValue} />
             {/each}
         </div>

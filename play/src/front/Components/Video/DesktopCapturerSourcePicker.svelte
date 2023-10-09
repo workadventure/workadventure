@@ -59,7 +59,7 @@
     <button type="button" class="btn danger close" on:click={cancel}>&times;</button>
     <h2>Select a Screen or Window to share!</h2>
     <section class="streams">
-        {#each desktopCapturerSources as source}
+        {#each desktopCapturerSources as source (source.id)}
             <div class="media-box clickable" on:click|preventDefault={() => selectDesktopCapturerSource(source)}>
                 <img src={source.thumbnailURL} alt={source.name} />
                 <div class="container">

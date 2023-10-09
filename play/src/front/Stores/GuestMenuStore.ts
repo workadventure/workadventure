@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { startLayerNamesStore } from "./StartLayerNamesStore";
 
@@ -15,19 +15,13 @@ export async function copyLink() {
 }
 
 export function getLink(): string {
-    let startLayerName: string[] = [];
-    startLayerNamesStore.subscribe((value) => {
-        startLayerName = value;
-    });
+    const startLayerName: string[] = get(startLayerNamesStore);
     const entryPoint: string | null = startLayerName.length > 0 ? startLayerName[0] : null;
     try {
         const currentPlayer = gameManager.getCurrentGameScene().CurrentPlayer;
         const playerPos = { x: Math.floor(currentPlayer.x), y: Math.floor(currentPlayer.y) };
 
-        let walkAutomatically = false;
-        walkAutomaticallyStore.subscribe((value) => {
-            walkAutomatically = value;
-        });
+        const walkAutomatically = get(walkAutomaticallyStore);
 
         return `${getRoomId()}${entryPoint ? `#${entryPoint}` : ""}${
             walkAutomatically ? `&moveTo=${playerPos.x},${playerPos.y}` : ""
@@ -40,13 +34,6 @@ export function getLink(): string {
 
 export function getRoomId(): string {
     return `${location.origin}${location.pathname}`;
-}
-
-export function updateInputFieldValue() {
-    const input = document.getElementById("input-share-link");
-    if (input && input instanceof HTMLInputElement) {
-        input.value = getLink();
-    }
 }
 
 export const canShare = navigator.share !== undefined;

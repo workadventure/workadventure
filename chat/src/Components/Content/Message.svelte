@@ -139,6 +139,8 @@
                 urlifyError = err.message;
             });
     });
+
+    /* eslint-disable svelte/no-at-html-tags */
 </script>
 
 <div
@@ -282,7 +284,7 @@
 
                         <!-- File associated -->
                         {#if message.links && message.links.length > 0}
-                            {#each message.links as link}
+                            {#each message.links as link (link.url)}
                                 <File
                                     on:download={(event) => {
                                         download(event.detail.url, event.detail?.name);
@@ -317,12 +319,12 @@
 
                             <!-- Reply message body render -->
                             <p class="mb-0 text-xxs whitespace-pre-line break-words">
-                                {@html HtmlUtils.replaceEmojy(message.targetMessageReply.body)}
+                                {@html HtmlUtils.replaceEmoji(message.targetMessageReply.body)}
                             </p>
 
                             <!-- Reply message file -->
                             {#if message.targetMessageReply.links && message.targetMessageReply.links.length > 0}
-                                {#each message.targetMessageReply.links as link}
+                                {#each message.targetMessageReply.links as link (link.url)}
                                     <File url={link.url} name={link.description} />
                                 {/each}
                             {/if}

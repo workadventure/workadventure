@@ -89,7 +89,7 @@
             </svg>
         </div>
         <section hidden={!expandedTilesetCopyright}>
-            {#each tilesetCopyright as copyright}
+            {#each tilesetCopyright as copyright (copyright)}
                 <p class="whitespace-pre-line">{copyright}</p>
             {:else}
                 <p>{$LL.menu.about.copyrights.tileset.empty()}</p>
@@ -105,7 +105,7 @@
             </svg>
         </div>
         <section hidden={!expandedAudioCopyright}>
-            {#each audioCopyright as copyright}
+            {#each audioCopyright as copyright (copyright)}
                 <p class="whitespace-pre-line">{copyright}</p>
             {:else}
                 <p>{$LL.menu.about.copyrights.audio.empty()}</p>

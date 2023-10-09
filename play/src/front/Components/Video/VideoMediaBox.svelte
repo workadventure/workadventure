@@ -102,7 +102,7 @@
         {:else if $statusStore === "error"}
             <div class="rtc-error" />
         {/if}
-        <!-- svelte-ignore a11y-media-has-caption &ndash;&gt;-->
+        <!-- svelte-ignore a11y-media-has-caption -->
         {#if $streamStore}
             <div class="aspect-video w-full absolute top-0 left-0 overflow-hidden z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur rounded-xl" style="background-image: url({loaderImg})">
                 <video
