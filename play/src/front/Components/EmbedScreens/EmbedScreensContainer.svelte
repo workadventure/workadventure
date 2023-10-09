@@ -6,7 +6,7 @@
     import "../../style/wa-theme/video-ui.scss";
 </script>
 
-<div id="embedScreensContainer">
+<div id="embedScreensContainer" class="relative h-full pt-24 flex justify-center items-center">
     {#if $embedScreenLayoutStore === LayoutMode.Presentation}
         <PresentationLayout />
     {:else}
@@ -15,10 +15,4 @@
 </div>
 
 <style lang="scss">
-    #embedScreensContainer {
-        display: flex;
-        padding-top: 2%;
-        height: 100%;
-        position: relative;
-    }
 </style>

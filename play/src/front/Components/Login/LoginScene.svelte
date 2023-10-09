@@ -92,7 +92,7 @@
                 type="text"
                 name="loginSceneName"
                 placeholder="Tapez votre prénom ou pseudo..."
-                class="w-52 md:w-96 h-12 text text-center border-white bg-contrast rounded border border-solid border-white/20 mt-4 mb-0"
+                class="w-52 md:w-96 h-12 text text-center bg-contrast rounded border border-solid border-white/20 mt-4 mb-0"
                 autofocus
                 maxlength={MAX_USERNAME_LENGTH}
                 bind:value={name}
@@ -108,7 +108,7 @@
             {/if}
         </section>
         <section class="action flex h-fit justify-center m-0" class:opacity-50={(name.trim() === "" && startValidating) || errorName !== ""}>
-            <button type="submit" disabled='{(name.trim() === "" && startValidating) || errorName !== ""}' class="w-52 md:w-96 bold text-center block btn btn-secondary btn-lg loginSceneFormSubmit">{$LL.login.continue()}</button>
+            <button type="submit" disabled='{(name.trim() === "" && startValidating) || errorName !== ""}' class="mt-4 w-52 md:w-96 bold text-center block btn btn-secondary btn-lg loginSceneFormSubmit">{$LL.login.continue()}</button>
         </section>
     </div>
     {#if logo !== logoImg && gameManager.currentStartedRoom.showPoweredBy !== false}

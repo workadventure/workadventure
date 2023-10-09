@@ -37,6 +37,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     my: {
         silentZone: "Zone silencieuse",
         nameTag: "Vous",
+        loading: "Chargement de votre webcam..."
     },
     disable: "Couper la caméra",
 };

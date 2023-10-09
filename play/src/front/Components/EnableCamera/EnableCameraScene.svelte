@@ -119,7 +119,7 @@
                     autoplay
                     muted
                     playsinline
-                />
+                ></video>
             {:else}
                 <div class="webrtcsetup rounded-md h-28 gap-x-56 mb-6">
                     <img class="background-img" src={cinemaCloseImg} alt="" />
@@ -135,7 +135,7 @@
                 <div class="control-group">
                     <img src={cinemaImg} alt="Camera" />
                     <div class="is-dark">
-                        <select bind:value={selectedCamera} on:change={selectCamera} class="w-52 md:w-96">
+                        <select bind:value={selectedCamera} on:change={selectCamera} class="w-52 md:w-96 text-white bg-contrast rounded border border-solid border-white/20 mt-4 mb-0">
                             <!-- start with camera off -->
                             <option value={undefined}>{$LL.camera.disable()}</option>
 
@@ -151,7 +151,7 @@
                 <div class="control-group">
                     <img src={microphoneImg} alt="Microphone" />
                     <div class="is-dark">
-                        <select bind:value={selectedMicrophone} on:change={selectMicrophone} class="w-52 md:w-96">
+                        <select bind:value={selectedMicrophone} on:change={selectMicrophone} class="w-52 md:w-96 text-white bg-contrast rounded border border-solid border-white/20 mt-4 mb-0">
                             <!-- start with microphone off -->
                             <option value={undefined}>{$LL.audio.disable()}</option>
 

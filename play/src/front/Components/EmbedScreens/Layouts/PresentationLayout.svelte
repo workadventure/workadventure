@@ -53,7 +53,7 @@
     });
 </script>
 
-<div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias}>
+<div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias} class="flex flex-col w-full h-full">
     {#if displayFullMedias}
         <div id="full-medias" class="z-[300] relative mx-auto top-8 h-1/2 overflow-y-auto">
             <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
@@ -62,43 +62,8 @@
             {/if}
         </div>
     {:else}
-        <div id="embed-left-block">
-            <div id="main-embed-screen">
-                {#if $highlightedEmbedScreen}
-                    {#if $highlightedEmbedScreen.type === "streamable"}
-                        {#key $highlightedEmbedScreen.embed.uniqueId}
-                            <MediaBox
-                                isHightlighted={true}
-                                isClickable={true}
-                                streamable={$highlightedEmbedScreen.embed}
-                            />
-                        {/key}
-                    {:else if $highlightedEmbedScreen.type === "cowebsite"}
-                        {#key $highlightedEmbedScreen.embed.getId()}
-                            <div class="highlighted-cowebsite-container">
-                                <div
-                                    id={"cowebsite-slot-" + $highlightedEmbedScreen.embed.getId()}
-                                    class="highlighted-cowebsite"
-                                />
-                                <div class="actions">
-                                    {#if $highlightedEmbedScreen.embed.isClosable()}
-                                        <button
-                                            type="button"
-                                            class="close-window top-right-btn"
-                                            on:click={closeCoWebsite}
-                                        >
-                                            &times;
-                                        </button>
-                                    {/if}
-                                </div>
-                            </div>
-                        {/key}
-                    {/if}
-                {/if}
-            </div>
-        </div>
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div class="relative self-end z-[300] bottom-6 md:bottom-4">
+            <div class="relative self-center z-[300] flex">
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}
@@ -113,6 +78,41 @@
                 {/if}
             </div>
         {/if}
+        <div id="embed-left-block">
+            <div id="main-embed-screen">
+                {#if $highlightedEmbedScreen}
+                    {#if $highlightedEmbedScreen.type === "streamable"}
+                        {#key $highlightedEmbedScreen.embed.uniqueId}
+                            <MediaBox
+                                    isHightlighted={true}
+                                    isClickable={true}
+                                    streamable={$highlightedEmbedScreen.embed}
+                            />
+                        {/key}
+                    {:else if $highlightedEmbedScreen.type === "cowebsite"}
+                        {#key $highlightedEmbedScreen.embed.getId()}
+                            <div class="highlighted-cowebsite-container">
+                                <div
+                                        id={"cowebsite-slot-" + $highlightedEmbedScreen.embed.getId()}
+                                        class="highlighted-cowebsite"
+                                ></div>
+                                <div class="actions">
+                                    {#if $highlightedEmbedScreen.embed.isClosable()}
+                                        <button
+                                                type="button"
+                                                class="close-window top-right-btn"
+                                                on:click={closeCoWebsite}
+                                        >
+                                            &times;
+                                        </button>
+                                    {/if}
+                                </div>
+                            </div>
+                        {/key}
+                    {/if}
+                {/if}
+            </div>
+        </div>
     {/if}
 </div>
 
@@ -120,10 +120,6 @@
     @import "../../../style/breakpoints.scss";
 
     #presentation-layout {
-        height: 100%;
-        width: 100%;
-        display: flex;
-
         &.full-medias {
             overflow-y: auto;
             overflow-x: hidden;

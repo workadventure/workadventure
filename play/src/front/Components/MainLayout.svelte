@@ -159,38 +159,4 @@
 <style lang="scss">
     @import "../style/breakpoints.scss";
 
-    #main-layout {
-        display: grid;
-        grid-template-columns: 120px calc(100% - 120px);
-        grid-template-rows: 100%;
-        transition: all 0.2s ease-in-out;
-
-        &-left-aside {
-            min-width: 80px;
-        }
-    }
-
-    @include media-breakpoint-up(md) {
-        #main-layout {
-            grid-template-columns: 15% 85%;
-
-            &-left-aside {
-                min-width: auto;
-            }
-
-            &.not-cowebsite {
-                grid-template-columns: 0% 100%;
-            }
-        }
-    }
-
-    @include media-breakpoint-up(sm) {
-        #main-layout {
-            grid-template-columns: 20% 80%;
-
-            &.not-cowebsite {
-                grid-template-columns: 0% 100%;
-            }
-        }
-    }
 </style>

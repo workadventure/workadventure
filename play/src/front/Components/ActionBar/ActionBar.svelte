@@ -15,6 +15,7 @@
     import {
         cameraListStore,
         localStreamStore,
+        localVolumeStore,
         speakerListStore,
         requestedCameraState,
         requestedMicrophoneState,
@@ -84,9 +85,11 @@
     import {selectCompanionSceneVisibleStore} from "../../Stores/SelectCompanionStore";
     import {SelectCompanionScene, SelectCompanionSceneName} from "../../Phaser/Login/SelectCompanionScene";
     import {EnableCameraScene, EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
+    import HorizontalSoundMeterWidget from "../EnableCamera/HorizontalSoundMeterWidget.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
+    let selectedMicrophone: string | undefined = undefined;
     let cameraActive = false;
     let microphoneActive = false;
     let profileMenuIsDropped = false;
@@ -556,7 +559,7 @@
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M1.375 2.375L21.625 22.625" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                             <path d="M8.125 4.625C8.125 3.72989 8.48058 2.87145 9.11351 2.23851C9.74645 1.60558 10.6049 1.25 11.5 1.25C12.3951 1.25 13.2536 1.60558 13.8865 2.23851C14.5194 2.87145 14.875 3.72989 14.875 4.625V10.25C14.875 10.5832 14.8258 10.9145 14.7287 11.2332M12.4788 13.4832C11.9744 13.6361 11.4412 13.6687 10.922 13.5784C10.4028 13.4882 9.9119 13.2776 9.4887 12.9635C9.06549 12.6494 8.72171 12.2406 8.48491 11.7698C8.2481 11.299 8.12484 10.7793 8.125 10.2522V9.12725" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M3.625 10.25C3.62475 11.6713 4.00915 13.0661 4.73742 14.2866C5.46568 15.5071 6.51068 16.5077 7.76159 17.1824C9.01249 17.8571 10.4227 18.1807 11.8426 18.1189C13.2625 18.0571 14.6392 17.6121 15.8267 16.8313M18.0767 14.5813C18.9248 13.2961 19.3756 11.78ƒbtn)97 19.3727 10.25" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M3.625 10.25C3.62475 11.6713 4.00915 13.0661 4.73742 14.2866C5.46568 15.5071 6.51068 16.5077 7.76159 17.1824C9.01249 17.8571 10.4227 18.1807 11.8426 18.1189C13.2625 18.0571 14.6392 17.6121 15.8267 16.8313M18.0767 14.5813C18.9248 13.2961 19.3756 11.7897 19.3727 10.25" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                             <path d="M7 22.625H16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                             <path d="M11.5 18.125V22.625" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                         </svg>
@@ -568,7 +571,11 @@
                                     </div>
                                     <div class="relative z-10">
                                         <div class="italic mb-3 text-sm">Click on icon to turn {$requestedMicrophoneState && !$silentStore ? "OFF" : "ON"} microphone</div>
-                                        <div class="w-full h-6 bg-secondary"></div>
+                                        {#if selectedMicrophone != undefined}
+                                            <div class="w-full flex flex-col flex-wrap content-center mt-6">
+                                                <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
+                                            </div>
+                                        {/if}
                                         <button  class="btn btn-sm btn-border btn-light text-center block">
                                             Edit mic/speaker settings
                                         </button>
@@ -671,10 +678,10 @@
                             </div>
                         </div>
                     </div>
-                    <div  class={`absolute mt-2 top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-full text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-4 before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all ${adminMenuIsDropped ? "" : "-translate-y-4 opacity-0 "}`}>
+                    <div  class="absolute mt-2 top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-full text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-4 before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all {adminMenuIsDropped ? '' : '-translate-y-4 opacity-0 '}">
                         <ul class="p-0 m-0">
                             {#if $mapEditorActivated}
-                                <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
+                                <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => toggleMapEditorMode()}>
                                     <div class="group-hover:mr-2 transition-all w-8 mr-1 text-center">
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -684,7 +691,7 @@
                                 </li>
                             {/if}
                             {#if $userHasAccessToBackOfficeStore}
-                                <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
+                                <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openBo()}>
                                     <div class="group-hover:mr-2 transition-all w-8 mr-1 text-center">
                                         <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -793,7 +800,7 @@
     <div
             class="flex justify-center m-auto absolute left-0 right-0 top-24 w-auto z-50"
     >
-        <div class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg pl-4 flex flex-col items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 sm:flex-row">
+        <div class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg pl-4 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 sm:flex-row">
             <div class="bottom-action-section flex animate flex-row flex items-center">
                 {#each [...$emoteDataStore.keys()] as key}
                     <div class="transition-all bottom-action-button">

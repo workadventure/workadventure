@@ -71,7 +71,7 @@
         {#if mapLink}
             <a href={mapLink} class="btn btn-sm btn-secondary uppercase inline-block" target="_blank">{$LL.menu.about.mapLink()}</a>
         {/if}
-        <div class="mt-4 text-lg font-bold flex items-center py-4 px-8 border-y border-x-0 border-solid border-white/20 {expandedMapCopyright ? 'bg-contrast' : 'bg-contrast/50 hover:bg-contrast'}" on:click={() => (expandedMapCopyright = !expandedMapCopyright)}>
+        <div class="mt-4 text-lg font-bold flex items-center py-4 px-8 border-y border-x-0 border-solid border-white/20 {expandedMapCopyright ? 'bg-secondary' : 'bg-contrast/50 hover:bg-contrast'}" on:click={() => (expandedMapCopyright = !expandedMapCopyright)}>
             <div class="grow text-left">{$LL.menu.about.copyrights.map.title()}</div>
             <svg xmlns="http://www.w3.org/2000/svg" class="{expandedMapCopyright ? 'rotate-180' : ''}" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>

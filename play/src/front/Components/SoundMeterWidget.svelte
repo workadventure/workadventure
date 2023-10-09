@@ -19,11 +19,11 @@
     }
 </script>
 
-<div class="flex justify-between w-10 h-10 items-center {classcss ?? ''}" class:active={display}>
+<div class="flex justify-between w-8 h-6 items-center {classcss ?? ''}" class:active={display}>
     {#if volume}
         {#each volume as bar}
             <div
-                class="h-4 voice-meter-bar rounded flex w-[1px] transition-transform outline outline-solid outline-secondary/50 {barClass}"
+                class="h-4 voice-meter-bar rounded flex w-[1px] transition-transform outline outline-solid outline-black/30 {barClass}"
                 class:scale-y-[0%]={bar < 10}
                 class:scale-y-[10%]={bar > 20 && bar < 30}
                 class:scale-y-[20%]={bar > 30 && bar < 40}
