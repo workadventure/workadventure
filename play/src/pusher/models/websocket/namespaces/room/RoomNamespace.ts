@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ErrorS2CEvent } from "./server-to-client-events/ErrorS2CEvent";
 
 export const RoomClientToServerEvents = z.object({
     "viewport": z.function().args().returns(z.void()),
@@ -32,6 +33,7 @@ export const RoomClientToServerEvents = z.object({
 });
 
 export const RoomServerToClientEvents = z.object({
+    error: z.function().args(ErrorS2CEvent).returns(z.void()),
 });
 
 export const RoomInterServerEvents = z.object({});

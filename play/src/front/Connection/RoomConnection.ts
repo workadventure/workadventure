@@ -87,12 +87,13 @@ import type {
     ViewportInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
+import { io, Socket } from "socket.io-client";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
 
 export class RoomConnection implements RoomConnection {
-    private readonly socket: WebSocket;
+    private readonly socket: Socket<>;
     private userId: number | null = null;
     private static websocketFactory: null | ((url: string) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     private closed = false;
@@ -262,7 +263,7 @@ export class RoomConnection implements RoomConnection {
         if (RoomConnection.websocketFactory) {
             this.socket = RoomConnection.websocketFactory(url);
         } else {
-            this.socket = new WebSocket(url);
+            this.socket = io(url);
         }
 
         this.socket.binaryType = "arraybuffer";

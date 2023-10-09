@@ -59,7 +59,7 @@ const debug = Debug("socket");
 
 export class SocketManager implements ZoneEventListener {
     private adminConnections: Map<string, Map<string, AdminConnection>> = new Map<string, Map<string, AdminConnection>>();
-    private users: Map<string, UserData> = new Map<string, UserData>();
+    private sockets: Map<string, SocketData> = new Map<string, SocketData>();
     private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();
     private spaces: Map<string, Space> = new Map<string, Space>();
     private spaceStreamsToPusher: Map<number, BackSpaceConnection> = new Map<number, BackSpaceConnection>();
@@ -176,36 +176,35 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    async handleJoinRoom(client: Socket): Promise<void> {
-        const clientData = client.getUserData();
-        const viewport = clientData.viewport;
+    async handleJoinRoom(client: Socket, socketData:): Promise<void> {
+        const viewport = socketData.viewport;
         try {
             const joinRoomMessage: JoinRoomMessage = {
-                userUuid: clientData.userUuid,
-                userJid: clientData.userJid,
-                IPAddress: clientData.IPAddress,
-                roomId: clientData.roomId,
-                name: clientData.name,
-                availabilityStatus: clientData.availabilityStatus,
-                positionMessage: ProtobufUtils.toPositionMessage(clientData.position),
-                tag: clientData.tags,
-                isLogged: clientData.isLogged,
-                companionTexture: clientData.companionTexture,
-                activatedInviteUser: clientData.activatedInviteUser != undefined ? clientData.activatedInviteUser : true,
-                canEdit: clientData.canEdit,
-                characterTextures: clientData.characterTextures,
-                applications: clientData.applications ? clientData.applications : [],
-                visitCardUrl: clientData.visitCardUrl ?? "", // TODO: turn this into an optional field
-                userRoomToken: clientData.userRoomToken ?? "", // TODO: turn this into an optional field
-                lastCommandId: clientData.lastCommandId ?? "", // TODO: turn this into an optional field
+                userUuid: socketData.userUuid,
+                userJid: socketData.userJid,
+                IPAddress: socketData.IPAddress,
+                roomId: socketData.roomId,
+                name: socketData.name,
+                availabilityStatus: socketData.availabilityStatus,
+                positionMessage: ProtobufUtils.toPositionMessage(socketData.position),
+                tag: socketData.tags,
+                isLogged: socketData.isLogged,
+                companionTexture: socketData.companionTexture,
+                activatedInviteUser: socketData.activatedInviteUser != undefined ? socketData.activatedInviteUser : true,
+                canEdit: socketData.canEdit,
+                characterTextures: socketData.characterTextures,
+                applications: socketData.applications ? socketData.applications : [],
+                visitCardUrl: socketData.visitCardUrl ?? "", // TODO: turn this into an optional field
+                userRoomToken: socketData.userRoomToken ?? "", // TODO: turn this into an optional field
+                lastCommandId: socketData.lastCommandId ?? "", // TODO: turn this into an optional field
             };
 
-            debug("Calling joinRoom '" + clientData.roomId + "'");
-            const apiClient = await apiClientRepository.getClient(clientData.roomId);
+            debug("Calling joinRoom '" + socketData.roomId + "'");
+            const apiClient = await apiClientRepository.getClient(socketData.roomId);
             const streamToPusher = apiClient.joinRoom();
-            clientEventsEmitter.emitClientJoin(clientData.userUuid, clientData.roomId);
+            clientEventsEmitter.emitClientJoin(socketData.userUuid, socketData.roomId);
 
-            clientData.backConnection = streamToPusher;
+            socketData.backConnection = streamToPusher;
 
             streamToPusher
                 .on("data", (message: ServerToClientMessage) => {
@@ -215,8 +214,8 @@ export class SocketManager implements ZoneEventListener {
                     }
                     switch (message.message.$case) {
                         case "roomJoinedMessage": {
-                            clientData.userId = message.message.roomJoinedMessage.currentUserId;
-                            clientData.spaceUser.id = message.message.roomJoinedMessage.currentUserId;
+                            socketData.userId = message.message.roomJoinedMessage.currentUserId;
+                            socketData.spaceUser.id = message.message.roomJoinedMessage.currentUserId;
 
                             // If this is the first message sent, send back the viewport.
                             this.handleViewport(client, viewport);
@@ -230,13 +229,13 @@ export class SocketManager implements ZoneEventListener {
                     }
 
                     // Let's pass data over from the back to the client.
-                    if (!clientData.disconnecting) {
+                    if (!socketData.disconnecting) {
                         client.send(ServerToClientMessage.encode(message).finish(), true);
                     }
                 })
                 .on("end", () => {
                     // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
-                    if (!clientData.disconnecting) {
+                    if (!socketData.disconnecting) {
                         console.warn(
                             "Connection lost to back server '" +
                                 apiClient.getChannel().getTarget() +
@@ -253,7 +252,7 @@ export class SocketManager implements ZoneEventListener {
                         "Error in connection to back server '" +
                             apiClient.getChannel().getTarget() +
                             "' for room '" +
-                            clientData.roomId +
+                            socketData.roomId +
                             "'at :" +
                             date.toLocaleString("en-GB"),
                         err
@@ -262,13 +261,13 @@ export class SocketManager implements ZoneEventListener {
                         "Error in connection to back server '" +
                             apiClient.getChannel().getTarget() +
                             "' for room '" +
-                            clientData.roomId +
+                            socketData.roomId +
                             "': " +
-                            clientData.userUuid +
+                            socketData.userUuid +
                             err,
                         "debug"
                     );
-                    if (!clientData.disconnecting) {
+                    if (!socketData.disconnecting) {
                         this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
                     }
                 });
@@ -281,8 +280,8 @@ export class SocketManager implements ZoneEventListener {
             };
             streamToPusher.write(pusherToBackMessage);
 
-            const pusherRoom = await this.getOrCreateRoom(clientData.roomId);
-            pusherRoom.mucRooms = clientData.mucRooms;
+            const pusherRoom = await this.getOrCreateRoom(socketData.roomId);
+            pusherRoom.mucRooms = socketData.mucRooms;
             pusherRoom.join(client);
         } catch (e) {
             Sentry.captureException(`An error occurred on "join_room" event ${e}`);
@@ -941,7 +940,11 @@ export class SocketManager implements ZoneEventListener {
     }
 
     emitXMPPSettings(client: Socket): void {
-        const userData = client.getUserData();
+        const userData = this.sockets.get(client.id);
+        if (!userData) {
+            Sentry.captureException("SocketManager => emitXMPPSettings => userData is undefined");
+            throw new Error("User not found");
+        }
         const xmppSettings: XmppSettingsMessage = {
             conferenceDomain: "conference." + EJABBERD_DOMAIN,
             rooms: userData.mucRooms.map((definition: MucRoomDefinition) => {

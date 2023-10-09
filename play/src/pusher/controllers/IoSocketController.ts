@@ -234,6 +234,7 @@ export class IoSocketController {
 
                     socket.emit("error", {
                         reason: "error",
+                        status: 400,
                         error: {
                             type: "error",
                             title: "400 Bad Request",
@@ -268,6 +269,7 @@ export class IoSocketController {
                     if (version !== apiVersionHash) {
                         socket.emit("error", {
                             reason: "error",
+                            status: 419,
                             error: {
                                 type: "retry",
                                 title: "Please refresh",
@@ -340,34 +342,23 @@ export class IoSocketController {
                                                 err?.response?.status,
                                                 errorType.data
                                             );
-                                            return res.upgrade(
-                                                {
-                                                    rejected: true,
-                                                    reason: "error",
-                                                    status: err?.response?.status || 500,
-                                                    error: errorType.data,
-                                                } satisfies FailedErrorData,
-                                                websocketKey,
-                                                websocketProtocol,
-                                                websocketExtensions,
-                                                context
-                                            );
+                                            socket.emit("error", {
+                                                reason: "error",
+                                                status: err?.response?.status || 500,
+                                                error: errorType.data,
+                                            });
+                                            socket.disconnect(true);
+                                            return;
                                         } else {
                                             Sentry.captureException(`Unknown error on room connection ${err}`);
                                             console.error("Unknown error on room connection", err);
-                                            return res.upgrade(
-                                                {
-                                                    rejected: true,
-                                                    reason: null,
-                                                    status: 500,
-                                                    message: err?.response?.data,
-                                                    roomId: roomId,
-                                                } satisfies FailedInvalidData,
-                                                websocketKey,
-                                                websocketProtocol,
-                                                websocketExtensions,
-                                                context
-                                            );
+                                            socket.emit("error", {
+                                                reason: null,
+                                                message: err?.response?.data,
+                                                roomId: roomId,
+                                            });
+                                            socket.disconnect(true);
+                                            return;
                                         }
                                     }
                                     throw err;
@@ -404,32 +395,22 @@ export class IoSocketController {
                                 userData.jabberId = `${userData.jabberId}/${uuid()}`;
                             }
                             if (characterTextureIds.length !== characterTextures.length) {
-                                return res.upgrade(
-                                    {
-                                        rejected: true,
-                                        reason: "invalidTexture",
-                                        entityType: "character",
-                                    } satisfies FailedInvalidTextureData,
-                                    websocketKey,
-                                    websocketProtocol,
-                                    websocketExtensions,
-                                    context
-                                );
+                                socket.emit("error", {
+                                    reason: "invalidTexture",
+                                    entityType: "character",
+                                });
+                                socket.disconnect(true);
+                                return;
                             }
                             if (companionTextureId && !companionTexture) {
-                                return res.upgrade(
-                                    {
-                                        rejected: true,
-                                        reason: "invalidTexture",
-                                        entityType: "companion",
-                                    } satisfies FailedInvalidTextureData,
-                                    websocketKey,
-                                    websocketProtocol,
-                                    websocketExtensions,
-                                    context
-                                );
+                                socket.emit("error", {
+                                    reason: "invalidTexture",
+                                    entityType: "companion",
+                                });
+                                socket.disconnect(true);
+                                return;
                             }
-                            const responseData: UserSocketData = {
+                            const socketData: UserSocketData = {
                                 // Data passed here is accessible on the "websocket" socket object.
                                 rejected: false,
                                 disconnecting: false,
@@ -437,7 +418,7 @@ export class IoSocketController {
                                 roomId,
                                 userUuid: userData.userUuid,
                                 userJid: userData.jabberId,
-                                IPAddress,
+                                IPAddress: ipAddress,
                                 name,
                                 companionTexture,
                                 availabilityStatus,
@@ -488,56 +469,105 @@ export class IoSocketController {
                                     visitCardUrl: memberVisitCardUrl ?? undefined,
                                 }),
                             };
-                            /* This immediately calls open handler, you must not use res after this call */
-                            res.upgrade(
-                                responseData,
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context
-                            );
+
+                            // Let's join the room
+                            await socketManager.handleJoinRoom(socket, socketData);
+                            socketManager.emitXMPPSettings(socket);
+
+                            //get data information and show messages
+                            // if (socketData.messages && Array.isArray(socketData.messages)) {
+                            //     socketData.messages.forEach((c: unknown) => {
+                            //         const messageToSend = z.object({ type: z.string(), message: z.string() }).parse(c);
+                            //         const bytes = ServerToClientMessageTsProto.encode({
+                            //             message: {
+                            //                 $case: "sendUserMessage",
+                            //                 sendUserMessage: {
+                            //                     type: messageToSend.type,
+                            //                     message: messageToSend.message,
+                            //                 },
+                            //             },
+                            //         }).finish();
+                            //         if (!socketData.disconnecting) {
+                            //             ws.send(bytes, true);
+                            //         }
+                            //     });
+                            // }
+
+                            // Performance test
+                            /*
+                            const positionMessage = new PositionMessage();
+                            positionMessage.setMoving(true);
+                            positionMessage.setX(300);
+                            positionMessage.setY(300);
+                            positionMessage.setDirection(PositionMessage.Direction.DOWN);
+                            const userMovedMessage = new UserMovedMessage();
+                            userMovedMessage.setUserid(1);
+                            userMovedMessage.setPosition(positionMessage);
+                            const subMessage = new SubMessage();
+                            subMessage.setUsermovedmessage(userMovedMessage);
+                            const startTimestamp2 = Date.now();
+                            for (let i = 0; i < 100000; i++) {
+                                const batchMessage = new BatchMessage();
+                                batchMessage.setEvent("");
+                                batchMessage.setPayloadList([
+                                    subMessage
+                                ]);
+                                const serverToClientMessage = new ServerToClientMessage();
+                                serverToClientMessage.setBatchmessage(batchMessage);
+                                client.send(serverToClientMessage.serializeBinary().buffer, true);
+                            }
+                            const endTimestamp2 = Date.now();
+                            const startTimestamp = Date.now();
+                            for (let i = 0; i < 100000; i++) {
+                                // Let's do a performance test!
+                                const bytes = ServerToClientMessageTsProto.encode({
+                                    message: {
+                                        $case: "batchMessage",
+                                        batchMessage: {
+                                            event: '',
+                                            payload: [
+                                                {
+                                                    message: {
+                                                        $case: "userMovedMessage",
+                                                        userMovedMessage: {
+                                                            userId: 1,
+                                                            position: {
+                                                                moving: true,
+                                                                x: 300,
+                                                                y: 300,
+                                                                direction: PositionMessage_Direction.DOWN,
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }).finish();
+                                client.send(bytes);
+                            }
+                            const endTimestamp = Date.now();
+                            */
                 } catch (error) {
-                    if (e instanceof Error) {
-                        if (!(e instanceof JsonWebTokenError)) {
-                            Sentry.captureException(e);
-                            console.error(e);
+                    if (error instanceof Error) {
+                        if (!(error instanceof JsonWebTokenError)) {
+                            Sentry.captureException(error);
+                            console.error(error);
                         }
-                        if (upgradeAborted.aborted) {
-                            // If the response points to nowhere, don't attempt an upgrade
-                            return;
-                        }
-                        res.upgrade(
-                            {
-                                rejected: true,
-                                reason: e instanceof JsonWebTokenError ? tokenInvalidException : null,
-                                status: 401,
-                                message: e.message,
-                                roomId,
-                            } satisfies FailedInvalidData,
-                            websocketKey,
-                            websocketProtocol,
-                            websocketExtensions,
-                            context
-                        );
+                        socket.emit("error", {
+                            reason: error instanceof JsonWebTokenError ? tokenInvalidException : null,
+                            message: error.message,
+                            roomId,
+                        });
                     } else {
-                        if (upgradeAborted.aborted) {
-                            // If the response points to nowhere, don't attempt an upgrade
-                            return;
-                        }
-                        res.upgrade(
-                            {
-                                rejected: true,
-                                reason: null,
-                                message: "500 Internal Server Error",
-                                status: 500,
-                                roomId,
-                            } satisfies FailedInvalidData,
-                            websocketKey,
-                            websocketProtocol,
-                            websocketExtensions,
-                            context
-                        );
+                        socket.emit("error", {
+                            reason: null,
+                            message: "500 Internal Server Error",
+                            roomId,
+                        });
                     }
+                    socket.disconnect(true);
+                    return;
                 }
             })().catch((e) => {
                 socket.disconnect(true);
