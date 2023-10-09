@@ -82,7 +82,6 @@
     }
 }
 .wa-message-body{
-    @apply rounded-lg bg-dark text-xs px-3 py-2 text-left;
     p{
         @apply whitespace-pre-line;
         margin: 0;

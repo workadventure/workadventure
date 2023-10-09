@@ -440,7 +440,7 @@
     transition:fly={{ x: 500, duration: 400 }}
     on:click={() => (applicationMenuIsOpenned = false)}
 >
-    <div class="wa-thread-head">
+    <div class="wa-thread-head fixed w-full border-x-0 border-b border-t-0 border-solid border-white/30 backdrop-blur">
         <div class="title">
             <div class="py-1 w-14 self-stretch flex justify-center align-middle">
                 <button class="exit text-lighter-purple m-0" on:click={backToThreadList}>
@@ -494,7 +494,7 @@
                             : "mt-2"
                     }`}
                 >
-                    <div class={`flex ${message.type === ChatMessageTypes.me ? "justify-end" : "justify-start"}`}>
+                    <div class={`flex ${message.type === ChatMessageTypes.me ? "justify-end text-right" : "justify-start"}`}>
                         <div
                             class={`${
                                 message.type === ChatMessageTypes.me ? "opacity-0" : "mt-4"
@@ -513,46 +513,40 @@
                         </div>
                         <div class="w-3/4">
                             {#if !needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)}
-                                <div
-                                    style={`border-bottom-color:${message.author?.color}`}
-                                    class={`flex justify-between mx-2 border-0 border-b border-solid text-light-purple-alt text-xxs pb-1 ${
-                                        message.type === ChatMessageTypes.me ? "flex-row-reverse" : ""
-                                    }`}
-                                >
-                                    <span class="text-lighter-purple">
-                                        {#if message.type === ChatMessageTypes.me}
-                                            {$LL.me()}
-                                        {:else if message.author}
-                                            {message.author?.name.match(/\[\d*]/)
-                                                ? message.author?.name.substring(
-                                                      0,
-                                                      message.author?.name.search(/\[\d*]/)
-                                                  )
-                                                : message.author?.name}
-                                            {#if message.author?.name.match(/\[\d*]/)}
-                                                <span class="font-light text-xs text-gray">
-                                                    #{message.author?.name
+                                <div class="flex text-xxs px-8 py-1>
+                                    <span class="bold text-white/50 { message.type === ChatMessageTypes.me ? 'pl-4' : 'pr-4'}">
+                                    {#if message.type === ChatMessageTypes.me}
+                                        {$LL.me()}
+                                    {:else if message.author}
+                                        {message.author?.name.match(/\[\d*]/)
+                                            ? message.author?.name.substring(
+                                                0,
+                                                message.author?.name.search(/\[\d*]/)
+                                            )
+                                            : message.author?.name}
+                                        {#if message.author?.name.match(/\[\d*]/)}
+                                                    <span class="font-light text-xs text-gray">
+                                                        #{message.author?.name
                                                         .match(/\[\d*]/)
                                                         ?.join()
                                                         ?.replace("[", "")
                                                         ?.replace("]", "")}
-                                                </span>
-                                            {/if}
-                                        {:else}
-                                            {message.authorName}
+                                                    </span>
                                         {/if}
+                                    {:else}
+                                        {message.authorName}
+                                    {/if}
                                     </span>
-                                    <span
-                                        >{message.date.toLocaleTimeString($locale, {
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                            second: "2-digit",
-                                        })}</span
-                                    >
+                                    <span class="text-white/50 { message.type === ChatMessageTypes.me ? 'pl-4' : 'pr-4'}" >
+                                    {message.date.toLocaleTimeString($locale, {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                    })}
+                                    </span>
                                 </div>
                             {/if}
                             {#if message.text}
-                                <div class="wa-message-body">
+                                <div class="wa-message-body rounded-lg px-4 py-2 inline-block leading-6 {message.type === ChatMessageTypes.me ? 'bg-secondary' : 'bg-contrast'}">
                                     {#each message.text as text (text)}
                                         <div class="text-ellipsis overflow-y-auto break-words whitespace-pre-line">
                                             {#await HtmlUtils.urlify(text)}
@@ -639,7 +633,7 @@
     </div>
 
     <!--MESSAGE FORM-->
-    <div class="wa-message-form">
+    <div class="wa-message-form fixed bottom-0 w-full">
         <div class="emote-menu-container">
             <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
         </div>
@@ -690,7 +684,7 @@
                 </div>
             {/each}
 
-            <div class="w-full px-2 pb-2 flex flex-row justify-center items-center">
+            <div class="w-full px-2 py-2 flex flex-row justify-center items-center bg-contrast/80 border-x-0 border-b-0 border-t border-solid border-white/30 backdrop-blur">
                 <div class="actions px-2 py-2">
                     <div class="flex items-center space-x-1">
                         <button
@@ -699,41 +693,55 @@
                             on:click|preventDefault|stopPropagation={toggleApplicationMenu}
                             disabled={$applications.size === 0}
                         >
-                            <img
-                                src={`./static/images/applications/app${applicationMenuIsOpenned ? "On" : "Off"}.png`}
-                                alt="send"
-                                width="17px"
-                            />
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-apps" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+                                <path d="M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+                                <path d="M14 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+                                <path d="M14 7l6 0" />
+                                <path d="M17 4l0 6" />
+                            </svg>
                         </button>
                     </div>
                 </div>
-                <div
-                    bind:this={input}
-                    contenteditable="true"
-                    bind:innerHTML={htmlMessageText}
-                    data-placeholder={$LL.enterText()}
-                    on:keydown={handlerKeyDown}
-                    on:input={writing}
-                    on:focus={onFocus}
-                    on:blur={onBlur}
-                />
-                <div class="actions px-2 py-2">
-                    <div class="flex items-center space-x-1">
-                        <button
-                            class={`bg-transparent p-0 m-0 inline-flex justify-center items-center ${
-                                emojiOpened ? "text-light-blue" : ""
-                            }`}
+                <div class="relative grow">
+                    <div
+                            bind:this={input}
+                            contenteditable="true"
+                            bind:innerHTML={htmlMessageText}
+                            data-placeholder={$LL.enterText()}
+                            on:keydown={handlerKeyDown}
+                            on:input={writing}
+                            on:focus={onFocus}
+                            on:blur={onBlur}
+                            class="bg-contrast rounded border border-solid border-white/20 px-4 py-2 focus:outline-secondary"
+                    ></div>
+                    <button
+                            class="bg-transparent p-0 m-0 inline-flex justify-center items-center absolute right-2 top-0 bottom-0 m-auto opacity-50 hover:opacity-100 cursor-pointer { emojiOpened ? 'text-light-blue' : '' }"
                             on:click|preventDefault|stopPropagation={openEmoji}
-                        >
-                            <SmileIcon size="17" />
-                        </button>
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-mood-smile" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                            <path d="M9 10l.01 0" />
+                            <path d="M15 10l.01 0" />
+                            <path d="M9.5 15a3.5 3.5 0 0 0 5 0" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="actions">
+                    <div class="flex items-center space-x-1">
                         <button
                             id="send"
                             type="submit"
-                            class="can-send bg-transparent p-0 m-0 inline-flex justify-center items-center text-light-blue"
+                            class="can-send bg-transparent p-0 m-0 inline-flex justify-center items-center text-light-blue px-3 mx-1 py-1.5 rounded hover:bg-secondary cursor-pointer"
                             on:click|stopPropagation={saveMessage}
                         >
-                            <SendIcon size="17" />
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-send" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M10 14l11 -11" />
+                                <path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5" />
+                            </svg>
                         </button>
                     </div>
                 </div>

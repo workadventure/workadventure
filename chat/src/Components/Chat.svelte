@@ -234,7 +234,7 @@
                 {#if $navChat !== "users" || $showPart !== "loading" || $showPart !== "connectionNotAuthorized" }
                     <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
                 {/if}
-                {#if !userStore.get().isLogged && ENABLE_OPENID && $enableChat}
+                {#if ENABLE_OPENID && $enableChat}
                     <div class="bg-contrast/80">
                         <div class="p-3 text-sm text-center">
                             <div class="text-sm italic">{$LL.signIn()}</div>
@@ -250,7 +250,7 @@
     </section>
 </aside>
 
-<audio id="newMessageSound" src="./static/new-message.mp3" class="w-0 h-0 opacity-0" />
+<audio id="newMessageSound" src="./static/new-message.mp3" class="w-0 h-0 opacity-0"></audio>
 
 <style lang="scss">
     aside.chatWindow {

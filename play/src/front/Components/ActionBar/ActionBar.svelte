@@ -660,7 +660,7 @@
                 <div class="flex items-center relative">
                     <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2 mr-4" on:click={() =>
 				adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false } tabindex="0">
-                        <div class="flex items center h-full group-hover:bg-white/10 transition-all group-hover:rounded">
+                        <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded">
                             <div class="px-2 m-auto">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
