@@ -3,7 +3,7 @@ import { Subject } from "rxjs";
 import type { AddPlayerEvent } from "../../Events/AddPlayerEvent";
 import type { PlayerPosition } from "../../Events/PlayerPosition";
 import { ActionsMenuAction } from "../ui";
-import { sendToWorkadventure } from "../IframeApiContribution";
+import { queryWorkadventure, sendToWorkadventure } from "../IframeApiContribution";
 
 export const remotePlayers = new Map<number, RemotePlayer>();
 
@@ -40,6 +40,12 @@ export interface RemotePlayerInterface {
      * An object storing players variables
      */
     readonly state: ReadOnlyState;
+
+    /**
+     * Send an event to the player.
+     * Remote player can listen to this event using `WA.event.onEventTriggered(key).subscribe((event) => { ... })`.
+     */
+    sendEvent(key: string, value: unknown): Promise<void>;
 }
 
 export type ReadOnlyState = { onVariableChange(key: string): Observable<unknown> } & {
@@ -168,6 +174,17 @@ export class RemotePlayer implements RemotePlayerInterface {
         sendToWorkadventure({
             type: "removeActionsMenuKeyFromRemotePlayer",
             data: { id: this._playerId, actionKey: key },
+        });
+    }
+
+    public sendEvent(key: string, value: unknown): Promise<void> {
+        return queryWorkadventure({
+            type: "dispatchEvent",
+            data: {
+                key,
+                value,
+                targetUserIds: [this._playerId],
+            },
         });
     }
 }
