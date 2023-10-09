@@ -33,6 +33,7 @@ import { chatConnectionManager } from "./Connection/ChatConnectionManager";
 import { NotificationType } from "./Media/MediaManager";
 import { activeThreadStore } from "./Stores/ActiveThreadStore";
 import { emojiRegex } from "./Utils/HtmlUtils";
+import { User } from "./Xmpp/AbstractRoom";
 
 const debug = Debug("chat");
 
@@ -131,9 +132,23 @@ class IframeListener {
                             }
                             case "comingUser": {
                                 const mucRoomDefault = mucRoomsStore.getDefaultRoom();
-                                let userData = undefined;
+                                let userData: User;
                                 if (mucRoomDefault && iframeEvent.data.author.jid !== "fake") {
-                                    userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
+                                    let userDataDefaultMucRoom = mucRoomDefault.getUserByJid(
+                                        iframeEvent.data.author.jid
+                                    );
+                                    if (userDataDefaultMucRoom === undefined) {
+                                        // Something went wrong while fetching user data from the default MucRoom.
+                                        // Let's try a fallback.
+                                        userDataDefaultMucRoom = {
+                                            name: "Unknown",
+                                            active: true,
+                                            jid: iframeEvent.data.author.jid,
+                                            isMe: false,
+                                            isMember: false,
+                                        };
+                                    }
+                                    userData = userDataDefaultMucRoom;
                                 } else {
                                     userData = iframeEvent.data.author;
                                 }
