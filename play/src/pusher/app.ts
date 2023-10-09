@@ -22,6 +22,7 @@ import { jwtTokenManager } from "./services/JWTTokenManager";
 import { CompanionService } from "./services/CompanionService";
 import { WokaService } from "./services/WokaService";
 import { Server as SocketServer } from "socket.io";
+import * as mgspackParser from "socket.io-msgpack-parser";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LiveDirectory = require("live-directory");
 
@@ -31,7 +32,13 @@ class App {
 
     constructor() {
         this.webserver = new HyperExpress.Server();
-        this.socketServer = new SocketServer();
+        this.socketServer = new SocketServer({
+            parser: mgspackParser,
+            cors: {
+                origin: "*",
+                methods: ["GET", "POST"],
+            },
+        });
         this.socketServer.attachApp(this.webserver.uws_instance);
 
         // Global middlewares

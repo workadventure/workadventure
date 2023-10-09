@@ -88,12 +88,13 @@ import type {
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
 import { io, Socket } from "socket.io-client";
+import { RoomClientToServerEvents, RoomServerToClientEvents } from "@workadventure/socket-namespaces/src/room/RoomNamespace";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
 
 export class RoomConnection implements RoomConnection {
-    private readonly socket: Socket<>;
+    private readonly socket: Socket<RoomServerToClientEvents, RoomClientToServerEvents>;
     private userId: number | null = null;
     private static websocketFactory: null | ((url: string) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     private closed = false;
@@ -266,14 +267,7 @@ export class RoomConnection implements RoomConnection {
             this.socket = io(url);
         }
 
-        this.socket.binaryType = "arraybuffer";
-
-        this.socket.onopen = () => {
-            console.info("Socket has been opened");
-            this.resetPingTimeout();
-        };
-
-        this.socket.addEventListener("close", (event) => {
+        this.socket.on("disconnect", (reason, details) => {
             console.info("Socket has been closed", this.userId, this.closed, event);
             if (this.timeout) {
                 clearTimeout(this.timeout);
@@ -281,11 +275,16 @@ export class RoomConnection implements RoomConnection {
 
             // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
             if (this.userId === null && !this.closed) {
-                this._connectionErrorStream.next(event);
+                this._connectionErrorStream.next(details);
             }
         });
 
-        this.socket.onmessage = (messageEvent) => {
+        this.socket.on("connect", () => {
+            console.info("Socket has been opened");
+            this.resetPingTimeout();
+        });
+
+        this.socket.on("message", (messageEvent) => {
             const arrayBuffer: ArrayBuffer = messageEvent.data;
 
             const serverToClientMessage = ServerToClientMessageTsProto.decode(new Uint8Array(arrayBuffer));
@@ -646,7 +645,7 @@ export class RoomConnection implements RoomConnection {
                     const _exhaustiveCheck: never = message;
                 }
             }
-        };
+        });
     }
 
     private resetPingTimeout(): void {
@@ -838,7 +837,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public onConnectError(callback: (error: Event) => void): void {
-        this.socket.addEventListener("error", callback);
+        this.socket.on("error", callback);
     }
 
     public sendWebrtcSignal(signal: unknown, receiverId: number) {
@@ -866,7 +865,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public onServerDisconnected(callback: () => void): void {
-        this.socket.addEventListener("close", (event) => {
+        this.socket.on("disconnect", (event) => {
             // FIXME: technically incorrect: if we call onServerDisconnected several times, we will run several times the code (and we probably want to run only callback() serveral times).
             // FIXME: call to query.reject and this.completeStreams should probably be stored somewhere else.
 
@@ -1230,7 +1229,7 @@ export class RoomConnection implements RoomConnection {
     private send(message: ClientToServerMessageTsProto): void {
         const bytes = ClientToServerMessageTsProto.encode(message).finish();
 
-        if (this.socket.readyState === WebSocket.CLOSING || this.socket.readyState === WebSocket.CLOSED) {
+        if (this.socket.disconnected) {
             console.warn("Trying to send a message to the server, but the connection is closed. Message: ", message);
             return;
         }

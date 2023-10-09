@@ -8,8 +8,7 @@ import {
     SubMessage,
 } from "@workadventure/messages";
 import { Space } from "../../src/pusher/models/Space";
-import { BackSpaceConnection, UserSocketData } from "../../src/pusher/models/websocket/SocketData";
-import { Socket } from "../../src/pusher/services/SocketManager";
+import { BackSpaceConnection, SocketData } from "../../src/pusher/models/websocket/SocketData";
 describe("Space", () => {
     let eventsWatcher: PusherToBackSpaceMessage[] = [];
     const backSpaceConnection = mock<BackSpaceConnection>({

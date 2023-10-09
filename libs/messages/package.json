@@ -4,7 +4,6 @@
   "description": "Google Protobuf generated messages",
   "main": "./src/index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc"
   },
   "author": "WorkAdventure",
@@ -17,6 +16,7 @@
     "openapi3-ts": "^3.0.2",
     "protobufjs": "^7.2.4",
     "rxjs": "6.6.3",
+    "tozod": "^3.0.0",
     "zod": "^3.19.1"
   },
   "devDependencies": {

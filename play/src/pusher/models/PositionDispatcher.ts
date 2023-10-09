@@ -12,7 +12,8 @@ import Debug from "debug";
 import { Zone } from "./Zone";
 import type { ZoneEventListener } from "./Zone";
 import type { ViewportInterface } from "./websocket/ViewportMessage";
-import { Socket } from "../services/SocketManager";
+import type { Socket } from "socket.io";
+import { socketManager } from "../services/SocketManager";
 
 const debug = Debug("positiondispatcher");
 
@@ -49,7 +50,7 @@ export class PositionDispatcher {
             return;
         }
 
-        const oldZones = socket.getUserData().listenedZones;
+        const oldZones = socketManager.getSocketData(socket).listenedZones;
         const newZones = new Set<Zone>();
 
         const topLeftDesc = this.getZoneDescriptorFromCoordinates(viewport.left, viewport.top);
@@ -93,7 +94,7 @@ export class PositionDispatcher {
 
     public removeViewport(socket: Socket): void {
         // Also, let's stop listening on viewports
-        const listenedZones = socket.getUserData().listenedZones;
+        const listenedZones = socketManager.getSocketData(socket).listenedZones;
         if (listenedZones) {
             for (const zone of listenedZones) {
                 this.stopListening(zone, socket);

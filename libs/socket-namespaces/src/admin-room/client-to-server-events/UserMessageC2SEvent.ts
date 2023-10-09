@@ -10,7 +10,6 @@ export const BanBannedUserMessageC2SEvent = z.object({
 export const UserMessageC2SEvent = z.object({
     message: extendApi(BanBannedUserMessageC2SEvent),
     world: z.string(),
-    jwt: z.string(),
 });
 
 export type BanBannedUserMessageC2SEvent = z.infer<typeof BanBannedUserMessageC2SEvent>;

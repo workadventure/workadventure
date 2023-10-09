@@ -2,10 +2,19 @@
   "name": "@workadventure/socket-namespaces",
   "version": "1.0.0",
   "description": "WebSocket namespaces typing for WorkAdventure",
-  "main": "./src/index.ts",
   "author": "WorkAdventure",
   "license": "ISC",
+  "scripts": {
+    "build": "tsc"
+  },
   "files": [
     "src"
-  ]
+  ],
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@workadventure/messages": "^1.0.0",
+    "zod": "^3.22.4"
+  }
 }

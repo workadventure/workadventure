@@ -2,7 +2,7 @@ import { Socket } from "socket.io";
 import { ExtendedError } from "socket.io/dist/namespace";
 import { jwtTokenManager } from "../../../services/JWTTokenManager";
 import * as Sentry from "@sentry/node";
-import { ErrorS2CEvent } from "../namespaces/admin-room/server-to-client-events/ErrorS2CEvent";
+import { ErrorS2CEvent } from "../../../../../../libs/socket-namespaces/src/admin-room/server-to-client-events/ErrorS2CEvent";
 
 export default (socket: Socket, next: (err?: ExtendedError | undefined) => void) => {
     const token = socket.handshake.auth.token;

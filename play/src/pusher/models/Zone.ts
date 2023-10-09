@@ -22,20 +22,20 @@ import * as Sentry from "@sentry/node";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import type { PositionDispatcher } from "../models/PositionDispatcher";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
-import { Socket } from "../services/SocketManager";
+import { ClientSocket, socketManager } from "../services/SocketManager";
 
 const debug = Debug("zone");
 
 export interface ZoneEventListener {
-    onUserEnters(user: UserDescriptor, listener: Socket): void;
-    onUserMoves(user: UserDescriptor, listener: Socket): void;
-    onUserLeaves(userId: number, listener: Socket): void;
-    onGroupEnters(group: GroupDescriptor, listener: Socket): void;
-    onGroupMoves(group: GroupDescriptor, listener: Socket): void;
-    onGroupLeaves(groupId: number, listener: Socket): void;
-    onEmote(emoteMessage: EmoteEventMessage, listener: Socket): void;
-    onError(errorMessage: ErrorMessage, listener: Socket): void;
-    onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: Socket): void;
+    onUserEnters(user: UserDescriptor, listener: ClientSocket): void;
+    onUserMoves(user: UserDescriptor, listener: ClientSocket): void;
+    onUserLeaves(userId: number, listener: ClientSocket): void;
+    onGroupEnters(group: GroupDescriptor, listener: ClientSocket): void;
+    onGroupMoves(group: GroupDescriptor, listener: ClientSocket): void;
+    onGroupLeaves(groupId: number, listener: ClientSocket): void;
+    onEmote(emoteMessage: EmoteEventMessage, listener: ClientSocket): void;
+    onError(errorMessage: ErrorMessage, listener: ClientSocket): void;
+    onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ClientSocket): void;
 }
 
 /*export type EntersCallback = (thing: Movable, listener: User) => void;
@@ -179,7 +179,7 @@ export class Zone implements CustomJsonReplacerInterface {
     //private things: Set<Movable> = new Set<Movable>();
     private users: Map<number, UserDescriptor> = new Map<number, UserDescriptor>();
     private groups: Map<number, GroupDescriptor> = new Map<number, GroupDescriptor>();
-    private listeners: Set<Socket> = new Set<Socket>();
+    private listeners: Set<ClientSocket> = new Set<ClientSocket>();
     private backConnection!: ClientReadableStream<BatchToPusherMessage>;
     private isClosing = false;
 
@@ -324,7 +324,7 @@ export class Zone implements CustomJsonReplacerInterface {
                     if (!this.isClosing) {
                         const date = new Date();
                         for (const listener of this.listeners) {
-                            const userUuid = listener.getUserData().userUuid;
+                            const userUuid = socketManager.getSocketData(listener).userUuid;
                             debug(
                                 "Error on back connection" + userUuid + "at : " + date.toLocaleString("en-GB")
                             );
@@ -370,7 +370,7 @@ export class Zone implements CustomJsonReplacerInterface {
      */
     private notifyUserEnter(user: UserDescriptor, oldZone: ZoneDescriptor | undefined): void {
         for (const listener of this.listeners) {
-            if (listener.getUserData().userId === user.userId) {
+            if (socketManager.getSocketData(listener).userId === user.userId) {
                 continue;
             }
             if (oldZone === undefined || !this.isListeningZone(listener, oldZone.x, oldZone.y)) {
@@ -399,7 +399,7 @@ export class Zone implements CustomJsonReplacerInterface {
      */
     private notifyUserLeft(userId: number, newZone: ZoneDescriptor | undefined): void {
         for (const listener of this.listeners) {
-            if (listener.getUserData().userId === userId) {
+            if (socketManager.getSocketData(listener).userId === userId) {
                 continue;
             }
             if (newZone === undefined || !this.isListeningZone(listener, newZone.x, newZone.y)) {
@@ -412,7 +412,7 @@ export class Zone implements CustomJsonReplacerInterface {
 
     private notifyEmote(emoteMessage: EmoteEventMessage): void {
         for (const listener of this.listeners) {
-            if (listener.getUserData().userId === emoteMessage.actorUserId) {
+            if (socketManager.getSocketData(listener).userId === emoteMessage.actorUserId) {
                 continue;
             }
             this.socketListener.onEmote(emoteMessage, listener);
@@ -421,7 +421,7 @@ export class Zone implements CustomJsonReplacerInterface {
 
     private notifyPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage): void {
         for (const listener of this.listeners) {
-            if (listener.getUserData().userId === playerDetailsUpdatedMessage.userId) {
+            if (socketManager.getSocketData(listener).userId === playerDetailsUpdatedMessage.userId) {
                 continue;
             }
             this.socketListener.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener);
@@ -439,9 +439,6 @@ export class Zone implements CustomJsonReplacerInterface {
      */
     private notifyGroupLeft(groupId: number, newZone: ZoneDescriptor | undefined): void {
         for (const listener of this.listeners) {
-            if (listener.getUserData().groupId === groupId) {
-                continue;
-            }
             if (newZone === undefined || !this.isListeningZone(listener, newZone.x, newZone.y)) {
                 this.socketListener.onGroupLeaves(groupId, listener);
             } else {
@@ -450,9 +447,9 @@ export class Zone implements CustomJsonReplacerInterface {
         }
     }
 
-    private isListeningZone(socket: Socket, x: number, y: number): boolean {
+    private isListeningZone(socket: ClientSocket, x: number, y: number): boolean {
         // TODO: improve efficiency by not doing a full scan of listened zones.
-        for (const zone of socket.getUserData().listenedZones) {
+        for (const zone of socketManager.getSocketData(socket).listenedZones) {
             if (zone.x === x && zone.y === y) {
                 return true;
             }
@@ -468,16 +465,17 @@ export class Zone implements CustomJsonReplacerInterface {
 
     private notifyUserMove(userDescriptor: UserDescriptor): void {
         for (const listener of this.listeners) {
-            if (listener.getUserData().userId === userDescriptor.userId) {
+            if (socketManager.getSocketData(listener).userId === userDescriptor.userId) {
                 continue;
             }
             this.socketListener.onUserMoves(userDescriptor, listener);
         }
     }
 
-    public startListening(listener: Socket): void {
+    public startListening(listener: ClientSocket): void {
+        const userData = socketManager.getSocketData(listener);
         for (const [userId, user] of this.users.entries()) {
-            if (userId !== listener.getUserData().userId) {
+            if (userId !== userData.userId) {
                 this.socketListener.onUserEnters(user, listener);
             }
         }
@@ -487,12 +485,13 @@ export class Zone implements CustomJsonReplacerInterface {
         }
 
         this.listeners.add(listener);
-        listener.getUserData().listenedZones.add(this);
+        userData.listenedZones.add(this);
     }
 
-    public stopListening(listener: Socket): void {
+    public stopListening(listener: ClientSocket): void {
+        const userData = socketManager.getSocketData(listener);
         for (const userId of this.users.keys()) {
-            if (userId !== listener.getUserData().userId) {
+            if (userId !== userData.userId) {
                 this.socketListener.onUserLeaves(userId, listener);
             }
         }
@@ -502,12 +501,12 @@ export class Zone implements CustomJsonReplacerInterface {
         }
 
         this.listeners.delete(listener);
-        listener.getUserData().listenedZones.delete(this);
+        userData.listenedZones.delete(this);
     }
 
     public customJsonReplacer(key: unknown, value: unknown): string | undefined {
         if (key === "listeners") {
-            return `${(value as Set<Socket>).size} listener(s) registered`;
+            return `${(value as Set<ClientSocket>).size} listener(s) registered`;
         }
         if (key === "positionDispatcher") {
             return "positionDispatcher";

@@ -8,7 +8,8 @@ import { PositionDispatcher } from "./PositionDispatcher";
 import type { ViewportInterface } from "./websocket/ViewportMessage";
 import type { ZoneEventListener } from "./Zone";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
-import { Socket } from "../services/SocketManager";
+import { Socket } from "socket.io";
+import { socketManager } from "../services/SocketManager";
 
 const debug = Debug("room");
 
@@ -48,13 +49,13 @@ export class PusherRoom implements CustomJsonReplacerInterface {
             return;
         }
 
-        socket.getUserData().pusherRoom = this;
+        socketManager.getSocketData(socket).pusherRoom = this;
     }
 
     public leave(socket: Socket): void {
         this.positionNotifier.removeViewport(socket);
         this.listeners.delete(socket);
-        socket.getUserData().pusherRoom = undefined;
+        socketManager.getSocketData(socket).pusherRoom = undefined;
     }
 
     public isEmpty(): boolean {
@@ -96,8 +97,9 @@ export class PusherRoom implements CustomJsonReplacerInterface {
 
                         // Let's dispatch this variable to all the listeners
                         for (const listener of this.listeners) {
-                            if (!readableBy || listener.getUserData().tags.includes(readableBy)) {
-                                listener.getUserData().emitInBatch({
+                            const userData = socketManager.getSocketData(listener);
+                            if (!readableBy || userData.tags.includes(readableBy)) {
+                                userData.emitInBatch({
                                     message: {
                                         $case: "variableMessage",
                                         variableMessage: variableMessage,
@@ -109,7 +111,8 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                     }
                     case "editMapCommandMessage": {
                         for (const listener of this.listeners) {
-                            listener.getUserData().emitInBatch({
+                            const userData = socketManager.getSocketData(listener);
+                            userData.emitInBatch({
                                 message: {
                                     $case: "editMapCommandMessage",
                                     editMapCommandMessage: message.message.editMapCommandMessage,
@@ -129,11 +132,11 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                                 }
                                 this._wamSettings.megaphone =
                                     message.message.editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message.updateMegaphoneSettingMessage;
-                                listener.getUserData().emitInBatch({
+                                    userData.emitInBatch({
                                     message: {
                                         $case: "megaphoneSettingsMessage",
                                         megaphoneSettingsMessage: {
-                                            enabled: WAMSettingsUtils.canUseMegaphone(this._wamSettings, listener.getUserData().tags),
+                                            enabled: WAMSettingsUtils.canUseMegaphone(this._wamSettings, userData.tags),
                                             url: WAMSettingsUtils.getMegaphoneUrl(
                                                 this._wamSettings,
                                                 new URL(this.roomUrl).host,
@@ -150,7 +153,7 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                         const errorMessage = message.message.errorMessage;
                         // Let's dispatch this error to all the listeners
                         for (const listener of this.listeners) {
-                            listener.getUserData().emitInBatch({
+                            socketManager.getSocketData(listener).emitInBatch({
                                 message: {
                                     $case: "errorMessage",
                                     errorMessage: errorMessage,
@@ -162,7 +165,7 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                     case "joinMucRoomMessage": {
                         // Let's dispatch this joinMucRoomMessage to all the listeners
                         for (const listener of this.listeners) {
-                            listener.getUserData().emitInBatch({
+                            socketManager.getSocketData(listener).emitInBatch({
                                 message: {
                                     $case: "joinMucRoomMessage",
                                     joinMucRoomMessage: message.message.joinMucRoomMessage,
@@ -174,7 +177,7 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                     case "leaveMucRoomMessage": {
                         // Let's dispatch this leaveMucRoomMessage to all the listeners
                         for (const listener of this.listeners) {
-                            listener.getUserData().emitInBatch({
+                            socketManager.getSocketData(listener).emitInBatch({
                                 message: {
                                     $case: "leaveMucRoomMessage",
                                     leaveMucRoomMessage: message.message.leaveMucRoomMessage,
@@ -196,18 +199,20 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                 this.close();
                 // Let's close all connections linked to that room
                 for (const listener of this.listeners) {
-                    listener.getUserData().disconnecting = true;
-                    listener.end(1011, "Connection error between pusher and back server");
-                    console.error("Connection error between pusher and back server", err);
                     Sentry.captureMessage(
                         "Connection error between pusher and back server : " +
                             err +
                             " " +
                             this.roomUrl +
                             " " +
-                            listener.getUserData().userUuid,
+                            socketManager.getSocketData(listener).userUuid,
                         "debug"
                     );
+                    listener.emit("error", {
+                        reason: "Connection error between pusher and back server",
+                    });
+                    console.error("Connection error between pusher and back server", err);
+                    listener.disconnect(true);
                 }
             }
         });
@@ -217,18 +222,14 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                 this.close();
                 // Let's close all connections linked to that room
                 for (const listener of this.listeners) {
-                    listener.getUserData().disconnecting = true;
                     Sentry.captureMessage(
-                        "Close on back connection " + this.roomUrl + " " + listener.getUserData().userUuid,
+                        "Close on back connection " + this.roomUrl + " " + socketManager.getSocketData(listener).userUuid,
                         "debug"
                     );
-                    listener.end(
-                        1011,
-                        "Connection closed between pusher and back server" +
-                            this.roomUrl +
-                            " " +
-                            new Date().toLocaleString("en-GB")
-                    );
+                    listener.emit("error", {
+                        reason: "Connection closed between pusher and back server",
+                    });
+                    listener.disconnect(true);
                 }
             }
         });

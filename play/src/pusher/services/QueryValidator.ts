@@ -3,7 +3,7 @@ import { Socket } from "socket.io";
 import type { z, ZodObject } from "zod";
 import type { ZodRawShape } from "zod/lib/types";
 import type { Request, Response } from "hyper-express";
-import { RoomClientToServerEvents, RoomServerToClientEvents } from "../models/websocket/namespaces/room/RoomNamespace";
+import { RoomClientToServerEvents, RoomServerToClientEvents } from "../../../../libs/socket-namespaces/src/room/RoomNamespace";
 
 /**
  * Either validates the query and returns the parsed query data (according to the validator passed in parameter)
