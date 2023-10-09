@@ -88,6 +88,7 @@ import type {
     ViewportInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
+import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -203,7 +204,7 @@ export class RoomConnection implements RoomConnection {
     private readonly _megaphoneSettingsMessageStream = new BehaviorSubject<MegaphoneSettings | undefined>(undefined);
     public readonly megaphoneSettingsMessageStream = this._megaphoneSettingsMessageStream.asObservable();
 
-    private readonly _receivedEventMessageStream = new Subject<ReceivedEventMessage>();
+    private readonly _receivedEventMessageStream = new Subject<ReceiveEventEvent>();
     public readonly receivedEventMessageStream = this._receivedEventMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -395,7 +396,11 @@ export class RoomConnection implements RoomConnection {
                                 break;
                             }
                             case "receivedEventMessage": {
-                                this._receivedEventMessageStream.next(subMessage.receivedEventMessage);
+                                this._receivedEventMessageStream.next({
+                                    name: subMessage.receivedEventMessage.name,
+                                    value: JSON.parse(subMessage.receivedEventMessage.value) as unknown,
+                                    senderId: subMessage.receivedEventMessage.senderId,
+                                });
                                 break;
                             }
                             default: {

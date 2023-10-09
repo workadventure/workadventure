@@ -2,6 +2,8 @@ import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
 import { ReceiveEventEvent } from "../Events/ReceiveEventEvent";
 
+export type ScriptingEvent = ReceiveEventEvent;
+
 export abstract class AbstractWorkadventureEventCommands {
     protected receivedEventResolvers = new Subject<ReceiveEventEvent>();
     protected eventSubscribers = new Map<string, Subject<ReceiveEventEvent>>();
@@ -19,7 +21,7 @@ export abstract class AbstractWorkadventureEventCommands {
         });
     }
 
-    onEventTriggered(key: string): Observable<ReceiveEventEvent> {
+    onEventTriggered(key: string): Observable<ScriptingEvent> {
         let subject = this.eventSubscribers.get(key);
         if (subject === undefined) {
             subject = new Subject<ReceiveEventEvent>();

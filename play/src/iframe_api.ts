@@ -22,6 +22,7 @@ import player, {
     setUserRoomToken,
     setUuid,
     setIsLogged,
+    setPlayerId,
 } from "./front/Api/Iframe/player";
 import players from "./front/Api/Iframe/players";
 import type { ButtonDescriptor } from "./front/Api/Iframe/Ui/ButtonDescriptor";
@@ -52,6 +53,7 @@ export type { EmbeddedWebsite } from "./front/Api/Iframe/Room/EmbeddedWebsite";
 export type { Area } from "./front/Api/Iframe/Area/Area";
 export type { ActionsMenuAction } from "./front/Api/Iframe/ui";
 export type { TileDescriptor } from "./front/Api/Iframe/room";
+export type { ScriptingEvent } from "./front/Api/Iframe/AbstractEvent";
 
 const globalState = createState();
 
@@ -71,6 +73,7 @@ const initPromise = queryWorkadventure({
     type: "getState",
     data: undefined,
 }).then((gameState) => {
+    setPlayerId(gameState.playerId);
     setPlayerName(gameState.nickname);
     setPlayerLanguage(gameState.language);
     setRoomId(gameState.roomId);

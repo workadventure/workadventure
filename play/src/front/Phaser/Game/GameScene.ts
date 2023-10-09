@@ -1938,6 +1938,7 @@ ${escapedMessage}
             // for the connection to send back the answer.
             await this.connectionAnswerPromiseDeferred.promise;
             return {
+                playerId: this.connection?.getUserId(),
                 mapUrl: this.mapUrlFile,
                 startLayerName: this.startPositionCalculator.getStartPositionName() ?? undefined,
                 uuid: localUserStore.getLocalUser()?.uuid,

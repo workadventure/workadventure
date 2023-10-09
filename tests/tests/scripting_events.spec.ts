@@ -12,24 +12,33 @@ test.describe('Scripting API Events', () => {
 
         // 1. Test that the event is triggered locally
         const eventTriggered = await evaluateScript(page, async () => {
-            let eventTriggered = false;
-            await WA.onInit();
-            WA.event.onEventTriggered("key").subscribe((event) => {
-                if (event.key !== "key") {
-                    return;
-                }
-                if (event.value !== "value") {
-                    return;
-                }
-                if (event.senderId !== WA.player.playerId) {
-                    return;
-                }
+            await WA.onInit().then(() => {
+                console.log("WA.player.playerId", WA.player.playerId);
 
-                eventTriggered = true;
+            });
+
+            const promise = new Promise<void>((resolve, reject) => {
+                WA.event.onEventTriggered("key").subscribe((event) => {
+                    if (event.key !== "key") {
+                        reject(new Error("Invalid event key"));
+                        return;
+                    }
+                    if (event.value !== "value") {
+                        reject(new Error("Invalid event value"));
+                        return;
+                    }
+                    if (event.senderId !== WA.player.playerId) {
+                        reject(new Error("Invalid event senderId"));
+                        return;
+                    }
+
+                    resolve();
+                });
             });
 
             WA.event.dispatchEvent("key", "value");
-            return eventTriggered;
+            await promise;
+            return true;
         });
         expect(eventTriggered).toBeTruthy();
 
@@ -62,7 +71,7 @@ test.describe('Scripting API Events', () => {
                 if (event.value !== "value") {
                     return;
                 }
-                if (event.senderId !== WA.player.playerId) {
+                if (event.senderId === WA.player.playerId) {
                     return;
                 }
 
@@ -76,6 +85,5 @@ test.describe('Scripting API Events', () => {
         });
 
         await expect.poll(() => gotExpectedNotification).toBe(true);
-
     });
 });
