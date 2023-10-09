@@ -48,7 +48,6 @@ import {
     EmbeddableWebsiteAnswer,
     CompanionTextureMessage,
     RoomShortDescription,
-    ReceivedEventMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
@@ -75,6 +74,7 @@ import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene";
 import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
 import { currentMegaphoneNameStore } from "../Stores/MegaphoneStore";
+import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
 import { localUserStore } from "./LocalUserStore";
 import { connectionManager } from "./ConnectionManager";
 import { adminMessagesService } from "./AdminMessagesService";
@@ -88,7 +88,6 @@ import type {
     ViewportInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
-import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -397,8 +396,8 @@ export class RoomConnection implements RoomConnection {
                             }
                             case "receivedEventMessage": {
                                 this._receivedEventMessageStream.next({
-                                    name: subMessage.receivedEventMessage.name,
-                                    value: JSON.parse(subMessage.receivedEventMessage.value) as unknown,
+                                    key: subMessage.receivedEventMessage.name,
+                                    value: subMessage.receivedEventMessage.value,
                                     senderId: subMessage.receivedEventMessage.senderId,
                                 });
                                 break;
@@ -977,7 +976,7 @@ export class RoomConnection implements RoomConnection {
             $case: "sendEventQuery",
             sendEventQuery: {
                 name,
-                value: JSON.stringify(value),
+                value: value,
                 targetUserIds: targetUserIds ?? [],
             },
         });

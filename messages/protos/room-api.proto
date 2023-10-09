@@ -30,6 +30,7 @@ message DispatchEventRequest {
     string room = 1;
     string name = 2;
     google.protobuf.Value value = 3;
+    repeated int32 targetUserIds = 4;
 }
 
 service RoomApi {

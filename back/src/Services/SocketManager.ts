@@ -44,7 +44,6 @@ import {
     AddSpaceUserMessage,
     RemoveSpaceUserMessage,
     SendEventQuery,
-    ReceivedEventMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -58,7 +57,7 @@ import { Group } from "../Model/Group";
 import { GROUP_RADIUS, MINIMUM_DISTANCE, TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable";
 import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
-import { RoomSocket, VariableSocket, ZoneSocket } from "../RoomManager";
+import { EventSocket, RoomSocket, VariableSocket, ZoneSocket } from "../RoomManager";
 import { Zone } from "../Model/Zone";
 import { Admin } from "../Model/Admin";
 import { Space } from "../Model/Space";
@@ -1056,6 +1055,8 @@ export class SocketManager {
         }
 
         room.removeVariableListener(call);
+
+        this.cleanupRoomIfEmpty(room);
     }
 
     public async handleJoinAdminRoom(admin: Admin, roomId: string): Promise<GameRoom> {
@@ -1365,7 +1366,7 @@ export class SocketManager {
 
     async dispatchChatMessagePrompt(chatMessagePrompt: ChatMessagePrompt): Promise<boolean> {
         const room = await this.roomsPromises.get(chatMessagePrompt.roomId);
-        console.log(chatMessagePrompt.roomId);
+
         if (!room) {
             return false;
         }
@@ -1447,35 +1448,37 @@ export class SocketManager {
     }
 
     private handleSendEventQuery(gameRoom: GameRoom, user: User, sendEventQuery: SendEventQuery) {
-        const targetUserIds = sendEventQuery.targetUserIds;
+        gameRoom.dispatchEvent(sendEventQuery.name, sendEventQuery.value, user.id, sendEventQuery.targetUserIds);
+    }
 
-        const receivedEventMessage: ReceivedEventMessage = {
-            name: sendEventQuery.name,
-            value: sendEventQuery.value,
-            senderId: user.id,
-        };
-
-        if (targetUserIds.length === 0) {
-            gameRoom.sendSubMessageToRoom({
-                message: {
-                    $case: "receivedEventMessage",
-                    receivedEventMessage: receivedEventMessage,
-                },
-            });
-        } else {
-            for (const targetUserId of targetUserIds) {
-                const targetUser = gameRoom.getUserById(targetUserId);
-                if (targetUser) {
-                    targetUser.emitInBatch({
-                        message: {
-                            $case: "receivedEventMessage",
-                            receivedEventMessage: receivedEventMessage,
-                        },
-                    });
-                }
-            }
-            throw new Error("Sending events to specific users is not yet implemented");
+    async dispatchEvent(roomUrl: string, name: string, value: unknown, targetUserIds: number[]): Promise<void> {
+        const roomPromise = this.roomsPromises.get(roomUrl);
+        if (!roomPromise) {
+            // The room does not exist. No need to instantiate it, there is no one in.
+            return Promise.resolve();
         }
+        const room = await roomPromise;
+        room.dispatchEvent(name, value, "RoomApi", targetUserIds);
+    }
+
+    async addEventListener(call: EventSocket) {
+        const room = await this.getOrCreateRoom(call.request.room);
+        if (!room) {
+            throw new Error("In addEventListener, could not find room with id '" + call.request.room + "'");
+        }
+
+        room.addEventListener(call);
+    }
+
+    async removeEventListener(call: EventSocket) {
+        const room = await this.roomsPromises.get(call.request.room);
+        if (!room) {
+            throw new Error("In removeEventListener, could not find room with id '" + call.request.room + "'");
+        }
+
+        room.removeEventListener(call);
+
+        this.cleanupRoomIfEmpty(room);
     }
 }
 

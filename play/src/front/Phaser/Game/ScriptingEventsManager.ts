@@ -9,10 +9,10 @@ export class ScriptingEventsManager {
     constructor(private roomConnection: RoomConnection) {
         // The variableMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
         //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-        roomConnection.receivedEventMessageStream.subscribe(({ name, value, senderId }) => {
+        roomConnection.receivedEventMessageStream.subscribe(({ key, value, senderId }) => {
             // On server change, let's notify the iframes
             iframeListener.dispatchReceivedEvent({
-                key: name,
+                key: key,
                 value: value,
                 senderId: senderId,
             });

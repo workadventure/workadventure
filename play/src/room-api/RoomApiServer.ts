@@ -182,26 +182,26 @@ export default {
                 apiClientRepository
                     .getClient(call.request.room)
                     .then((apiClient) => {
-                        const variableListener = apiClient.listenEvent(call.request);
+                        const eventListener = apiClient.listenEvent(call.request);
 
-                        variableListener.on("data", (response) => {
+                        eventListener.on("data", (response) => {
                             call.write(response);
                         });
 
-                        variableListener.on("cancelled", () => {
+                        eventListener.on("cancelled", () => {
                             call.end();
                         });
 
-                        variableListener.on("error", (e) => {
+                        eventListener.on("error", (e) => {
                             call.end(e);
                         });
 
                         call.on("cancelled", () => {
-                            variableListener.cancel();
+                            eventListener.cancel();
                             call.end();
                         });
                         call.on("error", (e) => {
-                            variableListener.cancel();
+                            eventListener.cancel();
                             call.end();
                         });
                     })
