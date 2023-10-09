@@ -136,6 +136,10 @@
                     }
                 }
             }
+
+            .disable-opacity {
+                @apply tw-opacity-50;
+            }
         }
     }
 }
