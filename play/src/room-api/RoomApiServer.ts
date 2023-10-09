@@ -132,4 +132,87 @@ export default {
                 });
             });
     },
+    dispatchEvent: (call, callback) => {
+        AuthenticationGuard(call.metadata, call.request.room)
+            .then((authentication) => {
+                apiClientRepository
+                    .getClient(call.request.room)
+                    .then((apiClient) => {
+                        apiClient.dispatchEvent(call.request, (error, response) => {
+                            if (error) {
+                                return callback(error);
+                            }
+
+                            callback(null, response);
+                        });
+                    })
+                    .catch((error) => {
+                        console.error("Error on creating api client!", error);
+                        return callback({
+                            code: Status.INTERNAL,
+                            details: "Internal error, please contact us!",
+                        });
+                    });
+            })
+            .catch((error) => {
+                if (error instanceof GuardError) {
+                    return callback({
+                        code: error.code,
+                        details: error.details,
+                    });
+                }
+
+                if ("code" in error && "details" in error) {
+                    return callback({
+                        code: error.code,
+                        details: error.details,
+                    });
+                }
+
+                console.error("Internal authentication error:", error);
+                return callback({
+                    code: Status.INTERNAL,
+                    details: "Internal error, please contact us!",
+                });
+            });
+    },
+    listenEvent: (call) => {
+        AuthenticationGuard(call.metadata, call.request.room)
+            .then(() => {
+                apiClientRepository
+                    .getClient(call.request.room)
+                    .then((apiClient) => {
+                        const variableListener = apiClient.listenEvent(call.request);
+
+                        variableListener.on("data", (response) => {
+                            call.write(response);
+                        });
+
+                        variableListener.on("cancelled", () => {
+                            call.end();
+                        });
+
+                        variableListener.on("error", (e) => {
+                            call.end(e);
+                        });
+
+                        call.on("cancelled", () => {
+                            variableListener.cancel();
+                            call.end();
+                        });
+                        call.on("error", (e) => {
+                            variableListener.cancel();
+                            call.end();
+                        });
+                    })
+                    .catch((error) => {
+                        console.error("Error on creating api client!", error);
+                        call.destroy(new Error("Internal error, please contact us!"));
+                        return;
+                    });
+            })
+            .catch((error) => {
+                return call.destroy(error);
+            });
+    },
 } satisfies RoomApiServerInterface;

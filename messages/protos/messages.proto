@@ -1052,18 +1052,6 @@ message SpaceFilterLiveStreaming{
 message SpaceFilterEverybody{
 }
 
-message VariableRequest {
-  string room = 1;
-  string name = 2;
-}
-
-message SaveVariableRequest {
-  string room = 1;
-  string name = 2;
-  google.protobuf.Value value = 3;
-
-}
-
 /*
 message Filter {
   enum Operator {
@@ -1081,3 +1069,34 @@ message Filter {
 /*********************************************************************************
  * End Spaces messages
  *********************************************************************************/
+
+
+/* Duplicated events from RoomAPI */
+
+message VariableRequest {
+  string room = 1;
+  string name = 2;
+}
+
+message SaveVariableRequest {
+  string room = 1;
+  string name = 2;
+  google.protobuf.Value value = 3;
+
+}
+
+message EventRequest {
+  string room = 1;
+  string name = 2;
+}
+
+message EventResponse {
+  google.protobuf.Value value = 1;
+  optional int32 senderId = 2;
+}
+
+message DispatchEventRequest {
+  string room = 1;
+  string name = 2;
+  google.protobuf.Value value = 3;
+}

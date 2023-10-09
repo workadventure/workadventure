@@ -17,10 +17,12 @@ import {
     PingMessage,
     ChatMessagePrompt,
     ServerToClientMessage,
-    VariableRequest,
+    VariableRequest, DispatchEventRequest, EventRequest, EventResponse,
 } from "@workadventure/messages";
 import { RoomManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import {
+    handleServerStreamingCall,
+    handleUnaryCall,
     sendUnaryData,
     ServerDuplexStream,
     ServerErrorResponse,
@@ -546,6 +548,8 @@ const roomManager = {
                 callback(null);
             })
             .catch((error) => {
+                console.error(error);
+                Sentry.captureException(error);
                 throw error;
             });
     },
@@ -580,6 +584,23 @@ const roomManager = {
             }
         );
     },
+    /** Dispatch an event to all users in the room */
+    dispatchEvent(call: ServerWritableStream<DispatchEventRequest, Empty>)) {
+        socketManager
+            .dispatchEvent(call.request.room, call.request.name, JSON.stringify(call.request.value))
+            .then(() => {
+                callback(null);
+            })
+            .catch((error) => {
+                console.error(error);
+                Sentry.captureException(error);
+                throw error;
+            });
+    },
+    /** Listen to events dispatched in the room */
+    listenEvent: handleServerStreamingCall<EventRequest, EventResponse> {
+
+    }
 } satisfies RoomManagerServer;
 
 export { roomManager };
