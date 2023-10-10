@@ -1,5 +1,6 @@
 import { RoomApiServer as RoomApiServerInterface } from "@workadventure/messages/src/ts-proto-generated/room-api";
 import { Status } from "@grpc/grpc-js/build/src/constants";
+import * as Sentry from "@sentry/node";
 import { apiClientRepository } from "../pusher/services/ApiClientRepository";
 import AuthenticationGuard from "./guards/AuthenticationGuard";
 import { GuardError } from "./types/GuardError";
@@ -66,7 +67,9 @@ export default {
                         });
 
                         variableListener.on("error", (e) => {
-                            call.end(e);
+                            console.error("Error on variable listener:", e);
+                            Sentry.captureException(e);
+                            call.end();
                         });
 
                         call.on("cancelled", () => {
@@ -193,7 +196,9 @@ export default {
                         });
 
                         eventListener.on("error", (e) => {
-                            call.end(e);
+                            console.error("Error on event listener:", e);
+                            Sentry.captureException(e);
+                            call.end();
                         });
 
                         call.on("cancelled", () => {
