@@ -886,6 +886,10 @@ message RoomsList {
   repeated RoomDescription roomDescription = 1;
 }
 
+message DispatchGlobalEventRequest {
+  string name = 1;
+  google.protobuf.Value value = 2;
+}
 
 /********************************************************************************
  * Start Chat Messages
@@ -1102,3 +1106,4 @@ message DispatchEventRequest {
   // If targetUserIds is empty, the event is broadcast to all users in the room. Otherwise, it targets the users with the given ids.
   repeated int32 targetUserIds = 4;
 }
+

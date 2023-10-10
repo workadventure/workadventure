@@ -624,6 +624,10 @@ const roomManager = {
             call.end(e);
         });
     },
+    dispatchGlobalEvent(call, callback) {
+        socketManager.dispatchGlobalEvent(call.request.name, call.request.value);
+        callback(null);
+    },
 } satisfies RoomManagerServer;
 
 export { roomManager };

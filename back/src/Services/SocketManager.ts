@@ -1480,6 +1480,12 @@ export class SocketManager {
 
         this.cleanupRoomIfEmpty(room);
     }
+
+    dispatchGlobalEvent(name: string, value: unknown) {
+        for (const room of this.resolvedRooms.values()) {
+            room.dispatchEvent(name, value, "RoomApi", []);
+        }
+    }
 }
 
 export const socketManager = new SocketManager();

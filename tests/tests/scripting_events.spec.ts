@@ -3,7 +3,7 @@ import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 
 test.describe('Scripting API Events', () => {
-    test('test events', async ({ page, browser }) => {
+    test('test events', async ({ page, browser, request }) => {
         // Go to 
         await page.goto(
             'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
@@ -55,6 +55,7 @@ test.describe('Scripting API Events', () => {
 
         let gotExpectedBroadcastNotification = false;
         let gotExpectedTargetedNotification = false;
+        let gotExpectedGlobalNotification = false;
         page.on('console', async (msg) => {
             const text = await msg.text();
             //console.log(text);
@@ -63,6 +64,9 @@ test.describe('Scripting API Events', () => {
             }
             if (text === 'Targeted event triggered') {
                 gotExpectedTargetedNotification = true;
+            }
+            if (text === 'Global event triggered') {
+                gotExpectedGlobalNotification = true;
             }
         });
 
@@ -121,5 +125,35 @@ test.describe('Scripting API Events', () => {
         });
 
         await expect.poll(() => gotExpectedTargetedNotification).toBe(true);
+
+        // 4. Test that sending event through the global /global/event API on the pusher works
+
+        await evaluateScript(page, async () => {
+            await WA.onInit();
+            WA.event.onEventTriggered("key4").subscribe((event) => {
+                if (event.key !== "key4") {
+                    return;
+                }
+                if (event.value !== "value") {
+                    return;
+                }
+
+                console.log("Global event triggered");
+            });
+        });
+
+        const result = await request.post("http://play.workadventure.localhost/global/event", {
+            headers: {
+                "Authorization": process.env.ADMIN_API_TOKEN,
+            },
+            data: {
+                key: "key4",
+                payload: "value",
+            }
+        });
+        expect(result.status()).toBe(200);
+        expect(await result.text()).toEqual("ok");
+
+        await expect.poll(() => gotExpectedGlobalNotification).toBe(true);
     });
 });
