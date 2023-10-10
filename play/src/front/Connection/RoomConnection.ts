@@ -47,6 +47,7 @@ import {
     UnwatchSpaceMessage,
     EmbeddableWebsiteAnswer,
     CompanionTextureMessage,
+    RoomShortDescription,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
@@ -1487,6 +1488,17 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.roomTagsAnswer.tags;
+    }
+
+    public async queryRoomsFromSameWorld(): Promise<RoomShortDescription[]> {
+        const answer = await this.query({
+            $case: "roomsFromSameWorldQuery",
+            roomsFromSameWorldQuery: {},
+        });
+        if (answer.$case !== "roomsFromSameWorldAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.roomsFromSameWorldAnswer.roomDescriptions;
     }
 
     public async queryEmbeddableWebsite(url: string): Promise<EmbeddableWebsiteAnswer> {

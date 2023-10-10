@@ -10,7 +10,7 @@
   "scripts": {
     "ts-proto": "grpc_tools_node_protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./src/compiled_proto --ts_proto_opt=\"outputServices=nice-grpc,outputServices=generic-definitions,useExactTypes=false\" --proto_path=../../../messages/protos ../../../messages/protos/room-api.proto",
     "build": "tsc --build",
-    "example": "ts-node ./src/example.ts",
+    "example": "tsx ./src/example.ts",
     "lint": "eslint --ext .js,.ts .",
     "lint-fix": "eslint --fix --ext .js,.ts .",
     "format": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
@@ -47,8 +47,8 @@
     "grpc-tools": "^1.12.4",
     "lint-staged": "^13.2.0",
     "prettier": "^2.8.6",
-    "ts-node": "^10.9.1",
     "ts-proto": "^1.143.0",
+    "tsx": "^3.12.10",
     "typescript": "^5.0.2"
   },
   "lint-staged": {

@@ -1,5 +1,6 @@
 import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import { ShortMapDescriptionList } from "./ShortMapDescription";
 
 export interface AdminInterface {
     /**
@@ -77,7 +78,7 @@ export interface AdminInterface {
      * @param roomUrl
      * @return string[]
      */
-    getUrlRoomsFromSameWorld(roomUrl: string, locale?: string): Promise<string[]>;
+    getUrlRoomsFromSameWorld(roomUrl: string, locale?: string): Promise<ShortMapDescriptionList>;
 
     /**
      * @param accessToken

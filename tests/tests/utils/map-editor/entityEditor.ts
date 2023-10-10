@@ -1,4 +1,4 @@
-import {Page} from "@playwright/test";
+import {expect, Page} from "@playwright/test";
 
 class EntityEditor {
     async selectEntity(page: Page, nb: number, search?: string){
@@ -17,6 +17,10 @@ class EntityEditor {
 
     async quitEntitySelector(page: Page){
         await page.locator('.map-editor .item-picker .item-variations img[alt="Unselect object picked"]').click();
+        await expect(page.locator('.map-editor .item-picker .item-variations img[alt="Unselect object picked"]')).toHaveCount(0);
+        // That's bad, but we need to wait a bit for the canvas to put the object.
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(2000);
     }
 
     async addProperty(page: Page, property: string) {

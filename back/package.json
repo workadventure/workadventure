@@ -5,8 +5,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --inspect=0.0.0.0:9229 --exit-child --respawn ./server.ts",
-    "runprod": "ts-node --transpileOnly ./server.ts",
+    "dev": "tsx watch --inspect=0.0.0.0:9229 ./server.ts",
+    "runprod": "tsx ./server.ts",
     "profile": "tsc && node --prof ./dist/server.js",
     "typecheck": "tsc --noEmit",
     "test": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config vitest.config.ts ",
@@ -62,8 +62,7 @@
     "query-string": "^6.13.3",
     "redis": "^4.3.1",
     "source-map-support": "^0.5.21",
-    "ts-node": "^10.9.1",
-    "typescript": "^4.5.4",
+    "tsx": "^3.12.10",
     "uuidv4": "^6.0.7",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.10.0",
     "zod": "^3.19.1"
@@ -87,7 +86,7 @@
     "eslint-plugin-import": "^2.27.5",
     "lint-staged": "^11.0.0",
     "prettier": "^2.8.1",
-    "ts-node-dev": "^2.0.0",
+    "typescript": "^4.5.4",
     "vitest": "^0.29.1",
     "vitest-mock-extended": "^1.0.9"
   },

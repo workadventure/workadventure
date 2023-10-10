@@ -68,6 +68,7 @@ class App {
                     ".ttf",
                     ".woff2",
                     ".map",
+                    ".gif",
                 ],
             },
             hot_reload: process.env.NODE_ENV !== "production",

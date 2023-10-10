@@ -41,13 +41,14 @@ import type { ExSocketInterface, BackSpaceConnection } from "../models/Websocket
 import { ProtobufUtils } from "../models/Websocket/ProtobufUtils";
 import type { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../models/Zone";
 import type { AdminConnection, ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
-import { EJABBERD_DOMAIN, WHITE_LISTE_EMBEDAABLE_DOMAINS } from "../enums/EnvironmentVariable";
+import { EJABBERD_DOMAIN, EMBEDDED_DOMAINS_WHITELIST } from "../enums/EnvironmentVariable";
 import { Space } from "../models/Space";
 import { emitInBatch } from "./IoSocketHelpers";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
 import { adminService } from "./AdminService";
+import { ShortMapDescription } from "./ShortMapDescription";
 
 const debug = Debug("socket");
 
@@ -907,7 +908,8 @@ export class SocketManager implements ZoneEventListener {
         let tabUrlRooms: string[];
 
         if (playGlobalMessageEvent.broadcastToWorld) {
-            tabUrlRooms = await adminService.getUrlRoomsFromSameWorld(clientRoomUrl, "en");
+            const shortDescriptions = await adminService.getUrlRoomsFromSameWorld(clientRoomUrl, "en");
+            tabUrlRooms = shortDescriptions.map((shortDescription) => shortDescription.roomUrl);
         } else {
             tabUrlRooms = [clientRoomUrl];
         }
@@ -1146,6 +1148,52 @@ export class SocketManager implements ZoneEventListener {
         );
     }
 
+    async handleRoomsFromSameWorldQuery(client: ExSocketInterface, queryMessage: QueryMessage) {
+        let roomDescriptions: ShortMapDescription[];
+        try {
+            roomDescriptions = await adminService.getUrlRoomsFromSameWorld(client.roomId);
+        } catch (e) {
+            console.warn("SocketManager => handleRoomsFromSameWorldQuery => error while getting other rooms list", e);
+            // Nothing to do with the error
+            Sentry.captureException(e);
+            client.send(
+                ServerToClientMessage.encode({
+                    message: {
+                        $case: "answerMessage",
+                        answerMessage: {
+                            id: queryMessage.id,
+                            answer: {
+                                $case: "error",
+                                error: {
+                                    message: e instanceof Error ? e.message + e.stack : "Unknown error",
+                                },
+                            },
+                        },
+                    },
+                }).finish(),
+                true
+            );
+            return;
+        }
+        client.send(
+            ServerToClientMessage.encode({
+                message: {
+                    $case: "answerMessage",
+                    answerMessage: {
+                        id: queryMessage.id,
+                        answer: {
+                            $case: "roomsFromSameWorldAnswer",
+                            roomsFromSameWorldAnswer: {
+                                roomDescriptions,
+                            },
+                        },
+                    },
+                },
+            }).finish(),
+            true
+        );
+    }
+
     handleLeaveSpace(client: ExSocketInterface, spaceName: string) {
         const space = this.spaces.get(spaceName);
         if (space) {
@@ -1222,9 +1270,9 @@ export class SocketManager implements ZoneEventListener {
     }
 }
 
-// Verify that the domain of the url in parameter is in the white list of embeddable domains defined in the .env file (WHITE_LISTE_EMBEDAABLE_DOMAINS)
+// Verify that the domain of the url in parameter is in the white list of embeddable domains defined in the .env file (EMBEDDED_DOMAINS_WHITELIST)
 const verifyUrlAsDomainInWhiteList = (url: string) => {
-    return WHITE_LISTE_EMBEDAABLE_DOMAINS.some((domain) => url.includes(domain));
+    return EMBEDDED_DOMAINS_WHITELIST.some((domain) => url.includes(domain));
 };
 
 export const socketManager = new SocketManager();

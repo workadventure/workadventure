@@ -2,6 +2,7 @@ import { XmppSettingsMessage } from "@workadventure/messages";
 import { KlaxoonService } from "@workadventure/shared-utils";
 import { get } from "svelte/store";
 import Debug from "debug";
+import { Deferred } from "ts-deferred/index";
 import { XmppClient } from "../Xmpp/XmppClient";
 import { connectionEstablishedStore, enableChat } from "../Stores/ChatStore";
 import { xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
@@ -14,6 +15,7 @@ class ChatConnectionManager {
     private authToken?: string;
     private xmppSettingsMessage?: XmppSettingsMessage;
     private xmppClient?: XmppClient;
+    private deferredXmppClient: Deferred<XmppClient>;
 
     private _klaxoonToolActivated = false;
     private _klaxoonToolClientId: string | undefined = undefined;
@@ -26,6 +28,7 @@ class ChatConnectionManager {
     constructor() {
         this.uuid = "";
         this.playUri = "";
+        this.deferredXmppClient = new Deferred<XmppClient>();
     }
 
     initUser(
@@ -66,11 +69,8 @@ class ChatConnectionManager {
         this.start();
     }
 
-    get connectionOrFail(): XmppClient {
-        if (!this.xmppClient) {
-            throw new Error("No chat connection with XMPP server!");
-        }
-        return this.xmppClient;
+    get connectionPromise(): Promise<XmppClient> {
+        return this.deferredXmppClient.promise;
     }
 
     get connection(): XmppClient | undefined {
@@ -83,7 +83,15 @@ class ChatConnectionManager {
             debug("chatConnectionManager => start => all parameters are OK");
             if (get(enableChat)) {
                 this.xmppClient = new XmppClient(this.xmppSettingsMessage);
+                this.xmppClient.readyPromise
+                    .then(() => {
+                        this.deferredXmppClient.resolve(this.xmppClient);
+                    })
+                    .catch((e) => {
+                        this.deferredXmppClient.reject(e);
+                    });
             } else {
+                this.deferredXmppClient.reject("Chat is disabled");
                 xmppServerConnectionStatusStore.set(true);
             }
             connectionEstablishedStore.set(true);

@@ -50,7 +50,6 @@
          "name":"floorLayer",
          "objects":[
                 {
-                 "class":"",
                  "height":116.924156284309,
                  "id":1,
                  "name":"Tests",
@@ -62,13 +61,13 @@
                      "text":"An empty map dedicated to run tests about the chat in E2E Playwright environment.",
                      "wrap":true
                     },
+                 "type":"",
                  "visible":true,
                  "width":158.381128664136,
                  "x":85.1946075358359,
                  "y":5.93109324900794
                 }, 
                 {
-                 "class":"area",
                  "height":320,
                  "id":3,
                  "name":"LiveZone",
@@ -84,10 +83,79 @@
                          "value":"liveZone"
                         }],
                  "rotation":0,
+                 "type":"area",
                  "visible":true,
                  "width":126.363636363636,
                  "x":321.818181818182,
                  "y":0
+                }, 
+                {
+                 "height":44,
+                 "id":4,
+                 "name":"LiveZone_a",
+                 "properties":[
+                        {
+                         "name":"start",
+                         "type":"bool",
+                         "value":true
+                        }],
+                 "rotation":0,
+                 "type":"area",
+                 "visible":true,
+                 "width":55,
+                 "x":361,
+                 "y":30
+                }, 
+                {
+                 "height":44,
+                 "id":6,
+                 "name":"Out_LiveZone_b",
+                 "properties":[
+                        {
+                         "name":"start",
+                         "type":"bool",
+                         "value":true
+                        }],
+                 "rotation":0,
+                 "type":"area",
+                 "visible":true,
+                 "width":55,
+                 "x":202.5,
+                 "y":237.5
+                }, 
+                {
+                 "height":44,
+                 "id":7,
+                 "name":"Out_LiveZone_a",
+                 "properties":[
+                        {
+                         "name":"start",
+                         "type":"bool",
+                         "value":true
+                        }],
+                 "rotation":0,
+                 "type":"area",
+                 "visible":true,
+                 "width":55,
+                 "x":203.5,
+                 "y":29
+                }, 
+                {
+                 "height":44,
+                 "id":8,
+                 "name":"LiveZone_b",
+                 "properties":[
+                        {
+                         "name":"start",
+                         "type":"bool",
+                         "value":true
+                        }],
+                 "rotation":0,
+                 "type":"area",
+                 "visible":true,
+                 "width":55,
+                 "x":355.5,
+                 "y":236
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -96,7 +164,7 @@
          "y":0
         }],
  "nextlayerid":9,
- "nextobjectid":4,
+ "nextobjectid":9,
  "orientation":"orthogonal",
  "properties":[
         {
@@ -110,7 +178,7 @@
          "value":true
         }],
  "renderorder":"right-down",
- "tiledversion":"1.9.1",
+ "tiledversion":"1.10.2",
  "tileheight":32,
  "tilesets":[
         {
@@ -636,6 +704,6 @@
         }],
  "tilewidth":32,
  "type":"map",
- "version":"1.9",
+ "version":"1.10",
  "width":14
 }

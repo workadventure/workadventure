@@ -7,6 +7,7 @@ import {
     toBool,
     toNumber,
     toArray,
+    emptyStringToUndefined,
 } from "@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils";
 
 export const EnvironmentVariables = z.object({
@@ -29,7 +30,15 @@ export const EnvironmentVariables = z.object({
     // Use "*" to allow any domain
     ALLOWED_CORS_ORIGIN: z.string().url().or(z.literal("*")).optional(),
     PUSHER_URL: AbsoluteOrRelativeUrl.optional(),
-    PUBLIC_MAP_STORAGE_URL: z.string().url().optional(),
+    PUBLIC_MAP_STORAGE_URL: z
+        .string()
+        .url()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe('The public URL to the map-storage server (for instance: "https://map-storage.example.com"'),
+    INTERNAL_MAP_STORAGE_URL: AbsoluteOrRelativeUrl.optional()
+        .transform(emptyStringToUndefined)
+        .describe('The internal URL to the map-storage server (for instance: "https://map-storage:3000"'),
     OPID_CLIENT_ID: z.string().optional(),
     OPID_CLIENT_SECRET: z.string().optional(),
     OPID_CLIENT_ISSUER: z.string().optional(),
@@ -103,7 +112,6 @@ export const EnvironmentVariables = z.object({
     JITSI_DOMAIN: z.string().optional(),
     JITSI_XMPP_DOMAIN: z.string().optional(),
     JITSI_MUC_DOMAIN: z.string().optional(),
-    MAP_STORAGE_PATH_PREFIX: z.string().optional(),
     KLAXOON_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
     KLAXOON_CLIENT_ID: z.string().optional(),
     YOUTUBE_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
@@ -111,7 +119,7 @@ export const EnvironmentVariables = z.object({
     GOOGLE_SHEETS_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
     GOOGLE_SLIDES_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
     ERASER_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
-    WHITE_LISTE_EMBEDAABLE_DOMAINS: z
+    EMBEDDED_DOMAINS_WHITELIST: z
         .string()
         .optional()
         .transform((val) => toArray(val)),

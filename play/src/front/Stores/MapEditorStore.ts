@@ -12,6 +12,7 @@ function createMapEditorModeStore() {
 
     return {
         subscribe,
+        set,
         switchMode: (value: boolean) => {
             set(get(mapEditorActivated) && value);
         },
