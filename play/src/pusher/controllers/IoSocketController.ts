@@ -540,7 +540,7 @@ export class IoSocketController {
                             jabberId: userData.jabberId,
                             jabberPassword: userData.jabberPassword,
                             mucRooms: userData.mucRooms || undefined,
-                            activatedInviteUser: userData.activatedInviteUser || undefined,
+                            activatedInviteUser: userData.activatedInviteUser ?? undefined,
                             canEdit: userData.canEdit ?? false,
                             applications: userData.applications,
                             position: {
