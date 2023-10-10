@@ -28,6 +28,7 @@ export class DiskFileSystem implements FileSystemInterface {
             const fullPath = this.getFullPath(directory);
             if (await fs.pathExists(fullPath)) {
                 const files = await this.getAllFilesWithin(fullPath, fullPath);
+                const promises: Promise<void>[] = [];
                 for (const file of files) {
                     if (file.includes(".wam")) {
                         const tmjKey = file.slice().replace(".wam", ".tmj");
@@ -36,8 +37,9 @@ export class DiskFileSystem implements FileSystemInterface {
                             continue;
                         }
                     }
-                    await fs.promises.unlink(path.resolve(fullPath, file));
+                    promises.push(fs.promises.unlink(path.resolve(fullPath, file)));
                 }
+                await Promise.all(promises);
             }
         } catch (error) {
             console.log(error);
@@ -141,9 +143,13 @@ export class DiskFileSystem implements FileSystemInterface {
             const list = await fs.promises.readdir(dir);
             for (let file of list) {
                 file = path.resolve(dir, file);
+                // TODO: Optimize this by using a Promise.all
+                // eslint-disable-next-line no-await-in-loop
                 const stat = await fs.promises.stat(file);
                 if (stat && stat.isDirectory()) {
                     /* Recurse into a subdirectory */
+                    // TODO: Optimize this by using a Promise.all
+                    // eslint-disable-next-line no-await-in-loop
                     results = results.concat(await this.getAllFilesWithin(file, startingDir));
                 } else {
                     /* Is a file */

@@ -25,7 +25,7 @@
             -->
         </div>
         <div>
-            {#each chatZones as chatZone}
+            {#each chatZones as chatZone (chatZone.url)}
                 <ChatMucRoom mucRoom={chatZone} {searchValue} />
             {/each}
         </div>

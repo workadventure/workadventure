@@ -37,29 +37,45 @@ export class MapListService {
             maps: {},
         };
 
+        const promises: Promise<{ wamFilePath: string; wam: WAMFileFormat }>[] = [];
         for (const wamFilePath of files) {
-            try {
-                const virtualPath = mapPathUsingDomain(wamFilePath, domain);
-                const wamFileString = await this.fileSystem.readFileAsString(virtualPath);
-                const wamFile = WAMFileFormat.parse(JSON.parse(wamFileString));
-                wamFiles.maps[wamFilePath] = {
-                    mapUrl: wamFile.mapUrl,
-                    metadata: wamFile.metadata,
-                    vendor: wamFile.vendor,
+            promises.push(this.readWamFile(wamFilePath, domain));
+        }
+
+        const settledPromises = await Promise.allSettled(promises);
+        for (const outcome of settledPromises) {
+            if (outcome.status === "fulfilled") {
+                wamFiles.maps[outcome.value.wamFilePath] = {
+                    mapUrl: outcome.value.wam.mapUrl,
+                    metadata: outcome.value.wam.metadata,
+                    vendor: outcome.value.wam.vendor,
                 };
-            } catch (err) {
-                Sentry.captureException(
-                    `Error while trying to read a WAM file to generate cache: ${JSON.stringify(
-                        err
-                    )}. Skipping this file for cache generation.`
-                );
-                console.log(`Parsing error for ${wamFilePath}. Skipping this file for cache generation.`);
+            } else {
+                Sentry.captureException(outcome.reason);
+                console.log(outcome.reason);
             }
         }
 
         await this.writeCacheFileNoLimit(domain, wamFiles);
         if (ENABLE_WEB_HOOK) {
             this.webHookService.callWebHook(domain, undefined, "update");
+        }
+    }
+
+    private async readWamFile(
+        wamFilePath: string,
+        domain: string
+    ): Promise<{ wamFilePath: string; wam: WAMFileFormat }> {
+        try {
+            const virtualPath = mapPathUsingDomain(wamFilePath, domain);
+            const wamFileString = await this.fileSystem.readFileAsString(virtualPath);
+            return { wamFilePath: wamFilePath, wam: WAMFileFormat.parse(JSON.parse(wamFileString)) };
+        } catch (e) {
+            throw new Error(
+                `Error while trying to read WAM file "${wamFilePath}" to generate cache: ${JSON.stringify(
+                    e
+                )}. Skipping this file for cache generation.`
+            );
         }
     }
 

@@ -211,6 +211,7 @@ export class MapEditorModeManager {
         }
         for (const command of commands) {
             for (const tool of Object.values(this.editorTools)) {
+                //eslint-disable-next-line no-await-in-loop
                 await tool.handleIncomingCommandMessage(command);
             }
         }
@@ -273,6 +274,8 @@ export class MapEditorModeManager {
 
     public subscribeToRoomConnection(connection: RoomConnection): void {
         const limit = pLimit(1);
+        // The editMapCommandMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+        //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
         connection.editMapCommandMessageStream.subscribe((editMapCommandMessage) => {
             limit(async () => {
                 if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
@@ -299,6 +302,7 @@ export class MapEditorModeManager {
                 }
 
                 for (const tool of Object.values(this.editorTools)) {
+                    //eslint-disable-next-line no-await-in-loop
                     await tool.handleIncomingCommandMessage(editMapCommandMessage);
                 }
             }).catch((e) => console.error(e));
@@ -312,6 +316,7 @@ export class MapEditorModeManager {
             while (this.pendingCommands.length > 0) {
                 const command = this.pendingCommands.pop();
                 if (command) {
+                    //eslint-disable-next-line no-await-in-loop
                     await command.getUndoCommand().execute();
                     // also remove from local history of commands as this is invalid
                     const index = this.localCommandsHistory.findIndex(

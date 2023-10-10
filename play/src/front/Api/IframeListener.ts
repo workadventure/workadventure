@@ -162,7 +162,7 @@ class IframeListener {
     private readonly _loadSoundStream: Subject<LoadSoundEvent> = new Subject();
     public readonly loadSoundStream = this._loadSoundStream.asObservable();
 
-    private readonly _trackCameraUpdateStream: Subject<LoadSoundEvent> = new Subject();
+    private readonly _trackCameraUpdateStream: Subject<void> = new Subject();
     public readonly trackCameraUpdateStream = this._trackCameraUpdateStream.asObservable();
 
     private readonly _setTilesStream: Subject<SetTilesEvent> = new Subject();

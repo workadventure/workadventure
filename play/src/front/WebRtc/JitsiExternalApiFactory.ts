@@ -16,8 +16,8 @@ class JitsiExternalApiFactory {
             jitsiScript.onload = () => {
                 resolve();
             };
-            jitsiScript.onerror = () => {
-                reject();
+            jitsiScript.onerror = (event) => {
+                reject(new Error("Unable to load Jitsi external_api.js script."));
             };
 
             document.head.appendChild(jitsiScript);

@@ -2,6 +2,7 @@
     import { onDestroy, onMount } from "svelte";
     import type { UIWebsiteEvent } from "../../../Api/Events/Ui/UIWebsiteEvent";
     import { iframeListener } from "../../../Api/IframeListener";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
 
     export let uiWebsite: UIWebsiteEvent;
     let main: HTMLDivElement;
@@ -9,7 +10,7 @@
     iframe.id = `ui-website-${uiWebsite.id}`;
     iframe.tabIndex = -1;
     $: {
-        iframe.src = uiWebsite.url;
+        iframe.src = new URL(uiWebsite.url, gameManager.getCurrentGameScene().getMapUrl()).toString();
         iframe.title = uiWebsite.url;
         iframe.style.border = "0";
         iframe.allow = uiWebsite.allowPolicy ?? "";

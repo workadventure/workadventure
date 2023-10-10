@@ -1,4 +1,4 @@
-import { Subject } from "rxjs";
+import { Subject, Subscription } from "rxjs";
 import type { UserInputChatEvent } from "../Events/UserInputChatEvent";
 import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
@@ -53,9 +53,10 @@ export class WorkadventureChatCommands extends IframeApiContribution<Workadventu
      * {@link https://workadventu.re/map-building/api-chat.md#listening-to-messages-from-the-chat | Website documentation}
      *
      * @param {function(string): void} callback Function that will be called when a message is received. It contains the message typed by the user
+     * @return {Subscription} Subscription to the chat message. Call ".unsubscribe()" to stop listening to the chat.
      */
-    onChatMessage(callback: (message: string) => void): void {
-        chatStream.subscribe(callback);
+    onChatMessage(callback: (message: string) => void): Subscription {
+        return chatStream.subscribe(callback);
     }
 }
 

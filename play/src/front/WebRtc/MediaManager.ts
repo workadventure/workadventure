@@ -40,6 +40,8 @@ export class MediaManager {
                 throw new Error("Cannot load locale on media manager");
             })
             .finally(() => {
+                // It is ok to not unsubscribe to this store because it is a singleton.
+                // eslint-disable-next-line svelte/no-ignored-unsubscribe
                 localStreamStore.subscribe((result) => {
                     if (result.type === "error") {
                         if (result.error.name !== MediaStreamConstraintsError.NAME && get(myCameraStore)) {
@@ -61,6 +63,8 @@ export class MediaManager {
                     }
                 });
 
+                // It is ok to not unsubscribe to this store because it is a singleton.
+                // eslint-disable-next-line svelte/no-ignored-unsubscribe
                 screenSharingLocalStreamStore.subscribe((result) => {
                     if (result.type === "error") {
                         console.error(result.error);
@@ -120,14 +124,6 @@ export class MediaManager {
             return localUserStore.getNotification();
         } else {
             return false;
-        }
-    }
-
-    public requestNotification() {
-        if (window.Notification && Notification.permission !== "granted") {
-            return Notification.requestPermission();
-        } else {
-            return Promise.reject();
         }
     }
 

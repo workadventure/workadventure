@@ -9,7 +9,7 @@ describe("Main store", () => {
 
         let triggered = false;
 
-        mapStore.subscribe((map) => {
+        const unsubscribe = mapStore.subscribe((map) => {
             triggered = true;
             expect(map).toBe(mapStore);
         });
@@ -31,6 +31,7 @@ describe("Main store", () => {
         triggered = false;
         mapStore.clear();
         expect(triggered).toBe(true);
+        unsubscribe();
     });
 
     it("generates stores for keys with getStore", () => {
@@ -41,7 +42,7 @@ describe("Main store", () => {
 
         mapStore.set("foo", "someValue");
 
-        mapStore.getStore("foo").subscribe((value) => {
+        const unsubscribe = mapStore.getStore("foo").subscribe((value) => {
             valueReceivedInStoreForFoo = value;
         });
         const unsubscribeBar = mapStore.getStore("bar").subscribe((value) => {
@@ -61,6 +62,7 @@ describe("Main store", () => {
         unsubscribeBar();
         mapStore.set("bar", "fiz");
         expect(valueReceivedInStoreForBar).toBe(undefined);
+        unsubscribe();
     });
 
     it("generates stores with getStoreByAccessor", () => {
@@ -121,7 +123,7 @@ describe("Main store", () => {
 
         let value: number | undefined;
 
-        sumStore.subscribe((val) => {
+        const unsubscribe = sumStore.subscribe((val) => {
             value = val;
         });
 
@@ -146,5 +148,7 @@ describe("Main store", () => {
         mapStore.delete("baz");
 
         expect(value).toBe(48);
+
+        unsubscribe();
     });
 });

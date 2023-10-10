@@ -199,7 +199,7 @@ at most 5 times per second (about once every 200ms).
 
 ## Remote players variables
 
-Each remote player can have [a set of variables attached](variables.md#player-variables).
+Each remote player can have [a set of variables attached](../variables#player-variables).
 Those variables can [only be set by the remote player itself, using the `WA.player` object from the scripting API.](api-player.md#player-specific-variables).
 
 Only **public** player variables can be read by other players.

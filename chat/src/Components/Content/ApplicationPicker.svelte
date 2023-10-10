@@ -23,7 +23,7 @@
     class={`actions tw-absolute tw-bottom-0 tw-mb-16 tw-flex tw-flex-col tw-items-center tw-w-auto tw-left-4 ${_class}`}
     style={_style}
 >
-    {#each [...applications] as app}
+    {#each [...applications] as app (app.name)}
         <button
             class="action btn-app tw-cursor-pointer tw-flex tw-flex-row tw-justify-center"
             on:keydown

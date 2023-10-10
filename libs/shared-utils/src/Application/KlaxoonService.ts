@@ -44,7 +44,7 @@ export const initWindowKlaxoonActivityPicker = () => {
     /* eslint-enable */
 
     console.info(
-        "A new function was added into the browser winddow: KlaxoonActivityPicker",
+        "A new function was added into the browser window: KlaxoonActivityPicker",
         window.KlaxoonActivityPicker
     );
 };
