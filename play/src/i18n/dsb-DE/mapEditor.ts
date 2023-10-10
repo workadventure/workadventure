@@ -128,8 +128,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         loading: "Lodujo se...",
         megaphone: {
             title: "Megafon",
-            description:
-                "Megafon jo rěd, z kótarymž móžośo swój głos wusćełaś pó cełem swěśe abo we jadnej śpě.",
+            description: "Megafon jo rěd, z kótarymž móžośo swój głos wusćełaś pó cełem swěśe abo we jadnej śpě.",
             inputs: {
                 spaceName: "Mě śpy",
                 spaceNameHelper:

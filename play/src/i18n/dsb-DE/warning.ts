@@ -7,8 +7,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     limit: "Ten swět dosegnjo skóro swóju maksimalnu kapacitu!",
     accessDenied: {
         camera: "Pśistup ku kamerje njejo zwólony. Klikni how, aby  nastajenja browsera kontrolěrował.",
-        screenSharing:
-            "Pśenosowanje wobrazowki njejo zwólone. Klikni how, aby nastajenja browsera kontrolěrował.",
+        screenSharing: "Pśenosowanje wobrazowki njejo zwólone. Klikni how, aby nastajenja browsera kontrolěrował.",
         room: "Pśistup zakazany. Njamaš pšawa, aby stupił do teje śpy.",
         teleport: "Wy njesmějośo se teleportěrowaś k tomu wužywarjeju.",
     },

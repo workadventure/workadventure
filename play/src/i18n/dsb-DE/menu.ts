@@ -83,8 +83,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
         createMap: {
             title: "Swóju kórtu stwóriś ",
-            description:
-                "Ty móžoš teke swóju samsku kórtu stwóriś. Cyń za našym wukazanim kšoceń za kšocenju.",
+            description: "Ty móžoš teke swóju samsku kórtu stwóriś. Cyń za našym wukazanim kšoceń za kšocenju.",
         },
     },
     about: {

@@ -39,8 +39,7 @@ const dsb_DE: Translation = {
     you: "Ty",
     ban: {
         title: "Blokěrowaś",
-        content:
-            "Wužywarja {userName} z aktualnego swěta wugnaś. Administrator móžo tu akciju zasej anulěrowaś.",
+        content: "Wužywarja {userName} z aktualnego swěta wugnaś. Administrator móžo tu akciju zasej anulěrowaś.",
         ban: "Togo wužywarja blokěrowaś",
     },
     loading: "Lodujo se",
@@ -139,8 +138,7 @@ const dsb_DE: Translation = {
         tooBig: "Dataja {fileName} jo pśewjelika {maxFileSize}.",
         notLogged: "Wy musyśo zalogowane byś, aby dataju górjej lodowali.",
     },
-    needRefresh:
-        "Cas Wašogo zwězanja jo se dokóńcował. Aktualizěrujśo bok, aby se naspjet z chatom zwězali.",
+    needRefresh: "Cas Wašogo zwězanja jo se dokóńcował. Aktualizěrujśo bok, aby se naspjet z chatom zwězali.",
     refresh: "Aktualizěrowaś",
     upgrade: "Upgrade",
     upgradeToSeeMore: "Upgrade, aby wěcej powěsćow wiźeli",
