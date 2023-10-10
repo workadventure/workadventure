@@ -17,6 +17,7 @@ import muc from "./muc";
 import notification from "./notification";
 import cowebsite from "./cowebsite";
 import actionbar from "./actionbar";
+import megaphone from "./megaphone";
 
 const hsb_DE = merge(en_US, {
     audio,
