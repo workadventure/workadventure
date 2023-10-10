@@ -38,6 +38,9 @@
     let minimized = isMediaBreakpointOnly("md");
     let isMobile = isMediaBreakpointUp("md");
 
+    let destroyed = false;
+    let currentDeviceId: string|undefined;
+
     if (peer) {
         embedScreen = {
             type: "streamable",
@@ -49,6 +52,9 @@
         minimized = isMediaBreakpointOnly("md");
         isMobile = isMediaBreakpointUp("md");
     });
+
+    // TODO: check the race condition when setting sinkId is solved.
+    // Also, read: https://github.com/nwjs/nw.js/issues/4340
 
     onMount(() => {
         resizeObserver.observe(videoContainer);
@@ -64,18 +70,36 @@
     onDestroy(() => {
         if (subscribeChangeOutput) subscribeChangeOutput();
         if (subscribeStreamStore) subscribeStreamStore();
+        destroyed = true;
     });
+
+    // sinkIdPromise is used to throttle the setSinkId calls
+    let sinkIdPromise = Promise.resolve();
 
     //sets the ID of the audio device to use for output
     function setAudioOutput(deviceId: string) {
+        if (destroyed) {
+            // In case this function is called in a promise that resolves after the component is destroyed,
+            // let's ignore the call.
+            return;
+        }
+
+        if (currentDeviceId === deviceId) {
+            // No need to change the audio output if it's already the one we want.
+            return;
+        }
+        currentDeviceId = deviceId;
+
         // Check HTMLMediaElement.setSinkId() compatibility for browser => https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
         try {
             // @ts-ignore
-            if (videoElement != undefined && videoElement.setSinkId != undefined) {
-                // @ts-ignore
-                videoElement.setSinkId(deviceId).catch((e) => {
-                    console.info("Error setting the audio output device: ", e);
-                });
+            if (videoElement !== undefined && videoElement.setSinkId != undefined) {
+                sinkIdPromise = sinkIdPromise.then(() =>
+                    // @ts-ignore
+                    videoElement.setSinkId(deviceId).catch((e) => {
+                        console.info("Error setting the audio output device: ", e);
+                    })
+                );
                 console.warn("Setting Sink Id to ", deviceId);
             }
         } catch (err) {
