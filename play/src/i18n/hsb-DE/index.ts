@@ -36,6 +36,7 @@ const hsb_DE = merge(en_US, {
     notification,
     cowebsite,
     actionbar,
+    megaphone,
 });
 
 export default hsb_DE;
