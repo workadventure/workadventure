@@ -60,7 +60,10 @@
             // @ts-ignore
             if (videoElement != undefined && videoElement.setSinkId != undefined) {
                 // @ts-ignore
-                videoElement.setSinkId(deviceId);
+                videoElement.setSinkId(deviceId).catch((e) => {
+                    console.info("Error setting the audio output device: ", e);
+                });
+                console.warn("Setting Sink Id to ", deviceId);
             }
         } catch (err) {
             console.info(

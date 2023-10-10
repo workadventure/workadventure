@@ -768,6 +768,7 @@ export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {
     const audiooutput = $deviceListStore.filter((device) => device.kind === "audiooutput");
     // if the previous speaker used isn`t defined in the list, apply default speaker
     const value = audiooutput.find((device) => device.deviceId === get(speakerSelectedStore));
+    console.warn("speakerListStore", audiooutput, get(speakerSelectedStore), value);
     if (value == undefined && audiooutput.length > 0) {
         speakerSelectedStore.set(audiooutput[0].deviceId);
     } else {
@@ -855,13 +856,16 @@ speakerSelectedStore.subscribe((speaker) => {
     const currentValue = speaker;
     const speakerList = get(speakerListStore);
     const oldDevice =
-        oldValue && speakerList ? speakerList.find((mediaDeviceInfo) => mediaDeviceInfo.deviceId == oldValue) : null;
+        oldValue && speakerList
+            ? speakerList.find((mediaDeviceInfo) => mediaDeviceInfo.deviceId == oldValue)
+            : undefined;
     if (
-        oldDevice != undefined &&
-        speakerList != undefined &&
+        oldDevice !== undefined &&
+        speakerList !== undefined &&
         currentValue !== oldDevice.deviceId &&
         speakerList.find((value) => value.deviceId == oldValue)
     ) {
+        console.warn("speakerSelectedStore.subscribe", oldValue, currentValue, oldDevice.deviceId);
         speakerSelectedStore.set(oldDevice.deviceId);
     }
 });
