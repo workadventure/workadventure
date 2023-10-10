@@ -20,7 +20,7 @@ const error: DeepPartial<Translation["error"]> = {
     errorDialog: {
         title: "Error 😱",
         hasReportIssuesUrl: "Si voleu més informació, podeu contactar amb l'administrador o informar d'un problema a:",
-        noReportIssuesUrl: "Si voleu més informació, podeu contactar amb nosaltres a:",
+        noReportIssuesUrl: "Si voleu més informació, podeu contactar amb l'administrador del món.",
         messageFAQ: "També podeu consultar la nostra:",
         reload: "Recarregar",
         close: "Tancar",

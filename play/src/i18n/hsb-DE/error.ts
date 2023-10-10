@@ -20,7 +20,7 @@ const error: DeepPartial<Translation["error"]> = {
     errorDialog: {
         title: "Zmylk 😱",
         hasReportIssuesUrl: "Za dalše informacije móžeš so z administratorami skontaktować abo zmylk podawać pod:",
-        noReportIssuesUrl: "Za dalše informacije móžeš so pola nas pod:",
+        noReportIssuesUrl: "Za dalše informacije móžeš so z administratorami swěta skontaktować.",
         messageFAQ: "Móžeš tež naš:",
         reload: "Přezačinić",
         close: "Zamknjeny",

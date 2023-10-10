@@ -3,6 +3,8 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import ImgVirtualhugsvirtualhug from "../images/virtual-hugs-virtual-hug.gif";
+    import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
+    import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 
     function close(): void {
         errorStore.clearClosableMessages();
@@ -12,6 +14,17 @@
     function refresh(): void {
         window.location.reload();
         return;
+    }
+
+    function openCwebsiteLink(event: MouseEvent) {
+        let link: string | undefined;
+        if ((link = (event.target as HTMLAnchorElement).href) == undefined) return;
+
+        const coWebsite = new SimpleCoWebsite(new URL(link), undefined, undefined, 75, true);
+        coWebsiteManager.addCoWebsiteToStore(coWebsite, undefined);
+        coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
+            console.error("Error during loading a co-website: " + coWebsite.getUrl());
+        });
     }
 </script>
 
@@ -32,20 +45,22 @@
         {#if connectionManager.currentRoom?.reportIssuesUrl}
             <p class="tw-text-xs">
                 {$LL.error.errorDialog.hasReportIssuesUrl()}
-                <a href={connectionManager.currentRoom.reportIssuesUrl}
+                <a href={connectionManager.currentRoom.reportIssuesUrl} target="_blank" rel="noopener noreferrer"
                     >{connectionManager.currentRoom.reportIssuesUrl}</a
                 >
             </p>
         {:else}
             <p class="tw-text-xs">
                 {$LL.error.errorDialog.noReportIssuesUrl()}
-                <a href="mailto:hello@workadventu.re?subject=WorkAdventure Error" rel="noreferrer" target="_blank"
-                    >hello@workadventu.re</a
-                >
             </p>
             <p class="tw-text-xs">
                 {$LL.error.errorDialog.messageFAQ()}
-                <a href="https://workadventu.re/faq" rel="noreferrer" target="_blank">FAQ</a>
+                <a
+                    href="https://workadventu.re/faq"
+                    on:click|stopPropagation|preventDefault={openCwebsiteLink}
+                    target="_blank"
+                    rel="noopener noreferrer">FAQ</a
+                >
             </p>
         {/if}
     </section>

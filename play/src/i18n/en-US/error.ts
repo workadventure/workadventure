@@ -17,7 +17,7 @@ const error: BaseTranslation = {
     errorDialog: {
         title: "Error 😱",
         hasReportIssuesUrl: "If you want more information, you may contact administrator or report an issue at:",
-        noReportIssuesUrl: "If you want more information, you may contact us at:",
+        noReportIssuesUrl: "If you want more information, you may contact the administrator of the world.",
         messageFAQ: "You may also check our:",
         reload: "Reload",
         close: "Close",

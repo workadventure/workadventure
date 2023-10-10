@@ -22,7 +22,7 @@ const error: DeepPartial<Translation["error"]> = {
         title: "Fehler 😱",
         hasReportIssuesUrl:
             "Für weitere Informationen wende dich bitte an die Administratoren oder melde einen Fehler unter:",
-        noReportIssuesUrl: "Für weitere Informationen wende dich bitte an uns unter:",
+        noReportIssuesUrl: "Für weitere Informationen wende dich bitte an die Administratoren dieser Welt.",
         messageFAQ: "Du kannst auch unsere FAQ lesen:",
         reload: "Neu laden",
         close: "Schließen",
