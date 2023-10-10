@@ -767,12 +767,17 @@ export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {
 
     const audiooutput = $deviceListStore.filter((device) => device.kind === "audiooutput");
     // if the previous speaker used isn`t defined in the list, apply default speaker
-    const value = audiooutput.find((device) => device.deviceId === get(speakerSelectedStore));
-    console.warn("speakerListStore", audiooutput, get(speakerSelectedStore), value);
-    if (value == undefined && audiooutput.length > 0) {
-        speakerSelectedStore.set(audiooutput[0].deviceId);
-    } else {
-        speakerSelectedStore.set(undefined);
+    const previousSpeakerId = get(speakerSelectedStore);
+    const previousAudioOutputDevice = audiooutput.find((device) => device.deviceId === previousSpeakerId);
+    if (previousAudioOutputDevice === undefined) {
+        console.log("Could not find previous selected speaker in speaker device list");
+        if (audiooutput.length > 0) {
+            console.log("Selecting default speaker");
+            speakerSelectedStore.set(audiooutput[0].deviceId);
+        } else {
+            console.log("No output device found");
+            speakerSelectedStore.set(undefined);
+        }
     }
     return audiooutput;
 });
