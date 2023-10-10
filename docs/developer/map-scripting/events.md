@@ -27,7 +27,7 @@ An event can be sent:
 To broadcast an event, use the `WA.event.dispatchEvent` method:
 
 ```typescript
-WA.event.broadcastEvent("my-event", "my payload");
+WA.event.dispatchEvent("my-event", "my payload");
 ```
 
 An event has a name (`my-event` in the example above), and a payload (`my payload` in the example above). 
