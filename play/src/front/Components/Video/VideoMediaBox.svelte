@@ -4,6 +4,7 @@
     import { Color } from "@workadventure/shared-utils";
     import { onDestroy, onMount } from "svelte";
     import { Unsubscriber } from "svelte/store";
+    import CancelablePromise from "cancelable-promise";
     import type { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -17,7 +18,6 @@
     import { speakerListStore, speakerSelectedStore } from "../../Stores/MediaStore";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import BanReportBox from "./BanReportBox.svelte";
-    import { srcObject } from "./utils";
 
     export let clickable = false;
 
@@ -29,8 +29,8 @@
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
     let constraintStore = peer.constraintsStore;
-    let subscribeChangeOutput: Unsubscriber;
-    let subscribeStreamStore: Unsubscriber;
+    let unsubscribeChangeOutput: Unsubscriber;
+    let unsubscribeStreamStore: Unsubscriber;
 
     let embedScreen: EmbedScreen;
     let videoContainer: HTMLDivElement;
@@ -58,38 +58,48 @@
     // TODO: check the race condition when setting sinkId is solved.
     // Also, read: https://github.com/nwjs/nw.js/issues/4340
 
+    // A promise to chain calls to setSinkId and setting the srcObject
+    let sinkIdPromise = CancelablePromise.resolve();
+
     onMount(() => {
         resizeObserver.observe(videoContainer);
-        let bypassFirstCall = true;
 
-        subscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
-            if (bypassFirstCall) {
-                bypassFirstCall = false;
-                return;
+        unsubscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
+            if (deviceId !== undefined) {
+                setAudioOutput(deviceId);
             }
-            if (deviceId != undefined) setAudioOutput(deviceId);
         });
 
-        subscribeStreamStore = streamStore.subscribe(() => {
+        unsubscribeStreamStore = streamStore.subscribe((stream) => {
             // We wait just a little bit to be sure that the subscribe changing the video element is applied BEFORE trying to set the sinkId
-            console.log("Speaker will switch in 5 seconds");
+            /*console.log("Speaker will switch in 5 seconds");
             setTimeout(() => {
                 if ($speakerSelectedStore != undefined) {
                     console.log("Switching speaker");
                     setAudioOutput($speakerSelectedStore);
                 }
-            }, 5000);
+            }, 5000);*/
+            sinkIdPromise = sinkIdPromise.then(() => {
+                if (destroyed) {
+                    // In case this function is called in a promise that resolves after the component is destroyed,
+                    // let's ignore the call.
+                    console.warn("streamStore modified after the component was destroyed. Call is ignored.");
+                    return;
+                }
+
+                if (videoElement) {
+                    videoElement.srcObject = stream;
+                }
+            });
         });
     });
 
     onDestroy(() => {
-        if (subscribeChangeOutput) subscribeChangeOutput();
-        if (subscribeStreamStore) subscribeStreamStore();
+        if (unsubscribeChangeOutput) unsubscribeChangeOutput();
+        if (unsubscribeStreamStore) unsubscribeStreamStore();
         destroyed = true;
+        sinkIdPromise.cancel();
     });
-
-    // sinkIdPromise is used to throttle the setSinkId calls
-    let sinkIdPromise = Promise.resolve();
 
     //sets the ID of the audio device to use for output
     function setAudioOutput(deviceId: string) {
@@ -109,15 +119,17 @@
 
         // Check HTMLMediaElement.setSinkId() compatibility for browser => https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
         try {
-            sinkIdPromise = sinkIdPromise.then(() =>
-                videoElement
+            console.log("Awaiting to set sink id to ", deviceId);
+            sinkIdPromise = sinkIdPromise.then(() => {
+                console.log("Setting Sink Id to ", deviceId);
+                return videoElement
                     ?.setSinkId?.(deviceId)
                     .then(() => {
                         console.info("Audio output device set to ", deviceId);
                         // Trying to set the stream again after setSinkId is set (for Chrome, according to https://bugs.chromium.org/p/chromium/issues/detail?id=971947&q=setsinkid&can=2)
-                        if (videoElement && $streamStore) {
+                        /*if (videoElement && $streamStore) {
                             videoElement.srcObject = $streamStore;
-                        }
+                        }*/
                     })
                     .catch((e: unknown) => {
                         if (e instanceof DOMException && e.name === "AbortError") {
@@ -134,9 +146,8 @@
                             return;
                         }
                         console.info("Error setting the audio output device: ", e);
-                    })
-            );
-            console.warn("Setting Sink Id to ", deviceId);
+                    });
+            });
         } catch (err) {
             console.info(
                 "Your browser is not compatible for updating your speaker over a video element. Try to change the default audio output in your computer settings. Error: ",
@@ -186,7 +197,6 @@
                 style={$embedScreenLayoutStore === LayoutMode.Presentation
                     ? `border: solid 2px ${backGroundColor}`
                     : ""}
-                use:srcObject={$streamStore}
                 autoplay
                 playsinline
             />
