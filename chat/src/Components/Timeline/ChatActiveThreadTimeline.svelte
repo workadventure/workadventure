@@ -593,6 +593,8 @@
                                 ><b style={target.color ? `color: ${target.color};` : ""}
                                     >{target.name && target.name.match(/\[\d*]/)
                                         ? target.name.substring(0, target.name.search(/\[\d*]/))
+                                        : target.name
+                                        ? target.name
                                         : "Unknown"}
                                     {#if target.name.match(/\[\d*]/)}
                                         <span class="tw-font-light tw-text-xs tw-text-gray">
@@ -624,6 +626,8 @@
                                 ><b style={target.color ? `color: ${target.color};` : ""}
                                     >{target.name && target.name.match(/\[\d*]/)
                                         ? target.name.substring(0, target.name.search(/\[\d*]/))
+                                        : target.name
+                                        ? target.name
                                         : "Unknown"}
                                     {#if target.name.match(/\[\d*]/)}
                                         <span class="tw-font-light tw-text-xs tw-text-gray">
