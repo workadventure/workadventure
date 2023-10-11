@@ -39,7 +39,7 @@
     let isMobile = isMediaBreakpointUp("md");
 
     let destroyed = false;
-    let currentDeviceId: string|undefined;
+    let currentDeviceId: string | undefined;
 
     if (peer) {
         embedScreen = {
@@ -58,12 +58,22 @@
 
     onMount(() => {
         resizeObserver.observe(videoContainer);
+        let bypassFirstCall = true;
         subscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
+            if (bypassFirstCall) {
+                bypassFirstCall = false;
+                return;
+            }
             if (deviceId != undefined) setAudioOutput(deviceId);
         });
 
         subscribeStreamStore = streamStore.subscribe(() => {
-            if ($speakerSelectedStore != undefined) setAudioOutput($speakerSelectedStore);
+            // We wait just a little bit to be sure that the subscribe changing the video element is applied BEFORE trying to set the sinkId
+            setTimeout(() => {
+                if ($speakerSelectedStore != undefined) {
+                    setAudioOutput($speakerSelectedStore);
+                }
+            }, 100);
         });
     });
 

@@ -32,7 +32,7 @@
     let embedScreen: EmbedScreen;
 
     let destroyed = false;
-    let currentDeviceId: string|undefined;
+    let currentDeviceId: string | undefined;
 
     if (peer) {
         embedScreen = {
@@ -42,12 +42,21 @@
     }
 
     onMount(() => {
+        let bypassFirstCall = true;
+
         subscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
+            if (bypassFirstCall) {
+                bypassFirstCall = false;
+                return;
+            }
             if (deviceId != undefined) setAudioOutPut(deviceId);
         });
 
         subscribeStreamStore = streamStore.subscribe(() => {
-            if ($speakerSelectedStore != undefined) setAudioOutPut($speakerSelectedStore);
+            // We wait just a little bit to be sure that the subscribe changing the video element is applied BEFORE trying to set the sinkId
+            setTimeout(() => {
+                if ($speakerSelectedStore != undefined) setAudioOutPut($speakerSelectedStore);
+            }, 100);
         });
     });
 
@@ -83,7 +92,7 @@
                     videoElement.setSinkId(deviceId).catch((e) => {
                         console.info("Error setting the audio output device: ", e);
                     })
-            );
+                );
                 console.warn("Setting Sink Id to ", deviceId);
             }
         } catch (err) {
