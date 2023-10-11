@@ -12,7 +12,7 @@
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import microphoneOffImg from "../images/microphone-off.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import {speakerListStore, speakerSelectedStore} from "../../Stores/MediaStore";
+    import { speakerListStore, speakerSelectedStore } from "../../Stores/MediaStore";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import BanReportBox from "./BanReportBox.svelte";
     import { srcObject } from "./utils";
@@ -88,22 +88,27 @@
         // Check HTMLMediaElement.setSinkId() compatibility for browser => https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
         try {
             sinkIdPromise = sinkIdPromise.then(() =>
-                videoElement.setSinkId?.(deviceId).then(() => {
-                    console.info("Audio output device set to ", deviceId);
-                }).catch((e: unknown) => {
-                    if (e instanceof DOMException && e.name === "AbortError") {
-                        // An error occurred while setting the sinkId. Let's fallback to default.
-                        console.warn("Error setting the audio output device. We fallback to default.");
-                        if ($speakerListStore && $speakerListStore.length > 0) {
-                            speakerSelectedStore.set($speakerListStore[0].deviceId);
-                        } else {
-                            console.warn("Cannot fall back to default speaker. There is no speakers in the speaker list.");
-                            speakerSelectedStore.set(undefined);
+                videoElement
+                    ?.setSinkId?.(deviceId)
+                    .then(() => {
+                        console.info("Audio output device set to ", deviceId);
+                    })
+                    .catch((e: unknown) => {
+                        if (e instanceof DOMException && e.name === "AbortError") {
+                            // An error occurred while setting the sinkId. Let's fallback to default.
+                            console.warn("Error setting the audio output device. We fallback to default.");
+                            if ($speakerListStore && $speakerListStore.length > 0) {
+                                speakerSelectedStore.set($speakerListStore[0].deviceId);
+                            } else {
+                                console.warn(
+                                    "Cannot fall back to default speaker. There is no speakers in the speaker list."
+                                );
+                                speakerSelectedStore.set(undefined);
+                            }
+                            return;
                         }
-                        return;
-                    }
-                    console.info("Error setting the audio output device: ", e);
-                })
+                        console.info("Error setting the audio output device: ", e);
+                    })
             );
             console.warn("Setting Sink Id to ", deviceId);
         } catch (err) {
