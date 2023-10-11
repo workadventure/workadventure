@@ -79,6 +79,7 @@
                     setAudioOutput($speakerSelectedStore);
                 }
             }, 5000);*/
+            console.log("Stream store changed. Awaiting to set the stream to the video element.");
             sinkIdPromise = sinkIdPromise.then(() => {
                 if (destroyed) {
                     // In case this function is called in a promise that resolves after the component is destroyed,
@@ -88,7 +89,10 @@
                 }
 
                 if (videoElement) {
+                    console.log("Setting stream to the video element.");
                     videoElement.srcObject = stream;
+                } else {
+                    console.error("Video element is not defined. Cannot set the stream.");
                 }
             });
         });
