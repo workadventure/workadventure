@@ -135,7 +135,7 @@ export default {
                 });
             });
     },
-    dispatchEvent: (call, callback) => {
+    broadcastEvent: (call, callback) => {
         AuthenticationGuard(call.metadata, call.request.room)
             .then((authentication) => {
                 apiClientRepository
@@ -179,7 +179,7 @@ export default {
                 });
             });
     },
-    listenEvent: (call) => {
+    listenToEvent: (call) => {
         AuthenticationGuard(call.metadata, call.request.room)
             .then(() => {
                 apiClientRepository

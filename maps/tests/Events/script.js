@@ -2,10 +2,10 @@
 WA.onInit().then(() => {
 
     WA.chat.onChatMessage((message) => {
-        WA.event.dispatchEvent("chatMessage", message);
+        WA.event.broadcast("chatMessage", message);
     });
 
-    WA.event.onEventTriggered("chatMessage").subscribe((event) => {
+    WA.event.on("chatMessage").subscribe((event) => {
         WA.chat.sendChatMessage(event.value, "Parrot");
     });
 });

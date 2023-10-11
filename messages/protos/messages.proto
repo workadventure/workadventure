@@ -251,7 +251,7 @@ message ClientToServerMessage {
 
 message ReceivedEventMessage {
   string name = 1;
-  google.protobuf.Value value = 2;
+  google.protobuf.Value data = 2;
   optional int32 senderId = 3;
 }
 
@@ -343,7 +343,7 @@ message RoomsFromSameWorldQuery {
 
 message SendEventQuery {
   string name = 1;
-  google.protobuf.Value value = 2;
+  google.protobuf.Value data = 2;
   repeated int32 targetUserIds = 3;
 }
 
@@ -1102,7 +1102,7 @@ message EventResponse {
 message DispatchEventRequest {
   string room = 1;
   string name = 2;
-  google.protobuf.Value value = 3;
+  google.protobuf.Value data = 3;
   // If targetUserIds is empty, the event is broadcast to all users in the room. Otherwise, it targets the users with the given ids.
   repeated int32 targetUserIds = 4;
 }

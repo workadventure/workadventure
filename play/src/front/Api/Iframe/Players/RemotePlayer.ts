@@ -43,7 +43,7 @@ export interface RemotePlayerInterface {
 
     /**
      * Send an event to the player.
-     * Remote player can listen to this event using `WA.event.onEventTriggered(key).subscribe((event) => { ... })`.
+     * Remote player can listen to this event using `WA.event.on(key).subscribe((event) => { ... })`.
      */
     sendEvent(key: string, value: unknown): Promise<void>;
 }
@@ -177,12 +177,12 @@ export class RemotePlayer implements RemotePlayerInterface {
         });
     }
 
-    public sendEvent(key: string, value: unknown): Promise<void> {
+    public sendEvent(name: string, data: unknown): Promise<void> {
         return queryWorkadventure({
             type: "dispatchEvent",
             data: {
-                key,
-                value,
+                name,
+                data,
                 targetUserIds: [this._playerId],
             },
         });

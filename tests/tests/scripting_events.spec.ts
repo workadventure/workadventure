@@ -18,7 +18,7 @@ test.describe('Scripting API Events', () => {
             });
 
             const promise = new Promise<void>((resolve, reject) => {
-                WA.event.onEventTriggered("key").subscribe((event) => {
+                WA.event.on("key").subscribe((event) => {
                     if (event.key !== "key") {
                         reject(new Error("Invalid event key"));
                         return;
@@ -36,7 +36,7 @@ test.describe('Scripting API Events', () => {
                 });
             });
 
-            WA.event.dispatchEvent("key", "value");
+            WA.event.broadcast("key", "value");
             await promise;
             return true;
         });
@@ -72,7 +72,7 @@ test.describe('Scripting API Events', () => {
 
         await evaluateScript(page, async () => {
             await WA.onInit();
-            WA.event.onEventTriggered("key2").subscribe((event) => {
+            WA.event.on("key2").subscribe((event) => {
                 if (event.key !== "key2") {
                     return;
                 }
@@ -89,7 +89,7 @@ test.describe('Scripting API Events', () => {
 
         await evaluateScript(page2, async () => {
             await WA.onInit();
-            WA.event.dispatchEvent("key2", "value");
+            WA.event.broadcast("key2", "value");
         });
 
         await expect.poll(() => gotExpectedBroadcastNotification).toBe(true);
@@ -98,7 +98,7 @@ test.describe('Scripting API Events', () => {
 
         await evaluateScript(page, async () => {
             await WA.onInit();
-            WA.event.onEventTriggered("key3").subscribe((event) => {
+            WA.event.on("key3").subscribe((event) => {
                 if (event.key !== "key3") {
                     return;
                 }
@@ -130,7 +130,7 @@ test.describe('Scripting API Events', () => {
 
         await evaluateScript(page, async () => {
             await WA.onInit();
-            WA.event.onEventTriggered("key4").subscribe((event) => {
+            WA.event.on("key4").subscribe((event) => {
                 if (event.key !== "key4") {
                     return;
                 }

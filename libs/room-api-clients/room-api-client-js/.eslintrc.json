@@ -30,6 +30,6 @@
         "require-atomic-updates": "error",
         "prefer-promise-reject-errors": "error",
 
-        "rxjs/no-ignored-subscription": "error",
+        "rxjs/no-ignored-subscription": "error"
     }
 }

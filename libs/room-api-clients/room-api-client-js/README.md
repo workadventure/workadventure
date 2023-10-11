@@ -109,8 +109,8 @@ init();
 
 The Room API client allows you to send and listen to events in a room using the following methods:
 
-- `client.dispatchEvent({ name: string, room: string, value: unknown }): Promise<void>`
-- `client.listenEvent({ name: string, room: string }): AsyncIterable<any>`
+- `client.broadcastEvent({ name: string, room: string, data: unknown }): Promise<void>`
+- `client.listenToEvent({ name: string, room: string }): AsyncIterable<any>`
 
 ### Example
 
@@ -134,17 +134,17 @@ const eventName = "my-event";
 async function init() {
   // Send an event in 5 seconds
   setTimeout(async () => {
-    await client.dispatchEvent({
+    await client.broadcastEvent({
       name: eventName,
       room: roomUrl,
-      value: "Default Value",
+      data: "Default Value",
     });
 
     console.log("Event sent: Default Value");
   }, 5000);
 
   // Listen a event
-  const events = client.listenEvent({
+  const events = client.listenToEvent({
     name: eventName,
     room: roomUrl,
   });
@@ -152,7 +152,7 @@ async function init() {
   for await (const event of events) {
     console.log("Event received:");
     console.log("Sender:", event.senderId);
-    console.log("Value:", event.value);
+    console.log("Value:", event.data);
     break;
   }
 }

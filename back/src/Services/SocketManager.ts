@@ -1448,7 +1448,7 @@ export class SocketManager {
     }
 
     private handleSendEventQuery(gameRoom: GameRoom, user: User, sendEventQuery: SendEventQuery) {
-        gameRoom.dispatchEvent(sendEventQuery.name, sendEventQuery.value, user.id, sendEventQuery.targetUserIds);
+        gameRoom.dispatchEvent(sendEventQuery.name, sendEventQuery.data, user.id, sendEventQuery.targetUserIds);
     }
 
     async dispatchEvent(roomUrl: string, name: string, value: unknown, targetUserIds: number[]): Promise<void> {

@@ -141,7 +141,7 @@ test.describe('Room API', async () => {
         await evaluateScript(page, async () => {
             await WA.onInit();
 
-            await WA.event.dispatchEvent("my-event", {"foo": "bar"});
+            await WA.event.broadcast("my-event", {"foo": "bar"});
         });
 
         await expect.poll(() => resolved).toBeTruthy();
@@ -169,7 +169,7 @@ test.describe('Room API', async () => {
 
         await evaluateScript(page, async () => {
             await WA.onInit();
-            WA.event.onEventTriggered("key").subscribe((event) => {
+            WA.event.on("key").subscribe((event) => {
                 if (event.key !== "key") {
                     return;
                 }

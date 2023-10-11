@@ -24,10 +24,10 @@ An event can be sent:
 
 ## Broadcasting an event
 
-To broadcast an event, use the `WA.event.dispatchEvent` method:
+To broadcast an event, use the `WA.event.broadcast` method:
 
 ```typescript
-WA.event.dispatchEvent("my-event", "my payload");
+WA.event.broadcast("my-event", "my payload");
 ```
 
 An event has a name (`my-event` in the example above), and a payload (`my payload` in the example above). 
@@ -52,27 +52,27 @@ for (const player of players) {
 
 ## Listening to events
 
-All events (whether they are broadcast or targeted) can be listened to using `WA.event.onEventTriggered`.
+All events (whether they are broadcast or targeted) can be listened to using `WA.event.on`.
 
 ```typescript
-WA.event.onEventTriggered("my-event").subscribe((event) => {
+WA.event.on("my-event").subscribe((event) => {
     console.log("Event received", event.value);
 });
 ```
 
-The `onEventTriggered` method returns an [RxJS Observable](https://rxjs.dev/guide/observable). You can use the `subscribe` method
+The `on` method returns an [RxJS Observable](https://rxjs.dev/guide/observable). You can use the `subscribe` method
 to listen to events. The `subscribe` method takes a callback function that will be called each time an event is received.
 The callback function takes a single argument: the `event` object that contain the following fields:
 
-- `value` (type: `unknown`): the payload of the event
-- `key` (type: `string`): the name of the event
+- `data` (type: `unknown`): the payload of the event
+- `name` (type: `string`): the name of the event
 - `senderId` (type: `number`): the ID of the player that sent the event (or `undefined` if the event was sent by the system)
 
 The `subscribe` method returns a `Subscription` object. You can use the `unsubscribe` method of this object to stop listening to events.
 
 ```typescript
-const subscription = WA.event.onEventTriggered("my-event").subscribe((event) => {
-    console.log("Event received", event.value);
+const subscription = WA.event.on("my-event").subscribe((event) => {
+    console.log("Event received", event.data);
 });
 
 // ...
@@ -80,14 +80,14 @@ const subscription = WA.event.onEventTriggered("my-event").subscribe((event) => 
 subscription.unsubscribe();
 ```
 
-### A note about the `value` field
+### A note about the `data` field
 
-If you are using Typescript, the `value` field of the `event` object is of type `unknown`. This is because the type of the payload
+If you are using Typescript, the `data` field of the `event` object is of type `unknown`. This is because the type of the payload
 is not known in advance. You can use a type assertion to tell Typescript what is the type of the payload:
 
 ```typescript
-WA.event.onEventTriggered("my-event").subscribe((event) => {
-    const payload = event.value as string;
+WA.event.on("my-event").subscribe((event) => {
+    const payload = event.data as string;
     console.log("Event received", payload);
 });
 ```
@@ -108,8 +108,8 @@ const myEventSchema = z.object({
     myField: z.string()
 });
 
-WA.event.onEventTriggered("some-event").subscribe((event) => {
-    const result = myEventSchema.safeParse(event.value);
+WA.event.on("some-event").subscribe((event) => {
+    const result = myEventSchema.safeParse(event.data);
     if (!result.success) {
         console.error("Invalid event payload", result.error);
         return;

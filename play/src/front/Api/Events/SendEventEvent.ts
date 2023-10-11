@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const isSendEventEvent = z.object({
-    key: z.string(),
-    value: z.unknown(),
+    name: z.string(),
+    data: z.unknown(),
     targetUserIds: z.array(z.number()).optional(),
 });
 

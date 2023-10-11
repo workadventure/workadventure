@@ -396,8 +396,8 @@ export class RoomConnection implements RoomConnection {
                             }
                             case "receivedEventMessage": {
                                 this._receivedEventMessageStream.next({
-                                    key: subMessage.receivedEventMessage.name,
-                                    value: subMessage.receivedEventMessage.value,
+                                    name: subMessage.receivedEventMessage.name,
+                                    data: subMessage.receivedEventMessage.data,
                                     senderId: subMessage.receivedEventMessage.senderId,
                                 });
                                 break;
@@ -971,12 +971,12 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public async emitScriptableEvent(name: string, value: unknown, targetUserIds: number[] | undefined): Promise<void> {
+    public async emitScriptableEvent(name: string, data: unknown, targetUserIds: number[] | undefined): Promise<void> {
         const answer = await this.query({
             $case: "sendEventQuery",
             sendEventQuery: {
                 name,
-                value: value,
+                data,
                 targetUserIds: targetUserIds ?? [],
             },
         });

@@ -19,17 +19,17 @@ async function init() {
   setTimeout(async () => {
     console.log("Sending event: { foo: \"Default Value\" }");
 
-    await client.dispatchEvent({
+    await client.broadcastEvent({
       name: eventName,
       room: roomUrl,
-      value: { foo: "Default Value" },
+      data: { foo: "Default Value" },
     });
 
     console.log("Event sent: { foo: \"Default Value\" }");
   }, 1000);
 
   // Listen a event
-  const events = client.listenEvent({
+  const events = client.listenToEvent({
     name: eventName,
     room: roomUrl,
   });
@@ -37,7 +37,7 @@ async function init() {
   for await (const event of events) {
     console.log("Event", event);
     console.log("Sender:", event.senderId);
-    console.log("Value:", event.value);
+    console.log("Value:", event.data);
     break;
   }
 }

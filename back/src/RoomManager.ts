@@ -587,7 +587,7 @@ const roomManager = {
     /** Dispatch an event to all users in the room */
     dispatchEvent(call, callback) {
         socketManager
-            .dispatchEvent(call.request.room, call.request.name, call.request.value, call.request.targetUserIds)
+            .dispatchEvent(call.request.room, call.request.name, call.request.data, call.request.targetUserIds)
             .then(() => {
                 callback(null);
             })
@@ -621,7 +621,9 @@ const roomManager = {
                 console.error(e);
                 Sentry.captureException(e);
             });
-            call.end(e);
+            console.error(e);
+            Sentry.captureException(e);
+            call.end();
         });
     },
     dispatchGlobalEvent(call, callback) {

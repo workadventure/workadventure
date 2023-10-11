@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const isReceiveEventEvent = z.object({
-    key: z.string(),
-    value: z.unknown(),
+    name: z.string(),
+    data: z.unknown(),
     senderId: z.number().optional(),
 });
 

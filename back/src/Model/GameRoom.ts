@@ -1189,7 +1189,7 @@ export class GameRoom implements BrothersFinder {
         );
     }
 
-    public dispatchEvent(name: string, value: unknown, senderId: number | "RoomApi", targetUserIds: number[]): void {
+    public dispatchEvent(name: string, data: unknown, senderId: number | "RoomApi", targetUserIds: number[]): void {
         if (targetUserIds.length === 0) {
             // Dispatch to all users
             this.sendSubMessageToRoom({
@@ -1197,7 +1197,7 @@ export class GameRoom implements BrothersFinder {
                     $case: "receivedEventMessage",
                     receivedEventMessage: {
                         name,
-                        value,
+                        data,
                         senderId: senderId === "RoomApi" ? undefined : senderId,
                     },
                 },
@@ -1208,7 +1208,7 @@ export class GameRoom implements BrothersFinder {
             for (const eventListener of listeners ?? []) {
                 eventListener.write({
                     senderId: senderId === "RoomApi" ? undefined : senderId,
-                    value: value,
+                    data,
                 });
             }
         } else {
@@ -1220,7 +1220,7 @@ export class GameRoom implements BrothersFinder {
                             $case: "receivedEventMessage",
                             receivedEventMessage: {
                                 name,
-                                value,
+                                data,
                                 senderId: senderId === "RoomApi" ? undefined : senderId,
                             },
                         },

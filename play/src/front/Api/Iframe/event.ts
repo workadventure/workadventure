@@ -16,7 +16,7 @@ export class WorkadventureEventCommands extends AbstractWorkadventureEventComman
         }),
     ];
 
-    dispatchEvent(key: string, value: unknown): Promise<void> {
+    broadcast(name: string, data: unknown): Promise<void> {
         /*const subscriber = this.eventSubscribers.get(key);
         if (subscriber) {
             subscriber.next({
@@ -29,8 +29,8 @@ export class WorkadventureEventCommands extends AbstractWorkadventureEventComman
         return queryWorkadventure({
             type: "dispatchEvent",
             data: {
-                key,
-                value,
+                name,
+                data,
             },
         });
     }

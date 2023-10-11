@@ -14,14 +14,14 @@ export abstract class AbstractWorkadventureEventCommands {
         // Not unsubscribing is ok, this is two singletons never destroyed.
         //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
         this.receivedEventResolvers.subscribe((event) => {
-            const subject = this.eventSubscribers.get(event.key);
+            const subject = this.eventSubscribers.get(event.name);
             if (subject !== undefined) {
                 subject.next(event);
             }
         });
     }
 
-    onEventTriggered(key: string): Observable<ScriptingEvent> {
+    on(key: string): Observable<ScriptingEvent> {
         let subject = this.eventSubscribers.get(key);
         if (subject === undefined) {
             subject = new Subject<ReceiveEventEvent>();
