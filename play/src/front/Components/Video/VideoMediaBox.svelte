@@ -41,6 +41,8 @@
     let destroyed = false;
     let currentDeviceId: string | undefined;
 
+    $: videoEnabled = $constraintStore ? $constraintStore.video : false;
+
     if (peer) {
         embedScreen = {
             type: "streamable",
@@ -59,6 +61,7 @@
     onMount(() => {
         resizeObserver.observe(videoContainer);
         let bypassFirstCall = true;
+
         subscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
             if (bypassFirstCall) {
                 bypassFirstCall = false;
@@ -139,26 +142,41 @@
 
 <div
     class="video-container"
+    class:video-off={!videoEnabled}
     bind:this={videoContainer}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     <div
-        class="tw-flex tw-w-full tw-flex-col tw-h-full"
+        style={videoEnabled
+            ? ""
+            : `border: solid 2px ${backGroundColor}; color: ${textColor}; background-color: ${backGroundColor}; color: ${textColor}`}
+        class="tw-flex tw-w-full "
+        class:tw-flex-col={videoEnabled}
+        class:tw-h-full={videoEnabled}
+        class:tw-items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
+        class:tw-px-3={!videoEnabled}
+        class:tw-rounded={!videoEnabled}
+        class:tw-flex-row={!videoEnabled}
+        class:tw-relative={!videoEnabled}
         class:tw-justify-center={$statusStore === "connecting" || $statusStore === "error"}
-        class:tw-items-center={$statusStore === "connecting" || $statusStore === "error"}
     >
         {#if $statusStore === "connecting"}
             <div class="connecting-spinner" />
         {:else if $statusStore === "error"}
             <div class="rtc-error" />
+        {:else if !videoEnabled}
+            <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
         {/if}
-        <!-- svelte-ignore a11y-media-has-caption -->
         {#if $streamStore}
+            <!-- svelte-ignore a11y-media-has-caption -->
             <video
                 bind:this={videoElement}
-                class:no-video={!$constraintStore || $constraintStore.video === false}
+                class:tw-h-0={!videoEnabled}
+                class:tw-w-0={!videoEnabled}
                 class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
-                class="tw-h-full tw-max-w-full tw-rounded"
+                class:tw-h-full={videoEnabled}
+                class:tw-max-w-full={videoEnabled}
+                class:tw-rounded={videoEnabled}
                 style={$embedScreenLayoutStore === LayoutMode.Presentation
                     ? `border: solid 2px ${backGroundColor}`
                     : ""}
@@ -168,48 +186,75 @@
             />
         {/if}
 
-        <div class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height">
-            <i class="tw-flex">
-                <span
-                    style="background-color: {backGroundColor}; color: {textColor};"
-                    class="nametag-text nametag-shape tw-pr-3 tw-pl-5 tw-h-4 tw-max-h-8">{name}</span
-                >
-            </i>
-        </div>
-        <div class="woka-webcam-container container-end video-on-responsive-height tw-pb-1 tw-left-0">
-            <div
-                class="tw-flex {($constraintStore && $constraintStore.video !== false) || minimized ? '' : 'no-video'}"
-            >
-                <Woka userId={peer.userId} placeholderSrc={""} customHeight="20px" customWidth="20px" />
+        {#if videoEnabled}
+            <div class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height">
+                <i class="tw-flex">
+                    <span
+                        style="background-color: {backGroundColor}; color: {textColor};"
+                        class="nametag-text nametag-shape tw-pr-3 tw-pl-5 tw-h-4 tw-max-h-8">{name}</span
+                    >
+                </i>
             </div>
-        </div>
-        {#if $constraintStore && $constraintStore.audio !== false}
+            <div class="woka-webcam-container container-end video-on-responsive-height tw-pb-1 tw-left-0">
+                <div
+                    class="tw-flex {($constraintStore && $constraintStore.video !== false) || minimized
+                        ? ''
+                        : 'no-video'}"
+                >
+                    <Woka userId={peer.userId} placeholderSrc={""} customHeight="20px" customWidth="20px" />
+                </div>
+            </div>
+            {#if $constraintStore && $constraintStore.audio !== false}
+                <div
+                    class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2"
+                >
+                    <SoundMeterWidget volume={$volumeStore} classcss="tw-absolute" barColor="blue" />
+                </div>
+            {:else}
+                <div
+                    class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2"
+                >
+                    <img draggable="false" src={microphoneOffImg} class="tw-flex tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
+                </div>
+            {/if}
             <div
-                class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2"
+                class="report-ban-container tw-flex tw-z-[600] media-box-camera-on-size media-box-camera-on-position
+            tw-translate-x-3 tw-transition-all tw-opacity-0"
             >
-                <SoundMeterWidget volume={$volumeStore} classcss="tw-absolute" barColor="blue" />
+                <BanReportBox {peer} />
             </div>
         {:else}
-            <div
-                class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2"
+            <span
+                style={$embedScreenLayoutStore === LayoutMode.VideoChat
+                    ? `background-color: ${backGroundColor}; color: ${textColor}`
+                    : ""}
+                class="tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10"
+                >{name}</span
             >
-                <img draggable="false" src={microphoneOffImg} class="tw-flex tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
+            {#if $constraintStore && $constraintStore.audio !== false}
+                <SoundMeterWidget
+                    volume={$volumeStore}
+                    classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                    barColor={textColor}
+                />
+            {:else}
+                <img
+                    draggable="false"
+                    src={microphoneOffImg}
+                    class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                    alt="Mute"
+                    class:tw-brightness-0={textColor === "black"}
+                    class:tw-brightness-100={textColor === "white"}
+                />
+            {/if}
+            <div class="tw-w-full tw-flex report-ban-container-cam-off tw-opacity-0 tw-h-10">
+                <BanReportBox {peer} />
             </div>
         {/if}
-        <div
-            class="report-ban-container tw-flex tw-z-[600] media-box-camera-on-size media-box-camera-on-position
-            tw-translate-x-3 tw-transition-all tw-opacity-0"
-        >
-            <BanReportBox {peer} />
-        </div>
     </div>
 </div>
 
 <style lang="scss">
-    video.no-video {
-        visibility: collapse;
-    }
-
     video {
         object-fit: cover;
         &.object-contain {

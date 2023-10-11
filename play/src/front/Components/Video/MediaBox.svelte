@@ -11,7 +11,6 @@
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
-    import VideoOffBox from "./VideoOffBox.svelte";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
 
     export let streamable: Streamable;
@@ -39,36 +38,33 @@
     onDestroy(() => {
         gameScene.reposition();
     });
+    $: videoEnabled = $constraintStore ? $constraintStore.video : false;
 </script>
 
 {#if streamable instanceof VideoPeer}
-    {#if $constraintStore && !$constraintStore.video}
+    {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
         <div
-            class="media-container {isHightlighted
-                ? 'hightlighted tw-max-w-sm tw-mx-auto'
-                : 'tw-flex tw-m-auto media-box-camera-off-size tw-h-12'}
-     media-box-shape-color tw-pointer-events-auto tw-p-0 screen-blocker
-"
+            class="media-container media-box-shape-color tw-pointer-events-auto screen-blocker"
+            class:hightlighted={isHightlighted}
+            class:tw-mr-6={isHightlighted && videoEnabled}
+            class:tw-flex={!isHightlighted}
+            class:media-box-camera-on-size={!isHightlighted && videoEnabled}
+            class:media-box-camera-off-size={!isHightlighted && !videoEnabled}
+            class:tw-max-w-sm={isHightlighted && !videoEnabled}
+            class:tw-mx-auto={isHightlighted && !videoEnabled}
+            class:tw-m-auto={!isHightlighted && !videoEnabled}
+            class:tw-h-12={!isHightlighted && !videoEnabled}
             class:clickable={isClickable}
             class:mozaic-duo={mozaicDuo}
             class:mozaic-full-width={mozaicSolo}
             class:mozaic-quarter={mozaicQuarter}
         >
-            <div class="{isHightlighted ? 'tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex screen-blocker">
-                <VideoOffBox peer={streamable} clickable={false} />
-            </div>
-        </div>
-    {:else if ($constraintStore && $constraintStore.video) || $statusStore === "error" || $statusStore === "connecting"}
-        <div
-            class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
-     media-box-shape-color tw-pointer-events-auto screen-blocker
-"
-            class:clickable={isClickable}
-            class:mozaic-duo={mozaicDuo}
-            class:mozaic-full-width={mozaicSolo}
-            class:mozaic-quarter={mozaicQuarter}
-        >
-            <div class="{isHightlighted ? 'tw-h-[32vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex screen-blocker">
+            <div
+                class="tw-w-full tw-flex screen-blocker"
+                class:tw-mr-6={isHightlighted}
+                class:tw-mx-auto={!isHightlighted}
+                class:tw-h-[32vw]={isHightlighted && videoEnabled}
+            >
                 <VideoMediaBox peer={streamable} clickable={isClickable} />
             </div>
         </div>
