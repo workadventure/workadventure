@@ -14,7 +14,7 @@
     import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import microphoneOffImg from "../images/microphone-off-blue.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { speakerSelectedStore } from "../../Stores/MediaStore";
+    import {speakerListStore, speakerSelectedStore} from "../../Stores/MediaStore";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import BanReportBox from "./BanReportBox.svelte";
     import { srcObject } from "./utils";
@@ -91,27 +91,38 @@
         if (destroyed) {
             // In case this function is called in a promise that resolves after the component is destroyed,
             // let's ignore the call.
+            console.warn("setAudioOutput called after the component was destroyed. Call is ignored.");
             return;
         }
 
         if (currentDeviceId === deviceId) {
             // No need to change the audio output if it's already the one we want.
+            console.log("setAudioOutput on already set deviceId. Ignoring call.");
             return;
         }
         currentDeviceId = deviceId;
 
         // Check HTMLMediaElement.setSinkId() compatibility for browser => https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
         try {
-            // @ts-ignore
-            if (videoElement !== undefined && videoElement.setSinkId != undefined) {
-                sinkIdPromise = sinkIdPromise.then(() =>
-                    // @ts-ignore
-                    videoElement.setSinkId(deviceId).catch((e) => {
-                        console.info("Error setting the audio output device: ", e);
-                    })
-                );
-                console.warn("Setting Sink Id to ", deviceId);
-            }
+            sinkIdPromise = sinkIdPromise.then(() =>
+                videoElement.setSinkId?.(deviceId).then(() => {
+                    console.info("Audio output device set to ", deviceId);
+                }).catch((e: unknown) => {
+                    if (e instanceof DOMException && e.name === "AbortError") {
+                        // An error occurred while setting the sinkId. Let's fallback to default.
+                        console.warn("Error setting the audio output device. We fallback to default.");
+                        if ($speakerListStore && $speakerListStore.length > 0) {
+                            speakerSelectedStore.set($speakerListStore[0].deviceId);
+                        } else {
+                            console.warn("Cannot fall back to default speaker. There is no speakers in the speaker list.");
+                            speakerSelectedStore.set(undefined);
+                        }
+                        return;
+                    }
+                    console.info("Error setting the audio output device: ", e);
+                })
+            );
+            console.warn("Setting Sink Id to ", deviceId);
         } catch (err) {
             console.info(
                 "Your browser is not compatible for updating your speaker over a video element. Try to change the default audio output in your computer settings. Error: ",
