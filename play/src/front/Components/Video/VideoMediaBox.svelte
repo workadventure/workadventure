@@ -112,6 +112,10 @@
                     ?.setSinkId?.(deviceId)
                     .then(() => {
                         console.info("Audio output device set to ", deviceId);
+                        // Trying to set the stream again after setSinkId is set (for Chrome, according to https://bugs.chromium.org/p/chromium/issues/detail?id=971947&q=setsinkid&can=2)
+                        if (videoElement && $streamStore) {
+                            videoElement.srcObject = $streamStore;
+                        }
                     })
                     .catch((e: unknown) => {
                         if (e instanceof DOMException && e.name === "AbortError") {
