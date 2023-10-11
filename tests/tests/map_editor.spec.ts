@@ -195,6 +195,9 @@ test.describe('Map editor', () => {
       await hideNoCamera(page);
     }
 
+    // check if the iframe activity picker is opened
+    const popupPromise = page.waitForEvent('popup');
+
     //await Menu.openMapEditor(page);
     await page.getByRole('button', {name: 'toggle-map-editor'}).click();
     await MapEditor.openAreaEditor(page);
@@ -215,8 +218,6 @@ test.describe('Map editor', () => {
       return;
     }
 
-    // check if the iframe activity picker is opened
-    const popupPromise = page.waitForEvent('popup');
     await Map.teleportToPosition(page, 9 * 32, 9 * 32)
     /*const popup =*/ await popupPromise;
 
