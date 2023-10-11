@@ -29,16 +29,16 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     settings: {
         videoBandwidth: {
-            title: "Wideoqualität",
-            low: "Nisko",
-            recommended: "Zaležite",
-            unlimited: "Njepřećiwo",
+            title: "Kwalita wideja",
+            low: "Niska",
+            recommended: "Doporučena",
+            unlimited: "Njewobmjezowana",
         },
         shareScreenBandwidth: {
-            title: "Qualität předawki wobrazow",
-            low: "Nisko",
-            recommended: "Zaležite",
-            unlimited: "Njepřećiwo",
+            title: "Kwalita přenosowaneje wobrazowki",
+            low: "Niska",
+            recommended: "Doporučena",
+            unlimited: "Njewobmjezowana",
         },
         language: {
             title: "rěč",
@@ -46,14 +46,14 @@ const menu: DeepPartial<Translation["menu"]> = {
         privacySettings: {
             title: "modus njepřitomnosće",
             explanation: "Jeli Work Adventure Tab aktiwny njeje, so do „modusa njepřitomnosće“ přešaltuje.",
-            cameraToggle: "Kameru w„ modusu njepřitomnosće “ aktiwěrowanu wostajić.",
-            microphoneToggle: "Mikrofon w„ modusu njepřitomnosće “aktiwěrowany wostajić.",
+            cameraToggle: "Kameru w „modusu njepřitomnosće“ aktiwěrowanu wostajić.",
+            microphoneToggle: "Mikrofon w „modusu njepřitomnosće“ aktiwěrowany wostajić.",
         },
         save: "składować",
         fullscreen: "połny wobraz",
         notifications: "powěsće",
-        cowebsiteTrigger: "Kóždy raz so naprašować, prjedy hač so webstrony abo Jitsi Meet rumy wotewru",
-        ignoreFollowRequest: "ignoruj sćěhi naprašowanja druhich wužiwarjow",
+        cowebsiteTrigger: "Kóždy raz so naprašować, prjedy hač so webstrony abo Jitsi Meet rumy wotewrje",
+        ignoreFollowRequest: "Ignoruj naprašowanja wo sćěhowanje wot druhich wužiwarjow",
     },
     invite: {
         description: "Link do tuteho ruma dźělić!",
@@ -107,10 +107,10 @@ const menu: DeepPartial<Translation["menu"]> = {
         profile: "profil",
         settings: "nastajenja",
         invite: "přeprošenje",
-        credit: "přez kartu",
+        credit: "wo karće",
         globalMessages: "globalne powěsće",
         contact: "kontakt",
-        report: "Report Issues",
+        report: "zmylki připowědźić",
     },
 };
 

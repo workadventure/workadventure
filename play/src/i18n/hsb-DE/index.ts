@@ -17,6 +17,7 @@ import muc from "./muc";
 import notification from "./notification";
 import cowebsite from "./cowebsite";
 import actionbar from "./actionbar";
+import megaphone from "./megaphone";
 
 const hsb_DE = merge(en_US, {
     audio,
@@ -36,6 +37,7 @@ const hsb_DE = merge(en_US, {
     notification,
     cowebsite,
     actionbar,
+    megaphone,
 });
 
 export default hsb_DE;

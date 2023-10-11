@@ -19,9 +19,9 @@ const warning: DeepPartial<Translation["warning"]> = {
     waitingConnectionTitle: "na zwisk čakać",
     waitingConnectionSubtitle: "zwjazać",
     popupBlocked: {
-        title: "Blokěrowanje wokna",
-        content: "Prošu, w swojim browserje wokna za tutu stronu weba dopušćić.",
-        done: "Dobrze",
+        title: "Blokěrowanje wuskakowaceho wokna",
+        content: "Prošu w browseru wuskakowace wokna za tutu stronu dowolić.",
+        done: "Ok",
     },
 };
 
