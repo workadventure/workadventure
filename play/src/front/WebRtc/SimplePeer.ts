@@ -9,6 +9,7 @@ import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
 import { batchGetUserMediaStore } from "../Stores/MediaStore";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 import { mediaManager, NotificationType } from "./MediaManager";
 import { ScreenSharingPeer } from "./ScreenSharingPeer";
 import { VideoPeer } from "./VideoPeer";
@@ -60,14 +61,16 @@ export class SimplePeer {
 
         this.initialise();
 
-        blackListManager.onBlockStream.subscribe((userUuid) => {
-            const user = playersStore.getPlayerByUuid(userUuid);
-            if (!user) {
-                return;
-            }
+        this.rxJsUnsubscribers.push(
+            blackListManager.onBlockStream.subscribe((userUuid) => {
+                const user = playersStore.getPlayerByUuid(userUuid);
+                if (!user) {
+                    return;
+                }
 
-            this.closeConnection(user.userId);
-        });
+                this.closeConnection(user.userId);
+            })
+        );
     }
 
     /**
@@ -165,6 +168,7 @@ export class SimplePeer {
             mediaManager.createNotification(name, NotificationType.discussion);
         }
 
+        analyticsClient.addNewParticipant();
         peerStore.addPeer(user.userId, peer);
         return peer;
     }

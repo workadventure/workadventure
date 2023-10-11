@@ -209,6 +209,7 @@ export class GameScene extends DirtyScene {
     private iframeSubscriptionList!: Array<Subscription>;
     private gameMapChangedSubscription!: Subscription;
     private messageSubscription: Subscription | null = null;
+    private rxJsSubscriptions: Array<Subscription> = [];
 
     private peerStoreUnsubscriber!: Unsubscriber;
     private emoteUnsubscriber!: Unsubscriber;
@@ -225,6 +226,7 @@ export class GameScene extends DirtyScene {
     private refreshPromptStoreStoreUnsubscriber!: Unsubscriber;
 
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
+    private unsubscribers: Unsubscriber[] = [];
 
     mapUrlFile!: string;
     wamUrlFile?: string;
@@ -546,6 +548,7 @@ export class GameScene extends DirtyScene {
 
             switch (itemType) {
                 case "computer": {
+                    //eslint-disable-next-line no-await-in-loop
                     const module = await import("../Items/Computer/computer");
                     itemFactory = module.default;
                     break;
@@ -947,6 +950,8 @@ export class GameScene extends DirtyScene {
                 userIsAdminStore.set(this.connection.hasTag("admin"));
                 userIsEditorStore.set(this.connection.hasTag("editor"));
 
+                // The userJoinedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.userJoinedMessageStream.subscribe((message) => {
                     this.remotePlayersRepository.addPlayer(message);
 
@@ -964,6 +969,8 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
+                // The userMovedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.userMovedMessageStream.subscribe((message) => {
                     this.remotePlayersRepository.movePlayer(message);
                     const position = message.position;
@@ -979,6 +986,8 @@ export class GameScene extends DirtyScene {
                     this.updatePlayerPosition(messageUserMoved);
                 });
 
+                // The userLeftMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.userLeftMessageStream.subscribe((message) => {
                     this.remotePlayersRepository.removePlayer(message.userId);
                     this.playersEventDispatcher.postMessage({
@@ -987,12 +996,16 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
+                // The refreshRoomMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.refreshRoomMessageStream.subscribe((message) => {
                     refreshPromptStore.set({
                         timeToRefresh: message.timeToRefresh,
                     });
                 });
 
+                // The playerDetailsUpdatedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.playerDetailsUpdatedMessageStream.subscribe((message) => {
                     // Is this message for me (exceptionally, we can use this stream to send messages to users
                     // who share the same UUID as us)
@@ -1004,12 +1017,16 @@ export class GameScene extends DirtyScene {
                     this.remotePlayersRepository.updatePlayer(message);
                 });
 
+                // The groupUpdateMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.groupUpdateMessageStream.subscribe(
                     (groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
                         this.shareGroupPosition(groupPositionMessage);
                     }
                 );
 
+                // The groupDeleteMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.groupDeleteMessageStream.subscribe((message) => {
                     try {
                         this.deleteGroup(message.groupId);
@@ -1026,6 +1043,8 @@ export class GameScene extends DirtyScene {
                 });
                 hideConnectionIssueMessage();
 
+                // The itemEventMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.itemEventMessageStream.subscribe((message) => {
                     const item = this.actionableItems.get(message.itemId);
                     if (item === undefined) {
@@ -1039,14 +1058,14 @@ export class GameScene extends DirtyScene {
                     item.fire(message.event, message.state, message.parameters);
                 });
 
+                // The groupUsersUpdateMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
                     this.currentPlayerGroupId = message.groupId;
                 });
 
-                this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
-                    this.currentPlayerGroupId = message.groupId;
-                });
-
+                // The joinMucRoomMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.joinMucRoomMessageStream.subscribe((mucRoomDefinitionMessage) => {
                     iframeListener.sendJoinMucEventToChatIframe(
                         mucRoomDefinitionMessage.url,
@@ -1055,10 +1074,15 @@ export class GameScene extends DirtyScene {
                         mucRoomDefinitionMessage.subscribe
                     );
                 });
+
+                // The leaveMucRoomMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.leaveMucRoomMessageStream.subscribe((leaveMucRoomMessage) => {
                     iframeListener.sendLeaveMucEventToChatIframe(leaveMucRoomMessage.url);
                 });
 
+                // The worldFullMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.messageSubscription = this.connection.worldFullMessageStream.subscribe((message) => {
                     this.showWorldFullError(message);
                 });
@@ -1129,6 +1153,8 @@ export class GameScene extends DirtyScene {
                     this._room.group ?? undefined
                 );
 
+                // The xmppSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.xmppSettingsMessageStream.subscribe((xmppSettingsMessage) => {
                     if (xmppSettingsMessage) {
                         iframeListener.sendXmppSettingsToChatIframe(xmppSettingsMessage);
@@ -1138,6 +1164,8 @@ export class GameScene extends DirtyScene {
                 const broadcastService = new BroadcastService(this.connection);
                 this._broadcastService = broadcastService;
 
+                // The megaphoneSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
                     if (megaphoneSettingsMessage) {
                         megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
@@ -1299,21 +1327,29 @@ export class GameScene extends DirtyScene {
             //this.reposition();
         });
 
-        requestedCameraState.subscribe((state) => {
-            this.connection?.emitCameraState(state);
-        });
+        this.unsubscribers.push(
+            requestedCameraState.subscribe((state) => {
+                this.connection?.emitCameraState(state);
+            })
+        );
 
-        requestedMicrophoneState.subscribe((state) => {
-            this.connection?.emitMicrophoneState(state);
-        });
+        this.unsubscribers.push(
+            requestedMicrophoneState.subscribe((state) => {
+                this.connection?.emitMicrophoneState(state);
+            })
+        );
 
-        requestedScreenSharingState.subscribe((state) => {
-            this.connection?.emitScreenSharingState(state);
-        });
+        this.unsubscribers.push(
+            requestedScreenSharingState.subscribe((state) => {
+                this.connection?.emitScreenSharingState(state);
+            })
+        );
 
-        megaphoneEnabledStore.subscribe((state) => {
-            this.connection?.emitMegaphoneState(state);
-        });
+        this.unsubscribers.push(
+            megaphoneEnabledStore.subscribe((state) => {
+                this.connection?.emitMegaphoneState(state);
+            })
+        );
 
         const talkIconVolumeTreshold = 10;
         let oldPeersNumber = 0;
@@ -2006,6 +2042,7 @@ ${escapedMessage}
                             for (const layer of this.Map.layers) {
                                 layer.tilemapLayer.destroy(false);
                             }
+                            this.gameMapFrontWrapper?.close();
                             //Create a new GameMap with the changed file
                             this.gameMapFrontWrapper = new GameMapFrontWrapper(
                                 this,
@@ -2025,9 +2062,11 @@ ${escapedMessage}
                             resolve(newFirstgid);
                         });
                     });
-                    this.load.on("loaderror", () => {
-                        console.error("Error while loading " + eventTileset.url + ".");
-                        reject(-1);
+                    this.load.on("loaderror", (file: Phaser.Loader.File) => {
+                        if (file.src === eventTileset.url) {
+                            console.error("Error while loading " + eventTileset.url + ".");
+                            reject(new Error("Error while loading " + eventTileset.url + "."));
+                        }
                     });
 
                     this.load.json(eventTileset.url, eventTileset.url);
@@ -2177,8 +2216,11 @@ ${escapedMessage}
         this.gameMapFrontWrapper.setDynamicAreaProperty(areaName, propertyName, propertyValue);
     }
 
-    public getMapDirUrl(): string {
-        return this.mapUrlFile.substring(0, this.mapUrlFile.lastIndexOf("/"));
+    public getMapUrl(): string {
+        if (!this.mapUrlFile) {
+            throw new Error("Trying to access mapUrl before it was fetched");
+        }
+        return this.mapUrlFile;
     }
 
     public async onMapExit(roomUrl: URL) {
@@ -2293,11 +2335,16 @@ ${escapedMessage}
         this.emoteUnsubscriber?.();
         this.emoteMenuUnsubscriber?.();
         this.followUsersColorStoreUnsubscriber?.();
+        this.modalVisibilityStoreUnsubscriber?.();
         this.highlightedEmbedScreenUnsubscriber?.();
         this.embedScreenLayoutStoreUnsubscriber?.();
         this.userIsJitsiDominantSpeakerStoreUnsubscriber?.();
         this.jitsiParticipantsCountStoreUnsubscriber?.();
         this.availabilityStatusStoreUnsubscriber?.();
+        for (const unsubscriber of this.unsubscribers) {
+            unsubscriber();
+        }
+        this.unsubscribers = [];
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
         iframeListener.unregisterAnswerer("getMapData");
@@ -2319,6 +2366,7 @@ ${escapedMessage}
         this.areaManager?.close();
         this.playersEventDispatcher.cleanup();
         this.playersMovementEventDispatcher.cleanup();
+        this.gameMapFrontWrapper?.close();
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
@@ -2328,6 +2376,10 @@ ${escapedMessage}
         for (const iframeEvents of this.iframeSubscriptionList) {
             iframeEvents.unsubscribe();
         }
+        for (const subscription of this.rxJsSubscriptions) {
+            subscription.unsubscribe();
+        }
+        this.rxJsSubscriptions = [];
         this.gameMapChangedSubscription?.unsubscribe();
         this.messageSubscription?.unsubscribe();
         gameSceneIsLoadedStore.set(false);
@@ -2837,26 +2889,30 @@ ${escapedMessage}
     }
 
     private subscribeToEntitiesManagerObservables(): void {
-        this.gameMapFrontWrapper
-            .getEntitiesManager()
-            .getPointerOverEntityObservable()
-            .subscribe((entity) => {
-                if (get(mapEditorModeStore)) {
-                    return;
-                }
-                this.activatablesManager.handlePointerOverActivatableObject(entity);
-                this.markDirty();
-            });
-        this.gameMapFrontWrapper
-            .getEntitiesManager()
-            .getPointerOutEntityObservable()
-            .subscribe((entity) => {
-                if (get(mapEditorModeStore)) {
-                    return;
-                }
-                this.activatablesManager.handlePointerOutActivatableObject();
-                this.markDirty();
-            });
+        this.rxJsSubscriptions.push(
+            this.gameMapFrontWrapper
+                .getEntitiesManager()
+                .getPointerOverEntityObservable()
+                .subscribe((entity) => {
+                    if (get(mapEditorModeStore)) {
+                        return;
+                    }
+                    this.activatablesManager.handlePointerOverActivatableObject(entity);
+                    this.markDirty();
+                })
+        );
+        this.rxJsSubscriptions.push(
+            this.gameMapFrontWrapper
+                .getEntitiesManager()
+                .getPointerOutEntityObservable()
+                .subscribe((entity) => {
+                    if (get(mapEditorModeStore)) {
+                        return;
+                    }
+                    this.activatablesManager.handlePointerOutActivatableObject();
+                    this.markDirty();
+                })
+        );
     }
 
     private doRemovePlayer(userId: number) {
@@ -2998,6 +3054,9 @@ ${escapedMessage}
 
     public sendViewportToServer(margin = 300): void {
         const camera = this.cameras.main;
+        if (!camera) {
+            return;
+        }
         this.connection?.setViewport({
             left: Math.max(0, camera.scrollX - margin),
             top: Math.max(0, camera.scrollY - margin),

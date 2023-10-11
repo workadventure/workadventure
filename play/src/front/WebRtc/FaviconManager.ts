@@ -58,6 +58,7 @@ export class FaviconManager {
             // Load previous favicon image
             const img = document.createElement("img");
             img.src = this._faviconsHref.get(sizes) as string;
+            img.crossOrigin = "anonymous";
             img.onload = () => {
                 const faviconSize = 16;
                 // Cretae image notification for fiveicon

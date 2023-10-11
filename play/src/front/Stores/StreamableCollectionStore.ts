@@ -34,7 +34,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
             $screenSharingStreamStore.forEach(addPeer);
             $peerStore.forEach(addPeer);
-            console.warn("streamableCollectionStore triggerred");
+
             $jitsiTracksStore.forEach((jitsiTrackWrapper) => {
                 const cameraTrackWrapper = jitsiTrackWrapper.cameraTrackWrapper;
                 if (!cameraTrackWrapper.isEmpty() && !jitsiTrackWrapper.isLocal) {

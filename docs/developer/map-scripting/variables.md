@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 10
 ---
 
 # Variables
@@ -29,7 +29,7 @@ In order to declare allowed variables in a room, you need to add **objects** in 
 
 Each object will represent a variable.
 
-![Object layer](../images/object_variable.png)
+![Object layer](images/object_variable.png)
 
 The name of the variable is the name of the object.
 The object **class** MUST be **variable**.
@@ -63,7 +63,7 @@ Trying to set a variable to a value that is not compatible with the schema will 
 
 There are plenty of ways to use variables in WorkAdventure:
 
-- Using the [scripting API](api-state.md), you can read, edit or track the content of variables.
+- Using the [scripting API](references/api-state.md), you can read, edit or track the content of variables.
 - Using the [Action zones](/developer/map-scripting/scripting-api-extra/generic-action-zones), you can set the value of a variable when someone is entering or leaving a zone
 - By [binding variable values to properties in the map](/developer/map-scripting/scripting-api-extra/variable-to-property-binding)
 - By [using automatically generated configuration screens](/developer/map-scripting/scripting-api-extra/automatic-configuration) to create forms to edit the value of variables
@@ -87,8 +87,8 @@ They can be "public" or "private".
 - Public variables are visible to nearby players in the same room (using the scripting API)
 - Private variables are only visible to the player itself
 
-Use [`WA.player.state`](api-player.md#player-specific-variables) to read or write variables for the current player.
-Use [`WA.players` along with `RemotePlayer.state`](api-players.md#remote-players-variables) to read the variables of nearby players.
+Use [`WA.player.state`](references/api-player.md#player-specific-variables) to read or write variables for the current player.
+Use [`WA.players` along with `RemotePlayer.state`](references/api-players.md#remote-players-variables) to read the variables of nearby players.
 
 :::caution
 Player variables can be read only when the player is connected. WorkAdventure does not offer a way to fetch the list

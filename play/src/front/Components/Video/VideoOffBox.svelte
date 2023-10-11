@@ -17,7 +17,6 @@
     import BanReportBox from "./BanReportBox.svelte";
     import { srcObject } from "./utils";
 
-    let videoContainer: HTMLDivElement;
     let videoElement: HTMLVideoElement;
     export let peer: VideoPeer;
     export let clickable = false;
@@ -39,12 +38,7 @@
         };
     }
 
-    const resizeObserver = new ResizeObserver(() => {
-        return;
-    });
-
     onMount(() => {
-        resizeObserver.observe(videoContainer);
         subscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
             if (deviceId != undefined) setAudioOutPut(deviceId);
         });
@@ -81,7 +75,6 @@
 
 <div
     class="video-container video-off"
-    bind:this={videoContainer}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     <div
@@ -89,7 +82,7 @@
         class="tw-items-center tw-px-3 tw-w-full tw-rounded tw-flex tw-flex-row tw-relative"
     >
         <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
-        <!-- svelte-ignore a11y-media-has-caption &ndash;&gt;-->
+        <!-- svelte-ignore a11y-media-has-caption -->
         {#if $streamStore}
             <video
                 bind:this={videoElement}

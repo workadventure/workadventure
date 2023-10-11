@@ -66,6 +66,12 @@
                         "noPrefix": {
                           "type": "boolean"
                         },
+                        "width": {
+                          "type": "number",
+                          "minimum": 1,
+                          "maximum": 100,
+                          "default": 50
+                        },
                         "jitsiRoomConfig": {
                           "type": "object",
                           "properties": {
@@ -163,6 +169,8 @@
                         },
                         "width": {
                           "type": "number",
+                          "minimum": 1,
+                          "maximum": 100,
                           "default": 50
                         },
                         "policy": {

@@ -138,8 +138,6 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
 
     constructor(
         url: URL,
-        allowApi: boolean | undefined,
-        allowPolicy: string | undefined,
         widthPercent: number | undefined,
         closable: boolean | undefined,
         private roomName: string,
@@ -149,7 +147,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         private jitsiInterfaceConfig: object | undefined,
         private domain: string
     ) {
-        super(url, allowApi, allowPolicy, widthPercent, closable);
+        super(url, false, undefined, widthPercent, closable);
     }
 
     private loadPromise: CancelablePromise | undefined;

@@ -17,7 +17,7 @@ WA.state.onVariableChange(key : string).subscribe((data: unknown) => {}) : Subsc
 WA.state.[any property]: unknown
 ```
 
-These methods and properties can be used to save, load and track changes in [variables related to the current room](variables.md).
+These methods and properties can be used to save, load and track changes in [variables related to the current room](../variables.md).
 
 Variables stored in `WA.state` can be any value that is serializable in JSON.
 
@@ -71,7 +71,7 @@ Variables storage is subject to an authorization process. Read below to learn mo
 
 Out of the box, you cannot edit *any* variable. Variables MUST be declared in the map.
 
-Check the [dedicated variables page](variables.md) to learn how to declare a variable in a map.
+Check the [dedicated variables page](../variables.md) to learn how to declare a variable in a map.
 
 ## Tracking variables changes
 

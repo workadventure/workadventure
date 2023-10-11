@@ -81,7 +81,7 @@
 {#if $loadingSubscribersStore}
     <Loader text={$LL.loadingUsers()} height="tw-h-40" />
 {:else}
-    {#each roomSorted as room}
+    {#each roomSorted as room (room)}
         <div class="users tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
             <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
                 {#if !$loadingSubscribersStore}

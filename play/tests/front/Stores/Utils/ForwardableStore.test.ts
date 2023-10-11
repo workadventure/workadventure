@@ -8,7 +8,7 @@ describe("Forwardable store", () => {
 
         let value = "";
 
-        forwardableStore.subscribe((val) => {
+        const unsubscribe = forwardableStore.subscribe((val) => {
             value = val;
         });
 
@@ -27,5 +27,7 @@ describe("Forwardable store", () => {
         expect(value).toBe("bar");
         stringStore2.set("baz");
         expect(value).toBe("baz");
+
+        unsubscribe();
     });
 });

@@ -53,6 +53,7 @@ export const JitsiRoomPropertyData = PropertyBase.extend({
     trigger: z.union([z.literal("onaction"), z.literal("onicon")]).optional(),
     triggerMessage: z.string().optional(),
     noPrefix: z.boolean().optional(),
+    width: z.number().min(1).max(100).default(50).optional(),
     jitsiRoomConfig: JitsiRoomConfigData,
 });
 
@@ -70,7 +71,7 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
     allowAPI: z.boolean().optional(),
     trigger: z.union([z.literal("onaction"), z.literal("onicon")]).optional(),
     triggerMessage: z.string().optional(),
-    width: z.number().default(50).optional(),
+    width: z.number().min(1).max(100).default(50).optional(),
     policy: z
         .string()
         .default("fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture")

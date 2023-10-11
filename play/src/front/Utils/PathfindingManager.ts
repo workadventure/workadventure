@@ -62,6 +62,7 @@ export class PathfindingManager {
                 return [];
             }
             // rejected Promise will return undefined for path
+            // eslint-disable-next-line no-await-in-loop
             path = await this.getPath(start, endPoint).catch();
             if (path && path.length > 0) {
                 return measuredInPixels ? this.mapTileUnitsToPixels(path) : path;

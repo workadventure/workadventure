@@ -25,6 +25,8 @@ import { MapListService } from "../Services/MapListService";
 import { FileNotFoundError } from "./FileNotFoundError";
 import { FileSystemInterface } from "./FileSystemInterface";
 
+/* eslint-disable no-await-in-loop */
+
 export class S3FileSystem implements FileSystemInterface {
     public constructor(private s3: S3, private bucketName: string) {}
 
@@ -55,6 +57,7 @@ export class S3FileSystem implements FileSystemInterface {
             if (pageMarker) {
                 command.Marker = pageMarker;
             }
+
             listObjectsResponse = await this.s3.send(new ListObjectsCommand(command));
             const objects = listObjectsResponse.Contents;
 

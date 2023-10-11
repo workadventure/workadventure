@@ -24,7 +24,9 @@ describe("SpacesWatcher", () => {
 
         const watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher, 0);
         expect(eventsWatcher.some((message) => message?.message?.$case === "pingMessage")).toBe(true);
-        await new Promise((resolve) => setTimeout(resolve, 5));
+        await new Promise((resolve) => {
+            setTimeout(resolve, 5);
+        });
 
         expect(isClosed).toBe(true);
     });
@@ -52,7 +54,9 @@ describe("SpacesWatcher", () => {
         watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher, 0.1);
         let isClosed = false;
         spaceSocketToPusher.on("end", () => (isClosed = true));
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await new Promise((resolve) => {
+            setTimeout(resolve, 300);
+        });
         expect(isClosed).toBe(false);
     });
 });

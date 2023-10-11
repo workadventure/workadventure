@@ -89,7 +89,7 @@
                     fetchStartAreasName().catch((e) => console.error(e));
                 }}
             >
-                {#each [...mapsUrl.entries()] as map}
+                {#each [...mapsUrl.entries()] as map (map[0])}
                     <option value={map[0]}>{map[1].name}</option>
                 {/each}
             </select>
@@ -106,7 +106,7 @@
                     on:change={onValueChange}
                     on:blur={onValueChange}
                 >
-                    {#each startAreas as areaName}
+                    {#each startAreas as areaName (areaName)}
                         <option value={areaName}>{areaName}</option>
                     {/each}
                     {#if startAreas.length === 0}

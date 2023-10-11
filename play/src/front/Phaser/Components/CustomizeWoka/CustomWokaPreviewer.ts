@@ -101,12 +101,14 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
             return;
         }
         getPlayerAnimations(textureKey).forEach((d) => {
-            this.scene.anims.create({
-                key: d.key,
-                frames: this.scene.anims.generateFrameNumbers(d.frameModel, { frames: d.frames }),
-                frameRate: d.frameRate,
-                repeat: d.repeat,
-            });
+            if (!this.scene.anims.exists(d.key)) {
+                this.scene.anims.create({
+                    key: d.key,
+                    frames: this.scene.anims.generateFrameNumbers(d.frameModel, { frames: d.frames }),
+                    frameRate: d.frameRate,
+                    repeat: d.repeat,
+                });
+            }
         });
         // Needed, otherwise, animations are not handled correctly.
         if (this.scene) {

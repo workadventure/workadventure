@@ -19,10 +19,12 @@ describe("RoomApiServer", () => {
                 default: (metadata: Metadata, _room: string) => {
                     return new Promise<void>((resolve, reject) => {
                         if (metadata.get("x-api-key")[0] !== "MYAWESOMEKEY") {
-                            return reject(new GuardError(Status.UNAUTHENTICATED, "X-API-Key metadata not defined!"));
+                            reject(new GuardError(Status.UNAUTHENTICATED, "X-API-Key metadata not defined!"));
+                            return;
                         }
 
-                        return resolve();
+                        resolve();
+                        return;
                     });
                 },
             };
@@ -33,10 +35,11 @@ describe("RoomApiServer", () => {
                 getClient: (clientId: string) => {
                     return new Promise((resolve, reject) => {
                         if (clientId.endsWith("invalid")) {
-                            return reject(new Error("Invalid client"));
+                            reject(new Error("Invalid client"));
+                            return;
                         }
 
-                        return resolve({
+                        resolve({
                             readVariable: (
                                 request: VariableRequest,
                                 callback: (error: any | null, response: any | undefined) => void

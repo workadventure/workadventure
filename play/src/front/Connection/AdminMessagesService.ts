@@ -20,10 +20,6 @@ class AdminMessagesService {
     private _messageStream: Subject<AdminMessageEvent> = new Subject();
     public messageStream = this._messageStream.asObservable();
 
-    constructor() {
-        this.messageStream.subscribe((event) => console.info("message", event));
-    }
-
     onSendusermessage(message: SendUserMessage | BanUserMessage) {
         this._messageStream.next({
             type: message.type as unknown as AdminMessageEventTypes,

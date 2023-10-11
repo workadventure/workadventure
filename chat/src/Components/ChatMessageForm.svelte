@@ -322,7 +322,11 @@
                 break;
             case "Youtube":
                 try {
-                    app.link = await YoutubeService.getYoutubeEmbedUrl(new URL(app.link));
+                    const oldLink = app.link;
+                    const newLink = await YoutubeService.getYoutubeEmbedUrl(new URL(app.link));
+                    if (app.link === oldLink) {
+                        app.link = newLink;
+                    }
                 } catch (e) {
                     console.info($LL.form.application.youtube.error(), e);
                     app.error = $LL.form.application.youtube.error();
@@ -503,6 +507,8 @@
             });
         }
     });
+
+    /* eslint-disable svelte/require-each-key */
 </script>
 
 <div class="wa-message-form" bind:this={messageForm}>
@@ -530,7 +536,7 @@
                         {$selectedMessageToReply.body}
                     </p>
                     {#if $selectedMessageToReply && $selectedMessageToReply.links && $selectedMessageToReply.links.length > 0}
-                        {#each $selectedMessageToReply.links as link}
+                        {#each $selectedMessageToReply.links as link (link.url)}
                             <File url={link.url} name={link.description} />
                         {/each}
                     {/if}
@@ -548,7 +554,7 @@
 
     {#if usersSearching.length > 0}
         <div class="wa-dropdown-menu">
-            {#each usersSearching as user}
+            {#each usersSearching as user (user.jid)}
                 <span
                     class="wa-dropdown-item user-tag"
                     on:click|stopPropagation|preventDefault={() => addUserTag(user)}
@@ -560,7 +566,7 @@
         </div>
     {/if}
 
-    {#each [...$applicationsSelected] as app}
+    {#each [...$applicationsSelected] as app (app.name)}
         <div
             class="tw-flex tw-flex-column tw-items-center tw-justify-center tw-mx-12 tw-mb-2 tw-p-3 tw-flex tw-flex-wrap tw-rounded-xl tw-text-xxs tw-bottom-12"
             style="backdrop-filter: blur(30px);border: solid 1px rgb(27 27 41);"

@@ -282,6 +282,10 @@ const myWebsite = await WA.ui.website.open({
 myWebsite.position.vertical = "top";
 ```
 
+:::info
+The `url` parameter can be a relative URL. In this case, the URL is relative to the map file.
+:::
+
 ### Close a UI website
 You can close a website with the close function on the `UIWebsite` object
 

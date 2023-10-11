@@ -39,7 +39,7 @@
     </section>
     <section class="body">
         <p><img src={ImgVirtualhugsvirtualhug} alt="Funny gif to send your virtual hug" class="tw-m-auto tw-h-60" /></p>
-        {#each $errorStore as error}
+        {#each $errorStore as error (error.id)}
             <p>{error.message}</p>
         {/each}
         {#if connectionManager.currentRoom?.reportIssuesUrl}

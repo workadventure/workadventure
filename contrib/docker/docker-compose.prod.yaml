@@ -36,7 +36,7 @@ services:
       - JITSI_PRIVATE_MODE
       - ENABLE_MAP_EDITOR
       - MAP_EDITOR_ALLOWED_USERS
-      - PUSHER_URL=/
+      - PUSHER_URL=https://${DOMAIN}/
       - ICON_URL=/icon
       - TURN_SERVER
       - TURN_USER

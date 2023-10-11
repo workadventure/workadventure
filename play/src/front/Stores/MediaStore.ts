@@ -529,7 +529,15 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                         return stream;
                     })
                     .catch((e) => {
-                        if (constraints.video !== false /* || constraints.audio !== false*/) {
+                        if (e instanceof OverconstrainedError && e.constraint === "deviceId") {
+                            console.info(
+                                "Could not access the requested microphone or webcam. Falling back to default microphone and webcam",
+                                constraints,
+                                e
+                            );
+                            requestedCameraDeviceIdStore.set(undefined);
+                            requestedMicrophoneDeviceIdStore.set(undefined);
+                        } else if (constraints.video !== false /* || constraints.audio !== false*/) {
                             console.info(
                                 "Error. Unable to get microphone and/or camera access. Trying audio only.",
                                 constraints,
@@ -778,6 +786,8 @@ function isConstrainDOMStringParameters(param: ConstrainDOMString): param is Con
 }
 
 // TODO: detect the new webcam and automatically switch on it.
+// It is ok to not unsubscribe to this store because it is a singleton.
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
 cameraListStore.subscribe((devices) => {
     // Store not initialized yet
     if (devices === undefined) {
@@ -799,6 +809,8 @@ cameraListStore.subscribe((devices) => {
     }
 });
 
+// It is ok to not unsubscribe to this store because it is a singleton.
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
 microphoneListStore.subscribe((devices) => {
     // Store not initialized yet
     if (devices === undefined) {
@@ -818,11 +830,14 @@ microphoneListStore.subscribe((devices) => {
     // If we cannot find the device ID, let's remove it.
     if (isConstrainDOMStringParameters(deviceId)) {
         if (!devices.find((device) => device.deviceId === deviceId.exact)) {
+            console.log("Microphone unplugged, removing constraint on deviceId");
             requestedMicrophoneDeviceIdStore.set(undefined);
         }
     }
 });
 
+// It is ok to not unsubscribe to this store because it is a singleton.
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
 localStreamStore.subscribe((streamResult) => {
     if (streamResult.type === "error") {
         if (streamResult.error.name === BrowserTooOldError.NAME || streamResult.error.name === WebviewOnOldIOS.NAME) {
@@ -833,6 +848,8 @@ localStreamStore.subscribe((streamResult) => {
 
 // When the stream is initialized, the new sound constraint is recreated and the first speaker is set.
 // If the user did not select the new speaker, the first new speaker cannot be selected automatically.
+// It is ok to not unsubscribe to this store because it is a singleton.
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
 speakerSelectedStore.subscribe((speaker) => {
     const oldValue = localUserStore.getSpeakerDeviceId();
     const currentValue = speaker;

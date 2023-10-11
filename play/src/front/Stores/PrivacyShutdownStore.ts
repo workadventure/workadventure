@@ -10,6 +10,8 @@ function createPrivacyShutdownStore() {
 
     const { subscribe, set } = writable(privacyEnabled);
 
+    // It is ok to not unsubscribe to this store because it is a singleton.
+    // eslint-disable-next-line svelte/no-ignored-unsubscribe
     visibilityStore.subscribe((isVisible) => {
         if (!isVisible && get(peerStore).size === 0) {
             privacyEnabled = true;
@@ -21,6 +23,8 @@ function createPrivacyShutdownStore() {
         }
     });
 
+    // It is ok to not unsubscribe to this store because it is a singleton.
+    // eslint-disable-next-line svelte/no-ignored-unsubscribe
     peerStore.subscribe((peers) => {
         if (peers.size === 0 && get(visibilityStore) === false) {
             privacyEnabled = true;
