@@ -1,3 +1,3 @@
 declare interface HTMLMediaElement {
-    setSinkId?: (sinkId: string) => Promise<void>
+    setSinkId?: (sinkId: string) => Promise<void>;
 }

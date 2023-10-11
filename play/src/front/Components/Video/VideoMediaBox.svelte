@@ -72,11 +72,13 @@
 
         subscribeStreamStore = streamStore.subscribe(() => {
             // We wait just a little bit to be sure that the subscribe changing the video element is applied BEFORE trying to set the sinkId
+            console.log("Speaker will switch in 5 seconds");
             setTimeout(() => {
                 if ($speakerSelectedStore != undefined) {
+                    console.log("Switching speaker");
                     setAudioOutput($speakerSelectedStore);
                 }
-            }, 100);
+            }, 5000);
         });
     });
 
