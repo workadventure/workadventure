@@ -88,13 +88,14 @@ import type {
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
 import { io, Socket } from "socket.io-client";
-import { RoomClientToServerEvents, RoomServerToClientEvents } from "@workadventure/socket-namespaces/src/room/RoomNamespace";
+import * as mgspackParser from "socket.io-msgpack-parser";
+import { RoomClientToServerFunctions, RoomServerToClientFunctions, RoomServerToClientEvents } from "@workadventure/socket-namespaces/src/room/RoomNamespace";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
 
 export class RoomConnection implements RoomConnection {
-    private readonly socket: Socket<RoomServerToClientEvents, RoomClientToServerEvents>;
+    private readonly socket: Socket<RoomServerToClientFunctions, RoomClientToServerFunctions>;
     private userId: number | null = null;
     private static websocketFactory: null | ((url: string) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     private closed = false;
@@ -180,7 +181,7 @@ export class RoomConnection implements RoomConnection {
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
 
-    private readonly _connectionErrorStream = new Subject<CloseEvent>();
+    private readonly _connectionErrorStream = new Subject<Socket.DisconnectReason>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
     private readonly _xmppSettingsMessageStream = new BehaviorSubject<XmppSettingsMessage | undefined>(undefined);
     public readonly xmppSettingsMessageStream = this._xmppSettingsMessageStream.asObservable();
@@ -264,18 +265,20 @@ export class RoomConnection implements RoomConnection {
         if (RoomConnection.websocketFactory) {
             this.socket = RoomConnection.websocketFactory(url);
         } else {
-            this.socket = io(url);
+            this.socket = io(url, {
+                parser: mgspackParser,
+            });
         }
 
         this.socket.on("disconnect", (reason, details) => {
-            console.info("Socket has been closed", this.userId, this.closed, event);
+            console.info("Socket has been closed", this.userId, this.closed);
             if (this.timeout) {
                 clearTimeout(this.timeout);
             }
 
             // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
             if (this.userId === null && !this.closed) {
-                this._connectionErrorStream.next(details);
+                this._connectionErrorStream.next(reason);
             }
         });
 
@@ -284,10 +287,8 @@ export class RoomConnection implements RoomConnection {
             this.resetPingTimeout();
         });
 
-        this.socket.on("message", (messageEvent) => {
-            const arrayBuffer: ArrayBuffer = messageEvent.data;
-
-            const serverToClientMessage = ServerToClientMessageTsProto.decode(new Uint8Array(arrayBuffer));
+        this.socket.on("message", (data) => {
+            const serverToClientMessage = ServerToClientMessageTsProto.decode(new Uint8Array(data));
 
             const message = serverToClientMessage.message;
             if (message === undefined) {
@@ -836,8 +837,8 @@ export class RoomConnection implements RoomConnection {
         };
     }
 
-    public onConnectError(callback: (error: Event) => void): void {
-        this.socket.on("error", callback);
+    public onConnectError(callback: () => void): void {
+        this.socket.on("connect_error", callback);
     }
 
     public sendWebrtcSignal(signal: unknown, receiverId: number) {
@@ -865,12 +866,12 @@ export class RoomConnection implements RoomConnection {
     }
 
     public onServerDisconnected(callback: () => void): void {
-        this.socket.on("disconnect", (event) => {
+        this.socket.on("disconnect", (reason) => {
             // FIXME: technically incorrect: if we call onServerDisconnected several times, we will run several times the code (and we probably want to run only callback() serveral times).
             // FIXME: call to query.reject and this.completeStreams should probably be stored somewhere else.
 
             // Cleanup queries:
-            const error = new Error("Socket closed with code " + event.code + ". Reason: " + event.reason);
+            const error = new Error(`Socket closed with reason: ${reason}`);
             for (const query of this.queries.values()) {
                 query.reject(error);
             }
@@ -880,8 +881,8 @@ export class RoomConnection implements RoomConnection {
             if (this.closed === true || connectionManager.unloading) {
                 return;
             }
-            console.info("Socket closed with code " + event.code + ". Reason: " + event.reason);
-            if (event.code === 1000) {
+            console.info(`Socket closed with reason: ${reason}`);
+            if (reason === "io client disconnect") {
                 // Normal closure case
                 return;
             }
@@ -1227,6 +1228,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     private send(message: ClientToServerMessageTsProto): void {
+        console.log("Sending message to server: ", message);
         const bytes = ClientToServerMessageTsProto.encode(message).finish();
 
         if (this.socket.disconnected) {
@@ -1234,7 +1236,9 @@ export class RoomConnection implements RoomConnection {
             return;
         }
 
-        this.socket.send(bytes);
+        console.log("Sending message to server bytes: ", bytes);
+
+        this.socket.send(bytes.buffer);
     }
 
     public emitAskPosition(uuid: string, playUri: string) {

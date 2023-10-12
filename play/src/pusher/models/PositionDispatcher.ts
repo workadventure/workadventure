@@ -14,6 +14,7 @@ import type { ZoneEventListener } from "./Zone";
 import type { ViewportInterface } from "./websocket/ViewportMessage";
 import type { Socket } from "socket.io";
 import { socketManager } from "../services/SocketManager";
+import { SocketData } from "./websocket/SocketData";
 
 const debug = Debug("positiondispatcher");
 
@@ -44,13 +45,15 @@ export class PositionDispatcher {
     /**
      * Sets the viewport coordinates.
      */
-    public setViewport(socket: Socket, viewport: ViewportInterface): void {
+    public setViewport(socket: Socket, socketData: SocketData): void {
+        const viewport = socketData.viewport;
+
         if (viewport.left > viewport.right || viewport.top > viewport.bottom) {
             console.warn("Invalid viewport received: ", viewport);
             return;
         }
 
-        const oldZones = socketManager.getSocketData(socket).listenedZones;
+        const oldZones = socketData.listenedZones;
         const newZones = new Set<Zone>();
 
         const topLeftDesc = this.getZoneDescriptorFromCoordinates(viewport.left, viewport.top);
@@ -66,15 +69,15 @@ export class PositionDispatcher {
         const removedZones = [...oldZones].filter((x) => !newZones.has(x));
 
         for (const zone of addedZones) {
-            zone.startListening(socket);
+            zone.startListening(socket, socketData);
         }
         for (const zone of removedZones) {
-            this.stopListening(zone, socket);
+            this.stopListening(zone, socket, socketData);
         }
     }
 
-    private stopListening(zone: Zone, socket: Socket): void {
-        zone.stopListening(socket);
+    private stopListening(zone: Zone, socket: Socket, socketData: SocketData): void {
+        zone.stopListening(socket, socketData);
         if (!zone.hasListeners()) {
             zone.close();
             this.deleteZone(zone);
@@ -92,12 +95,12 @@ export class PositionDispatcher {
         }
     }
 
-    public removeViewport(socket: Socket): void {
+    public removeViewport(socket: Socket, socketData: SocketData): void {
         // Also, let's stop listening on viewports
-        const listenedZones = socketManager.getSocketData(socket).listenedZones;
+        const listenedZones = socketData.listenedZones;
         if (listenedZones) {
             for (const zone of listenedZones) {
-                this.stopListening(zone, socket);
+                this.stopListening(zone, socket, socketData);
             }
         }
     }

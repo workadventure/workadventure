@@ -20,6 +20,7 @@ import { localUserStore } from "./LocalUserStore";
 import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels";
 import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
+import { Socket } from "socket.io-client";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -290,24 +291,22 @@ class ConnectionManager {
                 lastCommandId
             );
 
-            connection.onConnectError((error: object) => {
+            connection.onConnectError(() => {
                 console.info("onConnectError => An error occurred while connecting to socket server. Retrying");
-                reject(error);
+                reject();
             });
 
-            connection.connectionErrorStream.subscribe((event: CloseEvent) => {
+            connection.connectionErrorStream.subscribe((reason: Socket.DisconnectReason) => {
                 console.info(
-                    "An error occurred while connecting to socket server. Retrying => Event: ",
-                    event.reason,
-                    event.code,
-                    event
+                    "An error occurred while connecting to socket server. Retrying => Reason: ",
+                    reason,
                 );
 
                 //However, Chrome will rarely report any close code 1006 reasons to the Javascript side.
                 //This is likely due to client security rules in the WebSocket spec to prevent abusing WebSocket.
                 //(such as using it to scan for open ports on a destination server, or for generating lots of connections for a denial-of-service attack).
                 // more detail here: https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
-                if (event.code === 1006) {
+                if (reason === "transport close" || reason === "io server disconnect") {
                     //check cookies
                     const cookies = document.cookie.split(";");
                     for (const cookie of cookies) {
@@ -322,14 +321,7 @@ class ConnectionManager {
                     }
                 }
 
-                reject(
-                    new Error(
-                        "An error occurred while connecting to socket server. Retrying. Code: " +
-                            event.code +
-                            ", Reason: " +
-                            event.reason
-                    )
-                );
+                reject(new Error(`An error occurred while connecting to socket server. Retrying. Reason: ${reason}`));
             });
 
             connection.roomJoinedMessageStream.subscribe((connect: OnConnectInterface) => {

@@ -3,7 +3,12 @@ import { Socket } from "socket.io";
 import { socketManager } from "./SocketManager";
 
 export function emitInBatch(socket: Socket, payload: SubMessage): void {
-    const socketData = socketManager.getSocketData(socket);
+    const socketData = socketManager.getConnectedSocketData(socket);
+
+    if (!socketData) {
+        return;
+    }
+
     socketData.batchedMessages.payload.push(payload);
 
     if (socketData.batchTimeout === null) {

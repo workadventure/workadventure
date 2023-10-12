@@ -10,7 +10,7 @@ import {
 import Debug from "debug";
 import * as Sentry from "@sentry/node";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
-import { BackSpaceConnection } from "./websocket/SocketData";
+import { BackSpaceConnection, SocketData } from "./websocket/SocketData";
 import { ClientSocket, socketManager } from "../services/SocketManager";
 
 type SpaceUserExtended = { lowercaseName: string } & SpaceUser;
@@ -26,17 +26,16 @@ export class Space implements CustomJsonReplacerInterface {
         public readonly name: string,
         private spaceStreamToPusher: BackSpaceConnection,
         public backId: number,
-        watcher: ClientSocket
+        watcher: ClientSocket,
+        socketData: SocketData
     ) {
         this.users = new Map<number, SpaceUserExtended>();
         this.clientWatchers = new Map<number, ClientSocket>();
-        this.addClientWatcher(watcher);
+        this.addClientWatcher(watcher, socketData);
         debug(`created : ${name}`);
     }
 
-    public addClientWatcher(watcher: ClientSocket) {
-        const clientData = socketManager.getSocketData(watcher);
-
+    public addClientWatcher(watcher: ClientSocket, clientData: SocketData) {
         if (!clientData.userId) {
             throw new Error("Back user id not set yet!");
         }
@@ -58,13 +57,12 @@ export class Space implements CustomJsonReplacerInterface {
         debug(`${this.name} : watcher added ${clientData.name}`);
     }
 
-    public removeClientWatcher(watcher: ClientSocket) {
-        const clientData = socketManager.getSocketData(watcher);
-        if (!clientData.userId) {
+    public removeClientWatcher(socketData: SocketData) {
+        if (!socketData.userId) {
             throw new Error("Back user id not set yet!");
         }
-        this.clientWatchers.delete(clientData.userId);
-        debug(`${this.name} : watcher removed ${clientData.name}`);
+        this.clientWatchers.delete(socketData.userId);
+        debug(`${this.name} : watcher removed ${socketData.name}`);
     }
 
     public addUser(spaceUser: SpaceUser) {
@@ -224,7 +222,12 @@ export class Space implements CustomJsonReplacerInterface {
 
     private notifyAll(subMessage: SubMessage, youngUser: SpaceUserExtended, oldUser: SpaceUserExtended | null = null) {
         this.clientWatchers.forEach((watcher) => {
-            const clientData = socketManager.getSocketData(watcher);
+            const clientData = socketManager.getConnectedSocketData(watcher);
+
+            if (!clientData) {
+                return;
+            }
+
             if (this.isWatcherTargeted(watcher, youngUser) || (oldUser && this.isWatcherTargeted(watcher, oldUser))) {
                 debug(`${this.name} : ${clientData.name} targeted`);
                 const filterOfThisSpace = clientData.spacesFilters.get(this.name) ?? [];
@@ -269,11 +272,19 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     public notifyMe(watcher: ClientSocket, subMessage: SubMessage) {
-        socketManager.getSocketData(watcher).emitInBatch(subMessage);
+        const clientData = socketManager.getConnectedSocketData(watcher);
+        if (!clientData) {
+            return;
+        }
+        clientData.emitInBatch(subMessage);
     }
 
     private isWatcherTargeted(watcher: ClientSocket, user: SpaceUserExtended) {
-        const filtersOfThisSpace = socketManager.getSocketData(watcher).spacesFilters.get(this.name) ?? [];
+        const userData = socketManager.getSocketData(watcher);
+        if (!userData) {
+            return false;
+        }
+        const filtersOfThisSpace = userData.spacesFilters.get(this.name) ?? [];
         return filtersOfThisSpace.filter((spaceFilter) => this.filterOneUser(spaceFilter, user)).length > 0;
     }
 
@@ -319,7 +330,7 @@ export class Space implements CustomJsonReplacerInterface {
     public handleAddFilter(watcher: ClientSocket, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
         const newFilter = updateSpaceFilterMessage.spaceFilterMessage;
         if (newFilter) {
-            debug(`${this.name} : filter added (${newFilter.filterName}) for ${socketManager.getSocketData(watcher).userId}`);
+            debug(`${this.name} : filter added (${newFilter.filterName}) for ${socketManager.getConnectedSocketData(watcher)?.userId}`);
             const newData = this.filter(newFilter);
             this.delta(watcher, this.users, newData, newFilter.filterName);
         }
@@ -327,7 +338,12 @@ export class Space implements CustomJsonReplacerInterface {
 
     public handleUpdateFilter(watcher: ClientSocket, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
         const newFilter = updateSpaceFilterMessage.spaceFilterMessage;
-        const userData = socketManager.getSocketData(watcher);
+        const userData = socketManager.getConnectedSocketData(watcher);
+
+        if (!userData) {
+            return;
+        }
+
         if (newFilter) {
             const oldFilter = userData.spacesFilters
                 .get(this.name)
@@ -344,7 +360,7 @@ export class Space implements CustomJsonReplacerInterface {
     public handleRemoveFilter(watcher: ClientSocket, removeSpaceFilterMessage: RemoveSpaceFilterMessage) {
         const oldFilter = removeSpaceFilterMessage.spaceFilterMessage;
         if (oldFilter) {
-            debug(`${this.name} : filter removed (${oldFilter.filterName}) for ${socketManager.getSocketData(watcher).userId}`);
+            debug(`${this.name} : filter removed (${oldFilter.filterName}) for ${socketManager.getConnectedSocketData(watcher)?.userId}`);
             const oldData = this.filter(oldFilter);
             this.delta(watcher, oldData, this.users, undefined);
         }
@@ -373,7 +389,7 @@ export class Space implements CustomJsonReplacerInterface {
             }
         });
 
-        debug(`${this.name} : filter calculated for ${socketManager.getSocketData(watcher).userId} (${addedUsers} added, ${removedUsers} removed)`);
+        debug(`${this.name} : filter calculated for ${socketManager.getConnectedSocketData(watcher)?.userId} (${addedUsers} added, ${removedUsers} removed)`);
     }
 
     private notifyMeAddUser(watcher: ClientSocket, user: SpaceUserExtended, filterName: string | undefined) {

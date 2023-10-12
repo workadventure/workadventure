@@ -225,6 +225,8 @@ export class SocketManager implements ZoneEventListener {
 
             socketData.backConnection = streamToPusher;
 
+            this.socketsData.set(client.id, socketData);
+
             streamToPusher
                 .on("data", (message: ServerToClientMessage) => {
                     if (!message.message) {
@@ -326,23 +328,35 @@ export class SocketManager implements ZoneEventListener {
 
             const pusherRoom = await this.getOrCreateRoom(socketData.roomId);
             pusherRoom.mucRooms = socketData.mucRooms;
-            pusherRoom.join(client);
+            pusherRoom.join(client, socketData);
         } catch (e) {
             Sentry.captureException(`An error occurred on "join_room" event ${e}`);
             console.error(`An error occurred on "join_room" event ${e}`);
         }
     }
 
-    public getSocketData(client: ClientSocket): SocketData {
-        const data = this.socketsData.get(client.id);
+    public getSocketData(client: ClientSocket): SocketData|undefined {
+        return this.socketsData.get(client.id);
+    }
 
-        if (!data) {
-            client.disconnect(true);
+    /**
+     * Get socket data if the client is connected
+     * @param client
+     * @returns SocketData if the client is connected, undefined otherwise
+     */
+    public getConnectedSocketData(client: ClientSocket): SocketData|undefined {
+        if (client.disconnected) {
+            return undefined;
+        }
+
+        const clientData = this.getSocketData(client);
+
+        if (!clientData) {
             Sentry.captureException("Client has no data");
             throw new Error("Client has no data");
         }
 
-        return data;
+        return clientData;
     }
 
     public async handleJoinSpace(
@@ -350,7 +364,12 @@ export class SocketManager implements ZoneEventListener {
         spaceName: string,
         filter: SpaceFilterMessage | undefined = undefined
     ): Promise<void> {
-        const clientData = this.getSocketData(client);
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
+        }
+
         try {
             const backId = apiClientRepository.getIndex(spaceName);
             let spaceStreamToPusher = this.spaceStreamsToPusher.get(backId);
@@ -449,10 +468,10 @@ export class SocketManager implements ZoneEventListener {
 
             let space: Space | undefined = this.spaces.get(spaceName);
             if (!space) {
-                space = new Space(spaceName, spaceStreamToPusher, backId, client);
+                space = new Space(spaceName, spaceStreamToPusher, backId, client, clientData);
                 this.spaces.set(spaceName, space);
             } else {
-                space.addClientWatcher(client);
+                space.addClientWatcher(client, clientData);
             }
             clientData.spaces.push(space);
 
@@ -478,7 +497,12 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleViewport(client: ClientSocket, viewport: ViewportMessage): void {
-        const clientData = this.getSocketData(client);
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
+        }
+
         try {
             clientData.viewport = viewport;
 
@@ -488,7 +512,7 @@ export class SocketManager implements ZoneEventListener {
                 Sentry.captureException("In SET_VIEWPORT, could not find world with id ' " + clientData.roomId);
                 return;
             }
-            room.setViewport(client, clientData.viewport);
+            room.setViewport(client, clientData);
         } catch (e) {
             Sentry.captureException(`An error occurred on "SET_VIEWPORT" event ${e}`);
             console.error(`An error occurred on "SET_VIEWPORT" event ${e}`);
@@ -496,11 +520,23 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleUserMovesMessage(client: ClientSocket, userMovesMessage: UserMovesMessage): void {
-        const clientData = this.getSocketData(client);
+        const clientData = this.getConnectedSocketData(client);
+
+        console.log("handleUserMovesMessage", "1");
+
+        if (!clientData) {
+            return;
+        }
+
+        console.log("handleUserMovesMessage", "2");
+
         if (!clientData.backConnection) {
             Sentry.captureException("Client has no back connection");
             throw new Error("Client has no back connection");
         }
+
+        console.log("handleUserMovesMessage", "3");
+
 
         clientData.backConnection.write({
             message: {
@@ -509,10 +545,14 @@ export class SocketManager implements ZoneEventListener {
             },
         });
 
+        console.log("handleUserMovesMessage", "4");
+
         const viewport = userMovesMessage.viewport;
         if (viewport === undefined) {
             throw new Error("Missing viewport in UserMovesMessage");
         }
+
+        console.log("handleUserMovesMessage", "5");
 
         // Now, we need to listen to the correct viewport.
         this.handleViewport(client, viewport);
@@ -556,7 +596,11 @@ export class SocketManager implements ZoneEventListener {
         };
         socketManager.forwardMessageToBack(client, pusherToBackMessage);
 
-        const clientData = this.getSocketData(client);
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
+        }
 
         if (clientData.spaceUser.availabilityStatus !== playerDetailsMessage.availabilityStatus) {
             clientData.spaceUser.availabilityStatus = playerDetailsMessage.availabilityStatus;
@@ -571,7 +615,12 @@ export class SocketManager implements ZoneEventListener {
     }
 
     async handleReportMessage(client: ClientSocket, reportPlayerMessage: ReportPlayerMessage): Promise<void> {
-        const clientData = this.getSocketData(client);
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
+        }
+
         try {
             await adminService.reportPlayer(
                 reportPlayerMessage.reportedUserUuid,
@@ -589,6 +638,11 @@ export class SocketManager implements ZoneEventListener {
     leaveRoom(socket: ClientSocket): void {
         // leave previous room and world
         const clientData = this.getSocketData(socket);
+
+        if (!clientData) {
+            return;
+        }
+
         try {
             if (clientData.roomId) {
                 try {
@@ -597,7 +651,7 @@ export class SocketManager implements ZoneEventListener {
                     if (room) {
                         debug("Leaving room %s.", clientData.roomId);
 
-                        room.leave(socket);
+                        room.leave(socket, clientData);
                         this.deleteRoomIfEmpty(room);
                     } else {
                         console.error("Could not find the GameRoom the user is leaving!");
@@ -621,9 +675,12 @@ export class SocketManager implements ZoneEventListener {
 
     leaveSpaces(socket: ClientSocket) {
         const clientData = this.getSocketData(socket);
+        if (!clientData) {
+            return;
+        }
         clientData.spacesFilters = new Map<string, SpaceFilterMessage[]>();
         (clientData.spaces ?? []).forEach((space) => {
-            space.removeClientWatcher(socket);
+            space.removeClientWatcher(clientData);
             space.removeUser(clientData.spaceUser.id);
             this.deleteSpaceIfEmpty(space);
         });
@@ -650,13 +707,6 @@ export class SocketManager implements ZoneEventListener {
             room.close();
             this.rooms.delete(room.roomUrl);
             debug("Room %s is empty. Deleting.", room.roomUrl);
-        }
-    }
-
-    public deleteRoomIfEmptyFromId(roomUrl: string): void {
-        const room = this.rooms.get(roomUrl);
-        if (room) {
-            this.deleteRoomIfEmpty(room);
         }
     }
 
@@ -910,7 +960,12 @@ export class SocketManager implements ZoneEventListener {
         client: ClientSocket,
         playGlobalMessageEvent: PlayGlobalMessage
     ): Promise<void> {
-        const clientData = this.getSocketData(client);
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
+        }
+
         if (!clientData.tags.includes("admin")) {
             throw new Error("Client is not an admin!");
         }
@@ -939,7 +994,12 @@ export class SocketManager implements ZoneEventListener {
     }
 
     forwardMessageToBack(client: ClientSocket, message: PusherToBackMessage["message"]): void {
-        const clientData = this.getSocketData(client);
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
+        }
+
         const pusherToBackMessage: PusherToBackMessage = {
             message: message,
         };
@@ -982,14 +1042,14 @@ export class SocketManager implements ZoneEventListener {
     }
 
     emitXMPPSettings(client: ClientSocket): void {
-        const userData = this.getSocketData(client);
-        if (!userData) {
-            Sentry.captureException("SocketManager => emitXMPPSettings => userData is undefined");
-            throw new Error("User not found");
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
         }
         const xmppSettings: XmppSettingsMessage = {
             conferenceDomain: "conference." + EJABBERD_DOMAIN,
-            rooms: userData.mucRooms.map((definition: MucRoomDefinition) => {
+            rooms: clientData.mucRooms.map((definition: MucRoomDefinition) => {
                 if (!definition.name || !definition.url || !definition.type) {
                     throw new Error("Name URL and type cannot be empty!");
                 }
@@ -1000,8 +1060,8 @@ export class SocketManager implements ZoneEventListener {
                     subscribe: definition.subscribe,
                 };
             }),
-            jabberId: userData.jabberId,
-            jabberPassword: userData.jabberPassword ?? "",
+            jabberId: clientData.jabberId,
+            jabberPassword: clientData.jabberPassword ?? "",
         };
 
         if (!client.disconnected) {
@@ -1017,33 +1077,43 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleAddSpaceFilterMessage(client: ClientSocket, addSpaceFilterMessage: AddSpaceFilterMessage) {
-        const userData = this.getSocketData(client);
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
+        }
+
         const newFilter = addSpaceFilterMessage.spaceFilterMessage;
         if (newFilter) {
-            const space = userData.spaces.find((space) => space.name === newFilter.spaceName);
+            const space = clientData.spaces.find((space) => space.name === newFilter.spaceName);
             if (space) {
                 space.handleAddFilter(client, addSpaceFilterMessage);
-                let spacesFilter = userData.spacesFilters.get(space.name);
+                let spacesFilter = clientData.spacesFilters.get(space.name);
                 if (!spacesFilter) {
                     spacesFilter = [newFilter];
                 } else {
                     spacesFilter.push(newFilter);
                 }
-                userData.spacesFilters.set(space.name, spacesFilter);
+                clientData.spacesFilters.set(space.name, spacesFilter);
             }
         }
     }
 
     handleUpdateSpaceFilterMessage(client: ClientSocket, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
-        const userData = this.getSocketData(client);
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
+        }
+
         const newFilter = updateSpaceFilterMessage.spaceFilterMessage;
         if (newFilter) {
-            const space = userData.spaces.find((space) => space.name === newFilter.spaceName);
+            const space = clientData.spaces.find((space) => space.name === newFilter.spaceName);
             if (space) {
                 space.handleUpdateFilter(client, updateSpaceFilterMessage);
-                const spacesFilter = userData.spacesFilters.get(space.name);
+                const spacesFilter = clientData.spacesFilters.get(space.name);
                 if (spacesFilter) {
-                    userData.spacesFilters.set(
+                    clientData.spacesFilters.set(
                         space.name,
                         spacesFilter.map((filter) => (filter.filterName === newFilter.filterName ? newFilter : filter))
                     );
@@ -1057,15 +1127,20 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleRemoveSpaceFilterMessage(client: ClientSocket, removeSpaceFilterMessage: RemoveSpaceFilterMessage) {
-        const userData = this.getSocketData(client);
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
+        }
+
         const oldFilter = removeSpaceFilterMessage.spaceFilterMessage;
         if (oldFilter) {
-            const space = userData.spaces.find((space) => space.name === oldFilter.spaceName);
+            const space = clientData.spaces.find((space) => space.name === oldFilter.spaceName);
             if (space) {
                 space.handleRemoveFilter(client, removeSpaceFilterMessage);
-                const spacesFilter = userData.spacesFilters.get(space.name);
+                const spacesFilter = clientData.spacesFilters.get(space.name);
                 if (spacesFilter) {
-                    userData.spacesFilters.set(
+                    clientData.spacesFilters.set(
                         space.name,
                         spacesFilter.filter((filter) => filter.filterName !== oldFilter.filterName)
                     );
@@ -1079,7 +1154,12 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleCameraState(client: ClientSocket, state: boolean) {
-        const clientData = this.getSocketData(client);
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
+        }
+
         clientData.cameraState = state;
         clientData.spaceUser.cameraState = state;
         const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
@@ -1092,7 +1172,12 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleMicrophoneState(client: ClientSocket, state: boolean) {
-        const clientData = this.getSocketData(client);
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
+        }
+
         clientData.microphoneState = state;
         clientData.spaceUser.microphoneState = state;
         const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
@@ -1105,7 +1190,12 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleScreenSharingState(client: ClientSocket, state: boolean) {
-        const clientData = this.getSocketData(client);
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
+        }
+
         clientData.screenSharingState = state;
         clientData.spaceUser.screenSharingState = state;
         const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
@@ -1118,7 +1208,12 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleMegaphoneState(client: ClientSocket, megaphoneStateMessage: MegaphoneStateMessage) {
-        const clientData = this.getSocketData(client);
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
+        }
+
         clientData.megaphoneState = megaphoneStateMessage.value;
         clientData.spaceUser.megaphoneState = megaphoneStateMessage.value;
         const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
@@ -1133,7 +1228,12 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleJitsiParticipantIdSpace(client: ClientSocket, spaceName: string, jitsiParticipantId: string) {
-        const clientData = this.getSocketData(client);
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
+        }
+
         const space = clientData.spaces.find((space) => space.name === spaceName);
         if (space) {
             const partialSpaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
@@ -1145,7 +1245,12 @@ export class SocketManager implements ZoneEventListener {
     }
 
     async handleRoomTagsQuery(client: ClientSocket, queryMessage: QueryMessage) {
-        const clientData = this.getSocketData(client);
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
+        }
+
         let tags: string[];
         try {
             tags = await adminService.getTagsList(clientData.roomId);
@@ -1174,8 +1279,15 @@ export class SocketManager implements ZoneEventListener {
 
     async handleRoomsFromSameWorldQuery(client: ClientSocket, queryMessage: QueryMessage) {
         let roomDescriptions: ShortMapDescription[];
+
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
+        }
+
         try {
-            roomDescriptions = await adminService.getUrlRoomsFromSameWorld(this.getSocketData(client).roomId);
+            roomDescriptions = await adminService.getUrlRoomsFromSameWorld(clientData.roomId);
         } catch (e) {
             console.warn("SocketManager => handleRoomsFromSameWorldQuery => error while getting other rooms list", e);
             // Nothing to do with the error
@@ -1217,10 +1329,15 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleLeaveSpace(client: ClientSocket, spaceName: string) {
-        const clientData = this.getSocketData(client);
+        const clientData = this.getConnectedSocketData(client);
+
+        if (!clientData) {
+            return;
+        }
+
         const space = this.spaces.get(spaceName);
         if (space) {
-            space.removeClientWatcher(client);
+            space.removeClientWatcher(clientData);
             space.removeUser(clientData.spaceUser.id);
             clientData.spaces = clientData.spaces.filter((space) => space.name !== spaceName);
             this.deleteSpaceIfEmpty(space);

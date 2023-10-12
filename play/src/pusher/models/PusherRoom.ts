@@ -6,10 +6,11 @@ import { WAMFileFormat, WAMSettingsUtils } from "@workadventure/map-editor";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import { PositionDispatcher } from "./PositionDispatcher";
 import type { ViewportInterface } from "./websocket/ViewportMessage";
-import type { ZoneEventListener } from "./Zone";
+import type { Zone, ZoneEventListener } from "./Zone";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { Socket } from "socket.io";
 import { socketManager } from "../services/SocketManager";
+import { SocketData } from "./websocket/SocketData";
 
 const debug = Debug("room");
 
@@ -38,24 +39,24 @@ export class PusherRoom implements CustomJsonReplacerInterface {
         ];
     }
 
-    public setViewport(socket: Socket, viewport: ViewportInterface): void {
-        this.positionNotifier.setViewport(socket, viewport);
+    public setViewport(socket: Socket, socketData: SocketData): void {
+        this.positionNotifier.setViewport(socket, socketData);
     }
 
-    public join(socket: Socket): void {
+    public join(socket: Socket, socketData: SocketData): void {
         this.listeners.add(socket);
 
         if (!this.mucRooms) {
             return;
         }
 
-        socketManager.getSocketData(socket).pusherRoom = this;
+        socketData.pusherRoom = this;
     }
 
-    public leave(socket: Socket): void {
-        this.positionNotifier.removeViewport(socket);
+    public leave(socket: Socket, socketData: SocketData): void {
+        this.positionNotifier.removeViewport(socket, socketData);
         this.listeners.delete(socket);
-        socketManager.getSocketData(socket).pusherRoom = undefined;
+        socketData.pusherRoom = undefined;
     }
 
     public isEmpty(): boolean {
@@ -97,7 +98,10 @@ export class PusherRoom implements CustomJsonReplacerInterface {
 
                         // Let's dispatch this variable to all the listeners
                         for (const listener of this.listeners) {
-                            const userData = socketManager.getSocketData(listener);
+                            const userData = socketManager.getConnectedSocketData(listener);
+                            if (!userData) {
+                                continue;
+                            }
                             if (!readableBy || userData.tags.includes(readableBy)) {
                                 userData.emitInBatch({
                                     message: {
@@ -112,6 +116,11 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                     case "editMapCommandMessage": {
                         for (const listener of this.listeners) {
                             const userData = socketManager.getSocketData(listener);
+
+                            if (!userData) {
+                                continue;
+                            }
+
                             userData.emitInBatch({
                                 message: {
                                     $case: "editMapCommandMessage",
@@ -153,7 +162,13 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                         const errorMessage = message.message.errorMessage;
                         // Let's dispatch this error to all the listeners
                         for (const listener of this.listeners) {
-                            socketManager.getSocketData(listener).emitInBatch({
+                            const userData = socketManager.getSocketData(listener);
+
+                            if (!userData) {
+                                continue;
+                            }
+
+                            userData.emitInBatch({
                                 message: {
                                     $case: "errorMessage",
                                     errorMessage: errorMessage,
@@ -165,7 +180,12 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                     case "joinMucRoomMessage": {
                         // Let's dispatch this joinMucRoomMessage to all the listeners
                         for (const listener of this.listeners) {
-                            socketManager.getSocketData(listener).emitInBatch({
+                            const userData = socketManager.getSocketData(listener);
+
+                            if (!userData) {
+                                continue;
+                            }
+                            userData.emitInBatch({
                                 message: {
                                     $case: "joinMucRoomMessage",
                                     joinMucRoomMessage: message.message.joinMucRoomMessage,
@@ -177,7 +197,12 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                     case "leaveMucRoomMessage": {
                         // Let's dispatch this leaveMucRoomMessage to all the listeners
                         for (const listener of this.listeners) {
-                            socketManager.getSocketData(listener).emitInBatch({
+                            const userData = socketManager.getSocketData(listener);
+
+                            if (!userData) {
+                                continue;
+                            }
+                            userData.emitInBatch({
                                 message: {
                                     $case: "leaveMucRoomMessage",
                                     leaveMucRoomMessage: message.message.leaveMucRoomMessage,
@@ -199,13 +224,18 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                 this.close();
                 // Let's close all connections linked to that room
                 for (const listener of this.listeners) {
+                    const userData = socketManager.getSocketData(listener);
+
+                    if (!userData) {
+                        continue;
+                    }
                     Sentry.captureMessage(
                         "Connection error between pusher and back server : " +
                             err +
                             " " +
                             this.roomUrl +
                             " " +
-                            socketManager.getSocketData(listener).userUuid,
+                            userData.userUuid,
                         "debug"
                     );
                     listener.emit("error", {
@@ -222,8 +252,12 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                 this.close();
                 // Let's close all connections linked to that room
                 for (const listener of this.listeners) {
+                    const userData = socketManager.getSocketData(listener);
+                    if (!userData) {
+                        continue;
+                    }
                     Sentry.captureMessage(
-                        "Close on back connection " + this.roomUrl + " " + socketManager.getSocketData(listener).userUuid,
+                        "Close on back connection " + this.roomUrl + " " + userData.userUuid,
                         "debug"
                     );
                     listener.emit("error", {

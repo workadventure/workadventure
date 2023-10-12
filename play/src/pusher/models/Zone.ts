@@ -23,6 +23,7 @@ import { apiClientRepository } from "../services/ApiClientRepository";
 import type { PositionDispatcher } from "../models/PositionDispatcher";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 import { ClientSocket, socketManager } from "../services/SocketManager";
+import { SocketData } from "./websocket/SocketData";
 
 const debug = Debug("zone");
 
@@ -324,7 +325,7 @@ export class Zone implements CustomJsonReplacerInterface {
                     if (!this.isClosing) {
                         const date = new Date();
                         for (const listener of this.listeners) {
-                            const userUuid = socketManager.getSocketData(listener).userUuid;
+                            const userUuid = socketManager.getSocketData(listener)?.userUuid ?? "unknown";
                             debug(
                                 "Error on back connection" + userUuid + "at : " + date.toLocaleString("en-GB")
                             );
@@ -370,7 +371,11 @@ export class Zone implements CustomJsonReplacerInterface {
      */
     private notifyUserEnter(user: UserDescriptor, oldZone: ZoneDescriptor | undefined): void {
         for (const listener of this.listeners) {
-            if (socketManager.getSocketData(listener).userId === user.userId) {
+            const socketData = socketManager.getConnectedSocketData(listener);
+            if (!socketData) {
+                continue;
+            }
+            if (socketData.userId === user.userId) {
                 continue;
             }
             if (oldZone === undefined || !this.isListeningZone(listener, oldZone.x, oldZone.y)) {
@@ -399,7 +404,11 @@ export class Zone implements CustomJsonReplacerInterface {
      */
     private notifyUserLeft(userId: number, newZone: ZoneDescriptor | undefined): void {
         for (const listener of this.listeners) {
-            if (socketManager.getSocketData(listener).userId === userId) {
+            const socketData = socketManager.getConnectedSocketData(listener);
+            if (!socketData) {
+                continue;
+            }
+            if (socketData.userId === userId) {
                 continue;
             }
             if (newZone === undefined || !this.isListeningZone(listener, newZone.x, newZone.y)) {
@@ -412,7 +421,11 @@ export class Zone implements CustomJsonReplacerInterface {
 
     private notifyEmote(emoteMessage: EmoteEventMessage): void {
         for (const listener of this.listeners) {
-            if (socketManager.getSocketData(listener).userId === emoteMessage.actorUserId) {
+            const socketData = socketManager.getConnectedSocketData(listener);
+            if (!socketData) {
+                continue;
+            }
+            if (socketData.userId === emoteMessage.actorUserId) {
                 continue;
             }
             this.socketListener.onEmote(emoteMessage, listener);
@@ -421,7 +434,11 @@ export class Zone implements CustomJsonReplacerInterface {
 
     private notifyPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage): void {
         for (const listener of this.listeners) {
-            if (socketManager.getSocketData(listener).userId === playerDetailsUpdatedMessage.userId) {
+            const socketData = socketManager.getConnectedSocketData(listener);
+            if (!socketData) {
+                continue;
+            }
+            if (socketData.userId === playerDetailsUpdatedMessage.userId) {
                 continue;
             }
             this.socketListener.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener);
@@ -449,7 +466,11 @@ export class Zone implements CustomJsonReplacerInterface {
 
     private isListeningZone(socket: ClientSocket, x: number, y: number): boolean {
         // TODO: improve efficiency by not doing a full scan of listened zones.
-        for (const zone of socketManager.getSocketData(socket).listenedZones) {
+        const socketData = socketManager.getConnectedSocketData(socket);
+        if (!socketData) {
+            return false;
+        }
+        for (const zone of socketData.listenedZones) {
             if (zone.x === x && zone.y === y) {
                 return true;
             }
@@ -465,17 +486,20 @@ export class Zone implements CustomJsonReplacerInterface {
 
     private notifyUserMove(userDescriptor: UserDescriptor): void {
         for (const listener of this.listeners) {
-            if (socketManager.getSocketData(listener).userId === userDescriptor.userId) {
+            const socketData = socketManager.getConnectedSocketData(listener);
+            if (!socketData) {
+                continue;
+            }
+            if (socketData.userId === userDescriptor.userId) {
                 continue;
             }
             this.socketListener.onUserMoves(userDescriptor, listener);
         }
     }
 
-    public startListening(listener: ClientSocket): void {
-        const userData = socketManager.getSocketData(listener);
+    public startListening(listener: ClientSocket, socketData: SocketData): void {
         for (const [userId, user] of this.users.entries()) {
-            if (userId !== userData.userId) {
+            if (userId !== socketData.userId) {
                 this.socketListener.onUserEnters(user, listener);
             }
         }
@@ -485,13 +509,12 @@ export class Zone implements CustomJsonReplacerInterface {
         }
 
         this.listeners.add(listener);
-        userData.listenedZones.add(this);
+        socketData.listenedZones.add(this);
     }
 
-    public stopListening(listener: ClientSocket): void {
-        const userData = socketManager.getSocketData(listener);
+    public stopListening(listener: ClientSocket, socketData: SocketData): void {
         for (const userId of this.users.keys()) {
-            if (userId !== userData.userId) {
+            if (userId !== socketData.userId) {
                 this.socketListener.onUserLeaves(userId, listener);
             }
         }
@@ -501,7 +524,7 @@ export class Zone implements CustomJsonReplacerInterface {
         }
 
         this.listeners.delete(listener);
-        userData.listenedZones.delete(this);
+        socketData.listenedZones.delete(this);
     }
 
     public customJsonReplacer(key: unknown, value: unknown): string | undefined {

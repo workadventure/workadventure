@@ -42,7 +42,7 @@ describe("Space", () => {
             } as UserSocketData;
         },
     });
-    const space = new Space("test", backSpaceConnection, 1, client);
+    const space = new Space("test", backSpaceConnection, 1, client, clientData);
     it("should return true because Space is empty", () => {
         expect(space.isEmpty()).toBe(true);
     });

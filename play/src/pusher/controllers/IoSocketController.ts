@@ -172,7 +172,7 @@ export class IoSocketController {
             RoomServerToClientFunctions,
             RoomInterServerFunctions,
             RoomSocketData
-        > = this.app.of("/");
+        > = this.app.of("/room");
 
         roomNamespace.on("connection", (socket) => {
             console.info(`Socket connect to client on ${socket.handshake.address}`);
@@ -188,17 +188,13 @@ export class IoSocketController {
                             ? error.issues.map((issue) => "Parameter " + issue.path + ": " + issue.message)
                             : ["Unknown error"];
 
-                    socket.emit("error", {
-                        reason: "error",
-                        status: 400,
-                        error: {
-                            type: "error",
-                            title: "400 Bad Request",
-                            subtitle: "Something wrong while connection!",
-                            image: "",
-                            code: "WS_BAD_REQUEST",
-                            details: messages.join("\n"),
-                        },
+                    socketManager.emitErrorScreenMessage(socket, {
+                        type: "error",
+                        title: "400 Bad Request",
+                        subtitle: "Something wrong while connection!",
+                        image: "",
+                        code: "WS_BAD_REQUEST",
+                        details: messages.join("\n"),
                     });
 
                     socket.disconnect(true);
@@ -223,20 +219,16 @@ export class IoSocketController {
 
                 try {
                     if (version !== apiVersionHash) {
-                        socket.emit("error", {
-                            reason: "error",
-                            status: 419,
-                            error: {
-                                type: "retry",
-                                title: "Please refresh",
-                                subtitle: "New version available",
-                                image: "/resources/icons/new_version.png",
-                                code: "NEW_VERSION",
-                                details: "A new version of WorkAdventure is available. Please refresh your window",
-                                canRetryManual: true,
-                                buttonTitle: "Refresh",
-                                timeToRetry: 999999,
-                            },
+                        socketManager.emitErrorScreenMessage(socket, {
+                            type: "retry",
+                            title: "Please refresh",
+                            subtitle: "New version available",
+                            image: "/resources/icons/new_version.png",
+                            code: "NEW_VERSION",
+                            details: "A new version of WorkAdventure is available. Please refresh your window",
+                            canRetryManual: true,
+                            buttonTitle: "Refresh",
+                            timeToRetry: 999999,
                         });
                         socket.disconnect(true);
                         return;
@@ -301,21 +293,13 @@ export class IoSocketController {
                                         err?.response?.status,
                                         errorType.data
                                     );
-                                    socket.emit("error", {
-                                        reason: "error",
-                                        status: err?.response?.status || 500,
-                                        error: errorType.data,
-                                    });
+                                    socketManager.emitErrorScreenMessage(socket, errorType.data);
                                     socket.disconnect(true);
                                     return;
                                 } else {
                                     Sentry.captureException(`Unknown error on room connection ${err}`);
                                     console.error("Unknown error on room connection", err);
-                                    socket.emit("error", {
-                                        reason: null,
-                                        message: err?.response?.data,
-                                        roomId: roomId,
-                                    });
+                                    socketManager.emitErrorScreenMessage(socket, err?.response?.data);
                                     socket.disconnect(true);
                                     return;
                                 }
@@ -354,18 +338,12 @@ export class IoSocketController {
                         userData.jabberId = `${userData.jabberId}/${uuid()}`;
                     }
                     if (characterTextureIds.length !== characterTextures.length) {
-                        socket.emit("error", {
-                            reason: "invalidTexture",
-                            entityType: "character",
-                        });
+                        socketManager.emitInvalidCharacterTextureMessage(socket);
                         socket.disconnect(true);
                         return;
                     }
                     if (companionTextureId && !companionTexture) {
-                        socket.emit("error", {
-                            reason: "invalidTexture",
-                            entityType: "companion",
-                        });
+                        socketManager.emitInvalidCompanionTextureMessage(socket);
                         socket.disconnect(true);
                         return;
                     }
@@ -528,17 +506,12 @@ export class IoSocketController {
                             Sentry.captureException(error);
                             console.error(error);
                         }
-                        socket.emit("error", {
-                            reason: error instanceof JsonWebTokenError ? tokenInvalidException : null,
-                            message: error.message,
-                            roomId,
-                        });
+                        error instanceof JsonWebTokenError ?
+                            socketManager.emitTokenExpiredMessage(socket) :
+                            socketManager.emitConnectionErrorMessage(socket, error.message);
+
                     } else {
-                        socket.emit("error", {
-                            reason: null,
-                            message: "500 Internal Server Error",
-                            roomId,
-                        });
+                        socketManager.emitConnectionErrorMessage(socket, "500 Internal Server Error");
                     }
                     socket.disconnect(true);
                     return;
@@ -562,11 +535,13 @@ export class IoSocketController {
 
             socket.on("message", async (data) => {
                 try {
-                    const message = ClientToServerMessage.decode(new Uint8Array(data));
+                    const message = ClientToServerMessage.decode(data.buffer);
                     if (!message.message) {
                         console.warn("Empty message received.");
                         return;
                     }
+
+                    console.log("message received", message)
                     switch (message.message.$case) {
                         case "viewportMessage": {
                             socketManager.handleViewport(socket, message.message.viewportMessage);
