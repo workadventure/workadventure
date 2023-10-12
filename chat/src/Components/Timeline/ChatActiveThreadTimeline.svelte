@@ -591,16 +591,20 @@
                             <span
                                 class="tw-w-fit tag tw-bg-dark tw-mx-2 tw-px-3 tw-py-1 tw-border tw-border-solid tw-rounded-full tw-text-xs tw-border-lighter-purple"
                                 ><b style={target.color ? `color: ${target.color};` : ""}
-                                    >{target.name.match(/\[\d*]/)
+                                    >{target.name && target.name.match(/\[\d*]/)
                                         ? target.name.substring(0, target.name.search(/\[\d*]/))
-                                        : target.name}
+                                        : target.name
+                                        ? target.name
+                                        : "Unknown"}
                                     {#if target.name.match(/\[\d*]/)}
                                         <span class="tw-font-light tw-text-xs tw-text-gray">
                                             #{target.name
-                                                .match(/\[\d*]/)
-                                                ?.join()
-                                                ?.replace("[", "")
-                                                ?.replace("]", "")}
+                                                ? target.name
+                                                      .match(/\[\d*]/)
+                                                      ?.join()
+                                                      ?.replace("[", "")
+                                                      ?.replace("]", "")
+                                                : "Unknown"}
                                         </span>
                                     {/if}</b
                                 >{$LL.timeLine.incoming()}
@@ -620,16 +624,20 @@
                             <span
                                 class="tw-w-fit tag tw-bg-dark tw-mx-2 tw-px-3 tw-py-1 tw-border tw-border-solid tw-rounded-full tw-text-xs tw-border-lighter-purple"
                                 ><b style={target.color ? `color: ${target.color};` : ""}
-                                    >{target.name.match(/\[\d*]/)
+                                    >{target.name && target.name.match(/\[\d*]/)
                                         ? target.name.substring(0, target.name.search(/\[\d*]/))
-                                        : target.name}
+                                        : target.name
+                                        ? target.name
+                                        : "Unknown"}
                                     {#if target.name.match(/\[\d*]/)}
                                         <span class="tw-font-light tw-text-xs tw-text-gray">
                                             #{target.name
-                                                .match(/\[\d*]/)
-                                                ?.join()
-                                                ?.replace("[", "")
-                                                ?.replace("]", "")}
+                                                ? target.name
+                                                      .match(/\[\d*]/)
+                                                      ?.join()
+                                                      ?.replace("[", "")
+                                                      ?.replace("]", "")
+                                                : "Unknown"}
                                         </span>
                                     {/if}</b
                                 >{$LL.timeLine.outcoming()}
