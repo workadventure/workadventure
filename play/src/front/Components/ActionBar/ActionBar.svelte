@@ -355,7 +355,6 @@
 
     function selectSpeaker(deviceId: string) {
         localUserStore.setSpeakerDeviceId(deviceId);
-        console.warn("selectSpeaker", deviceId);
         speakerSelectedStore.set(deviceId);
     }
 
@@ -379,16 +378,15 @@
         if (value.type === "success") {
             stream = value.stream;
 
-            if (stream !== null) {
+            /*if (stream !== null) {
                 const audioTracks = stream.getAudioTracks();
                 if (audioTracks.length > 0) {
                     // set default speaker selected
                     if ($speakerListStore && $speakerListStore.length > 0) {
-                        console.warn("localStreamStore.subscribe", $speakerListStore[0].deviceId);
                         speakerSelectedStore.set($speakerListStore[0].deviceId);
                     }
                 }
-            }
+            }*/
         } else {
             stream = null;
         }

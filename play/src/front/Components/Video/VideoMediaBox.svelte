@@ -15,9 +15,10 @@
     import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import microphoneOffImg from "../images/microphone-off-blue.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { speakerListStore, speakerSelectedStore } from "../../Stores/MediaStore";
+    import {selectDefaultSpeaker, speakerListStore, speakerSelectedStore} from "../../Stores/MediaStore";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import BanReportBox from "./BanReportBox.svelte";
+    import Debug from "debug";
 
     export let clickable = false;
 
@@ -40,6 +41,8 @@
 
     let destroyed = false;
     let currentDeviceId: string | undefined;
+
+    const debug = Debug("VideoMediaBox");
 
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
 
@@ -72,7 +75,7 @@
         });
 
         unsubscribeStreamStore = streamStore.subscribe((stream) => {
-            console.log("Stream store changed. Awaiting to set the stream to the video element.");
+            debug("Stream store changed. Awaiting to set the stream to the video element.");
             sinkIdPromise = sinkIdPromise.then(() => {
                 if (destroyed) {
                     // In case this function is called in a promise that resolves after the component is destroyed,
@@ -82,12 +85,12 @@
                 }
 
                 if (videoElement) {
-                    console.log("Setting stream to the video element.");
+                    debug("Setting stream to the video element.");
                     videoElement.srcObject = stream;
                     // After some tests, it appears that the sinkId is lost when the stream is set to the video element.
                     // Let's try to set it again.
                     /*if (currentDeviceId) {
-                        console.log("Setting the sinkId just after setting the stream.");
+                        debug("Setting the sinkId just after setting the stream.");
                         return videoElement.setSinkId?.(currentDeviceId);
                     }*/
                 } else {
@@ -116,48 +119,51 @@
 
         if (currentDeviceId === deviceId) {
             // No need to change the audio output if it's already the one we want.
-            console.log("setAudioOutput on already set deviceId. Ignoring call.");
+            debug("setAudioOutput on already set deviceId. Ignoring call.");
             return;
         }
         currentDeviceId = deviceId;
 
         // Check HTMLMediaElement.setSinkId() compatibility for browser => https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
-        try {
-            console.log("Awaiting to set sink id to ", deviceId);
-            sinkIdPromise = sinkIdPromise.then(() => {
-                console.log("Setting Sink Id to ", deviceId);
-                return videoElement
-                    ?.setSinkId?.(deviceId)
-                    .then(() => {
-                        console.info("Audio output device set to ", deviceId);
-                        // Trying to set the stream again after setSinkId is set (for Chrome, according to https://bugs.chromium.org/p/chromium/issues/detail?id=971947&q=setsinkid&can=2)
-                        /*if (videoElement && $streamStore) {
-                            videoElement.srcObject = $streamStore;
-                        }*/
-                    })
-                    .catch((e: unknown) => {
-                        if (e instanceof DOMException && e.name === "AbortError") {
-                            // An error occurred while setting the sinkId. Let's fallback to default.
-                            console.warn("Error setting the audio output device. We fallback to default.");
-                            if ($speakerListStore && $speakerListStore.length > 0) {
-                                speakerSelectedStore.set($speakerListStore[0].deviceId);
-                            } else {
-                                console.warn(
-                                    "Cannot fall back to default speaker. There is no speakers in the speaker list."
-                                );
-                                speakerSelectedStore.set(undefined);
-                            }
-                            return;
-                        }
-                        console.info("Error setting the audio output device: ", e);
-                    });
+        debug("Awaiting to set sink id to ", deviceId);
+        sinkIdPromise = sinkIdPromise.then(async () => {
+            debug("Setting Sink Id to ", deviceId);
+
+            const timeOutPromise = new Promise((resolve, reject) => {
+                setTimeout(resolve, 2000, 'timeout');
             });
-        } catch (err) {
-            console.info(
-                "Your browser is not compatible for updating your speaker over a video element. Try to change the default audio output in your computer settings. Error: ",
-                err
-            );
-        }
+
+            try {
+                const setSinkIdRacePromise = Promise.race([
+                    timeOutPromise,
+                    videoElement
+                        ?.setSinkId?.(deviceId)
+                ]);
+
+                let result = await setSinkIdRacePromise;
+                if (result === 'timeout') {
+                    // In some rare case, setSinkId can NEVER return. I've seen this in Firefox on Linux with a Jabra.
+                    // Let's fallback to default speaker if this happens.
+                    console.warn("setSinkId timed out. Calling setSinkId again on default speaker.");
+                    selectDefaultSpeaker();
+                    return;
+                } else {
+                    console.info("Audio output device set to ", deviceId);
+                    // Trying to set the stream again after setSinkId is set (for Chrome, according to https://bugs.chromium.org/p/chromium/issues/detail?id=971947&q=setsinkid&can=2)
+                    /*if (videoElement && $streamStore) {
+                        videoElement.srcObject = $streamStore;
+                    }*/
+                }
+            } catch (e) {
+                if (e instanceof DOMException && e.name === "AbortError") {
+                    // An error occurred while setting the sinkId. Let's fallback to default.
+                    console.warn("Error setting the audio output device. We fallback to default.");
+                    selectDefaultSpeaker();
+                    return;
+                }
+                console.info("Error setting the audio output device: ", e);
+            }
+        });
     }
 </script>
 
@@ -197,9 +203,7 @@
             class:tw-h-full={videoEnabled}
             class:tw-max-w-full={videoEnabled}
             class:tw-rounded={videoEnabled}
-            style={$embedScreenLayoutStore === LayoutMode.Presentation
-                ? `border: solid 2px ${backGroundColor}`
-                : ""}
+            style={$embedScreenLayoutStore === LayoutMode.Presentation ? `border: solid 2px ${backGroundColor}` : ""}
             autoplay
             playsinline
         />
