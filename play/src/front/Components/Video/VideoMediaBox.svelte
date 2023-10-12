@@ -5,6 +5,7 @@
     import { onDestroy, onMount } from "svelte";
     import { Unsubscriber } from "svelte/store";
     import CancelablePromise from "cancelable-promise";
+    import Debug from "debug";
     import type { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -15,7 +16,7 @@
     import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import microphoneOffImg from "../images/microphone-off-blue.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { speakerListStore, speakerSelectedStore } from "../../Stores/MediaStore";
+    import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import BanReportBox from "./BanReportBox.svelte";
 
@@ -41,6 +42,8 @@
     let destroyed = false;
     let currentDeviceId: string | undefined;
 
+    const debug = Debug("VideoMediaBox");
+
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
 
     if (peer) {
@@ -59,6 +62,7 @@
     // Also, read: https://github.com/nwjs/nw.js/issues/4340
 
     // A promise to chain calls to setSinkId and setting the srcObject
+    // setSinkId must be resolved before setting the srcObject. See Chrome bug, according to https://bugs.chromium.org/p/chromium/issues/detail?id=971947&q=setsinkid&can=2
     let sinkIdPromise = CancelablePromise.resolve();
 
     onMount(() => {
@@ -71,15 +75,7 @@
         });
 
         unsubscribeStreamStore = streamStore.subscribe((stream) => {
-            // We wait just a little bit to be sure that the subscribe changing the video element is applied BEFORE trying to set the sinkId
-            /*console.log("Speaker will switch in 5 seconds");
-            setTimeout(() => {
-                if ($speakerSelectedStore != undefined) {
-                    console.log("Switching speaker");
-                    setAudioOutput($speakerSelectedStore);
-                }
-            }, 5000);*/
-            console.log("Stream store changed. Awaiting to set the stream to the video element.");
+            debug("Stream store changed. Awaiting to set the stream to the video element.");
             sinkIdPromise = sinkIdPromise.then(() => {
                 if (destroyed) {
                     // In case this function is called in a promise that resolves after the component is destroyed,
@@ -89,11 +85,18 @@
                 }
 
                 if (videoElement) {
-                    console.log("Setting stream to the video element.");
+                    debug("Setting stream to the video element.");
                     videoElement.srcObject = stream;
+                    // After some tests, it appears that the sinkId is lost when the stream is set to the video element.
+                    // Let's try to set it again.
+                    /*if (currentDeviceId) {
+                        debug("Setting the sinkId just after setting the stream.");
+                        return videoElement.setSinkId?.(currentDeviceId);
+                    }*/
                 } else {
                     console.error("Video element is not defined. Cannot set the stream.");
                 }
+                return;
             });
         });
     });
@@ -116,48 +119,47 @@
 
         if (currentDeviceId === deviceId) {
             // No need to change the audio output if it's already the one we want.
-            console.log("setAudioOutput on already set deviceId. Ignoring call.");
+            debug("setAudioOutput on already set deviceId. Ignoring call.");
             return;
         }
         currentDeviceId = deviceId;
 
         // Check HTMLMediaElement.setSinkId() compatibility for browser => https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
-        try {
-            console.log("Awaiting to set sink id to ", deviceId);
-            sinkIdPromise = sinkIdPromise.then(() => {
-                console.log("Setting Sink Id to ", deviceId);
-                return videoElement
-                    ?.setSinkId?.(deviceId)
-                    .then(() => {
-                        console.info("Audio output device set to ", deviceId);
-                        // Trying to set the stream again after setSinkId is set (for Chrome, according to https://bugs.chromium.org/p/chromium/issues/detail?id=971947&q=setsinkid&can=2)
-                        /*if (videoElement && $streamStore) {
-                            videoElement.srcObject = $streamStore;
-                        }*/
-                    })
-                    .catch((e: unknown) => {
-                        if (e instanceof DOMException && e.name === "AbortError") {
-                            // An error occurred while setting the sinkId. Let's fallback to default.
-                            console.warn("Error setting the audio output device. We fallback to default.");
-                            if ($speakerListStore && $speakerListStore.length > 0) {
-                                speakerSelectedStore.set($speakerListStore[0].deviceId);
-                            } else {
-                                console.warn(
-                                    "Cannot fall back to default speaker. There is no speakers in the speaker list."
-                                );
-                                speakerSelectedStore.set(undefined);
-                            }
-                            return;
-                        }
-                        console.info("Error setting the audio output device: ", e);
-                    });
+        debug("Awaiting to set sink id to ", deviceId);
+        sinkIdPromise = sinkIdPromise.then(async () => {
+            debug("Setting Sink Id to ", deviceId);
+
+            const timeOutPromise = new Promise((resolve) => {
+                setTimeout(resolve, 2000, "timeout");
             });
-        } catch (err) {
-            console.info(
-                "Your browser is not compatible for updating your speaker over a video element. Try to change the default audio output in your computer settings. Error: ",
-                err
-            );
-        }
+
+            try {
+                const setSinkIdRacePromise = Promise.race([timeOutPromise, videoElement?.setSinkId?.(deviceId)]);
+
+                let result = await setSinkIdRacePromise;
+                if (result === "timeout") {
+                    // In some rare case, setSinkId can NEVER return. I've seen this in Firefox on Linux with a Jabra.
+                    // Let's fallback to default speaker if this happens.
+                    console.warn("setSinkId timed out. Calling setSinkId again on default speaker.");
+                    selectDefaultSpeaker();
+                    return;
+                } else {
+                    console.info("Audio output device set to ", deviceId);
+                    // Trying to set the stream again after setSinkId is set (for Chrome, according to https://bugs.chromium.org/p/chromium/issues/detail?id=971947&q=setsinkid&can=2)
+                    /*if (videoElement && $streamStore) {
+                        videoElement.srcObject = $streamStore;
+                    }*/
+                }
+            } catch (e) {
+                if (e instanceof DOMException && e.name === "AbortError") {
+                    // An error occurred while setting the sinkId. Let's fallback to default.
+                    console.warn("Error setting the audio output device. We fallback to default.");
+                    selectDefaultSpeaker();
+                    return;
+                }
+                console.info("Error setting the audio output device: ", e);
+            }
+        });
     }
 </script>
 
@@ -188,23 +190,19 @@
         {:else if !videoEnabled}
             <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
         {/if}
-        {#if $streamStore}
-            <!-- svelte-ignore a11y-media-has-caption -->
-            <video
-                bind:this={videoElement}
-                class:tw-h-0={!videoEnabled}
-                class:tw-w-0={!videoEnabled}
-                class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
-                class:tw-h-full={videoEnabled}
-                class:tw-max-w-full={videoEnabled}
-                class:tw-rounded={videoEnabled}
-                style={$embedScreenLayoutStore === LayoutMode.Presentation
-                    ? `border: solid 2px ${backGroundColor}`
-                    : ""}
-                autoplay
-                playsinline
-            />
-        {/if}
+        <!-- svelte-ignore a11y-media-has-caption -->
+        <video
+            bind:this={videoElement}
+            class:tw-h-0={!videoEnabled}
+            class:tw-w-0={!videoEnabled}
+            class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
+            class:tw-h-full={videoEnabled}
+            class:tw-max-w-full={videoEnabled}
+            class:tw-rounded={videoEnabled}
+            style={$embedScreenLayoutStore === LayoutMode.Presentation ? `border: solid 2px ${backGroundColor}` : ""}
+            autoplay
+            playsinline
+        />
 
         {#if videoEnabled}
             <div class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height">
