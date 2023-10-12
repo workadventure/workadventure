@@ -749,7 +749,7 @@ export const cameraListStore = derived(deviceListStore, ($deviceListStore) => {
         return undefined;
     }
 
-    return $deviceListStore.filter((device) => device.kind === "videoinput");
+    return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "videoinput"));
 });
 
 export const microphoneListStore = derived(deviceListStore, ($deviceListStore) => {
@@ -757,7 +757,7 @@ export const microphoneListStore = derived(deviceListStore, ($deviceListStore) =
         return undefined;
     }
 
-    return $deviceListStore.filter((device) => device.kind === "audioinput");
+    return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "audioinput"));
 });
 
 export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {
@@ -765,17 +765,43 @@ export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {
         return undefined;
     }
 
-    const audiooutput = $deviceListStore.filter((device) => device.kind === "audiooutput");
-    // if the previous speaker used isn`t defined in the list, apply default speaker
-    const value = audiooutput.find((device) => device.deviceId === get(speakerSelectedStore));
-    if (value == undefined && audiooutput.length > 0) {
-        speakerSelectedStore.set(audiooutput[0].deviceId);
+    return removeDuplicateDevices($deviceListStore.filter((device) => device.kind === "audiooutput"));
+});
+
+export const selectDefaultSpeaker = () => {
+    const devices = get(speakerListStore);
+    if (devices !== undefined && devices.length > 0) {
+        console.log("Selecting default speaker");
+        speakerSelectedStore.set(devices[0].deviceId);
     } else {
+        console.log("No output device found");
         speakerSelectedStore.set(undefined);
     }
-    return audiooutput;
+};
+
+// This is a singleton so no need to unsubscribe
+//eslint-disable-next-line svelte/no-ignored-unsubscribe
+speakerListStore.subscribe((devices) => {
+    if (devices === undefined) {
+        return;
+    }
+    // if the previous speaker used isn`t defined in the list, apply default speaker
+    const previousSpeakerId = get(speakerSelectedStore);
+    const previousAudioOutputDevice = devices.find((device) => device.deviceId === previousSpeakerId);
+    if (previousAudioOutputDevice === undefined) {
+        selectDefaultSpeaker();
+    }
 });
+
 export const speakerSelectedStore = writable<string | undefined>();
+
+function removeDuplicateDevices(devices: MediaDeviceInfo[]) {
+    const uniqueDevices = new Map<string, MediaDeviceInfo>();
+    devices.forEach((device) => {
+        uniqueDevices.set(device.deviceId, device);
+    });
+    return Array.from(uniqueDevices.values());
+}
 
 function isConstrainDOMStringParameters(param: ConstrainDOMString): param is ConstrainDOMStringParameters {
     return (
@@ -850,21 +876,24 @@ localStreamStore.subscribe((streamResult) => {
 // If the user did not select the new speaker, the first new speaker cannot be selected automatically.
 // It is ok to not unsubscribe to this store because it is a singleton.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
-speakerSelectedStore.subscribe((speaker) => {
+/*speakerSelectedStore.subscribe((speaker) => {
     const oldValue = localUserStore.getSpeakerDeviceId();
     const currentValue = speaker;
     const speakerList = get(speakerListStore);
     const oldDevice =
-        oldValue && speakerList ? speakerList.find((mediaDeviceInfo) => mediaDeviceInfo.deviceId == oldValue) : null;
+        oldValue && speakerList
+            ? speakerList.find((mediaDeviceInfo) => mediaDeviceInfo.deviceId == oldValue)
+            : undefined;
     if (
-        oldDevice != undefined &&
-        speakerList != undefined &&
+        oldDevice !== undefined &&
+        speakerList !== undefined &&
         currentValue !== oldDevice.deviceId &&
         speakerList.find((value) => value.deviceId == oldValue)
     ) {
+        console.warn("speakerSelectedStore.subscribe", oldValue, currentValue, oldDevice.deviceId);
         speakerSelectedStore.set(oldDevice.deviceId);
     }
-});
+});*/
 
 function createVideoBandwidthStore() {
     const { subscribe, set } = writable<number | "unlimited">(localUserStore.getVideoBandwidth());

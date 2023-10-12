@@ -4,6 +4,8 @@
     import { Color } from "@workadventure/shared-utils";
     import { onDestroy, onMount } from "svelte";
     import { Unsubscriber } from "svelte/store";
+    import CancelablePromise from "cancelable-promise";
+    import Debug from "debug";
     import type { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -14,10 +16,9 @@
     import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import microphoneOffImg from "../images/microphone-off-blue.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { speakerSelectedStore } from "../../Stores/MediaStore";
+    import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import BanReportBox from "./BanReportBox.svelte";
-    import { srcObject } from "./utils";
 
     export let clickable = false;
 
@@ -29,14 +30,21 @@
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
     let constraintStore = peer.constraintsStore;
-    let subscribeChangeOutput: Unsubscriber;
-    let subscribeStreamStore: Unsubscriber;
+    let unsubscribeChangeOutput: Unsubscriber;
+    let unsubscribeStreamStore: Unsubscriber;
 
     let embedScreen: EmbedScreen;
     let videoContainer: HTMLDivElement;
     let videoElement: HTMLVideoElement;
     let minimized = isMediaBreakpointOnly("md");
     let isMobile = isMediaBreakpointUp("md");
+
+    let destroyed = false;
+    let currentDeviceId: string | undefined;
+
+    const debug = Debug("VideoMediaBox");
+
+    $: videoEnabled = $constraintStore ? $constraintStore.video : false;
 
     if (peer) {
         embedScreen = {
@@ -50,115 +58,221 @@
         isMobile = isMediaBreakpointUp("md");
     });
 
+    // TODO: check the race condition when setting sinkId is solved.
+    // Also, read: https://github.com/nwjs/nw.js/issues/4340
+
+    // A promise to chain calls to setSinkId and setting the srcObject
+    // setSinkId must be resolved before setting the srcObject. See Chrome bug, according to https://bugs.chromium.org/p/chromium/issues/detail?id=971947&q=setsinkid&can=2
+    let sinkIdPromise = CancelablePromise.resolve();
+
     onMount(() => {
         resizeObserver.observe(videoContainer);
-        subscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
-            if (deviceId != undefined) setAudioOutput(deviceId);
+
+        unsubscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
+            if (deviceId !== undefined) {
+                setAudioOutput(deviceId);
+            }
         });
 
-        subscribeStreamStore = streamStore.subscribe(() => {
-            if ($speakerSelectedStore != undefined) setAudioOutput($speakerSelectedStore);
+        unsubscribeStreamStore = streamStore.subscribe((stream) => {
+            debug("Stream store changed. Awaiting to set the stream to the video element.");
+            sinkIdPromise = sinkIdPromise.then(() => {
+                if (destroyed) {
+                    // In case this function is called in a promise that resolves after the component is destroyed,
+                    // let's ignore the call.
+                    console.warn("streamStore modified after the component was destroyed. Call is ignored.");
+                    return;
+                }
+
+                if (videoElement) {
+                    debug("Setting stream to the video element.");
+                    videoElement.srcObject = stream;
+                    // After some tests, it appears that the sinkId is lost when the stream is set to the video element.
+                    // Let's try to set it again.
+                    /*if (currentDeviceId) {
+                        debug("Setting the sinkId just after setting the stream.");
+                        return videoElement.setSinkId?.(currentDeviceId);
+                    }*/
+                } else {
+                    console.error("Video element is not defined. Cannot set the stream.");
+                }
+                return;
+            });
         });
     });
 
     onDestroy(() => {
-        if (subscribeChangeOutput) subscribeChangeOutput();
-        if (subscribeStreamStore) subscribeStreamStore();
+        if (unsubscribeChangeOutput) unsubscribeChangeOutput();
+        if (unsubscribeStreamStore) unsubscribeStreamStore();
+        destroyed = true;
+        sinkIdPromise.cancel();
     });
 
     //sets the ID of the audio device to use for output
     function setAudioOutput(deviceId: string) {
-        // Check HTMLMediaElement.setSinkId() compatibility for browser => https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
-        try {
-            // @ts-ignore
-            if (videoElement != undefined && videoElement.setSinkId != undefined) {
-                // @ts-ignore
-                videoElement.setSinkId(deviceId).catch((e) => {
-                    console.info("Error setting the audio output device: ", e);
-                });
-            }
-        } catch (err) {
-            console.info(
-                "Your browser is not compatible for updating your speaker over a video element. Try to change the default audio output in your computer settings. Error: ",
-                err
-            );
+        if (destroyed) {
+            // In case this function is called in a promise that resolves after the component is destroyed,
+            // let's ignore the call.
+            console.warn("setAudioOutput called after the component was destroyed. Call is ignored.");
+            return;
         }
+
+        if (currentDeviceId === deviceId) {
+            // No need to change the audio output if it's already the one we want.
+            debug("setAudioOutput on already set deviceId. Ignoring call.");
+            return;
+        }
+        currentDeviceId = deviceId;
+
+        // Check HTMLMediaElement.setSinkId() compatibility for browser => https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
+        debug("Awaiting to set sink id to ", deviceId);
+        sinkIdPromise = sinkIdPromise.then(async () => {
+            debug("Setting Sink Id to ", deviceId);
+
+            const timeOutPromise = new Promise((resolve) => {
+                setTimeout(resolve, 2000, "timeout");
+            });
+
+            try {
+                const setSinkIdRacePromise = Promise.race([timeOutPromise, videoElement?.setSinkId?.(deviceId)]);
+
+                let result = await setSinkIdRacePromise;
+                if (result === "timeout") {
+                    // In some rare case, setSinkId can NEVER return. I've seen this in Firefox on Linux with a Jabra.
+                    // Let's fallback to default speaker if this happens.
+                    console.warn("setSinkId timed out. Calling setSinkId again on default speaker.");
+                    selectDefaultSpeaker();
+                    return;
+                } else {
+                    console.info("Audio output device set to ", deviceId);
+                    // Trying to set the stream again after setSinkId is set (for Chrome, according to https://bugs.chromium.org/p/chromium/issues/detail?id=971947&q=setsinkid&can=2)
+                    /*if (videoElement && $streamStore) {
+                        videoElement.srcObject = $streamStore;
+                    }*/
+                }
+            } catch (e) {
+                if (e instanceof DOMException && e.name === "AbortError") {
+                    // An error occurred while setting the sinkId. Let's fallback to default.
+                    console.warn("Error setting the audio output device. We fallback to default.");
+                    selectDefaultSpeaker();
+                    return;
+                }
+                console.info("Error setting the audio output device: ", e);
+            }
+        });
     }
 </script>
 
 <div
     class="video-container"
+    class:video-off={!videoEnabled}
     bind:this={videoContainer}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     <div
-        class="tw-flex tw-w-full tw-flex-col tw-h-full"
+        style={videoEnabled
+            ? ""
+            : `border: solid 2px ${backGroundColor}; color: ${textColor}; background-color: ${backGroundColor}; color: ${textColor}`}
+        class="tw-flex tw-w-full "
+        class:tw-flex-col={videoEnabled}
+        class:tw-h-full={videoEnabled}
+        class:tw-items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
+        class:tw-px-3={!videoEnabled}
+        class:tw-rounded={!videoEnabled}
+        class:tw-flex-row={!videoEnabled}
+        class:tw-relative={!videoEnabled}
         class:tw-justify-center={$statusStore === "connecting" || $statusStore === "error"}
-        class:tw-items-center={$statusStore === "connecting" || $statusStore === "error"}
     >
         {#if $statusStore === "connecting"}
             <div class="connecting-spinner" />
         {:else if $statusStore === "error"}
             <div class="rtc-error" />
+        {:else if !videoEnabled}
+            <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
         {/if}
         <!-- svelte-ignore a11y-media-has-caption -->
-        {#if $streamStore}
-            <video
-                bind:this={videoElement}
-                class:no-video={!$constraintStore || $constraintStore.video === false}
-                class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
-                class="tw-h-full tw-max-w-full tw-rounded"
-                style={$embedScreenLayoutStore === LayoutMode.Presentation
-                    ? `border: solid 2px ${backGroundColor}`
-                    : ""}
-                use:srcObject={$streamStore}
-                autoplay
-                playsinline
-            />
-        {/if}
+        <video
+            bind:this={videoElement}
+            class:tw-h-0={!videoEnabled}
+            class:tw-w-0={!videoEnabled}
+            class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
+            class:tw-h-full={videoEnabled}
+            class:tw-max-w-full={videoEnabled}
+            class:tw-rounded={videoEnabled}
+            style={$embedScreenLayoutStore === LayoutMode.Presentation ? `border: solid 2px ${backGroundColor}` : ""}
+            autoplay
+            playsinline
+        />
 
-        <div class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height">
-            <i class="tw-flex">
-                <span
-                    style="background-color: {backGroundColor}; color: {textColor};"
-                    class="nametag-text nametag-shape tw-pr-3 tw-pl-5 tw-h-4 tw-max-h-8">{name}</span
-                >
-            </i>
-        </div>
-        <div class="woka-webcam-container container-end video-on-responsive-height tw-pb-1 tw-left-0">
-            <div
-                class="tw-flex {($constraintStore && $constraintStore.video !== false) || minimized ? '' : 'no-video'}"
-            >
-                <Woka userId={peer.userId} placeholderSrc={""} customHeight="20px" customWidth="20px" />
+        {#if videoEnabled}
+            <div class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height">
+                <i class="tw-flex">
+                    <span
+                        style="background-color: {backGroundColor}; color: {textColor};"
+                        class="nametag-text nametag-shape tw-pr-3 tw-pl-5 tw-h-4 tw-max-h-8">{name}</span
+                    >
+                </i>
             </div>
-        </div>
-        {#if $constraintStore && $constraintStore.audio !== false}
+            <div class="woka-webcam-container container-end video-on-responsive-height tw-pb-1 tw-left-0">
+                <div
+                    class="tw-flex {($constraintStore && $constraintStore.video !== false) || minimized
+                        ? ''
+                        : 'no-video'}"
+                >
+                    <Woka userId={peer.userId} placeholderSrc={""} customHeight="20px" customWidth="20px" />
+                </div>
+            </div>
+            {#if $constraintStore && $constraintStore.audio !== false}
+                <div
+                    class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2"
+                >
+                    <SoundMeterWidget volume={$volumeStore} classcss="tw-absolute" barColor="blue" />
+                </div>
+            {:else}
+                <div
+                    class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2"
+                >
+                    <img draggable="false" src={microphoneOffImg} class="tw-flex tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
+                </div>
+            {/if}
             <div
-                class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2"
+                class="report-ban-container tw-flex tw-z-[600] media-box-camera-on-size media-box-camera-on-position
+            tw-translate-x-3 tw-transition-all tw-opacity-0"
             >
-                <SoundMeterWidget volume={$volumeStore} classcss="tw-absolute" barColor="blue" />
+                <BanReportBox {peer} />
             </div>
         {:else}
-            <div
-                class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2"
+            <span
+                style={$embedScreenLayoutStore === LayoutMode.VideoChat
+                    ? `background-color: ${backGroundColor}; color: ${textColor}`
+                    : ""}
+                class="tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10"
+                >{name}</span
             >
-                <img draggable="false" src={microphoneOffImg} class="tw-flex tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
+            {#if $constraintStore && $constraintStore.audio !== false}
+                <SoundMeterWidget
+                    volume={$volumeStore}
+                    classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                    barColor={textColor}
+                />
+            {:else}
+                <img
+                    draggable="false"
+                    src={microphoneOffImg}
+                    class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                    alt="Mute"
+                    class:tw-brightness-0={textColor === "black"}
+                    class:tw-brightness-100={textColor === "white"}
+                />
+            {/if}
+            <div class="tw-w-full tw-flex report-ban-container-cam-off tw-opacity-0 tw-h-10">
+                <BanReportBox {peer} />
             </div>
         {/if}
-        <div
-            class="report-ban-container tw-flex tw-z-[600] media-box-camera-on-size media-box-camera-on-position
-            tw-translate-x-3 tw-transition-all tw-opacity-0"
-        >
-            <BanReportBox {peer} />
-        </div>
     </div>
 </div>
 
 <style lang="scss">
-    video.no-video {
-        visibility: collapse;
-    }
-
     video {
         object-fit: cover;
         &.object-contain {
