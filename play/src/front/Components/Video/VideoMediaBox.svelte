@@ -59,6 +59,7 @@
     // Also, read: https://github.com/nwjs/nw.js/issues/4340
 
     // A promise to chain calls to setSinkId and setting the srcObject
+    // setSinkId must be resolved before setting the srcObject. See Chrome bug, according to https://bugs.chromium.org/p/chromium/issues/detail?id=971947&q=setsinkid&can=2
     let sinkIdPromise = CancelablePromise.resolve();
 
     onMount(() => {
@@ -71,14 +72,6 @@
         });
 
         unsubscribeStreamStore = streamStore.subscribe((stream) => {
-            // We wait just a little bit to be sure that the subscribe changing the video element is applied BEFORE trying to set the sinkId
-            /*console.log("Speaker will switch in 5 seconds");
-            setTimeout(() => {
-                if ($speakerSelectedStore != undefined) {
-                    console.log("Switching speaker");
-                    setAudioOutput($speakerSelectedStore);
-                }
-            }, 5000);*/
             console.log("Stream store changed. Awaiting to set the stream to the video element.");
             sinkIdPromise = sinkIdPromise.then(() => {
                 if (destroyed) {
@@ -91,9 +84,16 @@
                 if (videoElement) {
                     console.log("Setting stream to the video element.");
                     videoElement.srcObject = stream;
+                    // After some tests, it appears that the sinkId is lost when the stream is set to the video element.
+                    // Let's try to set it again.
+                    /*if (currentDeviceId) {
+                        console.log("Setting the sinkId just after setting the stream.");
+                        return videoElement.setSinkId?.(currentDeviceId);
+                    }*/
                 } else {
                     console.error("Video element is not defined. Cannot set the stream.");
                 }
+                return;
             });
         });
     });
@@ -188,23 +188,21 @@
         {:else if !videoEnabled}
             <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
         {/if}
-        {#if $streamStore}
-            <!-- svelte-ignore a11y-media-has-caption -->
-            <video
-                bind:this={videoElement}
-                class:tw-h-0={!videoEnabled}
-                class:tw-w-0={!videoEnabled}
-                class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
-                class:tw-h-full={videoEnabled}
-                class:tw-max-w-full={videoEnabled}
-                class:tw-rounded={videoEnabled}
-                style={$embedScreenLayoutStore === LayoutMode.Presentation
-                    ? `border: solid 2px ${backGroundColor}`
-                    : ""}
-                autoplay
-                playsinline
-            />
-        {/if}
+        <!-- svelte-ignore a11y-media-has-caption -->
+        <video
+            bind:this={videoElement}
+            class:tw-h-0={!videoEnabled}
+            class:tw-w-0={!videoEnabled}
+            class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
+            class:tw-h-full={videoEnabled}
+            class:tw-max-w-full={videoEnabled}
+            class:tw-rounded={videoEnabled}
+            style={$embedScreenLayoutStore === LayoutMode.Presentation
+                ? `border: solid 2px ${backGroundColor}`
+                : ""}
+            autoplay
+            playsinline
+        />
 
         {#if videoEnabled}
             <div class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height">
