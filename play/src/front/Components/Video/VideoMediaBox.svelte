@@ -5,6 +5,7 @@
     import { onDestroy, onMount } from "svelte";
     import { Unsubscriber } from "svelte/store";
     import CancelablePromise from "cancelable-promise";
+    import Debug from "debug";
     import type { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -15,10 +16,9 @@
     import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import microphoneOffImg from "../images/microphone-off-blue.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import {selectDefaultSpeaker, speakerListStore, speakerSelectedStore} from "../../Stores/MediaStore";
+    import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import BanReportBox from "./BanReportBox.svelte";
-    import Debug from "debug";
 
     export let clickable = false;
 
@@ -129,19 +129,15 @@
         sinkIdPromise = sinkIdPromise.then(async () => {
             debug("Setting Sink Id to ", deviceId);
 
-            const timeOutPromise = new Promise((resolve, reject) => {
-                setTimeout(resolve, 2000, 'timeout');
+            const timeOutPromise = new Promise((resolve) => {
+                setTimeout(resolve, 2000, "timeout");
             });
 
             try {
-                const setSinkIdRacePromise = Promise.race([
-                    timeOutPromise,
-                    videoElement
-                        ?.setSinkId?.(deviceId)
-                ]);
+                const setSinkIdRacePromise = Promise.race([timeOutPromise, videoElement?.setSinkId?.(deviceId)]);
 
                 let result = await setSinkIdRacePromise;
-                if (result === 'timeout') {
+                if (result === "timeout") {
                     // In some rare case, setSinkId can NEVER return. I've seen this in Firefox on Linux with a Jabra.
                     // Let's fallback to default speaker if this happens.
                     console.warn("setSinkId timed out. Calling setSinkId again on default speaker.");

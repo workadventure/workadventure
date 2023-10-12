@@ -777,8 +777,10 @@ export const selectDefaultSpeaker = () => {
         console.log("No output device found");
         speakerSelectedStore.set(undefined);
     }
-}
+};
 
+// This is a singleton so no need to unsubscribe
+//eslint-disable-next-line svelte/no-ignored-unsubscribe
 speakerListStore.subscribe((devices) => {
     if (devices === undefined) {
         return;
