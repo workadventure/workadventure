@@ -3,14 +3,13 @@
 @import '@workadventure/tailwind/style/index.scss';
 
 ::-webkit-scrollbar {
-    width: 4px;
+    width: 1px;
 }
 ::-webkit-scrollbar-track {
-    background: none;
+    @apply bg-none;
 }
 ::-webkit-scrollbar-thumb {
-    @apply bg-lighter-purple;
-    border-radius: 10px;
+    @apply bg-white;
 }
 ::-webkit-scrollbar-thumb:active {
     @apply bg-light-blue;

@@ -6,8 +6,8 @@ import Texture = Phaser.Textures.Texture;
 
 const TextName = "Loading...";
 
-const loadingBarHeight = 16;
-const padding = 5;
+const loadingBarHeight = 10;
+const padding = 2;
 
 export class Loader {
     private progressContainer!: Phaser.GameObjects.Graphics;
@@ -45,7 +45,7 @@ export class Loader {
             .then((texture) => {
                 this.logo = this.scene.add.image(
                     this.scene.game.renderer.width / 2,
-                    this.scene.game.renderer.height / 2 - 150,
+                    this.scene.game.renderer.height / 2 - 100,
                     texture
                 );
 
@@ -73,7 +73,7 @@ export class Loader {
         }
 
         this.progressContainer = this.scene.add.graphics();
-        this.progressContainer.fillStyle(0x444444, 0.8);
+        this.progressContainer.fillStyle(0x1B2A41, 1);
         this.progress = this.scene.add.graphics();
 
         this.resize();
@@ -119,15 +119,15 @@ export class Loader {
     }
 
     public resize(): void {
-        const loadingBarWidth: number = Math.floor(this.scene.game.renderer.width / 3);
+        const loadingBarWidth: number = this.scene.game.renderer.width;
 
         this.progressContainer.clear();
-        this.progressContainer.fillStyle(0x444444, 0.8);
+        this.progressContainer.fillStyle(0x1B2A41, 0.1);
         this.progressContainer.fillRect(
             (this.scene.game.renderer.width - loadingBarWidth) / 2 - padding,
             this.scene.game.renderer.height / 2 + 50 - padding,
-            loadingBarWidth + padding * 2,
-            loadingBarHeight + padding * 2
+            loadingBarWidth,
+            loadingBarHeight + padding
         );
 
         this.drawProgress();
@@ -149,10 +149,10 @@ export class Loader {
     }
 
     private drawProgress() {
-        const loadingBarWidth: number = Math.floor(this.scene.game.renderer.width / 3);
+        const loadingBarWidth: number =this.scene.game.renderer.width;
 
         this.progress.clear();
-        this.progress.fillStyle(0xbbbbbb, 1);
+        this.progress.fillStyle(0x4156F6, 1);
         this.progress.fillRect(
             (this.scene.game.renderer.width - loadingBarWidth) / 2,
             this.scene.game.renderer.height / 2 + 50,

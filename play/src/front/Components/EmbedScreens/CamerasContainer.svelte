@@ -22,12 +22,4 @@
 </aside>
 
 <style lang="scss">
-    .cameras-container {
-        &:first-child {
-            margin-top: 2%;
-        }
-        &.full {
-            flex: 0 0 100%;
-        }
-    }
 </style>

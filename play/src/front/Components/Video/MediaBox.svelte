@@ -44,7 +44,7 @@
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore && !$constraintStore.video}
         <div
-            class="media-container {isHightlighted
+            class="media-container  {isHightlighted
                 ? 'hightlighted max-w-sm mx-auto'
                 : 'flex m-auto media-box-camera-off-size h-12'}
      media-box-shape-color pointer-events-auto p-0 screen-blocker
@@ -60,7 +60,7 @@
         </div>
     {:else if ($constraintStore && $constraintStore.video) || $statusStore === "error" || $statusStore === "connecting"}
         <div
-            class="media-container {isHightlighted ? 'hightlighted mr-6' : 'flex media-box-camera-on-size'}
+            class="media-container {isHightlighted ? 'hightlighted' : 'flex media-box-camera-on-size'}
      media-box-shape-color pointer-events-auto screen-blocker
 "
             class:clickable={isClickable}
@@ -124,14 +124,6 @@
     //Classes factorizing tailwind's ones are defined in video-ui.scss
 
     .media-container {
-        transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, max-height 0.2s,
-            max-width 0.2s;
-
-        &:hover {
-            margin-top: 4%;
-            margin-bottom: 2%;
-        }
-
         &.clickable {
             cursor: pointer;
         }

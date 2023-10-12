@@ -440,14 +440,18 @@
     transition:fly={{ x: 500, duration: 400 }}
     on:click={() => (applicationMenuIsOpenned = false)}
 >
-    <div class="wa-thread-head fixed w-full border-x-0 border-b border-t-0 border-solid border-white/30 backdrop-blur">
-        <div class="title">
-            <div class="py-1 w-14 self-stretch flex justify-center align-middle">
-                <button class="exit text-lighter-purple m-0" on:click={backToThreadList}>
-                    <ArrowLeftIcon />
+
+    <div class="wa-thread-head fixed w-full border-x-0 border-b border-t-0 border-solid border-white/30 backdrop-blur z-20 bg-contrast/80">
+        <div class="title relative py-2">
+            <div class="absolute left-3 top-3">
+                <button class="exit p-2 hover:bg-white/20 rounded cursor-pointer" on:click={backToThreadList}>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="32" height="32" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M15 6l-6 6l6 6" />
+                    </svg>
                 </button>
             </div>
-            <div class="text-center pt-2 pb-3">
+            <div class="text-center p-2 pt-3">
                 <div class="flex justify-center">
                     <b>{$LL.timeLine.title()}</b>
                     {#if $chatPeerConnectionInProgress}
@@ -457,11 +461,11 @@
                         </div>
                     {/if}
                 </div>
-                <div class="flex flex-wrap gap-x-1 items-center text-xs text-lighter-purple">
+                <div class="flex justify-center items-center text-xs text-white/50 grow">
                     {$LL.timeLine.description()}
                 </div>
             </div>
-            <div id="settings" class="py-1 w-14 self-stretch flex justify-center align-middle">
+            <div id="settings" class="w-14 self-stretch flex justify-center align-middle">
                 <!--
             <button class="text-lighter-purple m-0">
                 {#if $settingsViewStore}
@@ -473,34 +477,36 @@
             -->
             </div>
         </div>
-        <div class="flex flex-col flex-auto w-full">
-            <div class="wa-message-bg border border-transparent border-b-light-purple border-solid px-5 pb-0.5">
-                <button class="wa-action" type="button" on:click|stopPropagation={reInitialize}
-                    ><RefreshCwIcon size="13" class="mr-2" /> {$LL.reinit()}
+        <div class="absolute right-4 top-3">
+            <div class="wa-message-bg">
+                <button class="p-2 hover:bg-white/20 cursor-pointer rounded">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-dots" width="32" height="32" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                        <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                        <path d="M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                    </svg>
                 </button>
+                <!--<button class="wa-action btn btn-sm btn-light btn-border" type="button" on:click|stopPropagation={reInitialize}>
+                    <RefreshCwIcon size="13" class="mr-2" />
+                    {$LL.reinit()}
+                </button>-->
             </div>
         </div>
     </div>
 
     <!-- MESSAGE LIST-->
-    <div id="timeLine-messageList" class="flex flex-col flex-auto px-5 py-24 justify-end h-auto min-h-screen">
+    <div id="timeLine-messageList" class="flex flex-col flex-auto px-5 pt-32 pb-16 justify-end h-auto min-h-screen relative z-10">
         {#each $chatMessagesStore as message, i (message.id)}
             {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
                 <div
-                    id={`message_${message.id}`}
-                    class={`${
-                        needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)
-                            ? "mt-0.5"
-                            : "mt-2"
-                    }`}
+                    id="message_{message.id}"
+                    class="{needHideHeader(message.author?.name ?? message.authorName ?? '', message.date, i) ? 'mt-0.5' : 'mt-2'}"
                 >
                     <div class={`flex ${message.type === ChatMessageTypes.me ? "justify-end text-right" : "justify-start"}`}>
+                        {#if !needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)}
                         <div
-                            class={`${
-                                message.type === ChatMessageTypes.me ? "opacity-0" : "mt-4"
-                            } relative wa-avatar-mini mr-2`}
-                            style={`background-color: ${message.author?.color ?? "#56eaff"}`}
-                        >
+                            class="aspect-ratio w-12 h-12 p-1 overflow-hidden rounded-lg { message.type === ChatMessageTypes.me ? 'opacity-0' : 'mt-4' } relative wa-avatar-mini mr-2" style={`background-color: ${message.author?.color ?? "#56eaff"}`}>
                             <div class="wa-container">
                                 <img
                                     class="w-full"
@@ -511,10 +517,14 @@
                                 />
                             </div>
                         </div>
+                        {:else}
+                            <div class="aspect-ratio w-12 h-12 mr-2"></div>
+                        {/if}
                         <div class="w-3/4">
+                            <div class="inline-block">
                             {#if !needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)}
-                                <div class="flex text-xxs px-8 py-1>
-                                    <span class="bold text-white/50 { message.type === ChatMessageTypes.me ? 'pl-4' : 'pr-4'}">
+                                <div class="flex text-xxs px-4 py-1">
+                                    <span class="bold text-white/50 text-left grow">
                                     {#if message.type === ChatMessageTypes.me}
                                         {$LL.me()}
                                     {:else if message.author}
@@ -537,16 +547,16 @@
                                         {message.authorName}
                                     {/if}
                                     </span>
-                                    <span class="text-white/50 { message.type === ChatMessageTypes.me ? 'pl-4' : 'pr-4'}" >
-                                    {message.date.toLocaleTimeString($locale, {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                    })}
+                                    <span class="text-white/50 text-right" >
+                                        {message.date.toLocaleTimeString($locale, {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        })}
                                     </span>
                                 </div>
                             {/if}
                             {#if message.text}
-                                <div class="wa-message-body rounded-lg px-4 py-2 inline-block leading-6 {message.type === ChatMessageTypes.me ? 'bg-secondary' : 'bg-contrast'}">
+                                <div class="wa-message-body rounded-lg px-4 py-2 inline-block leading-6 min-w-[7rem] max-h-80 overflow-hidden relative before:absolute before:content-[''] before:z-10 before:top-64 before:left-0 before:h-16 before:w-full before:bg-gradient-to-t after:content-['Read_more...'] after:absolute after:left-0 after:top-[18.5rem] after:w-full after:h-10 after:cursor-pointer after:text-center after:underline after:z-20 after:text-xs after:mt-6px after:border after:border-l-0 after:border-b-0 after:border-t after:border-solid after:border-white/20 {message.type === ChatMessageTypes.me ? 'bg-secondary from-secondary text-left before:from-secondary before:via-secondary' : 'bg-contrast before:from-contrast before:via-contrast'}">
                                     {#each message.text as text (text)}
                                         <div class="text-ellipsis overflow-y-auto break-words whitespace-pre-line">
                                             {#await HtmlUtils.urlify(text)}
@@ -558,6 +568,7 @@
                                     {/each}
                                 </div>
                             {/if}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -568,8 +579,8 @@
                     {#each message.targets as target (target.jid)}
                         <div class="event text-center mt-2" style="white-space: nowrap;">
                             <span
-                                class="w-fit tag bg-dark mx-2 px-3 py-1 border border-solid rounded-full text-xs border-lighter-purple"
-                                ><b style={target.color ? `color: ${target.color};` : ""}
+                                class="w-fit tag mx-2 px-3 py-1 border border-solid border-white/20 rounded-full text-xs"
+                                ><b
                                     >{target.name.match(/\[\d*]/)
                                         ? target.name.substring(0, target.name.search(/\[\d*]/))
                                         : target.name}
@@ -583,7 +594,7 @@
                                         </span>
                                     {/if}</b
                                 >{$LL.timeLine.incoming()}
-                                <span class="text-xss text-lighter-purple">
+                                <span class="text-xss opacity-50">
                                     - {message.date.toLocaleTimeString($locale, {
                                         hour: "2-digit",
                                         minute: "2-digit",
@@ -597,8 +608,8 @@
                     {#each message.targets as target (target.jid)}
                         <div class="event text-center mt-2" style="white-space: nowrap;">
                             <span
-                                class="w-fit tag bg-dark mx-2 px-3 py-1 border border-solid rounded-full text-xs border-lighter-purple"
-                                ><b style={target.color ? `color: ${target.color};` : ""}
+                                class="w-fit tag mx-2 px-3 py-1 border border-solid border-white/20 rounded-full text-xs"
+                                ><b
                                     >{target.name.match(/\[\d*]/)
                                         ? target.name.substring(0, target.name.search(/\[\d*]/))
                                         : target.name}
@@ -612,7 +623,7 @@
                                         </span>
                                     {/if}</b
                                 >{$LL.timeLine.outcoming()}
-                                <span class="text-xss text-lighter-purple">
+                                <span class="text-xss opacity-50">
                                     - {message.date.toLocaleTimeString($locale, {
                                         hour: "2-digit",
                                         minute: "2-digit",
@@ -631,9 +642,8 @@
             {/each}
         {/if}
     </div>
-
     <!--MESSAGE FORM-->
-    <div class="wa-message-form fixed bottom-0 w-full">
+    <div class="wa-message-form fixed bottom-0 w-full z-20">
         <div class="emote-menu-container">
             <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
         </div>

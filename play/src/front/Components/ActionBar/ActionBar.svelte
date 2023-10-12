@@ -661,17 +661,17 @@
                     <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2 mr-4" on:click={() =>
 				adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false } tabindex="0">
                         <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded">
-                            <div class="px-2 m-auto">
+                            <div class="px-2 ">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M10 19H3C2.46957 19 1.96086 18.7893 1.58579 18.4142C1.21071 18.0391 1 17.5304 1 17V3C1 2.46957 1.21071 1.96086 1.58579 1.58579C1.96086 1.21071 2.46957 1 3 1H17C17.5304 1 18.0391 1.21071 18.4142 1.58579C18.7893 1.96086 19 2.46957 19 3V10M1 8H19M8 1V19M17.001 19C16.4706 19 15.9619 18.7893 15.5868 18.4142C15.2117 18.0391 15.001 17.5304 15.001 17C15.001 16.4696 15.2117 15.9609 15.5868 15.5858C15.9619 15.2107 16.4706 15 17.001 15M17.001 19C17.5314 19 18.0401 18.7893 18.4152 18.4142C18.7903 18.0391 19.001 17.5304 19.001 17C19.001 16.4696 18.7903 15.9609 18.4152 15.5858C18.0401 15.2107 17.5314 15 17.001 15M17.001 19V20.5M17.001 15V13.5M20.032 15.25L18.733 16M15.27 18L13.97 18.75M13.97 15.25L15.27 16M18.733 18L20.033 18.75" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                     </svg>
                                 </svg>
                             </div>
-                            <div class="m-auto pt-1">
+                            <div class="">
                                 <div class="font-bold text-white leading-3">Admin menu</div>
                             </div>
-                            <div class="m-auto pl-4 pr-6">
+                            <div class="pl-4 pr-6">
                                 <svg class="transition-all" class:rotate-180={adminMenuIsDropped} width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M1 1L7 7L13 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
@@ -682,7 +682,7 @@
                         <ul class="p-0 m-0">
                             {#if $mapEditorActivated}
                                 <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => toggleMapEditorMode()}>
-                                    <div class="group-hover:mr-2 transition-all w-8 mr-1 text-center">
+                                    <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                         </svg>
@@ -692,7 +692,7 @@
                             {/if}
                             {#if $userHasAccessToBackOfficeStore}
                                 <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openBo()}>
-                                    <div class="group-hover:mr-2 transition-all w-8 mr-1 text-center">
+                                    <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                         <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <path d="M3 1V5M3 9V17M9 1V11M9 15V17M15 1V2M15 6V17M1 5H5V9H1V5ZM7 11H11V15H7V11ZM13 2H17V6H13V2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -703,20 +703,25 @@
                                 </li>
                             {/if}
                             <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
-                                <div class="group-hover:mr-2 transition-all w-8 mr-1 text-center">
-                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
-                                         xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z"
-                                              stroke="white" stroke-width="2" stroke-linecap="round"
-                                              stroke-linejoin="round"/>
+                                <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-message-share" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <path d="M8 9h8" />
+                                        <path d="M8 13h6" />
+                                        <path d="M13 18l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v6" />
+                                        <path d="M16 22l5 -5" />
+                                        <path d="M21 21.5v-4.5h-4.5" />
                                     </svg>
                                 </div>
                                 <div>Envoyer message global</div>
                             </li>
                             <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
-                                <div class="group-hover:mr-2 transition-all w-8 mr-1 text-center">
-                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-speakerphone" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <path d="M18 8a3 3 0 0 1 0 6" />
+                                        <path d="M10 8v11a1 1 0 0 1 -1 1h-1a1 1 0 0 1 -1 -1v-5" />
+                                        <path d="M12 8h0l4.524 -3.77a.9 .9 0 0 1 1.476 .692v12.156a.9 .9 0 0 1 -1.476 .692l-4.524 -3.77h-8a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h8" />
                                     </svg>
                                 </div>
                                 <div>Utiliser le mégaphone</div>
@@ -745,7 +750,7 @@
                 <div class={`absolute mt-2 top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-full text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-4 before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all ${profileMenuIsDropped ? "" : "-translate-y-4 opacity-0 "}`}>
                     <ul class="p-0 m-0 list-none">
                         <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditNameScene()}>
-                            <div class="group-hover:mr-2 transition-all w-8 mr-1 text-center">
+                            <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M5.224 22.132C5.55401 21.0336 6.22929 20.0709 7.14966 19.3866C8.07003 18.7024 9.18646 18.333 10.3333 18.3333H15.6667C16.815 18.3329 17.9328 18.7032 18.8538 19.389C19.7749 20.0749 20.45 21.0397 20.7787 22.14M1 13C1 14.5759 1.31039 16.1363 1.91345 17.5922C2.5165 19.0481 3.40042 20.371 4.51472 21.4853C5.62902 22.5996 6.95189 23.4835 8.4078 24.0866C9.86371 24.6896 11.4241 25 13 25C14.5759 25 16.1363 24.6896 17.5922 24.0866C19.0481 23.4835 20.371 22.5996 21.4853 21.4853C22.5996 20.371 23.4835 19.0481 24.0866 17.5922C24.6896 16.1363 25 14.5759 25 13C25 11.4241 24.6896 9.86371 24.0866 8.4078C23.4835 6.95189 22.5996 5.62902 21.4853 4.51472C20.371 3.40042 19.0481 2.5165 17.5922 1.91345C16.1363 1.31039 14.5759 1 13 1C11.4241 1 9.86371 1.31039 8.4078 1.91345C6.95189 2.5165 5.62902 3.40042 4.51472 4.51472C3.40042 5.62902 2.5165 6.95189 1.91345 8.4078C1.31039 9.86371 1 11.4241 1 13ZM9 10.3333C9 11.3942 9.42143 12.4116 10.1716 13.1618C10.9217 13.9119 11.9391 14.3333 13 14.3333C14.0609 14.3333 15.0783 13.9119 15.8284 13.1618C16.5786 12.4116 17 11.3942 17 10.3333C17 9.27247 16.5786 8.25505 15.8284 7.50491C15.0783 6.75476 14.0609 6.33333 13 6.33333C11.9391 6.33333 10.9217 6.75476 10.1716 7.50491C9.42143 8.25505 9 9.27247 9 10.3333Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
@@ -753,19 +758,19 @@
                             <div>Edit profil</div>
                         </li>
                         <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditSkinScene}>
-                            <div class="group-hover:mr-2 transition-all w-8 mr-1 text-center">
+                            <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <Woka userId={-1} placeholderSrc="" customWidth="26px" customHeight="26px" />
                             </div>
                             <div>Change skin</div>
                         </li>
-                        <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all" on:click={() => openEditCompanionScene}>
-                            <div class="group-hover:mr-2 transition-all w-8 mr-1 text-center">
+                        <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditCompanionScene}>
+                            <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <Companion userId={-1} placeholderSrc="" width="26px" height="26px" />
                             </div>
                             <div>Add a companion</div>
                         </li>
                         <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
-                            <div class="group-hover:mr-2 transition-all w-8 mr-1 text-center">
+                            <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M9.46 18.846C6.44929 17.9127 3.92666 15.8324 2.43721 13.0545C0.947767 10.2765 0.611114 7.02411 1.5 4C4.61553 4.14257 7.66417 3.06658 10 1C12.3358 3.06658 15.3845 4.14257 18.5 4C19.1787 6.30911 19.1473 8.76894 18.41 11.06M13 17L15 19L19 15" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
@@ -774,7 +779,7 @@
                         </li>
                         <li class="h-[1px] w-full bg-white/20 my-2"></li>
                         <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={openEnableCameraScene}>
-                            <div class="group-hover:mr-2 transition-all w-8 mr-1 text-center">
+                            <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <svg width="18" height="24" viewBox="0 0 18 24" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M4.33334 16.6667L1.89384 20.7337C1.78779 20.9106 1.73057 21.1126 1.72801 21.3189C1.72546 21.5252 1.77766 21.7285 1.8793 21.908C1.98093 22.0876 2.12836 22.237 2.30656 22.341C2.48476 22.445 2.68735 22.4998 2.89367 22.5H15.1063C15.3127 22.4998 15.5152 22.445 15.6934 22.341C15.8716 22.237 16.0191 22.0876 16.1207 21.908C16.2223 21.7285 16.2745 21.5252 16.272 21.3189C16.2694 21.1126 16.2122 20.9106 16.1062 20.7337L13.6667 16.6667M0.833336 9.66667C0.833336 10.7391 1.04457 11.8011 1.45499 12.7919C1.8654 13.7827 2.46695 14.683 3.2253 15.4414C3.98364 16.1997 4.88393 16.8013 5.87475 17.2117C6.86558 17.6221 7.92754 17.8333 9 17.8333C10.0725 17.8333 11.1344 17.6221 12.1253 17.2117C13.1161 16.8013 14.0164 16.1997 14.7747 15.4414C15.5331 14.683 16.1346 13.7827 16.545 12.7919C16.9554 11.8011 17.1667 10.7391 17.1667 9.66667C17.1667 8.5942 16.9554 7.53224 16.545 6.54142C16.1346 5.55059 15.5331 4.65031 14.7747 3.89196C14.0164 3.13362 13.1161 2.53206 12.1253 2.12165C11.1344 1.71124 10.0725 1.5 9 1.5C7.92754 1.5 6.86558 1.71124 5.87475 2.12165C4.88393 2.53206 3.98364 3.13362 3.2253 3.89196C2.46695 4.65031 1.8654 5.55059 1.45499 6.54142C1.04457 7.53224 0.833336 8.5942 0.833336 9.66667ZM5.5 9.66667C5.5 10.5949 5.86875 11.4852 6.52513 12.1415C7.18151 12.7979 8.07175 13.1667 9 13.1667C9.92826 13.1667 10.8185 12.7979 11.4749 12.1415C12.1313 11.4852 12.5 10.5949 12.5 9.66667C12.5 8.73841 12.1313 7.84817 11.4749 7.19179C10.8185 6.53542 9.92826 6.16667 9 6.16667C8.07175 6.16667 7.18151 6.53542 6.52513 7.19179C5.86875 7.84817 5.5 8.73841 5.5 9.66667Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
@@ -782,7 +787,7 @@
                             <div>Change cam / mic</div>
                         </li>
                         <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => showMenuItem(SubMenusInterface.settings)}>
-                            <div class="group-hover:mr-2 transition-all w-8 mr-1 text-center">
+                            <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M9.90625 2.39625C10.4388 0.20125 13.5612 0.20125 14.0938 2.39625C14.1736 2.726 14.3303 3.03222 14.5509 3.29C14.7715 3.54778 15.0499 3.74982 15.3633 3.87968C15.6768 4.00955 16.0165 4.06356 16.3547 4.03734C16.693 4.01111 17.0203 3.90538 17.31 3.72875C19.2387 2.55375 21.4475 4.76125 20.2725 6.69125C20.0961 6.98082 19.9906 7.30792 19.9644 7.64597C19.9382 7.98401 19.9922 8.32346 20.1219 8.63672C20.2516 8.94999 20.4534 9.22822 20.7109 9.44882C20.9684 9.66941 21.2743 9.82613 21.6038 9.90625C23.7988 10.4388 23.7988 13.5612 21.6038 14.0938C21.274 14.1736 20.9678 14.3303 20.71 14.5509C20.4522 14.7715 20.2502 15.0499 20.1203 15.3633C19.9905 15.6768 19.9364 16.0165 19.9627 16.3547C19.9889 16.693 20.0946 17.0203 20.2713 17.31C21.4463 19.2387 19.2388 21.4475 17.3088 20.2725C17.0192 20.0961 16.6921 19.9906 16.354 19.9644C16.016 19.9382 15.6765 19.9922 15.3633 20.1219C15.05 20.2516 14.7718 20.4534 14.5512 20.7109C14.3306 20.9684 14.1739 21.2743 14.0938 21.6038C13.5612 23.7988 10.4388 23.7988 9.90625 21.6038C9.82635 21.274 9.66972 20.9678 9.44911 20.71C9.2285 20.4522 8.95014 20.2502 8.63669 20.1203C8.32323 19.9905 7.98354 19.9364 7.64527 19.9627C7.30699 19.9889 6.97969 20.0946 6.69 20.2713C4.76125 21.4463 2.5525 19.2388 3.7275 17.3088C3.90388 17.0192 4.00944 16.6921 4.0356 16.354C4.06177 16.016 4.0078 15.6765 3.87809 15.3633C3.74838 15.05 3.54658 14.7718 3.28909 14.5512C3.03161 14.3306 2.7257 14.1739 2.39625 14.0938C0.20125 13.5612 0.20125 10.4388 2.39625 9.90625C2.726 9.82635 3.03222 9.66972 3.29 9.44911C3.54778 9.2285 3.74982 8.95014 3.87968 8.63669C4.00955 8.32323 4.06356 7.98354 4.03734 7.64527C4.01111 7.30699 3.90538 6.97969 3.72875 6.69C2.55375 4.76125 4.76125 2.5525 6.69125 3.7275C7.94125 4.4875 9.56125 3.815 9.90625 2.39625Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                     <path d="M8.25 12C8.25 12.9946 8.64509 13.9484 9.34835 14.6517C10.0516 15.3549 11.0054 15.75 12 15.75C12.9946 15.75 13.9484 15.3549 14.6517 14.6517C15.3549 13.9484 15.75 12.9946 15.75 12C15.75 11.0054 15.3549 10.0516 14.6517 9.34835C13.9484 8.64509 12.9946 8.25 12 8.25C11.0054 8.25 10.0516 8.64509 9.34835 9.34835C8.64509 10.0516 8.25 11.0054 8.25 12Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
