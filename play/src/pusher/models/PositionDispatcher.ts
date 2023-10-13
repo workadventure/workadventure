@@ -9,10 +9,10 @@
  * number of players around the current player.
  */
 import Debug from "debug";
+import { Socket } from "../services/SocketManager";
 import { Zone } from "./Zone";
 import type { ZoneEventListener } from "./Zone";
 import type { ViewportInterface } from "./Websocket/ViewportMessage";
-import type { ExSocketInterface } from "./Websocket/ExSocketInterface";
 
 const debug = Debug("positiondispatcher");
 
@@ -43,13 +43,13 @@ export class PositionDispatcher {
     /**
      * Sets the viewport coordinates.
      */
-    public setViewport(socket: ExSocketInterface, viewport: ViewportInterface): void {
+    public setViewport(socket: Socket, viewport: ViewportInterface): void {
         if (viewport.left > viewport.right || viewport.top > viewport.bottom) {
             console.warn("Invalid viewport received: ", viewport);
             return;
         }
 
-        const oldZones = socket.listenedZones;
+        const oldZones = socket.getUserData().listenedZones;
         const newZones = new Set<Zone>();
 
         const topLeftDesc = this.getZoneDescriptorFromCoordinates(viewport.left, viewport.top);
@@ -72,7 +72,7 @@ export class PositionDispatcher {
         }
     }
 
-    private stopListening(zone: Zone, socket: ExSocketInterface): void {
+    private stopListening(zone: Zone, socket: Socket): void {
         zone.stopListening(socket);
         if (!zone.hasListeners()) {
             zone.close();
@@ -91,10 +91,11 @@ export class PositionDispatcher {
         }
     }
 
-    public removeViewport(socket: ExSocketInterface): void {
+    public removeViewport(socket: Socket): void {
         // Also, let's stop listening on viewports
-        if (socket.listenedZones) {
-            for (const zone of socket.listenedZones) {
+        const listenedZones = socket.getUserData().listenedZones;
+        if (listenedZones) {
+            for (const zone of listenedZones) {
                 this.stopListening(zone, socket);
             }
         }
