@@ -28,7 +28,7 @@ describe("Space", () => {
             disconnecting: false,
             token: "",
             roomId: "",
-            userId: undefined,
+            userId: 1,
             userUuid: "",
             userJid: "",
             isLogged: false,
