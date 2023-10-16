@@ -17,7 +17,15 @@ const error: DeepPartial<Translation["error"]> = {
     connectionRetry: {
         unableConnect: "Zwězanje z WorkAdventure njejo mógło se natwariś. Wobwěsć se, až sy z internetom zwězany.",
     },
-    error: "Zmólka",
+    errorDialog: {
+        title: "Zmólka 😱",
+        hasReportIssuesUrl:
+            "Dla dalšnych informacijow móžoš se z administratorami kontaktěrowaś abo zmólku powdawaś pod:",
+        noReportIssuesUrl: "Dla dalšnych informacijow wobroś se na administratory swěta.",
+        messageFAQ: "Móžoš teke do našu FAQ poglědaś:",
+        reload: "Aktualizowaś",
+        close: "Zacyniś",
+    },
 };
 
 export default error;
