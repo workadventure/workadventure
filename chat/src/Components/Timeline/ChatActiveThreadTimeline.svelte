@@ -581,16 +581,20 @@
                             <span
                                 class="w-fit tag mx-2 px-3 py-1 border border-solid border-white/20 rounded-full text-xs"
                                 ><b
-                                    >{target.name.match(/\[\d*]/)
+                                    >{target.name && target.name.match(/\[\d*]/)
                                         ? target.name.substring(0, target.name.search(/\[\d*]/))
-                                        : target.name}
+                                        : target.name
+                                        ? target.name
+                                        : "Unknown"}
                                     {#if target.name.match(/\[\d*]/)}
                                         <span class="font-light text-xs text-gray">
                                             #{target.name
-                                                .match(/\[\d*]/)
-                                                ?.join()
-                                                ?.replace("[", "")
-                                                ?.replace("]", "")}
+                                                ? target.name
+                                                      .match(/\[\d*]/)
+                                                      ?.join()
+                                                      ?.replace("[", "")
+                                                      ?.replace("]", "")
+                                                : "Unknown"}
                                         </span>
                                     {/if}</b
                                 >{$LL.timeLine.incoming()}
@@ -610,16 +614,20 @@
                             <span
                                 class="w-fit tag mx-2 px-3 py-1 border border-solid border-white/20 rounded-full text-xs"
                                 ><b
-                                    >{target.name.match(/\[\d*]/)
+                                    >{target.name && target.name.match(/\[\d*]/)
                                         ? target.name.substring(0, target.name.search(/\[\d*]/))
-                                        : target.name}
+                                        : target.name
+                                        ? target.name
+                                        : "Unknown"}
                                     {#if target.name.match(/\[\d*]/)}
                                         <span class="font-light text-xs text-gray">
                                             #{target.name
-                                                .match(/\[\d*]/)
-                                                ?.join()
-                                                ?.replace("[", "")
-                                                ?.replace("]", "")}
+                                                ? target.name
+                                                      .match(/\[\d*]/)
+                                                      ?.join()
+                                                      ?.replace("[", "")
+                                                      ?.replace("]", "")
+                                                : "Unknown"}
                                         </span>
                                     {/if}</b
                                 >{$LL.timeLine.outcoming()}

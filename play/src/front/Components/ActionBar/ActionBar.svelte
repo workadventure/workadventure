@@ -14,8 +14,7 @@
     import MyCamera from "../MyCamera.svelte";
     import {
         cameraListStore,
-        localStreamStore,
-        localVolumeStore,
+        microphoneListStore,
         speakerListStore,
         requestedCameraState,
         requestedMicrophoneState,
@@ -373,26 +372,7 @@
 
     onDestroy(() => {
         subscribers.map((subscriber) => subscriber());
-        unsubscribeLocalStreamStore();
-    });
-
-    let stream: MediaStream | null;
-    const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
-        if (value.type === "success") {
-            stream = value.stream;
-
-            if (stream !== null) {
-                const audioTracks = stream.getAudioTracks();
-                if (audioTracks.length > 0) {
-                    // set default speaker selected
-                    if ($speakerListStore && $speakerListStore.length > 0) {
-                        speakerSelectedStore.set($speakerListStore[0].deviceId);
-                    }
-                }
-            }
-        } else {
-            stream = null;
-        }
+        chatTotalMessagesSubscription?.unsubscribe();
     });
 
     const isMobile = isMediaBreakpointUp("md");
