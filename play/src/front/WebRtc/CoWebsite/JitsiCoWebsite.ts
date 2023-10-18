@@ -194,6 +194,9 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
                         this.jitsiApi.addListener("videoConferenceJoined", () => {
                             this.jitsiApi?.executeCommand("displayName", this.playerName);
                             this.jitsiApi?.executeCommand("avatarUrl", get(currentPlayerWokaStore));
+                            this.jitsiApi?.executeCommand("setNoiseSuppressionEnabled", {
+                                enabled: window.navigator.userAgent.toLowerCase().indexOf("firefox") === -1,
+                            });
 
                             this.updateParticipantsCountStore();
                         });
