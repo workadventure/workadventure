@@ -45,7 +45,7 @@ export class Loader {
             .then((texture) => {
                 this.logo = this.scene.add.image(
                     this.scene.game.renderer.width / 2,
-                    this.scene.game.renderer.height / 2 - 100,
+                    this.scene.game.renderer.height / 2 - 35,
                     texture
                 );
 
@@ -155,7 +155,7 @@ export class Loader {
         this.progress.fillStyle(0x4156F6, 1);
         this.progress.fillRect(
             (this.scene.game.renderer.width - loadingBarWidth) / 2,
-            this.scene.game.renderer.height / 2 + 50,
+            this.scene.game.renderer.height / 2,
             loadingBarWidth * this.progressAmount,
             loadingBarHeight
         );

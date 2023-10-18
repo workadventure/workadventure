@@ -404,7 +404,7 @@
 </script>
 <svelte:window on:keydown={onKeyDown} />
 <div class="grid grid-cols-3 justify-items-stretch absolute top-0 w-full p-4 pointer-events-auto">
-    <div class="justify-self-start" transition:fly={{delay: 500, y: -200, duration: 1500 }}>
+    <div class="justify-self-start" transition:fly={{delay: 500, y: -200, duration: 750 }}>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
                 on:click={() =>
@@ -444,9 +444,9 @@
             </div>
         </div>
     </div>
-    <div class="justify-self-center" transition:fly={{delay: 1000, y: -200, duration: 1500 }}>
+    <div class="justify-self-center">
         <div class="flex relative">
-            <div class={menuExpand ? "group menuExpand" : ""}>
+            <div class={menuExpand ? "group menuExpand" : ""} transition:fly={{delay: 750, y: -200, duration: 750 }}>
                 <div class="flex items-center mr-4 absolute right-28">
                     {#if menuExpand}
                         <div class="group/btn-more bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg  aspect-square">
@@ -532,7 +532,7 @@
                     {/if}
                 </div>
             </div>
-            <div>
+            <div transition:fly={{delay: 1000, y: -200, duration: 750 }}>
                 <!-- ACTION WRAPPER : CAM & MIC -->
                 <div class="flex items-center">
                     {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
@@ -636,11 +636,11 @@
             </div>
         </div>
     </div>
-    <div class="justify-self-end" transition:fly={{delay: 1500, y: -200, duration: 1500 }}>
+    <div class="justify-self-end">
         <div class="flex">
             {#if $inviteUserActivated}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div>
+                <div transition:fly={{delay: 1250, y: -200, duration: 750 }}>
                     <div class="flex items-center mr-4">
                         <div class="bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg ">
                             <button
@@ -657,19 +657,28 @@
                 </div>
             {/if}
             {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
-                <div class="flex items-center relative">
-                    <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2 mr-4" on:click={() =>
-				adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false } tabindex="0">
+                <div class="flex items-center relative mr-4" transition:fly={{delay: 1500, y: -200, duration: 750 }}>
+                    <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false } tabindex="0">
                         <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded">
-                            <div class="px-2 ">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M10 19H3C2.46957 19 1.96086 18.7893 1.58579 18.4142C1.21071 18.0391 1 17.5304 1 17V3C1 2.46957 1.21071 1.96086 1.58579 1.58579C1.96086 1.21071 2.46957 1 3 1H17C17.5304 1 18.0391 1.21071 18.4142 1.58579C18.7893 1.96086 19 2.46957 19 3V10M1 8H19M8 1V19M17.001 19C16.4706 19 15.9619 18.7893 15.5868 18.4142C15.2117 18.0391 15.001 17.5304 15.001 17C15.001 16.4696 15.2117 15.9609 15.5868 15.5858C15.9619 15.2107 16.4706 15 17.001 15M17.001 19C17.5314 19 18.0401 18.7893 18.4152 18.4142C18.7903 18.0391 19.001 17.5304 19.001 17C19.001 16.4696 18.7903 15.9609 18.4152 15.5858C18.0401 15.2107 17.5314 15 17.001 15M17.001 19V20.5M17.001 15V13.5M20.032 15.25L18.733 16M15.27 18L13.97 18.75M13.97 15.25L15.27 16M18.733 18L20.033 18.75" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
+                            <div class="px-2 h-6">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-table-options" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M12 21h-7a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v7" />
+                                    <path d="M3 10h18" class="group-hover:animate-bounce origin-center" style="transform-box: fill-box;" />
+                                    <path d="M10 3v18" />
+                                    <g class="group-hover:animate-spin origin-center transition-all" style="transform-box: fill-box;">
+                                        <path d="M19.001 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                        <path d="M19.001 15.5v1.5" />
+                                        <path d="M19.001 21v1.5" />
+                                        <path d="M22.032 17.25l-1.299 .75" />
+                                        <path d="M17.27 20l-1.3 .75" />
+                                        <path d="M15.97 17.25l1.3 .75" />
+                                        <path d="M20.733 20l1.3 .75" />
+                                    </g>
                                 </svg>
                             </div>
                             <div class="">
-                                <div class="font-bold text-white leading-3">Admin menu</div>
+                                <div class="font-bold text-white leading-3 whitespace-nowrap">Admin menu</div>
                             </div>
                             <div class="pl-4 pr-6">
                                 <svg class="transition-all" class:rotate-180={adminMenuIsDropped} width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -678,7 +687,7 @@
                             </div>
                         </div>
                     </div>
-                    <div  class="absolute mt-2 top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-full text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-4 before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all {adminMenuIsDropped ? '' : '-translate-y-4 opacity-0 '}">
+                    <div  class="absolute mt-2 top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-4 before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all {adminMenuIsDropped ? '' : '-translate-y-4 opacity-0 '}" transition:fly={{delay: 1750, y: -200, duration: 750 }}>
                         <ul class="p-0 m-0">
                             {#if $mapEditorActivated}
                                 <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => toggleMapEditorMode()}>
@@ -715,7 +724,8 @@
                                 </div>
                                 <div>Envoyer message global</div>
                             </li>
-                            <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
+                            {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
+                            <li on:click={toggleMegaphone} class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
                                 <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-speakerphone" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -726,19 +736,23 @@
                                 </div>
                                 <div>Utiliser le mégaphone</div>
                             </li>
+                            {/if}
                         </ul>
+                        {#if $streamingMegaphoneStore}
+                            <MegaphoneConfirm />
+                        {/if}
                     </div>
                 </div>
             {/if}
-            <div class="flex items-center relative">
+            <div class="flex items-center relative" transition:fly={{delay: 2000, y: -200, duration: 750 }}>
                 <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => profileMenuIsDropped = !profileMenuIsDropped} tabindex="0">
                     <div class="flex items center h-full group-hover:bg-white/10 transition-all group-hover:rounded">
                         <div class="px-2 m-auto">
                             <Woka userId={-1} placeholderSrc="" customWidth="42px" customHeight="42px" />
                         </div>
                         <div class="m-auto pt-1">
-                            <div class="font-bold text-white leading-3">Hugo</div>
-                            <div class="text-xs text-white/50">Edit preferences</div>
+                            <div class="font-bold text-white leading-3 whitespace-nowrap">Hugo</div>
+                            <div class="text-xs text-white/50 whitespace-nowrap">Edit preferences</div>
                         </div>
                         <div class="m-auto pl-4 pr-6">
                             <svg class="transition-all" class:rotate-180={profileMenuIsDropped} width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -747,7 +761,7 @@
                         </div>
                     </div>
                 </div>
-                <div class={`absolute mt-2 top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-full text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-4 before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all ${profileMenuIsDropped ? "" : "-translate-y-4 opacity-0 "}`}>
+                <div class="absolute mt-2 top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-4 before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all {profileMenuIsDropped ? '' : '-translate-y-4 opacity-0 '}">
                     <ul class="p-0 m-0 list-none">
                         <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditNameScene()}>
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
