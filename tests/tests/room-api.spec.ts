@@ -1,6 +1,6 @@
 import {chromium, expect, test} from '@playwright/test';
 import { createRoomApiClient } from '../../libs/room-api-clients/room-api-client-js/src';
-import { Value } from '../../libs/room-api-clients/room-api-client-js/src/compiled_proto/google/protobuf/struct';
+import {Value} from "../../libs/room-api-clients/room-api-client-js/src/compiled_proto/google/protobuf/struct";
 import { gotoWait200 } from './utils/containers';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
@@ -68,11 +68,13 @@ test.describe('Room API', async () => {
         // Check reading on browser
         await expect(textField).toHaveValue(newValue);
 
-        // Check reading on GRPC
-        await expect(client.readVariable({
+        const value = await client.readVariable({
             name: variableName,
             room: roomUrl,
-        })).resolves.toEqual(Value.wrap(newValue));
+        });
+
+        // Check reading on GRPC
+        expect(Value.unwrap(value)).toEqual(newValue);
     });
 
     test("Listen to a variable", async ({ page, browser }) => {
@@ -106,7 +108,7 @@ test.describe('Room API', async () => {
         }, 5000);
 
         for await (const value of listenVariable) {
-            expect(value).toEqual(Value.wrap(newValue));
+            expect(Value.unwrap(value)).toEqual(newValue);
             await expect(textField).toHaveValue(newValue);
             break;
         }

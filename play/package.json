@@ -162,7 +162,7 @@
     "throttle-debounce": "^5.0.0",
     "ts-deepmerge": "^2.0.4",
     "ts-deferred": "^1.0.4",
-    "ts-proto-descriptors": "^1.7.1",
+    "ts-proto-descriptors": "^1.15.0",
     "tsx": "^3.12.10",
     "typesafe-i18n": "^5.14.0",
     "uuid": "^9.0.0",
