@@ -35,6 +35,7 @@ import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages
 import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
 import { SocketData } from "../models/Websocket/SocketData";
+import { emitInBatch } from "../services/IoSocketHelpers";
 
 type UpgradeFailedInvalidData = {
     rejected: true;
@@ -644,6 +645,10 @@ export class IoSocketController {
 
                     // Mandatory for typing hint
                     const socket = ws as Socket;
+
+                    socketData.emitInBatch = (payload: SubMessage): void => {
+                        emitInBatch(socket, payload);
+                    };
 
                     await socketManager.handleJoinRoom(socket);
 
