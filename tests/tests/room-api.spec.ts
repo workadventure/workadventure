@@ -75,7 +75,7 @@ test.describe('Room API', async () => {
         })).resolves.toEqual(Value.wrap(newValue));
     });
 
-    test("Listen a variable", async ({ page, browser }) => {
+    test("Listen to a variable", async ({ page, browser }) => {
         // This test does not depend on the browser. Let's only run it in Chromium.
         if(browser.browserType() !== chromium) {
             //eslint-disable-next-line playwright/no-skipped-test

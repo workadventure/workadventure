@@ -1095,7 +1095,7 @@ message EventRequest {
 }
 
 message EventResponse {
-  google.protobuf.Value value = 1;
+  google.protobuf.Value data = 1;
   optional int32 senderId = 2;
 }
 

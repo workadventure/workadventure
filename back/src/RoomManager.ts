@@ -19,6 +19,7 @@ import {
     ServerToClientMessage,
     VariableRequest,
     EventRequest,
+    EventResponse,
 } from "@workadventure/messages";
 import { RoomManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import {
@@ -50,7 +51,7 @@ export type AdminSocket = ServerDuplexStream<AdminPusherToBackMessage, ServerToA
 export type ZoneSocket = ServerWritableStream<ZoneMessage, BatchToPusherMessage>;
 export type RoomSocket = ServerWritableStream<RoomMessage, BatchToPusherRoomMessage>;
 export type VariableSocket = ServerWritableStream<VariableRequest, unknown>;
-export type EventSocket = ServerWritableStream<EventRequest, unknown>;
+export type EventSocket = ServerWritableStream<EventRequest, EventResponse>;
 
 // Maximum time to wait for a pong answer to a ping before closing connection.
 // Note: PONG_TIMEOUT must be less than PING_INTERVAL
