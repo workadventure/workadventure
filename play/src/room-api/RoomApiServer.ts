@@ -69,6 +69,7 @@ export default {
                         variableListener.on("error", (e) => {
                             console.error("Error on variable listener:", e);
                             Sentry.captureException(e);
+                            // TODO: plan an error message
                             call.end();
                         });
 
@@ -198,6 +199,7 @@ export default {
                         eventListener.on("error", (e) => {
                             console.error("Error on event listener:", e);
                             Sentry.captureException(e);
+                            // TODO: plan an error message
                             call.end();
                         });
 
