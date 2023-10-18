@@ -34,7 +34,7 @@ Events can be listened to using `WA.event.on`.
 ```typescript
 import type { Observable } from "rxjs";
 
-type ScriptingEvent {
+type ScriptingEvent = {
     name: string;
     data: unknown;
     senderId: number | undefined;
