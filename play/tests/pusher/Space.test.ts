@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
 import {
     AvailabilityStatus,
@@ -10,7 +10,7 @@ import {
 } from "@workadventure/messages";
 import { Color } from "@workadventure/shared-utils";
 import { Space } from "../../src/pusher/models/Space";
-import { BackSpaceConnection, SocketData } from "../../src/pusher/models/Websocket/SocketData";
+import { BackSpaceConnection } from "../../src/pusher/models/Websocket/SocketData";
 import { Socket } from "../../src/pusher/services/SocketManager";
 import { Zone } from "../../src/pusher/models/Zone";
 describe("Space", () => {
@@ -22,88 +22,89 @@ describe("Space", () => {
         },
     });
     let eventsClient: SubMessage[] = [];
-    const client = mock<Socket>({
-        getUserData: (): SocketData => ({
-            rejected: false,
-            disconnecting: false,
-            token: "",
-            roomId: "",
-            userId: 1,
-            userUuid: "",
-            userJid: "",
-            isLogged: false,
-            ipAddress: "",
+    const clientData = {
+        rejected: false,
+        disconnecting: false,
+        token: "",
+        roomId: "",
+        userId: 1,
+        userUuid: "",
+        userJid: "",
+        isLogged: false,
+        ipAddress: "",
+        name: "",
+        characterTextures: [],
+        companionTexture: undefined,
+        position: { x: 0, y: 0, direction: "up", moving: false },
+        viewport: { left: 0, top: 0, right: 0, bottom: 0 },
+        availabilityStatus: AvailabilityStatus.ONLINE,
+        lastCommandId: undefined,
+        messages: [],
+        tags: [],
+        visitCardUrl: null,
+        userRoomToken: undefined,
+        jabberId: "",
+        jabberPassword: undefined,
+        activatedInviteUser: undefined,
+        mucRooms: [],
+        applications: undefined,
+        canEdit: false,
+        spaceUser: SpaceUser.fromPartial({
+            id: 1,
+            uuid: "",
             name: "",
-            characterTextures: [],
-            companionTexture: undefined,
-            position: { x: 0, y: 0, direction: "up", moving: false },
-            viewport: { left: 0, top: 0, right: 0, bottom: 0 },
+            playUri: "",
+            roomName: "",
             availabilityStatus: AvailabilityStatus.ONLINE,
-            lastCommandId: undefined,
-            messages: [],
+            isLogged: false,
+            color: Color.getColorByString(""),
             tags: [],
-            visitCardUrl: null,
-            userRoomToken: undefined,
-            jabberId: "",
-            jabberPassword: undefined,
-            activatedInviteUser: undefined,
-            mucRooms: [],
-            applications: undefined,
-            canEdit: false,
-            spaceUser: SpaceUser.fromPartial({
-                id: 0,
-                uuid: "",
-                name: "",
-                playUri: "",
-                roomName: "",
-                availabilityStatus: AvailabilityStatus.ONLINE,
-                isLogged: false,
-                color: Color.getColorByString(""),
-                tags: [],
-                cameraState: false,
-                screenSharingState: false,
-                microphoneState: false,
-                megaphoneState: false,
-                characterTextures: [
+            cameraState: false,
+            screenSharingState: false,
+            microphoneState: false,
+            megaphoneState: false,
+            characterTextures: [
+                {
+                    url: "",
+                    id: "",
+                },
+            ],
+            visitCardUrl: undefined,
+        }),
+        batchedMessages: {
+            event: "",
+            payload: [],
+        },
+        batchTimeout: null,
+        backConnection: undefined,
+        listenedZones: new Set<Zone>(),
+        pusherRoom: undefined,
+        spaces: [],
+        spacesFilters: new Map<string, SpaceFilterMessage[]>([
+            [
+                "test",
+                [
                     {
-                        url: "",
-                        id: "",
+                        filterName: "default",
+                        spaceName: "test",
+                        filter: {
+                            $case: "spaceFilterEverybody",
+                            spaceFilterEverybody: {},
+                        },
                     },
                 ],
-                visitCardUrl: undefined,
-            }),
-            batchedMessages: {
-                event: "",
-                payload: [],
-            },
-            batchTimeout: null,
-            backConnection: undefined,
-            listenedZones: new Set<Zone>(),
-            pusherRoom: undefined,
-            spaces: [],
-            spacesFilters: new Map<string, SpaceFilterMessage[]>([
-                [
-                    "test",
-                    [
-                        {
-                            filterName: "default",
-                            spaceName: "test",
-                            filter: {
-                                $case: "spaceFilterEverybody",
-                                spaceFilterEverybody: {},
-                            },
-                        },
-                    ],
-                ],
-            ]),
-            cameraState: undefined,
-            microphoneState: undefined,
-            screenSharingState: undefined,
-            megaphoneState: undefined,
-            emitInBatch: (payload: SubMessage) => {
-                eventsClient.push(payload);
-            },
-        }),
+            ],
+        ]),
+        cameraState: undefined,
+        microphoneState: undefined,
+        screenSharingState: undefined,
+        megaphoneState: undefined,
+        emitInBatch: (payload: SubMessage) => {
+            eventsClient.push(payload);
+        },
+    };
+    const client = mock<Socket>({
+        getUserData: vi.fn().mockReturnValue(clientData),
     });
     const space = new Space("test", backSpaceConnection, 1, client);
     it("should return true because Space is empty", () => {
