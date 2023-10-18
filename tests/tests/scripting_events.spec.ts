@@ -19,11 +19,11 @@ test.describe('Scripting API Events', () => {
 
             const promise = new Promise<void>((resolve, reject) => {
                 WA.event.on("key").subscribe((event) => {
-                    if (event.key !== "key") {
+                    if (event.name !== "key") {
                         reject(new Error("Invalid event key"));
                         return;
                     }
-                    if (event.value !== "value") {
+                    if (event.data !== "value") {
                         reject(new Error("Invalid event value"));
                         return;
                     }
@@ -73,10 +73,10 @@ test.describe('Scripting API Events', () => {
         await evaluateScript(page, async () => {
             await WA.onInit();
             WA.event.on("key2").subscribe((event) => {
-                if (event.key !== "key2") {
+                if (event.name !== "key2") {
                     return;
                 }
-                if (event.value !== "value") {
+                if (event.data !== "value") {
                     return;
                 }
                 if (event.senderId === WA.player.playerId) {
@@ -99,10 +99,10 @@ test.describe('Scripting API Events', () => {
         await evaluateScript(page, async () => {
             await WA.onInit();
             WA.event.on("key3").subscribe((event) => {
-                if (event.key !== "key3") {
+                if (event.name !== "key3") {
                     return;
                 }
-                if (event.value !== "value") {
+                if (event.data !== "value") {
                     return;
                 }
                 if (event.senderId === WA.player.playerId) {
@@ -131,10 +131,10 @@ test.describe('Scripting API Events', () => {
         await evaluateScript(page, async () => {
             await WA.onInit();
             WA.event.on("key4").subscribe((event) => {
-                if (event.key !== "key4") {
+                if (event.name !== "key4") {
                     return;
                 }
-                if (event.value !== "value") {
+                if (event.data !== "value") {
                     return;
                 }
 

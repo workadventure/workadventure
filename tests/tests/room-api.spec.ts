@@ -120,7 +120,7 @@ test.describe('Room API', async () => {
             return;
         }
 
-        const listenEvent = client.listenEvent({
+        const listenEvent = client.listenToEvent({
             name: "my-event",
             room: 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json',
         });
@@ -128,7 +128,7 @@ test.describe('Room API', async () => {
         let resolved = false;
         (async () => {
             for await (const event of listenEvent) {
-                expect(event.value.foo).toEqual("bar");
+                expect(event.data.foo).toEqual("bar");
                 break;
             }
         })().then(() => {
@@ -170,10 +170,10 @@ test.describe('Room API', async () => {
         await evaluateScript(page, async () => {
             await WA.onInit();
             WA.event.on("key").subscribe((event) => {
-                if (event.key !== "key") {
+                if (event.name !== "key") {
                     return;
                 }
-                if (event.value !== "value") {
+                if (event.data !== "value") {
                     return;
                 }
 
@@ -181,10 +181,10 @@ test.describe('Room API', async () => {
             });
         });
 
-        await client.dispatchEvent({
+        await client.broadcastEvent({
             name: "key",
             room: 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json',
-            value: "value",
+            data: "value",
         });
 
         await expect.poll(() => gotExpectedBroadcastNotification).toBe(true);
