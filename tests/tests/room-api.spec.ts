@@ -3,6 +3,7 @@ import { createRoomApiClient } from '../../libs/room-api-clients/room-api-client
 import { Value } from '../../libs/room-api-clients/room-api-client-js/src/compiled_proto/google/protobuf/struct';
 import { gotoWait200 } from './utils/containers';
 import { login } from './utils/roles';
+import {evaluateScript} from "./utils/scripting";
 
 const apiKey = process.env.ROOM_API_SECRET_KEY;
 
@@ -74,7 +75,7 @@ test.describe('Room API', async () => {
         })).resolves.toEqual(Value.wrap(newValue));
     });
 
-    test("Listen a variable", async ({ page, browser }) => {
+    test("Listen to a variable", async ({ page, browser }) => {
         // This test does not depend on the browser. Let's only run it in Chromium.
         if(browser.browserType() !== chromium) {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -109,5 +110,83 @@ test.describe('Room API', async () => {
             await expect(textField).toHaveValue(newValue);
             break;
         }
+    });
+
+    test("Listen to an event emitted from the game", async ({ page, browser }) => {
+        // This test does not depend on the browser. Let's only run it in Chromium.
+        if(browser.browserType() !== chromium) {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
+        const listenEvent = client.listenToEvent({
+            name: "my-event",
+            room: 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json',
+        });
+
+        let resolved = false;
+        (async () => {
+            for await (const event of listenEvent) {
+                expect(event.data.foo).toEqual("bar");
+                break;
+            }
+        })().then(() => {
+            resolved = true;
+        })
+
+        await page.goto('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json');
+        await login(page);
+
+        await evaluateScript(page, async () => {
+            await WA.onInit();
+
+            await WA.event.broadcast("my-event", {"foo": "bar"});
+        });
+
+        await expect.poll(() => resolved).toBeTruthy();
+    });
+
+    test("Send an event from the Room API", async ({ page, browser }) => {
+        // This test does not depend on the browser. Let's only run it in Chromium.
+        if(browser.browserType() !== chromium) {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
+        await page.goto('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json');
+        await login(page);
+
+        let gotExpectedBroadcastNotification = false;
+        page.on('console', async (msg) => {
+            const text = await msg.text();
+            //console.log(text);
+            if (text === 'Broadcast event triggered') {
+                gotExpectedBroadcastNotification = true;
+            }
+        });
+
+        await evaluateScript(page, async () => {
+            await WA.onInit();
+            WA.event.on("key").subscribe((event) => {
+                if (event.name !== "key") {
+                    return;
+                }
+                if (event.data !== "value") {
+                    return;
+                }
+
+                console.log("Broadcast event triggered");
+            });
+        });
+
+        await client.broadcastEvent({
+            name: "key",
+            room: 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json',
+            data: "value",
+        });
+
+        await expect.poll(() => gotExpectedBroadcastNotification).toBe(true);
     });
 });

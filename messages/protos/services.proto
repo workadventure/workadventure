@@ -24,7 +24,10 @@ service RoomManager {
   rpc readVariable(VariableRequest) returns (google.protobuf.Value);
   rpc listenVariable(VariableRequest) returns (stream google.protobuf.Value);
   rpc saveVariable(SaveVariableRequest) returns (google.protobuf.Empty);
+  rpc dispatchEvent(DispatchEventRequest) returns (google.protobuf.Empty); // Dispatch an event to all users in the room
+  rpc listenEvent(EventRequest) returns (stream EventResponse); // Listen to events dispatched in the room
   rpc handleMapStorageUploadMapDetected(MapStorageClearAfterUploadMessage) returns (google.protobuf.Empty);
+  rpc dispatchGlobalEvent(DispatchGlobalEventRequest) returns (google.protobuf.Empty); // Dispatch a scripting API message to ALL rooms
 }
 
 /**

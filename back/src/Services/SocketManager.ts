@@ -43,6 +43,7 @@ import {
     UpdateSpaceUserMessage,
     AddSpaceUserMessage,
     RemoveSpaceUserMessage,
+    SendEventQuery,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -56,7 +57,7 @@ import { Group } from "../Model/Group";
 import { GROUP_RADIUS, MINIMUM_DISTANCE, TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable";
 import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
-import { RoomSocket, VariableSocket, ZoneSocket } from "../RoomManager";
+import { EventSocket, RoomSocket, VariableSocket, ZoneSocket } from "../RoomManager";
 import { Zone } from "../Model/Zone";
 import { Admin } from "../Model/Admin";
 import { Space } from "../Model/Space";
@@ -769,6 +770,15 @@ export class SocketManager {
                     };
                     break;
                 }
+                case "sendEventQuery": {
+                    // TODO: in the future, if the event system is abused, we can throttle message by user id, here.
+                    this.handleSendEventQuery(gameRoom, user, queryMessage.query.sendEventQuery);
+                    answerMessage.answer = {
+                        $case: "sendEventAnswer",
+                        sendEventAnswer: {},
+                    };
+                    break;
+                }
                 case "embeddableWebsiteQuery":
                 case "roomTagsQuery":
                 case "roomsFromSameWorldQuery": {
@@ -1045,6 +1055,8 @@ export class SocketManager {
         }
 
         room.removeVariableListener(call);
+
+        this.cleanupRoomIfEmpty(room);
     }
 
     public async handleJoinAdminRoom(admin: Admin, roomId: string): Promise<GameRoom> {
@@ -1354,7 +1366,7 @@ export class SocketManager {
 
     async dispatchChatMessagePrompt(chatMessagePrompt: ChatMessagePrompt): Promise<boolean> {
         const room = await this.roomsPromises.get(chatMessagePrompt.roomId);
-        console.log(chatMessagePrompt.roomId);
+
         if (!room) {
             return false;
         }
@@ -1432,6 +1444,46 @@ export class SocketManager {
         const space = this.spaces.get(removeSpaceUserMessage.spaceName);
         if (space) {
             space.removeUser(pusher, removeSpaceUserMessage.userId);
+        }
+    }
+
+    private handleSendEventQuery(gameRoom: GameRoom, user: User, sendEventQuery: SendEventQuery) {
+        gameRoom.dispatchEvent(sendEventQuery.name, sendEventQuery.data, user.id, sendEventQuery.targetUserIds);
+    }
+
+    async dispatchEvent(roomUrl: string, name: string, value: unknown, targetUserIds: number[]): Promise<void> {
+        const roomPromise = this.roomsPromises.get(roomUrl);
+        if (!roomPromise) {
+            // The room does not exist. No need to instantiate it, there is no one in.
+            return Promise.resolve();
+        }
+        const room = await roomPromise;
+        room.dispatchEvent(name, value, "RoomApi", targetUserIds);
+    }
+
+    async addEventListener(call: EventSocket) {
+        const room = await this.getOrCreateRoom(call.request.room);
+        if (!room) {
+            throw new Error("In addEventListener, could not find room with id '" + call.request.room + "'");
+        }
+
+        room.addEventListener(call);
+    }
+
+    async removeEventListener(call: EventSocket) {
+        const room = await this.roomsPromises.get(call.request.room);
+        if (!room) {
+            throw new Error("In removeEventListener, could not find room with id '" + call.request.room + "'");
+        }
+
+        room.removeEventListener(call);
+
+        this.cleanupRoomIfEmpty(room);
+    }
+
+    dispatchGlobalEvent(name: string, value: unknown) {
+        for (const room of this.resolvedRooms.values()) {
+            room.dispatchEvent(name, value, "RoomApi", []);
         }
     }
 }

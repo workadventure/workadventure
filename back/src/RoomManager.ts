@@ -18,6 +18,8 @@ import {
     ChatMessagePrompt,
     ServerToClientMessage,
     VariableRequest,
+    EventRequest,
+    EventResponse,
 } from "@workadventure/messages";
 import { RoomManagerServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import {
@@ -49,6 +51,7 @@ export type AdminSocket = ServerDuplexStream<AdminPusherToBackMessage, ServerToA
 export type ZoneSocket = ServerWritableStream<ZoneMessage, BatchToPusherMessage>;
 export type RoomSocket = ServerWritableStream<RoomMessage, BatchToPusherRoomMessage>;
 export type VariableSocket = ServerWritableStream<VariableRequest, unknown>;
+export type EventSocket = ServerWritableStream<EventRequest, EventResponse>;
 
 // Maximum time to wait for a pong answer to a ping before closing connection.
 // Note: PONG_TIMEOUT must be less than PING_INTERVAL
@@ -546,6 +549,8 @@ const roomManager = {
                 callback(null);
             })
             .catch((error) => {
+                console.error(error);
+                Sentry.captureException(error);
                 throw error;
             });
     },
@@ -579,6 +584,52 @@ const roomManager = {
                     });
             }
         );
+    },
+    /** Dispatch an event to all users in the room */
+    dispatchEvent(call, callback) {
+        socketManager
+            .dispatchEvent(call.request.room, call.request.name, call.request.data, call.request.targetUserIds)
+            .then(() => {
+                callback(null);
+            })
+            .catch((error) => {
+                console.error(error);
+                Sentry.captureException(error);
+                throw error;
+            });
+    },
+    /** Listen to events dispatched in the room */
+    listenEvent(call) {
+        socketManager.addEventListener(call).catch((e) => {
+            call.end();
+        });
+
+        call.on("cancelled", () => {
+            socketManager.removeEventListener(call).catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+            });
+            call.end();
+        });
+
+        call.on("close", () => {
+            socketManager.removeEventListener(call).catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+            });
+        }).on("error", (e) => {
+            socketManager.removeEventListener(call).catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+            });
+            console.error(e);
+            Sentry.captureException(e);
+            call.end();
+        });
+    },
+    dispatchGlobalEvent(call, callback) {
+        socketManager.dispatchGlobalEvent(call.request.name, call.request.value);
+        callback(null);
     },
 } satisfies RoomManagerServer;
 

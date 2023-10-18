@@ -161,6 +161,7 @@ import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
+import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { faviconManager } from "./../../WebRtc/FaviconManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
@@ -265,6 +266,7 @@ export class GameScene extends DirtyScene {
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
     private playerVariablesManager!: PlayerVariablesManager;
+    private scriptingEventsManager!: ScriptingEventsManager;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private areaManager!: DynamicAreaManager;
@@ -1104,6 +1106,9 @@ export class GameScene extends DirtyScene {
                     this.handleCurrentPlayerHasMovedEvent(event);
                 });
 
+                // Set up events manager
+                this.scriptingEventsManager = new ScriptingEventsManager(this.connection);
+
                 // Set up variables manager
                 this.sharedVariablesManager = new SharedVariablesManager(
                     this.connection,
@@ -1933,6 +1938,7 @@ ${escapedMessage}
             // for the connection to send back the answer.
             await this.connectionAnswerPromiseDeferred.promise;
             return {
+                playerId: this.connection?.getUserId(),
                 mapUrl: this.mapUrlFile,
                 startLayerName: this.startPositionCalculator.getStartPositionName() ?? undefined,
                 uuid: localUserStore.getLocalUser()?.uuid,
@@ -2362,6 +2368,7 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("goToLogin");
         this.sharedVariablesManager?.close();
         this.playerVariablesManager?.close();
+        this.scriptingEventsManager?.close();
         this.embeddedWebsiteManager?.close();
         this.areaManager?.close();
         this.playersEventDispatcher.cleanup();
