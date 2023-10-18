@@ -34,7 +34,7 @@ services:
                     - 'xmpp.workadventure.localhost'
 
     play:
-        image: thecodingmachine/nodejs:v2-18-bullseye
+        image: thecodingmachine/nodejs:v2-20-bullseye
         command: npm run dev
         working_dir: /usr/src/app/play
         volumes:
@@ -152,7 +152,7 @@ services:
             - "traefik.http.services.play.loadbalancer.server.port=3000"
 
     chat:
-        image: thecodingmachine/nodejs:v2-18-bullseye
+        image: thecodingmachine/nodejs:v2-20-bullseye
         command: npm run start
         working_dir: /usr/src/app/chat
         environment:
@@ -203,7 +203,7 @@ services:
             - "traefik.http.services.maps.loadbalancer.server.port=80"
 
     back:
-        image: thecodingmachine/nodejs:v2-18-bullseye
+        image: thecodingmachine/nodejs:v2-20-bullseye
         command: npm run dev
         working_dir: /usr/src/app/back
         environment:
@@ -256,7 +256,7 @@ services:
             - "traefik.http.services.back.loadbalancer.server.port=8080"
 
     map-storage:
-        image: thecodingmachine/nodejs:v2-18-bullseye
+        image: thecodingmachine/nodejs:v2-20-bullseye
         command: npm run start:dev
         #command: npm run profile
         working_dir: /usr/src/app/map-storage
@@ -291,7 +291,7 @@ services:
             - "traefik.http.services.map-storage-ui.loadbalancer.server.port=8080"
 
     uploader:
-        image: thecodingmachine/nodejs:v2-18-bullseye
+        image: thecodingmachine/nodejs:v2-20-bullseye
         command: npm run dev
         #command: npm run profile
         working_dir: /usr/src/app/uploader
@@ -323,7 +323,7 @@ services:
             - "traefik.http.services.uploader.loadbalancer.server.port=8080"
 
     messages:
-        image: thecodingmachine/nodejs:v2-18-bullseye-build
+        image: thecodingmachine/nodejs:v2-20-bullseye-build
         environment:
             STARTUP_COMMAND_1: npm install
             STARTUP_COMMAND_2: npm run proto:watch

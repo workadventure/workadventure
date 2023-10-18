@@ -1,5 +1,5 @@
 # protobuf build
-FROM --platform=$BUILDPLATFORM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d as proto-builder
+FROM --platform=$BUILDPLATFORM node:20.8.0-bullseye-slim@sha256:9027d0d778368a3091ee36b0bfdc98ebf3d7815ee4e2811b05cc40ec2a0adf4e as proto-builder
 WORKDIR /usr/src
 COPY messages/package-lock.json messages/package.json ./
 RUN npm ci
@@ -8,7 +8,7 @@ COPY libs ./../libs
 RUN npm run tag-version && npm run ts-proto
 
 # final production image
-FROM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d
+FROM node:20.8.0-bullseye-slim@sha256:9027d0d778368a3091ee36b0bfdc98ebf3d7815ee4e2811b05cc40ec2a0adf4e
 EXPOSE 8080 50051
 WORKDIR /usr/src
 RUN apt-get update && apt-get install -y git curl

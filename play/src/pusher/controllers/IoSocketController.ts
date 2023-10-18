@@ -3,15 +3,11 @@ import type HyperExpress from "hyper-express";
 import { z } from "zod";
 import {
     apiVersionHash,
-    AvailabilityStatus,
     ClientToServerMessage,
-    CompanionTextureMessage,
     ErrorApiData,
-    MucRoomDefinition,
     ServerToClientMessage as ServerToClientMessageTsProto,
     SubMessage,
     WokaDetail,
-    ApplicationDefinitionInterface,
     SpaceFilterMessage,
     SpaceUser,
     CompanionDetail,
@@ -21,13 +17,10 @@ import { v4 as uuid } from "uuid";
 import { JID } from "stanza";
 import * as Sentry from "@sentry/node";
 import { Color } from "@workadventure/shared-utils";
-import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
-import { PointInterface } from "../models/Websocket/PointInterface";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
-import { socketManager } from "../services/SocketManager";
-import { emitInBatch } from "../services/IoSocketHelpers";
+import { Socket, socketManager, SocketUpgradeFailed } from "../services/SocketManager";
 import {
     ADMIN_SOCKETS_TOKEN,
     DISABLE_ANONYMOUS,
@@ -36,51 +29,13 @@ import {
     SOCKET_IDLE_TIMER,
 } from "../enums/EnvironmentVariable";
 import type { Zone } from "../models/Zone";
-import type { ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
+import type { AdminSocketData } from "../models/Websocket/AdminSocketData";
 import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
 import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
-
-type WebSocket = HyperExpress.compressors.WebSocket;
-
-/**
- * The object passed between the "open" and the "upgrade" methods when opening a websocket
- */
-type UpgradeData = {
-    // Data passed here is accessible on the "websocket" socket object.
-    rejected: false;
-    token: string;
-    userUuid: string;
-    userJid: string;
-    IPAddress: string;
-    userIdentifier: string;
-    roomId: string;
-    name: string;
-    companionTexture?: CompanionTextureMessage;
-    availabilityStatus: AvailabilityStatus;
-    lastCommandId?: string;
-    messages: unknown[];
-    tags: string[];
-    visitCardUrl: string | null;
-    userRoomToken?: string;
-    characterTextures: WokaDetail[];
-    jabberId?: string;
-    jabberPassword?: string | null;
-    applications?: ApplicationDefinitionInterface[] | null;
-    position: PointInterface;
-    viewport: {
-        top: number;
-        right: number;
-        bottom: number;
-        left: number;
-    };
-    mucRooms?: MucRoomDefinition[];
-    activatedInviteUser?: boolean;
-    isLogged: boolean;
-    canEdit: boolean;
-    spaceUser: SpaceUser;
-};
+import { SocketData } from "../models/Websocket/SocketData";
+import { emitInBatch } from "../services/IoSocketHelpers";
 
 type UpgradeFailedInvalidData = {
     rejected: true;
@@ -114,19 +69,28 @@ export class IoSocketController {
     }
 
     adminRoomSocket(): void {
-        this.app.ws("/admin/rooms", {
+        this.app.ws<AdminSocketData>("/admin/rooms", {
             upgrade: (res, req, context) => {
                 const websocketKey = req.getHeader("sec-websocket-key");
                 const websocketProtocol = req.getHeader("sec-websocket-protocol");
                 const websocketExtensions = req.getHeader("sec-websocket-extensions");
 
-                res.upgrade({}, websocketKey, websocketProtocol, websocketExtensions, context);
+                res.upgrade<AdminSocketData>(
+                    {
+                        adminConnections: new Map(),
+                        disconnecting: false,
+                    },
+                    websocketKey,
+                    websocketProtocol,
+                    websocketExtensions,
+                    context
+                );
             },
             open: (ws) => {
                 console.info(
                     "Admin socket connect to client on " + Buffer.from(ws.getRemoteAddressAsText()).toString()
                 );
-                ws.disconnecting = false;
+                ws.getUserData().disconnecting = false;
             },
             message: (ws, arrayBuffer): void => {
                 try {
@@ -202,7 +166,7 @@ export class IoSocketController {
                         }
 
                         for (const roomId of message.roomIds) {
-                            socketManager.handleAdminRoom(ws as ExAdminSocketInterface, roomId).catch((e) => {
+                            socketManager.handleAdminRoom(ws, roomId).catch((e) => {
                                 console.error(e);
                                 Sentry.captureException(e);
                             });
@@ -243,10 +207,9 @@ export class IoSocketController {
                 }
             },
             close: (ws) => {
-                const Client = ws as ExAdminSocketInterface;
                 try {
-                    Client.disconnecting = true;
-                    socketManager.leaveAdminRoom(Client);
+                    ws.getUserData().disconnecting = true;
+                    socketManager.leaveAdminRoom(ws);
                 } catch (e) {
                     Sentry.captureException(`An error occurred on admin "disconnect" ${e}`);
                     console.error(`An error occurred on admin "disconnect" ${e}`);
@@ -256,7 +219,7 @@ export class IoSocketController {
     }
 
     ioConnection(): void {
-        this.app.ws("/room", {
+        this.app.ws<SocketData | UpgradeFailedData>("/room", {
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
             idleTimeout: SOCKET_IDLE_TIMER,
@@ -301,7 +264,7 @@ export class IoSocketController {
                     const websocketKey = req.getHeader("sec-websocket-key");
                     const websocketProtocol = req.getHeader("sec-websocket-protocol");
                     const websocketExtensions = req.getHeader("sec-websocket-extensions");
-                    const IPAddress = req.getHeader("x-forwarded-for");
+                    const ipAddress = req.getHeader("x-forwarded-for");
                     const locale = req.getHeader("accept-language");
 
                     const {
@@ -394,7 +357,7 @@ export class IoSocketController {
                                     userIdentifier,
                                     tokenData?.accessToken,
                                     roomId,
-                                    IPAddress,
+                                    ipAddress,
                                     characterTextureIds,
                                     companionTextureId,
                                     locale
@@ -520,29 +483,19 @@ export class IoSocketController {
                             );
                         }
 
-                        const responseData = {
-                            // Data passed here is accessible on the "websocket" socket object.
+                        const socketData: SocketData = {
                             rejected: false,
+                            disconnecting: false,
                             token: token && typeof token === "string" ? token : "",
+                            roomId,
+                            userId: undefined,
                             userUuid: userData.userUuid,
                             userJid: userData.jabberId,
-                            IPAddress,
-                            userIdentifier,
-                            roomId,
+                            isLogged,
+                            ipAddress,
                             name,
-                            companionTexture,
-                            availabilityStatus,
-                            lastCommandId,
                             characterTextures,
-                            tags: memberTags,
-                            visitCardUrl: memberVisitCardUrl,
-                            userRoomToken: memberUserRoomToken,
-                            jabberId: userData.jabberId,
-                            jabberPassword: userData.jabberPassword,
-                            mucRooms: userData.mucRooms || undefined,
-                            activatedInviteUser: userData.activatedInviteUser ?? undefined,
-                            canEdit: userData.canEdit ?? false,
-                            applications: userData.applications,
+                            companionTexture,
                             position: {
                                 x: x,
                                 y: y,
@@ -555,8 +508,18 @@ export class IoSocketController {
                                 bottom,
                                 left,
                             },
-                            isLogged,
+                            availabilityStatus,
+                            lastCommandId,
                             messages: [],
+                            tags: memberTags,
+                            visitCardUrl: memberVisitCardUrl,
+                            userRoomToken: memberUserRoomToken,
+                            jabberId: userData.jabberId,
+                            jabberPassword: userData.jabberPassword,
+                            activatedInviteUser: userData.activatedInviteUser || undefined,
+                            mucRooms: userData.mucRooms || [],
+                            applications: userData.applications,
+                            canEdit: userData.canEdit ?? false,
                             spaceUser: SpaceUser.fromPartial({
                                 id: 0,
                                 uuid: userData.userUuid,
@@ -578,11 +541,26 @@ export class IoSocketController {
                                 })),
                                 visitCardUrl: memberVisitCardUrl ?? undefined,
                             }),
-                        } satisfies UpgradeData;
+                            emitInBatch: (payload: SubMessage): void => {},
+                            batchedMessages: {
+                                event: "",
+                                payload: [],
+                            },
+                            batchTimeout: null,
+                            backConnection: undefined,
+                            listenedZones: new Set<Zone>(),
+                            pusherRoom: undefined,
+                            spaces: [],
+                            spacesFilters: new Map<string, SpaceFilterMessage[]>(),
+                            cameraState: undefined,
+                            microphoneState: undefined,
+                            screenSharingState: undefined,
+                            megaphoneState: undefined,
+                        };
 
                         /* This immediately calls open handler, you must not use res after this call */
-                        res.upgrade(
-                            responseData,
+                        res.upgrade<SocketData>(
+                            socketData,
                             /* Spell these correctly */
                             websocketKey,
                             websocketProtocol,
@@ -638,41 +616,47 @@ export class IoSocketController {
                 });
             },
             /* Handlers */
-            open: (_ws: WebSocket) => {
+            open: (ws) => {
                 (async () => {
-                    const ws = _ws as WebSocket & (UpgradeData | UpgradeFailedData);
-                    if (ws.rejected === true) {
+                    const socketData = ws.getUserData();
+                    if (socketData.rejected === true) {
+                        const socket = ws as SocketUpgradeFailed;
                         // If there is a room in the error, let's check if we need to clean it.
-                        if (ws.roomId) {
-                            socketManager.deleteRoomIfEmptyFromId(ws.roomId);
+                        if ("roomId" in socketData) {
+                            socketManager.deleteRoomIfEmptyFromId(socketData.roomId);
                         }
 
-                        if (ws.reason === tokenInvalidException) {
-                            socketManager.emitTokenExpiredMessage(ws);
-                        } else if (ws.reason === "error") {
-                            socketManager.emitErrorScreenMessage(ws, ws.error);
-                        } else if (ws.reason === "invalidTexture") {
-                            if (ws.entityType === "character") {
-                                socketManager.emitInvalidCharacterTextureMessage(ws);
+                        if (socketData.reason === tokenInvalidException) {
+                            socketManager.emitTokenExpiredMessage(socket);
+                        } else if (socketData.reason === "error") {
+                            socketManager.emitErrorScreenMessage(socket, socketData.error);
+                        } else if (socketData.reason === "invalidTexture") {
+                            if (socketData.entityType === "character") {
+                                socketManager.emitInvalidCharacterTextureMessage(socket);
                             } else {
-                                socketManager.emitInvalidCompanionTextureMessage(ws);
+                                socketManager.emitInvalidCompanionTextureMessage(socket);
                             }
                         } else {
-                            socketManager.emitConnectionErrorMessage(ws, ws.message);
+                            socketManager.emitConnectionErrorMessage(socket, socketData.message);
                         }
                         ws.end(1000, "Error message sent");
                         return;
                     }
 
-                    // Let's join the room
-                    const client = this.initClient(ws);
-                    await socketManager.handleJoinRoom(client);
+                    // Mandatory for typing hint
+                    const socket = ws as Socket;
 
-                    socketManager.emitXMPPSettings(client);
+                    socketData.emitInBatch = (payload: SubMessage): void => {
+                        emitInBatch(socket, payload);
+                    };
+
+                    await socketManager.handleJoinRoom(socket);
+
+                    socketManager.emitXMPPSettings(socket);
 
                     //get data information and show messages
-                    if (client.messages && Array.isArray(client.messages)) {
-                        client.messages.forEach((c: unknown) => {
+                    if (socketData.messages && Array.isArray(socketData.messages)) {
+                        socketData.messages.forEach((c: unknown) => {
                             const messageToSend = z.object({ type: z.string(), message: z.string() }).parse(c);
 
                             const bytes = ServerToClientMessageTsProto.encode({
@@ -685,8 +669,8 @@ export class IoSocketController {
                                 },
                             }).finish();
 
-                            if (!client.disconnecting) {
-                                client.send(bytes, true);
+                            if (!socketData.disconnecting) {
+                                socket.send(bytes, true);
                             }
                         });
                     }
@@ -760,8 +744,7 @@ export class IoSocketController {
             },
             message: (ws, arrayBuffer): void => {
                 (async () => {
-                    const client = ws as ExSocketInterface;
-
+                    const socket = ws as Socket;
                     const message = ClientToServerMessage.decode(new Uint8Array(arrayBuffer));
 
                     if (!message.message) {
@@ -771,77 +754,77 @@ export class IoSocketController {
 
                     switch (message.message.$case) {
                         case "viewportMessage": {
-                            socketManager.handleViewport(client, message.message.viewportMessage);
+                            socketManager.handleViewport(socket, message.message.viewportMessage);
                             break;
                         }
                         case "userMovesMessage": {
-                            socketManager.handleUserMovesMessage(client, message.message.userMovesMessage);
+                            socketManager.handleUserMovesMessage(socket, message.message.userMovesMessage);
                             break;
                         }
                         case "playGlobalMessage": {
-                            await socketManager.emitPlayGlobalMessage(client, message.message.playGlobalMessage);
+                            await socketManager.emitPlayGlobalMessage(socket, message.message.playGlobalMessage);
                             break;
                         }
                         case "reportPlayerMessage": {
-                            await socketManager.handleReportMessage(client, message.message.reportPlayerMessage);
+                            await socketManager.handleReportMessage(socket, message.message.reportPlayerMessage);
                             break;
                         }
                         case "addSpaceFilterMessage": {
-                            socketManager.handleAddSpaceFilterMessage(client, message.message.addSpaceFilterMessage);
+                            socketManager.handleAddSpaceFilterMessage(socket, message.message.addSpaceFilterMessage);
                             break;
                         }
                         case "updateSpaceFilterMessage": {
                             socketManager.handleUpdateSpaceFilterMessage(
-                                client,
+                                socket,
                                 message.message.updateSpaceFilterMessage
                             );
                             break;
                         }
                         case "removeSpaceFilterMessage": {
                             socketManager.handleRemoveSpaceFilterMessage(
-                                client,
+                                socket,
                                 message.message.removeSpaceFilterMessage
                             );
                             break;
                         }
                         case "setPlayerDetailsMessage": {
-                            socketManager.handleSetPlayerDetails(client, message.message.setPlayerDetailsMessage);
+                            socketManager.handleSetPlayerDetails(socket, message.message.setPlayerDetailsMessage);
                             break;
                         }
                         case "watchSpaceMessage": {
                             void socketManager.handleJoinSpace(
-                                client,
+                                socket,
                                 message.message.watchSpaceMessage.spaceName,
                                 message.message.watchSpaceMessage.spaceFilter
                             );
                             break;
                         }
                         case "unwatchSpaceMessage": {
-                            void socketManager.handleLeaveSpace(client, message.message.unwatchSpaceMessage.spaceName);
+                            void socketManager.handleLeaveSpace(socket, message.message.unwatchSpaceMessage.spaceName);
                             break;
                         }
                         case "cameraStateMessage": {
-                            socketManager.handleCameraState(client, message.message.cameraStateMessage.value);
+                            socketManager.handleCameraState(socket, message.message.cameraStateMessage.value);
                             break;
                         }
                         case "microphoneStateMessage": {
-                            socketManager.handleMicrophoneState(client, message.message.microphoneStateMessage.value);
+                            socketManager.handleMicrophoneState(socket, message.message.microphoneStateMessage.value);
                             break;
                         }
                         case "screenSharingStateMessage": {
                             socketManager.handleScreenSharingState(
-                                client,
+                                socket,
                                 message.message.screenSharingStateMessage.value
                             );
                             break;
                         }
                         case "megaphoneStateMessage": {
-                            socketManager.handleMegaphoneState(client, message.message.megaphoneStateMessage);
+                            socketManager.handleMegaphoneState(socket, message.message.megaphoneStateMessage);
                             break;
                         }
                         case "jitsiParticipantIdSpaceMessage": {
                             socketManager.handleJitsiParticipantIdSpace(
-                                client,
+                                socket,
                                 message.message.jitsiParticipantIdSpaceMessage.spaceName,
                                 message.message.jitsiParticipantIdSpaceMessage.value
                             );
@@ -850,25 +833,25 @@ export class IoSocketController {
                         case "queryMessage": {
                             switch (message.message.queryMessage.query?.$case) {
                                 case "roomTagsQuery": {
-                                    void socketManager.handleRoomTagsQuery(client, message.message.queryMessage);
+                                    void socketManager.handleRoomTagsQuery(socket, message.message.queryMessage);
                                     break;
                                 }
                                 case "embeddableWebsiteQuery": {
                                     void socketManager.handleEmbeddableWebsiteQuery(
-                                        client,
+                                        socket,
                                         message.message.queryMessage
                                     );
                                     break;
                                 }
                                 case "roomsFromSameWorldQuery": {
                                     void socketManager.handleRoomsFromSameWorldQuery(
-                                        client,
+                                        socket,
                                         message.message.queryMessage
                                     );
                                     break;
                                 }
                                 default: {
-                                    socketManager.forwardMessageToBack(client, message.message);
+                                    socketManager.forwardMessageToBack(socket, message.message);
                                 }
                             }
                             break;
@@ -885,7 +868,7 @@ export class IoSocketController {
                         case "pingMessage":
                         case "editMapCommandMessage":
                         case "askPositionMessage": {
-                            socketManager.forwardMessageToBack(client, message.message);
+                            socketManager.forwardMessageToBack(socket, message.message);
                             break;
                         }
                         default: {
@@ -904,72 +887,23 @@ export class IoSocketController {
                 console.info("WebSocket backpressure: " + ws.getBufferedAmount());
             },
             close: (ws) => {
-                const client = ws as ExSocketInterface;
+                const socketData = ws.getUserData();
+
+                if (socketData.rejected === true) {
+                    return;
+                }
+
+                const socket = ws as Socket;
+
                 try {
-                    client.disconnecting = true;
-                    socketManager.leaveRoom(client);
-                    socketManager.leaveSpaces(client);
+                    socketData.disconnecting = true;
+                    socketManager.leaveRoom(socket);
+                    socketManager.leaveSpaces(socket);
                 } catch (e) {
                     Sentry.captureException(`An error occurred on "disconnect" ${e}`);
                     console.error(e);
-                } finally {
-                    if (client.pingIntervalId) {
-                        clearInterval(client.pingIntervalId);
-                    }
-                    if (client.pongTimeoutId) {
-                        clearTimeout(client.pongTimeoutId);
-                    }
                 }
             },
         });
-    }
-
-    //eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private initClient(ws: any): ExSocketInterface {
-        const client: ExSocketInterface = ws;
-        client.userJid = ws.userJid;
-        client.userUuid = ws.userUuid;
-        client.IPAddress = ws.IPAddress;
-        client.token = ws.token;
-        client.batchedMessages = {
-            event: "",
-            payload: [],
-        };
-        client.batchTimeout = null;
-        client.emitInBatch = (payload: SubMessage): void => {
-            emitInBatch(client, payload);
-        };
-        client.disconnecting = false;
-
-        client.messages = ws.messages;
-        client.name = ws.name;
-        client.userIdentifier = ws.userIdentifier;
-        client.tags = ws.tags;
-        client.visitCardUrl = ws.visitCardUrl;
-        client.characterTextures = ws.characterTextures;
-        client.companionTexture = ws.companionTexture;
-        client.availabilityStatus = ws.availabilityStatus;
-        client.lastCommandId = ws.lastCommandId;
-        client.roomId = ws.roomId;
-        client.listenedZones = new Set<Zone>();
-        client.jabberId = ws.jabberId;
-        client.jabberPassword = ws.jabberPassword;
-        client.mucRooms = ws.mucRooms;
-        client.activatedInviteUser = ws.activatedInviteUser;
-        client.canEdit = ws.canEdit;
-        client.isLogged = ws.isLogged;
-        client.applications = ws.applications;
-        client.customJsonReplacer = (key: unknown, value: unknown): string | undefined => {
-            if (key === "listenedZones") {
-                return (value as Set<Zone>).size + " listened zone(s)";
-            }
-            return undefined;
-        };
-        client.spaces = [];
-        client.spacesFilters = new Map<string, SpaceFilterMessage[]>();
-        client.cameraState = ws.cameraState;
-        client.microphoneState = ws.microphoneState;
-        client.screenSharingState = ws.screenSharingState;
-        return client;
     }
 }
