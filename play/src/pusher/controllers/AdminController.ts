@@ -239,15 +239,15 @@ export class AdminController extends BaseHttpController {
      *        required: true
      *        type: "string"
      *        description: The token to be allowed to access this API (in ADMIN_API_TOKEN environment variable)
-     *      - name: "key"
+     *      - name: "name"
      *        in: "body"
-     *        description: "The key of the event"
+     *        description: "The name of the event"
      *        required: true
      *        type: "string"
-     *      - name: "payload"
+     *      - name: "data"
      *        in: "body"
      *        description: "The payload of the event"
-     *        required: true
+     *        required: false
      *        type:
      *          oneOf:
      *          - type: "string"
@@ -268,8 +268,8 @@ export class AdminController extends BaseHttpController {
                 req,
                 res,
                 z.object({
-                    key: z.string(),
-                    payload: z.unknown(),
+                    name: z.string(),
+                    data: z.unknown().optional(),
                 })
             );
 
@@ -285,8 +285,8 @@ export class AdminController extends BaseHttpController {
                     new Promise<void>((resolve, reject) => {
                         roomClient.dispatchGlobalEvent(
                             {
-                                name: body.key,
-                                value: body.payload,
+                                name: body.name,
+                                value: body.data,
                             },
                             new Metadata(),
                             {

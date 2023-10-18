@@ -147,8 +147,8 @@ test.describe('Scripting API Events', () => {
                 "Authorization": process.env.ADMIN_API_TOKEN,
             },
             data: {
-                key: "key4",
-                payload: "value",
+                name: "key4",
+                data: "value",
             }
         });
         expect(result.status()).toBe(200);
