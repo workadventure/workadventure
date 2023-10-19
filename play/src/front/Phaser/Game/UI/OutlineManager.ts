@@ -4,6 +4,8 @@ import { DirtyScene } from "../DirtyScene";
 /**
  * Temporary solution to fix the issue with the postFX pipeline:
  * https://github.com/photonstorm/phaser/issues/6503
+ *
+ * TODO: delete this when we migrate to 3.60.1+
  */
 export class OutlineManager {
     private scene: DirtyScene;
@@ -18,7 +20,7 @@ export class OutlineManager {
             for (const [gameObject, getOutline] of this.gameObjects) {
                 this.getOutlinePlugin()?.remove(gameObject);
                 const outline = getOutline();
-                if (outline.color) {
+                if (outline.color !== undefined) {
                     this.getOutlinePlugin()?.add(gameObject, {
                         thickness: outline.thickness,
                         outlineColor: outline.color,
