@@ -86,11 +86,22 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.invisible = false;
                 this.playAnimation(direction, moving);
                 this.textureLoadedDeferred.resolve();
-                return this.getSnapshot().then((htmlImageElementSrc) => {
-                    this._pictureStore.set(htmlImageElementSrc);
-                    if (userId != undefined) {
-                        currentPlayerWokaStore.set(htmlImageElementSrc);
-                    }
+                // getSnapshot can be quite long (~16ms) so we delay it to avoid freezing the game.
+                // Since requestAnimationFrame has the priority over setTimeout, the game will keep running smoothly.
+                return new Promise<void>((resolve, reject) => {
+                    setTimeout(() => {
+                        this.getSnapshot()
+                            .then((htmlImageElementSrc) => {
+                                this._pictureStore.set(htmlImageElementSrc);
+                                if (userId != undefined) {
+                                    currentPlayerWokaStore.set(htmlImageElementSrc);
+                                }
+                                resolve();
+                            })
+                            .catch((e) => {
+                                reject(e);
+                            });
+                    }, 0);
                 });
             })
             .catch(() => {
@@ -109,6 +120,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                         this.invisible = false;
                         this.playAnimation(direction, moving);
                         this.textureLoadedDeferred.resolve();
+
                         return this.getSnapshot().then((htmlImageElementSrc) => {
                             this._pictureStore.set(htmlImageElementSrc);
                         });
