@@ -38,9 +38,7 @@ class AdminWokaService implements WokaServiceInterface {
          *       200:
          *         description: The list of the woka
          *         schema:
-         *             type: array
-         *             items:
-         *                 $ref: '#/definitions/WokaList'
+         *             $ref: '#/definitions/WokaList'
          *       404:
          *         description: Error while retrieving the data
          *         schema:
