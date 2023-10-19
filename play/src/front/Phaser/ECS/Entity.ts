@@ -169,7 +169,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.outlineColorStore.characterFarAway();
     }
 
-    public getCurrentOutline(): { thickness: number; color?: number } {
+    private getCurrentOutline(): { thickness: number; color?: number } {
         return { thickness: 2, color: get(this.outlineColorStore) };
     }
 

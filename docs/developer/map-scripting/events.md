@@ -36,7 +36,7 @@ The payload can be any JSON-serializable value (including objects, arrays, strin
 
 ## Targeting a player
 
-If you are tracking users using the [players API](./api-players.md), you can target a specific player using the `RemotePlayer.sendEvent` method:
+If you are tracking users using the [players API](./references/api-players.md), you can target a specific player using the `RemotePlayer.sendEvent` method:
 
 Example: let's send an event only to players that have the `admin` tag:
 
