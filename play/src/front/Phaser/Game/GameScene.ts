@@ -505,7 +505,7 @@ export class GameScene extends DirtyScene {
                     `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.mapUrlFile}".`
                 );
             }
-            if (typeof tileset.name === "undefined" || typeof tileset.image === "undefined") {
+            if (typeof tileset.name === "undefined" || !("image" in tileset)) {
                 console.warn("Don't know how to handle tileset ", tileset);
                 return;
             }
@@ -631,6 +631,11 @@ export class GameScene extends DirtyScene {
             if ("source" in tileset) {
                 throw new Error(
                     `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.mapUrlFile}".`
+                );
+            }
+            if (!("image" in tileset)) {
+                throw new Error(
+                    `Tilesets made of a collection of images are not supported in WorkAdventure in the Tiled map "${this.mapUrlFile}".`
                 );
             }
             const tilesetImage = this.Map.addTilesetImage(
