@@ -23,7 +23,7 @@
     "@types/uuid": "^8.3.4",
     "@workadventure/math-utils": "1.0.0",
     "@workadventure/messages": "1.0.0",
-    "@workadventure/tiled-map-type-guard": "^2.1.0",
+    "@workadventure/tiled-map-type-guard": "^2.1.2",
     "axios": "^1.3.2",
     "ipaddr.js": "^2.0.1",
     "lodash": "^4.17.21",
