@@ -134,6 +134,7 @@ import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+import { screenWakeLock } from "../../Utils/ScreenWakeLock";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -1369,11 +1370,13 @@ export class GameScene extends DirtyScene {
             // Join
             if (oldPeersNumber === 0 && newPeerNumber > oldPeersNumber) {
                 iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                screenWakeLock.requestWakeLock().catch((e) => console.error(e));
             }
 
             // Left
             if (newPeerNumber === 0 && newPeerNumber < oldPeersNumber) {
                 iframeListener.sendLeaveProximityMeetingEvent();
+                screenWakeLock.releaseWakeLock().catch((e) => console.error(e));
             }
 
             // Participant Join

@@ -9,6 +9,7 @@ import { requestedCameraState, requestedMicrophoneState } from "../../Stores/Med
 import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
+import { screenWakeLock } from "../../Utils/ScreenWakeLock";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 
 const JitsiConfig = z
@@ -198,6 +199,8 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
                                 enabled: window.navigator.userAgent.toLowerCase().indexOf("firefox") === -1,
                             });
 
+                            screenWakeLock.requestWakeLock().catch((error) => console.error(error));
+
                             this.updateParticipantsCountStore();
                         });
 
@@ -259,6 +262,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
     }
 
     private closeOrUnload() {
+        screenWakeLock.releaseWakeLock().catch((error) => console.error(error));
         if (this.isClosable()) {
             coWebsiteManager.closeCoWebsite(this);
         } else {
