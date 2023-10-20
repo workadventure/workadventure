@@ -1370,13 +1370,13 @@ export class GameScene extends DirtyScene {
             // Join
             if (oldPeersNumber === 0 && newPeerNumber > oldPeersNumber) {
                 iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
-                screenWakeLock.requestWakeLock().catch((e) => console.error(e));
+                screenWakeLock.requestWakeLock().catch((error) => console.error(error));
             }
 
             // Left
             if (newPeerNumber === 0 && newPeerNumber < oldPeersNumber) {
                 iframeListener.sendLeaveProximityMeetingEvent();
-                screenWakeLock.releaseWakeLock().catch((e) => console.error(e));
+                screenWakeLock.releaseWakeLock().catch((error) => console.error(error));
             }
 
             // Participant Join

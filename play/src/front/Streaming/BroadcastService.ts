@@ -11,6 +11,7 @@ import { RoomConnection } from "../Connection/RoomConnection";
 import { Space } from "../Space/Space";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { JITSI_DOMAIN, JITSI_MUC_DOMAIN, JITSI_XMPP_DOMAIN } from "../Enum/EnvironmentVariable";
+import { screenWakeLock } from "../Utils/ScreenWakeLock";
 import { JitsiTrackWrapper } from "./Jitsi/JitsiTrackWrapper";
 import { jitsiConferencesStore } from "./Jitsi/JitsiConferencesStore";
 import { JitsiConferenceWrapper } from "./Jitsi/JitsiConferenceWrapper";
@@ -128,6 +129,7 @@ export class BroadcastService {
         const broadcastSpace = new BroadcastSpace(this.connection, spaceName, spaceFilter, this, playSound);
         this.broadcastSpaces.push(broadcastSpace);
         broadcastServiceLogger("BroadcastService => joinSpace", spaceName);
+        screenWakeLock.requestWakeLock().catch((error) => console.error(error));
     }
 
     public leaveSpace(spaceName_: string) {
@@ -140,6 +142,7 @@ export class BroadcastService {
             broadcastServiceLogger("BroadcastService => leaveSpace", spaceName);
         }
         jitsiLoadingStore.set(false);
+        screenWakeLock.releaseWakeLock().catch((error) => console.error(error));
     }
 
     private async connect() {

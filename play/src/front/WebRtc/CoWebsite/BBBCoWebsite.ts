@@ -1,5 +1,6 @@
 import type CancelablePromise from "cancelable-promise";
 import { inExternalServiceStore } from "../../Stores/MyMediaStore";
+import { screenWakeLock } from "../../Utils/ScreenWakeLock";
 import { coWebsiteManager } from "../CoWebsiteManager";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 
@@ -16,11 +17,13 @@ export class BBBCoWebsite extends SimpleCoWebsite {
     }
 
     load(): CancelablePromise<HTMLIFrameElement> {
+        screenWakeLock.requestWakeLock().catch((error) => console.error(error));
         inExternalServiceStore.set(true);
         return super.load();
     }
 
     unload(): Promise<void> {
+        screenWakeLock.releaseWakeLock().catch((error) => console.error(error));
         inExternalServiceStore.set(false);
 
         return super.unload();
