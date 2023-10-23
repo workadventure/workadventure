@@ -2,6 +2,7 @@ import Debug from "debug";
 import type { UserSimplePeerInterface } from "../../WebRtc/SimplePeer";
 import { STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER } from "../../Enum/EnvironmentVariable";
 import { helpWebRtcSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
 
 export const debug = Debug("CheckTurn");
 
@@ -47,7 +48,7 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
     }
 
     if (window.navigator.userAgent.toLowerCase().indexOf("firefox") != -1) {
-        debug("RTC Peer Connection detection development is not available for Firefox browser!");
+        debug("RTC Peer Connection detection is not available for Firefox browser!");
         return;
     }
 
@@ -67,6 +68,7 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
             debug("onicecandidate => gathering is complete");
             if (!turnServerReached) {
                 debug("onicecandidate => no turn server found after gathering complete");
+                analyticsClient.turnTestFailure();
                 helpWebRtcSettingsVisibleStore.set("error");
             }
             if (checkPeerConnexionStatusTimeOut) {
@@ -90,6 +92,7 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
             debug("onicecandidate => The TURN server is reachable!");
             turnServerReached = true;
             helpWebRtcSettingsVisibleStore.set("hidden");
+            analyticsClient.turnTestSuccess(e.candidate.protocol);
             pc.close();
         }
     };
@@ -125,6 +128,7 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
     checkPeerConnexionStatusTimeOut = setTimeout(() => {
         if (!turnServerReached) {
             helpWebRtcSettingsVisibleStore.set("pending");
+            analyticsClient.turnTestTimeout();
         }
         if (checkPeerConnexionStatusTimeOut) {
             clearTimeout(checkPeerConnexionStatusTimeOut);

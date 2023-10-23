@@ -32,7 +32,7 @@ In order to create a zone that opens websites:
 :::warning Forbidden iframes
 A website can explicitly forbid another website from loading it in an iFrame using
 the [X-Frame-Options HTTP header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options). You can
-read more about this common issue and possible workaround the [troubleshooting guide](../troubleshooting.md#embedding-an-iframe-is-forbidden).
+read more about this common issue and possible workaround the [troubleshooting guide](./troubleshooting.md#embedding-an-iframe-is-forbidden).
 :::
 
 :::info
@@ -43,7 +43,7 @@ but we advise sticking with "area" objects for better performance!
 :::caution
 If the website you are embedding is using cookies, those cookies must be configured with the `SameSite=none` attribute. Otherwise,
 they will be ignored by the browser. If you manage to see the website you embed but cannot log into it, the `SameSite` attribute is most
-likely the culprit. You can read more about this common issue and possible workaround the [troubleshooting guide](../troubleshooting.md#i-cannot-log-into-my-embedded-website).
+likely the culprit. You can read more about this common issue and possible workaround the [troubleshooting guide](./troubleshooting.md#i-cannot-log-into-my-embedded-website).
 :::
 
 ## Integrating a Youtube video

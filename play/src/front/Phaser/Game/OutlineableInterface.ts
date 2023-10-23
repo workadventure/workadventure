@@ -7,5 +7,4 @@ export interface OutlineableInterface {
     pointerOutOutline(): void;
     characterCloseByOutline(color: number): void;
     characterFarAwayOutline(): void;
-    getCurrentOutline(): { thickness: number; color?: number };
 }

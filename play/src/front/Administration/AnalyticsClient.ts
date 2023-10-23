@@ -532,5 +532,29 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+
+    turnTestSuccess(protocol: string | null): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_turn_test_success`, { protocol });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    turnTestFailure(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_turn_test_failure`);
+            })
+            .catch((e) => console.error(e));
+    }
+
+    turnTestTimeout(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_turn_test_timeout`);
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();

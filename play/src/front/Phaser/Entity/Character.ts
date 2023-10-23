@@ -31,7 +31,7 @@ const interactiveRadius = 35;
 
 export abstract class Character extends Container implements OutlineableInterface {
     private bubble: SpeechBubble | null = null;
-    private readonly playerNameText: Text;
+    private playerNameText: Text | undefined;
     private readonly talkIcon: TalkIcon;
     protected readonly statusDot: PlayerStatusDot;
     protected readonly speakerIcon: SpeakerIcon;
@@ -48,8 +48,9 @@ export abstract class Character extends Container implements OutlineableInterfac
     scene: GameScene;
     private readonly _pictureStore: Writable<string | undefined>;
     protected readonly outlineColorStore = createColorStore();
-    private readonly outlineColorStoreUnsubscribe: Unsubscriber;
+    private outlineColorStoreUnsubscribe: Unsubscriber | undefined;
     private texturePromise: CancelablePromise<string[] | void> | undefined;
+    private destroyed = false;
 
     /**
      * A deferred promise that resolves when the texture of the character is actually displayed.
@@ -85,11 +86,22 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.invisible = false;
                 this.playAnimation(direction, moving);
                 this.textureLoadedDeferred.resolve();
-                return this.getSnapshot().then((htmlImageElementSrc) => {
-                    this._pictureStore.set(htmlImageElementSrc);
-                    if (userId != undefined) {
-                        currentPlayerWokaStore.set(htmlImageElementSrc);
-                    }
+                // getSnapshot can be quite long (~16ms) so we delay it to avoid freezing the game.
+                // Since requestAnimationFrame has the priority over setTimeout, the game will keep running smoothly.
+                return new Promise<void>((resolve, reject) => {
+                    setTimeout(() => {
+                        this.getSnapshot()
+                            .then((htmlImageElementSrc) => {
+                                this._pictureStore.set(htmlImageElementSrc);
+                                if (userId != undefined) {
+                                    currentPlayerWokaStore.set(htmlImageElementSrc);
+                                }
+                                resolve();
+                            })
+                            .catch((e) => {
+                                reject(e);
+                            });
+                    }, 0);
                 });
             })
             .catch(() => {
@@ -108,6 +120,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                         this.invisible = false;
                         this.playAnimation(direction, moving);
                         this.textureLoadedDeferred.resolve();
+
                         return this.getSnapshot().then((htmlImageElementSrc) => {
                             this._pictureStore.set(htmlImageElementSrc);
                         });
@@ -125,22 +138,53 @@ export abstract class Character extends Container implements OutlineableInterfac
             this.addCompanion(companionTexturePromise);
         }
 
-        // Todo: Replace the font family with a better one
-        this.playerNameText = new Text(scene, 0, playerNameY, name, {
-            fontFamily: '"Press Start 2P"',
-            fontSize: "8px",
-            strokeThickness: 2,
-            stroke: "#14304C",
-            metrics: {
-                ascent: 20,
-                descent: 10,
-                fontSize: 35,
-            },
-        });
+        // We delay the assignment of the text because it can take up to 16ms.
+        // If we enter a zone with 100 people, that is a 1.6s freeze.
+        // requestAnimationFrame has the priority over setTimeout so the game will keep running smoothly.
+        setTimeout(() => {
+            if (this.destroyed) {
+                // The character has been destroyed before the timeout
+                return;
+            }
 
+            // Todo: Replace the font family with a better one
+            this.playerNameText = new Text(scene, 0, playerNameY, name, {
+                fontFamily: '"Press Start 2P"',
+                fontSize: "8px",
+                strokeThickness: 2,
+                stroke: "#14304C",
+                metrics: {
+                    ascent: 20,
+                    descent: 10,
+                    fontSize: 35,
+                },
+            });
+
+            this.playerNameText.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
+            this.add([this.playerNameText]);
+
+            // Reposition status dot and megaphone icon
+            this.statusDot.x = (this.playerNameText.getLeftCenter().x ?? 0) - 6;
+            this.megaphoneIcon.x = this.playerNameText.width - 10;
+            this.statusDot.visible = true;
+            this.megaphoneIcon.visible = true;
+
+            scene.getOutlineManager().add(this.playerNameText, () => {
+                return this.getCurrentOutline();
+            });
+
+            this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
+                this.setOutline(color);
+            });
+        }, 0);
+
+        this.statusDot = new PlayerStatusDot(scene, 0, playerNameY - 1);
+        this.megaphoneIcon = new MegaphoneIcon(scene, 0, playerNameY - 1);
+        this.statusDot.visible = false;
+        this.megaphoneIcon.visible = false;
         this.talkIcon = new TalkIcon(scene, 0, -45);
         this.speakerIcon = new SpeakerIcon(scene, 0, -45);
-        this.add([this.talkIcon, this.speakerIcon]);
+        this.add([this.talkIcon, this.speakerIcon, this.statusDot, this.megaphoneIcon]);
 
         if (isClickable) {
             this.setInteractive({
@@ -149,21 +193,10 @@ export abstract class Character extends Container implements OutlineableInterfac
                 useHandCursor: true,
             });
         }
-        this.playerNameText.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
-        this.statusDot = new PlayerStatusDot(scene, (this.playerNameText.getLeftCenter().x ?? 0) - 6, playerNameY - 1);
-        this.megaphoneIcon = new MegaphoneIcon(scene, this.playerNameText.width - 10, playerNameY - 1);
-        this.add([this.playerNameText, this.statusDot, this.megaphoneIcon]);
 
         this.setClickable(isClickable);
 
-        this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
-            this.setOutline(color);
-        });
-
         scene.add.existing(this);
-        scene.getOutlineManager().add(this.getObjectToOutline(), () => {
-            return this.getCurrentOutline();
-        });
 
         this.scene.physics.world.enableBody(this);
         this.getBody().setImmovable(true);
@@ -220,10 +253,6 @@ export abstract class Character extends Container implements OutlineableInterfac
                 return { x: this.x, y: this.y };
             }
         }
-    }
-
-    public getObjectToOutline(): Phaser.GameObjects.GameObject {
-        return this.playerNameText;
     }
 
     private async getSnapshot(): Promise<string> {
@@ -377,7 +406,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         }
         this.texturePromise?.cancel();
         this.list.forEach((objectContaining) => objectContaining.destroy());
-        this.outlineColorStoreUnsubscribe();
+        this.outlineColorStoreUnsubscribe?.();
+        this.destroyed = true;
         super.destroy();
     }
 
@@ -442,6 +472,9 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     private setOutline(color: number | undefined) {
+        if (!this.playerNameText) {
+            throw new Error("Player name text is not defined when setOuline is called");
+        }
         if (color === undefined) {
             this.getOutlinePlugin()?.remove(this.playerNameText);
         } else {
@@ -464,7 +497,6 @@ export abstract class Character extends Container implements OutlineableInterfac
     private destroyEmote() {
         this.emote?.destroy();
         this.emote = null;
-        this.playerNameText.setVisible(true);
     }
 
     public get pictureStore(): PictureStore {
@@ -503,7 +535,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.outlineColorStore.characterFarAway();
     }
 
-    public getCurrentOutline(): { thickness: number; color?: number } {
+    private getCurrentOutline(): { thickness: number; color?: number } {
         return { thickness: 2, color: get(this.outlineColorStore) };
     }
 

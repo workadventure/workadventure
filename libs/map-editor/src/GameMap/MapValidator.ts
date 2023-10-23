@@ -402,6 +402,16 @@ export class MapValidator {
                 tilesetTsx.push(tileset.source);
                 continue;
             }
+
+            if (!("image" in tileset)) {
+                errors.push({
+                    type: "error",
+                    message: `The tileset "${tileset.name}" is a collection of images. Collection of images are not supported.`,
+                    details: "",
+                });
+                continue;
+            }
+
             //test of tileset image existence : ERRORS
             //TODO: optimize this by removing the await in the loop
             //eslint-disable-next-line no-await-in-loop
