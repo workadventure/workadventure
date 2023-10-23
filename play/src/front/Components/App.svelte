@@ -23,6 +23,8 @@
     import Chat from "./Chat/Chat.svelte";
     import MapEditor from "./MapEditor/MapEditor.svelte";
     import RefreshPrompt from "./RefreshPrompt.svelte";
+    import {loaderVisibleStore} from "../Stores/LoaderStore";
+    import LoaderScene from "./Loader/LoaderScene.svelte";
 
     export let game: Game;
 
@@ -33,6 +35,9 @@
      */
 </script>
 
+{#if $loaderVisibleStore }
+    <LoaderScene />
+{/if}
 {#if $errorScreenStore !== undefined}
     <div>
         <ErrorScreen />

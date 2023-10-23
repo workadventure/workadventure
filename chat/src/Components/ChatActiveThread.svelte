@@ -32,22 +32,25 @@
 </script>
 
 <!-- thread -->
-<div id="activeThread" class="flex flex-col h-full min-h-full over w-full pt-24">
-    <div class="wa-thread-head">
-        <div class="title">
-            <div class="py-1 w-14 self-stretch flex justify-center align-middle">
+<div id="activeThread" class="flex flex-col h-full min-h-full over w-full">
+    <div class="wa-thread-head fixed w-full border-x-0 border-b border-t-0 border-solid border-white/30 backdrop-blur z-20 bg-contrast/80">
+        <div class="title relative py-2">
+            <div class="absolute left-3 top-3">
                 <button
-                    class="exit text-lighter-purple m-0"
+                    class="exit p-2 hover:bg-white/20 rounded cursor-pointer"
                     on:click={() => {
                         activeThreadStore.reset();
                     }}
                 >
-                    <ArrowLeftIcon />
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="32" height="32" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M15 6l-6 6l6 6" />
+                    </svg>
                 </button>
             </div>
-            <div class="text-center pt-2 pb-3">
+            <div class="text-center p-2 pt-3">
                 <div class="flex justify-center">
-                    <b>{activeThread.name}</b>
+                    <div>{activeThread.name}</div>
                     {#if activeThread.type === "live"}
                         <div class="block relative ml-7 mt-1">
                             <span class="w-4 h-4 bg-pop-red block rounded-full absolute right-0 top-0 animate-ping" />
@@ -56,31 +59,41 @@
                     {/if}
                 </div>
                 <div
-                    class="flex flex-wrap gap-x-1 text-pop-green cursor-pointer items-center"
+                    class="flex flex-wrap justify-center gap-x-1 text-pop-green cursor-pointer items-center"
                     on:click={() => usersListViewStore.set(!$usersListViewStore)}
                 >
                     <OnlineUsers {presenceStore} />
                     {#if $usersListViewStore}<EyeOffIcon size="13" />{:else}<EyeIcon size="13" />{/if}
                 </div>
             </div>
-            <div id="settings" class="py-1 w-14 self-stretch flex justify-center align-middle">
-                <!--
-            <button class="text-lighter-purple m-0">
-                {#if $settingsViewStore}
-                    <MessageCircleIcon />
-                {:else}
-                    <SettingsIcon />
-                {/if}
-            </button>
-            -->
+            <!--
+               <div id="settings" class="py-1 w-14 self-stretch flex justify-center align-middle">
+
+               <button class="text-lighter-purple m-0">
+                   {#if $settingsViewStore}
+                       <MessageCircleIcon />
+                   {:else}
+                       <SettingsIcon />
+                   {/if}
+               </button>
             </div>
+           -->
         </div>
         {#if $me && $me.isAdmin}
-            <div class="flex flex-col flex-auto w-full">
-                <div class="wa-message-bg border border-transparent border-b-light-purple border-solid px-5 pb-0.5">
-                    <button class="wa-action" type="button" on:click|stopPropagation={() => activeThread.reInitialize()}
-                        ><RefreshCwIcon size="13" class="mr-2" /> {$LL.reinit()}
+            <div class="absolute right-4 top-3">
+                <div class="wa-message-bg">
+                    <button class="p-2 hover:bg-white/20 cursor-pointer rounded">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-dots" width="32" height="32" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                            <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                            <path d="M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                        </svg>
                     </button>
+                    <!--<button class="wa-action btn btn-sm btn-light btn-border" type="button" on:click|stopPropagation={reInitialize}>
+                        <RefreshCwIcon size="13" class="mr-2" />
+                        {$LL.reinit()}
+                    </button>-->
                 </div>
             </div>
         {/if}
@@ -103,7 +116,7 @@
     {/if}
     <div class:hidden={$usersListViewStore}>
         <ChatMessagesList mucRoom={activeThread} bind:this={messagesList} {formHeight} />
-        <div class="messageForm">
+        <div class="messageForm bottom-0 w-full fixed z-20">
             <ChatMessageForm
                 mucRoom={activeThread}
                 on:formHeight={(event) => handleFormHeight(event.detail)}
@@ -114,9 +127,4 @@
 </div>
 
 <style lang="scss">
-    .messageForm {
-        position: fixed;
-        bottom: 0;
-        width: 100%;
-    }
 </style>

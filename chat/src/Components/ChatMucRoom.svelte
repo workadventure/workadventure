@@ -32,9 +32,9 @@
     const readyStore = mucRoom.getRoomReadyStore();
 </script>
 
-<div class="wa-chat-item flex rounded bg-contrast px-4 py-2 items-center" on:mouseleave={closeChatUserMenu}>
+<div class="wa-chat-item flex rounded bg-white/10 transition-all hover:bg-white/20 pl-4 py-2 pr-2 mb-2 items-center cursor-pointer" on:mouseleave={closeChatUserMenu}>
     <div class="relative" on:click|stopPropagation={() => open()}>
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-messages" width="36" height="36" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-messages" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
             <path d="M21 14l-3 -3h-7a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1h9a1 1 0 0 1 1 1v10" />
             <path d="M14 15v2a1 1 0 0 1 -1 1h-7l-3 3v-10a1 1 0 0 1 1 -1h2" />
@@ -48,8 +48,8 @@
             {/if}
         </div>
     </div>
-    <div class="flex-auto ml-2" on:click|stopPropagation={() => open()}>
-        <div class="text-lg font-bold mb-0">
+    <div class="flex-auto ml-4 grow" on:click|stopPropagation={() => open()}>
+        <div class="text-lg font-bold mb-0 leading-5">
             {#each chunks as chunk (chunk.key)}
                 <span class={`${chunk.match ? "text-light-blue" : ""}`}>{chunk.text}</span>
             {/each}
@@ -65,7 +65,7 @@
 
     {#if $unreads}
         <span
-            class="bg-pop-red text-white w-5 h-5 mr-3 text-sm font-semibold flex items-center justify-center rounded animate-pulse"
+            class="bg-secondary text-white w-6 h-6 text-xs font-bold flex items-center justify-center rounded-full"
         >
             {$unreads}
         </span>
@@ -73,12 +73,15 @@
 
     <div class="wa-dropdown">
         <!-- toggle -->
-        <button class="text-light-purple m-0" on:click={openChatForumMenu}>
-            <MoreHorizontalIcon />
+        <button class="m-0 btn btn-white btn-ghost">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M9 6l6 6l-6 6" />
+            </svg>
         </button>
 
-        <!-- menu -->
-        <div class={`wa-dropdown-menu ${forumMenuActive ? "" : "invisible"}`} on:mouseleave={closeChatUserMenu}>
+        <!--
+        <div class={`wa-dropdown-menu ${forumMenuActive ? "" : "hidden"}`} on:mouseleave={closeChatUserMenu}>
             <span class="open wa-dropdown-item" on:click|stopPropagation={() => open()}
                 ><EyeIcon size="12" class="mr-1" /> {$LL.open()}
             </span>
@@ -87,7 +90,7 @@
                     ><RefreshCwIcon size="13" class="mr-1" /> {$LL.reinit()}</span
                 >
             {/if}
-            <!--<div class="wa-dropdown-item">Delete forum</div>-->
         </div>
+        -->
     </div>
 </div>

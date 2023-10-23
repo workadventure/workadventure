@@ -16,6 +16,7 @@
         cameraListStore,
         microphoneListStore,
         speakerListStore,
+        localVolumeStore,
         requestedCameraState,
         requestedMicrophoneState,
         silentStore,
@@ -264,10 +265,6 @@
         focusElement(key);
         clickEmoji(key);
     }
-    function disableMenuStores() {
-        menuVisiblilityStore.set(false);
-        menuIconVisiblilityStore.set(false);
-    }
 
     function showMenuItem(key: MenuKeys | string) {
         const menuItem = subMenusStore.findByKey(key);
@@ -288,25 +285,21 @@
     }
 
     function openEditNameScene() {
-        disableMenuStores();
         loginSceneVisibleStore.set(true);
         gameManager.leaveGame(LoginSceneName, new LoginScene());
     }
 
     function openEditSkinScene() {
-        disableMenuStores();
         selectCharacterSceneVisibleStore.set(true);
         gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
     }
 
     function openEditCompanionScene() {
-        disableMenuStores();
         selectCompanionSceneVisibleStore.set(true);
         gameManager.leaveGame(SelectCompanionSceneName, new SelectCompanionScene());
     }
 
     function openEnableCameraScene() {
-        disableMenuStores();
         enableCameraSceneVisibilityStore.showEnableCameraScene();
         gameManager.leaveGame(EnableCameraSceneName, new EnableCameraScene());
     }
@@ -372,7 +365,7 @@
 
     onDestroy(() => {
         subscribers.map((subscriber) => subscriber());
-        chatTotalMessagesSubscription?.unsubscribe();
+        //chatTotalMessagesSubscription?.unsubscribe();
     });
 
     const isMobile = isMediaBreakpointUp("md");
@@ -390,7 +383,8 @@
                 on:click={() =>
 			analyticsClient.openedChat()}
                 on:click={toggleChat}
-                class="flex relative transition-all duration-150 {chatVisibilityStore ? 'translate-x-0 opacity-100 visible' : 'translate-x-64 opacity-0 invisible'}"
+                class="flex relative transition-all duration-150"
+                class:opacity-0={$chatVisibilityStore}
         >
 
             <div class="group/btn-chat relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square">
@@ -430,24 +424,56 @@
                 <div class="flex items-center mr-4 absolute right-28">
                     {#if menuExpand}
                         <div class="group/btn-more bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg  aspect-square">
-                            <div class="h-12 w-12 rounded group-hover/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all">
-                                <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M1.5 3.75C1.5 3.15326 1.73705 2.58097 2.15901 2.15901C2.58097 1.73705 3.15326 1.5 3.75 1.5H6C6.59674 1.5 7.16903 1.73705 7.59099 2.15901C8.01295 2.58097 8.25 3.15326 8.25 3.75V4.875C8.25 5.47174 8.01295 6.04403 7.59099 6.46599C7.16903 6.88795 6.59674 7.125 6 7.125H3.75C3.15326 7.125 2.58097 6.88795 2.15901 6.46599C1.73705 6.04403 1.5 5.47174 1.5 4.875V3.75Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M1.5 13.875C1.5 13.2783 1.73705 12.706 2.15901 12.284C2.58097 11.8621 3.15326 11.625 3.75 11.625H6C6.59674 11.625 7.16903 11.8621 7.59099 12.284C8.01295 12.706 8.25 13.2783 8.25 13.875V17.25C8.25 17.8467 8.01295 18.419 7.59099 18.841C7.16903 19.2629 6.59674 19.5 6 19.5H3.75C3.15326 19.5 2.58097 19.2629 2.15901 18.841C1.73705 18.419 1.5 17.8467 1.5 17.25V13.875Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12.75 3.75C12.75 3.15326 12.9871 2.58097 13.409 2.15901C13.831 1.73705 14.4033 1.5 15 1.5H17.25C17.8467 1.5 18.419 1.73705 18.841 2.15901C19.2629 2.58097 19.5 3.15326 19.5 3.75V7.125C19.5 7.72174 19.2629 8.29403 18.841 8.71599C18.419 9.13795 17.8467 9.375 17.25 9.375H15C14.4033 9.375 13.831 9.13795 13.409 8.71599C12.9871 8.29403 12.75 7.72174 12.75 7.125V3.75Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M12.75 16.125C12.75 15.5283 12.9871 14.956 13.409 14.534C13.831 14.1121 14.4033 13.875 15 13.875H17.25C17.8467 13.875 18.419 14.1121 18.841 14.534C19.2629 14.956 19.5 15.5283 19.5 16.125V17.25C19.5 17.8467 19.2629 18.419 18.841 18.841C18.419 19.2629 17.8467 19.5 17.25 19.5H15C14.4033 19.5 13.831 19.2629 13.409 18.841C12.9871 18.419 12.75 17.8467 12.75 17.25V16.125Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <div class="h-12 w-12 rounded group-hover/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all"
+                                 on:click={() => analyticsClient.layoutPresentChange()}
+                                 on:click={switchLayoutMode}
+                            >
+                                {#if $embedScreenLayoutStore === LayoutMode.Presentation}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrows-minimize" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M5 9l4 0l0 -4" />
+                                    <path d="M3 3l6 6" />
+                                    <path d="M5 15l4 0l0 4" />
+                                    <path d="M3 21l6 -6" />
+                                    <path d="M19 9l-4 0l0 -4" />
+                                    <path d="M15 9l6 -6" />
+                                    <path d="M19 15l-4 0l0 4" />
+                                    <path d="M15 15l6 6" />
                                 </svg>
+                                {:else}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrows-maximize" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M16 4l4 0l0 4" />
+                                    <path d="M14 10l6 -6" />
+                                    <path d="M8 20l-4 0l0 -4" />
+                                    <path d="M4 20l6 -6" />
+                                    <path d="M16 20l4 0l0 -4" />
+                                    <path d="M14 14l6 6" />
+                                    <path d="M8 4l-4 0l0 4" />
+                                    <path d="M4 4l6 6" />
+                                </svg>
+                                {/if}
                             </div>
                         </div>
-                        <dƒiv class="group/btn-more bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg  aspect-square">
-                            <div class="h-12 w-12 rounded group-hover/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all">
+                        <div class="group/btn-more bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg  aspect-square">
+                            <div class="h-12 w-12 rounded group-hover/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all"
+                                 class:btn-secondary={$followStateStore === "active"}
+                                 class:disabled={$followStateStore !== "off"}
+                                 on:click={() => analyticsClient.follow()}
+                                 on:click={followClick}
+                            >
                                 <svg width="23" height="23" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M5.875 3.625C5.875 4.22174 5.63795 4.79403 5.21599 5.21599C4.79403 5.63795 4.22174 5.875 3.625 5.875C3.02826 5.875 2.45597 5.63795 2.03401 5.21599C1.61205 4.79403 1.375 4.22174 1.375 3.625C1.375 3.02826 1.61205 2.45597 2.03401 2.03401C2.45597 1.61205 3.02826 1.375 3.625 1.375C4.22174 1.375 4.79403 1.61205 5.21599 2.03401C5.63795 2.45597 5.875 3.02826 5.875 3.625ZM5.875 3.625L16.5625 3.625C17.6068 3.625 18.6083 4.03984 19.3467 4.77827C20.0852 5.51669 20.5 6.51821 20.5 7.5625C20.5 8.60679 20.0852 9.60831 19.3467 10.3467C18.6083 11.0852 17.6068 11.5 16.5625 11.5H6.4375C5.39321 11.5 4.39169 11.9148 3.65327 12.6533C2.91484 13.3917 2.5 14.3932 2.5 15.4375C2.5 16.4818 2.91484 17.4833 3.65327 18.2217C4.39169 18.9602 5.39321 19.375 6.4375 19.375H21.625M21.625 19.375L18.25 16M21.625 19.375L18.25 22.75" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </div>
-                        </dƒiv>
-                        <div on:click={toggleEmojiPicker} class="group/btn-more bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg  aspect-square" >
-                            <div class="h-12 w-12 rounded group-hover/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all">
+                        </div>
+                        <div
+                            class="group/btn-more bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg  aspect-square"
+                            on:click={toggleEmojiPicker}
+                        >
+                            <div
+                                class="h-12 w-12 rounded group-hover/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all"
+                            >
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <g>
                                         <path d="M9 10H9.01M15 10H15.01M9.5 15C9.82588 15.3326 10.2148 15.5968 10.6441 15.7772C11.0734 15.9576 11.5344 16.0505 12 16.0505C12.4656 16.0505 12.9266 15.9576 13.3559 15.7772C13.7852 15.5968 14.1741 15.3326 14.5 15M3 12C3 13.1819 3.23279 14.3522 3.68508 15.4442C4.13738 16.5361 4.80031 17.5282 5.63604 18.364C6.47177 19.1997 7.46392 19.8626 8.55585 20.3149C9.64778 20.7672 10.8181 21 12 21C13.1819 21 14.3522 20.7672 15.4442 20.3149C16.5361 19.8626 17.5282 19.1997 18.364 18.364C19.1997 17.5282 19.8626 16.5361 20.3149 15.4442C20.7672 14.3522 21 13.1819 21 12C21 10.8181 20.7672 9.64778 20.3149 8.55585C19.8626 7.46392 19.1997 6.47177 18.364 5.63604C17.5282 4.80031 16.5361 4.13738 15.4442 3.68508C14.3522 3.23279 13.1819 3 12 3C10.8181 3 9.64778 3.23279 8.55585 3.68508C7.46392 4.13738 6.47177 4.80031 5.63604 5.63604C4.80031 6.47177 4.13738 7.46392 3.68508 8.55585C3.23279 9.64778 3 10.8181 3 12Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>

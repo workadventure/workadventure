@@ -161,7 +161,7 @@
 
 <svelte:window on:keydown={onKeyDown} on:click={onClick} />
 
-<aside class="chatWindow h-full" bind:this={chatWindowElement}>
+<aside class="chatWindow h-full text-white relative after:content-[''] after:absolute after:w-[1px] after:h-full after:right-0 after:top-0 after:bg-white/30 after:z-50" bind:this={chatWindowElement}>
     <section class="p-0 m-0 h-full">
         {#if $showPart === "activeTimeline"}
             <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => timelineActiveStore.set(false)} />
@@ -170,7 +170,7 @@
                 <ChatActiveThread activeThread={$activeThreadStore} />
             {/if}
         {:else if ["home", "connectionNotAuthorized", "loading"].includes($showPart)}
-            <div class="flex flex-col items-stretch">
+            <div class="flex flex-col items-stretch h-screen">
                 {#if $showPart === "connectionNotAuthorized"}
                     <NeedRefresh />
                 {:else if $showPart === "loading"}
@@ -183,10 +183,10 @@
                         <nav class="nav">
                             <div class:chat={$navChat === "chat"}></div>
                             <ul class="list-none flex justify-between">
-                                <li class="w-1/2 py-4 text-center cursor-pointer bold {$navChat === 'chat' ? 'bg-contrast/80 text-white' : ''}" on:click={() => navChat.set("chat")}>
+                                <li class="w-1/2 py-4 text-center cursor-pointer bold border border-solid border-secondary border-x-0 border-b-0 {$navChat === 'chat' ? 'bg-contrast/80 text-white border-t-2' : 'border-t-0'}" on:click={() => navChat.set("chat")}>
                                     Chat
                                 </li>
-                                <li class="w-1/2 py-4 text-center cursor-pointer bold {$navChat === 'users' ? 'bg-contrast/80 text-white' : ''}" on:click={() => navChat.set("users")}>
+                                <li class="w-1/2 py-4 text-center cursor-pointer bold border border-solid border-secondary border-x-0 border-b-0 {$navChat === 'users' ? 'bg-contrast/80 text-white border-t-2' : 'border-t-0'}" on:click={() => navChat.set("users")}>
                                     {$LL.users()}
                                 </li>
                             </ul>
@@ -195,7 +195,7 @@
                         <div class="bg-contrast/80">
                             <div class="p-3 relative">
                                 <input
-                                        class="wa-searchbar block text-white w-full placeholder:text-sm rounded-full pr-4 py-4 pl-12 border-light-purple border border-solid hover:bg-contrast/80 transition-all focus:placeholder:text-white focus:bg-contrast focus:outline-secondary bg-transparent peer"
+                                        class="wa-searchbar block text-white w-full placeholder:text-sm rounded-full pr-4 py-3 pl-12 border-light-purple border border-solid hover:bg-contrast/80 transition-all focus:placeholder:text-white focus:bg-contrast focus:pl-14 focus:outline-secondary bg-transparent peer"
                                         placeholder={$navChat === "users" ? $LL.searchUser() : $LL.searchChat()}
                                         bind:value={searchValue}
                                         autofocus
@@ -235,16 +235,20 @@
                     <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
                 {/if}
                 {#if ENABLE_OPENID && $enableChat}
-                    <div class="bg-contrast/80">
-                        <div class="p-3 text-sm text-center">
-                            <div class="text-sm italic">{$LL.signIn()}</div>
-                            <button type="button" class="m-auto btn btn-sm btn-border btn-light cursor-pointer mt-3" on:click={login}>
+                    <div class="">
+                        <div class="p-3 text-sm bg-secondary rounded bottom-4 absolute w-11/12 left-0 right-0 m-auto flex items-center pl-6 pr-3">
+                            <div class="text-sm italic grow pr-2 leading-5">{$LL.signIn()}</div>
+                            <button type="button" class="m-auto btn btn-sm btn-light cursor-pointer whitespace-nowrap !text-secondary !bold" on:click={login}>
                                 {$LL.logIn()}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-right stroke-secondary translate-x-0.5" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M9 6l6 6l-6 6" />
+                                </svg>
                             </button>
                         </div>
                     </div>
                 {/if}
-                <div class="h-full bg-contrast/80"></div>
+                <div class="h-full bg-contrast/80 w-full grow flex-1"></div>
             </div>
         {/if}
     </section>
@@ -255,7 +259,6 @@
 <style lang="scss">
     aside.chatWindow {
         pointer-events: auto;
-        color: whitesmoke;
         display: flex;
         flex-direction: column;
     }

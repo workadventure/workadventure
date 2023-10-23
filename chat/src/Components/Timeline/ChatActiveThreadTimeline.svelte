@@ -453,7 +453,7 @@
             </div>
             <div class="text-center p-2 pt-3">
                 <div class="flex justify-center">
-                    <b>{$LL.timeLine.title()}</b>
+                    <div>{$LL.timeLine.title()}</div>
                     {#if $chatPeerConnectionInProgress}
                         <div class="block relative ml-7 mt-1">
                             <span class="w-4 h-4 bg-pop-green block rounded-full absolute right-0 top-0 animate-ping" />
@@ -506,10 +506,10 @@
                     <div class={`flex ${message.type === ChatMessageTypes.me ? "justify-end text-right" : "justify-start"}`}>
                         {#if !needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)}
                         <div
-                            class="aspect-ratio w-12 h-12 p-1 overflow-hidden rounded-lg { message.type === ChatMessageTypes.me ? 'opacity-0' : 'mt-4' } relative wa-avatar-mini mr-2" style={`background-color: ${message.author?.color ?? "#56eaff"}`}>
-                            <div class="wa-container">
+                            class="relative wa-avatar aspect-ratio h-10 w-10 rounded overflow-hidden false cursor-default { message.type === ChatMessageTypes.me ? 'opacity-0' : 'mt-6' } wa-avatar-mini mr-2" style={`background-color: ${message.author?.color ?? "#56eaff"}`}>
+                            <div class="wa-container cursor-default">
                                 <img
-                                    class="w-full"
+                                    class="cursor-default w-full mt-2"
                                     style="image-rendering: pixelated;"
                                     src={`${message.author?.woka ? message.author?.woka : defaultWoka}`}
                                     alt="Avatar"
@@ -734,18 +734,7 @@
                             on:blur={onBlur}
                             class="bg-contrast rounded border border-solid border-white/20 px-4 py-2 focus:outline-secondary"
                     ></div>
-                    <button
-                            class="bg-transparent p-0 m-0 inline-flex justify-center items-center absolute right-2 top-0 bottom-0 m-auto opacity-50 hover:opacity-100 cursor-pointer { emojiOpened ? 'text-light-blue' : '' }"
-                            on:click|preventDefault|stopPropagation={openEmoji}
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-mood-smile" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                            <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-                            <path d="M9 10l.01 0" />
-                            <path d="M15 10l.01 0" />
-                            <path d="M9.5 15a3.5 3.5 0 0 0 5 0" />
-                        </svg>
-                    </button>
+
                 </div>
                 <div class="actions">
                     <div class="flex items-center space-x-1">

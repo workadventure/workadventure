@@ -84,20 +84,18 @@
             <div class="px-4 py-1 flex items-center">
                 {#if !$loadingSubscribersStore}
                     <span
-                        class="{room !== 'disconnected'
-                            ? 'bg-light-blue'
-                            : 'bg-gray'} text-dark-purple min-w-[20px] h-5 mr-3 text-sm font-semibold flex items-center justify-center rounded"
+                        class="{room !== 'disconnected' ? 'bg-secondary' : 'bg-white/30'} min-w-[20px] h-5 mr-3 text-xs font-bold flex items-center justify-center rounded-full"
                     >
                         {usersByMaps.get(room)?.length}
                     </span>
                 {/if}
-                <p class="text-light-blue mb-0 text-sm flex-auto">
+                <div class="mb-0 text-sm flex-auto">
                     {#if $me && $me.roomName === room}
                         {$LL.userList.isHere()}
                     {:else}
                         {room}
                     {/if}
-                </p>
+                </div>
                 <button
                     class="text-lighter-purple"
                     on:click={() => shownRoomListStore.set($shownRoomListStore === room ? "" : room)}

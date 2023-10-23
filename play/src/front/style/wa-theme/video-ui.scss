@@ -23,12 +23,6 @@
 .scale-y-min {
     transform: scaleY(0.1);
 }
-
-.other-cameras {
-    @apply bottom-32 sm:bottom-48 md:bottom-28 xl:bottom-36 2xl:bottom-48 mb-2 overflow-y-auto overflow-x-hidden h-fit;
-    //lg:bottom-24
-}
-
 .container-end {
     @apply flex flex-col absolute justify-end;
 }

@@ -3,6 +3,7 @@ import { DirtyScene } from "../Game/DirtyScene";
 import { gameManager } from "../Game/GameManager";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import Texture = Phaser.Textures.Texture;
+import {loaderProgressStore, loaderVisibleStore} from "../../Stores/LoaderStore";
 
 const TextName = "Loading...";
 
@@ -26,32 +27,35 @@ export class Loader {
 
     public addLoader(): void {
         // If there is nothing to load, do not display the loader.
-        if (this.scene.load.list.entries.length === 0) {
-            return;
-        }
+        /*
+if (this.scene.load.list.entries.length === 0) {
+    return;
+}
 
-        const logoResource = gameManager.currentStartedRoom.loadingLogo ?? "static/images/logo.png";
-        this.logoNameIndex = "logoLoading" + logoResource;
+loaderVisibleStore.set(true);
 
-        //add loading if logo image until logo image is ready
-        this.loadingText = this.scene.add.text(
+const logoResource = gameManager.currentStartedRoom.loadingLogo ?? "static/images/logo.png";
+this.logoNameIndex = "logoLoading" + logoResource;
+
+//add loading if logo image until logo image is ready
+this.loadingText = this.scene.add.text(
+    this.scene.game.renderer.width / 2,
+    this.scene.game.renderer.height / 2 - 50,
+    TextName
+);
+
+const logoPromise = this.superLoad.image(this.logoNameIndex, logoResource);
+logoPromise
+    .then((texture) => {
+        this.logo = this.scene.add.image(
             this.scene.game.renderer.width / 2,
-            this.scene.game.renderer.height / 2 - 50,
-            TextName
+            this.scene.game.renderer.height / 2 - 35,
+            texture
         );
 
-        const logoPromise = this.superLoad.image(this.logoNameIndex, logoResource);
-        logoPromise
-            .then((texture) => {
-                this.logo = this.scene.add.image(
-                    this.scene.game.renderer.width / 2,
-                    this.scene.game.renderer.height / 2 - 35,
-                    texture
-                );
-
-                this.loadingText?.destroy();
-            })
-            .catch((e) => console.warn("Could not load logo: ", logoResource, e));
+        this.loadingText?.destroy();
+    })
+    .catch((e) => console.warn("Could not load logo: ", logoResource, e));
 
         let poweredByLogoPromise: CancelablePromise<Texture> | undefined;
         if (gameManager.currentStartedRoom.loadingLogo && gameManager.currentStartedRoom.showPoweredBy !== false) {
@@ -70,27 +74,29 @@ export class Loader {
                 .catch((e) =>
                     console.warn('Could not load image "static/images/Powered_By_WorkAdventure_Small.png"', e)
                 );
-        }
+        }*/
 
-        this.progressContainer = this.scene.add.graphics();
-        this.progressContainer.fillStyle(0x1B2A41, 1);
-        this.progress = this.scene.add.graphics();
+                //this.progressContainer = this.scene.add.graphics();
+                //this.progressContainer.fillStyle(0x1B2A41, 1);
+                //this.progress = this.scene.add.graphics();
 
-        this.resize();
+                //this.resize();
 
-        this.scene.load.on("progress", (value: number) => {
-            this.progressAmount = value;
-            this.drawProgress();
-        });
+                this.scene.load.on("progress", (value: number) => {
+                    this.progressAmount = value;
+                    loaderProgressStore.set(value);
+                    //this.drawProgress();
+                });
 
-        const resizeFunction = this.resize.bind(this);
-        this.scene.scale.on(Phaser.Scale.Events.RESIZE, resizeFunction);
-
-        if (gameManager.currentStartedRoom && gameManager.currentStartedRoom.backgroundColor != undefined) {
-            this.scene.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
-        }
-
+                //const resizeFunction = this.resize.bind(this);
+                //this.scene.scale.on(Phaser.Scale.Events.RESIZE, resizeFunction);
+                /*
+                if (gameManager.currentStartedRoom && gameManager.currentStartedRoom.backgroundColor != undefined) {
+                    this.scene.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
+                }
+                */
         this.scene.load.on("complete", () => {
+            /*
             if (this.loadingText) {
                 this.loadingText.destroy();
             }
@@ -106,58 +112,64 @@ export class Loader {
                 this.scene.markDirty();
             }
             this.scene.scale.off(Phaser.Scale.Events.RESIZE, resizeFunction);
+
+             */
+            loaderVisibleStore.set(false);
         });
     }
 
     public removeLoader(): void {
+        /*
         if (this.scene.load.textureManager.exists(this.logoNameIndex)) {
             this.scene.load.textureManager.remove(this.logoNameIndex);
         }
         if (this.scene.load.textureManager.exists("poweredByLogo")) {
             this.scene.load.textureManager.remove("poweredByLogo");
         }
+        */
+        loaderVisibleStore.set(false);
+    }
+    /*
+    public resize(): void {
+    const loadingBarWidth: number = this.scene.game.renderer.width;
+
+    this.progressContainer.clear();
+    this.progressContainer.fillStyle(0x1B2A41, 0.1);
+    this.progressContainer.fillRect(
+        (this.scene.game.renderer.width - loadingBarWidth) / 2 - padding,
+        this.scene.game.renderer.height / 2 + 50 - padding,
+        loadingBarWidth,
+        loadingBarHeight + padding
+    );
+
+    this.drawProgress();
+
+    if (this.loadingText) {
+        this.loadingText.x = this.scene.game.renderer.width / 2;
+        this.loadingText.y = this.scene.game.renderer.height / 2 - 50;
     }
 
-    public resize(): void {
-        const loadingBarWidth: number = this.scene.game.renderer.width;
+    if (this.logo) {
+        this.logo.x = this.scene.game.renderer.width / 2;
+        this.logo.y = this.scene.game.renderer.height / 2 - 150;
+    }
 
-        this.progressContainer.clear();
-        this.progressContainer.fillStyle(0x1B2A41, 0.1);
-        this.progressContainer.fillRect(
-            (this.scene.game.renderer.width - loadingBarWidth) / 2 - padding,
-            this.scene.game.renderer.height / 2 + 50 - padding,
-            loadingBarWidth,
-            loadingBarHeight + padding
-        );
-
-        this.drawProgress();
-
-        if (this.loadingText) {
-            this.loadingText.x = this.scene.game.renderer.width / 2;
-            this.loadingText.y = this.scene.game.renderer.height / 2 - 50;
-        }
-
-        if (this.logo) {
-            this.logo.x = this.scene.game.renderer.width / 2;
-            this.logo.y = this.scene.game.renderer.height / 2 - 150;
-        }
-
-        if (this.poweredByLogo) {
-            this.poweredByLogo.x = this.scene.game.renderer.width / 2;
-            this.poweredByLogo.y = this.scene.game.renderer.height - 40;
-        }
+    if (this.poweredByLogo) {
+        this.poweredByLogo.x = this.scene.game.renderer.width / 2;
+        this.poweredByLogo.y = this.scene.game.renderer.height - 40;
+    }
     }
 
     private drawProgress() {
-        const loadingBarWidth: number =this.scene.game.renderer.width;
+    const loadingBarWidth: number =this.scene.game.renderer.width;
 
-        this.progress.clear();
-        this.progress.fillStyle(0x4156F6, 1);
-        this.progress.fillRect(
-            (this.scene.game.renderer.width - loadingBarWidth) / 2,
-            this.scene.game.renderer.height / 2,
-            loadingBarWidth * this.progressAmount,
-            loadingBarHeight
-        );
-    }
+    this.progress.clear();
+    this.progress.fillStyle(0x4156F6, 1);
+    this.progress.fillRect(
+        (this.scene.game.renderer.width - loadingBarWidth) / 2,
+        this.scene.game.renderer.height / 2,
+        loadingBarWidth * this.progressAmount,
+        loadingBarHeight
+    );
+    }*/
 }

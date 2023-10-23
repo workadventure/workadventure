@@ -262,7 +262,7 @@
         top: 0;
         left: -100%;
         height: 100%;
-        width: 22%;
+        max-width: 500px;
         min-width: 335px;
         transition: all 0.2s ease-in-out;
         pointer-events: none;

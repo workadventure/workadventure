@@ -511,38 +511,53 @@
     /* eslint-disable svelte/require-each-key */
 </script>
 
-<div class="wa-message-form" bind:this={messageForm}>
+<div class="wa-message-form fixed bottom-0 w-full z-20" bind:this={messageForm}>
     {#if $selectedMessageToReply}
-        <div class="replyMessage" on:click={() => selectedMessageToReply.set(null)}>
-            <div
-                style={`border-bottom-color:${getColor($selectedMessageToReply.name)}`}
-                class={`mr-9 flex items-end justify-between mx-2 border-0 border-b border-solid text-light-purple-alt text-xxs pb-0.5 ${
-                    isMe($selectedMessageToReply.name) ? "flex-row-reverse" : "flex-row"
-                }`}
-            >
-                <span class={`text-lighter-purple ${isMe($selectedMessageToReply.name) ? "ml-2" : "mr-2"}`}
-                    >{#if isMe($selectedMessageToReply.name)}{$LL.me()}{:else}{$selectedMessageToReply.name}{/if}</span
-                >
-                <span class="text-xxxs"
-                    >{$selectedMessageToReply.time.toLocaleTimeString($locale, {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                    })}</span
-                >
-            </div>
+        <div class="replyMessage w-full bg-secondary relative" on:click={() => selectedMessageToReply.set(null)}>
             <div class="flex flex-wrap items-center justify-between">
-                <div class="w-11/12 message rounded-lg bg-dark text-xs px-3 py-2 text-left">
-                    <p class="mb-0 whitespace-pre-line break-words">
-                        {$selectedMessageToReply.body}
-                    </p>
+                <div class="grow message text-xs px-4 py-2 text-left w-full pr-12">
+                    <div class="flex items-end justify-between text-xxs">
+                    <span class="text-white opacity-50"
+                    >
+                        {#if isMe($selectedMessageToReply.name)}{$LL.me()}{:else}{$selectedMessageToReply.name}{/if} -
+                       {$selectedMessageToReply.time.toLocaleTimeString($locale, {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                        })}
+                    </span>
+                    </div>
+                    <div class="mb-0 whitespace-pre-line break-words flex">
+                        <div class="mr-1 opacity-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-corner-down-right" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M6 6v6a3 3 0 0 0 3 3h10l-4 -4m0 8l4 -4" />
+                            </svg>
+                        </div>
+                        <div class="truncate">
+                            {$selectedMessageToReply.body}
+                        </div>
+                    </div>
                     {#if $selectedMessageToReply && $selectedMessageToReply.links && $selectedMessageToReply.links.length > 0}
                         {#each $selectedMessageToReply.links as link (link.url)}
-                            <File url={link.url} name={link.description} />
+                            <div class="flex pt-2">
+                                <div class="px-1 aspect-square h-6 w-6 opacity-30">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-paperclip s-58EZrIzJfOBz" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" class="s-58EZrIzJfOBz"></path>
+                                        <path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5" class="s-58EZrIzJfOBz"></path>
+                                    </svg>
+                                </div>
+                                <a href="{link.url}" target="_blank" class="no-underline text-white ml-3 max-w-full text-ellipsis overflow-hidden whitespace-nowrap hover:underline">
+                                    {link.description}
+                                </a>
+                            </div>
                         {/each}
                     {/if}
                 </div>
-                <div class="close">
-                    <XCircleIcon size="17" />
+                <div class="close absolute right-0 top-0 bottom-0 m-auto h-full w-9 hover:bg-white/10 text-center flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="mt-1 icon icon-tabler icon-tabler-x s-58EZrIzJfOBz" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" class="s-58EZrIzJfOBz"></path><path d="M18 6l-12 12" class="s-58EZrIzJfOBz"></path>
+                        <path d="M6 6l12 12" class="s-58EZrIzJfOBz"></path>
+                    </svg>
                 </div>
             </div>
         </div>
@@ -608,11 +623,10 @@
     {/if}
 
     <form on:submit|preventDefault={sendMessage}>
-        <div class="w-full p-2">
+        <div class="w-full  ">
             {#each [...$filesUploadStore.values()] as fileUploaded}
                 <div
-                    class="upload-file flex flex-wrap rounded-3xl text-xxs justify-between items-center mx-6 px-3 mb-1"
-                    style="backdrop-filter: blur(30px);border: solid 1px rgb(27 27 41);"
+                    class="upload-file flex flex-wrap text-xs justify-between items-center px-4 py-2 relative bg-secondary"
                 >
                     {#if fileUploaded.errorMessage !== undefined}
                         <div
@@ -656,7 +670,12 @@
                         class="flex flex-wrap text-xxs items-center"
                     >
                         {#if fileUploaded.uploadState === uploadingState.finish}
-                            <CheckIcon size="14" class="text-pop-green" />
+                            <div class="px-1 aspect-square h-6 w-6 opacity-30">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-paperclip s-58EZrIzJfOBz" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" class="s-58EZrIzJfOBz"></path>
+                                    <path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5" class="s-58EZrIzJfOBz"></path>
+                                </svg>
+                            </div>
                         {:else if fileUploaded.uploadState === uploadingState.error}
                             <div
                                 class="alert-upload cursor-pointer"
@@ -667,18 +686,22 @@
                         {:else}
                             <LoaderIcon size="14" class="animate-spin" />
                         {/if}
-                        <span class="ml-1 max-w-full text-ellipsis overflow-hidden whitespace-nowrap">
+                        <span class="ml-3 max-w-full text-ellipsis overflow-hidden whitespace-nowrap">
                             {fileUploaded.name}
                         </span>
-                    </div>
-                    <button
-                        on:click|preventDefault|stopPropagation={() => {
+                        <button
+                                on:click|preventDefault|stopPropagation={() => {
                             handlerDeleteUploadedFile(fileUploaded);
                         }}
-                        class="delete pr-0 mr-0"
-                    >
-                        <Trash2Icon size="14" />
-                    </button>
+                                class="delete p-0 m-0 absolute right-0 top-0 h-full w-9 hover:bg-white/10 text-center"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="mt-1 icon icon-tabler icon-tabler-x" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M18 6l-12 12" />
+                                <path d="M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             {/each}
             {#if informationMessage}
@@ -695,7 +718,7 @@
                 </div>
             {/if}
 
-            <div class="w-full px-2 pb-2 flex flex-row justify-center items-center">
+            <div class="w-full px-2 py-2 flex flex-row justify-center items-center bg-contrast/80 border-x-0 border-b-0 border-t border-solid border-white/30 backdrop-blur">
                 <div class="actions px-2 py-2">
                     <div class="flex items-center space-x-1">
                         <button
@@ -704,54 +727,70 @@
                             on:click|preventDefault|stopPropagation={toggleApplicationMenu}
                             disabled={$applications.size === 0}
                         >
-                            <img
-                                src={`./static/images/applications/app${applicationMenuIsOpenned ? "On" : "Off"}.png`}
-                                alt="send"
-                                width="17px"
-                            />
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-apps" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+                                <path d="M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+                                <path d="M14 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+                                <path d="M14 7l6 0" />
+                                <path d="M17 4l0 6" />
+                            </svg>
                         </button>
                     </div>
                 </div>
-                <div
-                    contenteditable="true"
-                    bind:this={textarea}
-                    bind:textContent={newMessageText}
-                    bind:innerHTML={htmlMessageText}
-                    data-placeholder={$LL.enterText()}
-                    on:input={onInput}
-                    on:keydown={onKeyDown}
-                    on:keypress={onKeyPress}
-                />
-                <div class="actions px-2 py-2">
-                    <div class="flex items-center space-x-1">
-                        <button
-                            class={`bg-transparent p-0 m-0 inline-flex justify-center items-center ${
-                                emojiOpened ? "text-light-blue" : ""
-                            }`}
+                <div class="relative grow">
+                    <div
+                            contenteditable="true"
+                            bind:this={textarea}
+                            bind:textContent={newMessageText}
+                            bind:innerHTML={htmlMessageText}
+                            data-placeholder={$LL.enterText()}
+                            on:input={onInput}
+                            on:keydown={onKeyDown}
+                            on:keypress={onKeyPress}
+                            class="bg-contrast rounded border border-solid border-white/20 px-4 py-2 focus:outline-secondary"
+                    ></div>
+                    <button
+                            class="bg-transparent p-0 m-0 inline-flex justify-center items-center absolute right-2 top-0 bottom-0 m-auto opacity-50 hover:opacity-100 cursor-pointer { emojiOpened ? 'text-light-blue' : '' }"
                             on:click|preventDefault|stopPropagation={openEmoji}
-                        >
-                            <SmileIcon size="17" />
-                        </button>
-                        {#if $enableChatUpload}
-                            <input
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-mood-smile" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                            <path d="M9 10l.01 0" />
+                            <path d="M15 10l.01 0" />
+                            <path d="M9.5 15a3.5 3.5 0 0 0 5 0" />
+                        </svg>
+                    </button>
+                    {#if $enableChatUpload}
+                        <input
                                 type="file"
                                 id="file"
                                 name="file"
                                 class="hidden"
                                 on:input={handleInputFile}
                                 multiple
-                            />
-                            <label for="file" class="m-0 cursor-pointer"><PaperclipIcon size="17" /></label>
-                        {:else}
-                            <button
+                        />
+                        <label for="file" class="bg-transparent p-0 m-0 inline-flex justify-center items-center absolute right-10 top-0 bottom-0 m-auto opacity-50 hover:opacity-100 cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-paperclip" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5" />
+                            </svg>
+                        </label>
+                    {:else}
+                        <button
                                 id="file"
                                 class={`bg-transparent p-0 m-0 inline-flex justify-center items-center opacity-50`}
                                 on:click|preventDefault|stopPropagation={() =>
                                     (informationMessage = $LL.disabledByAdmin())}
-                            >
-                                <PaperclipIcon size="17" />
-                            </button>
-                        {/if}
+                        >
+                            <PaperclipIcon size="17" />
+                        </button>
+                    {/if}
+                </div>
+                <div class="actions px-2 py-2">
+                    <div class="flex items-center space-x-1">
+
                         <button
                             id="send"
                             type="submit"
@@ -769,7 +808,11 @@
                             {:else if $hasInProgressUploadingFile}
                                 <LoaderIcon size="17" class="animate-spin" />
                             {:else}
-                                <SendIcon size="17" />
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-send" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M10 14l11 -11" />
+                                    <path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5" />
+                                </svg>
                             {/if}
                         </button>
                     </div>
@@ -785,44 +828,6 @@
 </div>
 
 <style lang="scss">
-    .replyMessage {
-        padding: 0 20px;
-        margin: 0;
-        position: relative;
-
-        .close {
-            color: rgb(146 142 187);
-            &:hover {
-                color: rgb(255 71 90);
-            }
-        }
-
-        &::after {
-            //content: "x";
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            color: white;
-            font-size: 12px;
-            position: absolute;
-            top: 0;
-            right: 4px;
-            border: solid 1px white;
-            text-align: center;
-            border-radius: 99%;
-        }
-
-        .message {
-            opacity: 1;
-        }
-
-        &:hover {
-            cursor: pointer;
-            .close {
-                color: rgb(255 71 90);
-            }
-        }
-    }
 
     .wa-dropdown-menu {
         margin: 0 0 0 10px;
@@ -849,8 +854,6 @@
 
     form {
         display: flex;
-        padding-left: 4px;
-        padding-right: 4px;
         // button {
         //     background-color: #254560;
         //     border-bottom-right-radius: 4px;

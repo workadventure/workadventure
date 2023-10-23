@@ -28,21 +28,16 @@
 
 .wa-message{
     .actions{
-        visibility: hidden;
-        justify-content: space-between;
         .action{
-            cursor: pointer;
-            opacity: 0.8;
-            position: relative;
             .caption{
-                @apply absolute bg-dark-blue px-2 py-1 rounded-xl border-lighter-purple border border-solid;
+                @apply absolute bg-contrast px-2 py-1 rounded-xl;
                 display: none;
                 top: -32px;
                 left: 50%;
                 transform: translateX(-50%);
                 z-index: 10;
                 &::before{
-                    @apply absolute border-t-lighter-purple;
+                    @apply absolute border-t-contrast;
                     left: calc( 50% - 10px );
                     top: 100.5%;
                     content: '';
@@ -54,7 +49,7 @@
                     border-top-style: solid;
                 }
                 &::after{
-                    @apply absolute border-t-dark-blue;
+                    @apply absolute border-t-contrast;
                     margin-left: -50%;
                     top: 100%;
                     content: '';
@@ -138,12 +133,6 @@
                 &:hover {
                     --bg-opacity: 1;
                     background-color: rgb(77 75 103 / var(--bg-opacity));
-                }
-            }
-
-            &:hover {
-                span.action > span {
-                    display: block;
                 }
             }
         }

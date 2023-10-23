@@ -106,37 +106,37 @@
 
 <!-- TODO All 'cursor-default' will be deleted when Chat 1to1 will be released -->
 <div
-    class={`wa-chat-item ${user.isAdmin ? "admin" : "user"}  cursor-default`}
+    class="wa-chat-item relative flex items-center my-3 mx-4 {user.isAdmin ? 'admin' : 'user'}  cursor-default"
     on:click|stopPropagation={() => openChat(user)}
     on:mouseleave={closeChatUserMenu}
 >
     <div
-        class={`relative wa-avatar ${!user.active && "opacity-50"}  cursor-default`}
+        class="relative wa-avatar aspect-ratio h-10 w-10 rounded overflow-hidden {!user.active && 'opacity-50'}  cursor-default"
         style={`background-color: ${getColor(user.jid)}`}
         on:click|stopPropagation={() => openChat(user)}
     >
-        <div class="wa-container  cursor-default">
+        <div class="wa-container cursor-default">
             <img
-                class="w-full  cursor-default"
+                class="cursor-default w-full mt-2"
                 style="image-rendering: pixelated;"
                 src={getWoka(user.jid)}
                 alt="Avatar"
             />
         </div>
-        {#if user.active && user.availabilityStatus}
-            <span
-                title={getNameOfAvailabilityStatus(user.availabilityStatus)}
-                class={`w-4 h-4 ${getColorOfAvailabilityStatus(
-                    user.availabilityStatus
-                )}  cursor-default block rounded-full absolute right-0 top-0 transform translate-x-2 -translate-y-1 border-solid border-2 border-light-purple`}
-            />
-        {/if}
     </div>
+    {#if user.active && user.availabilityStatus}
+            <span
+                    title={getNameOfAvailabilityStatus(user.availabilityStatus)}
+                    class={`w-4 h-4 ${getColorOfAvailabilityStatus(
+                    user.availabilityStatus
+                )}  cursor-default block rounded-full absolute -left-1.5 -top-1 border-solid border-2 border-contrast`}
+            ></span>
+    {/if}
     <div
-        class={`flex-auto ml-3 ${!user.active && "opacity-50"}  cursor-default`}
+        class="flex-auto ml-3 $cursor-default"
         on:click|stopPropagation={() => openChat(user)}
     >
-        <h1 class={`text-sm font-bold mb-0  cursor-default`}>
+        <div class={`text-sm font-bold mb-0  cursor-default`}>
             {#each chunks as chunk (chunk.key)}
                 <span class={`${chunk.match ? "text-light-blue" : ""}  cursor-default`}>{chunk.text}</span>
             {/each}
@@ -168,8 +168,8 @@
                     -->
                 {/if}
             {/if}
-        </h1>
-        <p class="text-xs mb-0 font-condensed opacity-75  cursor-default">
+        </div>
+        <div class="text-xs mb-0 font-condensed opacity-75  cursor-default">
             {#if user.isMe}
                 {$LL.you()}
             {:else if user.active}
@@ -177,7 +177,7 @@
             {:else}
                 {$LL.userList.disconnected()}
             {/if}
-        </p>
+        </div>
     </div>
 
     {#if user.unreads}
@@ -189,7 +189,7 @@
     {/if}
 
     {#if user.active && !user.isMe}
-        <div class="wa-dropdown">
+        <div class="wa-dropdown hidden">
             <button class="text-light-purple focus:outline-none m-0" on:click|stopPropagation={openChatUserMenu}>
                 <MoreHorizontalIcon />
             </button>

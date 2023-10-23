@@ -16,13 +16,15 @@
     <div id="forumRooms" class="bg-contrast/80">
         <div class="px-8 flex items-center">
             {#if $unread > 0}
-                <span class="bg-pop-red text-white w-5 h-5 mr-3 text-sm font-semibold flex items-center justify-center rounded animate-pulse">
-                    {$unread}
-                </span>
+                <div class="pb-4">
+                    <span class="bg-secondary text-white w-6 h-6 mr-3 text-xs font-bold flex items-center justify-center rounded-full">
+                        {$unread}
+                    </span>
+                </div>
             {/if}
-            <p class="font-title font-lg uppercase opacity-50">
+            <div class="font-title font-lg uppercase opacity-50 pb-4">
                 Forums
-            </p>
+            </div>
             <!--<button class="text-lighter-purple">
                 <ChevronUpIcon class={`transform transition ${$showForumsStore ? "" : "rotate-180"}`} />
             </button>-->

@@ -219,12 +219,12 @@
     </div>
 
     <div
-        class="wa-messages-list flex flex-col flex-auto px-5 overflow-x-hidden overflow-y-scroll justify-end tw-h-auto min-h-screen"
+        class="wa-messages-list flex flex-col flex-auto px-5 pt-24 pb-16 justify-end h-auto min-h-screen relative z-10"
     >
-        <div class="mb-auto load-history">
+        <div class="mb-auto load-history flex items-center pb-2">
             {#if $canLoadOlderMessagesStore}
                 {#if !$loadingStore}
-                    <button class="m-auto cursor-pointer text-xs" on:click={() => mucRoom.sendRetrieveLastMessages()}
+                    <button class="m-auto cursor-pointer text-xs rounded-xl btn btn-border btn-light btn-xs !px-3" on:click={() => mucRoom.sendRetrieveLastMessages()}
                         >{$LL.load()}
                         {$LL.more()}
                         <ArrowUpIcon size="13" class="ml-1" /></button
@@ -233,7 +233,7 @@
                     <div
                         style="border-top-color:transparent"
                         class="w-5 h-5 border-2 border-white border-solid rounded-full animate-spin m-auto"
-                    />
+                    ></div>
                 {/if}
             {:else if $showDisabledLoadOlderMessagesStore && $me && $me.isAdmin}
                 {#if ADMIN_API_URL}
@@ -249,7 +249,7 @@
         </div>
         {#each $messagesStore as message, i (message.id)}
             {#if showDate(message.time, i)}
-                <div class="wa-separator">
+                <div class="wa-separator text-xs text-center w-full opacity-50">
                     {message.time.toLocaleDateString($locale, {
                         year: "numeric",
                         month: "short",
@@ -307,20 +307,24 @@
             </div>
         {/each}
         {#if $unreads > 0}
-            <div class="w-full fixed left-0 bottom-28 animate-bounce cursor-pointer">
+            <div class="w-full fixed left-0 bottom-16 animate-bounce cursor-pointer">
                 <div
                     in:fly={{ y: 10, duration: 200 }}
                     style="margin: auto"
-                    class="bg-lighter-purple rounded-xl h-5 px-2 w-fit text-xs flex justify-center items-center shadow-grey"
+                    class="bg-secondary rounded-xl px-3 py-1 w-fit text-xs flex justify-center items-center shadow-grey"
                     role="button"
                     tabindex="0"
                     on:click={scrollDownAndRead}
                 >
-                    <ArrowDownIcon size="14" />
-                    <p class="m-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevrons-down" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M7 7l5 5l5 -5" />
+                        <path d="M7 13l5 5l5 -5" />
+                    </svg>
+                    <div class="ml-1">
                         {$unreads}
                         {$unreads > 1 ? "nouveaux messages" : "nouveau message"}
-                    </p>
+                    </div>
                 </div>
             </div>
         {/if}
