@@ -11,6 +11,7 @@ import { RoomConnection } from "../Connection/RoomConnection";
 import { Space } from "../Space/Space";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { JITSI_DOMAIN, JITSI_MUC_DOMAIN, JITSI_XMPP_DOMAIN } from "../Enum/EnvironmentVariable";
+import { screenWakeLock } from "../Utils/ScreenWakeLock";
 import { JitsiTrackWrapper } from "./Jitsi/JitsiTrackWrapper";
 import { jitsiConferencesStore } from "./Jitsi/JitsiConferencesStore";
 import { JitsiConferenceWrapper } from "./Jitsi/JitsiConferenceWrapper";
@@ -88,6 +89,7 @@ export class BroadcastService {
     private jitsiConnection: JitsiConnection | undefined;
     private broadcastSpaces: BroadcastSpace[];
     private readonly _jitsiTracks: ForwardableStore<Map<string, JitsiTrackWrapper>>;
+    private screenWakeRelease: (() => Promise<void>) | undefined;
 
     constructor(private connection: RoomConnection) {
         /**
@@ -128,6 +130,10 @@ export class BroadcastService {
         const broadcastSpace = new BroadcastSpace(this.connection, spaceName, spaceFilter, this, playSound);
         this.broadcastSpaces.push(broadcastSpace);
         broadcastServiceLogger("BroadcastService => joinSpace", spaceName);
+        screenWakeLock
+            .requestWakeLock()
+            .then((release) => (this.screenWakeRelease = release))
+            .catch((error) => console.error(error));
     }
 
     public leaveSpace(spaceName_: string) {
@@ -140,6 +146,13 @@ export class BroadcastService {
             broadcastServiceLogger("BroadcastService => leaveSpace", spaceName);
         }
         jitsiLoadingStore.set(false);
+        if (this.screenWakeRelease) {
+            this.screenWakeRelease()
+                .then(() => {
+                    this.screenWakeRelease = undefined;
+                })
+                .catch((error) => console.error(error));
+        }
     }
 
     private async connect() {
