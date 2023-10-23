@@ -70,7 +70,7 @@
     "ts-proto": "^1.123.1",
     "typesafe-i18n": "^5.6.0",
     "uuid": "^9.0.0",
-    "zod": "^3.14.3"
+    "zod": "^3.22.3"
   },
   "scripts": {
     "start": "run-p serve svelte-check-watch typesafe-i18n-watch",
