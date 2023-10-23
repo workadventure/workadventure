@@ -42,7 +42,7 @@ dynamic behavior.
 |---------------------------------------------------------------------------|----------------------------------------------------------------|
 | I want to quickly place **objects** or **furniture** (tables / chairs...) | Inline Map Editor ([Entity Editor](inline-editor/entity-editor/index.md))   |
 | I want to add **interactive objects** (computer opening a website...)     | Inline Map Editor ([entity editor](inline-editor/entity-editor/index.md))   |
-| I want to add **areas** of interest (exits, entries, meeting rooms...)    | Mostly Inline Map Editor ([Entity Editor](inline-editor/area-editor.md)) |
+| I want to add **areas** of interest (exits, entries, meeting rooms...)    | Mostly Inline Map Editor ([Entity Editor](inline-editor/area-editor/index.md)) |
 | I want to edit the map in **real-time**, cooperating with multiple users  | [Inline Map Editor](inline-editor/index.md)                          |
 | I want to configure global settings (Microphone...)                       | [Inline Map Editor](inline-editor/index.md)                          |
 | I want to edit **floors** and **walls**                                   | [Tiled](tiled-editor/index.md)                                     |
