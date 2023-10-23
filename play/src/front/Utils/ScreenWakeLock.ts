@@ -1,10 +1,7 @@
 class ScreenWakeLock {
     private isSupported: boolean;
-    private wakeLock: WakeLockSentinel | null;
 
     constructor() {
-        this.wakeLock = null;
-
         if ("wakeLock" in navigator) {
             this.isSupported = true;
             console.log("Screen Wake Lock API supported!");
@@ -15,23 +12,15 @@ class ScreenWakeLock {
     }
 
     async requestWakeLock() {
-        if (!this.isSupported || this.wakeLock !== null) {
+        if (!this.isSupported) {
             return;
         }
 
-        this.wakeLock = await navigator.wakeLock.request("screen");
-        console.log("Screen Wake Lock is active");
-    }
+        const request = await navigator.wakeLock.request("screen");
 
-    async releaseWakeLock() {
-        if (!this.isSupported || this.wakeLock === null) {
-            return;
-        }
-
-        await this.wakeLock.release().then(() => {
-            this.wakeLock = null;
-        });
-        console.log("Screen Wake Lock is released");
+        return async function () {
+            await request.release();
+        };
     }
 }
 

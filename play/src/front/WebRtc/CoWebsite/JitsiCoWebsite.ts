@@ -137,6 +137,8 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
     private dominantSpeakerChangedCallback = this.onDominantSpeakerChanged.bind(this);
     private participantsCountChangeCallback = this.onParticipantsCountChange.bind(this);
 
+    private screenWakeRelease: (() => Promise<void>) | undefined;
+
     constructor(
         url: URL,
         widthPercent: number | undefined,
@@ -199,7 +201,10 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
                                 enabled: window.navigator.userAgent.toLowerCase().indexOf("firefox") === -1,
                             });
 
-                            screenWakeLock.requestWakeLock().catch((error) => console.error(error));
+                            screenWakeLock
+                                .requestWakeLock()
+                                .then((release) => (this.screenWakeRelease = release))
+                                .catch((error) => console.error(error));
 
                             this.updateParticipantsCountStore();
                         });
@@ -262,7 +267,13 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
     }
 
     private closeOrUnload() {
-        screenWakeLock.releaseWakeLock().catch((error) => console.error(error));
+        if (this.screenWakeRelease) {
+            this.screenWakeRelease()
+                .then(() => {
+                    this.screenWakeRelease = undefined;
+                })
+                .catch((error) => console.error(error));
+        }
         if (this.isClosable()) {
             coWebsiteManager.closeCoWebsite(this);
         } else {

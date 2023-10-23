@@ -89,6 +89,7 @@ export class BroadcastService {
     private jitsiConnection: JitsiConnection | undefined;
     private broadcastSpaces: BroadcastSpace[];
     private readonly _jitsiTracks: ForwardableStore<Map<string, JitsiTrackWrapper>>;
+    private screenWakeRelease: (() => Promise<void>) | undefined;
 
     constructor(private connection: RoomConnection) {
         /**
@@ -129,7 +130,10 @@ export class BroadcastService {
         const broadcastSpace = new BroadcastSpace(this.connection, spaceName, spaceFilter, this, playSound);
         this.broadcastSpaces.push(broadcastSpace);
         broadcastServiceLogger("BroadcastService => joinSpace", spaceName);
-        screenWakeLock.requestWakeLock().catch((error) => console.error(error));
+        screenWakeLock
+            .requestWakeLock()
+            .then((release) => (this.screenWakeRelease = release))
+            .catch((error) => console.error(error));
     }
 
     public leaveSpace(spaceName_: string) {
@@ -142,7 +146,13 @@ export class BroadcastService {
             broadcastServiceLogger("BroadcastService => leaveSpace", spaceName);
         }
         jitsiLoadingStore.set(false);
-        screenWakeLock.releaseWakeLock().catch((error) => console.error(error));
+        if (this.screenWakeRelease) {
+            this.screenWakeRelease()
+                .then(() => {
+                    this.screenWakeRelease = undefined;
+                })
+                .catch((error) => console.error(error));
+        }
     }
 
     private async connect() {

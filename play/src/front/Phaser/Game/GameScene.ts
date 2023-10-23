@@ -1355,6 +1355,8 @@ export class GameScene extends DirtyScene {
         const talkIconVolumeTreshold = 10;
         let oldPeersNumber = 0;
         let oldUsers = new Map<number, MessageUserJoined>();
+        let screenWakeRelease: (() => Promise<void>) | undefined;
+
         this.peerStoreUnsubscriber = peerStore.subscribe((peers) => {
             const newPeerNumber = peers.size;
             const newUsers = new Map<number, MessageUserJoined>();
@@ -1370,13 +1372,23 @@ export class GameScene extends DirtyScene {
             // Join
             if (oldPeersNumber === 0 && newPeerNumber > oldPeersNumber) {
                 iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
-                screenWakeLock.requestWakeLock().catch((error) => console.error(error));
+                screenWakeLock
+                    .requestWakeLock()
+                    .then((release) => (screenWakeRelease = release))
+                    .catch((error) => console.error(error));
             }
 
             // Left
             if (newPeerNumber === 0 && newPeerNumber < oldPeersNumber) {
                 iframeListener.sendLeaveProximityMeetingEvent();
-                screenWakeLock.releaseWakeLock().catch((error) => console.error(error));
+
+                if (screenWakeRelease) {
+                    screenWakeRelease()
+                        .then(() => {
+                            screenWakeRelease = undefined;
+                        })
+                        .catch((error) => console.error(error));
+                }
             }
 
             // Participant Join
