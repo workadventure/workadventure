@@ -5,6 +5,7 @@ import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { throttle } from "throttle-debounce";
 import { MapStore } from "@workadventure/store-utils";
+import { MathUtils } from "@workadventure/math-utils";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import {
@@ -2476,20 +2477,35 @@ ${escapedMessage}
         }
     }
 
+    /**
+     * Analyze the #moveTo parameter in the URL.
+     * This function will try to move the player
+     *
+     * - to the X,Y coordinates if this is X,Y coordinates
+     * - if not, to the WAM area with the given name
+     * - if not found, to the Tiled area with the given name
+     * - if not found, to the Tiled layer with the given name
+     */
     private tryMovePlayerWithMoveToParameter(): void {
         const moveToParam = urlManager.getHashParameter("moveTo");
         if (moveToParam) {
             try {
-                let endPos;
+                let endPos: { x: number; y: number };
                 const posFromParam = StringUtils.parsePointFromParam(moveToParam);
                 if (posFromParam) {
                     endPos = this.gameMapFrontWrapper.getTileIndexAt(posFromParam.x, posFromParam.y);
                 } else {
-                    const destinationObject = this.gameMapFrontWrapper.getObjectWithName(moveToParam);
-                    if (destinationObject) {
-                        endPos = this.gameMapFrontWrapper.getTileIndexAt(destinationObject.x, destinationObject.y);
+                    const areaData = this.gameMapFrontWrapper.getAreaByName(moveToParam);
+                    if (areaData) {
+                        const pixelEndPos = MathUtils.randomPositionFromRect(areaData);
+                        endPos = this.gameMapFrontWrapper.getTileIndexAt(pixelEndPos.x, pixelEndPos.y);
                     } else {
-                        endPos = this.gameMapFrontWrapper.getRandomPositionFromLayer(moveToParam);
+                        const destinationObject = this.gameMapFrontWrapper.getObjectWithName(moveToParam);
+                        if (destinationObject) {
+                            endPos = this.gameMapFrontWrapper.getTileIndexAt(destinationObject.x, destinationObject.y);
+                        } else {
+                            endPos = this.gameMapFrontWrapper.getRandomPositionFromLayer(moveToParam);
+                        }
                     }
                 }
 
