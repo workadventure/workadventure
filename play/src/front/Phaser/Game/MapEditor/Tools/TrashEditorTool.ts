@@ -5,6 +5,7 @@ import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/Are
 import { DeleteAreaFrontCommand } from "../Commands/Area/DeleteAreaFrontCommand";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
+import { Entity } from "../../../ECS/Entity";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
 export class TrashEditorTool extends EntityRelatedEditorTool {
@@ -107,6 +108,14 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
         if (!this.active) {
             return;
         }
+
+        const firstGameObject = gameObjects[0];
+
+        if (firstGameObject && firstGameObject instanceof Entity) {
+            firstGameObject.delete();
+            return;
+        }
+
         const areaEditorToolObjects = this.getAreaEditorToolObjectsFromGameObjects(gameObjects);
         if (areaEditorToolObjects.length === 1) {
             if (this.isAreaPreview(areaEditorToolObjects[0])) {

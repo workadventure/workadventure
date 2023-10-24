@@ -314,7 +314,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 !get(mapEditorSelectedEntityPrefabStore)
             ) {
                 if (this.isTrashEditorToolActive()) {
-                    entity.delete();
                     return;
                 }
                 mapEditorEntityModeStore.set("EDIT");
