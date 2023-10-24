@@ -272,6 +272,9 @@
     transition: all 0.2s ease;
 
     video {
-        object-fit: contain;
+        object-fit: cover;
+        &.object-contain {
+            object-fit: contain;
+        }
     }
 }
