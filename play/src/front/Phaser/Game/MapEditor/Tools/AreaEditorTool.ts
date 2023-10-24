@@ -563,12 +563,8 @@ export class AreaEditorTool extends MapEditorTool {
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
         areaPreview.on(AreaPreviewEvent.DragStart, () => {
             this.draggingdArea = true;
-            this.drawAreaOldPositionPreview(
-                areaPreview.x - areaPreview.width * 0.5,
-                areaPreview.y - areaPreview.height * 0.5,
-                areaPreview.width,
-                areaPreview.height
-            );
+            const areaData = areaPreview.getAreaData();
+            this.drawAreaOldPositionPreview(areaData.x, areaData.y, areaData.width, areaData.height);
         });
         areaPreview.on(AreaPreviewEvent.Released, () => {
             this.draggingdArea = false;
