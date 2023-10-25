@@ -2495,7 +2495,11 @@ ${escapedMessage}
                 if (posFromParam) {
                     endPos = this.gameMapFrontWrapper.getTileIndexAt(posFromParam.x, posFromParam.y);
                 } else {
-                    const areaData = this.gameMapFrontWrapper.getAreaByName(moveToParam);
+                    // First, try by id
+                    let areaData = this.gameMapFrontWrapper.getAreas()?.get(moveToParam);
+                    if (!areaData) {
+                        areaData = this.gameMapFrontWrapper.getAreaByName(moveToParam);
+                    }
                     if (areaData) {
                         const pixelEndPos = MathUtils.randomPositionFromRect(areaData);
                         endPos = this.gameMapFrontWrapper.getTileIndexAt(pixelEndPos.x, pixelEndPos.y);
