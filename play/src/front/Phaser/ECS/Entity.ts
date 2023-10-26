@@ -104,9 +104,19 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public activate(): void {
-        if (!(get(mapEditorModeStore) && get(mapEditorEntityModeStore) === "EDIT")) {
-            this.toggleActionsMenu();
+        if (get(mapEditorModeStore)) {
+            actionsMenuStore.clear();
+            return;
         }
+
+        const editorMode = get(mapEditorEntityModeStore);
+
+        if (editorMode !== "EDIT") {
+            actionsMenuStore.clear();
+            return;
+        }
+
+        this.toggleActionsMenu();
     }
 
     public deactivate(): void {

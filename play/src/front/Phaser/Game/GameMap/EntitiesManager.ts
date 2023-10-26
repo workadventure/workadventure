@@ -310,16 +310,17 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             }
             if (
                 get(mapEditorModeStore) &&
-                this.isEntityEditorToolActive() &&
+                (this.isEntityEditorToolActive() || this.isTrashEditorToolActive()) &&
                 !get(mapEditorSelectedEntityPrefabStore)
             ) {
+                if (document.activeElement instanceof HTMLElement) {
+                    document.activeElement.blur();
+                }
+
                 if (this.isTrashEditorToolActive()) {
                     return;
                 }
                 mapEditorEntityModeStore.set("EDIT");
-                if (document.activeElement instanceof HTMLElement) {
-                    document.activeElement.blur();
-                }
                 mapEditorSelectedEntityStore.set(entity);
             }
         });
