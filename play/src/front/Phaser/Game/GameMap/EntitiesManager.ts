@@ -236,15 +236,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         entity.on(EntityEvent.Updated, (data: EntityData) => {
             this.emit(EntitiesManagerEvent.UpdateEntity, data);
         });
-        entity.on(Phaser.Input.Events.DRAG_START, () => {
-            if (
-                get(mapEditorModeStore) &&
-                this.isEntityEditorToolActive() &&
-                get(mapEditorEntityModeStore) === "EDIT"
-            ) {
-                mapEditorSelectedEntityDraggedStore.set(true);
-            }
-        });
         entity.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
             if (
                 get(mapEditorModeStore) &&
@@ -308,9 +299,10 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             if (pointer.downElement?.tagName !== "CANVAS") {
                 return;
             }
+
             if (
                 get(mapEditorModeStore) &&
-                (this.isEntityEditorToolActive() || this.isTrashEditorToolActive()) &&
+                this.isEntityEditorToolActive() &&
                 !get(mapEditorSelectedEntityPrefabStore)
             ) {
                 if (document.activeElement instanceof HTMLElement) {
@@ -320,7 +312,9 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 if (this.isTrashEditorToolActive()) {
                     return;
                 }
+
                 mapEditorEntityModeStore.set("EDIT");
+                mapEditorSelectedEntityDraggedStore.set(true);
                 mapEditorSelectedEntityStore.set(entity);
             }
         });
