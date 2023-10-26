@@ -69,8 +69,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         super();
         this.scene = scene;
         this.gameMapFrontWrapper = gameMapFrontWrapper;
-        this.shiftKey = this.scene.input.keyboard?.addKey("SHIFT");
-        this.ctrlKey = this.scene.input.keyboard?.addKey("CTRL");
+        this.shiftKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+        this.ctrlKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
         this.entities = new Map<string, Entity>();
         this.activatableEntities = [];
         this.properties = new Map<string, string | boolean | number>();

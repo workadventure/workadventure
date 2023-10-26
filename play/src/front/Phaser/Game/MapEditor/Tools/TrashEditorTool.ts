@@ -17,7 +17,7 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
         super(mapEditorModeManager);
 
         this.active = false;
-        this.ctrlKey = this.scene.input.keyboard?.addKey("CTRL");
+        this.ctrlKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
         this.areaPreviews = this.createAreaPreviews();
         this.bindEventHandlers();
     }

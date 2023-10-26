@@ -59,8 +59,8 @@ export class AreaEditorTool extends MapEditorTool {
         this.mapEditorModeManager = mapEditorModeManager;
         this.scene = this.mapEditorModeManager.getScene();
 
-        this.shiftKey = this.scene.input.keyboard?.addKey("SHIFT");
-        this.ctrlKey = this.scene.input.keyboard?.addKey("CTRL");
+        this.shiftKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+        this.ctrlKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
 
         this.areaPreviews = this.createAreaPreviews();
         this.active = false;
