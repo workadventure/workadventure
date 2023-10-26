@@ -248,15 +248,14 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 if (this.ctrlKey?.isDown) {
                     this.emit(AreaPreviewEvent.Copied, {
                         position: {
-                            x: this.oldPosition.x - this.areaData.width * 0.5,
-                            y: this.oldPosition.y - this.areaData.height * 0.5,
+                            x: this.areaData.x,
+                            y: this.areaData.y,
                         },
                         width: this.areaData.width,
                         height: this.areaData.height,
                         name: this.areaData.name,
                         properties: structuredClone(this.areaData.properties),
                     } as CopyAreaEventData);
-                    return;
                 }
                 this.updateAreaDataWithSquaresAdjustments();
                 const data: AtLeast<AreaData, "id"> = {
