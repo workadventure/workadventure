@@ -152,21 +152,19 @@ export class MapEditorModeManager {
     // A simple queue to be sure we run only one undo or redo at once.
     private runningUndoRedoCommand: Promise<void> = Promise.resolve();
 
-    public undoCommand(): void {
+    public async undoCommand(): Promise<void> {
         if (this.localCommandsHistory.length === 0 || this.currentCommandIndex === -1) {
             return;
         }
         try {
             const command = this.localCommandsHistory[this.currentCommandIndex];
-            const undoCommand1 = command.getUndoCommand();
-            this.pendingCommands.push(command);
-            logger("adding command to pendingList : ", command);
-
-            // do any necessary changes for active tool interface
-            //this.handleCommandExecutionByTools(undoCommand1, true);
+            const undoCommand = command.getUndoCommand();
+            await undoCommand.execute();
+            this.pendingCommands.push(undoCommand);
+            logger("adding command to pendingList : ", undoCommand);
 
             // this should not be called with every change. Use some sort of debounce
-            this.emitMapEditorUpdate(undoCommand1);
+            this.emitMapEditorUpdate(undoCommand);
             this.currentCommandIndex -= 1;
         } catch (e) {
             this.localCommandsHistory.splice(this.currentCommandIndex, 1);
@@ -175,7 +173,7 @@ export class MapEditorModeManager {
         }
     }
 
-    public redoCommand(): void {
+    public async redoCommand(): Promise<void> {
         if (
             this.localCommandsHistory.length === 0 ||
             this.currentCommandIndex === this.localCommandsHistory.length - 1
@@ -184,7 +182,7 @@ export class MapEditorModeManager {
         }
         try {
             const command = this.localCommandsHistory[this.currentCommandIndex + 1];
-            //const commandConfig = await command.execute();
+            await command.execute();
             this.pendingCommands.push(command);
             logger("adding command to pendingList : ", command);
 
@@ -292,6 +290,9 @@ export class MapEditorModeManager {
                     }
                     return;
                 }
+
+                logger("Received command from server", editMapCommandMessage.id);
+
                 if (this.pendingCommands.length > 0) {
                     if (this.pendingCommands[0].commandId === editMapCommandMessage.id) {
                         logger("removing command of pendingList : ", editMapCommandMessage.id);

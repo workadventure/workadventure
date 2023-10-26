@@ -31,7 +31,13 @@ export class DeleteEntityFrontCommand extends DeleteEntityCommand implements Fro
         if (!this.entityData) {
             return new VoidFrontCommand();
         }
-        return new CreateEntityFrontCommand(this.gameMap, undefined, this.entityData, undefined, this.entitiesManager);
+        return new CreateEntityFrontCommand(
+            this.gameMap,
+            this.entityId,
+            this.entityData,
+            undefined,
+            this.entitiesManager
+        );
     }
 
     public emitEvent(roomConnection: RoomConnection): void {
