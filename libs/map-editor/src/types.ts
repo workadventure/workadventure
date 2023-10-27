@@ -82,6 +82,7 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
             z.literal("website"),
             z.literal("youtube"),
             z.literal("klaxoon"),
+            z.literal("googleDrive"),
             z.literal("googleDocs"),
             z.literal("googleSheets"),
             z.literal("googleSlides"),
@@ -254,6 +255,7 @@ export type OpenWebsiteTypePropertiesKeys =
     | "website"
     | "youtube"
     | "klaxoon"
+    | "googleDrive"
     | "googleDocs"
     | "googleSheets"
     | "googleSlides"

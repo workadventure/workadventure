@@ -78,6 +78,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             warningEmbeddableLink: "Tutón link njemóže so zapołožić.",
             errorInvalidUrl: 'Njepłaćiwa URL. Dyrbi so z "http: /" abo "https: / /" započeć.',
             findOutMoreHere: "Tu zhoniće wjace",
+            openPickerSelector: "Wubrać",
         },
         advancedOptions: "Rozšěrjene opcije",
         speakerMegaphoneProperties: {
@@ -104,6 +105,48 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Hdźež ludźo kartu wopušća.",
             exitMap: "Kartu wopušćić",
             exitMapStartAreaName: "startowy wobłuk",
+        },
+        youtubeProperties: {
+            label: "Youtube-Video wočinić",
+            description: "Youtube-Video při zastupje wočinić.",
+            error: "Prošu zapodać płaćiwy Youtube-URL",
+            disabled: "Youtube-wočinjenje je deaktiwowane.",
+        },
+        googleDocsProperties: {
+            label: "Google Docs wočinić",
+            description: "Google Docs při zastupje wočinić.",
+            error: "Prošu zapodać płaćiwy Google Docs-URL",
+            disabled: "Google Docs-wočinjenje je deaktiwowane.",
+        },
+        klaxoonProperties: {
+            label: "Klaxoon wočinić",
+            description: "Klaxoon při zastupje wočinić.",
+            error: "Prošu zapodać płaćiwy Klaxoon-URL",
+            disabled: "Klaxoon-wočinjenje je deaktiwowane.",
+        },
+        googleSheetsProperties: {
+            label: "Google Sheets wočinić",
+            description: "Google Sheets při zastupje wočinić.",
+            error: "Prošu zapodać płaćiwy Google Sheets-URL",
+            disabled: "Google Sheets-wočinjenje je deaktiwowane.",
+        },
+        googleSlidesProperties: {
+            label: "Google Slides wočinić",
+            description: "Google Slides při zastupje wočinić.",
+            error: "Prošu zapodać płaćiwy Google Slides-URL",
+            disabled: "Google Slides-wočinjenje je deaktiwowane.",
+        },
+        eraserProperties: {
+            label: "Eraser wočinić",
+            description: "Eraser při zastupje wočinić.",
+            error: "Prošu zapodać płaćiwy Eraser-URL",
+            disabled: "Eraser-wočinjenje je deaktiwowane.",
+        },
+        googleDriveProperties: {
+            label: "Google Drive wočinić",
+            description: "Google Drive při zastupje wočinić.",
+            error: "Prošu zapodać płaćiwy Google Drive-URL",
+            disabled: "Google Drive-wočinjenje je deaktiwowane.",
         },
     },
     areaEditor: {

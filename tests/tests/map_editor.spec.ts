@@ -373,4 +373,14 @@ test.describe('Map editor', () => {
     // check if the popup with application is opened
     await expect(page.locator('.actions-menu .actions button').nth(0)).toContainText('Open Klaxoon');
   });
+
+  // Create test for Google picker docs
+  // test('Successfully open Google picker for docs', async ({ page, browser, request, browserName }) => {});
+
+  // Create test for Google picker spreadsheet
+
+  // Create test fir Google picker presentation
+
+  // Create test for Google picker drive
+
 });

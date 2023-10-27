@@ -19,6 +19,7 @@
     import webSvg from "../images/web-white.svg";
     import youtubeSvg from "../images/applications/icon_youtube.svg";
     import klaxoonSvg from "../images/applications/icon_klaxoon.svg";
+    import googleDriveSvg from "../images/applications/icon_google_drive.svg";
     import googleDocsSvg from "../images/applications/icon_google_docs.svg";
     import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
@@ -95,6 +96,11 @@
                     case "klaxoon":
                         placeholder = "https://app.klaxoon.com/";
                         buttonLabel = $LL.mapEditor.properties.klaxoonProperties.label();
+                        break;
+                    case "googleDrive":
+                        placeholder =
+                            "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit";
+                        buttonLabel = $LL.mapEditor.properties.googleDriveProperties.label();
                         break;
                     case "googleDocs":
                         placeholder =
@@ -238,6 +244,18 @@
             disabled={!connectionManager.currentRoom?.youtubeToolActivated}
             on:click={() => {
                 onAddProperty("openWebsite", "youtube");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.googleDriveProperties.label()}
+            descriptionText={connectionManager.currentRoom?.googleDriveToolActivated
+                ? $LL.mapEditor.properties.googleDriveProperties.description()
+                : $LL.mapEditor.properties.googleDriveProperties.disabled()}
+            img={googleDriveSvg}
+            style="z-index: 3;"
+            disabled={!connectionManager.currentRoom?.googleDriveToolActivated}
+            on:click={() => {
+                onAddProperty("openWebsite", "googleDrive");
             }}
         />
         <AddPropertyButton

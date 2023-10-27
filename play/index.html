@@ -128,6 +128,39 @@
                 });
             </script>
         {{/logRocketId}}
+        
+        {{#googleDrivePickerClientId}}
+            <script type="text/javascript">
+                window.pickerInited = false;
+                window.gisInited = false;
+            
+                /**
+                 * Callback after api.js is loaded.
+                 */
+                function gapiLoaded() {
+                    gapi.load('client:picker', initializePicker);
+                }
+
+                /**
+                 * Callback after the API client is loaded. Loads the
+                 * discovery doc to initialize the API.
+                 */
+                async function initializePicker() {
+                    await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
+                    pickerInited = true;
+                }
+            
+                /**
+                 * Callback after Google Identity Services are loaded.
+                 */
+                function gisLoaded() {
+                    window.gisInited = true;
+                }
+            </script>
+            <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+            <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+        {{/googleDrivePickerClientId}}
+
     </head>
     <body id="body" style="margin: 0; background-color: #000">
         <input type="hidden" id="authToken" value="{{ authToken }}" name="authToken">

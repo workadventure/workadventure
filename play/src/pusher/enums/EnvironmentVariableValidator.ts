@@ -115,6 +115,7 @@ export const EnvironmentVariables = z.object({
     KLAXOON_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
     KLAXOON_CLIENT_ID: z.string().optional(),
     YOUTUBE_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
+    GOOGLE_DRIVE_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
     GOOGLE_DOCS_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
     GOOGLE_SHEETS_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
     GOOGLE_SLIDES_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
@@ -129,6 +130,10 @@ export const EnvironmentVariables = z.object({
     PEER_VIDEO_RECOMMENDED_BANDWIDTH: PositiveIntAsString.optional(),
     PEER_SCREEN_SHARE_LOW_BANDWIDTH: PositiveIntAsString.optional(),
     PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: PositiveIntAsString.optional(),
+    // Google drive ouath for picker
+    GOOGLE_DRIVE_PICKER_CLIENT_ID: z.string().optional(),
+    GOOGLE_DRIVE_PICKER_API_KEY: z.string().optional(),
+    GOOGLE_DRIVE_PICKER_APP_ID: z.string().optional(),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
