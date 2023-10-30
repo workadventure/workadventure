@@ -349,7 +349,6 @@ export class GameMapFrontWrapper {
         this.oldPosition = this.position;
         this.position = { x, y };
         const areasChanged = this.gameMap.getGameMapAreas()?.triggerAreasChange(this.oldPosition, this.position);
-        //const tiledAreasChanged = this.triggerTiledAreasChange(this.oldPosition, this.position);
         const dynamicAreasChanged = this.triggerDynamicAreasChange(this.oldPosition, this.position);
         if (areasChanged /*|| tiledAreasChanged*/ || dynamicAreasChanged) {
             this.triggerAllProperties();
