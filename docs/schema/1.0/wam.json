@@ -240,9 +240,6 @@
           "items": {
             "type": "object",
             "properties": {
-              "id": {
-                "type": "string"
-              },
               "x": {
                 "type": "number"
               },
@@ -254,6 +251,9 @@
               },
               "height": {
                 "type": "number"
+              },
+              "id": {
+                "type": "string"
               },
               "visible": {
                 "type": "boolean"
@@ -447,11 +447,11 @@
               }
             },
             "required": [
-              "id",
               "x",
               "y",
               "width",
               "height",
+              "id",
               "visible",
               "name",
               "properties"

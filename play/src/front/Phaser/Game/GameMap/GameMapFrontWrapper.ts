@@ -751,6 +751,16 @@ export class GameMapFrontWrapper {
         );
     }
 
+    public listenAreaCreation(areaData: AreaData): void {
+        if (this.position === undefined) {
+            return;
+        }
+
+        if (this.isPlayerInsideAreaByCoordinates(areaData, this.position)) {
+            this.triggerSpecificAreaOnEnter(areaData);
+        }
+    }
+
     public listenAreaChanges(oldConfig: AtLeast<AreaData, "id">, newConfig: AtLeast<AreaData, "id">): void {
         if (this.position === undefined) {
             return;

@@ -444,7 +444,9 @@ export class AreaEditorTool extends MapEditorTool {
         mapEditorSelectedAreaPreviewStore.set(undefined);
     }
 
-    public handleAreaPreviewCreation(config: AreaData, localCommand: boolean): void {
+    public handleAreaCreation(config: AreaData, localCommand: boolean): void {
+        this.scene.getGameMapFrontWrapper().listenAreaCreation(config);
+
         if (!this.active) {
             return;
         }
