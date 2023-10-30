@@ -293,6 +293,7 @@ export class MapEditorModeManager {
 
                 logger("Received command from server", editMapCommandMessage.id);
 
+                // Local command execution (undo/redo)
                 if (this.pendingCommands.length > 0) {
                     if (this.pendingCommands[0].commandId === editMapCommandMessage.id) {
                         logger("removing command of pendingList : ", editMapCommandMessage.id);
@@ -302,6 +303,7 @@ export class MapEditorModeManager {
                     await this.revertPendingCommands();
                 }
 
+                // Remote command execution
                 for (const tool of Object.values(this.editorTools)) {
                     //eslint-disable-next-line no-await-in-loop
                     await tool.handleIncomingCommandMessage(editMapCommandMessage);
