@@ -152,12 +152,12 @@
 
         picker = new EmojiButton({
             styleProperties: {
-                "--font": "Press Start 2P",
-                "--background-color": "#23222c",
-                "--text-color": "#ffffff",
-                "--secondary-text-color": "#ffffff",
-                "--category-button-color": "#ffffff",
-                "--category-button-active-color": "#56eaff",
+                "--font": "Roboto Condensed",
+                "--background-color": "rgb(42, 66, 101)",
+                "--text-color": "#FF0000",
+                "--secondary-text-color": "#FF0000",
+                "--category-button-color": "#FF0000",
+                "--category-button-active-color": "rgb(65, 86, 246)",
             },
             position: "bottom",
             emojisPerRow: 5,
@@ -437,7 +437,8 @@
 <div
     id="activeTimeline"
     class="flex flex-col h-full min-h-full over w-full"
-    transition:fly={{ x: 500, duration: 400 }}
+    in:fly={{delay: 150, x: 500, duration: 250 }}
+    out:fly={{ x: -500, duration: 250 }}
     on:click={() => (applicationMenuIsOpenned = false)}
 >
 
@@ -789,83 +790,4 @@
 </div>
 
 <style lang="scss">
-    .settingsHeader {
-        padding-top: 58px;
-    }
-    .messageList {
-        display: flex;
-        justify-content: flex-end;
-        overflow-y: hidden;
-        min-height: calc(100vh - 40px);
-        padding: 60px 0;
-    }
-    form .actions {
-        top: 10px;
-    }
-    form [contenteditable="true"] {
-        padding-right: 4rem;
-    }
-    .wa-dropdown-menu {
-        margin: 0 0 0 10px;
-        position: relative;
-        width: 94%;
-        max-height: 50vh;
-        overflow-y: auto;
-        overflow-x: hidden;
-    }
-
-    input {
-        border-color: #879fc2;
-        margin-bottom: 0px;
-    }
-    .wa-message-form {
-        .actions {
-            .action {
-                cursor: pointer;
-                opacity: 0.8;
-                position: relative;
-                .caption {
-                    @apply absolute bg-dark-blue text-sm px-2 py-1 rounded-xl border-lighter-purple border border-solid;
-                    display: none;
-                    top: 5px;
-                    left: 54px;
-                    z-index: 10;
-                    width: max-content;
-                    &::before {
-                        @apply absolute border-lighter-purple;
-                        bottom: -10px;
-                        content: "";
-                        width: 0;
-                        height: 0;
-                        border-left: 9px solid transparent;
-                        border-right: 9px solid transparent;
-                        border-top-width: 6px;
-                        border-top-style: solid;
-                    }
-                    &::after {
-                        @apply absolute border-dark-blue;
-                        bottom: -10px;
-                        content: "";
-                        width: 0;
-                        height: 0;
-                        border-left: 7px solid transparent;
-                        border-right: 7px solid transparent;
-                        border-top-width: 5px;
-                        border-top-style: solid;
-                    }
-                }
-                &:hover {
-                    opacity: 1;
-                    .caption {
-                        display: block;
-                    }
-                }
-            }
-        }
-        &:hover {
-            .actions {
-                visibility: visible;
-            }
-        }
-    }
 </style>

@@ -65,7 +65,7 @@
         <CoWebsitesContainer vertical={isMobile} />
     </aside>
 
-    <section id="main-layout-main" class="pb-0">
+    <section id="main-layout-main" class="pb-0 pointer-events-none">
         <Lazy
             when={$showDesktopCapturerSourcePicker}
             component={() => import("./Video/DesktopCapturerSourcePicker.svelte")}

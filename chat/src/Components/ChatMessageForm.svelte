@@ -403,12 +403,12 @@
         dispatch("formHeight", messageForm.clientHeight);
         picker = new EmojiButton({
             styleProperties: {
-                "--font": "Press Start 2P",
-                "--background-color": "#23222c",
+                "--font": "Roboto Condensed",
+                "--background-color": "rgb(42, 66, 101)",
                 "--text-color": "#ffffff",
                 "--secondary-text-color": "#ffffff",
                 "--category-button-color": "#ffffff",
-                "--category-button-active-color": "#56eaff",
+                "--category-button-active-color": "rgb(65, 86, 246)",
             },
             position: "bottom",
             emojisPerRow: 5,
@@ -828,72 +828,4 @@
 </div>
 
 <style lang="scss">
-
-    .wa-dropdown-menu {
-        margin: 0 0 0 10px;
-        position: relative;
-        width: 94%;
-        max-height: 50vh;
-        overflow-y: auto;
-        overflow-x: hidden;
-
-        .wa-dropdown-item.user-tag {
-            img {
-                height: 22px;
-                width: 22px;
-                object-fit: contain;
-                margin-right: 6px;
-            }
-            &:active,
-            &:focus {
-                --bg-opacity: 1;
-                background-color: rgb(77 75 103 / var(--bg-opacity));
-            }
-        }
-    }
-
-    form {
-        display: flex;
-        // button {
-        //     background-color: #254560;
-        //     border-bottom-right-radius: 4px;
-        //     border-top-right-radius: 4px;
-        //     border: none;
-        //     border-left: solid white 1px;
-        //     font-size: 16px;
-        // }
-
-        .actions {
-            top: 5px;
-        }
-
-        .alert-upload {
-            --text-opacity: 1;
-            color: rgb(255 71 90 / var(--text-opacity));
-        }
-        .upload-file {
-            position: relative;
-            display: flex;
-            flex-wrap: nowrap;
-            .error-hover {
-                display: none;
-                left: 0;
-                min-height: 30px;
-                bottom: 35px;
-            }
-            button {
-                min-height: 0;
-                cursor: pointer;
-            }
-            &:hover {
-                .error-hover {
-                    display: flex;
-                }
-            }
-        }
-    }
-
-    input#app {
-        margin-bottom: 0;
-    }
 </style>

@@ -162,13 +162,14 @@
         }
         picker = new EmojiButton({
             styleProperties: {
-                "--font": "Press Start 2P",
-                "--background-color": "#23222c",
-                "--text-color": "#ffffff",
-                "--secondary-text-color": "#ffffff",
-                "--category-button-color": "#ffffff",
-                "--category-button-active-color": "#56eaff",
+                "--font": "Roboto Condensed",
+                "--background-color": "rgb(42, 66, 101)",
+                "--text-color": "#00FF00",
+                "--secondary-text-color": "#00FF00",
+                "--category-button-color": "#00FF00",
+                "--category-button-active-color": "rgb(65, 86, 246)",
             },
+            position: 'bottom-start',
             emojisPerRow: 5,
             autoFocusSearch: false,
             showPreview: false,
@@ -214,10 +215,6 @@
     bind:this={messagesList}
     style={`max-height: calc( 100vh - 6rem - ${formHeight - 7}px );`}
 >
-    <div class="emote-menu-container">
-        <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
-    </div>
-
     <div
         class="wa-messages-list flex flex-col flex-auto px-5 pt-24 pb-16 justify-end h-auto min-h-screen relative z-10"
     >
@@ -268,6 +265,10 @@
                 woka={getWoka(message.jid)}
                 needHideHeader={needHideHeader(message.name, message.time, i)}
             />
+            <div class="emote-menu-container">
+                <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
+            </div>
+
         {/each}
         {#each $usersStore
             .filter((userFilter) => !get(userFilter).isMe && get(userFilter).chatState === ChatState.Composing)

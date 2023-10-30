@@ -29,43 +29,24 @@
     }
 </script>
 
-<div class="emojis">
+<div class="emojis flex flex-wrap absolute -bottom-[10px] overflow-hidden rounded-lg items-center px-1 group-[.left]:bg-contrast/80 group-[.right]:bg-secondary/80 backdrop-blur justify-center z-20 group-[.right]:right-3 group-[.left]:left-3">
     {#each [...$reactions.keys()] as emojiStr (emojiStr)}
-        <span
-            class={mucRoom.haveReaction(emojiStr, messageId) ? "active" : ""}
+        <div
+            class="h-6 hover:bg-white/20 rounded-none px-0.5 cursor-pointer {mucRoom.haveReaction(emojiStr, messageId) ? 'active' : ''}"
             on:click={() => mucRoom.sendReactionMessage(emojiStr, messageId)}
             title={`${getUsersName(emojiStr)}`}
         >
             {emojiStr}
             {getNumberReactions(emojiStr)}
-        </span>
+        </div>
     {/each}
 </div>
 
 <style lang="scss">
     .emojis {
-        display: flex;
-        flex-wrap: wrap;
-        margin-top: -8px;
-        position: relative;
-        flex-direction: row-reverse;
-        margin-right: -5px;
-        min-height: 8px;
-        span {
+        div {
             font-size: 0.65rem;
-            border-radius: 1.5rem;
-            line-height: 0.75rem;
-            display: block;
-            background-color: #c3c3c345;
-            border: solid 1px #c3c3c3;
-            &.active {
-                background-color: #56eaff4f;
-                border: none;
-                backdrop-filter: blur(10px);
-            }
-            cursor: pointer;
-            padding: 2px 3px;
-            margin: 0.5px;
+            line-height: 1.25rem;
         }
     }
 </style>

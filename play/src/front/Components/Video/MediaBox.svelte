@@ -12,6 +12,7 @@
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
+    import loaderImg from "./../images/loader.svg";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -44,7 +45,7 @@
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
         <div
-            class="media-container  media-box-shape-color pointer-events-auto screen-blocker"
+            class="transition-all self-end relative aspect-video w-[350px]"
             class:hightlighted={isHightlighted}
             class:mr-6={isHightlighted && videoEnabled}
             class:flex={!isHightlighted}
@@ -59,14 +60,7 @@
             class:mozaic-full-width={mozaicSolo}
             class:mozaic-quarter={mozaicQuarter}
         >
-            <div
-                class="w-full flex screen-blocker"
-                class:mr-6={isHightlighted}
-                class:mx-auto={!isHightlighted}
-                class:h-[32vw]={isHightlighted && videoEnabled}
-            >
-                <VideoMediaBox peer={streamable} clickable={isClickable} />
-            </div>
+            <VideoMediaBox peer={streamable} clickable={isClickable} />
         </div>
     {/if}
 {:else if streamable instanceof ScreenSharingPeer}

@@ -9,17 +9,14 @@
     $: clickable = !full;
 </script>
 
-<aside class="cameras-container" class:full in:fly|local={{ x: 200, duration: 100 }}>
-    <div class="other-cameras">
-        {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
-            {#if !highlightedEmbedScreen || highlightedEmbedScreen.type !== "streamable" || (highlightedEmbedScreen.type === "streamable" && highlightedEmbedScreen.embed !== peer)}
-                {#key uniqueId}
-                    <MediaBox streamable={peer} isClickable={clickable} />
-                {/key}
-            {/if}
-        {/each}
-    </div>
-</aside>
+
+{#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
+    {#if !highlightedEmbedScreen || highlightedEmbedScreen.type !== "streamable" || (highlightedEmbedScreen.type === "streamable" && highlightedEmbedScreen.embed !== peer)}
+        {#key uniqueId}
+            <MediaBox streamable={peer} isClickable={clickable} />
+        {/key}
+    {/if}
+{/each}
 
 <style lang="scss">
 </style>

@@ -7,8 +7,8 @@
 </script>
 
 <div class="relative z-50 h-screen w-screen"
-     in:fade={{ delay: 100, duration: 500 }}
-     out:fade={{ delay: 500, duration: 150 }}
+     in:fade={{ duration: 100 }}
+     out:fade={{ delay: 500, duration: 300 }}
 >
     <div class="flex items-center min-h-screen w-full w-screen bg-contrast/80 backdrop-blur relative z-20">
         <div class="">

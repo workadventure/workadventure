@@ -149,10 +149,12 @@
 
 <div
     id={`message_${message.id}`}
-    class={`wa-message flex ${isMe ? "justify-end" : "justify-start"}
-            ${needHideHeader ? "mt-0.5" : "mt-2"}
-            ${isMe ? ($delivered ? "sent" : "sending") : "received"}
-            `}
+    class="wa-message flex group
+            {isMe ? 'right' : 'left'}
+            {isMe ? 'justify-end' : 'justify-start'}
+            {needHideHeader ? 'mt-0.5' : 'mt-2'}
+            {isMe ? ($delivered ? 'sent' : 'sending') : 'received'}"
+
 >
     <div class="flex flex-row items-center max-w-full">
         <div class={`flex max-w-full ${isMe ? "justify-end" : "justify-start"}`}>
@@ -176,9 +178,9 @@
             {#if !$error && !$deletedMessagesStore.has(message.id)}
                 <!-- Action bar -->
                 <div
-                    class={`actions invisible justify-between text-xs text-left flex mt-3 ${needHideHeader ? "" : "pt-4"} ${
-                        isMe ? "pr-2 flex-row-reverse" : "order-3 pl-2 flex-row"
-                    }`}
+                    class="actions invisible justify-between text-xs text-left flex mt-3 pt-4 {
+                        isMe ? 'pr-2 flex-row-reverse' : 'order-3 pl-2 flex-row'
+                    }"
                 >
                     {#if message.links != undefined && message.links.length > 0}
                         <div class="action reply aspect-square h-8 w-8 bg-contrast/80 rounded-full mr-1 text-center flex justify-center items-center relative cursor-pointer" on:click={() => downloadAllFile()} transition:fly={{
@@ -269,7 +271,7 @@
                 </div>
             {/if}
             <div
-                style={`${$deletedMessagesStore.has(message.id) ? "" : "max-width: 62%;"}`}
+                class="{$deletedMessagesStore.has(message.id) ? '' : 'max-w-2/3'} relative"
                 in:fly={{
                     x: isMe ? 10 : -10,
                     delay: 100,
@@ -319,7 +321,7 @@
 
                     <!-- Message -->
                 {:else}
-                    <div class="wa-message-body rounded-lg px-4 py-2 inline-block leading-6 min-w-[7rem] max-h-80 overflow-hidden relative before:absolute before:content-[''] before:z-10 before:top-64 before:left-0 before:h-16 before:w-full before:bg-gradient-to-t after:content-['Read_more...'] after:absolute after:left-0 after:top-[18.5rem] after:w-full after:h-10 after:cursor-pointer after:text-center after:underline after:z-20 after:text-xs after:mt-6px after:border after:border-l-0 after:border-b-0 after:border-t after:border-solid after:border-white/20 z-20 {message.type === ChatMessageTypes.me ? 'bg-secondary from-secondary text-left before:from-secondary before:via-secondary' : 'bg-contrast before:from-contrast before:via-contrast'}">
+                    <div class="wa-message-body rounded-lg px-4 py-2 inline-block leading-6 min-w-[7rem] max-h-80 overflow-hidden relative before:absolute before:content-[''] before:z-10 before:top-64 before:left-0 before:h-16 before:w-full before:bg-gradient-to-t after:content-['Read_more...'] after:absolute after:left-0 after:top-[18.5rem] after:w-full after:h-10 after:cursor-pointer after:text-center after:underline after:z-20 after:text-xs after:mt-6px after:border after:border-l-0 after:border-b-0 after:border-t after:border-solid after:border-white/20 z-20 group-[.right]:bg-secondary group-[.right]:from-secondary group-[.right]:text-left group-[.right]:before:from-secondary group-[.right]:before:via-secondary group-[.left]:bg-contrast group-[.left]:before:from-contrast group-[.left]:before:via-contrast">
                         <!-- Body associated -->
                         <div class="text-ellipsis overflow-y-auto whitespace-normal">
                             {#if html}
@@ -345,7 +347,6 @@
                             {/each}
                         {/if}
                     </div>
-
                     <!-- React associated -->
                     {#if message.reactions}
                         <Reactions {mucRoom} messageId={message.id} reactions={message.reactions} />
@@ -354,7 +355,7 @@
                     <!-- Reply associated -->
                     {#if message.targetMessageReply}
                         <div
-                            class="message-replied text-xs rounded-lg bg-contrast/70 px-3 py-2 mb-2 text-left cursor-pointer ml-5 relative -translate-y-2"
+                            class="message-replied text-xs rounded-lg bg-contrast/70 px-3 py-2 text-left cursor-pointer ml-5 relative -translate-y-2"
                             on:click|preventDefault|stopPropagation={() => {
                                 scrollToMessage(message.targetMessageReply?.id);
                             }}
@@ -441,31 +442,5 @@
                 margin-top: calc(20% - 3px);
             }
         }
-    }
-
-    .message-replied {
-        p:nth-child(1) {
-            font-style: italic;
-        }
-    }
-    p {
-        margin-bottom: 0 !important;
-    }
-    .selected .message::after {
-        border-radius: 0.5rem;
-        padding: 0.5rem 0.75rem;
-        content: " ";
-        width: 100%;
-        height: 100%;
-        display: block;
-        position: absolute;
-        top: 0;
-        right: 0;
-        border: solid 0.5px white;
-    }
-    .wa-message-body {
-        position: relative;
-        min-width: 75px;
-        word-break: break-word;
     }
 </style>

@@ -170,7 +170,7 @@
                 <ChatActiveThread activeThread={$activeThreadStore} />
             {/if}
         {:else if ["home", "connectionNotAuthorized", "loading"].includes($showPart)}
-            <div class="flex flex-col items-stretch h-screen">
+            <div class="flex flex-col items-stretch h-screen {ENABLE_OPENID && $enableChat ? 'pb-24' : ''}">
                 {#if $showPart === "connectionNotAuthorized"}
                     <NeedRefresh />
                 {:else if $showPart === "loading"}
@@ -236,7 +236,7 @@
                 {/if}
                 {#if ENABLE_OPENID && $enableChat}
                     <div class="">
-                        <div class="p-3 text-sm bg-secondary rounded bottom-4 absolute w-11/12 left-0 right-0 m-auto flex items-center pl-6 pr-3">
+                        <div class="p-3 text-sm bg-secondary rounded bottom-4 absolute w-full left-0 right-0 m-auto flex items-center pl-6 pr-3">
                             <div class="text-sm italic grow pr-2 leading-5">{$LL.signIn()}</div>
                             <button type="button" class="m-auto btn btn-sm btn-light cursor-pointer whitespace-nowrap !text-secondary !bold" on:click={login}>
                                 {$LL.logIn()}

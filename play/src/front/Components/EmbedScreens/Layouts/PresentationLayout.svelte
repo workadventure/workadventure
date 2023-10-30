@@ -78,7 +78,7 @@
                 {/if}
             </div>
         {/if}
-        <div id="embed-left-block">
+        <div id="embed-left-block" class=" {$highlightedEmbedScreen ? 'block' : 'hidden' }">
             <div id="main-embed-screen">
                 {#if $highlightedEmbedScreen}
                     {#if $highlightedEmbedScreen.type === "streamable"}
@@ -131,7 +131,6 @@
     }
 
     #embed-left-block {
-        display: flex;
         flex-direction: column;
         flex: 0 0 75%;
         height: 100%;

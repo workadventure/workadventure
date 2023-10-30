@@ -14,4 +14,5 @@
     on:click|stopPropagation={() => openReport(peer)}
 >
     <img alt="Report this user" draggable="false" src={reportImg} class="w-3 h-3 flex" />
+
 </button>

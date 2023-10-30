@@ -5,11 +5,16 @@
 
 <div class={`grid place-items-center ${height} loader`}>
     <div class="flex items-center flex-col">
-        <div
-            style="border-top-color:transparent"
-            class="w-16 h-16 border-2 border-white border-solid rounded-full animate-spin mb-5"
-        ></div>
-        <div class="animate-pulse">{text}</div>
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="100" viewBox="0 0 50 50" preserveAspectRatio="xMidYMid">
+            <circle cx="25" cy="25" r="0" fill="none" stroke="#4156f6" stroke-width="1">
+                <animate attributeName="r" repeatCount="indefinite" dur="1s" values="0;13" keyTimes="0;1" keySplines="0 0.2 0.8 1" calcMode="spline" begin="0s"></animate>
+                <animate attributeName="opacity" repeatCount="indefinite" dur="1s" values="1;0" keyTimes="0;1" keySplines="0.2 0 0.8 1" calcMode="spline" begin="0s"></animate>
+            </circle><circle cx="25" cy="25" r="0" fill="none" stroke="#ffffff" stroke-width="1">
+            <animate attributeName="r" repeatCount="indefinite" dur="1s" values="0;13" keyTimes="0;1" keySplines="0 0.2 0.8 1" calcMode="spline" begin="-0.5s"></animate>
+            <animate attributeName="opacity" repeatCount="indefinite" dur="1s" values="1;0" keyTimes="0;1" keySplines="0.2 0 0.8 1" calcMode="spline" begin="-0.5s"></animate>
+        </circle>
+        </svg>
+        <div class="animate-pulse text-sm">{text}</div>
     </div>
 </div>
 

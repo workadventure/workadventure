@@ -24,6 +24,8 @@
         streamingMegaphoneStore, enableCameraSceneVisibilityStore,
     } from "../../Stores/MediaStore";
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
+    import tooltipExemple from "../images/tooltip-exemple.gif";
+    import tooltipArrow from "../images/arrow-top.svg";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
@@ -94,7 +96,7 @@
     let microphoneActive = false;
     let profileMenuIsDropped = false;
     let adminMenuIsDropped = false;
-    let menuExpand = false;
+    let active = false, navigating = false;
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -399,14 +401,26 @@
                         <span class="w-3 h-3 block rounded-full absolute -top-0.5 -left-0.5 {$peerStore.size > 0 ? 'bg-success' : 'bg-danger'}" ></span>
                     </div>
                 {:else if $totalMessagesToSee > 0}
-                    <div class="absolute -top-2 -right-2 aspect-square flex w-5 h-5 items-center justify-center text-sm font-bold leading-none text-contrast bg-success rounded-full ">
+                    <div class="absolute -top-2 -left-2 aspect-square flex w-5 h-5 items-center justify-center text-sm font-bold leading-none text-contrast bg-success rounded-full z-10">
                         {$totalMessagesToSee}
                     </div>
                 {/if}
             </div>
 
             <div class="group/btn-chat relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square">
-                <div class="h-12 w-12 rounded group-hover/btn-chat:bg-white/10 aspect-square flex items-center justify-center  transition-all">
+                <div class="h-12 w-12 rounded group-hover/btn-chat:bg-white/10 aspect-square flex items-center justify-center  transition-all"
+                     on:mouseenter={() => {
+                    console.log("enter", navigating);
+                        if (!navigating) {
+                            active = true;
+                        }
+                    }}
+                                     on:mouseleave={() => {
+                    console.log("leave", navigating);
+                    if (!navigating) {
+                        active = false;
+                    }
+                }}>
                     <svg xmlns="http://www.w3.org/2000/svg" class="" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                         <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
@@ -415,48 +429,146 @@
                         <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
                     </svg>
                 </div>
+                {#if active}
+                <div class="block absolute w-64 text-white rounded-lg top-20 -left-2 transform before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded-lg before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:-left-0"  in:fly={{delay: 500, y: 40, duration: 100 }}>
+                    <div class="w-4 overflow-hidden inline-block absolute -top-[11px] left-10 transform -translate-x-1/2">
+                        <div class=" h-3 w-3 rotate-45 transform origin-bottom-left bg-contrast/80 backdrop-blur"></div>
+                    </div>
+                    <div class="relative z-10 pb-4 rounded-lg overflow-hidden">
+                        <img src="{tooltipExemple}" class="w-full -mt-[2px]" loading="lazy" />
+                        <div class="font-lg bold px-4 pt-3 pb-1">
+                            Find people and navigate to them
+                        </div>
+                        <div class="text-xs opacity-50 px-4">
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                        </div>
+                        <!--
+                        <button  class="btn btn-sm btn-border btn-light text-center block">
+                            Edit mic/speaker settings
+                        </button>
+                        -->
+                    </div>
+                </div>
+                {/if}
             </div>
         </div>
     </div>
     <div class="justify-self-center">
         <div class="flex relative">
-            <div class={menuExpand ? "group menuExpand" : ""} transition:fly={{delay: 750, y: -200, duration: 750 }}>
-                <div class="flex items-center mr-4 absolute right-28">
-                    {#if menuExpand}
-                        <div class="group/btn-more bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg  aspect-square">
-                            <div class="h-12 w-12 rounded group-hover/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all"
+            {#if !$silentStore}
+            <div transition:fly={{delay: 750, y: -200, duration: 750 }}>
+                <div class="flex items-center mr-4">
+                    <div
+                            class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
+                            on:click={toggleEmojiPicker}
+                    >
+                        <div
+                                class="h-12 w-12 rounded aspect-square flex items-center justify-center transition-all {$emoteMenuSubStore ? 'bg-secondary group-hover/bg-secondary-600' : ' group-hover/btn-emoji:bg-white/10'}"
+                        >
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <g>
+                                    <path d="M9 10H9.01M15 10H15.01M9.5 15C9.82588 15.3326 10.2148 15.5968 10.6441 15.7772C11.0734 15.9576 11.5344 16.0505 12 16.0505C12.4656 16.0505 12.9266 15.9576 13.3559 15.7772C13.7852 15.5968 14.1741 15.3326 14.5 15M3 12C3 13.1819 3.23279 14.3522 3.68508 15.4442C4.13738 16.5361 4.80031 17.5282 5.63604 18.364C6.47177 19.1997 7.46392 19.8626 8.55585 20.3149C9.64778 20.7672 10.8181 21 12 21C13.1819 21 14.3522 20.7672 15.4442 20.3149C16.5361 19.8626 17.5282 19.1997 18.364 18.364C19.1997 17.5282 19.8626 16.5361 20.3149 15.4442C20.7672 14.3522 21 13.1819 21 12C21 10.8181 20.7672 9.64778 20.3149 8.55585C19.8626 7.46392 19.1997 6.47177 18.364 5.63604C17.5282 4.80031 16.5361 4.13738 15.4442 3.68508C14.3522 3.23279 13.1819 3 12 3C10.8181 3 9.64778 3.23279 8.55585 3.68508C7.46392 4.13738 6.47177 4.80031 5.63604 5.63604C4.80031 6.47177 4.13738 7.46392 3.68508 8.55585C3.23279 9.64778 3 10.8181 3 12Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </g>
+                            </svg>
+                        </div>
+                        {#if $emoteMenuSubStore}
+                            <div
+                                    class="flex justify-center m-auto absolute left-0 right-0 -bottom-[55px] w-auto z-[500]"
+                                    transition:fly={{y: 50, duration: 250 }}
+                            >
+                                <img src="{tooltipArrow}" class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1" />
+                                <div class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg pl-4 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 sm:flex-row">
+                                    <div class="bottom-action-section flex animate flex-row flex items-center">
+                                        {#each [...$emoteDataStore.keys()] as key}
+                                            <div class="transition-all bottom-action-button">
+                                                <button
+                                                        on:click={() => {
+				clickEmoji(key);
+				}}
+                                                        id={`button-${$emoteDataStore.get(key)?.name}`}
+                                                        class="emoji py-4 px-2 hover:bg-white/20 block m-0 rounded-none flex items-center"
+                                                        class:focus={$emoteMenuStore && $emoteMenuSubCurrentEmojiSelectedStore === key}
+                                                >
+                                                    <div class="emoji" style="margin:auto" id={`icon-${$emoteDataStore.get(key)?.name}`}>
+                                                    {$emoteDataStore.get(key)?.emoji}
+                                                    </div>
+                                                    {#if !isMobile}
+                                                        <div class="text-white/50 font-xxs pl-2">{key}</div>
+                                                    {/if}
+                                                </button>
+                                            </div>
+                                        {/each}
+                                        <div class="transition-all bottom-action-button flex items-center h-full">
+                                            <button on:click={() =>
+					analyticsClient.editEmote()} on:click|preventDefault={edit}>
+                                                {#if $emoteDataStoreLoading}
+                                                    <div class="rounded-lg bg-dark text-xs">
+                                                        <!-- loading animation -->
+                                                        <div class="loading-group">
+                                                            <span class="loading-dot"></span>
+                                                            <span class="loading-dot"></span>
+                                                            <span class="loading-dot"></span>
+                                                        </div>
+                                                    </div>
+                                                {:else}
+                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <g>
+                                                            <path d="M12 5V19M5 12H19" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                        </g>
+                                                    </svg>
+                                                {/if}
+                                            </button>
+                                        </div>
+                                        <div class="transition-all bottom-action-button flex items-center bg-contrast rounded-r-lg h-full">
+                                            <button on:click|preventDefault={close}>
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <g>
+                                                        <path d="M18 6L6 18M6 6L18 18" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                    </g>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {/if}
+                    </div>
+                    {#if $bottomActionBarVisibilityStore}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <div class="group/btn-layout bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg  aspect-square">
+                            <div class="h-12 w-12 rounded btn-layout/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all"
                                  on:click={() => analyticsClient.layoutPresentChange()}
                                  on:click={switchLayoutMode}
                             >
                                 {#if $embedScreenLayoutStore === LayoutMode.Presentation}
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrows-minimize" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                    <path d="M5 9l4 0l0 -4" />
-                                    <path d="M3 3l6 6" />
-                                    <path d="M5 15l4 0l0 4" />
-                                    <path d="M3 21l6 -6" />
-                                    <path d="M19 9l-4 0l0 -4" />
-                                    <path d="M15 9l6 -6" />
-                                    <path d="M19 15l-4 0l0 4" />
-                                    <path d="M15 15l6 6" />
-                                </svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrows-minimize" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <path d="M5 9l4 0l0 -4" />
+                                        <path d="M3 3l6 6" />
+                                        <path d="M5 15l4 0l0 4" />
+                                        <path d="M3 21l6 -6" />
+                                        <path d="M19 9l-4 0l0 -4" />
+                                        <path d="M15 9l6 -6" />
+                                        <path d="M19 15l-4 0l0 4" />
+                                        <path d="M15 15l6 6" />
+                                    </svg>
                                 {:else}
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrows-maximize" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                    <path d="M16 4l4 0l0 4" />
-                                    <path d="M14 10l6 -6" />
-                                    <path d="M8 20l-4 0l0 -4" />
-                                    <path d="M4 20l6 -6" />
-                                    <path d="M16 20l4 0l0 -4" />
-                                    <path d="M14 14l6 6" />
-                                    <path d="M8 4l-4 0l0 4" />
-                                    <path d="M4 4l6 6" />
-                                </svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrows-maximize" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <path d="M16 4l4 0l0 4" />
+                                        <path d="M14 10l6 -6" />
+                                        <path d="M8 20l-4 0l0 -4" />
+                                        <path d="M4 20l6 -6" />
+                                        <path d="M16 20l4 0l0 -4" />
+                                        <path d="M14 14l6 6" />
+                                        <path d="M8 4l-4 0l0 4" />
+                                        <path d="M4 4l6 6" />
+                                    </svg>
                                 {/if}
                             </div>
                         </div>
-                        <div class="group/btn-more bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg  aspect-square">
-                            <div class="h-12 w-12 rounded group-hover/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all"
+                        <div class="group/btn-follow bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg  aspect-square">
+                            <div class="h-12 w-12 rounded group-hover/btn-follow:bg-white/10 aspect-square flex items-center justify-center transition-all"
                                  class:btn-secondary={$followStateStore === "active"}
                                  class:disabled={$followStateStore !== "off"}
                                  on:click={() => analyticsClient.follow()}
@@ -467,36 +579,12 @@
                                 </svg>
                             </div>
                         </div>
-                        <div
-                            class="group/btn-more bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg  aspect-square"
-                            on:click={toggleEmojiPicker}
-                        >
-                            <div
-                                class="h-12 w-12 rounded group-hover/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all"
-                            >
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <g>
-                                        <path d="M9 10H9.01M15 10H15.01M9.5 15C9.82588 15.3326 10.2148 15.5968 10.6441 15.7772C11.0734 15.9576 11.5344 16.0505 12 16.0505C12.4656 16.0505 12.9266 15.9576 13.3559 15.7772C13.7852 15.5968 14.1741 15.3326 14.5 15M3 12C3 13.1819 3.23279 14.3522 3.68508 15.4442C4.13738 16.5361 4.80031 17.5282 5.63604 18.364C6.47177 19.1997 7.46392 19.8626 8.55585 20.3149C9.64778 20.7672 10.8181 21 12 21C13.1819 21 14.3522 20.7672 15.4442 20.3149C16.5361 19.8626 17.5282 19.1997 18.364 18.364C19.1997 17.5282 19.8626 16.5361 20.3149 15.4442C20.7672 14.3522 21 13.1819 21 12C21 10.8181 20.7672 9.64778 20.3149 8.55585C19.8626 7.46392 19.1997 6.47177 18.364 5.63604C17.5282 4.80031 16.5361 4.13738 15.4442 3.68508C14.3522 3.23279 13.1819 3 12 3C10.8181 3 9.64778 3.23279 8.55585 3.68508C7.46392 4.13738 6.47177 4.80031 5.63604 5.63604C4.80031 6.47177 4.13738 7.46392 3.68508 8.55585C3.23279 9.64778 3 10.8181 3 12Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </g>
-                                </svg>
-                            </div>
-                        </div>
-                    {/if}
-                    <div class="group/btn-more bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg  aspect-square">
-                        <div class="h-12 w-12 rounded group-hover/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all" on:click={() =>menuExpand = !menuExpand}>
-                            <svg class:rotate-180={menuExpand} class="block" width="9" height="17" viewBox="0 0 9 17" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M7.875 15.25L1.125 8.5L7.875 1.75" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </div>
-                    </div>
-                    {#if $bottomActionBarVisibilityStore}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div class="group/btn-lock relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
                              class:disabled={$currentPlayerGroupLockStateStore}
                              on:click={() =>analyticsClient.lockDiscussion()}
                              on:click={lockClick}
                         >
-                            <Tooltip text={$LL.actionbar.lock()} />
+
                             <div class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-lock:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all">
                                 {#if $currentPlayerGroupLockStateStore}
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -513,31 +601,10 @@
                                 {/if}
                             </div>
                         </div>
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <div class="group/btn-lock relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
-                             on:click={() =>analyticsClient.screenSharing()}
-                             on:click={screenSharingClick}
-                        >
-                            <Tooltip text={$LL.actionbar.screensharing()} />
-                            <div class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-lock:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all">
-                                {#if $requestedScreenSharingState && !$silentStore}
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <g>
-                                            <path d="M21 12V15C21 15.2652 20.8946 15.5196 20.7071 15.7071C20.5196 15.8946 20.2652 16 20 16H4C3.73478 16 3.48043 15.8946 3.29289 15.7071C3.10536 15.5196 3 15.2652 3 15V5C3 4.73478 3.10536 4.48043 3.29289 4.29289C3.48043 4.10536 3.73478 4 4 4H13M7 20H17M9 16V20M15 16V20M17 8L21 4M17 4L21 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </g>
-                                    </svg>
-                                {:else}
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <g>
-                                            <path d="M21 12V15C21 15.2652 20.8946 15.5196 20.7071 15.7071C20.5196 15.8946 20.2652 16 20 16H4C3.73478 16 3.48043 15.8946 3.29289 15.7071C3.10536 15.5196 3 15.2652 3 15V5C3 4.73478 3.10536 4.48043 3.29289 4.29289C3.48043 4.10536 3.73478 4 4 4H13M7 20H17M9 16V20M15 16V20M17 4H21M21 4V8M21 4L16 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </g>
-                                    </svg>
-                                {/if}
-                            </div>
-                        </div>
                     {/if}
                 </div>
             </div>
+            {/if}
             <div transition:fly={{delay: 1000, y: -200, duration: 750 }}>
                 <!-- ACTION WRAPPER : CAM & MIC -->
                 <div class="flex items-center">
@@ -592,7 +659,7 @@
                     {/if}
                     <!-- NAV : MICROPHONE END -->
                     <!-- NAV : CAMERA START -->
-                    {#if $myCameraStore}
+                    {#if $myCameraStore && !$silentStore}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div class="group/btn-cam relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
                              class:disabled={!$requestedCameraState || $silentStore}
@@ -638,6 +705,32 @@
                         </div>
                     {/if}
                     <!-- NAV : CAMERA END -->
+
+                    <!-- NAV : SCREENSHARING START -->
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    {#if $bottomActionBarVisibilityStore}
+                    <div class="group/btn-share relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
+                         on:click={() =>analyticsClient.screenSharing()}
+                         on:click={screenSharingClick}
+                    >
+                        <div class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-share:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all">
+                            {#if $requestedScreenSharingState && !$silentStore}
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <g>
+                                        <path d="M21 12V15C21 15.2652 20.8946 15.5196 20.7071 15.7071C20.5196 15.8946 20.2652 16 20 16H4C3.73478 16 3.48043 15.8946 3.29289 15.7071C3.10536 15.5196 3 15.2652 3 15V5C3 4.73478 3.10536 4.48043 3.29289 4.29289C3.48043 4.10536 3.73478 4 4 4H13M7 20H17M9 16V20M15 16V20M17 8L21 4M17 4L21 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </g>
+                                </svg>
+                            {:else}
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <g>
+                                        <path d="M21 12V15C21 15.2652 20.8946 15.5196 20.7071 15.7071C20.5196 15.8946 20.2652 16 20 16H4C3.73478 16 3.48043 15.8946 3.29289 15.7071C3.10536 15.5196 3 15.2652 3 15V5C3 4.73478 3.10536 4.48043 3.29289 4.29289C3.48043 4.10536 3.73478 4 4 4H13M7 20H17M9 16V20M15 16V20M17 4H21M21 4V8M21 4L16 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </g>
+                                </svg>
+                            {/if}
+                        </div>
+                    </div>
+                    {/if}
+                    <!-- NAV : SCREENSHARING END -->
                 </div>
             </div>
         </div>
@@ -693,7 +786,8 @@
                             </div>
                         </div>
                     </div>
-                    <div  class="absolute mt-2 top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-4 before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all {adminMenuIsDropped ? '' : '-translate-y-4 opacity-0 '}" transition:fly={{delay: 1750, y: -200, duration: 750 }}>
+                    {#if adminMenuIsDropped}
+                    <div class="absolute mt-2 top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all" transition:fly={{y: 40, duration: 150 }}>
                         <ul class="p-0 m-0">
                             {#if $mapEditorActivated}
                                 <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => toggleMapEditorMode()}>
@@ -748,9 +842,10 @@
                             <MegaphoneConfirm />
                         {/if}
                     </div>
+                    {/if}
                 </div>
             {/if}
-            <div class="flex items-center relative" transition:fly={{delay: 2000, y: -200, duration: 750 }}>
+            <div class="flex items-center relative" transition:fly={{delay: 1750, y: -200, duration: 750 }}>
                 <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => profileMenuIsDropped = !profileMenuIsDropped} tabindex="0">
                     <div class="flex items center h-full group-hover:bg-white/10 transition-all group-hover:rounded">
                         <div class="px-2 m-auto">
@@ -767,7 +862,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="absolute mt-2 top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-4 before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all {profileMenuIsDropped ? '' : '-translate-y-4 opacity-0 '}">
+                {#if profileMenuIsDropped}
+                <div class="absolute mt-2 top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all" transition:fly={{y: 40, duration: 150 }}>
                     <ul class="p-0 m-0 list-none">
                         <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditNameScene()}>
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
@@ -817,69 +913,11 @@
                         </li>
                     </ul>
                 </div>
+                {/if}
             </div>
         </div>
     </div>
 </div>
-{#if $emoteMenuSubStore}
-    <div
-            class="flex justify-center m-auto absolute left-0 right-0 top-24 w-auto z-50"
-    >
-        <div class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg pl-4 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 sm:flex-row">
-            <div class="bottom-action-section flex animate flex-row flex items-center">
-                {#each [...$emoteDataStore.keys()] as key}
-                    <div class="transition-all bottom-action-button">
-                        <button
-                                on:click={() => {
-				clickEmoji(key);
-				}}
-                                id={`button-${$emoteDataStore.get(key)?.name}`}
-                                class="emoji py-4 px-2 hover:bg-white/20 block m-0 rounded-none"
-                                class:focus={$emoteMenuStore && $emoteMenuSubCurrentEmojiSelectedStore === key}
-                        >
-				<span class="emoji" style="margin:auto" id={`icon-${$emoteDataStore.get(key)?.name}`}>
-				{$emoteDataStore.get(key)?.emoji}
-				</span>
-                            {#if !isMobile}
-                                <span class="text-white/50 font-xxs pl-2">{key}</span>
-                            {/if}
-                        </button>
-                    </div>
-                {/each}
-                <div class="transition-all bottom-action-button flex items-center h-full">
-                    <button on:click={() =>
-					analyticsClient.editEmote()} on:click|preventDefault={edit}>
-                        {#if $emoteDataStoreLoading}
-                            <div class="rounded-lg bg-dark text-xs">
-                                <!-- loading animation -->
-                                <div class="loading-group">
-                                    <span class="loading-dot"></span>
-                                    <span class="loading-dot"></span>
-                                    <span class="loading-dot"></span>
-                                </div>
-                            </div>
-                        {:else}
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <g>
-                                    <path d="M12 5V19M5 12H19" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </g>
-                            </svg>
-                        {/if}
-                    </button>
-                </div>
-                <div class="transition-all bottom-action-button flex items-center bg-contrast rounded-r-lg h-full">
-                    <button on:click|preventDefault={close}>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <g>
-                                <path d="M18 6L6 18M6 6L18 18" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </g>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-{/if}
 <style lang="scss">
   @import "../../style/breakpoints.scss";
   * {

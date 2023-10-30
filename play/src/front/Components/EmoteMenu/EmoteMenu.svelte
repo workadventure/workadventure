@@ -15,12 +15,12 @@
         picker = new EmojiButton({
             rootElement: emojiContainer,
             styleProperties: {
-                "--font": "Press Start 2P",
-                "--background-color": "#23222c",
+                "--font": "Roboto Condensed",
+                "--background-color": "rgb(42, 66, 101)",
                 "--text-color": "#ffffff",
                 "--secondary-text-color": "#ffffff",
                 "--category-button-color": "#ffffff",
-                "--category-button-active-color": "#56eaff",
+                "--category-button-active-color": "rgb(65, 86, 246)",
             },
             position: {
                 bottom: "8rem",

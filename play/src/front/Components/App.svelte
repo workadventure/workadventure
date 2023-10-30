@@ -36,14 +36,16 @@
 </script>
 
 {#if $loaderVisibleStore }
-    <LoaderScene />
+    <div class="bg-contrast">
+        <LoaderScene />
+    </div>
 {/if}
 {#if $errorScreenStore !== undefined}
-    <div>
+    <div class="bg-contrast">
         <ErrorScreen />
     </div>
 {:else if $errorStore.length > 0}
-    <div>
+    <div class="bg-contrast bg-contrast">
         <ErrorDialog />
     </div>
 {:else if $loginSceneVisibleStore}
@@ -51,18 +53,18 @@
         <LoginScene {game} />
     </div>
 {:else if $selectCharacterSceneVisibleStore}
-    <div>
+    <div class="bg-contrast">
         <SelectCharacterScene {game} />
     </div>
 {:else if $selectCompanionSceneVisibleStore}
-    <div>
+    <div class="bg-contrast">
         <SelectCompanionScene {game} />
     </div>
 {:else if $enableCameraSceneVisibilityStore}
     <div class="scrollable">
         <EnableCameraScene {game} />
     </div>
-{:else if $gameSceneIsLoadedStore && !$selectCharacterCustomizeSceneVisibleStore}
+{:else if $gameSceneIsLoadedStore && !$loaderVisibleStore && !$selectCharacterCustomizeSceneVisibleStore}
     {#if $refreshPromptStore}
         <RefreshPrompt />
     {/if}
