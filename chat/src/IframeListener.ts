@@ -115,7 +115,11 @@ class IframeListener {
                                 }
                                 const mucRoomDefault = mucRoomsStore.getDefaultRoom();
                                 let userData = undefined;
-                                if (mucRoomDefault && iframeEvent.data.author.jid !== "fake") {
+                                if (
+                                    mucRoomDefault &&
+                                    iframeEvent.data.author &&
+                                    iframeEvent.data.author.jid !== "fake"
+                                ) {
                                     try {
                                         userData = mucRoomDefault.getUserByJid(iframeEvent.data.author.jid);
                                     } catch (e) {
@@ -125,9 +129,20 @@ class IframeListener {
                                 } else {
                                     userData = iframeEvent.data.author;
                                 }
-                                for (const chatMessageText of iframeEvent.data.text) {
-                                    chatMessagesStore.addExternalMessage(userData, chatMessageText, userData.name);
+
+                                if (iframeEvent.data.type === ChatMessageTypes.text) {
+                                    if (!userData) {
+                                        throw new Error("Received a message from the scripting API without an author");
+                                    }
+                                    for (const chatMessageText of iframeEvent.data.text) {
+                                        chatMessagesStore.addExternalMessage(userData, chatMessageText, userData.name);
+                                    }
+                                } else if (iframeEvent.data.type === ChatMessageTypes.me) {
+                                    for (const chatMessageText of iframeEvent.data.text) {
+                                        chatMessagesStore.addPersonalMessage(chatMessageText);
+                                    }
                                 }
+
                                 break;
                             }
                             case "comingUser": {
@@ -302,22 +317,16 @@ export const iframeListener = new IframeListener();
 //publish new message when user send message in chat timeline
 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
 newChatMessageSubject.subscribe((message) => {
-    window.parent.postMessage(
-        {
-            type: "addPersonnalMessage",
-            data: message,
-        },
-        "*"
-    );
+    iframeListener.sendToParent({
+        type: "addPersonnalMessage",
+        data: message,
+    });
 });
 
 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
 newChatMessageWritingStatusSubject.subscribe((status) => {
-    window.parent.postMessage(
-        {
-            type: "newChatMessageWritingStatus",
-            data: status,
-        },
-        "*"
-    );
+    iframeListener.sendToParent({
+        type: "newChatMessageWritingStatus",
+        data: status,
+    });
 });

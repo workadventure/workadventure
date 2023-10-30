@@ -1,15 +1,22 @@
 import { Subject, Subscription } from "rxjs";
 import type { UserInputChatEvent } from "../Events/UserInputChatEvent";
+import { SendChatMessageOptions } from "../../../../../libs/shared-utils/src/Events/ChatEvent";
 import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
+import { RemotePlayerInterface } from "./Players/RemotePlayer";
+import players from "./players";
 
-const chatStream = new Subject<string>();
+const chatStream = new Subject<UserInputChatEvent>();
+
+export interface OnChatMessageOptions {
+    scope: "local" | "bubble";
+}
 
 export class WorkadventureChatCommands extends IframeApiContribution<WorkadventureChatCommands> {
     callbacks = [
         apiCallback({
             callback: (event: UserInputChatEvent) => {
-                chatStream.next(event.message);
+                chatStream.next(event);
             },
             type: "userInputChat",
         }),
@@ -33,30 +40,67 @@ export class WorkadventureChatCommands extends IframeApiContribution<Workadventu
 
     /**
      * Sends a message in the chat. The message is only visible in the browser of the current user.
-     * {@link https://workadventu.re/map-building/api-chat.md#sending-a-message-in-the-chat | Website documentation}
-     *
+     * {@link https://docs.workadventu.re/developer/map-scripting/references/api-chat#sending-a-message-in-the-chat | Website documentation}
+     * @deprecated Use the overload with "options" instead
      * @param {string} message Message to be displayed in the chat
      * @param {string|undefined} author Name displayed for the author of the message. It does not have to be a real user
      */
-    sendChatMessage(message: string, author?: string): void {
+    sendChatMessage(message: string, author?: string): void;
+    /**
+     * Sends a message in the chat.
+     * {@link https://docs.workadventu.re/developer/map-scripting/references/api-chat#sending-a-message-in-the-chat | Website documentation}
+     *
+     * @param {string} message Message to be displayed in the chat
+     * @param {SendChatMessageOptions|undefined} options Decides if the message is sent only to the local users or to all users in the bubble. In undefined, the message is sent to the local user only. If the message is sent locally, you can decide an "author" name to be displayed in the chat. It does not have to be a real user.
+     */
+    sendChatMessage(message: string, options?: string | SendChatMessageOptions): void {
+        if (typeof options === "string") {
+            options = {
+                scope: "local",
+                author: options,
+            };
+        } else if (options === undefined) {
+            options = {
+                scope: "local",
+            };
+        }
         sendToWorkadventure({
             type: "chat",
             data: {
-                message: message,
-                author: author ?? "System",
+                message,
+                options,
             },
         });
     }
 
+    // TODO: implement start writing and stop writing
+
     /**
-     * Listens to messages typed by the current user and calls the callback. Messages from other users in the chat cannot be listened to.
+     * Listens to messages typed in the chat history.
      * {@link https://workadventu.re/map-building/api-chat.md#listening-to-messages-from-the-chat | Website documentation}
      *
-     * @param {function(string): void} callback Function that will be called when a message is received. It contains the message typed by the user
+     * @param {function(message: string, event: { authorId: number|undefined, user: RemotePlayerInterface|undefined }): void} callback Function that will be called when a message is received. It contains the message typed by the user
+     * @param {OnChatMessageOptions} options Options to decide if we listen only to messages from the local user (default) or from all users in the bubble.
      * @return {Subscription} Subscription to the chat message. Call ".unsubscribe()" to stop listening to the chat.
      */
-    onChatMessage(callback: (message: string) => void): Subscription {
-        return chatStream.subscribe(callback);
+    onChatMessage(
+        callback: (
+            message: string,
+            event: { authorId: number | undefined; author: RemotePlayerInterface | undefined }
+        ) => void,
+        options?: OnChatMessageOptions
+    ): Subscription {
+        const finalOptions = options ?? { scope: "local" };
+
+        return chatStream.subscribe((event) => {
+            if (finalOptions.scope === "local" && event.senderId !== undefined) {
+                return;
+            }
+            callback(event.message, {
+                authorId: event.senderId,
+                author: event.senderId ? players.get(event.senderId) : undefined,
+            });
+        });
     }
 }
 

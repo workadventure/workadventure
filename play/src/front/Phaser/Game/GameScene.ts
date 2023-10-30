@@ -1379,11 +1379,14 @@ export class GameScene extends DirtyScene {
 
             // Join
             if (oldPeersNumber === 0 && newPeerNumber > oldPeersNumber) {
-                iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                Array.from(peers.values())[0].once("connect", () => {
+                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                });
             }
 
             // Left
             if (newPeerNumber === 0 && newPeerNumber < oldPeersNumber) {
+                // TODO: leave event can be triggered without a join if connect fails
                 iframeListener.sendLeaveProximityMeetingEvent();
             }
 
@@ -1392,7 +1395,9 @@ export class GameScene extends DirtyScene {
                 const newUser = Array.from(newUsers.values()).find((player) => !oldUsers.get(player.userId));
 
                 if (newUser) {
-                    iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
+                    peers.get(newUser.userId)?.once("connect", () => {
+                        iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
+                    });
                 }
             }
 
@@ -1401,6 +1406,7 @@ export class GameScene extends DirtyScene {
                 const oldUser = Array.from(oldUsers.values()).find((player) => !newUsers.get(player.userId));
 
                 if (oldUser) {
+                    // TODO: leave event can be triggered without a join if connect fails
                     iframeListener.sendParticipantLeaveProximityMeetingEvent(oldUser);
                 }
             }
@@ -1667,7 +1673,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.addPersonnalMessageStream.subscribe((text) => {
-                iframeListener.sendUserInputChat(text);
+                iframeListener.sendUserInputChat(text, undefined);
                 _newChatMessageSubject.next(text);
             })
         );

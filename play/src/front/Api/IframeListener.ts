@@ -1,6 +1,6 @@
 import { Subject } from "rxjs";
 import { availabilityStatusToJSON, XmppSettingsMessage } from "@workadventure/messages";
-import { KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
+import { KLAXOON_ACTIVITY_PICKER_EVENT, ChatMessage } from "@workadventure/shared-utils";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import {
     additionnalButtonsMenu,
@@ -52,7 +52,6 @@ import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
 import type { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
 import type { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
 import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
-import type { ChatMessage } from "./Events/ChatEvent";
 import { ModalEvent } from "./Events/ModalEvent";
 import { AddButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
 import { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
@@ -340,7 +339,7 @@ class IframeListener {
                     } else if (iframeEvent.type === "cameraFollowPlayer") {
                         this._cameraFollowPlayerStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "chat") {
-                        scriptUtils.sendAnonymousChat(iframeEvent.data, iframe.contentWindow ?? undefined);
+                        scriptUtils.sendChat(iframeEvent.data, iframe.contentWindow ?? undefined);
                     } else if (iframeEvent.type === "openChat") {
                         this._openChatStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "closeChat") {
@@ -630,14 +629,16 @@ class IframeListener {
 
     /**
      * @param message The message to dispatch
+     * @param senderId The id of the sender (or undefined if the message is sent by the current user)
      * @param exceptOrigin Don't dispatch the message to exceptOrigin (to avoid infinite loops)
      */
-    sendUserInputChat(message: string, exceptOrigin?: Window) {
+    sendUserInputChat(message: string, senderId: number | undefined, exceptOrigin?: Window) {
         this.postMessage(
             {
                 type: "userInputChat",
                 data: {
-                    message: message,
+                    message,
+                    senderId,
                 } as UserInputChatEvent,
             },
             exceptOrigin

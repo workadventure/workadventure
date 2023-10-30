@@ -1,13 +1,17 @@
 import { z } from "zod";
 import { isUserData } from "@workadventure/messages";
-import { KLAXOON_ACTIVITY_PICKER_EVENT, isKlaxoonEvent } from "@workadventure/shared-utils";
+import {
+    KLAXOON_ACTIVITY_PICKER_EVENT,
+    isKlaxoonEvent,
+    isXmppSettingsMessageEvent,
+    isChatMessage,
+} from "@workadventure/shared-utils";
 import { isNotification } from "./Notification";
 import { isLocale } from "./Locale";
 import { isLeaveMucEvent } from "./LeaveMucEvent";
 import { isJoinMucEvent } from "./JoinMucEvent";
 import { isChatVisibility } from "./ChatVisibility";
 import { isSettings } from "./SettingsEvent";
-import { isXmppSettingsMessageEvent } from "./XmppSettingsMessageEvent";
 import { isOpenCoWebsite } from "./OpenCoWebsite";
 
 export const isIframeEventWrapper = z.union([
@@ -59,7 +63,7 @@ export const isIframeEventWrapper = z.union([
     }),
     z.object({
         type: z.literal("addChatMessage"),
-        data: z.any(),
+        data: isChatMessage,
     }),
     z.object({
         type: z.literal("comingUser"),

@@ -6,7 +6,7 @@ import type { RoomConnection } from "../Connection/RoomConnection";
 import { localStreamStore, obtainedMediaConstraintStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
 import {
-    chatMessagesStore,
+    chatMessagesService,
     newChatMessageSubject,
     newChatMessageWritingStatusSubject,
     writingStatusMessageStore,
@@ -142,7 +142,7 @@ export class VideoPeer extends Peer {
             this._statusStore.set("connected");
 
             this._connected = true;
-            chatMessagesStore.addIncomingUser(this.userId);
+            chatMessagesService.addIncomingUser(this.userId);
 
             this.newMessageSubscription = newChatMessageSubject.subscribe((newMessage) => {
                 if (!newMessage) return;
@@ -180,7 +180,7 @@ export class VideoPeer extends Peer {
                     }
                     case "message": {
                         if (!blackListManager.isBlackListed(this.userUuid)) {
-                            chatMessagesStore.addExternalMessage(this.userId, message.message);
+                            chatMessagesService.addExternalMessage(this.userId, message.message);
                         }
                         break;
                     }
@@ -305,7 +305,7 @@ export class VideoPeer extends Peer {
             this.onUnBlockSubscribe.unsubscribe();
             this.newMessageSubscription?.unsubscribe();
             this.newWritingStatusMessageSubscription?.unsubscribe();
-            chatMessagesStore.addOutcomingUser(this.userId);
+            chatMessagesService.addOutcomingUser(this.userId);
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();
             if (this.obtainedMediaConstraintStoreSubscribe) this.obtainedMediaConstraintStoreSubscribe();
             if (this.volumeStoreSubscribe) this.volumeStoreSubscribe();
