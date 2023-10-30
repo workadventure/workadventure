@@ -181,7 +181,9 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
         this.scene.input.off(Phaser.Input.Events.POINTER_OUT, this.pointerOutEventHandler);
     }
 
-    public handleAreaPreviewDeletion(id: string): void {
+    public handleAreaDeletion(id: string, areaData: AreaData | undefined): void {
+        this.scene.getGameMapFrontWrapper().listenAreaDeletion(areaData);
+
         if (!this.active) {
             return;
         }

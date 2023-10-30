@@ -113,15 +113,7 @@ export class GameMapAreas {
         return area;
     }
 
-    public deleteArea(id: string, playerPosition?: { x: number; y: number }): boolean {
-        if (playerPosition) {
-            const area = this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY).find(
-                (area) => area.id === id
-            );
-            if (area) {
-                this.triggerSpecificAreaOnLeave(area);
-            }
-        }
+    public deleteArea(id: string): boolean {
         const deleted = this.areas.delete(id);
         if (deleted) {
             return this.deleteAreaFromWAM(id);

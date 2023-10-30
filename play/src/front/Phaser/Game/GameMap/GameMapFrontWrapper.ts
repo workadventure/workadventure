@@ -728,10 +728,6 @@ export class GameMapFrontWrapper {
         return this.dynamicAreas.get(name);
     }
 
-    public deleteArea(id: string): void {
-        this.gameMap.getGameMapAreas()?.deleteArea(id, this.position);
-    }
-
     public deleteDynamicArea(name: string): void {
         this.dynamicAreas.delete(name);
     }
@@ -788,6 +784,17 @@ export class GameMapFrontWrapper {
         } else if (!isPlayerWasInsideArea && isPlayerInsideArea) {
             this.triggerSpecificAreaOnEnter(area);
             return;
+        }
+    }
+
+    public listenAreaDeletion(areaData: AreaData | undefined) {
+        if (areaData === undefined || this.position === undefined) {
+            console.error('Area with id "' + areaData?.id + '" does not exist, this not supposed to happen');
+            return;
+        }
+
+        if (this.isPlayerInsideAreaByCoordinates(areaData, this.position)) {
+            this.triggerSpecificAreaOnLeave(areaData);
         }
     }
 

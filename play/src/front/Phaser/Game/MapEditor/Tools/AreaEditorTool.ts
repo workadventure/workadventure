@@ -432,7 +432,9 @@ export class AreaEditorTool extends MapEditorTool {
         mapEditorSelectedAreaPreviewStore.set(areaPreview);
     }
 
-    public handleAreaPreviewDeletion(id: string): void {
+    public handleAreaDeletion(id: string, areaData: AreaData | undefined): void {
+        this.scene.getGameMapFrontWrapper().listenAreaDeletion(areaData);
+
         if (!this.active) {
             return;
         }
