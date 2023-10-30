@@ -119,7 +119,14 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
 
 export const AreaDataProperties = z.array(AreaDataProperty);
 
-export const AreaData = z.object({
+export const AreaCoordinates = z.object({
+    x: z.number(),
+    y: z.number(),
+    width: z.number(),
+    height: z.number(),
+});
+
+export const AreaData = AreaCoordinates.extend({
     id: z.string(),
     x: z.number(),
     y: z.number(),
@@ -259,6 +266,7 @@ export type OpenWebsiteTypePropertiesKeys =
     | "googleSlides"
     | "googleForms"
     | "eraser";
+export type AreaCoordinates = z.infer<typeof areaCoordinates>;
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
 export type AreaDataProperty = z.infer<typeof AreaDataProperty>;

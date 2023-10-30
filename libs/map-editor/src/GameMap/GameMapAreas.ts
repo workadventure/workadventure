@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import { MathUtils } from "@workadventure/math-utils";
-import { AreaData, AreaDataProperties, GameMapProperties, WAMFileFormat } from "../types";
+import { AreaData, AreaDataProperties, AtLeast, GameMapProperties, WAMFileFormat } from "../types";
 
 export type AreaChangeCallback = (
     areasChangedByAction: Array<AreaData>,
@@ -96,16 +96,19 @@ export class GameMapAreas {
         );
     }
 
-    public updateArea(id: string, config: Partial<AreaData>): AreaData | undefined {
-        const area = this.areas.get(id);
+    public updateArea(newConfig: AtLeast<AreaData, "id">): AreaData | undefined {
+        const area = this.areas.get(newConfig.id);
         if (!area) {
             throw new Error(`Area to update does not exist!`);
         }
-        _.merge(area, config);
+
+        _.merge(area, newConfig);
         // TODO: Find a way to update it without need of using conditions
-        if (config.properties !== undefined) {
-            area.properties = config.properties;
+
+        if (newConfig.properties !== undefined) {
+            area.properties = newConfig.properties;
         }
+
         this.updateAreaWAM(area);
         return area;
     }

@@ -455,12 +455,15 @@ export class AreaEditorTool extends MapEditorTool {
         }
     }
 
-    public handleAreaPreviewUpdate(config: AtLeast<AreaData, "id">): void {
+    public handleAreaUpdate(oldConfig: AtLeast<AreaData, "id">, newConfig: AtLeast<AreaData, "id">): void {
+        this.scene.getGameMapFrontWrapper().listenAreaChanges(oldConfig, newConfig);
+
         if (!this.active) {
             return;
         }
 
-        this.areaPreviews.find((area) => area.getAreaData().id === config.id)?.updatePreview(config);
+        this.areaPreviews.find((area) => area.getAreaData().id === newConfig.id)?.updatePreview(newConfig);
+
         this.scene.markDirty();
     }
 
