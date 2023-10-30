@@ -55,6 +55,7 @@ import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import type { ChatMessage } from "./Events/ChatEvent";
 import { ModalEvent } from "./Events/ModalEvent";
 import { AddButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
+import { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -826,6 +827,12 @@ class IframeListener {
         });
     }
 
+    dispatchReceivedEvent(receiveEventEvent: ReceiveEventEvent) {
+        this.postMessage({
+            type: "receiveEvent",
+            data: receiveEventEvent,
+        });
+    }
     sendActionMessageTriggered(uuid: string): void {
         this.postMessage({
             type: "messageTriggered",
@@ -1024,6 +1031,26 @@ class IframeListener {
             source ?? undefined
         );
     }
+
+    /*dispatchScriptableEventToOtherIframes(
+        key: string,
+        value: unknown,
+        myId: number,
+        source: MessageEventSource | null
+    ) {
+        // Let's dispatch the message to the other iframes
+        this.postMessage(
+            {
+                type: "receiveEvent",
+                data: {
+                    key,
+                    value,
+                    senderId: myId,
+                } as ReceiveEventEvent,
+            },
+            source ?? undefined
+        );
+    }*/
 }
 
 export const iframeListener = new IframeListener();

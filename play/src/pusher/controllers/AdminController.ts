@@ -1,8 +1,10 @@
 import { Metadata } from "@grpc/grpc-js";
 import type { Request, Response } from "hyper-express";
 import { ChatMessagePrompt, RoomsList } from "@workadventure/messages";
+import { z } from "zod";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import { adminToken } from "../middlewares/AdminToken";
+import { validatePostQuery } from "../services/QueryValidator";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class AdminController extends BaseHttpController {
@@ -11,6 +13,7 @@ export class AdminController extends BaseHttpController {
         this.receiveRoomEditionPrompt();
         this.getRoomsList();
         this.sendChatMessagePrompt();
+        this.dispatchGlobalEvent();
     }
 
     /**
@@ -21,11 +24,11 @@ export class AdminController extends BaseHttpController {
      *     tags:
      *      - Admin endpoint
      *     parameters:
-     *      - name: "admin-token"
+     *      - name: "authorization"
      *        in: "header"
      *        required: true
      *        type: "string"
-     *        description: TODO - move this to a classic "Authorization" header!
+     *        description: The token to be allowed to access this API (in ADMIN_API_TOKEN environment variable)
      *      - name: "roomId"
      *        in: "body"
      *        description: "The ID (full URL) to the room"
@@ -71,11 +74,11 @@ export class AdminController extends BaseHttpController {
      *     tags:
      *      - Admin endpoint
      *     parameters:
-     *      - name: "admin-token"
+     *      - name: "authorization"
      *        in: "header"
      *        required: true
      *        type: "string"
-     *        description: TODO - move this to a classic "Authorization" header!
+     *        description: The token to be allowed to access this API (in ADMIN_API_TOKEN environment variable)
      *      - name: "text"
      *        in: "body"
      *        description: "The text of the message"
@@ -219,6 +222,101 @@ export class AdminController extends BaseHttpController {
             }
 
             res.setHeader("Content-Type", "application/json").send(JSON.stringify(rooms));
+            return;
+        });
+    }
+
+    /**
+     * @openapi
+     * /global/event:
+     *   post:
+     *     description: Sends a scripting API event to ALL rooms.
+     *     tags:
+     *      - Admin endpoint
+     *     parameters:
+     *      - name: "authorization"
+     *        in: "header"
+     *        required: true
+     *        type: "string"
+     *        description: The token to be allowed to access this API (in ADMIN_API_TOKEN environment variable)
+     *      - name: "name"
+     *        in: "body"
+     *        description: "The name of the event"
+     *        required: true
+     *        type: "string"
+     *      - name: "data"
+     *        in: "body"
+     *        description: "The payload of the event"
+     *        required: false
+     *        type:
+     *          oneOf:
+     *          - type: "string"
+     *            nullable: true
+     *          - type: "object"
+     *          - type: "array"
+     *          - type: "number"
+     *          - type: "boolean"
+     *          - type: "integer"
+     *     responses:
+     *       200:
+     *         description: Will always return "ok".
+     *         example: "ok"
+     */
+    dispatchGlobalEvent(): void {
+        this.app.post("/global/event", [adminToken], async (req: Request, res: Response) => {
+            const body = await validatePostQuery(
+                req,
+                res,
+                z.object({
+                    name: z.string(),
+                    data: z.unknown().optional(),
+                })
+            );
+
+            if (body === undefined) {
+                return;
+            }
+
+            const roomClients = await apiClientRepository.getAllClients();
+
+            const promises: Promise<void>[] = [];
+            for (const roomClient of roomClients) {
+                promises.push(
+                    new Promise<void>((resolve, reject) => {
+                        roomClient.dispatchGlobalEvent(
+                            {
+                                name: body.name,
+                                value: body.data,
+                            },
+                            new Metadata(),
+                            {
+                                deadline: Date.now() + 1000,
+                            },
+                            (error, result) => {
+                                if (error) {
+                                    reject(error);
+                                } else {
+                                    resolve();
+                                }
+                            }
+                        );
+                    })
+                );
+            }
+
+            // Note: this call will take at most 1 second because we won't wait more for all the promises to resolve.
+            const results = await Promise.allSettled(promises);
+
+            for (const roomsListResult of results) {
+                if (roomsListResult.status === "rejected") {
+                    console.warn(
+                        "One back server did not respond within one second to the call to 'dispatchGlobalEvent': ",
+                        roomsListResult.reason
+                    );
+                }
+            }
+
+            res.send("ok");
             return;
         });
     }

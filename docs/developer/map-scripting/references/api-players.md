@@ -261,3 +261,18 @@ WA.players.onVariableChange("score").subscribe((event: PlayerVariableChanged) =>
     console.log(`Player ${event.player.name} new score is ${event.value}`);
 });
 ```
+
+## Sending an event to a remote player
+
+You can send an event to a remote player using the `WA.player.sendEvent` method.
+
+```typescript
+RemotePlayer.sendEvent(key: string, value: unknown): Promise<void>
+```
+
+Example:
+
+```typescript
+// Assuming remotePlayer is a RemotePlayerInterface instance
+remotePlayer.sendEvent("my-event", "my payload");
+```

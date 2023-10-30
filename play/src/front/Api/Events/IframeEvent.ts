@@ -58,6 +58,8 @@ import { isXmppSettingsMessageEvent } from "./XmppSettingsMessageEvent";
 import { isAddButtonActionBarEvent, isRemoveButtonActionBarEvent } from "./Ui/ButtonActionBarEvent";
 import { isBannerEvent } from "./Ui/BannerEvent";
 import { isTeleportPlayerToEventConfig } from "./TeleportPlayerToEvent";
+import { isSendEventEvent } from "./SendEventEvent";
+import { isReceiveEventEvent } from "./ReceiveEventEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -386,6 +388,10 @@ export const isIframeResponseEvent = z.union([
         data: isSetSharedPlayerVariableEvent,
     }),
     z.object({
+        type: z.literal("receiveEvent"),
+        data: isReceiveEventEvent,
+    }),
+    z.object({
         type: z.literal("messageTriggered"),
         data: isMessageReferenceEvent,
     }),
@@ -479,6 +485,10 @@ export const iframeQueryMapTypeGuards = {
     },
     setPlayerVariable: {
         query: isSetPlayerVariableEvent,
+        answer: z.undefined(),
+    },
+    dispatchEvent: {
+        query: isSendEventEvent,
         answer: z.undefined(),
     },
     loadTileset: {

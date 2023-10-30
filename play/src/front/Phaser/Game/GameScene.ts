@@ -5,6 +5,7 @@ import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { throttle } from "throttle-debounce";
 import { MapStore } from "@workadventure/store-utils";
+import { MathUtils } from "@workadventure/math-utils";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import {
@@ -161,6 +162,7 @@ import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
+import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { faviconManager } from "./../../WebRtc/FaviconManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
@@ -265,6 +267,7 @@ export class GameScene extends DirtyScene {
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
     private playerVariablesManager!: PlayerVariablesManager;
+    private scriptingEventsManager!: ScriptingEventsManager;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private areaManager!: DynamicAreaManager;
@@ -503,7 +506,7 @@ export class GameScene extends DirtyScene {
                     `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.mapUrlFile}".`
                 );
             }
-            if (typeof tileset.name === "undefined" || typeof tileset.image === "undefined") {
+            if (typeof tileset.name === "undefined" || !("image" in tileset)) {
                 console.warn("Don't know how to handle tileset ", tileset);
                 return;
             }
@@ -629,6 +632,11 @@ export class GameScene extends DirtyScene {
             if ("source" in tileset) {
                 throw new Error(
                     `Tilesets must be embedded in a map. The tileset "${tileset.source}" must be embedded in the Tiled map "${this.mapUrlFile}".`
+                );
+            }
+            if (!("image" in tileset)) {
+                throw new Error(
+                    `Tilesets made of a collection of images are not supported in WorkAdventure in the Tiled map "${this.mapUrlFile}".`
                 );
             }
             const tilesetImage = this.Map.addTilesetImage(
@@ -1103,6 +1111,9 @@ export class GameScene extends DirtyScene {
                 this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedInterface) => {
                     this.handleCurrentPlayerHasMovedEvent(event);
                 });
+
+                // Set up events manager
+                this.scriptingEventsManager = new ScriptingEventsManager(this.connection);
 
                 // Set up variables manager
                 this.sharedVariablesManager = new SharedVariablesManager(
@@ -1933,6 +1944,7 @@ ${escapedMessage}
             // for the connection to send back the answer.
             await this.connectionAnswerPromiseDeferred.promise;
             return {
+                playerId: this.connection?.getUserId(),
                 mapUrl: this.mapUrlFile,
                 startLayerName: this.startPositionCalculator.getStartPositionName() ?? undefined,
                 uuid: localUserStore.getLocalUser()?.uuid,
@@ -2362,6 +2374,7 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("goToLogin");
         this.sharedVariablesManager?.close();
         this.playerVariablesManager?.close();
+        this.scriptingEventsManager?.close();
         this.embeddedWebsiteManager?.close();
         this.areaManager?.close();
         this.playersEventDispatcher.cleanup();
@@ -2464,20 +2477,39 @@ ${escapedMessage}
         }
     }
 
+    /**
+     * Analyze the #moveTo parameter in the URL.
+     * This function will try to move the player
+     *
+     * - to the X,Y coordinates if this is X,Y coordinates
+     * - if not, to the WAM area with the given name
+     * - if not found, to the Tiled area with the given name
+     * - if not found, to the Tiled layer with the given name
+     */
     private tryMovePlayerWithMoveToParameter(): void {
         const moveToParam = urlManager.getHashParameter("moveTo");
         if (moveToParam) {
             try {
-                let endPos;
+                let endPos: { x: number; y: number };
                 const posFromParam = StringUtils.parsePointFromParam(moveToParam);
                 if (posFromParam) {
                     endPos = this.gameMapFrontWrapper.getTileIndexAt(posFromParam.x, posFromParam.y);
                 } else {
-                    const destinationObject = this.gameMapFrontWrapper.getObjectWithName(moveToParam);
-                    if (destinationObject) {
-                        endPos = this.gameMapFrontWrapper.getTileIndexAt(destinationObject.x, destinationObject.y);
+                    // First, try by id
+                    let areaData = this.gameMapFrontWrapper.getAreas()?.get(moveToParam);
+                    if (!areaData) {
+                        areaData = this.gameMapFrontWrapper.getAreaByName(moveToParam);
+                    }
+                    if (areaData) {
+                        const pixelEndPos = MathUtils.randomPositionFromRect(areaData);
+                        endPos = this.gameMapFrontWrapper.getTileIndexAt(pixelEndPos.x, pixelEndPos.y);
                     } else {
-                        endPos = this.gameMapFrontWrapper.getRandomPositionFromLayer(moveToParam);
+                        const destinationObject = this.gameMapFrontWrapper.getObjectWithName(moveToParam);
+                        if (destinationObject) {
+                            endPos = this.gameMapFrontWrapper.getTileIndexAt(destinationObject.x, destinationObject.y);
+                        } else {
+                            endPos = this.gameMapFrontWrapper.getRandomPositionFromLayer(moveToParam);
+                        }
                     }
                 }
 

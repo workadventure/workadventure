@@ -49,18 +49,29 @@
     });
 
     onMount(() => {
+        console.log("PresentationLayout");
         resizeObserver.observe(layoutDom);
     });
 </script>
 
 <div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias} class="flex flex-col w-full h-full">
     {#if displayFullMedias}
-        <div id="full-medias" class="z-[300] relative mx-auto top-8 h-1/2 overflow-y-auto">
-            <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
-            {#if $myCameraStore && $proximityMeetingStore === true}
-                <MyCamera />
-            {/if}
-        </div>
+        {#if $streamableCollectionStore.size > 0 || $myCameraStore}
+            <div id="full-medias" class="z-[300] relative mx-auto top-8 h-1/2 overflow-y-auto">
+                {#if $jitsiLoadingStore}
+                    <Loading />
+                {/if}
+                {#if $streamableCollectionStore.size > 0}
+                    <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
+                {/if}
+                {#if $myCameraStore && $proximityMeetingStore === true}
+                    <MyCamera />
+                {/if}
+                {#if $myJitsiCameraStore}
+                    <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
+                {/if}
+            </div>
+        {/if}
     {:else}
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div class="relative self-center z-[300] flex">
@@ -123,10 +134,6 @@
         &.full-medias {
             overflow-y: auto;
             overflow-x: hidden;
-        }
-
-        #full-medias {
-            overflow: hidden;
         }
     }
 
