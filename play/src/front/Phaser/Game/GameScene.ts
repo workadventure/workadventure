@@ -1946,6 +1946,7 @@ ${escapedMessage}
             return {
                 playerId: this.connection?.getUserId(),
                 mapUrl: this.mapUrlFile,
+                hashParameters: urlManager.getHashParameters(),
                 startLayerName: this.startPositionCalculator.getStartPositionName() ?? undefined,
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: this.playerName,
