@@ -1,6 +1,6 @@
 import { get } from "svelte/store";
 import Debug from "debug";
-import { KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
+import { KLAXOON_ACTIVITY_PICKER_EVENT, ChatMessageTypes } from "@workadventure/shared-utils";
 import {
     isLookingLikeIframeEventWrapper,
     isIframeEventWrapper,
@@ -10,7 +10,6 @@ import { userStore } from "./Stores/LocalUserStore";
 import {
     availabilityStatusStore,
     chatMessagesStore,
-    ChatMessageTypes,
     chatNotificationsStore,
     chatPeerConnectionInProgress,
     chatSoundsStore,
@@ -106,7 +105,7 @@ class IframeListener {
                                 break;
                             }
                             case "updateWritingStatusChatList": {
-                                writingStatusMessageStore.set(iframeEvent.data);
+                                writingStatusMessageStore.set(iframeEvent.data.users);
                                 break;
                             }
                             case "addChatMessage": {

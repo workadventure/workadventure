@@ -1,6 +1,7 @@
 import { derived, writable } from "svelte/store";
 import { Subject } from "rxjs";
 import { v4 as uuid } from "uuid";
+import { ChatMessageTypes } from "@workadventure/shared-utils";
 import { FileExt, UploadedFile, uploadingState } from "../Services/FileMessageManager";
 import { User } from "../Xmpp/AbstractRoom";
 import { Message } from "../Model/Message";
@@ -18,15 +19,6 @@ export const newChatMessageSubject = _newChatMessageSubject.asObservable();
 
 export const _newChatMessageWritingStatusSubject = new Subject<number>();
 export const newChatMessageWritingStatusSubject = _newChatMessageWritingStatusSubject.asObservable();
-
-export enum ChatMessageTypes {
-    text = 1,
-    me,
-    userIncoming,
-    userOutcoming,
-    userWriting,
-    userStopWriting,
-}
 
 export interface ChatMessage {
     id: string;
@@ -129,7 +121,12 @@ export const timelineActiveStore = writable<boolean>(false);
 
 export const lastTimelineMessageRead = writable<Date>(new Date());
 
-export const writingStatusMessageStore = writable<Set<string>>(new Set<string>());
+export const writingStatusMessageStore = writable<
+    Array<{
+        jid?: string;
+        name?: string;
+    }>
+>([]);
 
 export const chatInputFocusStore = writable(false);
 

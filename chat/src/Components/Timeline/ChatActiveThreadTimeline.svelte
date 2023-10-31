@@ -13,11 +13,11 @@
         KlaxoonEvent,
         EraserService,
         EraserException,
+        ChatMessageTypes,
     } from "@workadventure/shared-utils";
     import {
         chatMessagesStore,
         chatInputFocusStore,
-        ChatMessageTypes,
         chatPeerConnectionInProgress,
         writingStatusMessageStore,
         _newChatMessageWritingStatusSubject,
@@ -35,6 +35,8 @@
 
     const dispatch = createEventDispatcher();
     const defaultMucRoom = mucRoomsStore.getDefaultRoom();
+
+    let writingTimer: ReturnType<typeof setTimeout> | undefined;
 
     export let settingsView = false;
 
@@ -92,12 +94,28 @@
     }
 
     function writing() {
-        if (htmlMessageText != undefined && htmlMessageText !== "" && htmlMessageText !== "<br>") {
+        if (
+            htmlMessageText != undefined &&
+            htmlMessageText !== "" &&
+            htmlMessageText !== "<br>" &&
+            htmlMessageText !== "<div><br></div><div><br></div>"
+        ) {
             _newChatMessageWritingStatusSubject.next(ChatMessageTypes.userWriting);
+            if (writingTimer) {
+                clearTimeout(writingTimer);
+            }
+            writingTimer = setTimeout(() => {
+                _newChatMessageWritingStatusSubject.next(ChatMessageTypes.userStopWriting);
+                writingTimer = undefined;
+            }, 5000);
         } else {
             _newChatMessageWritingStatusSubject.next(ChatMessageTypes.userStopWriting);
+            if (writingTimer) {
+                clearTimeout(writingTimer);
+                writingTimer = undefined;
+            }
         }
-        if (htmlMessageText === "<br>") {
+        if (htmlMessageText === "<br>" || htmlMessageText === "<div><br></div><div><br></div>") {
             htmlMessageText = "";
         }
     }
@@ -655,8 +673,8 @@
         {/each}
 
         {#if defaultMucRoom}
-            {#each [...$writingStatusMessageStore] as userJid (userJid)}
-                <UserWriting {defaultMucRoom} {userJid} />
+            {#each [...$writingStatusMessageStore] as user (user.jid)}
+                <UserWriting {defaultMucRoom} userJid={user.jid} userName={user.name} />
             {/each}
         {/if}
     </div>

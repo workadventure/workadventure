@@ -6,6 +6,7 @@ import {
     isXmppSettingsMessageEvent,
     isChatMessage,
 } from "@workadventure/shared-utils";
+import { isUpdateWritingStatusChatListEvent } from "@workadventure/shared-utils/src/Events/UpdateWritingStatusChatListEvent";
 import { isNotification } from "./Notification";
 import { isLocale } from "./Locale";
 import { isLeaveMucEvent } from "./LeaveMucEvent";
@@ -59,7 +60,7 @@ export const isIframeEventWrapper = z.union([
     //TODO delete with chat XMPP integration for the discussion circle
     z.object({
         type: z.literal("updateWritingStatusChatList"),
-        data: z.any(),
+        data: isUpdateWritingStatusChatListEvent,
     }),
     z.object({
         type: z.literal("addChatMessage"),

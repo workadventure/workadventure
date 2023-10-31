@@ -1,6 +1,6 @@
 import { Subject, Subscription } from "rxjs";
+import { SendChatMessageOptions, ChatMessageTypes } from "@workadventure/shared-utils";
 import type { UserInputChatEvent } from "../Events/UserInputChatEvent";
-import { SendChatMessageOptions } from "../../../../../libs/shared-utils/src/Events/ChatEvent";
 import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import { RemotePlayerInterface } from "./Players/RemotePlayer";
@@ -73,7 +73,53 @@ export class WorkadventureChatCommands extends IframeApiContribution<Workadventu
         });
     }
 
-    // TODO: implement start writing and stop writing
+    /**
+     * Simulates a user is currently typing a message in the chat.
+     *
+     * If the scope is "bubble", the typing indicator will be displayed in the chat of all users in the bubble (except the current user)
+     * If the scope is "local", the typing indicator will be displayed in the chat of the current user only (and will appear to come from the user whose name is "author")
+     *
+     * @param options
+     */
+    startTyping(options: SendChatMessageOptions): void {
+        if (options.scope === "bubble") {
+            sendToWorkadventure({
+                type: "newChatMessageWritingStatus",
+                data: ChatMessageTypes.userWriting,
+            });
+        } else {
+            sendToWorkadventure({
+                type: "startWriting",
+                data: {
+                    author: options.author,
+                },
+            });
+        }
+    }
+
+    /**
+     * Simulates a user has stopped typing a message in the chat.
+     *
+     * If the scope is "bubble", the typing indicator will be removed in the chat of all users in the bubble (except the current user)
+     * If the scope is "local", the typing indicator will be removed in the chat of the current user only (and will appear to come from the user whose name is "author")
+     *
+     * @param options
+     */
+    stopTyping(options: SendChatMessageOptions): void {
+        if (options.scope === "bubble") {
+            sendToWorkadventure({
+                type: "newChatMessageWritingStatus",
+                data: ChatMessageTypes.userStopWriting,
+            });
+        } else {
+            sendToWorkadventure({
+                type: "stopWriting",
+                data: {
+                    author: options.author,
+                },
+            });
+        }
+    }
 
     /**
      * Listens to messages typed in the chat history.

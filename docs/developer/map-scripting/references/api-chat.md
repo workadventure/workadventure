@@ -127,3 +127,47 @@ WA.chat.onChatMessage(((message, event) => {
     scope: 'bubble'
 });
 ```
+
+### Emulating someone typing in the chat
+
+In order to give the impression that someone is typing in the chat, you can trigger the "typing" indicator.
+
+Use the following functions to trigger the "typing" indicator:
+
+```ts
+WA.chat.startTyping(options: SendLocalChatMessageOptions): void;
+WA.chat.stopTyping(options: SendLocalChatMessageOptions): void;
+```
+
+#### Typing indicator for the local user
+
+You can decide to display the "typing" indicator for the local user only, or for all users in the same bubble.
+
+If you want to display the "typing" indicator for the local user only, you can optionally pass the author name:
+
+```ts
+// Let's pretend we start typing something
+WA.chat.startTyping({ scope: 'local', author: 'John Doe' });
+
+// After a while, let's send a message
+setTimeout(() => {
+    WA.chat.sendChatMessage('Hello world', { scope: 'local', author: 'John Doe' });
+    WA.chat.stopTyping({ scope: 'local' });
+}, 2000);
+```
+
+#### Typing indicator for the bubble
+
+If you want to display the "typing" indicator for all users in the same bubble, you don't need to pass the author name
+(because the author has to be you).
+
+```ts
+// Let's pretend we start typing something
+WA.chat.startTyping({ scope: 'bubble' });
+
+// After a while, let's send a message
+setTimeout(() => {
+    WA.chat.sendChatMessage('Hello world', { scope: 'bubble' });
+    WA.chat.stopTyping({ scope: 'bubble' });
+}, 2000);
+```

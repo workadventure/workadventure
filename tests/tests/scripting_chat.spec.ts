@@ -6,7 +6,7 @@ import {expectInViewport, expectOutViewport} from "./utils/viewport";
 import Map from './utils/map';
 
 test.describe('Scripting chat functions', () => {
-    test('can open / close chat', async ({ page}) => {
+    test('can open / close chat + start / stop typing', async ({ page}) => {
         await page.goto(
             'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
         );
@@ -40,10 +40,32 @@ test.describe('Scripting chat functions', () => {
             .locator("#timeLine-messageList")
         ).toContainText('Test machine');
 
+        // Test start typing
+        await evaluateScript(page, async () => {
+            return WA.chat.startTyping({
+                scope: "local",
+                author: "Eve",
+            });
+        });
+
+        await expect(page.frameLocator('iframe[title="WorkAdventureChat"]').getByText('Eve', { exact: true })).toBeVisible();
+
+        // Test stop typing
+        await evaluateScript(page, async () => {
+            return WA.chat.stopTyping({
+                scope: "local",
+                author: "Eve",
+            });
+        });
+
+        await expect.poll(() => page.frameLocator('iframe[title="WorkAdventureChat"]').getByText('Eve', { exact: true }).count()).toBe(0);
+
         // Test close chat scripting
         await evaluateScript(page, async () => {
             return WA.chat.close();
         });
+
+
         await expectOutViewport("#chatWindow", page);
     });
 
@@ -88,5 +110,21 @@ test.describe('Scripting chat functions', () => {
 
         await promise;
 
+        await evaluateScript(page, async () => {
+            WA.chat.startTyping({
+                scope: 'bubble',
+            });
+        });
+
+        await expect(page2.frameLocator('iframe[title="WorkAdventureChat"]').locator('.loading-group')).toBeVisible();
+
+
+        await evaluateScript(page, async () => {
+            WA.chat.stopTyping({
+                scope: 'bubble',
+            });
+        });
+
+        await expect.poll(() => page2.frameLocator('iframe[title="WorkAdventureChat"]').locator('.loading-group').count()).toBe(0);
     });
 });

@@ -340,6 +340,10 @@ class IframeListener {
                         this._cameraFollowPlayerStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "chat") {
                         scriptUtils.sendChat(iframeEvent.data, iframe.contentWindow ?? undefined);
+                    } else if (iframeEvent.type === "startWriting") {
+                        scriptUtils.startWriting(iframeEvent.data, iframe.contentWindow ?? undefined);
+                    } else if (iframeEvent.type === "stopWriting") {
+                        scriptUtils.stopWriting(iframeEvent.data, iframe.contentWindow ?? undefined);
                     } else if (iframeEvent.type === "openChat") {
                         this._openChatStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "closeChat") {
@@ -918,11 +922,21 @@ class IframeListener {
 
     // << TODO delete with chat XMPP integration for the discussion circle
     sendWritingStatusToChatIframe(list: Set<PlayerInterface>) {
-        const usersTyping: Array<string> = [];
-        list.forEach((user) => usersTyping.push(user.userJid));
+        const usersTyping: Array<{
+            jid?: string;
+            name?: string;
+        }> = [];
+        list.forEach((user) =>
+            usersTyping.push({
+                jid: user.userJid === "fake" ? undefined : user.userJid,
+                name: user.name,
+            })
+        );
         this.postMessageToChat({
             type: "updateWritingStatusChatList",
-            data: usersTyping,
+            data: {
+                users: usersTyping,
+            },
         });
     }
 

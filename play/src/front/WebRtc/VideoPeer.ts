@@ -157,7 +157,9 @@ export class VideoPeer extends Peer {
             });
 
             this.newWritingStatusMessageSubscription = newChatMessageWritingStatusSubject.subscribe((status) => {
-                if (status == undefined) return;
+                if (status === undefined) {
+                    return;
+                }
                 this.write(
                     new Buffer(
                         JSON.stringify({

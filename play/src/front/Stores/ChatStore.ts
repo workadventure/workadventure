@@ -132,6 +132,56 @@ export const chatMessagesService = {
 
         chatVisibilityStore.set(true);
     },
+    /**
+     * Displays the "start writing" message in the chat.
+     * This method is only used by the scripting API to fake the fact someone (the local robot) is writing in the chat.
+     *
+     * @param authorId
+     * @param origin
+     */
+    startWriting(authorId: number, origin?: Window) {
+        const author = getAuthor(authorId);
+
+        //send list to chat iframe
+        iframeListener.sendMessageToChatIframe({
+            type: ChatMessageTypes.userWriting,
+            author: {
+                name: author.name,
+                active: true,
+                isMe: false,
+                jid: author.userJid,
+                isMember: false,
+                color: author.color ?? undefined,
+            },
+            date: new Date(),
+        });
+
+        chatVisibilityStore.set(true);
+    },
+    /**
+     * Displays the "start writing" message in the chat.
+     * This method is only used by the scripting API to fake the fact someone (the local robot) is writing in the chat.
+     *
+     * @param authorId
+     * @param origin
+     */
+    stopWriting(authorId: number, origin?: Window) {
+        const author = getAuthor(authorId);
+
+        //send list to chat iframe
+        iframeListener.sendMessageToChatIframe({
+            type: ChatMessageTypes.userStopWriting,
+            author: {
+                name: author.name,
+                active: true,
+                isMe: false,
+                jid: author.userJid,
+                isMember: false,
+                color: author.color ?? undefined,
+            },
+            date: new Date(),
+        });
+    },
 };
 
 function createChatSubMenuVisibilityStore() {

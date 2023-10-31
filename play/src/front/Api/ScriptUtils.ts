@@ -1,7 +1,8 @@
 import { GoogleWorkSpaceService, KlaxoonService, ChatMessageTypes } from "@workadventure/shared-utils";
 import type { ChatEvent } from "@workadventure/shared-utils";
+import { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
 import { playersStore } from "../Stores/PlayersStore";
-import { chatMessagesService } from "../Stores/ChatStore";
+import { chatMessagesService, writingStatusMessageStore } from "../Stores/ChatStore";
 import { iframeListener } from "./IframeListener";
 
 class ScriptUtils {
@@ -45,6 +46,24 @@ class ScriptUtils {
                 const _exhaustiveCheck: never = chatEvent.options;
             }
         }
+    }
+
+    public startWriting(startWritingEvent: StartWritingEvent, origin?: Window) {
+        const userId = playersStore.addFacticePlayer(startWritingEvent.author || "System");
+
+        /*const writingUsersList = get(writingStatusMessageStore);
+        writingUsersList.add(playersStore.getPlayerById(userId));*/
+        writingStatusMessageStore.addWritingStatus(userId, ChatMessageTypes.userWriting);
+
+        /*iframeListener.sendWritingStatusToChatIframe()
+
+        chatMessagesService.startWriting(userId, origin);*/
+    }
+
+    public stopWriting(stopWritingEvent: StopWritingEvent, origin?: Window) {
+        const userId = playersStore.addFacticePlayer(stopWritingEvent.author || "System");
+        //chatMessagesService.stopWriting(userId, origin);
+        writingStatusMessageStore.addWritingStatus(userId, ChatMessageTypes.userStopWriting);
     }
 }
 
