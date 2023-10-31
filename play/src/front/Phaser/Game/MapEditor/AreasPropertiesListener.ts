@@ -2,6 +2,7 @@ import { get } from "svelte/store";
 import {
     AreaData,
     AreaDataProperties,
+    AreaDataProperty,
     FocusablePropertyData,
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
@@ -52,47 +53,7 @@ export class AreasPropertiesListener {
                 continue;
             }
             for (const property of area.properties) {
-                switch (property.type) {
-                    case "openWebsite": {
-                        this.handleOpenWebsitePropertyOnEnter(property);
-                        break;
-                    }
-                    case "playAudio": {
-                        this.handlePlayAudioPropertyOnEnter(property);
-                        break;
-                    }
-                    case "focusable": {
-                        this.handleFocusablePropertiesOnEnter(area.x, area.y, area.width, area.height, property);
-                        break;
-                    }
-                    case "jitsiRoomProperty": {
-                        this.handleJitsiRoomPropertyOnEnter(property);
-                        break;
-                    }
-                    case "silent": {
-                        this.handleSilentPropertyOnEnter();
-                        break;
-                    }
-                    case "speakerMegaphone": {
-                        this.handleSpeakerMegaphonePropertyOnEnter(property);
-                        break;
-                    }
-                    case "listenerMegaphone": {
-                        this.handleListenerMegaphonePropertyOnEnter(property);
-                        break;
-                    }
-                    case "exit": {
-                        let url = `${property.url}`;
-                        if (property.areaName && property.areaName !== "") {
-                            url = `${property.url}#${property.areaName}`;
-                        }
-                        this.handleExitPropertyOnEnter(url);
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                }
+                this.addPropertyFilter(property, area);
             }
         }
     }
@@ -102,7 +63,37 @@ export class AreasPropertiesListener {
         oldProperties: AreaDataProperties | undefined,
         newProperties: AreaDataProperties | undefined
     ): void {
-        console.log(`Area ${area.name} updated`);
+        const propertiesTreated = new Set<string>();
+
+        if (newProperties === undefined) {
+            return;
+        }
+
+        if (oldProperties !== undefined) {
+            for (const oldProperty of oldProperties) {
+                const newProperty = newProperties.find((searchedProperty) => searchedProperty.id === oldProperty.id);
+
+                if (JSON.stringify(oldProperty) === JSON.stringify(newProperty)) {
+                    propertiesTreated.add(oldProperty.id);
+                    continue;
+                }
+
+                if (newProperty === undefined) {
+                    this.removePropertyFilter(oldProperty);
+                } else {
+                    this.updatePropertyFilter(oldProperty, newProperty, area);
+                }
+
+                propertiesTreated.add(oldProperty.id);
+            }
+        }
+
+        for (const newProperty of newProperties) {
+            if (propertiesTreated.has(newProperty.id)) {
+                continue;
+            }
+            this.addPropertyFilter(newProperty, area);
+        }
     }
 
     public onLeaveAreasHandler(areas: AreaData[]): void {
@@ -111,39 +102,143 @@ export class AreasPropertiesListener {
                 continue;
             }
             for (const property of area.properties) {
-                switch (property.type) {
-                    case "openWebsite": {
-                        this.handleOpenWebsitePropertiesOnLeave(property);
-                        break;
-                    }
-                    case "playAudio": {
-                        this.handlePlayAudioPropertyOnLeave();
-                        break;
-                    }
-                    case "focusable": {
-                        this.handleFocusablePropertiesOnLeave(property);
-                        break;
-                    }
-                    case "jitsiRoomProperty": {
-                        this.handleJitsiRoomPropertyOnLeave(property);
-                        break;
-                    }
-                    case "silent": {
-                        this.handleSilentPropertyOnLeave();
-                        break;
-                    }
-                    case "speakerMegaphone": {
-                        this.handleSpeakerMegaphonePropertyOnLeave(property);
-                        break;
-                    }
-                    case "listenerMegaphone": {
-                        this.handleListenerMegaphonePropertyOnLeave(property);
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
+                this.removePropertyFilter(property);
+            }
+        }
+    }
+
+    private addPropertyFilter(property: AreaDataProperty, area: AreaData) {
+        switch (property.type) {
+            case "openWebsite": {
+                this.handleOpenWebsitePropertyOnEnter(property);
+                break;
+            }
+            case "playAudio": {
+                this.handlePlayAudioPropertyOnEnter(property);
+                break;
+            }
+            case "focusable": {
+                this.handleFocusablePropertiesOnEnter(area.x, area.y, area.width, area.height, property);
+                break;
+            }
+            case "jitsiRoomProperty": {
+                this.handleJitsiRoomPropertyOnEnter(property);
+                break;
+            }
+            case "silent": {
+                this.handleSilentPropertyOnEnter();
+                break;
+            }
+            case "speakerMegaphone": {
+                this.handleSpeakerMegaphonePropertyOnEnter(property);
+                break;
+            }
+            case "listenerMegaphone": {
+                this.handleListenerMegaphonePropertyOnEnter(property);
+                break;
+            }
+            case "exit": {
+                let url = `${property.url}`;
+                if (property.areaName && property.areaName !== "") {
+                    url = `${property.url}#${property.areaName}`;
                 }
+                this.handleExitPropertyOnEnter(url);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+
+    private updatePropertyFilter(oldProperty: AreaDataProperty, newProperty: AreaDataProperty, area: AreaData) {
+        if (oldProperty.type !== newProperty.type) {
+            throw new Error("Cannot update a property with a different type");
+        }
+
+        switch (oldProperty.type) {
+            case "openWebsite": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handleOpenWebsitePropertiesOnLeave(oldProperty);
+                this.handleOpenWebsitePropertyOnEnter(newProperty);
+                break;
+            }
+            case "playAudio": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handlePlayAudioPropertyOnUpdate(newProperty);
+                break;
+            }
+            case "focusable": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handleFocusablePropertiesOnEnter(area.x, area.y, area.width, area.height, newProperty);
+                break;
+            }
+            case "jitsiRoomProperty": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handleJitsiRoomPropertyOnLeave(oldProperty);
+                this.handleJitsiRoomPropertyOnEnter(newProperty);
+                break;
+            }
+            case "speakerMegaphone": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handleSpeakerMegaphonePropertyOnLeave(oldProperty);
+                this.handleSpeakerMegaphonePropertyOnEnter(newProperty);
+                break;
+            }
+            case "listenerMegaphone": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handleListenerMegaphonePropertyOnLeave(oldProperty);
+                this.handleListenerMegaphonePropertyOnEnter(newProperty);
+                break;
+            }
+            case "exit": {
+                newProperty = newProperty as typeof oldProperty;
+                let url = `${newProperty.url}`;
+                if (newProperty.areaName && newProperty.areaName !== "") {
+                    url = `${newProperty.url}#${newProperty.areaName}`;
+                }
+                this.handleExitPropertyOnEnter(url);
+                break;
+            }
+            case "silent":
+            default: {
+                break;
+            }
+        }
+    }
+
+    private removePropertyFilter(property: AreaDataProperty) {
+        switch (property.type) {
+            case "openWebsite": {
+                this.handleOpenWebsitePropertiesOnLeave(property);
+                break;
+            }
+            case "playAudio": {
+                this.handlePlayAudioPropertyOnLeave();
+                break;
+            }
+            case "focusable": {
+                this.handleFocusablePropertiesOnLeave(property);
+                break;
+            }
+            case "jitsiRoomProperty": {
+                this.handleJitsiRoomPropertyOnLeave(property);
+                break;
+            }
+            case "silent": {
+                this.handleSilentPropertyOnLeave();
+                break;
+            }
+            case "speakerMegaphone": {
+                this.handleSpeakerMegaphonePropertyOnLeave(property);
+                break;
+            }
+            case "listenerMegaphone": {
+                this.handleListenerMegaphonePropertyOnLeave(property);
+                break;
+            }
+            default: {
+                break;
             }
         }
     }
@@ -232,9 +327,6 @@ export class AreasPropertiesListener {
         height: number,
         property: FocusablePropertyData
     ): void {
-        if (x === undefined || y === undefined || !height || !width) {
-            return;
-        }
         const zoomMargin = property.zoom_margin ? Math.max(0, property.zoom_margin) : undefined;
         this.scene.getCameraManager().enterFocusMode(
             {
@@ -389,6 +481,11 @@ export class AreasPropertiesListener {
     private handlePlayAudioPropertyOnLeave(): void {
         audioManagerFileStore.unloadAudio();
         audioManagerVisibilityStore.set(false);
+    }
+
+    private handlePlayAudioPropertyOnUpdate(newProperty: PlayAudioPropertyData): void {
+        audioManagerFileStore.unloadAudio();
+        audioManagerFileStore.playAudio(newProperty.audioLink, this.scene.getMapUrl(), newProperty.volume);
     }
 
     private handleJitsiRoomPropertyOnLeave(property: JitsiRoomPropertyData): void {

@@ -466,7 +466,14 @@ export class AreaEditorTool extends MapEditorTool {
             return;
         }
 
-        this.areaPreviews.find((area) => area.getAreaData().id === newConfig.id)?.updatePreview(newConfig);
+        console.log("handleAreaUpdate", oldConfig, newConfig);
+
+        const area = this.areaPreviews.find((area) => area.getAreaData().id === newConfig.id);
+
+        if (area) {
+            area.updatePreview(newConfig);
+            mapEditorSelectedAreaPreviewStore.set(area);
+        }
 
         this.scene.markDirty();
     }

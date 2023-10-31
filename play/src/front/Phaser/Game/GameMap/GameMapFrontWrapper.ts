@@ -784,7 +784,7 @@ export class GameMapFrontWrapper {
         const isOldCoordinates = AreaCoordinates.safeParse(oldConfig);
         const isNewCoordinates = AreaCoordinates.safeParse(newConfig);
 
-        if (!isOldCoordinates.success || !isNewCoordinates.success) {
+        if (!isOldCoordinates.success) {
             throw new Error("Something wrong happen! Area coordinates are not defined");
         }
 
@@ -796,7 +796,7 @@ export class GameMapFrontWrapper {
         }
 
         const oldAreaCoordinates = isOldCoordinates.data;
-        const newAreaCoordinates = isNewCoordinates.data;
+        const newAreaCoordinates = isNewCoordinates.success ? isNewCoordinates.data : oldAreaCoordinates;
 
         const isPlayerWasInsideArea = this.isPlayerInsideAreaByCoordinates(oldAreaCoordinates, this.position);
         const isPlayerInsideArea = this.isPlayerInsideAreaByCoordinates(newAreaCoordinates, this.position);
