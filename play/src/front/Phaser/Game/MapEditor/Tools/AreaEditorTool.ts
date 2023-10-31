@@ -580,11 +580,16 @@ export class AreaEditorTool extends MapEditorTool {
         areaPreview.on(AreaPreviewEvent.Copied, (data: CopyAreaEventData) => {
             this.copyArea(data);
         });
-        areaPreview.on(AreaPreviewEvent.Updated, (data: AtLeast<AreaData, "id">) => {
-            this.mapEditorModeManager
-                .executeCommand(new UpdateAreaFrontCommand(this.scene.getGameMap(), data, undefined, undefined, this))
-                .catch((e) => console.error(e));
-        });
+        areaPreview.on(
+            AreaPreviewEvent.Updated,
+            (newData: AtLeast<AreaData, "id">, oldData: AtLeast<AreaData, "id"> | undefined) => {
+                this.mapEditorModeManager
+                    .executeCommand(
+                        new UpdateAreaFrontCommand(this.scene.getGameMap(), newData, undefined, oldData, this)
+                    )
+                    .catch((e) => console.error(e));
+            }
+        );
         areaPreview.on(AreaPreviewEvent.Delete, () => {
             this.mapEditorModeManager
                 .executeCommand(

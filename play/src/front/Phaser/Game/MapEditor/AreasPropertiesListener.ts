@@ -1,6 +1,7 @@
 import { get } from "svelte/store";
 import {
     AreaData,
+    AreaDataProperties,
     FocusablePropertyData,
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
@@ -94,6 +95,14 @@ export class AreasPropertiesListener {
                 }
             }
         }
+    }
+
+    public onUpdateAreasHandler(
+        area: AreaData,
+        oldProperties: AreaDataProperties | undefined,
+        newProperties: AreaDataProperties | undefined
+    ): void {
+        console.log(`Area ${area.name} updated`);
     }
 
     public onLeaveAreasHandler(areas: AreaData[]): void {

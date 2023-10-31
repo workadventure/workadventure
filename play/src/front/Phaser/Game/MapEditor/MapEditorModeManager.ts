@@ -247,6 +247,7 @@ export class MapEditorModeManager {
                 break;
             }
             case "z": {
+                // Todo replace with key combo https://photonstorm.github.io/phaser3-docs/Phaser.Input.Keyboard.KeyCombo.html
                 if (this.ctrlKey?.isDown) {
                     if (this.shiftKey?.isDown) {
                         this.runningUndoRedoCommand = this.runningUndoRedoCommand

@@ -7,10 +7,17 @@ export type AreaChangeCallback = (
     allAreasOnNewPosition: Array<AreaData>
 ) => void;
 
+export type AreaUpdateCallback = (
+    area: AreaData,
+    oldProperties: AreaDataProperties | undefined,
+    newProperties: AreaDataProperties | undefined
+) => void;
+
 export class GameMapAreas {
     private wam: WAMFileFormat;
 
     private enterAreaCallbacks = Array<AreaChangeCallback>();
+    private updateAreaCallbacks = Array<AreaUpdateCallback>();
     private leaveAreaCallbacks = Array<AreaChangeCallback>();
 
     /**
@@ -169,6 +176,13 @@ export class GameMapAreas {
     }
 
     /**
+     * Registers a callback called when an area is update.
+     */
+    public onUpdateArea(callback: AreaUpdateCallback) {
+        this.updateAreaCallbacks.push(callback);
+    }
+
+    /**
      * Registers a callback called when the user moves outside another area.
      */
     public onLeaveArea(callback: AreaChangeCallback) {
@@ -178,6 +192,16 @@ export class GameMapAreas {
     public triggerSpecificAreaOnEnter(area: AreaData): void {
         for (const callback of this.enterAreaCallbacks) {
             callback([area], []);
+        }
+    }
+
+    public triggerSpecificAreaOnUpdate(
+        area: AreaData,
+        oldProperties: AreaDataProperties | undefined,
+        newProperties: AreaDataProperties | undefined
+    ): void {
+        for (const callback of this.updateAreaCallbacks) {
+            callback(area, oldProperties, newProperties);
         }
     }
 

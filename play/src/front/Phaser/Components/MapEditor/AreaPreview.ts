@@ -154,23 +154,26 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     }
 
     public addProperty(property: AreaDataProperty): void {
+        const oldAreaData = structuredClone(this.areaData);
         this.areaData.properties.push(property);
-        this.emit(AreaPreviewEvent.Updated, this.areaData);
+        this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData);
     }
 
     public updateProperty(changes: AtLeast<AreaDataProperty, "id">): void {
+        const oldAreaData = structuredClone(this.areaData);
         const property = this.areaData.properties.find((property) => property.id === changes.id);
         if (property) {
             _.merge(property, changes);
         }
-        this.emit(AreaPreviewEvent.Updated, this.areaData);
+        this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData);
     }
 
     public deleteProperty(id: string): boolean {
+        const oldAreaData = structuredClone(this.areaData);
         const index = this.areaData.properties.findIndex((property) => property.id === id);
         if (index !== -1) {
             this.areaData.properties.splice(index, 1);
-            this.emit(AreaPreviewEvent.Updated, this.areaData);
+            this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData);
             return true;
         } else {
             return false;
@@ -187,9 +190,10 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     }
 
     public updateAreaData(dataToChange: Partial<AreaData>): void {
+        const oldAreaData = structuredClone(this.areaData);
         const data = { id: this.areaData.id, ...dataToChange };
         this.updatePreview(data);
-        this.emit(AreaPreviewEvent.Updated, data);
+        this.emit(AreaPreviewEvent.Updated, data, oldAreaData);
     }
 
     private showSizeAlteringSquares(show = true): void {
@@ -405,9 +409,10 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     }
 
     public setAreaName(name: string): void {
+        const oldAreaData = structuredClone(this.areaData);
         this.areaData.name = name;
         const data = { id: this.areaData.id, name };
-        this.emit(AreaPreviewEvent.Updated, data);
+        this.emit(AreaPreviewEvent.Updated, data, oldAreaData);
     }
 
     public getId(): string {

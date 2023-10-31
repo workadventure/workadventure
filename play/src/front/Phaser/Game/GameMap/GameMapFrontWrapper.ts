@@ -1,4 +1,4 @@
-import { AreaCoordinates, AreaDataProperties, GameMapProperties } from "@workadventure/map-editor";
+import { AreaCoordinates, AreaDataProperties, AreaUpdateCallback, GameMapProperties } from "@workadventure/map-editor";
 import type { AreaChangeCallback, AreaData, AtLeast, GameMap } from "@workadventure/map-editor";
 import type {
     ITiledMap,
@@ -444,6 +444,13 @@ export class GameMapFrontWrapper {
     }
 
     /**
+     * Registers a callback called when an area has been updated.
+     */
+    public onUpdateArea(callback: AreaUpdateCallback) {
+        this.gameMap.onUpdateArea(callback);
+    }
+
+    /**
      * Registers a callback called when the user moves outside another area.
      */
     public onLeaveArea(callback: AreaChangeCallback) {
@@ -712,6 +719,14 @@ export class GameMapFrontWrapper {
         this.gameMap.getGameMapAreas()?.triggerSpecificAreaOnEnter(area);
     }
 
+    public triggerSpecificAreaOnUpdate(
+        area: AreaData,
+        oldProperties: AreaDataProperties | undefined,
+        newProperties: AreaDataProperties | undefined
+    ): void {
+        this.gameMap.getGameMapAreas()?.triggerSpecificAreaOnUpdate(area, oldProperties, newProperties);
+    }
+
     public triggerSpecificAreaOnLeave(area: AreaData): void {
         this.gameMap.getGameMapAreas()?.triggerSpecificAreaOnLeave(area);
     }
@@ -787,7 +802,9 @@ export class GameMapFrontWrapper {
         const isPlayerInsideArea = this.isPlayerInsideAreaByCoordinates(newAreaCoordinates, this.position);
 
         if (isPlayerWasInsideArea && isPlayerInsideArea) {
-            //this.triggerAllProperties();
+            if (JSON.stringify(oldConfig.properties) !== JSON.stringify(newConfig.properties)) {
+                this.triggerSpecificAreaOnUpdate(area, oldConfig.properties, newConfig.properties);
+            }
         } else if (isPlayerWasInsideArea && !isPlayerInsideArea) {
             this.triggerSpecificAreaOnLeave(area);
             return;
