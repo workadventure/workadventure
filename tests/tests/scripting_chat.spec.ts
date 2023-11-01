@@ -75,7 +75,7 @@ test.describe('Scripting chat functions', () => {
         );
 
         await login(page);
-        await Map.walkToPosition(page, 32, 32);
+        await Map.teleportToPosition(page, 32, 32);
 
         const newBrowser = await browser.browserType().launch();
         const page2 = await newBrowser.newPage();
@@ -105,8 +105,14 @@ test.describe('Scripting chat functions', () => {
             });
         });
 
+        // Wait for the onChatMessage to be registered
+        await new Promise<void>((resolve) => {
+            setTimeout(() => {
+                resolve();
+            }, 500);
+        });
 
-        await Map.walkToPosition(page2, 32, 32);
+        await Map.teleportToPosition(page2, 32, 32);
 
         await promise;
 
