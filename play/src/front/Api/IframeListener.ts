@@ -526,13 +526,15 @@ class IframeListener {
      * Registers an event listener to know when iframes are closed and returns an "unsubscriber" function.
      */
     onIframeCloseEvent(source: MessageEventSource, callback: () => void): () => void {
-        const callbackSet = this.iframeCloseCallbacks.get(source);
+        let callbackSet = this.iframeCloseCallbacks.get(source);
         if (callbackSet === undefined) {
-            throw new Error("Could not find iframe in list");
+            // It is possible that the iframe is not registered yet (register happens on the "load" event of the iframe, but it could be triggered AFTER first events are received).
+            callbackSet = new Set();
+            this.iframeCloseCallbacks.set(source, callbackSet);
         }
         callbackSet.add(callback);
         return () => {
-            callbackSet.delete(callback);
+            callbackSet?.delete(callback);
         };
     }
 
