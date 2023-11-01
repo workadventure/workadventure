@@ -13,7 +13,7 @@ import controls from "./front/Api/Iframe/controls";
 import ui from "./front/Api/Iframe/ui";
 import sound from "./front/Api/Iframe/sound";
 import event from "./front/Api/Iframe/event";
-import room, { setMapURL, setRoomId } from "./front/Api/Iframe/room";
+import room, { setHashParameters, setMapURL, setRoomId } from "./front/Api/Iframe/room";
 import { createState } from "./front/Api/Iframe/state";
 import player, {
     setPlayerName,
@@ -77,6 +77,7 @@ const initPromise = queryWorkadventure({
     setPlayerName(gameState.nickname);
     setPlayerLanguage(gameState.language);
     setRoomId(gameState.roomId);
+    setHashParameters(gameState.hashParameters);
     setMapURL(gameState.mapUrl);
     setTags(gameState.tags);
     setUuid(gameState.uuid);
