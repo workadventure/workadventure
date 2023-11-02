@@ -1,4 +1,4 @@
-import {expect, test} from '@playwright/test';
+import {expect, test, webkit} from '@playwright/test';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import Chat from './utils/chat';
@@ -70,6 +70,13 @@ test.describe('Scripting chat functions', () => {
     });
 
     test('can send message to bubble users', async ({ page, browser}) => {
+        // It seems WebRTC fails to start on Webkit
+        if(browser.browserType() === webkit) {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         await page.goto(
             'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
         );
