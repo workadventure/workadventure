@@ -54,6 +54,12 @@ export type { Area } from "./front/Api/Iframe/Area/Area";
 export type { ActionsMenuAction } from "./front/Api/Iframe/ui";
 export type { TileDescriptor } from "./front/Api/Iframe/room";
 export type { ScriptingEvent } from "./front/Api/Iframe/AbstractEvent";
+export type { RemotePlayerInterface } from "./front/Api/Iframe/Players/RemotePlayer";
+export type {
+    SendChatMessageOptions,
+    SendLocalChatMessageOptions,
+    SendBubbleChatMessageOptions,
+} from "../../libs/shared-utils/src/Events/ChatEvent";
 
 const globalState = createState();
 

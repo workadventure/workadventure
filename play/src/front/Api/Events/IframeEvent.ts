@@ -1,6 +1,8 @@
 import { z } from "zod";
-import { KLAXOON_ACTIVITY_PICKER_EVENT, isKlaxoonEvent } from "@workadventure/shared-utils";
-import { isChatEvent, isChatMessage } from "./ChatEvent";
+import { KLAXOON_ACTIVITY_PICKER_EVENT, isKlaxoonEvent, isXmppSettingsMessageEvent } from "@workadventure/shared-utils";
+import { isStartWritingEvent, isStopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
+import { isUpdateWritingStatusChatListEvent } from "@workadventure/shared-utils/src/Events/UpdateWritingStatusChatListEvent";
+import { isChatEvent, isChatMessage } from "../../../../../libs/shared-utils/src/Events/ChatEvent";
 import { isClosePopupEvent } from "./ClosePopupEvent";
 import { isGoToPageEvent } from "./GoToPageEvent";
 import { isLoadPageEvent } from "./LoadPageEvent";
@@ -54,7 +56,6 @@ import { isChatVisibilityEvent } from "./ChatVisibilityEvent";
 import { isNotificationEvent } from "./NotificationEvent";
 import { isShowBusinessCardEvent } from "./ShowBusinessCardEvent";
 import { isModalEvent } from "./ModalEvent";
-import { isXmppSettingsMessageEvent } from "./XmppSettingsMessageEvent";
 import { isAddButtonActionBarEvent, isRemoveButtonActionBarEvent } from "./Ui/ButtonActionBarEvent";
 import { isBannerEvent } from "./Ui/BannerEvent";
 import { isTeleportPlayerToEventConfig } from "./TeleportPlayerToEvent";
@@ -84,6 +85,14 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("chat"),
         data: isChatEvent,
+    }),
+    z.object({
+        type: z.literal("startWriting"),
+        data: isStartWritingEvent,
+    }),
+    z.object({
+        type: z.literal("stopWriting"),
+        data: isStopWritingEvent,
     }),
     z.object({
         type: z.literal("openChat"),
@@ -447,7 +456,7 @@ export const isIframeResponseEvent = z.union([
     }),
     z.object({
         type: z.literal("updateWritingStatusChatList"),
-        data: z.array(z.nullable(z.string())),
+        data: isUpdateWritingStatusChatListEvent,
     }),
     z.object({
         type: z.literal("buttonActionBarTrigger"),
