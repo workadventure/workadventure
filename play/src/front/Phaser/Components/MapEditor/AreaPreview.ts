@@ -412,6 +412,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         const oldAreaData = structuredClone(this.areaData);
         this.areaData.name = name;
         const data = { id: this.areaData.id, name };
+        console.log("setAreaName", data);
         this.emit(AreaPreviewEvent.Updated, data, oldAreaData);
     }
 
