@@ -74,6 +74,9 @@ export class JitsiConferenceWrapper {
                 });
             }
         });
+        // set the desired resolution to send to JVB or the peer (180, 360, 720).
+        console.info('Jitsi setSenderVideoConstraint => 180');
+        this.jitsiConference.setSenderVideoConstraint(180);
     }
 
     public static join(connection: JitsiConnection, jitsiRoomName: string): Promise<JitsiConferenceWrapper> {
