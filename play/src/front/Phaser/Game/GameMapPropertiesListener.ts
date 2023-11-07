@@ -34,6 +34,7 @@ import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
 import { AreasPropertiesListener } from "./MapEditor/AreasPropertiesListener";
 import { gameManager } from "./GameManager";
+import { TeamsRoom } from "../../Streaming/Teams/CreateRoom";
 
 export interface OpenCoWebsite {
     actionId: string;
@@ -348,6 +349,13 @@ export class GameMapPropertiesListener {
             this.onLeavePlaceHandler(
                 oldAreas.map((area) => this.gameMapFrontWrapper.mapDynamicAreaToTiledObject(area))
             );
+        });
+
+        this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.TEAMS_ROOM, (newValue, oldValue, allProps) => {
+            console.log("this.gameMapFrontWrapper.onPropertyChange", newValue, oldValue, allProps);
+            // Create Teams room
+            const teamsRoom = new TeamsRoom();
+            teamsRoom.room();
         });
     }
 
