@@ -36,6 +36,17 @@ const camera: DeepPartial<Translation["camera"]> = {
         nameTag: "Usted",
     },
     disable: "Apaga tu cámara",
+    menu: {
+        moreAction: "Más acciones",
+        closeMenu: "Cerrar el menú",
+        senPrivateMessage: "Enviar un mensaje privado (próximamente)",
+        banUser: "Expulsar usuario",
+        muteAudioUser: "Silenciar audio",
+        muteAudioEveryBody: "Silenciar audio para todos",
+        muteVideoUser: "Silenciar vídeo",
+        muteVideoEveryBody: "Silenciar vídeo para todos",
+        pin: "Fijar",
+    },
 };
 
 export default camera;

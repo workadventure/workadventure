@@ -37,6 +37,17 @@ const camera: BaseTranslation = {
         nameTag: "You",
     },
     disable: "Turn off your camera",
+    menu: {
+        moreAction: "More actions",
+        closeMenu: "Close menu",
+        senPrivateMessage: "Send a private message (coming soon)",
+        banUser: "Ban user",
+        muteAudioUser: "Mute audio",
+        muteAudioEveryBody: "Mute audio for everybody",
+        muteVideoUser: "Mute video",
+        muteVideoEveryBody: "Mute video for everybody",
+        pin: "Pin",
+    },
 };
 
 export default camera;

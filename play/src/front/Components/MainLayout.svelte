@@ -21,6 +21,7 @@
     import { coWebsites } from "../Stores/CoWebsiteStore";
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
+    import { notificationPlayingStore } from "../Stores/NotificationStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
@@ -42,6 +43,7 @@
     import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
     import Modal from "./Modal/Modal.svelte";
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
+    import Notification from "./UI/Notification.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -79,6 +81,14 @@
             <BanMessageContainer />
         {:else if $textMessageStore.length > 0}
             <TextMessageContainer />
+        {/if}
+
+        {#if $notificationPlayingStore}
+            <div class="tw-flex tw-flex-col tw-absolute tw-w-auto tw-right-0">
+                {#each [...$notificationPlayingStore.values()] as notification (notification.id)}
+                    <Notification {notification} />
+                {/each}
+            </div>
         {/if}
 
         {#if $soundPlayingStore}

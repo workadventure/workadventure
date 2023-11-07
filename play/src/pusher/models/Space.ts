@@ -19,6 +19,7 @@ const debug = Debug("space");
 
 export class Space implements CustomJsonReplacerInterface {
     private readonly users: Map<number, SpaceUserExtended>;
+    private readonly metadata: Map<string, unknown>;
 
     private clientWatchers: Map<number, Socket>;
 
@@ -29,6 +30,7 @@ export class Space implements CustomJsonReplacerInterface {
         watcher: Socket
     ) {
         this.users = new Map<number, SpaceUserExtended>();
+        this.metadata = new Map<string, unknown>();
         this.clientWatchers = new Map<number, Socket>();
         this.addClientWatcher(watcher);
         debug(`created : ${name}`);

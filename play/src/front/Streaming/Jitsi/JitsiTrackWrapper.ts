@@ -18,7 +18,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
     private spaceUserUpdateSubscribe: Subscription | undefined;
     public readonly isLocal: boolean;
 
-    constructor(readonly participantId: string, jitsiTrack: JitsiTrack | undefined) {
+    constructor(readonly participantId: string, jitsiTrack: JitsiTrack | undefined, readonly jitsiRoomName: string) {
         if (jitsiTrack) {
             this.setJitsiTrack(jitsiTrack);
             this.isLocal = jitsiTrack.isLocal();

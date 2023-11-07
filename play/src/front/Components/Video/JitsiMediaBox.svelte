@@ -12,6 +12,7 @@
     import UserTag from "./UserTag.svelte";
     import JitsiVideoElement from "./JitsiVideoElement.svelte";
     import JitsiAudioElement from "./JitsiAudioElement.svelte";
+    import ActionMediaBox from "./ActionMediaBox.svelte";
 
     export let clickable = true;
     export let isHightlighted = false;
@@ -42,12 +43,15 @@
     });
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     id="container"
     class="jitsi-video"
     bind:this={jitsiMediaBoxHtml}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
+    <ActionMediaBox {embedScreen} trackStreamWraper={peer} />
+
     {#if $videoTrackStore}
         <div class="tw-rounded-sm tw-overflow-hidden tw-flex tw-w-full tw-flex-col tw-h-full">
             <JitsiVideoElement

@@ -607,7 +607,7 @@ export class IoSocketController {
                                 socketManager.emitInvalidCompanionTextureMessage(socket);
                             }
                         } else {
-                            socketManager.emitConnectionErrorMessage(socket, socketData.message);
+                            socketManager.emitConnectionErrorMessage(socket, socketData.message.toString());
                         }
                         ws.end(1000, "Error message sent");
                         return;
