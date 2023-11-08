@@ -77,4 +77,22 @@ test.describe('Iframe API', () => {
 
     await expect(page.locator('.menu-container')).toContainText("Share the link of the room");
   });
+
+  test('base room properties', async ({
+                                                          page
+                                                        }) => {
+    await page.goto(
+        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json#foo=bar'
+    );
+
+    await login(page);
+
+    const parameter = await evaluateScript(page, async () => {
+      await WA.onInit();
+
+      return WA.room.hashParameters.foo;
+    });
+
+    expect(parameter).toEqual('bar');
+  });
 });

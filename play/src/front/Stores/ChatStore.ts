@@ -1,10 +1,9 @@
 import { writable } from "svelte/store";
 import { Subject } from "rxjs";
+import { ChatMessageTypes } from "@workadventure/shared-utils";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { iframeListener } from "../Api/IframeListener";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
-import type { ChatMessage } from "../Api/Events/ChatEvent";
-import { ChatMessageTypes } from "../Api/Events/ChatEvent";
 import { playersStore } from "./PlayersStore";
 
 export const chatZoneLiveStore = writable(false);
@@ -59,151 +58,131 @@ function createWritingStatusMessageStore() {
 }
 export const writingStatusMessageStore = createWritingStatusMessageStore();
 
-function createChatMessagesStore() {
-    const { subscribe, update } = writable<ChatMessage[]>([]);
+export const chatMessagesService = {
+    addIncomingUser(authorId: number) {
+        const author = getAuthor(authorId);
 
-    return {
-        subscribe,
-        addIncomingUser(authorId: number) {
-            update((list) => {
-                const lastMessage = list[list.length - 1];
-                if (lastMessage && lastMessage.type === ChatMessageTypes.userIncoming && lastMessage.targets) {
-                    lastMessage.targets.push(getAuthor(authorId).userUuid);
-                } else {
-                    list.push({
-                        type: ChatMessageTypes.userIncoming,
-                        targets: [getAuthor(authorId).userUuid],
-                        date: new Date(),
-                    });
-                }
+        /* @deprecated with new chat service */
+        iframeListener.sendComingUserToChatIframe({
+            type: ChatMessageTypes.userIncoming,
+            author: {
+                name: author.name,
+                active: true,
+                isMe: false,
+                jid: author.userJid,
+                isMember: false,
+                color: author.color ?? undefined,
+            },
+            date: new Date(),
+        });
+    },
+    addOutcomingUser(authorId: number) {
+        const author = getAuthor(authorId);
 
-                const author = getAuthor(authorId);
+        /* @deprecated with new chat service */
+        iframeListener.sendComingUserToChatIframe({
+            type: ChatMessageTypes.userOutcoming,
+            author: {
+                name: author.name,
+                active: true,
+                isMe: false,
+                jid: author.userJid,
+                isMember: false,
+                color: author.color ?? undefined,
+            },
+            date: new Date(),
+        });
 
-                /* @deprecated with new chat service */
-                iframeListener.sendComingUserToChatIframe({
-                    type: ChatMessageTypes.userIncoming,
-                    author: {
-                        name: author.name,
-                        active: true,
-                        isMe: false,
-                        jid: author.userJid,
-                        isMember: false,
-                        color: author.color,
-                    },
-                    date: new Date(),
-                });
+        //end of writing message
+        writingStatusMessageStore.addWritingStatus(authorId, ChatMessageTypes.userStopWriting);
+    },
+    addPersonalMessage(text: string) {
+        iframeListener.sendUserInputChat(text, undefined);
+        _newChatMessageSubject.next(text);
+    },
+    /**
+     * @param origin The iframe that originated this message (if triggered from the Scripting API), or undefined otherwise.
+     */
+    addExternalMessage(authorId: number, text: string, origin?: Window) {
+        const author = getAuthor(authorId);
 
-                return list;
-            });
-        },
-        addOutcomingUser(authorId: number) {
-            update((list) => {
-                const lastMessage = list[list.length - 1];
-                if (lastMessage && lastMessage.type === ChatMessageTypes.userOutcoming && lastMessage.targets) {
-                    lastMessage.targets.push(getAuthor(authorId).userUuid);
-                } else {
-                    list.push({
-                        type: ChatMessageTypes.userOutcoming,
-                        targets: [getAuthor(authorId).userUuid],
-                        date: new Date(),
-                    });
-                }
+        //TODO delete it with new XMPP integration
+        //send list to chat iframe
+        iframeListener.sendMessageToChatIframe({
+            type: ChatMessageTypes.text,
+            text: [text],
+            author: {
+                name: author.name,
+                active: true,
+                isMe: false,
+                jid: author.userJid,
+                isMember: false,
+                color: author.color ?? undefined,
+            },
+            date: new Date(),
+        });
 
-                const author = getAuthor(authorId);
+        //create message sound and text notification
+        mediaManager.playNewMessageNotification();
+        mediaManager.createNotification(author.name, NotificationType.message);
+        //end of writing message
+        writingStatusMessageStore.addWritingStatus(authorId, ChatMessageTypes.userStopWriting);
 
-                /* @deprecated with new chat service */
-                iframeListener.sendComingUserToChatIframe({
-                    type: ChatMessageTypes.userOutcoming,
-                    author: {
-                        name: author.name,
-                        active: true,
-                        isMe: false,
-                        jid: author.userJid,
-                        isMember: false,
-                        color: author.color,
-                    },
-                    date: new Date(),
-                });
+        iframeListener.sendUserInputChat(text, authorId, origin);
 
-                //end of writing message
-                writingStatusMessageStore.addWritingStatus(authorId, ChatMessageTypes.userStopWriting);
-                return list;
-            });
-        },
-        addPersonalMessage(text: string) {
-            iframeListener.sendUserInputChat(text);
-            _newChatMessageSubject.next(text);
-            update((list) => {
-                const lastMessage = list[list.length - 1];
-                if (lastMessage && lastMessage.type === ChatMessageTypes.me && lastMessage.text) {
-                    lastMessage.text.push(text);
-                } else {
-                    list.push({
-                        type: ChatMessageTypes.me,
-                        text: [text],
-                        date: new Date(),
-                    });
-                }
+        chatVisibilityStore.set(true);
+    },
+    /**
+     * Displays the "start writing" message in the chat.
+     * This method is only used by the scripting API to fake the fact someone (the local robot) is writing in the chat.
+     *
+     * @param authorId
+     * @param origin
+     */
+    startWriting(authorId: number, origin?: Window) {
+        const author = getAuthor(authorId);
 
-                return list;
-            });
-        },
-        /**
-         * @param origin The iframe that originated this message (if triggered from the Scripting API), or undefined otherwise.
-         */
-        addExternalMessage(authorId: number, text: string, origin?: Window) {
-            update((list) => {
-                const author = getAuthor(authorId);
-                let lastMessage = null;
-                if (list.length > 0) {
-                    lastMessage = list[list.length - 1];
-                }
-                if (
-                    lastMessage &&
-                    lastMessage.type === ChatMessageTypes.text &&
-                    lastMessage.text &&
-                    lastMessage?.author === author.userUuid
-                ) {
-                    lastMessage.text.push(text);
-                } else {
-                    list.push({
-                        type: ChatMessageTypes.text,
-                        text: [text],
-                        author: author.userUuid,
-                        date: new Date(),
-                    });
-                }
+        //send list to chat iframe
+        iframeListener.sendMessageToChatIframe({
+            type: ChatMessageTypes.userWriting,
+            author: {
+                name: author.name,
+                active: true,
+                isMe: false,
+                jid: author.userJid,
+                isMember: false,
+                color: author.color ?? undefined,
+            },
+            date: new Date(),
+        });
 
-                //TODO delete it with new XMPP integration
-                //send list to chat iframe
-                iframeListener.sendMessageToChatIframe({
-                    type: ChatMessageTypes.text,
-                    text: [text],
-                    author: {
-                        name: author.name,
-                        active: true,
-                        isMe: false,
-                        jid: author.userJid,
-                        isMember: false,
-                        color: author.color,
-                    },
-                    date: new Date(),
-                });
+        chatVisibilityStore.set(true);
+    },
+    /**
+     * Displays the "start writing" message in the chat.
+     * This method is only used by the scripting API to fake the fact someone (the local robot) is writing in the chat.
+     *
+     * @param authorId
+     * @param origin
+     */
+    stopWriting(authorId: number, origin?: Window) {
+        const author = getAuthor(authorId);
 
-                //create message sound and text notification
-                mediaManager.playNewMessageNotification();
-                mediaManager.createNotification(author.name, NotificationType.message);
-                //end of writing message
-                writingStatusMessageStore.addWritingStatus(authorId, ChatMessageTypes.userStopWriting);
-
-                iframeListener.sendUserInputChat(text, origin);
-                return list;
-            });
-            chatVisibilityStore.set(true);
-        },
-    };
-}
-export const chatMessagesStore = createChatMessagesStore();
+        //send list to chat iframe
+        iframeListener.sendMessageToChatIframe({
+            type: ChatMessageTypes.userStopWriting,
+            author: {
+                name: author.name,
+                active: true,
+                isMe: false,
+                jid: author.userJid,
+                isMember: false,
+                color: author.color ?? undefined,
+            },
+            date: new Date(),
+        });
+    },
+};
 
 function createChatSubMenuVisibilityStore() {
     const { subscribe, update } = writable<string>("");

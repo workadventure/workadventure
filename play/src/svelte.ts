@@ -86,8 +86,11 @@ switch (phaserMode) {
     case "webgl":
         mode = Phaser.WEBGL;
         break;
+    case "headless":
+        mode = Phaser.HEADLESS;
+        break;
     default:
-        throw new Error('phaserMode parameter must be one of "auto", "canvas" or "webgl"');
+        throw new Error('phaserMode parameter must be one of "auto", "canvas", "webgl" or "headless"');
 }
 
 const hdpiManager = new HdpiManager(640 * 480, 196 * 196);
@@ -121,9 +124,9 @@ const config: Phaser.Types.Core.GameConfig = {
     },
     disableContextMenu: true,
     render: {
-        pixelArt: true,
+        pixelArt: mode !== Phaser.HEADLESS, // There is a bug in Phaser 3.60.0 that makes headless mode crash when pixelArt is enabled
         roundPixels: true,
-        antialias: false,
+        antialias: mode === Phaser.HEADLESS, // There is a bug in Phaser 3.60.0 that makes headless mode crash when antialias is disabled
         antialiasGL: false,
     },
     plugins: {

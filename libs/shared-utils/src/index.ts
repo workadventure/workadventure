@@ -10,3 +10,5 @@ export * as KlaxoonService from "./Application/KlaxoonService";
 export * as KlaxoonException from "./Application/Exception/KlaxoonException";
 export * as EraserService from "./Application/EraserService";
 export * as EraserException from "./Application/Exception/EraserException";
+export * from "./Events/XmppSettingsMessageEvent";
+export * from "./Events/ChatEvent";
