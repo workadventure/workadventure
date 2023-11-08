@@ -30,7 +30,7 @@
             <label for="startTypeSelector">{$LL.mapEditor.properties.startProperties.type()}</label>
             <select
                 id="startTypeSelector"
-                class="tw-w-full"
+                class="w-full"
                 bind:value={property.isDefault}
                 on:change={() => {
                     onValueChange();

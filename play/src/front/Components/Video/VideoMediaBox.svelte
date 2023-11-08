@@ -247,9 +247,9 @@
         ></video>
         {#if displayNoVideoWarning}
                 <div
-                    class="tw-flex media-box-camera-on-size tw-absolute tw-justify-center tw-items-center tw-bg-danger/50 tw-text-white"
+                    class="flex media-box-camera-on-size absolute justify-center items-center bg-danger/50 text-white"
                 >
-                    <div class="tw-text-center">
+                    <div class="text-center">
                         <h1>{$LL.video.connection_issue()}</h1>
                         <p>{$LL.video.no_video_stream_received()}</p>
                     </div>
