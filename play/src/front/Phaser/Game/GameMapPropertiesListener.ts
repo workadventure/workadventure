@@ -34,7 +34,7 @@ import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
 import { AreasPropertiesListener } from "./MapEditor/AreasPropertiesListener";
 import { gameManager } from "./GameManager";
-import { TeamsRoom } from "../../Streaming/Teams/CreateRoom";
+import { callAgentManager } from "../../Streaming/Teams/CallAgentManager";
 
 export interface OpenCoWebsite {
     actionId: string;
@@ -352,10 +352,16 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.TEAMS_ROOM, (newValue, oldValue, allProps) => {
-            console.log("this.gameMapFrontWrapper.onPropertyChange", newValue, oldValue, allProps);
-            // Create Teams room
-            const teamsRoom = new TeamsRoom();
-            teamsRoom.room();
+            console.log("Teams room property changed", newValue, oldValue, allProps)
+            if (newValue !== undefined && oldValue === undefined) {
+                // Enter in a Teams room
+                callAgentManager.createMeeting();
+            } else if (newValue === undefined && oldValue !== undefined) {
+                // Leave the Teams room
+            } else {
+                // Enter in another Teams room
+                // todo: Leave the previous room and enter in the new one
+            }
         });
     }
 
