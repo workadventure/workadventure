@@ -378,8 +378,8 @@
     }
 </script>
 <svelte:window on:keydown={onKeyDown} />
-<div class="grid grid-cols-3 justify-items-stretch absolute top-0 w-full p-4 pointer-events-auto">
-    <div class="justify-self-start" transition:fly={{delay: 500, y: -200, duration: 750 }}>
+<div class="grid grid-cols-3 justify-items-stretch absolute top-0 w-full p-4 pointer-events-none bp-menu">
+    <div class="justify-self-start pointer-events-auto" transition:fly={{delay: 500, y: -200, duration: 750 }}>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
                 on:click={() =>
@@ -430,10 +430,8 @@
                     </svg>
                 </div>
                 {#if active}
-                <div class="block absolute w-64 text-white rounded-lg top-20 -left-2 transform before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded-lg before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:-left-0"  in:fly={{delay: 500, y: 40, duration: 100 }}>
-                    <div class="w-4 overflow-hidden inline-block absolute -top-[11px] left-10 transform -translate-x-1/2">
-                        <div class=" h-3 w-3 rotate-45 transform origin-bottom-left bg-contrast/80 backdrop-blur"></div>
-                    </div>
+                <div class="block absolute w-64 text-white rounded-lg top-[70px] -left-2 transform before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded-lg before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:-left-0"  in:fly={{delay: 500, y: 40, duration: 100 }}>
+                    <img loading="eager" src="{tooltipArrow}" class="content-[''] absolute -top-1 left-9 m-auto w-2 h-1" />
                     <div class="relative z-10 pb-4 rounded-lg overflow-hidden">
                         <img src="{tooltipExemple}" class="w-full -mt-[2px]" loading="lazy" />
                         <div class="font-lg bold px-4 pt-3 pb-1">
@@ -453,7 +451,7 @@
             </div>
         </div>
     </div>
-    <div class="justify-self-center">
+    <div class="justify-self-center pointer-events-auto">
         <div class="flex relative">
             {#if !$silentStore}
             <div transition:fly={{delay: 750, y: -200, duration: 750 }}>
@@ -473,10 +471,10 @@
                         </div>
                         {#if $emoteMenuSubStore}
                             <div
-                                    class="flex justify-center m-auto absolute left-0 right-0 -bottom-[55px] w-auto z-[500]"
-                                    transition:fly={{y: 50, duration: 250 }}
+                                    class="flex justify-center m-auto absolute left-0 right-0 top-[70px] w-auto z-[500]"
+                                    transition:fly={{y: 20, duration: 150 }}
                             >
-                                <img src="{tooltipArrow}" class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1" />
+                                <img loading="eager" src="{tooltipArrow}" class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1" />
                                 <div class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg pl-4 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 sm:flex-row">
                                     <div class="bottom-action-section flex animate flex-row flex items-center">
                                         {#each [...$emoteDataStore.keys()] as key}
@@ -493,7 +491,7 @@
                                                     {$emoteDataStore.get(key)?.emoji}
                                                     </div>
                                                     {#if !isMobile}
-                                                        <div class="text-white/50 font-xxs pl-2">{key}</div>
+                                                        <div class="text-white/50 font-xxs pl-1">{key}</div>
                                                     {/if}
                                                 </button>
                                             </div>
@@ -638,10 +636,8 @@
                                         </svg>
                                     {/if}
                                 </div>
-                                <div class="group-hover/btn-mic:block hidden absolute p-4 w-60 text-white text-center rounded-lg top-20 left-1/2 transform -translate-x-1/2 before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:left-0">
-                                    <div class="w-4 overflow-hidden inline-block absolute -top-3 left-1/2 transform -translate-x-1/2">
-                                        <div class=" h-3 w-3 rotate-45 transform origin-bottom-left bg-contrast/80 backdrop-blur"></div>
-                                    </div>
+                                <div class="group-hover/btn-mic:block hidden absolute p-4 w-60 text-white text-center rounded-lg top-[70px] left-1/2 transform -translate-x-1/2 before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:left-0">
+                                    <img loading="eager" src="{tooltipArrow}" class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1" />
                                     <div class="relative z-10">
                                         <div class="italic mb-3 text-sm">Click on icon to turn {$requestedMicrophoneState && !$silentStore ? "OFF" : "ON"} microphone</div>
                                         {#if selectedMicrophone != undefined}
@@ -682,16 +678,14 @@
                                     </svg>
                                 {/if}
                             </div>
-                            <div class="group-hover/btn-cam:block hidden absolute p-4 w-60 text-white text-center rounded-lg top-20 left-1/2 transform -translate-x-1/2 before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:left-0">
-                                <div class="w-4 overflow-hidden inline-block absolute -top-3 left-1/2 transform -translate-x-1/2">
-                                    <div class=" h-3 w-3 rotate-45 transform origin-bottom-left bg-contrast/80 backdrop-blur"></div>
-                                </div>
+                            <div class="group-hover/btn-cam:block hidden absolute p-4 w-60 text-white text-center rounded-lg top-[70px] left-1/2 transform -translate-x-1/2 before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:left-0">
+                                <img loading="eager" src="{tooltipArrow}" class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1" />
                                 <div class="relative z-10">
                                     <div class="italic mb-3 text-sm">Click on icon to turn {#if $requestedMicrophoneState && !$silentStore}OFF{:else}ON{/if} camera</div>
                                     {#if $streamableCollectionStore.size > 0 || $myCameraStore}
                                         <div class="relative self-end z-[300] bottom-6 md:bottom-4">
                                             {#if $myCameraStore}
-                                                <MyCamera />
+                                                <MyCamera small={true} />
                                             {/if}
                                         </div>
                                     {/if}
@@ -713,7 +707,7 @@
                          on:click={() =>analyticsClient.screenSharing()}
                          on:click={screenSharingClick}
                     >
-                        <div class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-share:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all">
+                        <div class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-share:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all {$requestedScreenSharingState && !$silentStore ? 'bg-secondary hover:bg-danger' : ''}">
                             {#if $requestedScreenSharingState && !$silentStore}
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <g>
@@ -735,7 +729,7 @@
             </div>
         </div>
     </div>
-    <div class="justify-self-end">
+    <div class="justify-self-end pointer-events-auto menu-right">
         <div class="flex">
             {#if $inviteUserActivated}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -756,7 +750,7 @@
                 </div>
             {/if}
             {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
-                <div class="flex items-center relative mr-4" transition:fly={{delay: 1500, y: -200, duration: 750 }}>
+                <div class="items-center relative mr-4 hidden lg:block" transition:fly={{delay: 1500, y: -200, duration: 750 }}>
                     <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false } tabindex="0">
                         <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded">
                             <div class="px-2 h-6">
@@ -865,6 +859,17 @@
                 {#if profileMenuIsDropped}
                 <div class="absolute mt-2 top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all" transition:fly={{y: 40, duration: 150 }}>
                     <ul class="p-0 m-0 list-none">
+                        <li class="group flex px-2 transition-all cursor-pointer text-sm font-bold ">
+                            <div class="flex items-center px-3 py-3 w-full bg-white/10 rounded">
+                                <div class="w-full">Basic account</div>
+                                <div class="">
+                                    <div class="btn btn-light btn-sm">
+                                        Upgrade
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="h-[1px] w-full bg-white/20 my-2"></li>
                         <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditNameScene()}>
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -923,6 +928,17 @@
   * {
     font-family: 'Roboto Condensed';
   }
+    /*
+  .bp-menu {
+    container: menuContainer / inline-size;
+  }
+  @container menuContainer (min-width: 700px) {
+    .menu-right {
+      display: none;
+    }
+  }
+  
+     */
   button {
     justify-content: center;
   }

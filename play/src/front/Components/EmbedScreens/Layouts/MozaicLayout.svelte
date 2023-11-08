@@ -7,6 +7,7 @@
     import { myCameraStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 
+    export let cardHeight = 196;
     let layoutDom: HTMLDivElement;
     let displayFullMedias = isMediaBreakpointUp("md");
 
@@ -18,6 +19,7 @@
         resizeObserver.observe(layoutDom);
         highlightedEmbedScreen.removeHighlight();
     });
+    $:console.log(cardHeight);
 </script>
 
 <div id="mozaic-layout" class="flex justify-center lg:pt-9" bind:this={layoutDom}>

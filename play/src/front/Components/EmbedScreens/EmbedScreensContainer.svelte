@@ -1,18 +1,60 @@
 <script lang="ts">
+    import { get } from "svelte/store";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+    import { embedScreenLayoutStore, heightCamWrapper } from "../../Stores/EmbedScreensStore";
     import PresentationLayout from "./Layouts/PresentationLayout.svelte";
     import MozaicLayout from "./Layouts/MozaicLayout.svelte";
     import { emoteMenuSubStore } from "../../Stores/EmoteStore";
     import "../../style/wa-theme/video-ui.scss";
+
+    export let y = 20
+
+    let expanding = null
+    let start = null, initial = null
+    let height = get(heightCamWrapper);
+
+    function startExpand(type, event) {
+        expanding = type
+        start = event.pageY
+        initial = { y, height }
+    }
+
+    function stopExpand() {
+        expanding = null
+        start = null
+        initial = null
+    }
+
+    function expand(event) {
+        if (!expanding) return
+        if (expanding == 'top') {
+            const delta = start - event.pageY
+            console.log(event.pageY);
+            y = initial.y - delta
+            $heightCamWrapper = initial.height + delta
+            return
+        }
+
+        if (expanding == 'bottom') {
+            const delta = event.pageY - start
+            console.log(event.pageY);
+            $heightCamWrapper = initial.height + delta
+            return
+        }
+    }
 </script>
 
-<div id="embedScreensContainer" class="relative h-full pt-24 flex justify-center items-center pointer-events-auto" style="{$emoteMenuSubStore ? 'padding-top:166px;' : '' }">
+<div id="embedScreensContainer" class="group relative h-full pt-24 flex justify-center items-center pointer-events-auto transition-all pb-7 hover:bg-contrast/80" style="{$emoteMenuSubStore ? 'padding-top:96px;' : '' }" on:mouseleave={stopExpand} >
     {#if $embedScreenLayoutStore === LayoutMode.Presentation}
         <PresentationLayout />
     {:else}
         <MozaicLayout />
     {/if}
+    <div class="group-hover:opacity-100 opacity-0 absolute bottom-0 w-full h-4 hover:bg-white/10 cursor-row-resize transition-all" on:mousedown={startExpand.bind(this, 'bottom')} on:mousemove={expand}>
+        <div class="group-hover:opacity-100 opacity-0 absolute bottom-1 left-0 right-0 m-auto h-2 w-48 pointer-events-none">
+            <div class="bg-white rounded-lg h-1 w-48"></div>
+        </div>
+    </div>
 </div>
 
 <style lang="scss">

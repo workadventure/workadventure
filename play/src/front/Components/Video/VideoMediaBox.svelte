@@ -18,10 +18,11 @@
     import microphoneOffImg from "../images/microphone-off-blue.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+    import { embedScreenLayoutStore, heightCamWrapper } from "../../Stores/EmbedScreensStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import BanReportBox from "./BanReportBox.svelte";
     import { srcObject } from "./utils";
+    import { fly } from "svelte/transition";
     import loaderImg from "../images/loader.svg";
 
     export let clickable = false;
@@ -49,6 +50,8 @@
     let currentDeviceId: string | undefined;
 
     let displayNoVideoWarning = false;
+
+    let showUserSubMenu = false;
 
     const debug = Debug("VideoMediaBox");
 
@@ -210,13 +213,13 @@
 </script>
 
 <div
-    class="video-container transition-all self-end relative aspect-video w-[350px]"
+    class="video-container transition-all relative h-full aspect-video"
     class:video-off={!videoEnabled}
     bind:this={videoContainer}
-    on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
+    style="height:{$heightCamWrapper}px;"
 >
     <div
-        class="aspect-video w-full absolute top-0 left-0 overflow-hidden z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur rounded-xl mr-4"
+        class="aspect-video absolute top-0 left-0 z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur"
         style="background-image: url({loaderImg})"
         class:flex-col={videoEnabled}
         class:h-full={videoEnabled}
@@ -233,18 +236,36 @@
             <div class="rtc-error" ></div>
         {/if}
         <!-- svelte-ignore a11y-media-has-caption -->
-        <video
-            bind:this={videoElement}
-            class:h-0={!videoEnabled}
-            class:w-0={!videoEnabled}
-            class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
-            class:h-full={videoEnabled}
-            class:max-w-full={videoEnabled}
-            class:rounded={videoEnabled}
-            autoplay
-            playsinline
-            class="h-full w-full rounded md:object-cover relative z-20"
-        ></video>
+        <div
+                on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
+                class="relative group/cam cursor-zoom-in rounded-lg overflow-hidden"
+        >
+            <video
+                    bind:this={videoElement}
+                    class:h-0={!videoEnabled}
+                    class:w-0={!videoEnabled}
+                    class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
+                    class:h-full={videoEnabled}
+                    class:max-w-full={videoEnabled}
+                    class:rounded={videoEnabled}
+                    autoplay
+                    playsinline
+                    class="h-full w-full rounded md:object-cover relative z-20"
+            ></video>
+            <div class="absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/cam:opacity-100 pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrows-maximize" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M16 4l4 0l0 4" />
+                    <path d="M14 10l6 -6" />
+                    <path d="M8 20l-4 0l0 -4" />
+                    <path d="M4 20l6 -6" />
+                    <path d="M16 20l4 0l0 -4" />
+                    <path d="M14 14l6 6" />
+                    <path d="M8 4l-4 0l0 4" />
+                    <path d="M4 4l6 6" />
+                </svg>
+            </div>
+        </div>
         {#if displayNoVideoWarning}
                 <div
                     class="tw-flex media-box-camera-on-size tw-absolute tw-justify-center tw-items-center tw-bg-danger/50 tw-text-white"
@@ -256,9 +277,9 @@
                 </div>
             {/if}
             <div class="absolute bottom-4 left-4 z-30">
-            <div class="flex">
-                    <div class="rounded bg-contrast/90 backdrop-blur flex items-center pl-4 py-1 text-white text-sm pl-12 pr-4 bold">
-                        <div class="absolute left-1 -top-1" style="image-rendering:pixelated">
+                <div class="flex">
+                    <div class="relative rounded bg-contrast/90 backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-9 bold">
+                        <div class="absolute left-1 -top-1 z-30" style="image-rendering:pixelated">
                             <Woka
                                     userId={peer.userId}
                                     placeholderSrc={""}
@@ -267,15 +288,72 @@
                             />
                         </div>
                         {name}
-                        <div class="pl-1 mr-3 p-1 rounded hover:bg-white/20">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-down" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <div class="p-1 rounded-sm hover:bg-white/20 absolute right-0 top-0 bottom-0 m-auto h-6 w-6 mr-1 transition-all {showUserSubMenu ? 'bg-white/20 hover:bg-white/30' : '' }"  on:click={() => showUserSubMenu = !showUserSubMenu}>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-down"
+                                 class:rotate-180={showUserSubMenu}
+                                 width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
                               <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                               <path d="M6 9l6 6l6 -6" />
                             </svg>
                         </div>
+                        {#if showUserSubMenu}
+                            <div class="rounded bg-contrast/80 justify-right font-normal py-1 absolute z-20 mt-1.5 right-0 text-right w-36"
+                                 transition:fly={{y: -25, duration: 50 }}
+                            >
+                                <div class="flex items-center px-4 py-1 hover:bg-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrows-maximize" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <path d="M16 4l4 0l0 4" />
+                                        <path d="M14 10l6 -6" />
+                                        <path d="M8 20l-4 0l0 -4" />
+                                        <path d="M4 20l6 -6" />
+                                        <path d="M16 20l4 0l0 -4" />
+                                        <path d="M14 14l6 6" />
+                                        <path d="M8 4l-4 0l0 4" />
+                                        <path d="M4 4l6 6" />
+                                    </svg>
+                                    <div class="pl-1">Show wide</div>
+                                </div>
+                                <div class="flex items-center px-4 py-1 hover:bg-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user-circle" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                                        <path d="M12 10m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+                                        <path d="M6.168 18.849a4 4 0 0 1 3.832 -2.849h4a4 4 0 0 1 3.834 2.855" />
+                                    </svg>
+                                    <div class="pl-1">Business card</div>
+                                </div>
+                                <div class="flex items-center px-4 py-1 hover:bg-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-volume-2" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <path d="M15 8a5 5 0 0 1 0 8" />
+                                        <path d="M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5" />
+                                    </svg>
+                                    <div class="pl-1">Volume</div>
+                                </div>
+                                <div class="flex items-center px-4 py-1 hover:bg-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-volume-off" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <path d="M15 8a5 5 0 0 1 1.912 4.934m-1.377 2.602a5 5 0 0 1 -.535 .464" />
+                                        <path d="M17.7 5a9 9 0 0 1 2.362 11.086m-1.676 2.299a9 9 0 0 1 -.686 .615" />
+                                        <path d="M9.069 5.054l.431 -.554a.8 .8 0 0 1 1.5 .5v2m0 4v8a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l1.294 -1.664" />
+                                        <path d="M3 3l18 18" />
+                                    </svg>
+                                    <div class="pl-1">Mute</div>
+                                </div>
+                                <div class="flex items-center px-4 py-1 hover:bg-danger">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-flag" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <path d="M5 5a5 5 0 0 1 7 0a5 5 0 0 0 7 0v9a5 5 0 0 1 -7 0a5 5 0 0 0 -7 0v-9z" />
+                                        <path d="M5 21v-7" />
+                                    </svg>
+                                    <div class="pl-1">Rerport user</div>
+                                </div>
+                            </div>
+                        {/if}
                     </div>
+                </div>
             </div>
-        </div>
         {#if videoEnabled}
             <div class="z-[251] absolute aspect-ratio right-4 w-8 bottom-5 p-1 flex items-center justify-center">
             {#if $constraintStore && $constraintStore.audio !== false}
@@ -298,14 +376,11 @@
                     barColor={textColor}
                 />
             {:else}
-                <img
-                    draggable="false"
-                    src={microphoneOffImg}
-                    class="flex p-1 h-8 w-8 voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
-                    alt="Mute"
-                    class:brightness-0={textColor === "black"}
-                    class:brightness-100={textColor === "white"}
-                />
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="s-UwsZWHGW9L4C">
+                    <path d="M1.375 2.375L21.625 22.625" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="s-UwsZWHGW9L4C"></path><path d="M8.125 4.625C8.125 3.72989 8.48058 2.87145 9.11351 2.23851C9.74645 1.60558 10.6049 1.25 11.5 1.25C12.3951 1.25 13.2536 1.60558 13.8865 2.23851C14.5194 2.87145 14.875 3.72989 14.875 4.625V10.25C14.875 10.5832 14.8258 10.9145 14.7287 11.2332M12.4788 13.4832C11.9744 13.6361 11.4412 13.6687 10.922 13.5784C10.4028 13.4882 9.9119 13.2776 9.4887 12.9635C9.06549 12.6494 8.72171 12.2406 8.48491 11.7698C8.2481 11.299 8.12484 10.7793 8.125 10.2522V9.12725" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="s-UwsZWHGW9L4C"></path>
+                    <path d="M3.625 10.25C3.62475 11.6713 4.00915 13.0661 4.73742 14.2866C5.46568 15.5071 6.51068 16.5077 7.76159 17.1824C9.01249 17.8571 10.4227 18.1807 11.8426 18.1189C13.2625 18.0571 14.6392 17.6121 15.8267 16.8313M18.0767 14.5813C18.9248 13.2961 19.3756 11.78ƒbtn)97 19.3727 10.25" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="s-UwsZWHGW9L4C"></path>
+                    <path d="M7 22.625H16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="s-UwsZWHGW9L4C"></path><path d="M11.5 18.125V22.625" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="s-UwsZWHGW9L4C"></path>
+                </svg>
             {/if}
             <div class="w-full flex report-ban-container-cam-off opacity-0 h-10">
                 <BanReportBox {peer} />

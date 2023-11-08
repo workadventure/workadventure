@@ -21,8 +21,8 @@
         flex-wrap: wrap;
         align-content: flex-end;
         position: absolute;
-        bottom: 0px;
-        left: 2%;
+        top: 0;
+        right: 0;
         overflow: visible;
 
         &.vertical {

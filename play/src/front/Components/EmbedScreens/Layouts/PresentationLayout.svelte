@@ -54,10 +54,10 @@
     });
 </script>
 
-<div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias} class="flex flex-col w-full h-full">
+<div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias} class="flex flex-col">
     {#if displayFullMedias}
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div id="full-medias" class="z-[300] relative mx-auto top-8 h-1/2 overflow-y-auto">
+            <div id="full-medias" class="z-[300] relative mx-auto top-8 h-1/2 overflow-y-auto h-full">
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}
@@ -74,7 +74,7 @@
         {/if}
     {:else}
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div class="relative self-center z-[300] flex">
+            <div class="grid gap-x-4 grid-flow-col auto-cols-auto">
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}

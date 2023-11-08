@@ -4,6 +4,7 @@
     import {loaderProgressStore} from "../../Stores/LoaderStore";
     import {gameManager} from "../../Phaser/Game/GameManager";
     import bgMap from "../images/map-exemple.png";
+    import defaultLoader from "../images/Workadventure.gif";
 </script>
 
 <div class="relative z-50 h-screen w-screen"
@@ -18,12 +19,13 @@
             {/if}
             -->
             <div class="text-center mb-4 w-full">
-                <img src="./static/images/Workadventure.gif" class="max-h-10 px-4" />
+                <img src="{defaultLoader}" class="max-h-10 px-4" />
             </div>
             <div class="absolute w-full h-3 bg-contrast py-[2px]">
                 <div class="bg-secondary h-full transition-all duration-200" style="width: {$loaderProgressStore * 100}%"></div>
             </div>
         </div>
     </div>
-    <div class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url('{bgMap}');"></div>
+    <div in:fade={{ duration: 100 }}
+         class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url('{bgMap}');"></div>
 </div>

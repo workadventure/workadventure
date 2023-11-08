@@ -1,5 +1,5 @@
 #cowebsite {
-    @apply bg-dark-blue/80;
+    @apply bg-dark-blue/50 backdrop-blur;
     position: fixed;
     z-index: 820;
     transition: transform 0.5s;
@@ -19,20 +19,22 @@
     }
 
     aside {
-        @apply bg-dark-blue;
         align-items: center;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
 
         #cowebsite-aside-holder {
-            @apply bg-dark-blue;
             height: 20px;
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             width: 100%;
+            padding: 16px 0;
+            &:hover {
+                @apply bg-contrast/80;
+            }
 
             img {
                 width: 80%;

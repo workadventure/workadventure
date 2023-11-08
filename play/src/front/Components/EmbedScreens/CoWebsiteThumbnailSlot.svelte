@@ -101,23 +101,21 @@
 
 <div
     id={"cowebsite-thumbnail-" + index}
-    class="cowebsite-thumbnail"
+    class="cowebsite-thumbnail flex items-center mr-4 p-2 rounded {isMain || isHighlight ? 'bg-white text-contrast' : 'bg-contrast/80 text-white' }"
     class:asleep={$state === "asleep"}
     class:loading={$state === "loading"}
     class:ready={$state === "ready"}
-    class:displayed={isMain || isHighlight}
     class:vertical
-    on:click={() => analyticsClient.stackOpenCloseMultiIframe()}
-    on:click={onClick}
 >
     <img
-        class="cowebsite-icon noselect clickable bg-dark-blue/50 p-0 border-medium-purple border-solid rounded pointer-events-auto hover:border-light-purple hover:bg-dark-blue/75 hover:scale-105 transition-all"
+        class="cowebsite-icon noselect clickable p-0 border-medium-purple border-solid rounded pointer-events-auto transition-all mr-4"
         class:hide={!iconLoaded}
         class:meeting={isMeeting}
         bind:this={icon}
         on:dragstart|preventDefault={noDrag}
         alt=""
     />
+    <!--
     <svg
         xmlns="http://www.w3.org/2000/svg"
         xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -215,19 +213,38 @@
                 calcMode="discrete"
             />
         </rect>
-    </svg>
+    </svg> -->
+    <div class="pr-2">
+        <div class="bold text-lg">{cowebsiteName}</div>
+        <div class="italic text-xs opacity-50 -mt-1">{cowebsiteName}</div>
+    </div>
+    <div
+        on:click={() => analyticsClient.stackOpenCloseMultiIframe()}
+        on:click={onClick}
+    >
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g clip-path="url(#clip0_1820_4223)">
+                <path d="M16.5 5.5L5.5 16.5M5.5 5.5L16.5 16.5" class="{isMain || isHighlight ? 'stroke-contrast' : 'stroke-white' } transition-all" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+            <defs>
+                <clipPath id="clip0_1820_4223">
+                    <rect width="22" height="22" fill="white"/>
+                </clipPath>
+            </defs>
+        </svg>
+    </div>
 
-    <!-- TODO use trigger message property -->
+    <!--
     <div class="cowebsite-hover opacity-1 md:opacity-0" style="width: max-content;">
         <p>{$LL.cowebsite.open()} / {$LL.cowebsite.close()} <b>{cowebsiteName}</b></p>
     </div>
+    -->
 </div>
 
 <style lang="scss">
     .cowebsite-thumbnail {
         cursor: pointer;
         position: relative;
-        margin: 12px;
         margin-top: auto;
         margin-bottom: auto;
 
@@ -319,7 +336,7 @@
             }
 
             80% {
-                transform: translateX(10px);
+                transform: translateX(10px
             }
 
             100% {

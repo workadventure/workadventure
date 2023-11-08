@@ -24,36 +24,42 @@
 </script>
 
 <form
-    class="helpCameraSettings z-[600] bg-dark-purple rounded text-white self-center p-3 pointer-events-auto flex flex-col m-auto w-full md:w-2/3 2xl:w-1/4 text-sm md:text-base"
+    class="helpCameraSettings z-[600] bg-contrast/80 backdrop-filter text-center rounded-lg text-white self-center pointer-events-auto flex flex-col m-auto w-full md:w-2/3 xl:w-[380px] text-sm md:text-base absolute bottom-4 left-0 right-0 m-auto overflow-hidden"
     style={getBackgroundColor() ? `background-color: ${getBackgroundColor()};` : ""}
     on:submit|preventDefault={close}
     transition:fly={{ y: -50, duration: 500 }}
 >
     <section class="mb-0">
-        <h2 class="mb-0">{$LL.camera.help.title()}</h2>
-        <p class="err blue-title">{$LL.camera.help.permissionDenied()}</p>
-        <p>{$LL.camera.help.content()}</p>
-        <p class="mb-0 flex justify-center flex-col">
+        <div class="mb-0 text-lg bold border border-solid border-transparent border-b-white/20 bg-white/10 px-4 py-3">{$LL.camera.help.title()}</div>
+        <div class="px-4 mt-4">
+            <div class="bg-danger-1200 border border-solid border-danger text-danger-400 rounded-sm px-4 py-1 inline-block text-sm">{$LL.camera.help.permissionDenied()}</div>
+        </div>
+        <div class="p-4 italic opacity-50 text-sm leading-4">
+            {$LL.camera.help.content()}
+        </div>
+        {#if isFirefox}
+            <p class="err">
+                {$LL.camera.help.firefoxContent()}
+            </p>
+        {/if}
+        <div class="h-72 overflow-hidden opacity-80 saturate-50">
             {#if isFirefox}
-                <p class="err">
-                    {$LL.camera.help.firefoxContent()}
-                </p>
                 <img
-                    src={$LL.camera.help.screen.firefox()}
-                    alt="help camera setup"
-                    class="rounded-lg w-5/6 md:w-80 m-auto"
+                        src={$LL.camera.help.screen.firefox()}
+                        alt="help camera setup"
+                        class="w-full m-auto"
                 />
             {:else if isChrome && !isAndroid}
                 <img
-                    src={$LL.camera.help.screen.chrome()}
-                    alt="help camera setup"
-                    class="rounded-lg w-5/6 md:w-80 m-auto"
+                        src={$LL.camera.help.screen.chrome()}
+                        alt="help camera setup"
+                        class="w-full m-auto"
                 />
             {/if}
-        </p>
+        </div>
     </section>
-    <section class="flex row justify-center">
-        <button class="light" on:click|preventDefault={refresh}>{$LL.camera.help.refresh()}</button>
-        <button type="submit" class="outline" on:click|preventDefault={close}>{$LL.camera.help.continue()}</button>
+    <section class="flex row justify-center p-4">
+        <button class="btn btn-sm btn-border btn-light mr-2 w-full justify-center" on:click|preventDefault={refresh}>{$LL.camera.help.refresh()}</button>
+        <button type="submit" class="btn btn-danger btn-sm w-full justify-center" on:click|preventDefault={close}>{$LL.camera.help.continue()}</button>
     </section>
 </form>

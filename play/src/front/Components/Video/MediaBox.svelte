@@ -46,27 +46,25 @@
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
         <div
-            class="transition-all self-end relative aspect-video w-[350px]"
+            class="transition-all relative h-full aspect-video w-fit"
             class:hightlighted={isHightlighted}
             class:mr-6={isHightlighted && videoEnabled}
-            class:flex={!isHightlighted}
-            class:media-box-camera-on-size={!isHightlighted && videoEnabled}
-            class:media-box-camera-off-size={!isHightlighted && !videoEnabled}
             class:max-w-sm={isHightlighted && !videoEnabled}
             class:mx-auto={isHightlighted && !videoEnabled}
             class:m-auto={!isHightlighted && !videoEnabled}
-            class:h-12={!isHightlighted && !videoEnabled}
+            class:aspect-video={!isHightlighted && !videoEnabled}
             class:clickable={isClickable}
             class:mozaic-duo={mozaicDuo}
             class:mozaic-full-width={mozaicSolo}
             class:mozaic-quarter={mozaicQuarter}
+            transition:fly={{y: 50, duration: 150 }}
         >
             <VideoMediaBox peer={streamable} clickable={isClickable} />
         </div>
     {/if}
 {:else if streamable instanceof ScreenSharingPeer}
     <div
-        class="media-container {isHightlighted ? 'hightlighted mr-6' : 'flex media-box-camera-on-size'}
+        class="media-container {isHightlighted ? 'hightlighted mr-6' : 'flex'}
      media-box-shape-color
 "
         class:clickable={isClickable}
@@ -94,7 +92,6 @@
         class:mozaic-duo={mozaicDuo}
         class:mozaic-full-width={mozaicSolo}
         class:mozaic-quarter={mozaicQuarter}
-        transition:fly={{ x: 200, duration: 250 }}
     >
         <div
             class="w-full flex screen-blocker"
@@ -107,9 +104,7 @@
     </div>
 {:else}
     <div
-        class="media-container {isHightlighted ? 'hightlighted mr-6' : 'flex media-box-camera-on-size'}
-     media-box-shape-color
-"
+        class="media-container  {isHightlighted ? 'hightlighted mr-6' : 'flex h-full aspect-ratio'}"
         class:clickable={isClickable}
         class:mozaic-duo={mozaicDuo}
         class:mozaic-full-width={mozaicSolo}

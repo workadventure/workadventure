@@ -31,16 +31,17 @@
 
 <div
     class="video-container screen-sharing flex w-full flex-col h-full"
+    style="height:192px;"
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     {#if $statusStore === "connecting"}
-        <div class="connecting-spinner" />
+        <div class="connecting-spinner"></div>
     {/if}
     {#if $statusStore === "error"}
-        <div class="rtc-error" />
+        <div class="rtc-error"></div>
     {/if}
     {#if $streamStore !== null}
-        <video use:srcObject={$streamStore} autoplay playsinline class="h-full max-w-full mx-auto rounded" muted />
+        <video use:srcObject={$streamStore} autoplay playsinline class="h-full max-w-full mx-auto rounded" muted></video>
         <div
             class="nametag-screenshare-container container-end flex media-box-camera-on-size video-on-responsive-height"
         >

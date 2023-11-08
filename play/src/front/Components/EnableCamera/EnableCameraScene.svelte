@@ -213,7 +213,7 @@
             margin-top: 10px;
 
             img {
-                width: 30px;
+                width: 24px;
                 margin-right: 10px;
             }
         }
