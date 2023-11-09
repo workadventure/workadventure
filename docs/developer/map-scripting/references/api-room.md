@@ -237,6 +237,28 @@ Check
 the [Tiled documentation to learn more about the format of the JSON map](https://doc.mapeditor.org/en/stable/reference/json-map-format/)
 .
 
+### Get the URL hash parameters
+
+```ts
+WA.room.hashParameters: Record<string, string>;
+```
+
+The parameters passed in the hash (#) are available in `WA.room.hashParameters` property.
+Use this to pass parameters from the URL to your script.
+
+:::info
+You need to wait for the end of the initialization before accessing `WA.room.hashParameters`
+:::
+
+```ts
+// If the URL is https://play.workadventu.re/_/global/mymap.org/map.json#myparam=hello
+
+WA.onInit().then(() => {
+  console.log("Map URL: ", WA.room.hashParameters.myparam);
+  // Will output something like: 'hello"
+});
+```
+
 ### Changing tiles
 
 ```ts

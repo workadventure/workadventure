@@ -5,6 +5,7 @@ import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { throttle } from "throttle-debounce";
 import { MapStore } from "@workadventure/store-utils";
+import { MathUtils } from "@workadventure/math-utils";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import {
@@ -1381,15 +1382,14 @@ export class GameScene extends DirtyScene {
 
             // Join
             if (oldPeersNumber === 0 && newPeerNumber > oldPeersNumber) {
-                iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
-                screenWakeLock
-                    .requestWakeLock()
-                    .then((release) => (screenWakeRelease = release))
-                    .catch((error) => console.error(error));
+                Array.from(peers.values())[0].once("connect", () => {
+                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                });
             }
 
             // Left
             if (newPeerNumber === 0 && newPeerNumber < oldPeersNumber) {
+                // TODO: leave event can be triggered without a join if connect fails
                 iframeListener.sendLeaveProximityMeetingEvent();
 
                 if (screenWakeRelease) {
@@ -1406,7 +1406,9 @@ export class GameScene extends DirtyScene {
                 const newUser = Array.from(newUsers.values()).find((player) => !oldUsers.get(player.userId));
 
                 if (newUser) {
-                    iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
+                    peers.get(newUser.userId)?.once("connect", () => {
+                        iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
+                    });
                 }
             }
 
@@ -1415,6 +1417,7 @@ export class GameScene extends DirtyScene {
                 const oldUser = Array.from(oldUsers.values()).find((player) => !newUsers.get(player.userId));
 
                 if (oldUser) {
+                    // TODO: leave event can be triggered without a join if connect fails
                     iframeListener.sendParticipantLeaveProximityMeetingEvent(oldUser);
                 }
             }
@@ -1681,7 +1684,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.addPersonnalMessageStream.subscribe((text) => {
-                iframeListener.sendUserInputChat(text);
+                iframeListener.sendUserInputChat(text, undefined);
                 _newChatMessageSubject.next(text);
             })
         );
@@ -1960,6 +1963,7 @@ ${escapedMessage}
             return {
                 playerId: this.connection?.getUserId(),
                 mapUrl: this.mapUrlFile,
+                hashParameters: urlManager.getHashParameters(),
                 startLayerName: this.startPositionCalculator.getStartPositionName() ?? undefined,
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: this.playerName,
@@ -2491,20 +2495,39 @@ ${escapedMessage}
         }
     }
 
+    /**
+     * Analyze the #moveTo parameter in the URL.
+     * This function will try to move the player
+     *
+     * - to the X,Y coordinates if this is X,Y coordinates
+     * - if not, to the WAM area with the given name
+     * - if not found, to the Tiled area with the given name
+     * - if not found, to the Tiled layer with the given name
+     */
     private tryMovePlayerWithMoveToParameter(): void {
         const moveToParam = urlManager.getHashParameter("moveTo");
         if (moveToParam) {
             try {
-                let endPos;
+                let endPos: { x: number; y: number };
                 const posFromParam = StringUtils.parsePointFromParam(moveToParam);
                 if (posFromParam) {
                     endPos = this.gameMapFrontWrapper.getTileIndexAt(posFromParam.x, posFromParam.y);
                 } else {
-                    const destinationObject = this.gameMapFrontWrapper.getObjectWithName(moveToParam);
-                    if (destinationObject) {
-                        endPos = this.gameMapFrontWrapper.getTileIndexAt(destinationObject.x, destinationObject.y);
+                    // First, try by id
+                    let areaData = this.gameMapFrontWrapper.getAreas()?.get(moveToParam);
+                    if (!areaData) {
+                        areaData = this.gameMapFrontWrapper.getAreaByName(moveToParam);
+                    }
+                    if (areaData) {
+                        const pixelEndPos = MathUtils.randomPositionFromRect(areaData);
+                        endPos = this.gameMapFrontWrapper.getTileIndexAt(pixelEndPos.x, pixelEndPos.y);
                     } else {
-                        endPos = this.gameMapFrontWrapper.getRandomPositionFromLayer(moveToParam);
+                        const destinationObject = this.gameMapFrontWrapper.getObjectWithName(moveToParam);
+                        if (destinationObject) {
+                            endPos = this.gameMapFrontWrapper.getTileIndexAt(destinationObject.x, destinationObject.y);
+                        } else {
+                            endPos = this.gameMapFrontWrapper.getRandomPositionFromLayer(moveToParam);
+                        }
                     }
                 }
 

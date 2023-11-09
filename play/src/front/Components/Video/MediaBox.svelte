@@ -33,6 +33,7 @@
 
     onMount(() => {
         gameScene.reposition();
+        console.log("streamable", streamable);
     });
 
     onDestroy(() => {
@@ -85,16 +86,28 @@
     </div>
 {:else if streamable instanceof JitsiTrackStreamWrapper}
     <div
-        class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
-     media-box-shape-color tw-pointer-events-auto screen-blocker
-"
+        class="media-container media-box-shape-color tw-pointer-events-auto screen-blocker"
+        class:hightlighted={isHightlighted}
+        class:tw-mr-6={isHightlighted && streamable.getVideoTrack()}
+        class:tw-flex={!isHightlighted}
+        class:media-box-camera-on-size={!isHightlighted && streamable.getVideoTrack()}
+        class:media-box-camera-off-size={!isHightlighted && !streamable.getVideoTrack()}
+        class:tw-max-w-sm={isHightlighted && !streamable.getVideoTrack()}
+        class:tw-mx-auto={isHightlighted && !streamable.getVideoTrack()}
+        class:tw-m-auto={!isHightlighted && !streamable.getVideoTrack()}
+        class:tw-h-12={!isHightlighted && !streamable.getVideoTrack()}
         class:clickable={isClickable}
         class:mozaic-duo={mozaicDuo}
         class:mozaic-full-width={mozaicSolo}
         class:mozaic-quarter={mozaicQuarter}
         transition:fly={{ x: 200, duration: 250 }}
     >
-        <div class="{isHightlighted ? 'tw-h-[32vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex screen-blocker">
+        <div
+            class="tw-w-full tw-flex screen-blocker"
+            class:tw-mr-6={isHightlighted}
+            class:tw-mx-auto={!isHightlighted}
+            class:tw-h-[32vw]={isHightlighted && videoEnabled}
+        >
             <JitsiMediaBox peer={streamable} clickable={isClickable} />
         </div>
     </div>

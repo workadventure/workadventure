@@ -32,6 +32,12 @@ export const setRoomId = (id: string) => {
     roomId = id;
 };
 
+let hashParameters: Record<string, string> | undefined;
+
+export const setHashParameters = (theHashParameters: Record<string, string>) => {
+    hashParameters = theHashParameters;
+};
+
 let mapURL: string | undefined;
 
 export const setMapURL = (url: string) => {
@@ -218,6 +224,19 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
             );
         }
         return mapURL;
+    }
+
+    /**
+     * The parameters behind the hash (#) of the URL are available from the WA.room.hashParameters property.
+     * They should follow the format key=value&key2=value2.
+     */
+    get hashParameters(): Record<string, string> {
+        if (hashParameters === undefined) {
+            throw new Error(
+                "hashParameters is not initialized yet. You should call WA.room.hashParameters within a WA.onInit callback."
+            );
+        }
+        return hashParameters;
     }
 
     /**
