@@ -45,7 +45,7 @@ import { localUserStore } from "../../Connection/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { Loader } from "../Components/Loader";
-import { RemotePlayer, RemotePlayerEvent } from "../Entity/RemotePlayer";
+import { RemotePlayer } from "../Entity/RemotePlayer";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
@@ -2881,17 +2881,6 @@ ${escapedMessage}
         player.on(Phaser.Input.Events.POINTER_OUT, () => {
             this.activatablesManager.handlePointerOutActivatableObject();
             this.markDirty();
-        });
-
-        player.on(RemotePlayerEvent.Clicked, () => {
-            const userFound = this.remotePlayersRepository.getPlayers().get(player.userId);
-
-            if (!userFound) {
-                console.error("Undefined clicked player!");
-                return;
-            }
-
-            iframeListener.sendRemotePlayerClickedEvent(userFound);
         });
     }
 
