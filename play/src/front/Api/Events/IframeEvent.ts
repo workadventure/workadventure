@@ -61,6 +61,7 @@ import { isBannerEvent } from "./Ui/BannerEvent";
 import { isTeleportPlayerToEventConfig } from "./TeleportPlayerToEvent";
 import { isSendEventEvent } from "./SendEventEvent";
 import { isReceiveEventEvent } from "./ReceiveEventEvent";
+import { isPlaySoundInBubbleEvent } from "./ProximityMeeting/PlaySoundInBubbleEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -603,6 +604,10 @@ export const iframeQueryMapTypeGuards = {
     getWoka: {
         query: z.undefined(),
         answer: z.string(),
+    },
+    playSoundInBubble: {
+        query: isPlaySoundInBubbleEvent,
+        answer: z.undefined(),
     },
 };
 

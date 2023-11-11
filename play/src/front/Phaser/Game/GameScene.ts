@@ -2218,6 +2218,11 @@ ${escapedMessage}
             }
             scriptUtils.goToPage("/login");
         });
+
+        iframeListener.registerAnswerer("playSoundInBubble", async (message) => {
+            const soundUrl = new URL(message.url, this.mapUrlFile);
+            await this.simplePeer.dispatchSound(soundUrl);
+        });
     }
 
     private setPropertyLayer(
@@ -2379,6 +2384,7 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("closeUIWebsite");
         iframeListener.unregisterAnswerer("enablePlayersTracking");
         iframeListener.unregisterAnswerer("goToLogin");
+        iframeListener.unregisterAnswerer("playSoundInBubble");
         this.sharedVariablesManager?.close();
         this.playerVariablesManager?.close();
         this.scriptingEventsManager?.close();
