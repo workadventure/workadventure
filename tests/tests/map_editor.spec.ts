@@ -265,7 +265,7 @@ test.describe('Map editor', () => {
     await Menu.closeMapEditor(page);
 
     // walk on the area position and open the popup
-    await Map.walkToPosition(page, 9 * 32, 9 * 32);
+    await Map.walkToPosition(page, 9 * 32 + 16, 9 * 32 + 16);
 
     // check if the iframe was opened and button thumbnail is visible
     await expect(page.locator('#cowebsite-thumbnail-0')).toBeVisible();
