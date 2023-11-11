@@ -7,7 +7,7 @@
     "@typescript-eslint/parser": "^5.40.1",
     "@workadventure/iframe-api-typings": "^1.12.10",
     "adm-zip": "^0.5.10",
-    "axios": "^1.3.2",
+    "axios": "^1.6.0",
     "dockerode": "^3.3.4",
     "dotenv-cli": "^6.0.0",
     "eslint": "^8.26.0",
