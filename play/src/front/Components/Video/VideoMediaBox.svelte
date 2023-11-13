@@ -15,7 +15,7 @@
 
     import Woka from "../Woka/WokaFromUserId.svelte";
     import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import microphoneOffImg from "../images/microphone-off-blue.png";
+    import microphoneOffImg from "../images/microphone-off.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";

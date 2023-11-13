@@ -73,7 +73,7 @@
             </div>
         {/if}
     {:else}
-        <div id="embed-left-block">
+        <div id="embed-left-block" class:highlighted-cowebsite={$highlightedEmbedScreen != undefined}>
             <div id="main-embed-screen">
                 {#if $highlightedEmbedScreen}
                     {#if $highlightedEmbedScreen.type === "streamable"}
@@ -146,8 +146,11 @@
         flex-direction: column;
         flex: 0 0 75%;
         height: 100%;
-        width: 75%;
+        width: 90%;
         padding-bottom: 4rem;
+        &.highlighted-cowebsite {
+            min-width: 90%;
+        }
     }
 
     #main-embed-screen {

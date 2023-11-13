@@ -8,6 +8,7 @@
     import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
@@ -51,6 +52,8 @@
             class:tw-flex={!isHightlighted}
             class:media-box-camera-on-size={!isHightlighted && videoEnabled}
             class:media-box-camera-off-size={!isHightlighted && !videoEnabled}
+            class:media-box-camera-resize-with-another-hightlight={!isHightlighted &&
+                $highlightedEmbedScreen != undefined}
             class:tw-max-w-sm={isHightlighted && !videoEnabled}
             class:tw-mx-auto={isHightlighted && !videoEnabled}
             class:tw-m-auto={!isHightlighted && !videoEnabled}
@@ -92,6 +95,7 @@
         class:tw-flex={!isHightlighted}
         class:media-box-camera-on-size={!isHightlighted && streamable.getVideoTrack()}
         class:media-box-camera-off-size={!isHightlighted && !streamable.getVideoTrack()}
+        class:media-box-camera-resize-with-another-hightlight={!isHightlighted && $highlightedEmbedScreen != undefined}
         class:tw-max-w-sm={isHightlighted && !streamable.getVideoTrack()}
         class:tw-mx-auto={isHightlighted && !streamable.getVideoTrack()}
         class:tw-m-auto={!isHightlighted && !streamable.getVideoTrack()}

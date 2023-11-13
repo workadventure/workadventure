@@ -1,6 +1,6 @@
 //* GENERAL */
 .media-box-camera-on-size {
-    @apply tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-28 md:tw-w-48 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96;
+    @apply tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-28 md:tw-w-48 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-[11rem] 2xl:tw-w-[22rem];
 }
 
 .media-box-camera-on-position {
@@ -13,6 +13,22 @@
 
 .media-box-shape-color {
     @apply tw-p-0 tw-bg-dark-blue/50 tw-rounded;
+}
+
+.media-box-camera-resize-with-another-hightlight {
+    @apply tw-h-12 tw-w-24 xl:tw-h-16 xl:tw-w-28 2xl:tw-h-20 2xl:tw-w-40;
+    &.media-box-camera-off-size,
+    .media-box-camera-off-size{
+        @apply tw-h-auto tw-w-24 xl:tw-w-28 2xl:tw-w-40;
+    }
+    &.video-on-responsive-height,
+    .video-on-responsive-height{
+        @apply tw-h-12 tw-w-24 xl:tw-h-16 xl:tw-w-28 2xl:tw-h-20 2xl:tw-w-40;
+    }
+    &.media-box-camera-on-size,
+    .media-box-camera-on-size{
+        @apply tw-h-12 tw-w-24 xl:tw-h-16 xl:tw-w-28 2xl:tw-h-20 2xl:tw-w-40;
+    }
 }
 
 .report-ban-container-cam-off {
@@ -46,7 +62,7 @@
         .woka-webcam-container,
         .voice-meter-webcam-container,
         .report-ban-container {
-            @apply tw-h-[32vw] md:tw-w-[58vw] lg:tw-w-[63vw] xl:tw-w-[66vw] 2xl:tw-w-[67vw];
+            @apply tw-h-[32vw] tw-w-[76vw] xl:tw-w-[80vw];
         }
 
         .nametag-screenshare-container {
@@ -61,7 +77,7 @@
     &:hover {
         .report-ban-container,
         .report-ban-screenshare-container {
-            @apply -tw-translate-x-3 tw-opacity-100 xl:-tw-translate-x-10;
+            @apply -tw-translate-x-1 tw-opacity-100;
         }
 
         .report-ban-container-cam-off {
@@ -69,7 +85,7 @@
         }
 
         .voice-meter-cam-off {
-            @apply -tw-translate-x-8 md:-tw-translate-x-1 xl:-tw-translate-x-8;
+            @apply -tw-translate-x-1;
         }
     }
 }
@@ -79,7 +95,7 @@
 }
 
 .video-on-responsive-height {
-    @apply tw-h-32 sm:tw-h-48 md:tw-h-28 lg:tw-h-24 xl:tw-h-36 2xl:tw-h-48;
+    @apply tw-h-32 sm:tw-h-48 md:tw-h-28 lg:tw-h-24 xl:tw-h-36 2xl:tw-h-[11rem];
 }
 
 .video-container {
