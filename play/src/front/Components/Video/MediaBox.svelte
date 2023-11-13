@@ -8,7 +8,6 @@
     import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
-    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
@@ -52,8 +51,6 @@
             class:tw-flex={!isHightlighted}
             class:media-box-camera-on-size={!isHightlighted && videoEnabled}
             class:media-box-camera-off-size={!isHightlighted && !videoEnabled}
-            class:media-box-camera-resize-with-another-hightlight={!isHightlighted &&
-                $highlightedEmbedScreen != undefined}
             class:tw-max-w-sm={isHightlighted && !videoEnabled}
             class:tw-mx-auto={isHightlighted && !videoEnabled}
             class:tw-m-auto={!isHightlighted && !videoEnabled}
@@ -67,7 +64,7 @@
                 class="tw-w-full tw-flex screen-blocker"
                 class:tw-mr-6={isHightlighted}
                 class:tw-mx-auto={!isHightlighted}
-                class:tw-h-[32vw]={isHightlighted && videoEnabled}
+                class:tw-h-full={isHightlighted && videoEnabled}
             >
                 <VideoMediaBox peer={streamable} clickable={isClickable} />
             </div>
@@ -83,7 +80,7 @@
         class:mozaic-full-width={mozaicSolo}
         class:mozaic-quarter={mozaicQuarter}
     >
-        <div class="{isHightlighted ? 'tw-h-[41vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-h-full tw-flex screen-blocker">
+        <div class="{isHightlighted ? 'tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-h-full tw-flex screen-blocker">
             <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
         </div>
     </div>
@@ -95,7 +92,6 @@
         class:tw-flex={!isHightlighted}
         class:media-box-camera-on-size={!isHightlighted && streamable.getVideoTrack()}
         class:media-box-camera-off-size={!isHightlighted && !streamable.getVideoTrack()}
-        class:media-box-camera-resize-with-another-hightlight={!isHightlighted && $highlightedEmbedScreen != undefined}
         class:tw-max-w-sm={isHightlighted && !streamable.getVideoTrack()}
         class:tw-mx-auto={isHightlighted && !streamable.getVideoTrack()}
         class:tw-m-auto={!isHightlighted && !streamable.getVideoTrack()}
@@ -110,7 +106,7 @@
             class="tw-w-full tw-flex screen-blocker"
             class:tw-mr-6={isHightlighted}
             class:tw-mx-auto={!isHightlighted}
-            class:tw-h-[32vw]={isHightlighted && videoEnabled}
+            class:tw-h-full={isHightlighted && videoEnabled}
         >
             <JitsiMediaBox peer={streamable} clickable={isClickable} />
         </div>
@@ -125,9 +121,7 @@
         class:mozaic-full-width={mozaicSolo}
         class:mozaic-quarter={mozaicQuarter}
     >
-        <div
-            class="{isHightlighted ? 'tw-h-[41vw] tw-mr-6' : 'tw-mx-auto'}   tw-w-full tw-h-full tw-flex screen-blocker"
-        >
+        <div class="{isHightlighted ? 'tw-mr-6' : 'tw-mx-auto'}   tw-w-full tw-h-full tw-flex screen-blocker">
             <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
         </div>
     </div>
@@ -141,11 +135,6 @@
     .media-container {
         transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, max-height 0.2s,
             max-width 0.2s;
-
-        &:hover {
-            margin-top: 4%;
-            margin-bottom: 2%;
-        }
 
         &.clickable {
             cursor: pointer;

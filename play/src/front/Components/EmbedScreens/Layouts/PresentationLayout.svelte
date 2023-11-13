@@ -109,7 +109,7 @@
             </div>
         </div>
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div class="tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4">
+            <div class="tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-max-w-[25%]">
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}
@@ -138,6 +138,7 @@
         #full-medias {
             overflow-y: auto;
             overflow-x: hidden;
+            width: 43%;
         }
     }
 

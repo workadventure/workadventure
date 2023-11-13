@@ -12,7 +12,6 @@
     import { LL } from "../../i18n/i18n-svelte";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
     import { localUserStore } from "../Connection/LocalUserStore";
-    import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";
@@ -53,11 +52,7 @@
     });
 </script>
 
-<div
-    class="tw-transition-all tw-self-end"
-    bind:this={cameraContainer}
-    class:media-box-camera-resize-with-another-hightlight={$highlightedEmbedScreen != undefined}
->
+<div class="tw-transition-all tw-self-end tw-relative" bind:this={cameraContainer}>
     <!--If we are in a silent zone-->
     {#if $silentStore}
         <div
@@ -104,7 +99,7 @@
                     playsinline
                 />
 
-                <div class="voice-meter-my-container tw-justify-end tw-z-[251] tw-pr-2 tw-absolute">
+                <div class="voice-meter-my-container tw-justify-end tw-z-[251] tw-pr-2 tw-absolute tw-w-full">
                     {#if $mediaStreamConstraintsStore.audio}
                         <SoundMeterWidget volume={$localVolumeStore} classcss="tw-absolute" barColor="blue" />
                     {:else}

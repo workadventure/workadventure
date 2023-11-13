@@ -278,7 +278,7 @@
             </div>
             {#if $constraintStore && $constraintStore.audio !== false}
                 <div
-                    class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2"
+                    class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2 tw-w-full"
                 >
                     <SoundMeterWidget volume={$volumeStore} classcss="tw-absolute" barColor="blue" />
                 </div>
@@ -291,7 +291,7 @@
             {/if}
             <div
                 class="report-ban-container tw-flex tw-z-[600] media-box-camera-on-size media-box-camera-on-position
-            tw-translate-x-3 tw-transition-all tw-opacity-0"
+            tw-translate-x-3 tw-transition-all tw-opacity-0 tw-w-full tw-h-full"
             >
                 <BanReportBox {peer} />
             </div>
@@ -330,7 +330,7 @@
     video {
         object-fit: cover;
         &.object-contain {
-            object-fit: contain;
+            object-fit: cover;
         }
     }
 </style>
