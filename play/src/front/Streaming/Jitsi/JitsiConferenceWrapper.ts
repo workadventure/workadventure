@@ -332,19 +332,33 @@ export class JitsiConferenceWrapper {
                 video: videoConstraints,
             },
         });
+        const tracksReturned: JitsiLocalTrack[] = [];
         if (!(newTracks instanceof Array)) {
             // newTracks is a JitsiConferenceError
             throw newTracks;
         } else {
-            newTracks.forEach((track) => {
+            for (const track of newTracks) {
                 if (track.isVideoTrack()) {
-                    usedCameraDeviceIdStore.set(track.getDeviceId());
+                    // if the type is desktop, cannot be set device camera id
+                    if (types[0] != "desktop") {
+                        usedCameraDeviceIdStore.set(track.getDeviceId());
+                    }
+                    tracksReturned.push(track);
                 } else if (track.isAudioTrack()) {
-                    usedMicrophoneDeviceIdStore.set(track.getDeviceId());
+                    // if the type is desktop, cannot be set device microphone id
+                    if (types[0] != "desktop") {
+                        usedMicrophoneDeviceIdStore.set(track.getDeviceId());
+                        tracksReturned.push(track);
+                    } else {
+                        // if the type is desktop, cannot be use audio track for screen sharing
+                        track
+                            .dispose()
+                            .catch((e) => console.error("jitsiLocalTracks error when we try to dispose it!", e));
+                    }
                 }
-            });
+            }
         }
-        return newTracks;
+        return tracksReturned;
     }
 
     private async handleTrack(oldTrack: JitsiLocalTrack | undefined, track: JitsiLocalTrack | undefined) {
