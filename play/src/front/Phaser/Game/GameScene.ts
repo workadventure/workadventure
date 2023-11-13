@@ -12,6 +12,7 @@ import {
     AvailabilityStatus,
     ErrorScreenMessage,
     PositionMessage_Direction,
+    SpaceFilterMessage,
 } from "@workadventure/messages";
 import { z } from "zod";
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
@@ -135,6 +136,7 @@ import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectC
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { screenWakeLock } from "../../Utils/ScreenWakeLock";
+import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -1172,7 +1174,18 @@ export class GameScene extends DirtyScene {
                     }
                 });
 
-                const broadcastService = new BroadcastService(this.connection);
+                const broadcastService = new BroadcastService(
+                    this.connection,
+                    (
+                        connection: RoomConnection,
+                        spaceName: string,
+                        spaceFilter: SpaceFilterMessage,
+                        broadcastService: BroadcastService,
+                        playSound: boolean
+                    ) => {
+                        return new JitsiBroadcastSpace(connection, spaceName, spaceFilter, broadcastService, playSound);
+                    }
+                );
                 this._broadcastService = broadcastService;
 
                 // The megaphoneSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.

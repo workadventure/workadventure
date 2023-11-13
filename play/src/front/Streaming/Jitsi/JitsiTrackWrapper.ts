@@ -4,9 +4,10 @@ import { Readable, Unsubscriber, writable, Writable, readable } from "svelte/sto
 import { SoundMeter } from "../../Phaser/Components/SoundMeter";
 import { SpaceUserExtended } from "../../Space/Space";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+import { TrackWrapper } from "../Common/TrackWrapper";
 import { JitsiTrackStreamWrapper } from "./JitsiTrackStreamWrapper";
 
-export class JitsiTrackWrapper {
+export class JitsiTrackWrapper implements TrackWrapper {
     private _spaceUser: SpaceUserExtended | undefined;
     public readonly cameraTrackWrapper: JitsiTrackStreamWrapper = new JitsiTrackStreamWrapper(this, "video/audio");
     public readonly screenSharingTrackWrapper: JitsiTrackStreamWrapper = new JitsiTrackStreamWrapper(this, "desktop");
