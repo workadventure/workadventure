@@ -109,7 +109,7 @@
             </div>
         </div>
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div class="tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-max-w-[25%]">
+            <div class="tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-max-w-[25%] tw-w-full">
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}

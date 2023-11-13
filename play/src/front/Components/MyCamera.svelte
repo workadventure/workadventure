@@ -52,7 +52,7 @@
     });
 </script>
 
-<div class="tw-transition-all tw-self-end tw-relative" bind:this={cameraContainer}>
+<div class="tw-transition-all tw-self-end tw-relative tw-w-full" bind:this={cameraContainer}>
     <!--If we are in a silent zone-->
     {#if $silentStore}
         <div
