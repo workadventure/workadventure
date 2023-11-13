@@ -119,7 +119,7 @@
         </section>
     {/if}
 </form>
-<div class="absolute left-0 top-0 w-full h-full z-20" style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};opacity:.85;` : ""}></div>
+<div class="absolute left-0 top-0 w-full h-full z-20 bg-contrast opacity-80" style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};` : ""}></div>
 <div class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url('{bgMap}');"></div>
 
 {#if legalString}

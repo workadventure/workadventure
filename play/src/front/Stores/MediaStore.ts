@@ -181,7 +181,7 @@ const deviceChanged10SecondsAgoStore = readable(false, function start(set) {
  */
 const mouseInCameraTriggerArea = readable(false, function start(set) {
     console.info("JE VIENS DE PASSER SUR LA PARTIE DROITE");
-    let lastInTriggerArea = false;
+    /*let lastInTriggerArea = false;
     const gameDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("game");
 
     const detectInTopCenter = (event: MouseEvent) => {
@@ -195,12 +195,12 @@ const mouseInCameraTriggerArea = readable(false, function start(set) {
             set(inTopCenter);
         }
 
-    };
+    };*/
 
-    document.addEventListener("mousemove", detectInTopCenter);
+    //document.addEventListener("mousemove", detectInTopCenter);
 
     return function stop() {
-        document.removeEventListener("mousemove", detectInTopCenter);
+        //document.removeEventListener("mousemove", detectInTopCenter);
     };
 });
 

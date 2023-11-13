@@ -8,11 +8,11 @@
         activeSubMenuStore,
         checkSubMenuToShow,
         customMenuIframe,
-        menuInputFocusStore,
         menuVisiblilityStore,
         SubMenusInterface,
         subMenusStore,
     } from "../../Stores/MenuStore";
+    import { menuInputFocusStore } from "../../Stores/MenuInputFocusStore";
     import { sendMenuClickedEvent } from "../../Api/Iframe/Ui/MenuItem";
     import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";

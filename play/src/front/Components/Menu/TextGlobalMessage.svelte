@@ -1,7 +1,7 @@
 <script lang="ts">
     import Quill from "quill";
     import { onDestroy, onMount } from "svelte";
-    import { menuInputFocusStore } from "../../Stores/MenuStore";
+    import { menuInputFocusStore } from "../../Stores/MenuInputFocusStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { AdminMessageEventTypes } from "../../Connection/AdminMessagesService";
     import type { PlayGlobalMessageInterface } from "../../Connection/ConnexionModels";

@@ -129,49 +129,9 @@
             </script>
         {{/logRocketId}}
     </head>
-    <body id="body" style="margin: 0;">
+    <body id="body" style="margin: 0;background-color:rgb(27, 42, 65);">
         <input type="hidden" id="authToken" value="{{ authToken }}" name="authToken">
-        <div style="background:#1B2A41; height: 100vh;width: 100vw;position: absolute;z-index: 2;"></div>
-        <div class="main-container" id="main-container" style="position: relative;z-index: 10;">
-            <!-- Create the editor container -->
-            <div id="game" class="game">
-                <div id="game-overlay"></div>
-            </div>
-            <div id="cowebsite">
-                <aside id="cowebsite-aside" class="noselect">
-                    <div id="cowebsite-aside-buttons">
-                        <button type="button" id="cowebsite-close" class="close-window top-right-btn">&times;</button>
-                        <button
-                            class="top-right-btn btn bg-medium-purple"
-                            id="cowebsite-fullscreen"
-                            alt="fullscreen mode"
-                        >
-                            <img
-                                id="cowebsite-fullscreen-close"
-                                style="display: none"
-                                src="resources/logos/fullscreen-exit.svg"
-                            />
-                            <img id="cowebsite-fullscreen-open" src="resources/logos/fullscreen.svg" />
-                        </button>
-                        <button
-                            class="top-right-btn btn bg-medium-purple"
-                            id="cowebsite-swipe"
-                            alt="swipe cowebsites"
-                        >
-                            <img src="resources/logos/cowebsite-swipe.svg" />
-                        </button>
-                    </div>
-                    <div id="cowebsite-aside-holder">
-                        <div class="h-full w-1 bg-white rounded-lg"></div>
-                    </div>
-                    <aside id="cowebsite-other-actions"></aside>
-                </aside>
-                <main id="cowebsite-slot-main">
-                    <img id="cowebsite-loader" src="./static/images/Workadventure-loop.gif" style="width: 300px;">
-                </main>
-            </div>
-            <div id="cowebsite-buffer"></div>
-        </div>
+        <div id="app"></div>
         <script type="module" src="/src/svelte.ts"></script>
     </body>
 </html>

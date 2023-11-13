@@ -58,7 +58,7 @@
             {/if}
         </div>
     </section>
-    <section class="flex row justify-center p-4">
+    <section class="flex row justify-center p-4 bg-contrast">
         <button class="btn btn-sm btn-border btn-light mr-2 w-full justify-center" on:click|preventDefault={refresh}>{$LL.camera.help.refresh()}</button>
         <button type="submit" class="btn btn-danger btn-sm w-full justify-center" on:click|preventDefault={close}>{$LL.camera.help.continue()}</button>
     </section>

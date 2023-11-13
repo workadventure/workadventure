@@ -19,7 +19,6 @@ import { userIsAdminStore } from "./GameStore";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
-export const menuInputFocusStore = writable(false);
 export const userIsConnected = writable(false);
 
 export const profileAvailable = derived(userIsConnected, ($userIsConnected) => {

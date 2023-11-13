@@ -45,16 +45,16 @@ class CoWebsiteManager {
     private _onResize: Subject<void> = new Subject();
     public onResize = this._onResize.asObservable();
 
-    private cowebsiteDom: HTMLDivElement;
+/*    private cowebsiteDom: HTMLDivElement;
     private resizing = false;
     private gameOverlayDom: HTMLDivElement;
     private cowebsiteBufferDom: HTMLDivElement;
     private cowebsiteAsideHolderDom: HTMLDivElement;
-    private cowebsiteLoaderDom: HTMLDivElement;
+    private cowebsiteLoaderDom: HTMLDivElement;*/
     private previousTouchMoveCoordinates: TouchMoveCoordinates | null = null; //only use on touchscreens to track touch movement
     private coWebsiteResizeSize = 50;
 
-    private buttonCloseCoWebsite: HTMLElement;
+//    private buttonCloseCoWebsite: HTMLElement;
 
     private loaderAnimationInterval: {
         interval: NodeJS.Timeout | undefined;
@@ -62,17 +62,17 @@ class CoWebsiteManager {
     };
 
     private resizeObserver = new ResizeObserver(() => {
-        this.resizeAllIframes();
+        /*this.resizeAllIframes();
 
         if (!this.isFullScreen && this.cowebsiteAsideHolderDom.style.visibility === "hidden") {
             this.toggleFullScreenIcon(true);
             this.restoreMainSize();
             this.fire();
-        }
+        }*/
     });
 
-    private mainCoWebsiteUnsubscriber: Unsubscriber;
-    private highlightedEmbedScreenUnsubscriber: Unsubscriber;
+    //private mainCoWebsiteUnsubscriber: Unsubscriber;
+    //private highlightedEmbedScreenUnsubscriber: Unsubscriber;
 
     public getMainState() {
         return get(this.openedMain);
@@ -82,15 +82,15 @@ class CoWebsiteManager {
         return this.openedMain;
     }
 
-    get width(): number {
+    /*get width(): number {
         return this.cowebsiteDom.clientWidth;
-    }
+    }*/
 
-    set width(width: number) {
+    /*set width(width: number) {
         this.cowebsiteDom.style.width = width + "px";
-    }
+    }*/
 
-    get maxWidth(): number {
+    /*get maxWidth(): number {
         let maxWidth = 75 * window.innerWidth;
         if (maxWidth !== 0) {
             maxWidth = Math.round(maxWidth / 100);
@@ -114,41 +114,41 @@ class CoWebsiteManager {
         }
 
         return maxHeight;
-    }
+    }*/
 
     get verticalMode(): boolean {
         return window.innerWidth < window.innerHeight;
     }
 
-    get isFullScreen(): boolean {
+    /*get isFullScreen(): boolean {
         return this.verticalMode ? this.height === window.innerHeight : this.width === window.innerWidth;
-    }
+    }*/
 
     constructor() {
-        this.cowebsiteDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDomId);
+        /*this.cowebsiteDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDomId);
         this.gameOverlayDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(gameOverlayDomId);
         this.cowebsiteBufferDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteBufferDomId);
         this.cowebsiteAsideHolderDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteAsideHolderDomId);
         this.cowebsiteLoaderDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteLoaderDomId);
 
-        this.buttonCloseCoWebsite = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
+        this.buttonCloseCoWebsite = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);*/
 
         this.loaderAnimationInterval = {
             interval: undefined,
             trails: undefined,
         };
 
-        this.mainCoWebsiteUnsubscriber = mainCoWebsite.subscribe((coWebsite) => {
+        /*this.mainCoWebsiteUnsubscriber = mainCoWebsite.subscribe((coWebsite) => {
             this.buttonCloseCoWebsite.hidden = !coWebsite?.isClosable() ?? false;
-        });
+        });*/
 
-        this.holderListeners();
-        this.transitionListeners();
+        //this.holderListeners();
+        //this.transitionListeners();
 
-        this.resizeObserver.observe(this.cowebsiteDom);
-        this.resizeObserver.observe(this.gameOverlayDom);
+        /*this.resizeObserver.observe(this.cowebsiteDom);
+        this.resizeObserver.observe(this.gameOverlayDom);*/
 
-        this.buttonCloseCoWebsite.addEventListener("click", () => {
+        /*this.buttonCloseCoWebsite.addEventListener("click", () => {
             analyticsClient.closeMultiIframe();
             const coWebsite = this.getMainCoWebsite();
 
@@ -198,17 +198,18 @@ class CoWebsiteManager {
                     });
                 }
             }
-        });
+        });*/
     }
 
     public cleanup(): void {
         this.closeCoWebsites();
-        this.mainCoWebsiteUnsubscriber();
-        this.highlightedEmbedScreenUnsubscriber();
+        //this.mainCoWebsiteUnsubscriber();
+        //this.highlightedEmbedScreenUnsubscriber();
     }
 
     public getCoWebsiteBuffer(): HTMLDivElement {
-        return this.cowebsiteBufferDom;
+        throw new Error("To be reimplemented");
+        //return this.cowebsiteBufferDom;
     }
 
     public getDevicePixelRatio(): number {
@@ -217,7 +218,7 @@ class CoWebsiteManager {
         return window.navigator.userAgent.includes("Firefox") ? 1 : window.devicePixelRatio;
     }
 
-    private holderListeners() {
+    /*private holderListeners() {
         const movecallback = (event: MouseEvent | TouchEvent) => {
             let x, y;
             if (event.type === "mousemove" && event instanceof MouseEvent) {
@@ -334,9 +335,9 @@ class CoWebsiteManager {
             }
             this.resizing = false;
         });
-    }
+    }*/
 
-    private transitionListeners() {
+    /*private transitionListeners() {
         this.cowebsiteDom.addEventListener("transitionend", () => {
             if (this.cowebsiteDom.classList.contains("loading")) {
                 this.fire();
@@ -348,7 +349,7 @@ class CoWebsiteManager {
                 this.loaderAnimationInterval.trails = undefined;
             }
         });
-    }
+    }*/
 
     public displayMain() {
         const coWebsite = this.getMainCoWebsite();
@@ -371,19 +372,19 @@ class CoWebsiteManager {
                 iframe.style.display = "none";
             }
         }
-        this.cowebsiteDom.classList.add("closing");
-        this.cowebsiteDom.classList.remove("opened");
+        //this.cowebsiteDom.classList.add("closing");
+        //this.cowebsiteDom.classList.remove("opened");
         this.openedMain.set(iframeStates.closed);
         this.fire();
     }
 
     private closeMain(): void {
         this.toggleFullScreenIcon(true);
-        this.cowebsiteDom.classList.add("closing");
-        this.cowebsiteDom.classList.remove("opened");
+        //this.cowebsiteDom.classList.add("closing");
+        //this.cowebsiteDom.classList.remove("opened");
         this.openedMain.set(iframeStates.closed);
-        this.cowebsiteDom.style.height = "";
-        this.cowebsiteDom.style.width = "";
+        //this.cowebsiteDom.style.height = "";
+        //this.cowebsiteDom.style.width = "";
         this.coWebsiteResizeSize = 50;
         this.fire();
     }
@@ -396,12 +397,12 @@ class CoWebsiteManager {
             const logo = document.createElement("img");
             logo.id = "custom-logo";
             logo.src = customLogo;
-            this.cowebsiteLoaderDom.parentNode?.replaceChild(logo, this.cowebsiteLoaderDom);
-            this.cowebsiteLoaderDom.style.display = "block";
+//            this.cowebsiteLoaderDom.parentNode?.replaceChild(logo, this.cowebsiteLoaderDom);
+//            this.cowebsiteLoaderDom.style.display = "block";
             return;
         }
 
-        this.cowebsiteLoaderDom.style.display = "block";
+  //      this.cowebsiteLoaderDom.style.display = "block";
         this.loaderAnimationInterval.interval = setInterval(() => {
             if (!this.loaderAnimationInterval.trails) {
                 this.loaderAnimationInterval.trails = [0, 1, 2];
@@ -409,7 +410,7 @@ class CoWebsiteManager {
 
             for (let trail = 1; trail < this.loaderAnimationInterval.trails.length + 1; trail++) {
                 for (let state = 0; state < 4; state++) {
-                    const stateDom = this.cowebsiteLoaderDom.querySelector(
+/*                    const stateDom = this.cowebsiteLoaderDom.querySelector(
                         `#trail-${trail}-state-${state}`
                     ) as SVGPolygonElement;
 
@@ -421,7 +422,7 @@ class CoWebsiteManager {
                         this.loaderAnimationInterval.trails[trail - 1] !== 0 &&
                         this.loaderAnimationInterval.trails[trail - 1] >= state
                             ? "visible"
-                            : "hidden";
+                            : "hidden";*/
                 }
             }
 
@@ -433,22 +434,22 @@ class CoWebsiteManager {
 
     private desactivateMainLoaderAnimation() {
         if (this.loaderAnimationInterval.interval) {
-            this.cowebsiteLoaderDom.style.display = "none";
+//            this.cowebsiteLoaderDom.style.display = "none";
             clearInterval(this.loaderAnimationInterval.interval);
         }
     }
 
     private saveMainSize() {
-        this.coWebsiteResizeSize = this.verticalMode
+  /*      this.coWebsiteResizeSize = this.verticalMode
             ? Math.round((this.height * 100) / window.innerHeight)
-            : Math.round((this.width * 100) / window.innerWidth);
+            : Math.round((this.width * 100) / window.innerWidth);*/
     }
 
     public restoreMainSize() {
-        this.verticalMode ? (this.cowebsiteDom.style.width = "") : (this.cowebsiteDom.style.height = "");
+/*        this.verticalMode ? (this.cowebsiteDom.style.width = "") : (this.cowebsiteDom.style.height = "");
         this.verticalMode
             ? (this.height = Math.round((this.coWebsiteResizeSize * window.innerHeight) / 100))
-            : (this.width = Math.round((this.coWebsiteResizeSize * window.innerWidth) / 100));
+            : (this.width = Math.round((this.coWebsiteResizeSize * window.innerWidth) / 100));*/
     }
 
     private loadMain(openingWidth?: number): void {
@@ -456,7 +457,7 @@ class CoWebsiteManager {
 
         let newWidth = openingWidth ?? 50;
 
-        if (newWidth > 75 && !this.isFullScreen) {
+/*        if (newWidth > 75 && !this.isFullScreen) {
             this.coWebsiteResizeSize = 75;
             this.toggleFullscreen();
         } else if (this.verticalMode) {
@@ -485,14 +486,14 @@ class CoWebsiteManager {
             this.saveMainSize();
         }
 
-        this.cowebsiteDom.classList.add("opened");
+        this.cowebsiteDom.classList.add("opened");*/
         this.openedMain.set(iframeStates.loading);
     }
 
     private openMain(): void {
-        this.cowebsiteDom.addEventListener("transitionend", () => {
+        /*this.cowebsiteDom.addEventListener("transitionend", () => {
             this.resizeAllIframes();
-        });
+        });*/
         this.openedMain.set(iframeStates.opened);
     }
 
@@ -786,13 +787,13 @@ class CoWebsiteManager {
         }
         if (!this.verticalMode) {
             return {
-                width: window.innerWidth - this.width,
+                width: window.innerWidth /*- this.width*/,
                 height: window.innerHeight,
             };
         } else {
             return {
                 width: window.innerWidth,
-                height: window.innerHeight - this.height,
+                height: window.innerHeight /*- this.height*/,
             };
         }
     }
@@ -804,7 +805,7 @@ class CoWebsiteManager {
     }
 
     private toggleFullscreen(): void {
-        if (this.isFullScreen) {
+        /*if (this.isFullScreen) {
             this.toggleFullScreenIcon(true);
             this.restoreMainSize();
             this.fire();
@@ -813,7 +814,7 @@ class CoWebsiteManager {
             this.toggleFullScreenIcon(false);
             this.verticalMode ? (this.height = window.innerHeight) : (this.width = window.innerWidth);
             //we don't trigger a resize of the phaser game since it won't be visible anyway.
-        }
+        }*/
     }
 
     private toggleFullScreenIcon(visible: boolean) {
@@ -821,11 +822,11 @@ class CoWebsiteManager {
         const closeFullScreenImage = HtmlUtils.getElementByIdOrFail(cowebsiteCloseFullScreenImageId);
 
         if (visible) {
-            this.cowebsiteAsideHolderDom.style.visibility = "visible";
+            //this.cowebsiteAsideHolderDom.style.visibility = "visible";
             openFullscreenImage.style.display = "inline";
             closeFullScreenImage.style.display = "none";
         } else {
-            this.cowebsiteAsideHolderDom.style.visibility = "hidden";
+            //this.cowebsiteAsideHolderDom.style.visibility = "hidden";
             openFullscreenImage.style.display = "none";
             closeFullScreenImage.style.display = "inline";
         }

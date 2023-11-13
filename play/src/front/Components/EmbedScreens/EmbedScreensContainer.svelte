@@ -50,7 +50,7 @@
     {:else}
         <MozaicLayout />
     {/if}
-    <div class="group-hover:opacity-100 opacity-0 absolute bottom-0 w-full h-4 hover:bg-white/10 cursor-row-resize transition-all" on:mousedown={startExpand.bind(this, 'bottom')} on:mousemove={expand}>
+    <div class="group-hover:opacity-100 pointer-events-auto opacity-0 absolute bottom-0 w-full h-4 hover:bg-white/10 cursor-row-resize transition-all" on:mousedown={startExpand.bind(this, 'bottom')} on:mousemove={expand}>
         <div class="group-hover:opacity-100 opacity-0 absolute bottom-1 left-0 right-0 m-auto h-2 w-48 pointer-events-none">
             <div class="bg-white rounded-lg h-1 w-48"></div>
         </div>
