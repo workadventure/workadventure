@@ -273,7 +273,7 @@
     video {
         object-fit: cover;
         &.object-contain {
-            object-fit: cover;
+            object-fit: contain;
         }
     }
 }

@@ -18,6 +18,7 @@
     import JitsiAudioElement from "./JitsiAudioElement.svelte";
 
     export let clickable = true;
+    export let isHightlighted = false;
     export let peer: JitsiTrackStreamWrapper;
 
     const videoTrackStore: Readable<JitsiTrack | undefined> = peer.videoTrackStore;
@@ -60,6 +61,7 @@
                 jitsiTrack={$videoTrackStore}
                 isMobile={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
                 isLocal={$videoTrackStore?.isLocal()}
+                {isHightlighted}
             />
         </div>
     {/if}

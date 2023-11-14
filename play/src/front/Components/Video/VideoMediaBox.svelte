@@ -23,8 +23,9 @@
     import BanReportBox from "./BanReportBox.svelte";
 
     export let clickable = false;
-
+    export let isHightlighted = false;
     export let peer: VideoPeer;
+
     let streamStore = peer.streamStore;
     let volumeStore = peer.volumeStore;
     let name = peer.userName;
@@ -40,7 +41,7 @@
     let videoContainer: HTMLDivElement;
     let videoElement: HTMLVideoElement;
     let minimized = isMediaBreakpointOnly("md");
-    let isMobile = isMediaBreakpointUp("md");
+    //let isMobile = isMediaBreakpointUp("md");
     let noVideoTimeout: ReturnType<typeof setTimeout> | undefined;
 
     let destroyed = false;
@@ -61,7 +62,7 @@
 
     const resizeObserver = new ResizeObserver(() => {
         minimized = isMediaBreakpointOnly("md");
-        isMobile = isMediaBreakpointUp("md");
+        //isMobile = isMediaBreakpointUp("md");
     });
 
     // TODO: check the race condition when setting sinkId is solved.
@@ -239,7 +240,9 @@
             bind:this={videoElement}
             class:tw-h-0={!videoEnabled}
             class:tw-w-0={!videoEnabled}
-            class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
+            class:object-contain={videoEnabled}
+            class:tw-max-h-[230px]={videoEnabled && !isHightlighted}
+            class:tw-max-h-[80vh]={videoEnabled && isHightlighted}
             class:tw-h-full={videoEnabled}
             class:tw-rounded={videoEnabled}
             style={$embedScreenLayoutStore === LayoutMode.Presentation ? `border: solid 2px ${backGroundColor}` : ""}
@@ -330,7 +333,6 @@
         object-fit: cover;
         &.object-contain {
             object-fit: contain;
-            max-height: 230px;
         }
     }
 </style>

@@ -92,6 +92,8 @@
             <div class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all">
                 <video
                     class="tw-h-full tw-w-full tw-rounded md:tw-object-cover"
+                    class:object-contain={stream}
+                    class:tw-max-h-[230px]={stream}
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay
@@ -141,4 +143,11 @@
 
 <style lang="scss">
     @import "../style/breakpoints.scss";
+    video {
+        object-fit: cover;
+        &.object-contain {
+            object-fit: contain;
+            max-height: 230px;
+        }
+    }
 </style>

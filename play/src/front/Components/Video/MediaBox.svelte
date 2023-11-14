@@ -65,7 +65,7 @@
                 class:tw-mx-auto={!isHightlighted}
                 class:tw-h-full={isHightlighted && videoEnabled}
             >
-                <VideoMediaBox peer={streamable} clickable={isClickable} />
+                <VideoMediaBox peer={streamable} clickable={isClickable} isHightlighted={isHightlighted}/>
             </div>
         </div>
     {/if}
@@ -105,7 +105,7 @@
             class:tw-mx-auto={!isHightlighted}
             class:tw-h-full={isHightlighted && videoEnabled}
         >
-            <JitsiMediaBox peer={streamable} clickable={isClickable} />
+            <JitsiMediaBox peer={streamable} clickable={isClickable} {isHightlighted}/>
         </div>
     </div>
 {:else}
