@@ -111,6 +111,7 @@
     import AchievementIcon from "../Icons/AchievementIcon.svelte";
     import CamSettingsIcon from "../Icons/CamSettingsIcon.svelte";
     import SettingsIcon from "../Icons/SettingsIcon.svelte";
+    import ChatOverlay from "../Chat/ChatOverlay.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -405,7 +406,7 @@
     <div class="justify-self-start pointer-events-auto" transition:fly={{delay: 500, y: -200, duration: 750 }}>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
-                class="flex relative transition-all duration-150"
+                class="flex relative transition-all duration-150 z-[2]"
                 class:opacity-0={$chatVisibilityStore}
         >
 
@@ -468,9 +469,9 @@
                 {/if}
             </div>
         </div>
-        <div>
-            <
-        </div>
+        {#if !$chatVisibilityStore}
+            <ChatOverlay />
+        {/if}
     </div>
     <div class="justify-self-center pointer-events-auto">
         <div class="flex relative">

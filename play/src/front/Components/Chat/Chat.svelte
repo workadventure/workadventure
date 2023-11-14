@@ -223,7 +223,7 @@
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
-<div id="chatWindow" class:show={$chatVisibilityStore} class="bg-contrast/50 backdrop-blur">
+<div id="chatWindow" class:show={$chatVisibilityStore} class="bg-contrast/50 backdrop-blur w-[20vw]">
     <input type="text" bind:this={searchElement} on:keydown={search} style="display: none;" />
     <iframe
         id="chatWorkAdventure"

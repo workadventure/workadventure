@@ -20,12 +20,12 @@ import {waScaleManager} from "../Phaser/Services/WaScaleManager";
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {iframeListener} from "../Api/IframeListener";
 import {desktopApi} from "../Api/Desktop";
-import { fly, fade } from "svelte/transition";
 
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 import CoWebsiteTab from "./EmbedScreens/CoWebsiteTab.svelte";
 import XIcon from "./Icons/XIcon.svelte";
 import FullScreenIcon from "./Icons/FullScreenIcon.svelte";
+import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
 let game: Game;
 let gameDiv: HTMLDivElement;
@@ -198,37 +198,16 @@ onMount(() => {
 </script>
 
 <div class="bg-contrast h-screen w-screen absolute z-[2]"></div>
-<div class="main-container" id="main-container" style="position: relative;z-index: 10;">
+<div class="main-container z-10 relative">
     <!-- Create the editor container -->
     <GameOverlay {game} ></GameOverlay>
     <div id="game"
          bind:this={gameDiv}
-         transition:fade={{ delay:1000, duration: 4000 }}
          class="absolute top-0 -z-10"
     >
     </div>
-    <div class="w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1000] hidden">
-        <div class="flex py-2 ml-3 items-center">
-            <div class="grow flex">
-                <CoWebsiteTab title="Hello world !" link="https://google.fr" active="true" />
-                <CoWebsiteTab isLoading="true" />
-            </div>
-            <div class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2">
-                <FullScreenIcon />
-            </div>
-            <div class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2">
-                <XIcon />
-            </div>
-        </div>
-        <div class="h-full ml-3">
-            <iframe
-                    src="https://www.rum-x.com/search/"
-                    class="h-full w-full border-none"
-                    loading="lazy"
-            ></iframe>
-        </div>
-        <div class="absolute left-1 top-0 bottom-0 m-auto w-0.5 h-40 bg-white rounded cursor-col-resize"></div>
-    </div>
+    <CoWebsitesContainer />
+
 </div>
 
 <style lang="scss">
