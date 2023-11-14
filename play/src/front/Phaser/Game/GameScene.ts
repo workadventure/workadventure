@@ -1365,6 +1365,8 @@ export class GameScene extends DirtyScene {
         const talkIconVolumeTreshold = 10;
         let oldPeersNumber = 0;
         let oldUsers = new Map<number, MessageUserJoined>();
+        let alreadyInBubble = false;
+        const pendingConnects = new Set<number>();
         this.peerStoreUnsubscriber = peerStore.subscribe((peers) => {
             const newPeerNumber = peers.size;
             const newUsers = new Map<number, MessageUserJoined>();
@@ -1379,8 +1381,16 @@ export class GameScene extends DirtyScene {
 
             // Join
             if (oldPeersNumber === 0 && newPeerNumber > oldPeersNumber) {
-                Array.from(peers.values())[0].once("connect", () => {
-                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                // Note: by design, the peerStore can only add or remove one user at a given time.
+                // So we know for sure that there is only one new user.
+                const peer = Array.from(peers.values())[0];
+                pendingConnects.add(peer.userId);
+                peer.once("connect", () => {
+                    pendingConnects.delete(peer.userId);
+                    if (pendingConnects.size === 0) {
+                        iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                        alreadyInBubble = true;
+                    }
                 });
             }
 
@@ -1395,9 +1405,23 @@ export class GameScene extends DirtyScene {
                 const newUser = Array.from(newUsers.values()).find((player) => !oldUsers.get(player.userId));
 
                 if (newUser) {
-                    peers.get(newUser.userId)?.once("connect", () => {
-                        iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
-                    });
+                    if (alreadyInBubble) {
+                        peers.get(newUser.userId)?.once("connect", () => {
+                            iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
+                        });
+                    } else {
+                        const peer = peers.get(newUser.userId);
+                        if (peer) {
+                            pendingConnects.add(newUser.userId);
+                            peer.once("connect", () => {
+                                pendingConnects.delete(newUser.userId);
+                                if (pendingConnects.size === 0) {
+                                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                                    alreadyInBubble = true;
+                                }
+                            });
+                        }
+                    }
                 }
             }
 
