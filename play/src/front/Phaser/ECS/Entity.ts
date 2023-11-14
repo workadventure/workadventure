@@ -13,7 +13,7 @@ import * as _ from "lodash";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
-import { mapEditorModeStore, mapEditorEntityModeStore } from "../../Stores/MapEditorStore";
+import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
 import { GameScene } from "../Game/GameScene";
@@ -109,12 +109,12 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             return;
         }
 
-        const editorMode = get(mapEditorEntityModeStore);
+        /*        const editorMode = get(mapEditorEntityModeStore);
 
         if (editorMode !== "EDIT") {
             actionsMenuStore.clear();
             return;
-        }
+        }*/
 
         this.toggleActionsMenu();
     }
