@@ -188,7 +188,7 @@ export class PusherRoom implements CustomJsonReplacerInterface {
                     case "receivedEventMessage": {
                         // Let's dispatch this receivedEventMessage to all the listeners
                         for (const listener of this.listeners) {
-                            listener.emitInBatch({
+                            listener.getUserData().emitInBatch({
                                 message: {
                                     $case: "receivedEventMessage",
                                     receivedEventMessage: message.message.receivedEventMessage,
