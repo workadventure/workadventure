@@ -193,6 +193,17 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
         mapEditorSelectedAreaPreviewStore.set(undefined);
     }
 
+    public handleAreaCreation(config: AreaData, localCommand: boolean): void {
+        this.scene.getGameMapFrontWrapper().listenAreaCreation(config);
+
+        if (!this.active) {
+            return;
+        }
+
+        this.createAreaPreview(config);
+        this.scene.markDirty();
+    }
+
     public handleAreaPreviewCreation(config: AreaData, localCommand: boolean): void {
         console.info("handleAreaPreviewCreation => No create area preview in trash mode");
     }
