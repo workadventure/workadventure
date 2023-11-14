@@ -19,8 +19,6 @@
     const audioTrackStore: Readable<JitsiTrack | undefined> = peer.audioTrackStore;
 
     let embedScreen: EmbedScreen;
-    let videoContainer: HTMLDivElement;
-
     let backGroundColor = Color.getColorByString(peer.jitsiTrackWrapper.spaceUser?.name ?? "");
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
 
@@ -35,7 +33,6 @@
 <div
     id="container"
     class="jitsi-video"
-    bind:this={videoContainer}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     {#if $videoTrackStore}
