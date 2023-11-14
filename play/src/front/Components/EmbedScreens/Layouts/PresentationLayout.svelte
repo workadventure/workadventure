@@ -57,7 +57,7 @@
 <div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias}>
     {#if displayFullMedias}
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div id="full-medias" class="tw-z-[300] tw-relative tw-mx-auto tw-top-8 tw-h-1/2 tw-overflow-y-auto">
+            <div id="full-medias" class="tw-z-[300] tw-relative tw-mx-auto tw-top-8 tw-h-1/3 tw-overflow-y-auto">
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}

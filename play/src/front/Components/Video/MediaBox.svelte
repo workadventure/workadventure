@@ -55,7 +55,6 @@
             class:tw-mx-auto={isHightlighted && !videoEnabled}
             class:tw-m-auto={!isHightlighted && !videoEnabled}
             class:tw-h-12={!isHightlighted && !videoEnabled}
-            class:tw-max-h-52={!isHightlighted}
             class:clickable={isClickable}
             class:mozaic-duo={mozaicDuo}
             class:mozaic-full-width={mozaicSolo}
