@@ -241,7 +241,7 @@
             class:tw-w-0={!videoEnabled}
             class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
             class:tw-h-full={videoEnabled}
-            class:tw-max-w-full={videoEnabled}
+            class:tw-max-w-[30%]={videoEnabled}
             class:tw-rounded={videoEnabled}
             style={$embedScreenLayoutStore === LayoutMode.Presentation ? `border: solid 2px ${backGroundColor}` : ""}
             autoplay
