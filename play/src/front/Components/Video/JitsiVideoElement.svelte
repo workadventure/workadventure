@@ -1,13 +1,10 @@
 <script lang="ts">
     import { afterUpdate, onMount } from "svelte";
     import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
-
-    import { LayoutMode } from "../../WebRtc/LayoutManager";
 
     export let jitsiTrack: JitsiTrack;
-    export let isMobile: boolean;
     export let isLocal: boolean;
+    export let isHightlighted: boolean;
 
     let videoElement: HTMLVideoElement;
 
@@ -25,9 +22,10 @@
 
 <video
     bind:this={videoElement}
-    class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
-    class="tw-h-full tw-max-w-full tw-rounded-sm"
+    class="object-contain tw-h-full tw-max-w-full tw-rounded-sm"
     class:tw-scale-x-[-1]={isLocal && jitsiTrack.getVideoType() === "camera"}
+    class:tw-max-h-[230px]={!isHightlighted}
+    class:tw-max-h-[80vh]={isHightlighted}
     autoplay
     playsinline
 />

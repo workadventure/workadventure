@@ -14,8 +14,8 @@
     import { LL } from "../../../i18n/i18n-svelte";
 
     import Woka from "../Woka/WokaFromUserId.svelte";
-    import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import microphoneOffImg from "../images/microphone-off-blue.png";
+    import { isMediaBreakpointOnly } from "../../Utils/BreakpointsUtils";
+    import microphoneOffImg from "../images/microphone-off.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
@@ -23,8 +23,9 @@
     import BanReportBox from "./BanReportBox.svelte";
 
     export let clickable = false;
-
+    export let isHightlighted = false;
     export let peer: VideoPeer;
+
     let streamStore = peer.streamStore;
     let volumeStore = peer.volumeStore;
     let name = peer.userName;
@@ -40,7 +41,6 @@
     let videoContainer: HTMLDivElement;
     let videoElement: HTMLVideoElement;
     let minimized = isMediaBreakpointOnly("md");
-    let isMobile = isMediaBreakpointUp("md");
     let noVideoTimeout: ReturnType<typeof setTimeout> | undefined;
 
     let destroyed = false;
@@ -61,7 +61,6 @@
 
     const resizeObserver = new ResizeObserver(() => {
         minimized = isMediaBreakpointOnly("md");
-        isMobile = isMediaBreakpointUp("md");
     });
 
     // TODO: check the race condition when setting sinkId is solved.
@@ -239,9 +238,10 @@
             bind:this={videoElement}
             class:tw-h-0={!videoEnabled}
             class:tw-w-0={!videoEnabled}
-            class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
+            class:object-contain={videoEnabled}
+            class:tw-max-h-[230px]={videoEnabled && !isHightlighted}
+            class:tw-max-h-[80vh]={videoEnabled && isHightlighted}
             class:tw-h-full={videoEnabled}
-            class:tw-max-w-full={videoEnabled}
             class:tw-rounded={videoEnabled}
             style={$embedScreenLayoutStore === LayoutMode.Presentation ? `border: solid 2px ${backGroundColor}` : ""}
             autoplay
@@ -278,7 +278,7 @@
             </div>
             {#if $constraintStore && $constraintStore.audio !== false}
                 <div
-                    class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2"
+                    class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2 tw-w-full"
                 >
                     <SoundMeterWidget volume={$volumeStore} classcss="tw-absolute" barColor="blue" />
                 </div>
@@ -291,7 +291,7 @@
             {/if}
             <div
                 class="report-ban-container tw-flex tw-z-[600] media-box-camera-on-size media-box-camera-on-position
-            tw-translate-x-3 tw-transition-all tw-opacity-0"
+            tw-translate-x-3 tw-transition-all tw-opacity-0 tw-w-full tw-h-full"
             >
                 <BanReportBox {peer} />
             </div>

@@ -2,7 +2,7 @@ import { Subject } from "rxjs";
 import type { JoinProximityMeetingEvent } from "../../Events/ProximityMeeting/JoinProximityMeetingEvent";
 import type { ParticipantProximityMeetingEvent } from "../../Events/ProximityMeeting/ParticipantProximityMeetingEvent";
 
-import { IframeApiContribution } from "../IframeApiContribution";
+import { IframeApiContribution, queryWorkadventure } from "../IframeApiContribution";
 import { RemotePlayer } from "../Players/RemotePlayer";
 import { apiCallback } from "../registeredCallbacks";
 
@@ -87,6 +87,15 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
             leaveStream = new Subject<void>();
         }
         return leaveStream;
+    }
+
+    async playSound(url: string): Promise<void> {
+        await queryWorkadventure({
+            type: "playSoundInBubble",
+            data: {
+                url: url,
+            },
+        });
     }
 }
 

@@ -45,7 +45,7 @@ import { localUserStore } from "../../Connection/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { Loader } from "../Components/Loader";
-import { RemotePlayer, RemotePlayerEvent } from "../Entity/RemotePlayer";
+import { RemotePlayer } from "../Entity/RemotePlayer";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
@@ -1368,6 +1368,8 @@ export class GameScene extends DirtyScene {
         let oldUsers = new Map<number, MessageUserJoined>();
         let screenWakeRelease: (() => Promise<void>) | undefined;
 
+        let alreadyInBubble = false;
+        const pendingConnects = new Set<number>();
         this.peerStoreUnsubscriber = peerStore.subscribe((peers) => {
             const newPeerNumber = peers.size;
             const newUsers = new Map<number, MessageUserJoined>();
@@ -1382,8 +1384,16 @@ export class GameScene extends DirtyScene {
 
             // Join
             if (oldPeersNumber === 0 && newPeerNumber > oldPeersNumber) {
-                Array.from(peers.values())[0].once("connect", () => {
-                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                // Note: by design, the peerStore can only add or remove one user at a given time.
+                // So we know for sure that there is only one new user.
+                const peer = Array.from(peers.values())[0];
+                pendingConnects.add(peer.userId);
+                peer.once("connect", () => {
+                    pendingConnects.delete(peer.userId);
+                    if (pendingConnects.size === 0) {
+                        iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                        alreadyInBubble = true;
+                    }
                 });
             }
 
@@ -1406,9 +1416,23 @@ export class GameScene extends DirtyScene {
                 const newUser = Array.from(newUsers.values()).find((player) => !oldUsers.get(player.userId));
 
                 if (newUser) {
-                    peers.get(newUser.userId)?.once("connect", () => {
-                        iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
-                    });
+                    if (alreadyInBubble) {
+                        peers.get(newUser.userId)?.once("connect", () => {
+                            iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
+                        });
+                    } else {
+                        const peer = peers.get(newUser.userId);
+                        if (peer) {
+                            pendingConnects.add(newUser.userId);
+                            peer.once("connect", () => {
+                                pendingConnects.delete(newUser.userId);
+                                if (pendingConnects.size === 0) {
+                                    iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+                                    alreadyInBubble = true;
+                                }
+                            });
+                        }
+                    }
                 }
             }
 
@@ -2229,6 +2253,11 @@ ${escapedMessage}
             }
             scriptUtils.goToPage("/login");
         });
+
+        iframeListener.registerAnswerer("playSoundInBubble", async (message) => {
+            const soundUrl = new URL(message.url, this.mapUrlFile);
+            await this.simplePeer.dispatchSound(soundUrl);
+        });
     }
 
     private setPropertyLayer(
@@ -2390,6 +2419,7 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("closeUIWebsite");
         iframeListener.unregisterAnswerer("enablePlayersTracking");
         iframeListener.unregisterAnswerer("goToLogin");
+        iframeListener.unregisterAnswerer("playSoundInBubble");
         this.sharedVariablesManager?.close();
         this.playerVariablesManager?.close();
         this.scriptingEventsManager?.close();
@@ -2892,17 +2922,6 @@ ${escapedMessage}
         player.on(Phaser.Input.Events.POINTER_OUT, () => {
             this.activatablesManager.handlePointerOutActivatableObject();
             this.markDirty();
-        });
-
-        player.on(RemotePlayerEvent.Clicked, () => {
-            const userFound = this.remotePlayersRepository.getPlayers().get(player.userId);
-
-            if (!userFound) {
-                console.error("Undefined clicked player!");
-                return;
-            }
-
-            iframeListener.sendRemotePlayerClickedEvent(userFound);
         });
     }
 

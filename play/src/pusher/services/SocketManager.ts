@@ -1235,6 +1235,11 @@ export class SocketManager implements ZoneEventListener {
             );
         };
 
+        // If the URL is in the white list, we send a message to the client
+        if (verifyUrlAsDomainInWhiteList(url)) {
+            return emitAnswerMessage(true, true);
+        }
+
         const processError = (error: { response: { status: number } }) => {
             // If the error is a 999 error, it means that this is LinkedIn that return this error code because the website is not embeddable and is not reachable by axios
             if (isAxiosError(error) && error.response?.status === 999) {
@@ -1254,9 +1259,7 @@ export class SocketManager implements ZoneEventListener {
         await axios
             .head(url, { timeout: 5_000 })
             // Klaxoon
-            .then((response) =>
-                emitAnswerMessage(true, !response.headers["x-frame-options"] || verifyUrlAsDomainInWhiteList(url))
-            )
+            .then((response) => emitAnswerMessage(true, !response.headers["x-frame-options"]))
             .catch(async (error) => {
                 // If response from server is "Method not allowed", we try to do a GET request
                 if (isAxiosError(error) && error.response?.status === 405) {

@@ -57,7 +57,7 @@
 <div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias}>
     {#if displayFullMedias}
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div id="full-medias" class="tw-z-[300] tw-relative tw-mx-auto tw-top-8 tw-h-1/2 tw-overflow-y-auto">
+            <div id="full-medias" class="tw-z-[300] tw-relative tw-mx-auto tw-top-8 tw-h-1/3 tw-overflow-y-auto">
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}
@@ -73,7 +73,7 @@
             </div>
         {/if}
     {:else}
-        <div id="embed-left-block">
+        <div id="embed-left-block" class:highlighted-cowebsite={$highlightedEmbedScreen != undefined}>
             <div id="main-embed-screen">
                 {#if $highlightedEmbedScreen}
                     {#if $highlightedEmbedScreen.type === "streamable"}
@@ -109,7 +109,7 @@
             </div>
         </div>
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div class="tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4">
+            <div class="tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-max-w-[25%] tw-w-full">
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}
@@ -138,6 +138,7 @@
         #full-medias {
             overflow-y: auto;
             overflow-x: hidden;
+            width: 43%;
         }
     }
 
@@ -146,8 +147,11 @@
         flex-direction: column;
         flex: 0 0 75%;
         height: 100%;
-        width: 75%;
+        width: 90%;
         padding-bottom: 4rem;
+        &.highlighted-cowebsite {
+            min-width: 90%;
+        }
     }
 
     #main-embed-screen {
