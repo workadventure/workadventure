@@ -55,7 +55,8 @@ export async function getScriptFrame(page: Page, title: string) : Promise<Frame>
     let frame: Frame | undefined;
 
     await expect.poll(async () => frame = await getFrameWithTitle(page, title), {
-        message: "Unable to find the script frame. Is there one defined on the map?"
+        message: "Unable to find the script frame. Is there one defined on the map?",
+        timeout: 20000,
     }).toBeDefined()
 
     return frame;

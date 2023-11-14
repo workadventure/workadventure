@@ -70,7 +70,7 @@ class UrlManager {
         history.pushState("", document.title, window.location.pathname + window.location.search);
     }
 
-    private getHashParameters(): Record<string, string> {
+    public getHashParameters(): Record<string, string> {
         return window.location.hash
             .substring(1)
             .split("&")

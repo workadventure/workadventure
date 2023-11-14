@@ -13,7 +13,7 @@ import controls from "./front/Api/Iframe/controls";
 import ui from "./front/Api/Iframe/ui";
 import sound from "./front/Api/Iframe/sound";
 import event from "./front/Api/Iframe/event";
-import room, { setMapURL, setRoomId } from "./front/Api/Iframe/room";
+import room, { setHashParameters, setMapURL, setRoomId } from "./front/Api/Iframe/room";
 import { createState } from "./front/Api/Iframe/state";
 import player, {
     setPlayerName,
@@ -54,6 +54,12 @@ export type { Area } from "./front/Api/Iframe/Area/Area";
 export type { ActionsMenuAction } from "./front/Api/Iframe/ui";
 export type { TileDescriptor } from "./front/Api/Iframe/room";
 export type { ScriptingEvent } from "./front/Api/Iframe/AbstractEvent";
+export type { RemotePlayerInterface } from "./front/Api/Iframe/Players/RemotePlayer";
+export type {
+    SendChatMessageOptions,
+    SendLocalChatMessageOptions,
+    SendBubbleChatMessageOptions,
+} from "../../libs/shared-utils/src/Events/ChatEvent";
 
 const globalState = createState();
 
@@ -77,6 +83,7 @@ const initPromise = queryWorkadventure({
     setPlayerName(gameState.nickname);
     setPlayerLanguage(gameState.language);
     setRoomId(gameState.roomId);
+    setHashParameters(gameState.hashParameters);
     setMapURL(gameState.mapUrl);
     setTags(gameState.tags);
     setUuid(gameState.uuid);

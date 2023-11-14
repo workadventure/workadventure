@@ -56,7 +56,7 @@ All events (whether they are broadcast or targeted) can be listened to using `WA
 
 ```typescript
 WA.event.on("my-event").subscribe((event) => {
-    console.log("Event received", event.value);
+    console.log("Event received", event.data);
 });
 ```
 

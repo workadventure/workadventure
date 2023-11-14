@@ -1,14 +1,29 @@
 <script lang="ts">
     import { fade, fly } from "svelte/transition";
     import { MucRoom } from "../../Xmpp/MucRoom";
-    import { User } from "../../Xmpp/AbstractRoom";
+    import { defaultColor, defaultWoka } from "../../Xmpp/AbstractRoom";
 
-    export let userJid: string;
+    export let userJid: string | undefined;
+    export let userName: string | undefined;
     export let defaultMucRoom: MucRoom;
 
-    let userData: User | undefined = undefined;
+    let userData:
+        | {
+              name: string;
+              color?: string;
+              woka?: string;
+          }
+        | undefined = undefined;
     try {
-        userData = defaultMucRoom.getUserByJid(userJid);
+        if (userJid === undefined) {
+            userData = {
+                name: userName ?? "System",
+                color: defaultColor,
+                woka: defaultWoka,
+            };
+        } else {
+            userData = defaultMucRoom.getUserByJid(userJid);
+        }
     } catch (e) {
         console.warn("Can't fetch user data from Ejabberd", e);
     }
