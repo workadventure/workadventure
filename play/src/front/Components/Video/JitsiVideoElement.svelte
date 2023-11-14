@@ -3,7 +3,6 @@
     import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 
     export let jitsiTrack: JitsiTrack;
-    export let isMobile: boolean;
     export let isLocal: boolean;
     export let isHightlighted: boolean;
 

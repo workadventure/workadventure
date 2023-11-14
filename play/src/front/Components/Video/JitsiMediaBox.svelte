@@ -1,14 +1,8 @@
 <script lang="ts">
-    import { onMount } from "svelte";
     import { Color } from "@workadventure/shared-utils";
     import { Readable } from "svelte/store";
     import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
-
-    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { LayoutMode } from "../../WebRtc/LayoutManager";
     import microphoneOffImg from "../images/microphone-off.png";
-
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
@@ -26,8 +20,6 @@
 
     let embedScreen: EmbedScreen;
     let videoContainer: HTMLDivElement;
-    //let minimized: boolean;
-    let isMobile: boolean;
 
     let backGroundColor = Color.getColorByString(peer.jitsiTrackWrapper.spaceUser?.name ?? "");
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
@@ -38,15 +30,6 @@
             embed: peer as unknown as Streamable,
         };
     }
-
-    const resizeObserver = new ResizeObserver(() => {
-        //minimized = isMediaBreakpointOnly("md");
-        isMobile = isMediaBreakpointUp("md");
-    });
-
-    onMount(() => {
-        resizeObserver.observe(videoContainer);
-    });
 </script>
 
 <div
@@ -57,12 +40,7 @@
 >
     {#if $videoTrackStore}
         <div class="tw-rounded-sm tw-overflow-hidden tw-flex tw-w-full tw-flex-col tw-h-full">
-            <JitsiVideoElement
-                jitsiTrack={$videoTrackStore}
-                isMobile={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
-                isLocal={$videoTrackStore?.isLocal()}
-                {isHightlighted}
-            />
+            <JitsiVideoElement jitsiTrack={$videoTrackStore} isLocal={$videoTrackStore?.isLocal()} {isHightlighted} />
         </div>
     {/if}
     {#if peer.target === "video/audio"}

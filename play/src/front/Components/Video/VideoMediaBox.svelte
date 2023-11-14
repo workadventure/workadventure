@@ -14,7 +14,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
 
     import Woka from "../Woka/WokaFromUserId.svelte";
-    import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+    import { isMediaBreakpointOnly } from "../../Utils/BreakpointsUtils";
     import microphoneOffImg from "../images/microphone-off.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
@@ -41,7 +41,6 @@
     let videoContainer: HTMLDivElement;
     let videoElement: HTMLVideoElement;
     let minimized = isMediaBreakpointOnly("md");
-    //let isMobile = isMediaBreakpointUp("md");
     let noVideoTimeout: ReturnType<typeof setTimeout> | undefined;
 
     let destroyed = false;
@@ -62,7 +61,6 @@
 
     const resizeObserver = new ResizeObserver(() => {
         minimized = isMediaBreakpointOnly("md");
-        //isMobile = isMediaBreakpointUp("md");
     });
 
     // TODO: check the race condition when setting sinkId is solved.
