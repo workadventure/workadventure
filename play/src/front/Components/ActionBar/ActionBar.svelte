@@ -49,7 +49,7 @@
         MenuKeys,
         subMenusStore,
         additionnalButtonsMenu,
-        mapEditorActivated, menuIconVisiblilityStore,
+        mapEditorActivated, menuIconVisiblilityStore, userIsConnected,
     } from "../../Stores/MenuStore";
     import {
         emoteDataStore,
@@ -78,7 +78,7 @@
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
+    import {ADMIN_URL, ENABLE_OPENID} from "../../Enum/EnvironmentVariable";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
     import Woka from "../Woka/WokaFromUserId.svelte";
     import Companion from "../Companion/Companion.svelte";
@@ -119,7 +119,7 @@
     let microphoneActive = false;
     let profileMenuIsDropped = false;
     let adminMenuIsDropped = false;
-    let active = false, navigating = false;
+    let helpActive = false, navigating = false;
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -413,10 +413,27 @@
                     class="group/btn-chat relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square"
                     on:click={() =>analyticsClient.openedChat()}
                     on:click={toggleChat}
+                    on:mouseenter={() => {
+                        console.log("enter", navigating);
+                        if (!navigating) {
+                            helpActive = "chat";
+                        }
+                    }}
+                    on:mouseleave={() => {
+                        console.log("leave", navigating);
+                        if (!navigating) {
+                            helpActive = false;
+                        }
+                    }}
             >
-                <div class="h-12 w-12 rounded group-hover/btn-chat:bg-white/10 aspect-square flex items-center justify-center transition-all">
+                <div class="h-12 w-12 rounded group-hover/btn-chat:bg-white/10 aspect-square flex items-center justify-center transition-all"
+                >
                     <MessageCircleIcon />
                 </div>
+
+                {#if helpActive === "chat"}
+                    <HelpTooltip title="Send text message with chat" />
+                {/if}
                 {#if $chatZoneLiveStore || $peerStore.size > 0}
                     <div>
                         <span class="w-4 h-4 block rounded-full absolute -top-1 -left-1 animate-ping {$peerStore.size > 0 ? 'bg-success' : 'bg-danger'}"></span>
@@ -431,24 +448,28 @@
 
             <div class="group/btn-users relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square">
                 <div class="h-12 w-12 rounded group-hover/btn-users:bg-white/10 aspect-square flex items-center justify-center transition-all"
-                     on:mouseenter={() => {
-                    console.log("enter", navigating);
+                    on:mouseenter={() => {
+                        console.log("enter", navigating);
                         if (!navigating) {
-                            active = true;
+                            helpActive = "users";
                         }
                     }}
                     on:mouseleave={() => {
-                    console.log("leave", navigating);
-                    if (!navigating) {
-                        active = false;
-                    }
-                }}>
+                        console.log("leave", navigating);
+                        if (!navigating) {
+                            helpActive = false;
+                        }
+                    }}
+                >
                     <UsersIcon />
                 </div>
-                {#if active}
+                {#if helpActive === "users"}
                     <HelpTooltip />
                 {/if}
             </div>
+        </div>
+        <div>
+            <
         </div>
     </div>
     <div class="justify-self-center pointer-events-auto">
@@ -457,14 +478,29 @@
             <div transition:fly={{delay: 750, y: -200, duration: 750 }}>
                 <div class="flex items-center mr-4">
                     <div
-                            class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
-                            on:click={toggleEmojiPicker}
+                        class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
+                        on:click={toggleEmojiPicker}
+                        on:mouseenter={() => {
+                            console.log("enter", navigating);
+                            if (!navigating) {
+                                helpActive = "emoji";
+                            }
+                        }}
+                                on:mouseleave={() => {
+                            console.log("leave", navigating);
+                            if (!navigating) {
+                                helpActive = false;
+                            }
+                        }}
                     >
                         <div
                                 class="h-12 w-12 rounded aspect-square flex items-center justify-center transition-all {$emoteMenuSubStore ? 'bg-secondary group-hover/bg-secondary-600' : ' group-hover/btn-emoji:bg-white/10'}"
                         >
                             <EmojiIcon />
                         </div>
+                        {#if helpActive === "emoji" || !emoteMenuSubStore}
+                            <HelpTooltip title="Display an emoji above your Woka" />
+                        {/if}
                         {#if $emoteMenuSubStore}
                             <div
                                     class="flex justify-center m-auto absolute left-0 right-0 top-[70px] w-auto z-[500]"
@@ -620,7 +656,7 @@
                                             </div>
                                         {/if}
                                         <button  class="btn btn-sm btn-border btn-light text-center block">
-                                            Edit mic/speaker settings
+                                            Edit mic/speaker settings<!-- trad -->
                                         </button>
                                     </div>
                                 </div>
@@ -657,8 +693,8 @@
                                         </div>
                                     {/if}
                                     {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
-                                        <button class="btn btn-sm btn-border btn-light block w-full text-center">
-                                            Edit camera settings
+                                        <button class="btn btn-sm btn-border btn-light text-center block">
+                                            Edit camera settings<!-- trad -->
                                         </button>
                                     {/if}
                                 </div>
@@ -694,16 +730,23 @@
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div transition:fly={{delay: 1250, y: -200, duration: 750 }}>
                     <div class="flex items-center mr-4">
-                        <div class="bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg ">
+                        <div class="bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg flex">
                             <button
                                     in:fly={{}}
                                     on:dragstart|preventDefault={noDrag}
                                     on:click={() => analyticsClient.openInvite()}
                                     on:click={() => showMenuItem(SubMenusInterface.invite)}
-                                    class="btn btn-secondary rounded h-12"
+                                    class="btn rounded h-12 select-none !px-4 {!$userIsConnected && ENABLE_OPENID ? 'btn-ghost btn-light' : 'btn-secondary' }"
                             >
                                 {$LL.menu.sub.invite()}
                             </button>
+                            {#if !$userIsConnected && ENABLE_OPENID}
+                                <a href="/login"
+                                   on:click={() => analyticsClient.login()}
+                                   class="btn btn-secondary rounded h-12 select-none ml-2 !px-4">
+                                    Login <!-- trad -->
+                                </a>
+                            {/if}
                         </div>
                     </div>
                 </div>
@@ -716,7 +759,7 @@
                                 <AdminPanIcon />
                             </div>
                             <div class="">
-                                <div class="font-bold text-white leading-3 whitespace-nowrap">Admin menu</div>
+                                <div class="font-bold text-white leading-3 whitespace-nowrap select-none">Admin menu<!-- trad --></div>
                             </div>
                             <div class="pl-3 pr-6 h-4 w-4">
                                 <ChevronDownIcon classList="h-4 w-4 aspect-ratio transition-all {adminMenuIsDropped ? 'rotate-180' : '' }" strokeWidth="2" />
@@ -733,7 +776,7 @@
                                             <path d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                         </svg>
                                     </div>
-                                    <div>Map editor</div>
+                                    <div>Map editor<!-- trad --></div>
                                 </li>
                             {/if}
                             {#if $userHasAccessToBackOfficeStore}
@@ -741,21 +784,21 @@
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                         <AdjustmentsIcon />
                                     </div>
-                                    <div>Back-office</div>
+                                    <div>Back-office<!-- trad --></div>
                                 </li>
                             {/if}
                             <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
                                 <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                     <MessageGlobalIcon />
                                 </div>
-                                <div>Envoyer message global</div>
+                                <div>Envoyer message global<!-- trad --></div>
                             </li>
                             {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
                             <li on:click={toggleMegaphone} class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
                                 <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                     <MegaphoneIcon />
                                 </div>
-                                <div>Utiliser le mégaphone</div>
+                                <div>Utiliser le mégaphone<!-- trad --></div>
                             </li>
                             {/if}
                         </ul>
@@ -773,8 +816,8 @@
                             <Woka userId={-1} placeholderSrc="" customWidth="42px" customHeight="42px" />
                         </div>
                         <div class="m-auto pt-1">
-                            <div class="font-bold text-white leading-3 whitespace-nowrap">Hugo</div>
-                            <div class="text-xs text-white/50 whitespace-nowrap">Edit preferences</div>
+                            <div class="font-bold text-white leading-3 whitespace-nowrap select-none">Hugo</div>
+                            <div class="text-xxs text-white/50 whitespace-nowrap select-none">Edit preferences<!-- trad --></div>
                         </div>
                         <div class="m-auto pl-3 pr-6 h-4 w-4">
                             <ChevronDownIcon strokeWidth="2" classList="h-4 w-4 aspect-ratio transition-all {profileMenuIsDropped ? 'rotate-180' : '' }" height="16px" width="16px"  />
@@ -786,10 +829,10 @@
                     <ul class="p-0 m-0 list-none">
                         <li class="group flex px-2 transition-all cursor-pointer text-sm font-bold ">
                             <div class="flex items-center px-3 py-3 w-full bg-white/10 rounded">
-                                <div class="w-full">Basic account</div>
+                                <div class="w-full">Basic account<!-- trad --></div>
                                 <div class="">
                                     <div class="btn btn-light btn-sm">
-                                        Upgrade
+                                        Upgrade<!-- trad -->
                                     </div>
                                 </div>
                             </div>
@@ -799,38 +842,38 @@
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <ProfilIcon />
                             </div>
-                            <div>Edit profil</div>
+                            <div>Edit profil<!-- trad --></div>
                         </li>
                         <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditSkinScene}>
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <Woka userId={-1} placeholderSrc="" customWidth="26px" customHeight="26px" />
                             </div>
-                            <div>Change skin</div>
+                            <div>Change skin<!-- trad --></div>
                         </li>
                         <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditCompanionScene}>
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <Companion userId={-1} placeholderSrc="" width="26px" height="26px" />
                             </div>
-                            <div>Add a companion</div>
+                            <div>Add a companion<!-- trad --></div>
                         </li>
                         <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <AchievementIcon />
                             </div>
-                            <div>Achievement</div>
+                            <div>Achievement<!-- trad --></div>
                         </li>
                         <li class="h-[1px] w-full bg-white/20 my-2"></li>
                         <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={openEnableCameraScene}>
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <CamSettingsIcon />
                             </div>
-                            <div>Change cam / mic</div>
+                            <div>Change cam / mic<!-- trad --></div>
                         </li>
                         <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => showMenuItem(SubMenusInterface.settings)}>
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <SettingsIcon />
                             </div>
-                            <div>Other settings</div>
+                            <div>Other settings<!-- trad --></div>
                         </li>
                     </ul>
                 </div>

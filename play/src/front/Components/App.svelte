@@ -23,6 +23,9 @@ import {desktopApi} from "../Api/Desktop";
 import { fly, fade } from "svelte/transition";
 
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+import CoWebsiteTab from "./EmbedScreens/CoWebsiteTab.svelte";
+import XIcon from "./Icons/XIcon.svelte";
+import FullScreenIcon from "./Icons/FullScreenIcon.svelte";
 
 let game: Game;
 let gameDiv: HTMLDivElement;
@@ -204,38 +207,30 @@ onMount(() => {
          class="absolute top-0 -z-10"
     >
     </div>
-    <div id="cowebsite">
-        <aside id="cowebsite-aside" class="noselect">
-            <div id="cowebsite-aside-buttons">
-                <button type="button" id="cowebsite-close" class="close-window top-right-btn">&times;</button>
-                <button
-                        class="top-right-btn btn bg-medium-purple"
-                        id="cowebsite-fullscreen"
-                        alt="fullscreen mode"
-                >
-                    <img
-                            id="cowebsite-fullscreen-close"
-                            style="display: none"
-                            src="resources/logos/fullscreen-exit.svg"
-                    />
-                    <img id="cowebsite-fullscreen-open" src="resources/logos/fullscreen.svg" />
-                </button>
-                <button
-                        class="top-right-btn btn bg-medium-purple"
-                        id="cowebsite-swipe"
-                        alt="swipe cowebsites"
-                >
-                    <img src="resources/logos/cowebsite-swipe.svg" />
-                </button>
+    <div class="w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1000] hidden">
+        <div class="flex py-2 ml-3 items-center">
+            <div class="grow flex">
+                <CoWebsiteTab title="Hello world !" link="https://google.fr" active="true" />
+                <CoWebsiteTab isLoading="true" />
             </div>
-            <div id="cowebsite-aside-holder">
-                <div class="h-full w-1 bg-white rounded-lg"></div>
+            <div class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2">
+                <FullScreenIcon />
             </div>
-            <aside id="cowebsite-other-actions"></aside>
-        </aside>
-        <main id="cowebsite-slot-main">
-            <img id="cowebsite-loader" src="./static/images/Workadventure-loop.gif" style="width: 300px;">
-        </main>
+            <div class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2">
+                <XIcon />
+            </div>
+        </div>
+        <div class="h-full ml-3">
+            <iframe
+                    src="https://www.rum-x.com/search/"
+                    class="h-full w-full border-none"
+                    loading="lazy"
+            ></iframe>
+        </div>
+        <div class="absolute left-1 top-0 bottom-0 m-auto w-0.5 h-40 bg-white rounded cursor-col-resize"></div>
     </div>
-    <div id="cowebsite-buffer"></div>
 </div>
+
+<style lang="scss">
+
+</style>

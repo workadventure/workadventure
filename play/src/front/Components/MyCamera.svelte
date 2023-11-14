@@ -139,7 +139,7 @@
                         barColor={textColor}
                     />
                 {:else}
-                    <div transition:fly={{delay: 100, y: 50, duration: 150 }}>
+                    <div >
                         <MicOffIcon />
                     </div>
                 {/if}
