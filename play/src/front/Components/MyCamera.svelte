@@ -52,7 +52,7 @@
     });
 </script>
 
-<div class="tw-transition-all tw-self-end" bind:this={cameraContainer}>
+<div class="tw-transition-all tw-self-end tw-relative tw-w-full" bind:this={cameraContainer}>
     <!--If we are in a silent zone-->
     {#if $silentStore}
         <div
@@ -92,6 +92,8 @@
             <div class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all">
                 <video
                     class="tw-h-full tw-w-full tw-rounded md:tw-object-cover"
+                    class:object-contain={stream}
+                    class:tw-max-h-[230px]={stream}
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay
@@ -99,7 +101,7 @@
                     playsinline
                 />
 
-                <div class="voice-meter-my-container tw-justify-end tw-z-[251] tw-pr-2 tw-absolute">
+                <div class="voice-meter-my-container tw-justify-end tw-z-[251] tw-pr-2 tw-absolute tw-w-full">
                     {#if $mediaStreamConstraintsStore.audio}
                         <SoundMeterWidget volume={$localVolumeStore} classcss="tw-absolute" barColor="blue" />
                     {:else}
@@ -141,4 +143,11 @@
 
 <style lang="scss">
     @import "../style/breakpoints.scss";
+    video {
+        object-fit: cover;
+        &.object-contain {
+            object-fit: contain;
+            max-height: 230px;
+        }
+    }
 </style>
