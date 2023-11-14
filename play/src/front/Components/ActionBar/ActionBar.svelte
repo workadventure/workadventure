@@ -49,6 +49,8 @@
         MenuKeys,
         subMenusStore,
         additionnalButtonsMenu,
+        addClassicButtonActionBarEvent,
+        addActionButtonActionBarEvent,
         mapEditorActivated, menuIconVisiblilityStore, userIsConnected,
     } from "../../Stores/MenuStore";
     import {
@@ -472,6 +474,40 @@
         {#if !$chatVisibilityStore}
             <ChatOverlay />
         {/if}
+        {#if $addActionButtonActionBarEvent.length > 0}
+            <div class="bottom-action-section tw-flex tw-flex-initial">
+                {#each $addActionButtonActionBarEvent as button}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                            in:fly={{}}
+                            on:dragstart|preventDefault={noDrag}
+                            on:click={() =>
+                                analyticsClient.clickOnCustomButton(
+                                    button.id,
+                                    undefined,
+                                    button.toolTip,
+                                    button.imageSrc
+                                )}
+                            on:click={() => {
+                                buttonActionBarTrigger(button.id);
+                            }}
+                            class="bottom-action-button"
+                    >
+                        {#if button.toolTip}
+                            <Tooltip text={button.toolTip} />
+                        {/if}
+                        <button id={button.id}>
+                            <img
+                                    draggable="false"
+                                    src={button.imageSrc}
+                                    style="padding: 2px"
+                                    alt={button.toolTip}
+                            />
+                        </button>
+                    </div>
+                {/each}
+            </div>
+        {/if}
     </div>
     <div class="justify-self-center pointer-events-auto">
         <div class="flex relative">
@@ -509,7 +545,7 @@
                             >
                                 <img loading="eager" src="{tooltipArrow}" class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1" />
                                 <div class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg pl-4 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 sm:flex-row">
-                                    <div class="bottom-action-section flex animate flex-row flex items-center">
+                                    <div class="flex animate flex-row flex items-center">
                                         {#each [...$emoteDataStore.keys()] as key}
                                             <div class="transition-all bottom-action-button">
                                                 <button
@@ -732,6 +768,23 @@
                 <div transition:fly={{delay: 1250, y: -200, duration: 750 }}>
                     <div class="flex items-center mr-4">
                         <div class="bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg flex">
+                            {#each $addClassicButtonActionBarEvent as button}
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                <div
+                                        class="flex flex-initial"
+                                        in:fly={{}}
+                                        on:dragstart|preventDefault={noDrag}
+                                        on:click={() => analyticsClient.clickOnCustomButton(button.id, button.label)}
+                                        on:click={() => {
+                                            buttonActionBarTrigger(button.id);
+                                        }}
+                                >
+                                    <button class="btn btn-light rounded h-12 mr-2 select-none !px-4" id={button.id}>
+                                        {button.label}
+                                    </button>
+                                </div>
+                            {/each}
+                            {#if $inviteUserActivated}
                             <button
                                     in:fly={{}}
                                     on:dragstart|preventDefault={noDrag}
@@ -741,6 +794,7 @@
                             >
                                 {$LL.menu.sub.invite()}
                             </button>
+                            {/if}
                             {#if !$userIsConnected && ENABLE_OPENID}
                                 <a href="/login"
                                    on:click={() => analyticsClient.login()}

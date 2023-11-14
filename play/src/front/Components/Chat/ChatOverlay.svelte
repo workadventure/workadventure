@@ -6,7 +6,7 @@
     <Message message="Yes..." />
     <Message message="OK cool :)" />
     <Message message="Non" />
-    <Message message="La forme ?" />
+    <Message message="La forme ? " />
     <Message message="Salut gros :)" />
     <Message message="Hello !" />
 </div>
