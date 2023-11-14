@@ -241,7 +241,6 @@
             class:tw-w-0={!videoEnabled}
             class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
             class:tw-h-full={videoEnabled}
-            class:tw-max-w-[30%]={videoEnabled}
             class:tw-rounded={videoEnabled}
             style={$embedScreenLayoutStore === LayoutMode.Presentation ? `border: solid 2px ${backGroundColor}` : ""}
             autoplay
@@ -330,7 +329,8 @@
     video {
         object-fit: cover;
         &.object-contain {
-            object-fit: cover;
+            object-fit: contain;
+            max-height: 230px;
         }
     }
 </style>
