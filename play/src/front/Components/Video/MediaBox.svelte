@@ -55,14 +55,14 @@
             class:tw-mx-auto={isHightlighted && !videoEnabled}
             class:tw-m-auto={!isHightlighted && !videoEnabled}
             class:tw-h-12={!isHightlighted && !videoEnabled}
+            class:tw-max-h-52={!isHightlighted}
             class:clickable={isClickable}
             class:mozaic-duo={mozaicDuo}
             class:mozaic-full-width={mozaicSolo}
             class:mozaic-quarter={mozaicQuarter}
         >
             <div
-                class="tw-w-full tw-flex screen-blocker"
-                class:tw-mr-6={isHightlighted}
+                class="tw-w-full tw-flex screen-blocker tw-flex tw-items-center"
                 class:tw-mx-auto={!isHightlighted}
                 class:tw-h-full={isHightlighted && videoEnabled}
             >
@@ -72,7 +72,7 @@
     {/if}
 {:else if streamable instanceof ScreenSharingPeer}
     <div
-        class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
+        class="media-container {isHightlighted ? 'hightlighted' : 'tw-flex media-box-camera-on-size'}
      media-box-shape-color
 "
         class:clickable={isClickable}
@@ -80,16 +80,15 @@
         class:mozaic-full-width={mozaicSolo}
         class:mozaic-quarter={mozaicQuarter}
     >
-        <div class="{isHightlighted ? 'tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-h-full tw-flex screen-blocker">
+        <div class="{isHightlighted ? '' : 'tw-mx-auto'} tw-w-full tw-h-full tw-flex screen-blocker">
             <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
         </div>
     </div>
 {:else if streamable instanceof JitsiTrackStreamWrapper}
     <div
-        class="media-container media-box-shape-color tw-pointer-events-auto screen-blocker"
+        class="media-container media-box-shape-color tw-pointer-events-auto screen-blocker tw-flex tw-items-center"
         class:hightlighted={isHightlighted}
         class:tw-mr-6={isHightlighted && streamable.getVideoTrack()}
-        class:tw-flex={!isHightlighted}
         class:media-box-camera-on-size={!isHightlighted && streamable.getVideoTrack()}
         class:media-box-camera-off-size={!isHightlighted && !streamable.getVideoTrack()}
         class:tw-max-w-sm={isHightlighted && !streamable.getVideoTrack()}
@@ -104,7 +103,6 @@
     >
         <div
             class="tw-w-full tw-flex screen-blocker"
-            class:tw-mr-6={isHightlighted}
             class:tw-mx-auto={!isHightlighted}
             class:tw-h-full={isHightlighted && videoEnabled}
         >
@@ -113,7 +111,7 @@
     </div>
 {:else}
     <div
-        class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
+        class="media-container {isHightlighted ? 'hightlighted' : 'tw-flex media-box-camera-on-size'}
      media-box-shape-color
 "
         class:clickable={isClickable}
@@ -121,7 +119,7 @@
         class:mozaic-full-width={mozaicSolo}
         class:mozaic-quarter={mozaicQuarter}
     >
-        <div class="{isHightlighted ? 'tw-mr-6' : 'tw-mx-auto'}   tw-w-full tw-h-full tw-flex screen-blocker">
+        <div class="{isHightlighted ? '' : 'tw-mx-auto'}   tw-w-full tw-h-full tw-flex screen-blocker">
             <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
         </div>
     </div>
