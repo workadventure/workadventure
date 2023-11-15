@@ -54,7 +54,7 @@ import { GameRoom } from "../Model/GameRoom";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { Group } from "../Model/Group";
-import { GROUP_RADIUS, MINIMUM_DISTANCE, PLAY_URL, TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable";
+import { GROUP_RADIUS, MINIMUM_DISTANCE, TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable";
 import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
 import { EventSocket, RoomSocket, VariableSocket, ZoneSocket } from "../RoomManager";
@@ -129,10 +129,6 @@ export class SocketManager {
                     }
                 );
             });
-        } else {
-            if (!room.roomUrl.match(`#${PLAY_URL}/_/.*#`)) {
-                emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
-            }
         }
 
         if (!socket.writable) {
