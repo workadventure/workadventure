@@ -238,7 +238,7 @@
             bind:this={videoElement}
             class:tw-h-0={!videoEnabled}
             class:tw-w-0={!videoEnabled}
-            class:object-contain={videoEnabled}
+            class:object-contain={minimized || isHightlighted}
             class:tw-max-h-[230px]={videoEnabled && !isHightlighted}
             class:tw-max-h-[80vh]={videoEnabled && isHightlighted}
             class:tw-h-full={videoEnabled}

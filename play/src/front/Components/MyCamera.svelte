@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { Color } from "@workadventure/shared-utils";
+    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import {
         cameraEnergySavingStore,
         localVolumeStore,
@@ -32,6 +33,10 @@
     });
 
     let cameraContainer: HTMLDivElement;
+    let isMobile = isMediaBreakpointUp("md");
+    const resizeObserver = new ResizeObserver(() => {
+        isMobile = isMediaBreakpointUp("md");
+    });
 
     onDestroy(() => {
         unsubscribeLocalStreamStore();
@@ -49,6 +54,7 @@
                 cameraContainer.style.visibility = "visible";
             }
         });
+        resizeObserver.observe(cameraContainer);
     });
 </script>
 
@@ -92,7 +98,7 @@
             <div class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all">
                 <video
                     class="tw-h-full tw-w-full tw-rounded md:tw-object-cover"
-                    class:object-contain={stream}
+                    class:object-contain={stream && isMobile}
                     class:tw-max-h-[230px]={stream}
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
