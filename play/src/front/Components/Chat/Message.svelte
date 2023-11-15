@@ -6,7 +6,7 @@
 
 </script>
 <div class="group">
-    <div class="rounded-lg px-4 py-2 text-xs overflow-hidden bg-contrast/50 text-white max-w-[300px] mt-1 shadow-lg inline-block clear-both hover:bg-contrast/80 transition-all">
+    <div class="rounded-lg px-4 py-2 text-xs overflow-hidden bg-contrast/50 text-white max-w-[300px] mt-1 shadow-lg inline-block clear-both hover:bg-contrast/80 transition-all pointer-event-auto">
         {message}
     </div>
     <div class="group-hover:h-3 group-hover:opacity-100 group-hover:visible invisible opacity-0 h-0 transition-all text-xxs mt-1">

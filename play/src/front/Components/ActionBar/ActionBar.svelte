@@ -19,6 +19,10 @@
         localVolumeStore,
         requestedCameraState,
         requestedMicrophoneState,
+        requestedCameraDeviceIdStore,
+        requestedMicrophoneDeviceIdStore,
+        usedCameraDeviceIdStore,
+        usedMicrophoneDeviceIdStore,
         silentStore,
         speakerSelectedStore,
         streamingMegaphoneStore, enableCameraSceneVisibilityStore,
@@ -114,6 +118,11 @@
     import CamSettingsIcon from "../Icons/CamSettingsIcon.svelte";
     import SettingsIcon from "../Icons/SettingsIcon.svelte";
     import ChatOverlay from "../Chat/ChatOverlay.svelte";
+    import ChevronUpIcon from "../Icons/ChevronUpIcon.svelte";
+    import {StringUtils} from "../../Utils/StringUtils";
+    import CheckIcon from "../Icons/CheckIcon.svelte";
+    import PlusIcon from "../Icons/PlusIcon.svelte";
+    import XIcon from "../Icons/XIcon.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -367,7 +376,7 @@
     function noDrag() {
         return false;
     }
-    /*
+
         function selectCamera(deviceId: string) {
             requestedCameraDeviceIdStore.set(deviceId);
             localUserStore.setPreferredVideoInputDevice(deviceId);
@@ -384,7 +393,7 @@
             localUserStore.setSpeakerDeviceId(deviceId);
             speakerSelectedStore.set(deviceId);
         }
-    */
+
     let subscribers = new Array<Unsubscriber>();
     let totalMessagesToSee = writable<number>(0);
     onMount(() => {
@@ -462,6 +471,7 @@
                     <div
                         class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
                         on:click={toggleEmojiPicker}
+                        on:click={helpActive = false}
                         on:mouseenter={() => { !navigating ? helpActive = "emoji" : '' }}
                         on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                     >
@@ -513,21 +523,13 @@
                                                         </div>
                                                     </div>
                                                 {:else}
-                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <g>
-                                                            <path d="M12 5V19M5 12H19" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                        </g>
-                                                    </svg>
+                                                    <PlusIcon />
                                                 {/if}
                                             </button>
                                         </div>
                                         <div class="transition-all bottom-action-button flex items-center bg-contrast rounded-r-lg h-full">
                                             <button on:click|preventDefault={close}>
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <g>
-                                                        <path d="M18 6L6 18M6 6L18 18" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                    </g>
-                                                </svg>
+                                                <XIcon />
                                             </button>
                                         </div>
                                     </div>
@@ -608,7 +610,7 @@
             {/if}
             <div transition:fly={{delay: 1000, y: -200, duration: 750 }}>
                 <!-- ACTION WRAPPER : CAM & MIC -->
-                <div class="flex items-center relative">
+                <div class="group/hardware flex items-center relative">
                     {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                         <!-- NAV : MICROPHONE START -->
                         {#if $myMicrophoneStore}
@@ -633,30 +635,98 @@
                                 {#if helpActive === "mic" || !emoteMenuSubStore}
                                     <HelpTooltip title="Set mic ON/OFF" />
                                 {/if}
-                                <div class="group-hover/btn-mic:block hidden absolute p-4 w-60 text-white text-center rounded-lg top-[70px] left-1/2 transform -translate-x-1/2 before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:left-0">
-                                    <img loading="eager" src="{tooltipArrow}" class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1" />
-                                    <div class="relative z-10">
-                                        <div class="italic mb-3 text-sm">Click on icon to turn {$requestedMicrophoneState && !$silentStore ? "OFF" : "ON"} microphone</div>
-                                        {#if selectedMicrophone != undefined}
-                                            <div class="w-full flex flex-col flex-wrap content-center mt-6">
-                                                <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
-                                            </div>
-                                        {/if}
-                                        <button  class="btn btn-sm btn-border btn-light text-center block">
-                                            Edit mic/speaker settings<!-- trad -->
-                                        </button>
-                                    </div>
-                                </div>
                             </div>
                         {/if}
                     {/if}
                     <!-- NAV : MICROPHONE END -->
-
-                    <div class="absolute h-2 w-6 rounded-b bg-contrast/80 backdrop-blur -bottom-2 left-0 right-0 m-auto p-1">
-                        <div class="absolute bottom-[2px] left-0 right-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm">
-                            <ChevronDownIcon classList="h-4 w-4 aspect-ratio transition-all" strokeWidth="2" />
+                    <!--{#if $microphoneListStore.length > 1 || $cameraListStore.length > 1 || $speakerListStore.length > 0}
+                    {/if}-->
+                        <div class="absolute h-3 w-7 rounded-b bg-contrast/80 backdrop-blur left-0 right-0 m-auto p-1 z-10 opacity-0 transition-all -bottom-3 {cameraActive ? 'opacity-100' : 'group-hover/hardware:opacity-100' }">
+                            <div
+                                class="absolute bottom-1 left-0 right-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm"
+                                on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
+                            >
+                                <ChevronUpIcon classList="h-4 w-4 aspect-ratio transition-all {cameraActive ? '' : 'rotate-180'}" strokeWidth="2" />
+                            </div>
                         </div>
-                    </div>
+                        {#if cameraActive}
+                            <div
+                                class="absolute top-20 left-1/2 transform -translate-x-1/2 text-white rounded-lg w-64 overflow-hidden before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded-lg before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:-left-0 transition-all"
+                                in:fly={{y: 40, duration: 150 }}
+                            >
+                                {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
+                                    <div class="my-2">
+                                        <div class="flex text-xxs uppercase text-white/50 px-3 py-2 relative">
+                                            {$LL.actionbar.subtitle.camera()}
+                                        </div>
+                                        {#each $cameraListStore as camera}
+                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                            <div
+                                                    class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$usedCameraDeviceIdStore === camera.deviceId ? 'bg-secondary' : 'hover:bg-white/10'}"
+                                                    on:click={() => {
+                                                analyticsClient.selectCamera();
+                                            }}
+                                                    on:click|stopPropagation|preventDefault={() =>
+                                                    selectCamera(camera.deviceId)}
+                                            >
+                                                <div class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$usedCameraDeviceIdStore === camera.deviceId ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}">
+                                                    {StringUtils.normalizeDeviceName(camera.label)}
+                                                </div>
+                                                <CheckIcon classList="h-4 w-4 aspect-ratio transition-all" color="stroke-white fill-transparent {$usedCameraDeviceIdStore === camera.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
+                                            </div>
+                                        {/each}
+                                    </div>
+                                {/if}
+                                {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 1}
+                                    <div class="my-2">
+                                        <div class="flex text-xxs uppercase text-white/50 px-3 py-2 relative">
+                                            {$LL.actionbar.subtitle.microphone()}
+                                        </div>
+                                        {#each $microphoneListStore as microphone}
+                                            <div
+                                                class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$usedMicrophoneDeviceIdStore === microphone.deviceId ? 'bg-secondary' : 'hover:bg-white/10'}"
+                                                on:click={() => {
+                                                                analyticsClient.selectMicrophone();
+                                                            }}
+                                                on:click|stopPropagation|preventDefault={() =>
+                                                                selectMicrophone(microphone.deviceId)}
+                                                >
+                                                <div class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$usedMicrophoneDeviceIdStore === microphone.deviceId ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}">
+                                                    {StringUtils.normalizeDeviceName(microphone.label)}
+                                                </div>
+                                                <CheckIcon classList="h-4 w-4 aspect-ratio transition-all" color="stroke-white fill-transparent {$usedMicrophoneDeviceIdStore === microphone.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
+                                            </div>
+                                        {/each}
+                                    </div>
+                                {/if}
+                                {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
+                                    <div class="my-2">
+                                        <div class="flex text-xxs uppercase text-white/50 px-3 py-1 relative">
+                                            {$LL.actionbar.subtitle.speaker()}
+                                        </div>
+                                        {#each $speakerListStore as speaker}
+                                            <div
+                                                    class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$speakerSelectedStore === speaker.deviceId ? 'bg-secondary' : 'hover:bg-white/10'}"
+                                                    on:click={() => {
+                                                        analyticsClient.selectSpeaker();
+                                                    }}
+                                                    on:click|stopPropagation|preventDefault={() =>
+                                                        selectSpeaker(speaker.deviceId)}
+                                            >
+                                                <div class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$speakerSelectedStore === speaker.deviceId ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}">
+                                                    {StringUtils.normalizeDeviceName(speaker.label)}
+                                                </div>
+                                                <CheckIcon classList="h-4 w-4 aspect-ratio transition-all" color="stroke-white fill-transparent {$speakerSelectedStore === speaker.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
+                                            </div>
+                                        {/each}
+                                    </div>
+                                {/if}
+                                <div class="relative z-10 flex px-4 py-3 bg-contrast">
+                                    <button href="#" class="btn btn-xs btn-ghost btn-light justify-center w-full mr-3">Test my settings <!-- trad & TODO --></button>
+                                    <button class="btn btn-xs btn-border btn-light justify-center w-full cursor-pointer" on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}>Close <!-- trad & TODO --></button>
+                                </div>
+                            </div>
+                        {/if}
                     <!-- NAV : CAMERA START -->
                     {#if $myCameraStore && !$silentStore}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -679,24 +749,6 @@
                             {#if helpActive === "cam" || !emoteMenuSubStore}
                                 <HelpTooltip title="Set camera ON/OFF" />
                             {/if}
-                            <!--<div class="group-hover/btn-cam:block hidden absolute p-4 w-60 text-white text-center rounded-lg top-[70px] left-1/2 transform -translate-x-1/2 before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:left-0">
-                                <img loading="eager" src="{tooltipArrow}" class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1" />
-                                <div class="relative z-10">
-                                    <div class="italic mb-3 text-sm">Click on icon to turn {#if $requestedMicrophoneState && !$silentStore}OFF{:else}ON{/if} camera</div>
-                                    {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-                                        <div class="relative self-end z-[300] bottom-6 md:bottom-4">
-                                            {#if $myCameraStore}
-                                                <MyCamera small={true} />
-                                            {/if}
-                                        </div>
-                                    {/if}
-                                    {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
-                                        <button class="btn btn-sm btn-border btn-light text-center block">
-                                            Edit camera settings trad
-                                        </button>
-                                    {/if}
-                                </div>
-                            </div>-->
                         </div>
                     {/if}
                     <!-- NAV : CAMERA END -->
