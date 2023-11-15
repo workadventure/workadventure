@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { Color } from "@workadventure/shared-utils";
+    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import {
         cameraEnergySavingStore,
         localVolumeStore,
@@ -17,7 +18,6 @@
     import Woka from "./Woka/WokaFromUserId.svelte";
     import microphoneOffImg from "./images/microphone-off.png";
     import cameraOffImg from "./images/camera-off.png";
-    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 
     let stream: MediaStream | null;
     let userName = localUserStore.getName();
