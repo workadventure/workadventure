@@ -722,8 +722,8 @@
                                     </div>
                                 {/if}
                                 <div class="relative z-10 flex px-4 py-3 bg-contrast">
-                                    <button href="#" class="btn btn-xs btn-ghost btn-light justify-center w-full mr-3">Test my settings <!-- trad & TODO --></button>
-                                    <button class="btn btn-xs btn-border btn-light justify-center w-full cursor-pointer" on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}>Close <!-- trad & TODO --></button>
+                                    <button href="#" class="btn btn-xs btn-ghost btn-light justify-center w-full mr-3" on:click={openEnableCameraScene}>Test my settings <!-- trad --></button>
+                                    <button class="btn btn-xs btn-border btn-light justify-center w-full cursor-pointer" on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}>Close <!-- trad --></button>
                                 </div>
                             </div>
                         {/if}
@@ -784,7 +784,7 @@
             {#if $addActionButtonActionBarEvent.length > 0}
                 <div class="flex items-center relative mr-4">
                     {#each $addActionButtonActionBarEvent as button}
-                        <div class="group/btn-custom{button.id} peer/custom{button.id} relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square">
+                        <div class="group/btn-custom{button.id} peer/custom{button.id} relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg">
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
                                     in:fly={{}}
@@ -799,18 +799,19 @@
                                     on:click={() => {
                                         buttonActionBarTrigger(button.id);
                                     }}
-                                    class="h-12 w-12 p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
+                                    class="h-12 min-w-[48px] p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
                             >
                                 {#if button.toolTip}
                                     <Tooltip text={button.toolTip} />
                                 {/if}
-                                <div id={button.id} class="h-6 w-6">
+                                <div id={button.id} class="h-6">
                                     <img
                                             draggable="false"
                                             src={button.imageSrc}
                                             alt={button.toolTip}
-                                            class="h-6 w-6"
+                                            class="h-6"
                                     />
+                                    <!-- src="./static/images/Workadventure.gif"   src={button.imageSrc}   -->
                                 </div>
                             </div>
                         </div>
