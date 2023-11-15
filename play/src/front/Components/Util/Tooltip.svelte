@@ -32,63 +32,6 @@
     });
 </script>
 
-<div bind:this={tooltipElement} class="tooltip w-fit">
-    <span bind:this={textElement} class="tooltiptext {toolTipPosition}">{text}</span>
+<div bind:this={tooltipElement}>
+    <div bind:this={textElement} class="fixed top-[70px] rounded w-40 px-4 py-2 bg-contrast/80 text-white left-1/2 transform -translate-x-1/2 text-center {toolTipPosition}">{text}</div>
 </div>
-
-<style lang="scss">
-    .tooltip {
-        display: block;
-        .tooltiptext {
-            white-space: pre;
-            visibility: hidden;
-            position: absolute;
-            align-items: center;
-            border-radius: 0.25rem;
-            --bg-opacity: 1;
-            background-color: rgb(56 56 74 / var(--bg-opacity));
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
-            padding-top: 0.25rem;
-            padding-bottom: 0.25rem;
-            text-align: center;
-            --text-opacity: 1;
-            color: rgb(255 255 255 / var(--text-opacity));
-        }
-
-        .right-tooltip {
-            left: 10px;
-            bottom: 50%;
-            transform: translate(0, 50%);
-            &::after {
-                top: calc(50% - 5px);
-                left: -5px;
-                border-color: theme("colors.transparent") theme("colors.medium-purple") theme("colors.transparent")
-                    theme("colors.transparent");
-            }
-        }
-
-        .left-tooltip {
-            right: 55px;
-            bottom: 50%;
-            transform: translate(0, 50%);
-            &::after {
-                top: calc(50% - 5px);
-                left: auto;
-                right: -12px;
-                border-color: theme("colors.transparent") theme("colors.medium-purple") theme("colors.transparent")
-                    theme("colors.transparent");
-                content: "";
-                transform: rotate(180deg);
-            }
-        }
-
-        .top-tooltip {
-            bottom: 10px;
-            left: 0;
-            &::after {
-                left: 1.5rem;
-            }
-        }
-    }
-</style>
