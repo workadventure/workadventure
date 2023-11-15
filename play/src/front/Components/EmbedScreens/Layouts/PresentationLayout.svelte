@@ -49,7 +49,6 @@
     });
 
     onMount(() => {
-        console.log("PresentationLayout");
         resizeObserver.observe(layoutDom);
     });
 </script>
@@ -109,7 +108,10 @@
             </div>
         </div>
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div class="tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-max-w-[25%] tw-w-full">
+            <div
+                class="tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-max-w-[25%] tw-w-full"
+                class:tw-w-[10%]={$highlightedEmbedScreen != undefined}
+            >
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}

@@ -5,6 +5,7 @@
     export let jitsiTrack: JitsiTrack;
     export let isLocal: boolean;
     export let isHightlighted: boolean;
+    export let isMobileFormat: boolean;
 
     let videoElement: HTMLVideoElement;
 
@@ -22,7 +23,8 @@
 
 <video
     bind:this={videoElement}
-    class="object-contain tw-h-full tw-max-w-full tw-rounded-sm"
+    class="tw-h-full tw-max-w-full tw-rounded-sm"
+    class:object-cover={isMobileFormat}
     class:tw-scale-x-[-1]={isLocal && jitsiTrack.getVideoType() === "camera"}
     class:tw-max-h-[230px]={!isHightlighted}
     class:tw-max-h-[80vh]={isHightlighted}

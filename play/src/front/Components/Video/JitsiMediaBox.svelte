@@ -14,6 +14,7 @@
     export let clickable = true;
     export let isHightlighted = false;
     export let peer: JitsiTrackStreamWrapper;
+    export let isMobileFormat: boolean;
 
     const videoTrackStore: Readable<JitsiTrack | undefined> = peer.videoTrackStore;
     const audioTrackStore: Readable<JitsiTrack | undefined> = peer.audioTrackStore;
@@ -37,7 +38,12 @@
 >
     {#if $videoTrackStore}
         <div class="tw-rounded-sm tw-overflow-hidden tw-flex tw-w-full tw-flex-col tw-h-full">
-            <JitsiVideoElement jitsiTrack={$videoTrackStore} isLocal={$videoTrackStore?.isLocal()} {isHightlighted} />
+            <JitsiVideoElement
+                jitsiTrack={$videoTrackStore}
+                isLocal={$videoTrackStore?.isLocal()}
+                {isHightlighted}
+                {isMobileFormat}
+            />
         </div>
     {/if}
     {#if peer.target === "video/audio"}

@@ -25,6 +25,7 @@
     export let clickable = false;
     export let isHightlighted = false;
     export let peer: VideoPeer;
+    export let isMobileFormat = false;
 
     let streamStore = peer.streamStore;
     let volumeStore = peer.volumeStore;
@@ -238,7 +239,7 @@
             bind:this={videoElement}
             class:tw-h-0={!videoEnabled}
             class:tw-w-0={!videoEnabled}
-            class:object-contain={videoEnabled}
+            class:object-contain={videoEnabled && isMobileFormat}
             class:tw-max-h-[230px]={videoEnabled && !isHightlighted}
             class:tw-max-h-[80vh]={videoEnabled && isHightlighted}
             class:tw-h-full={videoEnabled}
