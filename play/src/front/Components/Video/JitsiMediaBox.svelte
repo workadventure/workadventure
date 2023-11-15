@@ -2,11 +2,13 @@
     import { Color } from "@workadventure/shared-utils";
     import { Readable } from "svelte/store";
     import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
+    import { onMount } from "svelte";
     import microphoneOffImg from "../images/microphone-off.png";
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
+    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import UserTag from "./UserTag.svelte";
     import JitsiVideoElement from "./JitsiVideoElement.svelte";
     import JitsiAudioElement from "./JitsiAudioElement.svelte";
@@ -14,7 +16,6 @@
     export let clickable = true;
     export let isHightlighted = false;
     export let peer: JitsiTrackStreamWrapper;
-    export let isMobileFormat: boolean;
 
     const videoTrackStore: Readable<JitsiTrack | undefined> = peer.videoTrackStore;
     const audioTrackStore: Readable<JitsiTrack | undefined> = peer.audioTrackStore;
@@ -29,11 +30,22 @@
             embed: peer as unknown as Streamable,
         };
     }
+
+    let jitsiMediaBoxHtml: HTMLDivElement;
+    let isMobileFormat = isMediaBreakpointUp("md");
+    const resizeObserver = new ResizeObserver(() => {
+        isMobileFormat = isMediaBreakpointUp("md");
+    });
+
+    onMount(() => {
+        resizeObserver.observe(jitsiMediaBoxHtml);
+    });
 </script>
 
 <div
     id="container"
     class="jitsi-video"
+    bind:this={jitsiMediaBoxHtml}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     {#if $videoTrackStore}
