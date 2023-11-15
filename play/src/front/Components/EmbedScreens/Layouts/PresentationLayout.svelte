@@ -64,10 +64,10 @@
                     <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
                 {/if}
                 {#if $myCameraStore && $proximityMeetingStore === true}
-                    <MyCamera isMobile={displayFullMedias} />
+                    <MyCamera />
                 {/if}
                 {#if $myJitsiCameraStore}
-                    <MediaBox streamable={$myJitsiCameraStore} isClickable={false} isMobile={displayFullMedias} />
+                    <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
                 {/if}
             </div>
         {/if}
@@ -81,7 +81,6 @@
                                 isHightlighted={true}
                                 isClickable={true}
                                 streamable={$highlightedEmbedScreen.embed}
-                                isMobile={displayFullMedias}
                             />
                         {/key}
                     {:else if $highlightedEmbedScreen.type === "cowebsite"}
@@ -120,10 +119,10 @@
                     <CamerasContainer highlightedEmbedScreen={$highlightedEmbedScreen} />
                 {/if}
                 {#if $myCameraStore && !$megaphoneEnabledStore}
-                    <MyCamera isMobile={displayFullMedias} />
+                    <MyCamera />
                 {/if}
                 {#if $myJitsiCameraStore}
-                    <MediaBox streamable={$myJitsiCameraStore} isClickable={false} isMobile={displayFullMedias} />
+                    <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
                 {/if}
             </div>
         {/if}

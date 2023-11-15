@@ -17,8 +17,7 @@
     import Woka from "./Woka/WokaFromUserId.svelte";
     import microphoneOffImg from "./images/microphone-off.png";
     import cameraOffImg from "./images/camera-off.png";
-
-    export let isMobile = false;
+    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 
     let stream: MediaStream | null;
     let userName = localUserStore.getName();
@@ -34,6 +33,10 @@
     });
 
     let cameraContainer: HTMLDivElement;
+    let isMobile = isMediaBreakpointUp("md");
+    const resizeObserver = new ResizeObserver(() => {
+        isMobile = isMediaBreakpointUp("md");
+    });
 
     onDestroy(() => {
         unsubscribeLocalStreamStore();
@@ -51,6 +54,7 @@
                 cameraContainer.style.visibility = "visible";
             }
         });
+        resizeObserver.observe(cameraContainer);
     });
 </script>
 

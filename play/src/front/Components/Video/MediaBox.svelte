@@ -12,6 +12,7 @@
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
+    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -19,7 +20,6 @@
     export let mozaicSolo = false;
     export let mozaicDuo = false;
     export let mozaicQuarter = false;
-    export let isMobile = false;
 
     let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
     if (streamable instanceof VideoPeer) {
@@ -32,8 +32,16 @@
 
     const gameScene = gameManager.getCurrentGameScene();
 
+    let mediaBoxHtmlElement: HTMLDivElement;
+    let isMobile = isMediaBreakpointUp("md");
+    const resizeObserver = new ResizeObserver(() => {
+        isMobile = isMediaBreakpointUp("md");
+        console.log('isMobile', isMobile);
+    });
+
     onMount(() => {
         gameScene.reposition();
+        resizeObserver.observe(mediaBoxHtmlElement);
     });
 
     onDestroy(() => {
@@ -59,6 +67,7 @@
             class:mozaic-duo={mozaicDuo}
             class:mozaic-full-width={mozaicSolo}
             class:mozaic-quarter={mozaicQuarter}
+            bind:this={mediaBoxHtmlElement}
         >
             <div
                 class="tw-w-full tw-flex screen-blocker tw-flex tw-items-center"
@@ -78,6 +87,7 @@
         class:mozaic-duo={mozaicDuo}
         class:mozaic-full-width={mozaicSolo}
         class:mozaic-quarter={mozaicQuarter}
+        bind:this={mediaBoxHtmlElement}
     >
         <div class="{isHightlighted ? '' : 'tw-mx-auto'} tw-w-full tw-h-full tw-flex screen-blocker">
             <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
@@ -99,6 +109,7 @@
         class:mozaic-full-width={mozaicSolo}
         class:mozaic-quarter={mozaicQuarter}
         transition:fly={{ x: 200, duration: 250 }}
+        bind:this={mediaBoxHtmlElement}
     >
         <div
             class="tw-w-full tw-flex screen-blocker"
@@ -117,6 +128,7 @@
         class:mozaic-duo={mozaicDuo}
         class:mozaic-full-width={mozaicSolo}
         class:mozaic-quarter={mozaicQuarter}
+        bind:this={mediaBoxHtmlElement}
     >
         <div class="{isHightlighted ? '' : 'tw-mx-auto'}   tw-w-full tw-h-full tw-flex screen-blocker">
             <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
