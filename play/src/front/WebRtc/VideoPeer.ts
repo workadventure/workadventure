@@ -23,6 +23,8 @@ import { MessageStatusMessage } from "./P2PMessages/MessageStatusMessage";
 import { P2PMessage } from "./P2PMessages/P2PMessage";
 import { BlockMessage } from "./P2PMessages/BlockMessage";
 import { UnblockMessage } from "./P2PMessages/UnblockMessage";
+import {speechRecognizerFactory} from "../Utils/SpeechRecognizer";
+import {CancellationDetails, CancellationReason, ResultReason} from "microsoft-cognitiveservices-speech-sdk";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
@@ -100,6 +102,81 @@ export class VideoPeer extends Peer {
                         }
                     }
                 }, 100);
+            });
+
+            this.streamStore.subscribe((mediaStream) => {
+                if (mediaStream === null || mediaStream.getAudioTracks().length <= 0) {
+                    return;
+                }
+
+                const speechRecognizer = speechRecognizerFactory(mediaStream);
+
+                console.warn("Start Speech Recognizer")
+                /*speechRecognizer.recognizeOnceAsync((result) => {
+                    console.warn("Stop Speech Recognizer", result);
+
+                    switch (result.reason) {
+                        case ResultReason.RecognizedSpeech:
+                            console.log(`RECOGNIZED: Text=${result.text}`);
+                            break;
+                        case ResultReason.NoMatch:
+                            console.log("NOMATCH: Speech could not be recognized.");
+                            break;
+                        case ResultReason.Canceled: {
+                            const cancellation = CancellationDetails.fromResult(result);
+                            console.log(`CANCELED: Reason=${cancellation.reason}`);
+
+                            if (cancellation.reason == CancellationReason.Error) {
+                                console.log(`CANCELED: ErrorCode=${cancellation.ErrorCode}`);
+                                console.log(`CANCELED: ErrorDetails=${cancellation.errorDetails}`);
+                                console.log("CANCELED: Did you set the speech resource key and region values?");
+                            }
+                            break;
+                        }
+                        default:
+                            console.warn("Error other result : " + result.reason, result);
+                    }
+
+
+                    if (result.text !== undefined) {
+                        console.log("MESSAGE", result.text);
+                        //chatMessagesService.addExternalMessage(this.userId, result.text);
+                    }
+                    speechRecognizer.close();
+                });*/
+
+                speechRecognizer.recognizing = (s, e) => {
+                    console.log(`RECOGNIZING: Text=${e.result.text}`);
+                };
+
+                speechRecognizer.recognized = (s, e) => {
+                    if (e.result.reason == ResultReason.RecognizedSpeech) {
+                        console.log(`RECOGNIZED: Text=${e.result.text}`);
+                    }
+                    else if (e.result.reason == ResultReason.NoMatch) {
+                        console.log("NOMATCH: Speech could not be recognized.");
+                    }
+                };
+
+                speechRecognizer.canceled = (s, e) => {
+                    console.log(`CANCELED: Reason=${e.reason}`);
+
+                    if (e.reason == CancellationReason.Error) {
+                        console.log(`"CANCELED: ErrorCode=${e.errorCode}`);
+                        console.log(`"CANCELED: ErrorDetails=${e.errorDetails}`);
+                        console.log("CANCELED: Did you set the speech resource key and region values?");
+                    }
+
+                    speechRecognizer.stopContinuousRecognitionAsync();
+                };
+
+                speechRecognizer.sessionStopped = (s, e) => {
+                    console.log("\n    Session stopped event.");
+                    speechRecognizer.stopContinuousRecognitionAsync();
+                };
+
+                speechRecognizer.startContinuousRecognitionAsync();
+
             });
 
             return () => {
