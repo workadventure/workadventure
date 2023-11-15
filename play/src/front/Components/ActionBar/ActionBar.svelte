@@ -415,19 +415,8 @@
             <div
                     class="group/btn-chat relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square"
                     on:click={() =>analyticsClient.openedChat()}
-                    on:click={toggleChat}
-                    on:mouseenter={() => {
-                        console.log("enter", navigating);
-                        if (!navigating) {
-                            helpActive = "chat";
-                        }
-                    }}
-                    on:mouseleave={() => {
-                        console.log("leave", navigating);
-                        if (!navigating) {
-                            helpActive = false;
-                        }
-                    }}
+                    on:mouseenter={() => { !navigating ? helpActive = "chat" : '' }}
+                    on:mouseleave={() => { !navigating ? helpActive = false : '' }}
             >
                 <div class="h-12 w-12 rounded group-hover/btn-chat:bg-white/10 aspect-square flex items-center justify-center transition-all"
                 >
@@ -451,18 +440,8 @@
 
             <div class="group/btn-users relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square">
                 <div class="h-12 w-12 rounded group-hover/btn-users:bg-white/10 aspect-square flex items-center justify-center transition-all"
-                    on:mouseenter={() => {
-                        console.log("enter", navigating);
-                        if (!navigating) {
-                            helpActive = "users";
-                        }
-                    }}
-                    on:mouseleave={() => {
-                        console.log("leave", navigating);
-                        if (!navigating) {
-                            helpActive = false;
-                        }
-                    }}
+                     on:mouseenter={() => { !navigating ? helpActive = "users" : '' }}
+                     on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                 >
                     <UsersIcon />
                 </div>
@@ -474,40 +453,6 @@
         {#if !$chatVisibilityStore}
             <ChatOverlay />
         {/if}
-        {#if $addActionButtonActionBarEvent.length > 0}
-            <div class="bottom-action-section tw-flex tw-flex-initial">
-                {#each $addActionButtonActionBarEvent as button}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                            in:fly={{}}
-                            on:dragstart|preventDefault={noDrag}
-                            on:click={() =>
-                                analyticsClient.clickOnCustomButton(
-                                    button.id,
-                                    undefined,
-                                    button.toolTip,
-                                    button.imageSrc
-                                )}
-                            on:click={() => {
-                                buttonActionBarTrigger(button.id);
-                            }}
-                            class="bottom-action-button"
-                    >
-                        {#if button.toolTip}
-                            <Tooltip text={button.toolTip} />
-                        {/if}
-                        <button id={button.id}>
-                            <img
-                                    draggable="false"
-                                    src={button.imageSrc}
-                                    style="padding: 2px"
-                                    alt={button.toolTip}
-                            />
-                        </button>
-                    </div>
-                {/each}
-            </div>
-        {/if}
     </div>
     <div class="justify-self-center pointer-events-auto">
         <div class="flex relative">
@@ -517,18 +462,8 @@
                     <div
                         class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
                         on:click={toggleEmojiPicker}
-                        on:mouseenter={() => {
-                            console.log("enter", navigating);
-                            if (!navigating) {
-                                helpActive = "emoji";
-                            }
-                        }}
-                                on:mouseleave={() => {
-                            console.log("leave", navigating);
-                            if (!navigating) {
-                                helpActive = false;
-                            }
-                        }}
+                        on:mouseenter={() => { !navigating ? helpActive = "emoji" : '' }}
+                        on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                     >
                         <div
                                 class="h-12 w-12 rounded aspect-square flex items-center justify-center transition-all {$emoteMenuSubStore ? 'bg-secondary group-hover/bg-secondary-600' : ' group-hover/btn-emoji:bg-white/10'}"
@@ -639,14 +574,21 @@
                                  class:disabled={$followStateStore !== "off"}
                                  on:click={() => analyticsClient.follow()}
                                  on:click={followClick}
+                                 on:mouseenter={() => { !navigating ? helpActive = "follow" : '' }}
+                                 on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                             >
                                 <FollowIcon />
                             </div>
+                            {#if helpActive === "follow" || !emoteMenuSubStore}
+                                <HelpTooltip title="Ask to someone to follow you" />
+                            {/if}
                         </div>
                         <div class="group/btn-lock relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
                              class:disabled={$currentPlayerGroupLockStateStore}
                              on:click={() =>analyticsClient.lockDiscussion()}
                              on:click={lockClick}
+                             on:mouseenter={() => { !navigating ? helpActive = "lock" : '' }}
+                             on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                         >
 
                             <div class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-lock:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all">
@@ -656,6 +598,9 @@
                                     <LockOpenIcon />
                                 {/if}
                             </div>
+                            {#if helpActive === "lock" || !emoteMenuSubStore}
+                                <HelpTooltip title="Lock and start a private discussion" />
+                            {/if}
                         </div>
                     {/if}
                 </div>
@@ -663,7 +608,7 @@
             {/if}
             <div transition:fly={{delay: 1000, y: -200, duration: 750 }}>
                 <!-- ACTION WRAPPER : CAM & MIC -->
-                <div class="flex items-center">
+                <div class="flex items-center relative">
                     {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                         <!-- NAV : MICROPHONE START -->
                         {#if $myMicrophoneStore}
@@ -676,6 +621,8 @@
                                         class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-mic:bg-danger hover:bg-white/10 flex items-center justify-center transition-all"
                                         on:click={() =>analyticsClient.microphone()}
                                         on:click={microphoneClick}
+                                        on:mouseenter={() => { !navigating ? helpActive = "mic" : '' }}
+                                        on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                                 >
                                     {#if $requestedMicrophoneState && !$silentStore}
                                         <MicOnIcon />
@@ -683,6 +630,9 @@
                                         <MicOffIcon />
                                     {/if}
                                 </div>
+                                {#if helpActive === "mic" || !emoteMenuSubStore}
+                                    <HelpTooltip title="Set mic ON/OFF" />
+                                {/if}
                                 <div class="group-hover/btn-mic:block hidden absolute p-4 w-60 text-white text-center rounded-lg top-[70px] left-1/2 transform -translate-x-1/2 before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:left-0">
                                     <img loading="eager" src="{tooltipArrow}" class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1" />
                                     <div class="relative z-10">
@@ -701,6 +651,12 @@
                         {/if}
                     {/if}
                     <!-- NAV : MICROPHONE END -->
+
+                    <div class="absolute h-2 w-6 rounded-b bg-contrast/80 backdrop-blur -bottom-2 left-0 right-0 m-auto p-1">
+                        <div class="absolute bottom-[2px] left-0 right-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm">
+                            <ChevronDownIcon classList="h-4 w-4 aspect-ratio transition-all" strokeWidth="2" />
+                        </div>
+                    </div>
                     <!-- NAV : CAMERA START -->
                     {#if $myCameraStore && !$silentStore}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -711,6 +667,8 @@
                                     class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-cam:bg-danger hover:bg-white/10 flex items-center justify-center transition-all"
                                     on:click={() => analyticsClient.camera()}
                                     on:click={cameraClick}
+                                    on:mouseenter={() => { !navigating ? helpActive = "cam" : '' }}
+                                    on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                             >
                                 {#if $requestedCameraState && !$silentStore}
                                     <CamOnIcon />
@@ -718,7 +676,10 @@
                                     <CamOffIcon />
                                 {/if}
                             </div>
-                            <div class="group-hover/btn-cam:block hidden absolute p-4 w-60 text-white text-center rounded-lg top-[70px] left-1/2 transform -translate-x-1/2 before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:left-0">
+                            {#if helpActive === "cam" || !emoteMenuSubStore}
+                                <HelpTooltip title="Set camera ON/OFF" />
+                            {/if}
+                            <!--<div class="group-hover/btn-cam:block hidden absolute p-4 w-60 text-white text-center rounded-lg top-[70px] left-1/2 transform -translate-x-1/2 before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:left-0">
                                 <img loading="eager" src="{tooltipArrow}" class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1" />
                                 <div class="relative z-10">
                                     <div class="italic mb-3 text-sm">Click on icon to turn {#if $requestedMicrophoneState && !$silentStore}OFF{:else}ON{/if} camera</div>
@@ -731,11 +692,11 @@
                                     {/if}
                                     {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
                                         <button class="btn btn-sm btn-border btn-light text-center block">
-                                            Edit camera settings<!-- trad -->
+                                            Edit camera settings trad
                                         </button>
                                     {/if}
                                 </div>
-                            </div>
+                            </div>-->
                         </div>
                     {/if}
                     <!-- NAV : CAMERA END -->
@@ -746,6 +707,8 @@
                     <div class="group/btn-share relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
                          on:click={() =>analyticsClient.screenSharing()}
                          on:click={screenSharingClick}
+                         on:mouseenter={() => { !navigating ? helpActive = "share" : '' }}
+                         on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                     >
                         <div class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-share:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all {$requestedScreenSharingState && !$silentStore ? 'bg-secondary hover:bg-danger' : ''}">
                             {#if $requestedScreenSharingState && !$silentStore}
@@ -754,6 +717,9 @@
                                 <ScreenShareOffIcon />
                             {/if}
                         </div>
+                        {#if helpActive === "share" || !emoteMenuSubStore}
+                            <HelpTooltip title="Share your screen" />
+                        {/if}
                     </div>
                     {/if}
                     <!-- NAV : SCREENSHARING END -->
@@ -763,6 +729,42 @@
     </div>
     <div class="justify-self-end pointer-events-auto menu-right">
         <div class="flex">
+            {#if $addActionButtonActionBarEvent.length > 0}
+                <div class="flex items-center relative mr-4">
+                    {#each $addActionButtonActionBarEvent as button}
+                        <div class="group/btn-custom{button.id} peer/custom{button.id} relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square">
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <div
+                                    in:fly={{}}
+                                    on:dragstart|preventDefault={noDrag}
+                                    on:click={() =>
+                                        analyticsClient.clickOnCustomButton(
+                                            button.id,
+                                            undefined,
+                                            button.toolTip,
+                                            button.imageSrc
+                                        )}
+                                    on:click={() => {
+                                        buttonActionBarTrigger(button.id);
+                                    }}
+                                    class="h-12 w-12 p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
+                            >
+                                {#if button.toolTip}
+                                    <Tooltip text={button.toolTip} />
+                                {/if}
+                                <div id={button.id} class="h-6 w-6">
+                                    <img
+                                            draggable="false"
+                                            src={button.imageSrc}
+                                            alt={button.toolTip}
+                                            class="h-6 w-6"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    {/each}
+                </div>
+            {/if}
             {#if $inviteUserActivated}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div transition:fly={{delay: 1250, y: -200, duration: 750 }}>

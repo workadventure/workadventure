@@ -15,7 +15,7 @@
         <div class="font-lg bold px-4 pt-3 pb-1">
             {title}
         </div>
-        <div class="text-xs opacity-50 px-4">
+        <div class="text-xxs opacity-50 px-4">
             {desc}
         </div>
     </div>
