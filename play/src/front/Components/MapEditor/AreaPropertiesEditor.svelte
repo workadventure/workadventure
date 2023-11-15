@@ -43,7 +43,7 @@
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
-            properties = currentAreaPreview.getProperties() ?? [];
+            properties = structuredClone(currentAreaPreview.getProperties());
             areaName = currentAreaPreview.getAreaData().name;
             refreshFlags();
         }

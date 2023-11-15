@@ -40,7 +40,6 @@
         return !!(property.policy || property.allowAPI || !property.closable || property.width || property.newTab);
     }
 
-    console.log("property", property);
     onMount(() => {
         // if klaxoon, open Activity Picker
         if (property.application === "klaxoon" && (property.link == undefined || property.link === "")) {

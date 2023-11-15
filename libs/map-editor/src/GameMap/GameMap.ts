@@ -7,7 +7,7 @@ import {
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
 import { WAMFileFormat, GameMapProperties } from "../types";
-import type { AreaChangeCallback } from "./GameMapAreas";
+import type { AreaChangeCallback, AreaUpdateCallback } from "./GameMapAreas";
 import { GameMapAreas } from "./GameMapAreas";
 import { flattenGroupLayersMap } from "./LayersFlattener";
 import { GameMapEntities } from "./GameMapEntities";
@@ -180,10 +180,10 @@ export class GameMap {
     }
 
     /**
-     * Registers a callback called when the user moves outside another area.
+     * Registers a callback called when an area is updated.
      */
-    public onLeaveArea(callback: AreaChangeCallback) {
-        this.gameMapAreas?.onLeaveArea(callback);
+    public onUpdateArea(callback: AreaUpdateCallback) {
+        this.gameMapAreas?.onUpdateArea(callback);
     }
 
     public getTileProperty(index: number): Array<ITiledMapProperty> {

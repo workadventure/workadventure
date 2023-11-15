@@ -25,6 +25,7 @@
     import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
     import { Locales } from "../../../i18n/i18n-types";
     import { localUserStore } from "../../Connection/LocalUserStore";
+    import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 
     let chatIframe: HTMLIFrameElement;
     let searchElement: HTMLInputElement;
@@ -180,7 +181,7 @@
         if (e.key === "Escape" && $chatVisibilityStore) {
             closeChat();
             chatIframe.blur();
-        } else if (e.key === "c" && !$chatVisibilityStore && $enableUserInputsStore) {
+        } else if (e.key === "c" && !$chatVisibilityStore && !$mapEditorModeStore && $enableUserInputsStore) {
             chatVisibilityStore.set(true);
         }
     }

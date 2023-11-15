@@ -18,8 +18,10 @@ export class DeleteAreaFrontCommand extends DeleteAreaCommand implements FrontCo
     }
 
     public execute(): Promise<void> {
+        const area = this.gameMap.getGameMapAreas()?.getArea(this.areaId);
         const returnVal = super.execute();
-        this.editorTool.handleAreaPreviewDeletion(this.areaId);
+
+        this.editorTool.handleAreaDeletion(this.areaId, area);
 
         return returnVal;
     }

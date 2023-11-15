@@ -129,8 +129,6 @@ export class SocketManager {
                     }
                 );
             });
-        } else {
-            emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
         }
 
         if (!socket.writable) {

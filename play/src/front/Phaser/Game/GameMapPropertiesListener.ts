@@ -1,6 +1,6 @@
 import { get } from "svelte/store";
 import type { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
-import { AreaData, GameMapProperties } from "@workadventure/map-editor";
+import { AreaData, AreaDataProperties, GameMapProperties } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { z } from "zod";
@@ -338,6 +338,10 @@ export class GameMapPropertiesListener {
             this.onLeaveAreasHandler(oldAreas);
         });
 
+        this.gameMapFrontWrapper.onUpdateArea((area, oldProperties, newProperties) => {
+            this.onUpdateAreasHandler(area, oldProperties, newProperties);
+        });
+
         this.gameMapFrontWrapper.onEnterDynamicArea((newAreas) => {
             this.onEnterPlaceHandler(
                 newAreas.map((area) => this.gameMapFrontWrapper.mapDynamicAreaToTiledObject(area))
@@ -375,6 +379,14 @@ export class GameMapPropertiesListener {
 
     private onEnterAreasHandler(areas: AreaData[]): void {
         this.areasPropertiesListener.onEnterAreasHandler(areas);
+    }
+
+    private onUpdateAreasHandler(
+        area: AreaData,
+        oldProperties: AreaDataProperties | undefined,
+        newProperties: AreaDataProperties | undefined
+    ): void {
+        this.areasPropertiesListener.onUpdateAreasHandler(area, oldProperties, newProperties);
     }
 
     private onLeaveAreasHandler(areas: AreaData[]): void {
