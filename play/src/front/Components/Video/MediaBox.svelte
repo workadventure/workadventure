@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { readable, Unsubscriber, type Readable } from "svelte/store";
+    import { type Readable } from "svelte/store";
     import { onMount, onDestroy } from "svelte";
     import { PeerStatus, VideoPeer } from "../../WebRtc/VideoPeer";
     import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
@@ -8,7 +8,6 @@
     import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
-    import { videoConstraintStore } from "../../Stores/MediaStore";
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
@@ -20,6 +19,7 @@
     export let mozaicSolo = false;
     export let mozaicDuo = false;
     export let mozaicQuarter = false;
+    export let isMobile = false;
 
     let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
     if (streamable instanceof VideoPeer) {
@@ -38,32 +38,8 @@
 
     onDestroy(() => {
         gameScene.reposition();
-        videoTrackUnscriber?.();
     });
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
-
-    let videoTrackUnscriber: Unsubscriber;
-    const videoTrackSettingsStore = readable(
-        { width: $videoConstraintStore.width, height: $videoConstraintStore?.height },
-        (set) => {
-            if (streamable instanceof VideoPeer) {
-                videoTrackUnscriber = streamable.streamStore.subscribe((mediaStream) => {
-                    const videoTrack = mediaStream?.getVideoTracks()[0];
-                    if (videoTrack) {
-                        const settings = videoTrack.getSettings();
-                        set({ width: settings.width, height: settings.height });
-                    }
-                });
-            }
-        }
-    );
-
-    $: isMobileFormat =
-        $videoTrackSettingsStore &&
-        ($videoTrackSettingsStore.width as number) <= 480 &&
-        ($videoTrackSettingsStore.height as number) <= 800
-            ? true
-            : false;
 </script>
 
 {#if streamable instanceof VideoPeer}
@@ -89,7 +65,7 @@
                 class:tw-mx-auto={!isHightlighted}
                 class:tw-h-full={isHightlighted && videoEnabled}
             >
-                <VideoMediaBox peer={streamable} clickable={isClickable} {isHightlighted} {isMobileFormat} />
+                <VideoMediaBox peer={streamable} clickable={isClickable} {isHightlighted} isMobileFormat={isMobile} />
             </div>
         </div>
     {/if}
@@ -129,7 +105,7 @@
             class:tw-mx-auto={!isHightlighted}
             class:tw-h-full={isHightlighted && videoEnabled}
         >
-            <JitsiMediaBox peer={streamable} clickable={isClickable} {isHightlighted} {isMobileFormat} />
+            <JitsiMediaBox peer={streamable} clickable={isClickable} {isHightlighted} isMobileFormat={isMobile} />
         </div>
     </div>
 {:else}

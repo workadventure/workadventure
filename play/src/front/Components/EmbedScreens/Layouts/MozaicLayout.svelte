@@ -32,15 +32,16 @@
                 mozaicSolo={$streamableCollectionStore.size === 1}
                 mozaicDuo={$streamableCollectionStore.size === 2}
                 mozaicQuarter={$streamableCollectionStore.size === 3 || $streamableCollectionStore.size >= 4}
+                isMobile={displayFullMedias}
             />
         {/each}
         {#if $myCameraStore && displayFullMedias && $proximityMeetingStore === true}
-            <MyCamera />
+            <MyCamera isMobile={displayFullMedias} />
         {/if}
     </div>
     <div class="tw-absolute tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-right-5 ">
         {#if $myCameraStore && !displayFullMedias}
-            <MyCamera />
+            <MyCamera isMobile={displayFullMedias} />
         {/if}
     </div>
 </div>

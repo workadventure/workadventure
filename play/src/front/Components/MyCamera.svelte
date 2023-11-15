@@ -1,7 +1,6 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { Color } from "@workadventure/shared-utils";
-    import { readable } from "svelte/store";
     import {
         cameraEnergySavingStore,
         localVolumeStore,
@@ -9,7 +8,6 @@
         requestedCameraState,
         silentStore,
         localStreamStore,
-        videoConstraintStore,
     } from "../Stores/MediaStore";
     import { LL } from "../../i18n/i18n-svelte";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
@@ -19,6 +17,8 @@
     import Woka from "./Woka/WokaFromUserId.svelte";
     import microphoneOffImg from "./images/microphone-off.png";
     import cameraOffImg from "./images/camera-off.png";
+
+    export let isMobile = false;
 
     let stream: MediaStream | null;
     let userName = localUserStore.getName();
@@ -52,25 +52,6 @@
             }
         });
     });
-
-    let videoTrackSettingsStore = readable(
-        { width: $videoConstraintStore.width, height: $videoConstraintStore.height },
-        (set) => {
-            const videoTrack = stream?.getVideoTracks()[0];
-            if (videoTrack) {
-                const settings = videoTrack.getSettings();
-                set({
-                    width: settings.width ?? $videoConstraintStore.width,
-                    height: settings.height ?? $videoConstraintStore.height,
-                });
-            }
-        }
-    );
-
-    $: isMobileFormat =
-        $videoTrackSettingsStore &&
-        ($videoTrackSettingsStore.width as number) <= 480 &&
-        ($videoTrackSettingsStore.height as number) <= 800;
 </script>
 
 <div class="tw-transition-all tw-self-end tw-relative tw-w-full" bind:this={cameraContainer}>
@@ -113,7 +94,7 @@
             <div class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all">
                 <video
                     class="tw-h-full tw-w-full tw-rounded md:tw-object-cover"
-                    class:object-contain={stream && isMobileFormat}
+                    class:object-contain={stream && isMobile}
                     class:tw-max-h-[230px]={stream}
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
