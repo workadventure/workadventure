@@ -34,7 +34,10 @@ import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
 import { AreasPropertiesListener } from "./MapEditor/AreasPropertiesListener";
 import { gameManager } from "./GameManager";
-import { callAgentManager } from "../../Streaming/Teams/CallAgentManager";
+import { SpaceFilterMessage } from "@workadventure/messages";
+import { RoomConnection } from "../../Connection/RoomConnection";
+import { BroadcastService } from "../../Streaming/BroadcastService";
+import { TeamsBroadcastSpace } from "../../Streaming/Teams/TeamsBroadcastSpace";
 
 export interface OpenCoWebsite {
     actionId: string;
@@ -355,12 +358,30 @@ export class GameMapPropertiesListener {
             console.log("Teams room property changed", newValue, oldValue, allProps)
             if (newValue !== undefined && oldValue === undefined) {
                 // Enter in a Teams room
-                callAgentManager.createMeeting();
+                this.scene.broadcastService.joinSpace(String(newValue), false, (
+                    connection: RoomConnection,
+                    spaceName: string,
+                    spaceFilter: SpaceFilterMessage,
+                    broadcastService: BroadcastService,
+                    playSound: boolean
+                ) => {
+                    return new TeamsBroadcastSpace(connection, spaceName, spaceFilter, broadcastService, playSound);
+                });
             } else if (newValue === undefined && oldValue !== undefined) {
                 // Leave the Teams room
+                this.scene.broadcastService.leaveSpace(String(oldValue));
             } else {
                 // Enter in another Teams room
-                // todo: Leave the previous room and enter in the new one
+                this.scene.broadcastService.leaveSpace(String(oldValue));
+                this.scene.broadcastService.joinSpace(String(newValue), false, (
+                    connection: RoomConnection,
+                    spaceName: string,
+                    spaceFilter: SpaceFilterMessage,
+                    broadcastService: BroadcastService,
+                    playSound: boolean
+                ) => {
+                    return new TeamsBroadcastSpace(connection, spaceName, spaceFilter, broadcastService, playSound);
+                });
             }
         });
     }

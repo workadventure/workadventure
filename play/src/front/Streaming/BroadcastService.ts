@@ -9,7 +9,7 @@ import { BroadcastSpace } from "./Common/BroadcastSpace";
 import { BroadcastConnection } from "./Common/BroadcastConnection";
 import { TrackWrapper } from "./Common/TrackWrapper";
 
-export const jitsiLoadingStore = writable<boolean>(false);
+export const broadcastStreamLoadingStore = writable<boolean>(false);
 
 const broadcastServiceLogger = debug("BroadcastService");
 
@@ -69,7 +69,7 @@ export class BroadcastService {
             this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.space.name !== spaceNameSlugify);
             broadcastServiceLogger("leaveSpace", spaceNameSlugify);
         }
-        jitsiLoadingStore.set(false);
+        broadcastStreamLoadingStore.set(false);
         if (this.screenWakeRelease) {
             this.screenWakeRelease()
                 .then(() => {

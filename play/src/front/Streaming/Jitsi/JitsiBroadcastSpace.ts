@@ -8,14 +8,14 @@ import { RoomConnection } from "../../Connection/RoomConnection";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { Space } from "../../Space/Space";
 import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
-import { BroadcastService, jitsiLoadingStore } from "../BroadcastService";
+import { BroadcastService, broadcastStreamLoadingStore } from "../BroadcastService";
 import { BroadcastSpace } from "../Common/BroadcastSpace";
 import { JITSI_DOMAIN, JITSI_MUC_DOMAIN, JITSI_XMPP_DOMAIN } from "../../Enum/EnvironmentVariable";
 import { jitsiConferencesStore } from "./JitsiConferencesStore";
 import { JitsiConferenceWrapper } from "./JitsiConferenceWrapper";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 import { libJitsiFactory } from "./LibJitsiFactory";
-// eslint-disable-next-line import/no-unresolved
+import { BroadcastConnection } from "../Common/BroadcastConnection";
 
 const limit = pLimit(1);
 const jitsiBroadcastSpaceLogger = debug("JitsiBroadcastSpace");
@@ -44,9 +44,6 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
     ) {
         super();
         this.space = new Space(roomConnection, spaceName, spaceFilter);
-        this.roomConnection.emitUpdateSpaceMetadata(this.space.name, {
-            test: "test",
-        });
         this.jitsiTracks = new ForwardableStore<Map<string, JitsiTrackWrapper>>(new Map());
 
         // When the user leaves the space, we leave the Jitsi conference
@@ -63,17 +60,17 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                                 console.error(e);
                             })
                             .finally(() => {
-                                jitsiLoadingStore.set(false);
+                                broadcastStreamLoadingStore.set(false);
                                 broadcastService.checkIfCanDisconnect(this.provider);
                             });
                     }
                 } else {
                     limit(async () => {
                         if (this.conference === undefined) {
-                            jitsiLoadingStore.set(true);
+                            broadcastStreamLoadingStore.set(true);
                             this.conference = await this.joinJitsiConference(spaceName);
                             this.emitJitsiParticipantIdSpace(spaceName, this.conference.participantId);
-                            jitsiLoadingStore.set(false);
+                            broadcastStreamLoadingStore.set(false);
                         }
                     }).catch((e) => {
                         // TODO : Handle the error and retry to join the conference
@@ -84,6 +81,10 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         );
     }
 
+    private isJitsiConnection(connection: BroadcastConnection): connection is JitsiConnection {
+        return connection.hasOwnProperty("getJid") && connection.hasOwnProperty("initJitsiConference");
+    }
+
     async joinJitsiConference(roomName: string): Promise<JitsiConferenceWrapper> {
         if (!JITSI_DOMAIN || !JITSI_XMPP_DOMAIN || !JITSI_MUC_DOMAIN) {
             throw new Error("Cannot use Jitsi with a no domain defined, please check your environment variables");
@@ -91,7 +92,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
 
         let jitsiConnection = this.broadcastService.getBroadcastConnection(this.provider);
 
-        if (!jitsiConnection) {
+        if (!jitsiConnection || !this.isJitsiConnection(jitsiConnection)) {
             try {
                 jitsiConnection = await libJitsiFactory.createConnection(
                     JITSI_DOMAIN,
@@ -100,10 +101,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                 );
             } catch (e) {
                 jitsiBroadcastSpaceLogger("Error while connecting to Jitsi", e);
-            }
-
-            if (!jitsiConnection) {
-                jitsiLoadingStore.set(false);
+                broadcastStreamLoadingStore.set(false);
                 throw new Error("Could not connect to Jitsi");
             }
 
@@ -177,7 +175,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
             })
             .finally(() => {
                 this.broadcastService.checkIfCanDisconnect(this.provider);
-                jitsiLoadingStore.set(false);
+                broadcastStreamLoadingStore.set(false);
             });
         this.unsubscribes.forEach((unsubscribe) => unsubscribe());
         this.space.destroy();
