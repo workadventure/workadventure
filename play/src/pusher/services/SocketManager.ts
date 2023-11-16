@@ -324,7 +324,7 @@ export class SocketManager implements ZoneEventListener {
         client: Socket,
         spaceName: string,
         metadata: { [key: string]: unknown }
-    ): void {
+    ): Promise<void> {
         try {
             const backId = apiClientRepository.getIndex(spaceName);
             const spaceStreamToPusherPromise = this.spaceStreamsToPusher.get(backId);

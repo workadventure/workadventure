@@ -174,7 +174,7 @@ export class Space implements CustomJsonReplacerInterface {
 
     private notifyWatchers(watcher: SpacesWatcher, message: BackToPusherSpaceMessage) {
         for (const watcher_ of this.users.keys()) {
-            if (watcher_.id !== watcher.id || message.message.$case === "updateSpaceMetadataMessage") {
+            if (watcher_.id !== watcher.id || message.message?.$case === "updateSpaceMetadataMessage") {
                 watcher_.write(message);
             }
         }

@@ -10,7 +10,7 @@
     import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import { megaphoneEnabledStore } from "../../../Stores/MegaphoneStore";
     import Loading from "../../Video/Loading.svelte";
-    import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
+    import { broadcastStreamLoadingStore } from "../../../Streaming/BroadcastService";
 
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
@@ -99,7 +99,7 @@
         </div>
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div class="tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4">
-                {#if $jitsiLoadingStore}
+                {#if $broadcastStreamLoadingStore}
                     <Loading />
                 {/if}
                 {#if $streamableCollectionStore.size > 0}

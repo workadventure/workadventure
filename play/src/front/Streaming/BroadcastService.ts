@@ -42,6 +42,7 @@ export class BroadcastService {
         broadcastSpaceFactory?: BroadcastSpaceFactory
     ): BroadcastSpace {
         const spaceNameSlugify = slugify(spaceName);
+        // TODO: why is this not in the Space class?
         const spaceFilter = this.roomConnection.emitWatchSpaceLiveStreaming(spaceNameSlugify);
         const broadcastSpace = broadcastSpaceFactory
             ? broadcastSpaceFactory(this.roomConnection, spaceNameSlugify, spaceFilter, this, playSound)
