@@ -46,6 +46,10 @@ class FakeResponse {
     send(data: string) {
         this.lastSentData = data;
     }
+
+    atomic(cb: () => void) {
+        cb();
+    }
 }
 
 class FakeRequest {

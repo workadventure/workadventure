@@ -17,24 +17,35 @@ export class PrometheusController extends BaseHttpController {
 
     private async metrics(req: Request, res: Response): Promise<void> {
         if (!PROMETHEUS_AUTHORIZATION_TOKEN) {
-            res.status(501).send("Prometheus endpoint is disabled.");
+            res.atomic(() => {
+                res.status(501).send("Prometheus endpoint is disabled.");
+            });
             return;
         }
         const authorizationHeader = req.header("Authorization");
         if (!authorizationHeader) {
-            res.status(401).send("Undefined authorization header");
+            res.atomic(() => {
+                res.status(401).send("Undefined authorization header");
+            });
             return;
         }
         if (!authorizationHeader.startsWith("Bearer ")) {
-            res.status(401).send('Authorization header should start with "Bearer"');
+            res.atomic(() => {
+                res.status(401).send('Authorization header should start with "Bearer"');
+            });
             return;
         }
         if (authorizationHeader.substring(7) !== PROMETHEUS_AUTHORIZATION_TOKEN) {
-            res.status(401).send("Incorrect authorization header sent.");
+            res.atomic(() => {
+                res.status(401).send("Incorrect authorization header sent.");
+            });
             return;
         }
 
-        res.setHeader("Content-Type", register.contentType);
-        res.end(await register.metrics());
+        const metrics = await register.metrics();
+        res.atomic(() => {
+            res.setHeader("Content-Type", register.contentType);
+            res.end(metrics);
+        });
     }
 }
