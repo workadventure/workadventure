@@ -39,11 +39,14 @@ export class BroadcastService {
     public joinSpace(
         spaceName: string,
         playSound = true,
+        everybodyCanBroadcast = false,
         broadcastSpaceFactory?: BroadcastSpaceFactory
     ): BroadcastSpace {
         const spaceNameSlugify = slugify(spaceName);
         // TODO: why is this not in the Space class?
-        const spaceFilter = this.roomConnection.emitWatchSpaceLiveStreaming(spaceNameSlugify);
+        const spaceFilter = everybodyCanBroadcast
+            ? this.roomConnection.emitWatchSpaceMeeting(spaceNameSlugify)
+            : this.roomConnection.emitWatchSpaceLiveStreaming(spaceNameSlugify);
         const broadcastSpace = broadcastSpaceFactory
             ? broadcastSpaceFactory(this.roomConnection, spaceNameSlugify, spaceFilter, this, playSound)
             : this.defaultBroadcastSpaceFactory(this.roomConnection, spaceNameSlugify, spaceFilter, this, playSound);
@@ -65,7 +68,7 @@ export class BroadcastService {
         const spaceNameSlugify = slugify(spaceName);
         const space = this.broadcastSpaces.find((space) => space.space.name === spaceNameSlugify);
         if (space) {
-            this.roomConnection.emitUnwatchSpaceLiveStreaming(spaceNameSlugify);
+            this.roomConnection.emitUnwatchSpace(spaceNameSlugify);
             space.destroy();
             this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.space.name !== spaceNameSlugify);
             broadcastServiceLogger("leaveSpace", spaceNameSlugify);

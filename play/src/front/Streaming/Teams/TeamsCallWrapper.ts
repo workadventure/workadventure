@@ -17,6 +17,9 @@ export class TeamsCallWrapper {
      * @returns A promise that resolves when the call is hung up
      */
     public static async join(connection: TeamsConnection, space: Space, roomConnection: RoomConnection): Promise<TeamsCallWrapper> {
+        // Si vous voulez utiliser la graph api pour récupérer les infos de la réunion, il faut utiliser le token de l'utilisateur
+        // et ce endpoint: https://learn.microsoft.com/en-us/graph/api/application-post-onlinemeetings?view=graph-rest-1.0&tabs=http
+
         const meetingStatus = get(space.metadata).get("msTeamsMeetingStatus");
         let meetingId = get(space.metadata).get("msTeamsMeetingId");
 

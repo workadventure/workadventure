@@ -1454,7 +1454,28 @@ export class RoomConnection implements RoomConnection {
         return spaceFilter;
     }
 
-    public emitUnwatchSpaceLiveStreaming(spaceName: string) {
+    public emitWatchSpaceMeeting(spaceName: string) {
+        const spaceFilter: SpaceFilterMessage = {
+            filterName: "watchSpaceMeeting",
+            spaceName,
+            filter: {
+                $case: "spaceFilterEverybody",
+                spaceFilterEverybody: {},
+            },
+        };
+        this.send({
+            message: {
+                $case: "watchSpaceMessage",
+                watchSpaceMessage: WatchSpaceMessage.fromPartial({
+                    spaceName,
+                    spaceFilter,
+                }),
+            },
+        });
+        return spaceFilter;
+    }
+
+    public emitUnwatchSpace(spaceName: string) {
         this.send({
             message: {
                 $case: "unwatchSpaceMessage",
