@@ -81,7 +81,11 @@ export class GameManager {
 
     public setPlayerName(name: string): void {
         this.playerName = name;
-        localUserStore.setName(name);
+        // Only save the name if the user is not logged in
+        // If the user is logged in, the name will be fetched from the server. No need to save it locally.
+        if (!localUserStore.isLogged()) {
+            localUserStore.setName(name);
+        }
     }
 
     public setVisitCardUrl(visitCardUrl: string): void {

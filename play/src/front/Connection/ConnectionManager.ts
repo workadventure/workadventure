@@ -20,6 +20,7 @@ import { localUserStore } from "./LocalUserStore";
 import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels";
 import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
+import { hasCapability } from "./Capabilities";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -185,7 +186,7 @@ class ConnectionManager {
             //before set token of user we must load room and all information. For example the mandatory authentication could be require on current room
             this._currentRoom = await Room.createRoom(roomPathUrl);
 
-            //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
+            //Set last room visited! (connected or not, must be saved in localstorage and cache API)
             //use href to keep # value
             await localUserStore.setLastRoomUrl(roomPathUrl.href);
 
@@ -402,10 +403,14 @@ class ConnectionManager {
 
         const opidWokaNamePolicy = this.currentRoom?.opidWokaNamePolicy;
         if (username != undefined && opidWokaNamePolicy != undefined) {
-            if (opidWokaNamePolicy === "force_opid") {
+            if (hasCapability("api/save-name")) {
                 gameManager.setPlayerName(username);
-            } else if (opidWokaNamePolicy === "allow_override_opid" && localUserStore.getName() == undefined) {
-                gameManager.setPlayerName(username);
+            } else {
+                if (opidWokaNamePolicy === "force_opid") {
+                    gameManager.setPlayerName(username);
+                } else if (opidWokaNamePolicy === "allow_override_opid" && localUserStore.getName() == undefined) {
+                    gameManager.setPlayerName(username);
+                }
             }
         }
 
@@ -439,6 +444,23 @@ class ConnectionManager {
         //user connected, set connected store for menu at true
         if (localUserStore.isLogged()) {
             userIsConnected.set(true);
+        }
+    }
+
+    async saveName(name: string): Promise<void> {
+        if (this.authToken !== undefined) {
+            await axiosToPusher.post(
+                "save-name",
+                {
+                    name,
+                    roomUrl: this.currentRoom?.key,
+                },
+                {
+                    headers: {
+                        Authorization: this.authToken,
+                    },
+                }
+            );
         }
     }
 

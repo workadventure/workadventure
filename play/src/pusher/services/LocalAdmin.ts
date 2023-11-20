@@ -1,6 +1,6 @@
 import path from "path";
 import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
-import { OpidWokaNamePolicy } from "@workadventure/messages";
+import { Capabilities, OpidWokaNamePolicy } from "@workadventure/messages";
 import axios from "axios";
 import { MapsCacheFileFormat } from "@workadventure/map-editor";
 import {
@@ -229,6 +229,18 @@ class LocalAdmin implements AdminInterface {
 
     getTagsList(roomUrl: string): Promise<string[]> {
         return Promise.reject(new Error("No admin backoffice set!"));
+    }
+
+    saveName(userIdentifier: string, name: string, roomUrl: string): Promise<void> {
+        // Nothing to do, we don't have any database locally.
+        return Promise.resolve();
+    }
+
+    public getCapabilities(): Promise<Capabilities> {
+        return Promise.resolve({
+            "api/woka/list": "v1",
+            "api/companion/list": "v1",
+        });
     }
 }
 

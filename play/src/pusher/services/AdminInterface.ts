@@ -1,4 +1,5 @@
 import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
+import { Capabilities } from "@workadventure/messages";
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { ShortMapDescriptionList } from "./ShortMapDescription";
 
@@ -101,4 +102,11 @@ export interface AdminInterface {
     ): Promise<boolean>;
 
     getTagsList(roomUrl: string): Promise<string[]>;
+
+    /**
+     * Saves the name of the user in the (admin) database
+     */
+    saveName(userIdentifier: string, name: string, roomUrl: string): Promise<void>;
+
+    getCapabilities(): Promise<Capabilities>;
 }

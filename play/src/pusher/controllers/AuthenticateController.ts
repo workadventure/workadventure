@@ -10,7 +10,6 @@ import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
 import { adminService } from "../services/AdminService";
 import { validateQuery } from "../services/QueryValidator";
 import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService";
-import { adminApi } from "../services/AdminApi";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class AuthenticateController extends BaseHttpController {
@@ -101,7 +100,7 @@ export class AuthenticateController extends BaseHttpController {
             }
 
             // Let's validate the playUri (we don't want a hacker to forge a URL that will redirect to a malicious URL)
-            const verifyDomainService_ = VerifyDomainService.get(adminApi.getCapabilities());
+            const verifyDomainService_ = VerifyDomainService.get(await adminService.getCapabilities());
             const verifyDomainResult = await verifyDomainService_.verifyDomain(query.playUri);
             if (!verifyDomainResult) {
                 res.status(403);

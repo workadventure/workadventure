@@ -15,6 +15,7 @@ import {
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
 import * as Sentry from "@sentry/node";
+import { Deferred } from "ts-deferred";
 import {
     ADMIN_API_RETRY_DELAY,
     ADMIN_API_TOKEN,
@@ -92,6 +93,7 @@ export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUu
 
 class AdminApi implements AdminInterface {
     private capabilities: Capabilities = {};
+    private capabilitiesDeferred = new Deferred<Capabilities>();
 
     /**
      * Checks whether admin api is enabled
@@ -111,6 +113,7 @@ class AdminApi implements AdminInterface {
         const queryCapabilities = async (resolve: (_v: unknown) => void): Promise<void> => {
             try {
                 this.capabilities = await this.fetchCapabilities();
+                this.capabilitiesDeferred.resolve(this.capabilities);
                 console.info(`Capabilities query successful. Found capabilities: ${JSON.stringify(this.capabilities)}`);
                 resolve(0);
             } catch (ex) {
@@ -121,6 +124,7 @@ class AdminApi implements AdminInterface {
                     this.capabilities = {
                         "api/woka/list": "v1",
                     };
+                    this.capabilitiesDeferred.resolve(this.capabilities);
 
                     resolve(0);
                     console.warn(`Admin API server does not implement capabilities, default to basic capabilities`);
@@ -137,12 +141,12 @@ class AdminApi implements AdminInterface {
                 warnIssued = true;
 
                 setTimeout(() => {
-                    void queryCapabilities(resolve);
+                    queryCapabilities(resolve).catch((e) => console.error(e));
                 }, ADMIN_API_RETRY_DELAY);
             }
         };
         await new Promise((resolve) => {
-            void queryCapabilities(resolve);
+            queryCapabilities(resolve).catch((e) => console.error(e));
         });
         console.info(`Remote admin api connection successful at ${ADMIN_API_URL}`);
         return this.capabilities;
@@ -656,15 +660,103 @@ class AdminApi implements AdminInterface {
         }
     }
 
-    public getCapabilities(): Capabilities {
-        return this.capabilities;
+    public getCapabilities(): Promise<Capabilities> {
+        return this.capabilitiesDeferred.promise;
     }
 
     async getTagsList(roomUrl: string) {
+        /**
+         * @openapi
+         * /api/room/tags:
+         *   get:
+         *     tags: ["AdminAPI"]
+         *     description: Returns the list of all tags used somewhere in the room (for autocomplete purpose)
+         *     security:
+         *      - Bearer: []
+         *     produces:
+         *      - "application/json"
+         *     parameters:
+         *      - name: "roomUrl"
+         *        in: "query"
+         *        description: "The URL of the room"
+         *        type: "string"
+         *        required: true
+         *        example: "https://play.workadventu.re/@/teamSlug/worldSlug/roomSlug"
+         *     responses:
+         *       200:
+         *         description: The list of tags used in the room
+         *         schema:
+         *             type: array
+         *             items:
+         *                 type: string
+         */
         const response = await axios.get(ADMIN_API_URL + "/api/room/tags" + "?roomUrl=" + encodeURIComponent(roomUrl), {
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
         });
         return response.data ? response.data : [];
+    }
+
+    async saveName(userIdentifier: string, name: string, roomUrl: string): Promise<void> {
+        if (this.capabilities["api/save-name"] === undefined) {
+            // Save-name is not implemented in admin. Do nothing.
+            return;
+        }
+
+        /**
+         * @openapi
+         * /api/save-name:
+         *   post:
+         *     tags: ["AdminAPI"]
+         *     description: Saves the name of the Woka on the admin side.
+         *     security:
+         *      - Bearer: []
+         *     requestBody:
+         *       required: true
+         *       content:
+         *         application/json:
+         *           schema:
+         *             type: "object"
+         *             properties:
+         *               roomUrl:
+         *                 type: string
+         *                 required: true
+         *                 description: The URL of the room
+         *                 example: "https://play.workadventu.re/@/teamSlug/worldSlug/roomSlug"
+         *               name:
+         *                 type: string
+         *                 required: true
+         *                 description: The new name for the Woka
+         *                 example: "Alice"
+         *               userIdentifier:
+         *                 type: string
+         *                 required: true
+         *                 description: "It can be an uuid or an email"
+         *                 example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
+         *     responses:
+         *       204:
+         *         description: Save succeeded
+         *       404:
+         *         description: User or room not found
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiErrorData'
+         */
+        const response = await axios.post<unknown>(
+            ADMIN_API_URL + "/api/save-name",
+            {
+                playUri: roomUrl,
+                userIdentifier,
+                name,
+            },
+            {
+                headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            }
+        );
+        if (response.status !== 204) {
+            throw new Error(
+                "Error while saving name. Got unexpected status code. Expected 204, got " + response.status
+            );
+        }
+        return;
     }
 }
 
