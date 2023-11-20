@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { Color } from "@workadventure/shared-utils";
+    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import {
         cameraEnergySavingStore,
         localVolumeStore,
@@ -34,6 +35,10 @@
     });
 
     let cameraContainer: HTMLDivElement;
+    let isMobile = isMediaBreakpointUp("md");
+    const resizeObserver = new ResizeObserver(() => {
+        isMobile = isMediaBreakpointUp("md");
+    });
 
     export let small = false;
 
@@ -53,6 +58,7 @@
                 cameraContainer.style.visibility = "visible";
             }
         });
+        resizeObserver.observe(cameraContainer);
     });
 </script>
 
@@ -101,6 +107,9 @@
                 </div>
                 <video
                     class="h-full w-full rounded md:object-cover relative z-20"
+                    class:object-contain={stream}
+                    class:tw-max-h-[230px]={stream}
+                    style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay
                     muted

@@ -242,27 +242,23 @@
             <div class="rtc-error" ></div>
         {/if}
         <!-- svelte-ignore a11y-media-has-caption -->
-        <div
-                on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
-                class="relative group/cam cursor-zoom-in rounded-lg overflow-hidden"
-        >
-            <video
-                    bind:this={videoElement}
-                    class:h-0={!videoEnabled}
-                    class:w-0={!videoEnabled}
-                    class:object-contain={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
-                    class:h-full={videoEnabled}
-                    class:max-w-full={videoEnabled}
-                    class:rounded={videoEnabled}
-                    autoplay
-                    playsinline
-                    class="h-full w-full rounded md:object-cover relative z-20"
-            ></video>
-            <div class="absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/cam:opacity-100 pointer-events-none">
-                <FullScreenIcon />
-            </div>
-        </div>
-        {#if displayNoVideoWarning}
+        <video
+            bind:this={videoElement}
+            class:tw-h-0={!videoEnabled}
+            class:tw-w-0={!videoEnabled}
+            class:object-contain={minimized || isHightlighted}
+            class:tw-max-h-[230px]={videoEnabled && !isHightlighted}
+            class:tw-max-h-[80vh]={videoEnabled && isHightlighted}
+            class:tw-h-full={videoEnabled}
+            class:tw-rounded={videoEnabled}
+            style={$embedScreenLayoutStore === LayoutMode.Presentation ? `border: solid 2px ${backGroundColor}` : ""}
+            autoplay
+            playsinline
+            class="h-full w-full rounded md:object-cover relative z-20"
+        />
+
+        {#if videoEnabled}
+            {#if displayNoVideoWarning}
                 <div
                     class="tw-flex media-box-camera-on-size tw-absolute tw-justify-center tw-items-center tw-bg-danger/50 tw-text-white"
                 >

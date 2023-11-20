@@ -3,15 +3,16 @@
     import { Color } from "@workadventure/shared-utils";
     import { Readable } from "svelte/store";
     import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
+    import { onMount } from "svelte";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
+    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import UserTag from "./UserTag.svelte";
     import JitsiVideoElement from "./JitsiVideoElement.svelte";
     import JitsiAudioElement from "./JitsiAudioElement.svelte";
@@ -37,28 +38,30 @@
         };
     }
 
+    let jitsiMediaBoxHtml: HTMLDivElement;
+    let isMobileFormat = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
-        //minimized = isMediaBreakpointOnly("md");
-        isMobile = isMediaBreakpointUp("md");
+        isMobileFormat = isMediaBreakpointUp("md");
     });
 
     onMount(() => {
-        resizeObserver.observe(videoContainer);
+        resizeObserver.observe(jitsiMediaBoxHtml);
     });
 </script>
 
 <div
     id="container"
     class="jitsi-video"
-    bind:this={videoContainer}
+    bind:this={jitsiMediaBoxHtml}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     {#if $videoTrackStore}
         <div class="rounded-sm overflow-hidden flex w-full flex-col h-full">
             <JitsiVideoElement
                 jitsiTrack={$videoTrackStore}
-                isMobile={isMobile || $embedScreenLayoutStore === LayoutMode.VideoChat}
                 isLocal={$videoTrackStore?.isLocal()}
+                {isHightlighted}
+                {isMobileFormat}
             />
         </div>
     {/if}

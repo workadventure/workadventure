@@ -49,7 +49,6 @@
     });
 
     onMount(() => {
-        console.log("PresentationLayout");
         resizeObserver.observe(layoutDom);
     });
 </script>
@@ -124,6 +123,25 @@
                 {/if}
             </div>
         </div>
+        {#if $streamableCollectionStore.size > 0 || $myCameraStore}
+            <div
+                class="relative self-end z-[300] bottom-6 md:bottom-4 max-w-[25%] w-full"
+                class:w-[10%]={$highlightedEmbedScreen != undefined}
+            >
+                {#if $jitsiLoadingStore}
+                    <Loading />
+                {/if}
+                {#if $streamableCollectionStore.size > 0}
+                    <CamerasContainer highlightedEmbedScreen={$highlightedEmbedScreen} />
+                {/if}
+                {#if $myCameraStore && !$megaphoneEnabledStore}
+                    <MyCamera />
+                {/if}
+                {#if $myJitsiCameraStore}
+                    <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
+                {/if}
+            </div>
+        {/if}
     {/if}
 </div>
 
