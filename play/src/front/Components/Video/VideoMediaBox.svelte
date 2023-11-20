@@ -133,10 +133,11 @@
                 if ("requestVideoFrameCallback" in videoElement) {
                     // Let's wait 3 seconds before displaying a warning.
                     noVideoTimeout = setTimeout(() => {
-                        displayNoVideoWarning = true;
-                        noVideoTimeout = undefined;
-                        analyticsClient.noVideoStreamReceived();
-                    }, 3000);
+                            displayNoVideoWarning = true;
+                            noVideoTimeout = undefined;
+                            analyticsClient.noVideoStreamReceived();
+                        },
+                        3000);
 
                     videoElement.requestVideoFrameCallback(() => {
                         // A video frame was displayed. No need to display a warning.
@@ -312,31 +313,32 @@
                     </div>
                 </div>
             </div>
-        {#if videoEnabled}
-            <div class="z-[251] absolute aspect-ratio right-4 w-8 bottom-5 p-1 flex items-center justify-center">
-            {#if $constraintStore && $constraintStore.audio !== false}
-                <SoundMeterWidget volume={$volumeStore} classcss="absolute" barColor="blue" />
+            {#if videoEnabled}
+                <div class="z-[251] absolute aspect-ratio right-4 w-8 bottom-5 p-1 flex items-center justify-center">
+                    {#if $constraintStore && $constraintStore.audio !== false}
+                        <SoundMeterWidget volume={$volumeStore} classcss="absolute" barColor="blue" />
+                    {:else}
+                        <div transition:fly={{delay: 100, y: 50, duration: 150 }}>
+                            <MicOffIcon />
+                        </div>
+                    {/if}
+                </div>
             {:else}
-                <div transition:fly={{delay: 100, y: 50, duration: 150 }}>
-                    <MicOffIcon />
+                {#if $constraintStore && $constraintStore.audio !== false}
+                    <SoundMeterWidget
+                        volume={$volumeStore}
+                        classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
+                        barColor={textColor}
+                    />
+                {:else}
+                    <div transition:fly={{delay: 100, y: 50, duration: 150 }}>
+                        <MicOffIcon />
+                    </div>
+                {/if}
+                <div class="w-full flex report-ban-container-cam-off opacity-0 h-10">
+                    <BanReportBox {peer} />
                 </div>
             {/if}
-            </div>
-        {:else}
-            {#if $constraintStore && $constraintStore.audio !== false}
-                <SoundMeterWidget
-                    volume={$volumeStore}
-                    classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
-                    barColor={textColor}
-                />
-            {:else}
-                <div transition:fly={{delay: 100, y: 50, duration: 150 }}>
-                    <MicOffIcon />
-                </div>
-            {/if}
-            <div class="w-full flex report-ban-container-cam-off opacity-0 h-10">
-                <BanReportBox {peer} />
-            </div>
         {/if}
     </div>
 </div>

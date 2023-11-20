@@ -53,7 +53,7 @@
         <LoginScene {game} />
     </div>
 {:else if $selectCharacterSceneVisibleStore}
-    <div class="bg-contrast">
+    <div>
         <SelectCharacterScene {game} />
     </div>
 {:else if $selectCompanionSceneVisibleStore}
