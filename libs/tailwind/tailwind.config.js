@@ -28,6 +28,9 @@ module.exports = {
 
         // END OLD DEPRECATED COLORS
       },
+      zIndex: {
+
+      },
       minHeight: {
         10: "2.5rem",
       },
@@ -56,5 +59,10 @@ module.exports = {
       },
     },
   },
-  plugins: [require("@tailwindcss/forms"), require("@workadventure/design-system")],
+  plugins: [
+    require('@tailwindcss/container-queries'),
+    require("@tailwindcss/forms"),
+    require("@workadventure/design-system")
+  ],
+
 };

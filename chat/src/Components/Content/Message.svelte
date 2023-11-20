@@ -305,7 +305,7 @@
                 {/if}
                 <!-- Delete message -->
                 {#if $deletedMessagesStore.has(message.id)}
-                    <div class="wa-message-body rounded-lg px-3 py-1 inline-block leading-6 min-w-[7rem] max-h-80 overflow-hidden relative before:absolute before:content-[''] before:z-10 before:top-64 before:left-0 before:h-16 before:w-full before:bg-gradient-to-t after:content-['Read_more...'] after:absolute after:left-0 after:top-[18.5rem] after:w-full after:h-10 after:cursor-pointer after:text-center after:underline after:z-20 after:text-xs after:mt-6px after:border after:border-l-0 after:border-b-0 after:border-t after:border-solid after:border-white/20 bg-contrast/30">
+                    <div class="wa-message-body break-all rounded-lg px-3 py-1 inline-block leading-6 min-w-[7rem] max-h-80 overflow-hidden relative before:absolute before:content-[''] before:z-10 before:top-64 before:left-0 before:h-16 before:w-full before:bg-gradient-to-t after:content-['Read_more...'] after:absolute after:left-0 after:top-[18.5rem] after:w-full after:h-10 after:cursor-pointer after:text-center after:underline after:z-20 after:text-xs after:mt-6px after:border after:border-l-0 after:border-b-0 after:border-t after:border-solid after:border-white/20 bg-contrast/30">
                         <p class="italic text-sm opacity-60">
                             {#if JID.toBare(message.jid) === $deletedMessagesStore.get(message.id)}
                                 {#if isMe}
@@ -321,7 +321,7 @@
 
                     <!-- Message -->
                 {:else}
-                    <div class="wa-message-body rounded-lg px-4 py-2 inline-block leading-6 min-w-[7rem] max-h-80 overflow-hidden relative before:absolute before:content-[''] before:z-10 before:top-64 before:left-0 before:h-16 before:w-full before:bg-gradient-to-t after:content-['Read_more...'] after:absolute after:left-0 after:top-[18.5rem] after:w-full after:h-10 after:cursor-pointer after:text-center after:underline after:z-20 after:text-xs after:mt-6px after:border after:border-l-0 after:border-b-0 after:border-t after:border-solid after:border-white/20 z-20 group-[.right]:bg-secondary group-[.right]:from-secondary group-[.right]:text-left group-[.right]:before:from-secondary group-[.right]:before:via-secondary group-[.left]:bg-contrast group-[.left]:before:from-contrast group-[.left]:before:via-contrast">
+                    <div class="wa-message-body break-all rounded-lg px-4 py-2 inline-block leading-6 min-w-[7rem] max-h-80 overflow-hidden relative before:absolute before:content-[''] before:z-10 before:top-64 before:left-0 before:h-16 before:w-full before:bg-gradient-to-t after:content-['Read_more...'] after:absolute after:left-0 after:top-[18.5rem] after:w-full after:h-10 after:cursor-pointer after:text-center after:underline after:z-20 after:text-xs after:mt-6px after:border after:border-l-0 after:border-b-0 after:border-t after:border-solid after:border-white/20 z-20 group-[.right]:bg-secondary group-[.right]:from-secondary group-[.right]:text-left group-[.right]:before:from-secondary group-[.right]:before:via-secondary group-[.left]:bg-contrast group-[.left]:before:from-contrast group-[.left]:before:via-contrast">
                         <!-- Body associated -->
                         <div class="text-ellipsis overflow-y-auto whitespace-normal">
                             {#if html}

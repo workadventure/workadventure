@@ -162,7 +162,7 @@
 <svelte:window on:keydown={onKeyDown} on:click={onClick} />
 
 <aside class="chatWindow h-full text-white relative after:content-[''] after:absolute after:w-[1px] after:h-full after:right-0 after:top-0 after:bg-white/30 after:z-50" bind:this={chatWindowElement}>
-    <section class="p-0 m-0 h-full">
+    <section class="p-0 m-0 h-full overflow-x-hidden">
         {#if $showPart === "activeTimeline"}
             <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => timelineActiveStore.set(false)} />
         {:else if $showPart === "activeThread" && !["connectionNotAuthorized", "loading"].includes($showPart)}
@@ -170,7 +170,7 @@
                 <ChatActiveThread activeThread={$activeThreadStore} />
             {/if}
         {:else if ["home", "connectionNotAuthorized", "loading"].includes($showPart)}
-            <div class="flex flex-col items-stretch h-screen {ENABLE_OPENID && $enableChat ? 'pb-24' : ''}">
+            <div class="flex flex-col items-stretch h-screen {ENABLE_OPENID && $enableChat ? '' : ''}">
                 {#if $showPart === "connectionNotAuthorized"}
                     <NeedRefresh />
                 {:else if $showPart === "loading"}
@@ -235,8 +235,8 @@
                     <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
                 {/if}
                 {#if ENABLE_OPENID && $enableChat}
-                    <div class="">
-                        <div class="p-3 text-sm bg-secondary rounded bottom-4 absolute w-full left-0 right-0 m-auto flex items-center pl-6 pr-3">
+                    <div class="relative flex-none order-last bg-contrast/80 p-4">
+                        <div class="p-3 text-sm bg-secondary rounded w-full left-0 right-0 m-auto flex items-center pl-6 pr-3">
                             <div class="text-sm italic grow pr-2 leading-5">{$LL.signIn()}</div>
                             <button type="button" class="m-auto btn btn-sm btn-light cursor-pointer whitespace-nowrap !text-secondary !bold" on:click={login}>
                                 {$LL.logIn()}

@@ -216,7 +216,7 @@
     style={`max-height: calc( 100vh - 6rem - ${formHeight - 7}px );`}
 >
     <div
-        class="wa-messages-list flex flex-col flex-auto px-5 pt-24 pb-16 justify-end h-auto min-h-screen relative z-10"
+        class="wa-messages-list flex flex-col flex-auto px-5 pt-24 pb-16 justify-end h-auto min-h-screen relative z-10 overflow-x-hidden"
     >
         <div class="mb-auto load-history flex items-center pb-2">
             {#if $canLoadOlderMessagesStore}

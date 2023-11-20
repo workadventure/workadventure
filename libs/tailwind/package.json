@@ -15,6 +15,7 @@
     "@fontsource/press-start-2p": "^4.3.0",
     "@fontsource/roboto": "^4.5.8",
     "@fontsource/roboto-condensed": "^4.5.9",
+    "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/forms": "^0.5.0",
     "@workadventure/design-system": "^1.0.1",
     "postcss": "^8.4.14",

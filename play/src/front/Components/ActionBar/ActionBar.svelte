@@ -413,7 +413,10 @@
     }
 </script>
 <svelte:window on:keydown={onKeyDown} />
-<div class="grid grid-cols-3 justify-items-stretch absolute top-0 w-full p-4 pointer-events-none bp-menu">
+{#if !$chatVisibilityStore}
+    <ChatOverlay />
+{/if}
+<div class="grid grid-cols-3 justify-items-stretch absolute top-0 w-full p-4 pointer-events-none bp-menu z-[301]">
     <div class="justify-self-start pointer-events-auto" transition:fly={{delay: 500, y: -200, duration: 750 }}>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
@@ -424,6 +427,7 @@
             <div
                     class="group/btn-chat relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square"
                     on:click={() =>analyticsClient.openedChat()}
+                    on:click={toggleChat}
                     on:mouseenter={() => { !navigating ? helpActive = "chat" : '' }}
                     on:mouseleave={() => { !navigating ? helpActive = false : '' }}
             >
@@ -459,9 +463,6 @@
                 {/if}
             </div>
         </div>
-        {#if !$chatVisibilityStore}
-            <ChatOverlay />
-        {/if}
     </div>
     <div class="justify-self-center pointer-events-auto">
         <div class="flex relative">
@@ -478,9 +479,9 @@
                         <div
                                 class="h-12 w-12 rounded aspect-square flex items-center justify-center transition-all {$emoteMenuSubStore ? 'bg-secondary group-hover/bg-secondary-600' : ' group-hover/btn-emoji:bg-white/10'}"
                         >
-                            <EmojiIcon />
+                            <EmojiIcon color="{$emoteMenuSubStore ? 'stroke-white fill-white group-hover/btn-emoji:fill-transparent' : 'stroke-white fill-transparent group-hover/btn-emoji:fill-white'}" />
                         </div>
-                        {#if helpActive === "emoji" || !emoteMenuSubStore}
+                        {#if helpActive === "emoji" && !$emoteMenuSubStore}
                             <HelpTooltip title="Display an emoji above your Woka" />
                         {/if}
                         {#if $emoteMenuSubStore}
