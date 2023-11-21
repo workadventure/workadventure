@@ -108,5 +108,9 @@ export interface AdminInterface {
      */
     saveName(userIdentifier: string, name: string, roomUrl: string): Promise<void>;
 
+    saveTextures(userIdentifier: string, textures: string[], roomUrl: string): Promise<void>;
+
+    saveCompanionTexture(userIdentifier: string, texture: string, roomUrl: string): Promise<void>;
+
     getCapabilities(): Promise<Capabilities>;
 }

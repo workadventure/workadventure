@@ -1,5 +1,11 @@
 import path from "path";
-import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
+import type {
+    MapDetailsData,
+    RoomRedirect,
+    AdminApiData,
+    ErrorApiData,
+    CompanionDetail,
+} from "@workadventure/messages";
 import { Capabilities, OpidWokaNamePolicy } from "@workadventure/messages";
 import axios from "axios";
 import { MapsCacheFileFormat } from "@workadventure/map-editor";
@@ -59,16 +65,34 @@ class LocalAdmin implements AdminInterface {
         if (ENABLE_CHAT) {
             mucRooms.push({ name: "Welcome", url: `${playUri}/forum/welcome`, type: "forum", subscribe: false });
         }
+
+        let isCharacterTexturesValid = true;
+
+        const characterTextures = await localWokaService.fetchWokaDetails(characterTextureIds);
+        if (characterTextures === undefined) {
+            isCharacterTexturesValid = false;
+        }
+
+        let isCompanionTextureValid = true;
+        let companionTexture: CompanionDetail | undefined = undefined;
+        if (companionTextureId) {
+            companionTexture = await localCompanionService.fetchCompanionDetails(companionTextureId);
+            if (companionTexture === undefined) {
+                isCompanionTextureValid = false;
+            }
+        }
+
         return {
+            status: "ok",
             email: userIdentifier,
             userUuid: userIdentifier,
             tags: [],
             messages: [],
             visitCardUrl: null,
-            characterTextures: (await localWokaService.fetchWokaDetails(characterTextureIds)) ?? [],
-            companionTexture: companionTextureId
-                ? await localCompanionService.fetchCompanionDetails(companionTextureId)
-                : undefined,
+            isCharacterTexturesValid,
+            characterTextures: characterTextures ?? [],
+            isCompanionTextureValid,
+            companionTexture,
             userRoomToken: undefined,
             mucRooms,
             activatedInviteUser: true,
@@ -106,6 +130,7 @@ class LocalAdmin implements AdminInterface {
             match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
             if (!match) {
                 return Promise.resolve({
+                    status: "error",
                     type: "error",
                     code: "UNSUPPORTED_URL_FORMAT",
                     title: "Unsupported URL format",
@@ -232,8 +257,15 @@ class LocalAdmin implements AdminInterface {
     }
 
     saveName(userIdentifier: string, name: string, roomUrl: string): Promise<void> {
-        // Nothing to do, we don't have any database locally.
-        return Promise.resolve();
+        return Promise.reject(new Error("No admin backoffice set!"));
+    }
+
+    saveTextures(userIdentifier: string, textures: string[], roomUrl: string): Promise<void> {
+        return Promise.reject(new Error("No admin backoffice set!"));
+    }
+
+    saveCompanionTexture(userIdentifier: string, texture: string, roomUrl: string): Promise<void> {
+        return Promise.reject(new Error("No admin backoffice set!"));
     }
 
     public getCapabilities(): Promise<Capabilities> {

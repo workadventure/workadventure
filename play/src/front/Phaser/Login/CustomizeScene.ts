@@ -19,6 +19,7 @@ import type { IconButtonConfig } from "../Components/Ui/IconButton";
 import { IconButton, IconButtonEvent } from "../Components/Ui/IconButton";
 import { selectCharacterCustomizeSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
+import { connectionManager } from "../../Connection/ConnectionManager";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { EnableCameraSceneName } from "./EnableCameraScene";
@@ -161,6 +162,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         analyticsClient.validationWoka("CustomizeWoka");
 
         gameManager.setCharacterTextureIds(layers);
+        connectionManager.saveTextures(layers).catch((e) => console.error(e));
         this.scene.stop(CustomizeSceneName);
         gameManager.tryResumingGame(EnableCameraSceneName);
     }

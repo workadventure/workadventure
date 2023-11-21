@@ -41,14 +41,12 @@ type UpgradeFailedInvalidData = {
     rejected: true;
     reason: "tokenInvalid" | "invalidVersion" | null;
     message: string;
-    status: number;
     roomId: string;
 };
 
 type UpgradeFailedErrorData = {
     rejected: true;
     reason: "error";
-    status: number;
     error: ErrorApiData;
 };
 
@@ -293,8 +291,8 @@ export class IoSocketController {
                                 {
                                     rejected: true,
                                     reason: "error",
-                                    status: 419,
                                     error: {
+                                        status: "error",
                                         type: "retry",
                                         title: "Please refresh",
                                         subtitle: "New version available",
@@ -332,11 +330,14 @@ export class IoSocketController {
                         let memberVisitCardUrl: string | null = null;
                         let memberUserRoomToken: string | undefined;
                         let userData: FetchMemberDataByUuidResponse = {
+                            status: "ok",
                             email: userIdentifier,
                             userUuid: userIdentifier,
                             tags: [],
                             visitCardUrl: null,
+                            isCharacterTexturesValid: true,
                             characterTextures: [],
+                            isCompanionTextureValid: true,
                             companionTexture: undefined,
                             messages: [],
                             anonymous: true,
@@ -362,57 +363,72 @@ export class IoSocketController {
                                     companionTextureId,
                                     locale
                                 );
+
+                                if (userData.status === "ok" && !userData.isCharacterTexturesValid) {
+                                    return res.upgrade(
+                                        {
+                                            rejected: true,
+                                            reason: "invalidTexture",
+                                            entityType: "character",
+                                        } satisfies UpgradeFailedInvalidTexture,
+                                        websocketKey,
+                                        websocketProtocol,
+                                        websocketExtensions,
+                                        context
+                                    );
+                                }
+                                if (userData.status === "ok" && !userData.isCompanionTextureValid) {
+                                    return res.upgrade(
+                                        {
+                                            rejected: true,
+                                            reason: "invalidTexture",
+                                            entityType: "companion",
+                                        } satisfies UpgradeFailedInvalidTexture,
+                                        websocketKey,
+                                        websocketProtocol,
+                                        websocketExtensions,
+                                        context
+                                    );
+                                }
+
+                                if (userData.status !== "ok") {
+                                    if (upgradeAborted.aborted) {
+                                        // If the response points to nowhere, don't attempt an upgrade
+                                        return;
+                                    }
+
+                                    return res.upgrade(
+                                        {
+                                            rejected: true,
+                                            reason: "error",
+                                            error: userData,
+                                        } satisfies UpgradeFailedData,
+                                        websocketKey,
+                                        websocketProtocol,
+                                        websocketExtensions,
+                                        context
+                                    );
+                                }
                             } catch (err) {
                                 if (isAxiosError(err)) {
-                                    const errorType = ErrorApiData.safeParse(err?.response?.data);
-                                    if (errorType.success) {
-                                        if (upgradeAborted.aborted) {
-                                            // If the response points to nowhere, don't attempt an upgrade
-                                            return;
-                                        }
-
-                                        Sentry.captureException(
-                                            `Axios error on room connection ${err?.response?.status} ${errorType.data}`
-                                        );
-                                        console.error(
-                                            "Axios error on room connection",
-                                            err?.response?.status,
-                                            errorType.data
-                                        );
-
-                                        return res.upgrade(
-                                            {
-                                                rejected: true,
-                                                reason: "error",
-                                                status: err?.response?.status || 500,
-                                                error: errorType.data,
-                                            } satisfies UpgradeFailedData,
-                                            websocketKey,
-                                            websocketProtocol,
-                                            websocketExtensions,
-                                            context
-                                        );
-                                    } else {
-                                        Sentry.captureException(`Unknown error on room connection ${err}`);
-                                        console.error("Unknown error on room connection", err);
-                                        if (upgradeAborted.aborted) {
-                                            // If the response points to nowhere, don't attempt an upgrade
-                                            return;
-                                        }
-                                        return res.upgrade(
-                                            {
-                                                rejected: true,
-                                                reason: null,
-                                                status: 500,
-                                                message: err?.response?.data,
-                                                roomId: roomId,
-                                            } satisfies UpgradeFailedData,
-                                            websocketKey,
-                                            websocketProtocol,
-                                            websocketExtensions,
-                                            context
-                                        );
+                                    Sentry.captureException(`Unknown error on room connection ${err}`);
+                                    console.error("Unknown error on room connection", err);
+                                    if (upgradeAborted.aborted) {
+                                        // If the response points to nowhere, don't attempt an upgrade
+                                        return;
                                     }
+                                    return res.upgrade(
+                                        {
+                                            rejected: true,
+                                            reason: null,
+                                            message: err?.response?.data,
+                                            roomId: roomId,
+                                        } satisfies UpgradeFailedData,
+                                        websocketKey,
+                                        websocketProtocol,
+                                        websocketExtensions,
+                                        context
+                                    );
                                 }
                                 throw err;
                             }
@@ -581,7 +597,6 @@ export class IoSocketController {
                                 {
                                     rejected: true,
                                     reason: e instanceof JsonWebTokenError ? tokenInvalidException : null,
-                                    status: 401,
                                     message: e.message,
                                     roomId,
                                 } satisfies UpgradeFailedData,
@@ -600,7 +615,6 @@ export class IoSocketController {
                                     rejected: true,
                                     reason: null,
                                     message: "500 Internal Server Error",
-                                    status: 500,
                                     roomId,
                                 } satisfies UpgradeFailedData,
                                 websocketKey,

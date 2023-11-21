@@ -94,7 +94,11 @@ export class GameManager {
 
     public setCharacterTextureIds(textureIds: string[]): void {
         this.characterTextureIds = textureIds;
-        localUserStore.setCharacterTextures(textureIds);
+        // Only save the textures if the user is not logged in
+        // If the user is logged in, the textures will be fetched from the server. No need to save them locally.
+        if (!localUserStore.isLogged()) {
+            localUserStore.setCharacterTextures(textureIds);
+        }
     }
 
     getPlayerName(): string | null {
