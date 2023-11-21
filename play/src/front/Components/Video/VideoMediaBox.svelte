@@ -32,6 +32,7 @@
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
 
     export let clickable = false;
+    export let isHightlighted = false;
 
     export let peer: VideoPeer;
     let streamStore = peer.streamStore;
@@ -282,30 +283,30 @@
                         </div>
                         {name}
                         <div class="p-1 rounded-sm hover:bg-white/20 absolute right-0 top-0 bottom-0 m-auto h-6 w-6 mr-1 transition-all {showUserSubMenu ? 'bg-white/20 hover:bg-white/30' : '' }"  on:click={() => showUserSubMenu = !showUserSubMenu}>
-                            <ChevronDownIcon strokeWidth="2.5" classList="h-4 w-4 aspect-ratio transition-all {showUserSubMenu ? 'rotate-180' : '' }"  />
+                            <ChevronDownIcon strokeWidth="2.5" height="h-4" width="w-4" classList="aspect-ratio transition-all {showUserSubMenu ? 'rotate-180' : '' }"  />
                         </div>
                         {#if showUserSubMenu}
-                            <div class="rounded bg-contrast/80 justify-right font-normal py-1 absolute z-20 mt-1.5 right-0 text-right w-36"
+                            <div class="rounded bg-contrast/80 justify-right font-normal py-1 absolute z-20 mt-1.5 right-0 text-right w-36 overflow-hidden"
                                  transition:fly={{y: -25, duration: 50 }}
                             >
                                 <div class="flex items-center px-4 py-1 hover:bg-white/10">
-                                    <FullScreenIcon classList="h-4 w-4 aspect-ratio transition-all" />
+                                    <FullScreenIcon height="h-4" width="w-4" />
                                     <div class="pl-2">Show wide</div><!-- trans -->
                                 </div>
                                 <div class="flex items-center px-4 py-1 hover:bg-white/10">
-                                    <BusinessCardIcon classList="h-4 w-4 aspect-ratio transition-all" />
+                                    <BusinessCardIcon height="h-4" width="w-4" />
                                     <div class="pl-2">Business card</div><!-- trans -->
                                 </div>
                                 <div class="flex items-center px-4 py-1 hover:bg-white/10">
-                                    <VolumeIcon classList="h-4 w-4 aspect-ratio transition-all" />
+                                    <VolumeIcon height="h-4" width="w-4" />
                                     <div class="pl-2">Volume</div><!-- trans -->
                                 </div>
                                 <div class="flex items-center px-4 py-1 hover:bg-white/10">
-                                    <MicOffIcon classList="h-4 w-4 aspect-ratio transition-all" />
+                                    <MicOffIcon height="h-4" width="w-4" />
                                     <div class="pl-2">Mute</div><!-- trans -->
                                 </div>
                                 <div class="flex items-center px-4 py-1 hover:bg-danger">
-                                    <FlagIcon classList="h-4 w-4 aspect-ratio transition-all" />
+                                    <FlagIcon height="h-4" width="w-4" />
                                     <div class="pl-2">Report user</div> <!-- trans -->
                                 </div>
                             </div>

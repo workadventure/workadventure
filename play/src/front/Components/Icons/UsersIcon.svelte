@@ -1,10 +1,14 @@
 <script lang="ts">
-    export let classList = "h-6 w-6 aspect-ratio transition-all";
-    export let color = "stroke-white fill-transparent group-hover/btn-users:fill-white";
+    export let height = "h-6";
+    export let width = "w-6";
+    export let strokeColor = "stroke-white";
+    export let fillColor = "fill-transparent";
+    export let hover = "group-hover/btn-users:fill-white";
     export let strokeWidth = "1.5";
+    export let classList = "aspect-ratio transition-all";
 </script>
 
-<svg xmlns="http://www.w3.org/2000/svg" class="icon {classList} {color}" stroke-width="{strokeWidth}" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+<svg xmlns="http://www.w3.org/2000/svg" class="icon {height} {width} {strokeColor} {fillColor} {classList} {hover}" stroke-width="{strokeWidth}" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
     <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
     <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />

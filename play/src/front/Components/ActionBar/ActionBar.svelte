@@ -123,6 +123,7 @@
     import CheckIcon from "../Icons/CheckIcon.svelte";
     import PlusIcon from "../Icons/PlusIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
+    import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -131,6 +132,7 @@
     let microphoneActive = false;
     let profileMenuIsDropped = false;
     let adminMenuIsDropped = false;
+    let burgerOpen = false;
     let helpActive = false, navigating = false;
 
     function screenSharingClick(): void {
@@ -416,7 +418,7 @@
 {#if !$chatVisibilityStore}
     <ChatOverlay />
 {/if}
-<div class="grid grid-cols-3 justify-items-stretch absolute top-0 w-full p-4 pointer-events-none bp-menu z-[301]">
+<div class="grid grid-cols-3 justify-items-stretch absolute top-0 w-full p-2 xl:p-4 pointer-events-none bp-menu z-[301] @container">
     <div class="justify-self-start pointer-events-auto" transition:fly={{delay: 500, y: -200, duration: 750 }}>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
@@ -465,10 +467,10 @@
         </div>
     </div>
     <div class="justify-self-center pointer-events-auto">
-        <div class="flex relative">
+        <div class="flex relative space-x-2 xl:space-x-4">
             {#if !$silentStore}
             <div transition:fly={{delay: 750, y: -200, duration: 750 }}>
-                <div class="flex items-center mr-4">
+                <div class="flex items-center">
                     <div
                         class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
                         on:click={toggleEmojiPicker}
@@ -479,7 +481,7 @@
                         <div
                                 class="h-12 w-12 rounded aspect-square flex items-center justify-center transition-all {$emoteMenuSubStore ? 'bg-secondary group-hover/bg-secondary-600' : ' group-hover/btn-emoji:bg-white/10'}"
                         >
-                            <EmojiIcon color="{$emoteMenuSubStore ? 'stroke-white fill-white group-hover/btn-emoji:fill-transparent' : 'stroke-white fill-transparent group-hover/btn-emoji:fill-white'}" />
+                            <EmojiIcon color="{$emoteMenuSubStore ? 'stroke-white fill-white' : 'stroke-white fill-transparent'}" hover="{$emoteMenuSubStore ? 'group-hover/btn-emoji:fill-white' : 'group-hover/btn-emoji:fill-transparent'}" />
                         </div>
                         {#if helpActive === "emoji" && !$emoteMenuSubStore}
                             <HelpTooltip title="Display an emoji above your Woka" />
@@ -647,7 +649,7 @@
                                 class="absolute bottom-1 left-0 right-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm"
                                 on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
                             >
-                                <ChevronUpIcon classList="h-4 w-4 aspect-ratio transition-all {cameraActive ? '' : 'rotate-180'}" strokeWidth="2" />
+                                <ChevronUpIcon height="h-4" width="w-4" classList="aspect-ratio transition-all {cameraActive ? '' : 'rotate-180'}" strokeWidth="2" />
                             </div>
                         </div>
                         {#if cameraActive}
@@ -673,7 +675,7 @@
                                                 <div class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$usedCameraDeviceIdStore === camera.deviceId ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}">
                                                     {StringUtils.normalizeDeviceName(camera.label)}
                                                 </div>
-                                                <CheckIcon classList="h-4 w-4 aspect-ratio transition-all" color="stroke-white fill-transparent {$usedCameraDeviceIdStore === camera.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
+                                                <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" color="stroke-white fill-transparent {$usedCameraDeviceIdStore === camera.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
                                             </div>
                                         {/each}
                                     </div>
@@ -695,7 +697,7 @@
                                                 <div class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$usedMicrophoneDeviceIdStore === microphone.deviceId ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}">
                                                     {StringUtils.normalizeDeviceName(microphone.label)}
                                                 </div>
-                                                <CheckIcon classList="h-4 w-4 aspect-ratio transition-all" color="stroke-white fill-transparent {$usedMicrophoneDeviceIdStore === microphone.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
+                                                <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" color="stroke-white fill-transparent {$usedMicrophoneDeviceIdStore === microphone.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
                                             </div>
                                         {/each}
                                     </div>
@@ -717,7 +719,7 @@
                                                 <div class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$speakerSelectedStore === speaker.deviceId ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}">
                                                     {StringUtils.normalizeDeviceName(speaker.label)}
                                                 </div>
-                                                <CheckIcon classList="h-4 w-4 aspect-ratio transition-all" color="stroke-white fill-transparent {$speakerSelectedStore === speaker.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
+                                                <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" color="stroke-white fill-transparent {$speakerSelectedStore === speaker.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
                                             </div>
                                         {/each}
                                     </div>
@@ -765,9 +767,9 @@
                     >
                         <div class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-share:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all {$requestedScreenSharingState && !$silentStore ? 'bg-secondary hover:bg-danger' : ''}">
                             {#if $requestedScreenSharingState && !$silentStore}
-                                <ScreenShareIcon />
-                            {:else}
                                 <ScreenShareOffIcon />
+                            {:else}
+                                <ScreenShareIcon />
                             {/if}
                         </div>
                         {#if helpActive === "share" || !emoteMenuSubStore}
@@ -780,10 +782,10 @@
             </div>
         </div>
     </div>
-    <div class="justify-self-end pointer-events-auto menu-right">
-        <div class="flex">
+    <div class="justify-self-end pointer-events-auto menu-right @6xl:text-danger">
+        <div class="flex space-x-2 xl:space-x-4">
             {#if $addActionButtonActionBarEvent.length > 0}
-                <div class="flex items-center relative mr-4">
+                <div class="flex items-center relative hidden xl:block">
                     {#each $addActionButtonActionBarEvent as button}
                         <div class="group/btn-custom{button.id} peer/custom{button.id} relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg">
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -822,7 +824,7 @@
             {#if $inviteUserActivated}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div transition:fly={{delay: 1250, y: -200, duration: 750 }}>
-                    <div class="flex items-center mr-4">
+                    <div class="flex items-center hidden xl:block">
                         <div class="bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg flex">
                             {#each $addClassicButtonActionBarEvent as button}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -863,7 +865,7 @@
                 </div>
             {/if}
             {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
-                <div class="items-center relative mr-4 hidden lg:block" transition:fly={{delay: 1500, y: -200, duration: 750 }}>
+                <div class="items-center relative hidden xl:block" transition:fly={{delay: 1500, y: -200, duration: 750 }}>
                     <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false } tabindex="0">
                         <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded">
                             <div class="px-2 h-6">
@@ -920,7 +922,7 @@
                     {/if}
                 </div>
             {/if}
-            <div class="flex items-center relative" transition:fly={{delay: 1750, y: -200, duration: 750 }}>
+            <div class="flex items-center relative hidden xl:block" transition:fly={{delay: 1750, y: -200, duration: 750 }}>
                 <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => profileMenuIsDropped = !profileMenuIsDropped} on:click|preventDefault={close} tabindex="0">
                     <div class="flex items center h-full group-hover:bg-white/10 transition-all group-hover:rounded">
                         <div class="px-2 m-auto">
@@ -990,25 +992,110 @@
                 </div>
                 {/if}
             </div>
+            <div class="group/btn-burger relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 rounded-l-lg rounded-r-lg aspect-square block xl:hidden">
+                <div
+                    on:click={() => burgerOpen = !burgerOpen}
+                    class="h-12 min-w-[48px] p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
+                >
+                    {#if !burgerOpen}
+                        <MenuBurgerIcon />
+                    {:else }
+                        <XIcon />
+                    {/if}
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+{#if burgerOpen}
+    <div class="w-52 bg-contrast/80 absolute right-2 top-20 z-[1000] py-4 rounded-lg text-right text-white no-underline pointer-events-auto">
+        <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">Your profil</div>
+        <div class="px-4 py-2 hover:bg-white/10">Item example</div>
+        <div class="px-4 py-2 hover:bg-white/10">Item example</div>
+        <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">Administrator</div>
+        <div class="px-4 py-2 hover:bg-white/10">Item example</div>
+        <div class="px-4 py-2 hover:bg-white/10">Item example</div>
+        <div class="px-4 py-2 hover:bg-white/10">Item example</div>
+        <div class="h-[1px] w-full bg-white/10 my-4"></div>
+        {#if $inviteUserActivated}
+            <div class="px-4">
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                {#each $addClassicButtonActionBarEvent as button}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                            class="flex flex-initial"
+                            in:fly={{}}
+                            on:dragstart|preventDefault={noDrag}
+                            on:click={() => analyticsClient.clickOnCustomButton(button.id, button.label)}
+                            on:click={() => {
+                                    buttonActionBarTrigger(button.id);
+                                }}
+                    >
+                        <button class="btn btn-light btn-sm !px-4 w-full justify-center" id={button.id}>
+                            {button.label}
+                        </button>
+                    </div>
+                {/each}
+                {#if $inviteUserActivated}
+                    <button
+                            in:fly={{}}
+                            on:dragstart|preventDefault={noDrag}
+                            on:click={() => analyticsClient.openInvite()}
+                            on:click={() => showMenuItem(SubMenusInterface.invite)}
+                            class="btn btn-sm !px-4 w-full justify-center {!$userIsConnected && ENABLE_OPENID ? 'btn-ghost btn-light' : 'btn-secondary' }"
+                    >
+                        {$LL.menu.sub.invite()}
+                    </button>
+                {/if}
+                {#if !$userIsConnected && ENABLE_OPENID}
+                    <a href="/login"
+                       on:click={() => analyticsClient.login()}
+                       class="btn btn-secondary rounded h-12 select-none ml-2 !px-4">
+                        Login <!-- trad -->
+                    </a>
+                {/if}
+            </div>
+        {/if}
+        {#if $addActionButtonActionBarEvent.length > 0}
+            {#each $addActionButtonActionBarEvent as button}
+                <div class="px-4">
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div class="h-[1px] w-full bg-white/10 my-4"></div>
+                    <div
+                            in:fly={{}}
+                            on:dragstart|preventDefault={noDrag}
+                            on:click={() =>
+                                    analyticsClient.clickOnCustomButton(
+                                        button.id,
+                                        undefined,
+                                        button.toolTip,
+                                        button.imageSrc
+                                    )}
+                            on:click={() => {
+                                    buttonActionBarTrigger(button.id);
+                                }}
+                            class="flex items-center justify-center btn btn-ghost btn-sm btn-light rounded select-none ml-2 !px-4 "
+                    >
+                        <img
+                                draggable="false"
+                                src={button.imageSrc}
+                                alt={button.toolTip}
+                                class="h-6 mr-4"
+                        />
+                        {button.toolTip}
+                        <!-- src="./static/images/Workadventure.gif"   src={button.imageSrc}   -->
+                    </div>
+                </div>
+            {/each}
+        {/if}
+    </div>
+{/if}
 <style lang="scss">
   @import "../../style/breakpoints.scss";
   * {
     font-family: 'Roboto Condensed';
   }
-    /*
-  .bp-menu {
-    container: menuContainer / inline-size;
-  }
-  @container menuContainer (min-width: 700px) {
-    .menu-right {
-      display: none;
-    }
-  }
-  
-     */
   .translate-right {
     transform: translateX(2rem);
   }

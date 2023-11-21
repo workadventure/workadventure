@@ -160,7 +160,7 @@ onMount(() => {
                 }
             },
         },
-        backgroundColor: "#1b1b29",
+        backgroundColor: "#1b2a41",
     };
 
     game = new Game(config);

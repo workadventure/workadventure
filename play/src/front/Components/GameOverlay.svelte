@@ -45,7 +45,7 @@
         <ErrorScreen />
     </div>
 {:else if $errorStore.length > 0}
-    <div class="bg-contrast bg-contrast">
+    <div class="bg-contrast">
         <ErrorDialog />
     </div>
 {:else if $loginSceneVisibleStore}
