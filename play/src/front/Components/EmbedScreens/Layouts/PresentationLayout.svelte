@@ -109,7 +109,7 @@
         </div>
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div
-                class="tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-max-w-[25%] tw-w-full"
+                class="tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-max-w-[25%] 2xl:tw-max-w-[420px] tw-w-full"
                 class:tw-w-[10%]={$highlightedEmbedScreen != undefined}
             >
                 {#if $jitsiLoadingStore}
@@ -153,6 +153,9 @@
         padding-bottom: 4rem;
         &.highlighted-cowebsite {
             min-width: 90%;
+        }
+        @media (min-width: 1536px) {
+            min-width: calc(100% - 420px);
         }
     }
 
