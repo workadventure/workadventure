@@ -213,7 +213,7 @@
         // TODO: remove this hack
         setTimeout(() => {
             aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
-        }, 100);
+        }, 1000);
     }
 </script>
 
