@@ -175,7 +175,6 @@ export class VideoPeer extends Peer {
         this.on("data", (chunk: Buffer) => {
             try {
                 const data = JSON.parse(chunk.toString("utf8"));
-                console.log("VideoPeer => data", data);
                 const message = P2PMessage.parse(data);
                 switch (message.type) {
                     case "constraint": {
@@ -243,13 +242,7 @@ export class VideoPeer extends Peer {
         }
 
         this.localStreamStoreSubscribe = localStreamStore.subscribe((streamValue) => {
-            if (streamValue.type === "success" && streamValue.stream) {
-                this.addStream(streamValue.stream);
-                console.log(
-                    "localStreamStoreSubscribe => streamValue",
-                    streamValue.stream.getVideoTracks()[0].getSettings()
-                );
-            }
+            if (streamValue.type === "success" && streamValue.stream) this.addStream(streamValue.stream);
         });
         this.apparentMediaConstraintStoreSubscribe = apparentMediaContraintStore.subscribe((constraints) => {
             this.write(
@@ -293,20 +286,6 @@ export class VideoPeer extends Peer {
 
         try {
             this.remoteStream = stream;
-            // check the width and height of the stream and log it into the console
-            // this is useful for debugging
-            console.log("stream => stream.getVideoTracks()[0].getSettings()", stream.getVideoTracks()[0].getSettings());
-            const videoTracks = stream.getVideoTracks();
-            if (videoTracks.length > 0) {
-                // check the width and height for each video track
-                videoTracks.forEach((track) => {
-                    console.log("check for each track ...", track);
-                    if (track.kind === "video")
-                        console.log(
-                            "video track: width=" + track.getSettings().width + ", height=" + track.getSettings().height
-                        );
-                });
-            }
             if (blackListManager.isBlackListed(this.userUuid) || this.blocked) {
                 this.toggleRemoteStream(false);
             }

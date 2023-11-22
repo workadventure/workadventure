@@ -12,12 +12,14 @@
     let aspectRatio = 1;
 
     onMount(() => {
-        aspectRatio = jitsiTrack.getTrack().getSettings().aspectRatio ?? 1;
+        // TODO: remove this hack
+        setTimeout(() => {
+            aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
+        }, 1000);
         attachTrack();
     });
 
     afterUpdate(() => {
-        aspectRatio = jitsiTrack.getTrack().getSettings().aspectRatio ?? 1;
         attachTrack();
     });
 

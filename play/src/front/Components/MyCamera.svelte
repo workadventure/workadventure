@@ -20,13 +20,20 @@
     import cameraOffImg from "./images/camera-off.png";
 
     let stream: MediaStream | null;
+    let videoElement: HTMLVideoElement;
     let userName = localUserStore.getName();
     let backgroundColor = Color.getColorByString(userName ?? "default");
     let textColor = Color.getTextColorByBackgroundColor(backgroundColor);
 
+    let aspectRatio = 1;
+
     const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
             stream = value.stream;
+            // TODO: remove this hack
+            setTimeout(() => {
+                aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
+            }, 100);
         } else {
             stream = null;
         }
@@ -97,8 +104,9 @@
             </div>
             <div class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all">
                 <video
+                    bind:this={videoElement}
                     class="tw-h-full tw-w-full tw-rounded md:tw-object-cover"
-                    class:object-contain={stream && isMobile}
+                    class:object-contain={stream && (isMobile || aspectRatio < 1)}
                     class:tw-max-h-[230px]={stream}
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
