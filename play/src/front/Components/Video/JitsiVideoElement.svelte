@@ -14,7 +14,7 @@
     onMount(() => {
         // TODO: remove this hack
         setTimeout(() => {
-            aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
+            aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
         }, 1000);
         attachTrack();
     });

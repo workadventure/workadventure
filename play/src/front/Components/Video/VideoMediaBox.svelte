@@ -212,7 +212,7 @@
     function updateRatio() {
         // TODO: remove this hack
         setTimeout(() => {
-            aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
+            aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
         }, 100);
     }
 </script>
