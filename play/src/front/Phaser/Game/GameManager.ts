@@ -12,7 +12,6 @@ import {
 import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
 import { EnableCameraSceneName } from "../Login/EnableCameraScene";
 import { LoginSceneName } from "../Login/LoginScene";
-import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { EmptySceneName } from "../Login/EmptyScene";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraStore } from "../../Stores/MyMediaStore";
@@ -59,9 +58,6 @@ export class GameManager {
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
         if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
             return LoginSceneName;
-        } else if (!this.characterTextureIds) {
-            console.info("Any Woka texture has been found, you will be redirect to the Woka selection scene");
-            return SelectCharacterSceneName;
         } else if (preferredVideoInputDeviceId === undefined || preferredAudioInputDeviceId === undefined) {
             return EnableCameraSceneName;
         } else {
