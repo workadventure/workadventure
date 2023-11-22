@@ -66,7 +66,11 @@
     });
 </script>
 
-<div class="tw-transition-all tw-self-end tw-relative tw-w-full" bind:this={cameraContainer}>
+<div
+    bind:this={cameraContainer}
+    class="tw-transition-all tw-self-end tw-relative tw-w-full"
+    class:tw-opacity-50={isMobile && $streamableCollectionStore.size === 0}
+>
     <!--If we are in a silent zone-->
     {#if $silentStore}
         <div
@@ -109,7 +113,6 @@
                     class="tw-h-full tw-w-full tw-rounded md:tw-object-cover"
                     class:object-contain={stream && (isMobile || aspectRatio < 1)}
                     class:tw-max-h-[230px]={stream}
-                    class:tw-opacity-25={isMobile && $streamableCollectionStore.size === 0}
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay
