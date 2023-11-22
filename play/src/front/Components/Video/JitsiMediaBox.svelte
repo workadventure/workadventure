@@ -38,6 +38,7 @@
     });
 
     onMount(() => {
+        console.log("JitsiMediaBox => onMount => peer", peer.getVideoTrack()?.getTrack().getSettings());
         resizeObserver.observe(jitsiMediaBoxHtml);
     });
 </script>
