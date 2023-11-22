@@ -509,6 +509,10 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                 return navigator.mediaDevices
                     .getUserMedia(constraints)
                     .then((stream) => {
+                        console.log(
+                            "initStream => getUserMedia => stream.getVideoTracks().getSettings()",
+                            stream.getVideoTracks()[0].getSettings()
+                        );
                         // Close old stream
                         if (currentStream) {
                             //we need stop all tracks to make sure the old stream will be garbage collected

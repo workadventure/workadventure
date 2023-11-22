@@ -503,6 +503,10 @@ export class JitsiConferenceWrapper {
     }
 
     private addRemoteTrack(track: JitsiTrack, allowOverride: boolean) {
+        console.log(
+            "JitsiConferenceWrapper => addRemoteTrack => track",
+            track.getOriginalStream().getVideoTracks()[0].getSettings()
+        );
         debug("JitsiConferenceWrapper => addRemoteTrack", track.getType());
         this._streamStore.update((tracks) => {
             // @ts-ignore

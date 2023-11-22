@@ -286,6 +286,20 @@ export class VideoPeer extends Peer {
 
         try {
             this.remoteStream = stream;
+            // check the width and height of the stream and log it into the console
+            // this is useful for debugging
+            console.log("stream => stream.getVideoTracks()[0].getSettings()");
+            const videoTracks = stream.getVideoTracks();
+            if (videoTracks.length > 0) {
+                // check the width and height for each video track
+                videoTracks.forEach((track) => {
+                    console.log("check for each track ...", track);
+                    if (track.kind === "video")
+                        console.log(
+                            "video track: width=" + track.getSettings().width + ", height=" + track.getSettings().height
+                        );
+                });
+            }
             if (blackListManager.isBlackListed(this.userUuid) || this.blocked) {
                 this.toggleRemoteStream(false);
             }
