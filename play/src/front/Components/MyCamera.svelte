@@ -13,6 +13,7 @@
     import { LL } from "../../i18n/i18n-svelte";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
     import { localUserStore } from "../Connection/LocalUserStore";
+    import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";
@@ -108,6 +109,7 @@
                     class="tw-h-full tw-w-full tw-rounded md:tw-object-cover"
                     class:object-contain={stream && (isMobile || aspectRatio < 1)}
                     class:tw-max-h-[230px]={stream}
+                    class:tw-opacity-25={isMobile && $streamableCollectionStore.size === 0}
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay
