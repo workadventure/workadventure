@@ -3,9 +3,14 @@
     import { get } from "svelte/store";
     import { onDestroy, onMount } from "svelte";
     import type { audioManagerVolume } from "../../Stores/AudioManagerStore";
-    import { audioManagerFileStore, audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
+    import {
+        audioManagerFileStore,
+        audioManagerVisibilityStore,
+        audioManagerVolumeStore,
+    } from "../../Stores/AudioManagerStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { localUserStore } from "../../Connection/LocalUserStore";
+    import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
 
     let HTMLAudioPlayer: HTMLAudioElement;
     let audioPlayerVolumeIcon: HTMLElement;
@@ -21,6 +26,10 @@
         audioManagerVolumeStore.setMuted(localUserStore.getAudioPlayerMuted());
 
         unsubscriberFileStore = audioManagerFileStore.subscribe((src: string) => {
+            if (src == "") {
+                if (HTMLAudioPlayer) HTMLAudioPlayer.pause();
+                return;
+            }
             HTMLAudioPlayer.pause();
             HTMLAudioPlayer.src = src;
             HTMLAudioPlayer.loop = get(audioManagerVolumeStore).loop;
@@ -53,11 +62,19 @@
     });
 
     function tryPlay() {
+        console.trace("tryPlay");
+        HTMLAudioPlayer.onended = () => {
+            // Fixme: this is a hack to close menu when audio is ends without cut the sound
+            actionsMenuStore.clear();
+            // Audiovisilibily is set to false when audio is ended
+            audioManagerVisibilityStore.set(false);
+        };
         void HTMLAudioPlayer.play()
             .then(() => {
                 isAudioAllowed = true;
             })
-            .catch(() => {
+            .catch((e) => {
+                console.error("The audio could not be played: ", e);
                 isAudioAllowed = false;
             });
     }

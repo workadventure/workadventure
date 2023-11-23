@@ -299,7 +299,8 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                                 propertyName: GameMapProperties.PLAY_AUDIO,
                                 propertyValue: audioLink,
                             });
-                            actionsMenuStore.clear();
+                            // Fixme: close the menu without impact audio manager and playing
+                            //actionsMenuStore.clear();
                         },
                     });
                     break;
