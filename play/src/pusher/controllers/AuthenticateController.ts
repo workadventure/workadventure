@@ -133,12 +133,14 @@ export class AuthenticateController extends BaseHttpController {
                 z.object({
                     token: z.string(),
                     playUri: z.string(),
+                    localStorageCharacterTextureIds: z.array(z.string()).optional(),
+                    localStorageCompanionTextureId: z.string().optional(),
                 })
             );
             if (query === undefined) {
                 return;
             }
-            const { token, playUri } = query;
+            const { token, playUri, localStorageCharacterTextureIds, localStorageCompanionTextureId } = query;
             try {
                 const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token, false);
 
@@ -149,7 +151,8 @@ export class AuthenticateController extends BaseHttpController {
                     authTokenData.accessToken,
                     playUri,
                     IPAddress,
-                    [],
+                    localStorageCharacterTextureIds ?? [],
+                    localStorageCompanionTextureId,
                     req.header("accept-language")
                 );
 

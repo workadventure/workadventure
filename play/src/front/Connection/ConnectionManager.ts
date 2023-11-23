@@ -85,9 +85,17 @@ class ConnectionManager {
      *
      * @return returns a promise to the Room we are going to load OR a pointer to the URL we must redirect to if authentication is needed.
      */
-    public async initGameConnexion(): Promise<Room | URL> {
+    public async initGameConnexion(): Promise<
+        | {
+              room: Room;
+              nextScene: "selectCharacterScene" | "selectCompanionScene" | "gameScene";
+          }
+        | URL
+    > {
         this.connexionType = urlManager.getGameConnexionType();
         this._currentRoom = null;
+
+        let nextScene: "selectCharacterScene" | "selectCompanionScene" | "gameScene" = "gameScene";
 
         const urlParams = new URLSearchParams(window.location.search);
         let token = urlParams.get("token");
@@ -194,6 +202,11 @@ class ConnectionManager {
             if (!this.authToken) {
                 if (!this._currentRoom.authenticationMandatory) {
                     await this.anonymousLogin();
+
+                    const characterTextures = localUserStore.getCharacterTextures();
+                    if (characterTextures === null || characterTextures.length === 0) {
+                        nextScene = "selectCharacterScene";
+                    }
                 } else {
                     const redirect = this.loadOpenIDScreen();
                     if (redirect === null) {
@@ -223,6 +236,13 @@ class ConnectionManager {
                         }
                     }
                     analyticsClient.loggedWithSso();
+                    if (response.status === "ok") {
+                        if (response.isCharacterTexturesValid === false) {
+                            nextScene = "selectCharacterScene";
+                        } else if (response.isCompanionTextureValid === false) {
+                            nextScene = "selectCompanionScene";
+                        }
+                    }
                 } catch (err) {
                     if (isAxiosError(err) && err.response?.status === 401) {
                         console.warn("Token expired, trying to login anonymously");
@@ -268,7 +288,10 @@ class ConnectionManager {
         // add report issue menu
         subMenusStore.addReportIssuesMenu();
 
-        return Promise.resolve(this._currentRoom);
+        return Promise.resolve({
+            room: this._currentRoom,
+            nextScene,
+        });
     }
 
     public async anonymousLogin(isBenchmark = false): Promise<void> {
@@ -406,7 +429,12 @@ class ConnectionManager {
         // For this to work, the authToken should be stored in a cookie instead of localStorage.
         const data = await axiosToPusher
             .get("me", {
-                params: { token, playUri: this.currentRoom?.key },
+                params: {
+                    token,
+                    playUri: this.currentRoom?.key,
+                    localStorageCharacterTextureIds: localUserStore.getCharacterTextures() ?? undefined,
+                    localStorageCompanionTextureId: localUserStore.getCompanionTextureId(),
+                },
             })
             .then((res) => {
                 return res.data;

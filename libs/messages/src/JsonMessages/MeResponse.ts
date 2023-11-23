@@ -1,6 +1,7 @@
 import {z} from "zod";
 import {extendApi} from "@anatine/zod-openapi";
 import {ErrorApiData} from "./ErrorApiData";
+import {WokaDetail} from "./PlayerTextures";
 
 export const MeSuccessResponse = extendApi(
     z.object({
@@ -38,6 +39,16 @@ export const MeSuccessResponse = extendApi(
         visitCardUrl: extendApi(z.string().nullable().optional(), {
             description:
                 "The visit card URL of the Woka.",
+        }),
+        isCharacterTexturesValid: extendApi(z.boolean(), {
+            description:
+                "True if the character textures are valid, false if we need to redirect the user to the Woka selection page.",
+            example: true,
+        }),
+        isCompanionTextureValid: extendApi(z.boolean(), {
+            description:
+                "True if the companion texture is valid, false if we need to redirect the user to the companion selection page.",
+            example: true,
         }),
     }),
     {

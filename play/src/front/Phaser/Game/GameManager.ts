@@ -12,9 +12,11 @@ import {
 import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
 import { EnableCameraSceneName } from "../Login/EnableCameraScene";
 import { LoginSceneName } from "../Login/LoginScene";
+import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { EmptySceneName } from "../Login/EmptyScene";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraStore } from "../../Stores/MyMediaStore";
+import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { GameScene } from "./GameScene";
 
 /**
@@ -45,7 +47,7 @@ export class GameManager {
             // so we need to redirect to an empty Phaser scene, waiting for the redirection to take place
             return EmptySceneName;
         }
-        this.startRoom = result;
+        this.startRoom = result.room;
         this.loadMap(this.startRoom);
 
         const preferredAudioInputDeviceId = localUserStore.getPreferredAudioInputDevice();
@@ -58,6 +60,10 @@ export class GameManager {
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
         if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
             return LoginSceneName;
+        } else if (result.nextScene === "selectCharacterScene") {
+            return SelectCharacterSceneName;
+        } else if (result.nextScene === "selectCompanionScene") {
+            return SelectCompanionSceneName;
         } else if (preferredVideoInputDeviceId === undefined || preferredAudioInputDeviceId === undefined) {
             return EnableCameraSceneName;
         } else {
