@@ -241,7 +241,7 @@ export class IoSocketController {
                             roomId: z.string(),
                             token: z.string().optional(),
                             name: z.string(),
-                            characterTextureIds: z.union([z.string(), z.string().array()]),
+                            characterTextureIds: z.union([z.string(), z.string().array()]).optional(),
                             x: z.coerce.number(),
                             y: z.coerce.number(),
                             top: z.coerce.number(),
@@ -313,7 +313,9 @@ export class IoSocketController {
                         }
 
                         const characterTextureIds: string[] =
-                            typeof query.characterTextureIds === "string"
+                            query.characterTextureIds === undefined
+                                ? []
+                                : typeof query.characterTextureIds === "string"
                                 ? [query.characterTextureIds]
                                 : query.characterTextureIds;
 

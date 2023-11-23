@@ -27,10 +27,7 @@ import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
-import {
-    CompanionTexturesLoadingManager,
-    lazyLoadPlayerCompanionTexture,
-} from "../Companion/CompanionTexturesLoadingManager";
+import { lazyLoadPlayerCompanionTexture } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
 import {
     DEBUG_MODE,
@@ -250,8 +247,6 @@ export class GameScene extends DirtyScene {
     public userInputManager!: UserInputManager;
     private isReconnecting: boolean | undefined = undefined;
     private playerName!: string;
-    private characterTextureIds!: string[];
-    private companionTextureId!: string | null;
     private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
@@ -283,7 +278,6 @@ export class GameScene extends DirtyScene {
     private playersEventDispatcher = new IframeEventDispatcher();
     private playersMovementEventDispatcher = new IframeEventDispatcher();
     private remotePlayersRepository = new RemotePlayersRepository();
-    private companionLoadingManager: CompanionTexturesLoadingManager | undefined;
     private throttledSendViewportToServer!: () => void;
     private playersDebugLogAlreadyDisplayed = false;
     private _broadcastService: BroadcastService | undefined;
@@ -314,7 +308,6 @@ export class GameScene extends DirtyScene {
 
     //hook preload scene
     preload(): void {
-        this.companionLoadingManager = new CompanionTexturesLoadingManager(this.superLoad, this.load);
         //initialize frame event of scripting API
         this.listenToIframeEvents();
 
@@ -623,8 +616,6 @@ export class GameScene extends DirtyScene {
             throw new Error("playerName is not set");
         }
         this.playerName = playerName;
-        this.characterTextureIds = gameManager.getCharacterTextureIds();
-        this.companionTextureId = gameManager.getCompanionTextureId();
 
         this.Map = this.add.tilemap(this.mapUrlFile);
         const mapDirUrl = this.mapUrlFile.substring(0, this.mapUrlFile.lastIndexOf("/"));
@@ -910,7 +901,7 @@ export class GameScene extends DirtyScene {
             .connectToRoomSocket(
                 this.roomUrl,
                 this.playerName,
-                this.characterTextureIds,
+                gameManager.getCharacterTextureIds() ?? [],
                 {
                     ...this.startPositionCalculator.startPosition,
                 },
@@ -920,7 +911,7 @@ export class GameScene extends DirtyScene {
                     right: camera.scrollX + camera.width,
                     bottom: camera.scrollY + camera.height,
                 },
-                this.companionTextureId,
+                gameManager.getCompanionTextureId(),
                 get(availabilityStatusStore),
                 this.getGameMap().getLastCommandId()
             )
@@ -2687,7 +2678,7 @@ ${escapedMessage}
                 this.currentPlayerTexturesPromise,
                 PositionMessage_Direction.DOWN,
                 false,
-                this.companionTextureId ? this.currentCompanionTexturePromise : undefined
+                gameManager.getCompanionTextureId() ? this.currentCompanionTexturePromise : undefined
             );
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(0x365dff);

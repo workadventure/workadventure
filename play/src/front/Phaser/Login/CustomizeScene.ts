@@ -179,9 +179,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             const savedWokaTextureIds = gameManager.getCharacterTextureIds();
             if (savedWokaTextureIds) {
                 for (let i = 0; i < savedWokaTextureIds.length; i += 1) {
-                    const index = this.layers[i].findIndex(
-                        (item) => item.id === gameManager.getCharacterTextureIds()[i]
-                    );
+                    const index = this.layers[i].findIndex((item) => item.id === savedWokaTextureIds[i]);
                     // set first item as default if not found
                     this.selectedTextures[i] = index !== -1 ? index : 0;
                 }

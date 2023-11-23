@@ -1,5 +1,5 @@
 import type { AvailabilityStatus } from "@workadventure/messages";
-import { isRegisterData, MeResponse } from "@workadventure/messages";
+import { isRegisterData, MeRequest, MeResponse } from "@workadventure/messages";
 import { isAxiosError } from "axios";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { subMenusStore, userIsConnected, warningContainerStore } from "../Stores/MenuStore";
@@ -425,16 +425,21 @@ class ConnectionManager {
         //set connected store for menu at false
         userIsConnected.set(false);
 
+        const playUri = this.currentRoom?.key;
+        if (playUri == undefined) {
+            throw new Error("playUri is undefined");
+        }
+
         // TODO: the call to "/me" could be completely removed and the request data could come from the FrontController
         // For this to work, the authToken should be stored in a cookie instead of localStorage.
         const data = await axiosToPusher
             .get("me", {
                 params: {
                     token,
-                    playUri: this.currentRoom?.key,
+                    playUri,
                     localStorageCharacterTextureIds: localUserStore.getCharacterTextures() ?? undefined,
-                    localStorageCompanionTextureId: localUserStore.getCompanionTextureId(),
-                },
+                    localStorageCompanionTextureId: localUserStore.getCompanionTextureId() ?? undefined,
+                } satisfies MeRequest,
             })
             .then((res) => {
                 return res.data;

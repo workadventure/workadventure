@@ -111,10 +111,7 @@ export class GameManager {
         return this.visitCardUrl;
     }
 
-    getCharacterTextureIds(): string[] {
-        if (!this.characterTextureIds) {
-            throw new Error("characterTextures are not set");
-        }
+    getCharacterTextureIds(): string[] | null {
         return this.characterTextureIds;
     }
 

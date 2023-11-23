@@ -16,3 +16,4 @@ export * from './JsonMessages/RegisterData';
 export * from './JsonMessages/RoomRedirect';
 export * from './JsonMessages/OpidWokaNamePolicy';
 export * from './JsonMessages/MeResponse';
+export * from './JsonMessages/MeRequest';

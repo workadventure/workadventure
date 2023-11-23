@@ -1,5 +1,5 @@
 import { v4 } from "uuid";
-import { ErrorApiData, RegisterData, MeResponse } from "@workadventure/messages";
+import { ErrorApiData, RegisterData, MeResponse, MeRequest } from "@workadventure/messages";
 import { isAxiosError } from "axios";
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
@@ -127,16 +127,7 @@ export class AuthenticateController extends BaseHttpController {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/me", async (req, res) => {
             const IPAddress = req.header("x-forwarded-for");
-            const query = validateQuery(
-                req,
-                res,
-                z.object({
-                    token: z.string(),
-                    playUri: z.string(),
-                    localStorageCharacterTextureIds: z.array(z.string()).optional(),
-                    localStorageCompanionTextureId: z.string().optional(),
-                })
-            );
+            const query = validateQuery(req, res, MeRequest);
             if (query === undefined) {
                 return;
             }
