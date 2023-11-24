@@ -1,16 +1,23 @@
 import * as _ from "lodash";
 import { MathUtils } from "@workadventure/math-utils";
-import { AreaData, AreaDataProperties, GameMapProperties, WAMFileFormat } from "../types";
+import { AreaData, AreaDataProperties, AtLeast, GameMapProperties, WAMFileFormat } from "../types";
 
 export type AreaChangeCallback = (
     areasChangedByAction: Array<AreaData>,
     allAreasOnNewPosition: Array<AreaData>
 ) => void;
 
+export type AreaUpdateCallback = (
+    area: AreaData,
+    oldProperties: AreaDataProperties | undefined,
+    newProperties: AreaDataProperties | undefined
+) => void;
+
 export class GameMapAreas {
     private wam: WAMFileFormat;
 
     private enterAreaCallbacks = Array<AreaChangeCallback>();
+    private updateAreaCallbacks = Array<AreaUpdateCallback>();
     private leaveAreaCallbacks = Array<AreaChangeCallback>();
 
     /**
@@ -96,29 +103,24 @@ export class GameMapAreas {
         );
     }
 
-    public updateArea(id: string, config: Partial<AreaData>): AreaData | undefined {
-        const area = this.areas.get(id);
+    public updateArea(newConfig: AtLeast<AreaData, "id">): AreaData | undefined {
+        const area = this.areas.get(newConfig.id);
         if (!area) {
             throw new Error(`Area to update does not exist!`);
         }
-        _.merge(area, config);
+
+        _.merge(area, newConfig);
         // TODO: Find a way to update it without need of using conditions
-        if (config.properties !== undefined) {
-            area.properties = config.properties;
+
+        if (newConfig.properties !== undefined) {
+            area.properties = newConfig.properties;
         }
+
         this.updateAreaWAM(area);
         return area;
     }
 
-    public deleteArea(id: string, playerPosition?: { x: number; y: number }): boolean {
-        if (playerPosition) {
-            const area = this.getAreasOnPosition(playerPosition, this.areasPositionOffsetY).find(
-                (area) => area.id === id
-            );
-            if (area) {
-                this.triggerSpecificAreaOnLeave(area);
-            }
-        }
+    public deleteArea(id: string): boolean {
         const deleted = this.areas.delete(id);
         if (deleted) {
             return this.deleteAreaFromWAM(id);
@@ -174,6 +176,13 @@ export class GameMapAreas {
     }
 
     /**
+     * Registers a callback called when an area is update.
+     */
+    public onUpdateArea(callback: AreaUpdateCallback) {
+        this.updateAreaCallbacks.push(callback);
+    }
+
+    /**
      * Registers a callback called when the user moves outside another area.
      */
     public onLeaveArea(callback: AreaChangeCallback) {
@@ -183,6 +192,16 @@ export class GameMapAreas {
     public triggerSpecificAreaOnEnter(area: AreaData): void {
         for (const callback of this.enterAreaCallbacks) {
             callback([area], []);
+        }
+    }
+
+    public triggerSpecificAreaOnUpdate(
+        area: AreaData,
+        oldProperties: AreaDataProperties | undefined,
+        newProperties: AreaDataProperties | undefined
+    ): void {
+        for (const callback of this.updateAreaCallbacks) {
+            callback(area, oldProperties, newProperties);
         }
     }
 

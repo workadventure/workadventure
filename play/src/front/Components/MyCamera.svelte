@@ -12,7 +12,7 @@
     } from "../Stores/MediaStore";
     import { LL } from "../../i18n/i18n-svelte";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
-    import { localUserStore } from "../Connection/LocalUserStore";
+    import { gameManager } from "../Phaser/Game/GameManager";
     import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
@@ -22,7 +22,7 @@
 
     let stream: MediaStream | null;
     let videoElement: HTMLVideoElement;
-    let userName = localUserStore.getName();
+    let userName = gameManager.getPlayerName();
     let backgroundColor = Color.getColorByString(userName ?? "default");
     let textColor = Color.getTextColorByBackgroundColor(backgroundColor);
 

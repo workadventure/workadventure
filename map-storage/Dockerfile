@@ -3,7 +3,7 @@
 # When the issue above is closed, we can move back messages building inside Dockerfile
 
 # protobuf build
-FROM --platform=$BUILDPLATFORM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d as proto-builder
+FROM --platform=$BUILDPLATFORM node:20.8.0-bullseye-slim@sha256:9027d0d778368a3091ee36b0bfdc98ebf3d7815ee4e2811b05cc40ec2a0adf4e as proto-builder
 WORKDIR /usr/src
 COPY messages/package-lock.json messages/package.json ./
 RUN npm ci
@@ -12,7 +12,7 @@ COPY libs ./../libs
 RUN npm run tag-version && npm run ts-proto
 
 # typescript build
-FROM --platform=$BUILDPLATFORM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d as builder
+FROM --platform=$BUILDPLATFORM node:20.8.0-bullseye-slim@sha256:9027d0d778368a3091ee36b0bfdc98ebf3d7815ee4e2811b05cc40ec2a0adf4e as builder
 EXPOSE 3000 50053
 WORKDIR /usr/src
 ENV STORAGE_DIRECTORY=/maps
@@ -33,7 +33,7 @@ COPY --chown=node:node map-storage map-storage
 RUN cd map-storage && npm run front:build
 
 # final production image
-FROM node:18.12.1-buster-slim@sha256:62798b0191c85e2fc5f06897e345a6c9e8902ea3beedcb8e07463c665c37526d
+FROM node:20.8.0-bullseye-slim@sha256:9027d0d778368a3091ee36b0bfdc98ebf3d7815ee4e2811b05cc40ec2a0adf4e
 EXPOSE 3000 50053
 WORKDIR /usr/src
 ENV STORAGE_DIRECTORY=/maps

@@ -1,5 +1,5 @@
-import { AreaDataProperties, GameMapProperties } from "@workadventure/map-editor";
-import type { AreaChangeCallback, AreaData, GameMap } from "@workadventure/map-editor";
+import { AreaCoordinates, AreaDataProperties, AreaUpdateCallback, GameMapProperties } from "@workadventure/map-editor";
+import type { AreaChangeCallback, AreaData, AtLeast, GameMap } from "@workadventure/map-editor";
 import type {
     ITiledMap,
     ITiledMapLayer,
@@ -349,9 +349,8 @@ export class GameMapFrontWrapper {
         this.oldPosition = this.position;
         this.position = { x, y };
         const areasChanged = this.gameMap.getGameMapAreas()?.triggerAreasChange(this.oldPosition, this.position);
-        //const tiledAreasChanged = this.triggerTiledAreasChange(this.oldPosition, this.position);
         const dynamicAreasChanged = this.triggerDynamicAreasChange(this.oldPosition, this.position);
-        if (areasChanged /*|| tiledAreasChanged*/ || dynamicAreasChanged) {
+        if (areasChanged || dynamicAreasChanged) {
             this.triggerAllProperties();
         }
 
@@ -442,6 +441,13 @@ export class GameMapFrontWrapper {
      */
     public onEnterArea(callback: AreaChangeCallback) {
         this.gameMap.onEnterArea(callback);
+    }
+
+    /**
+     * Registers a callback called when an area has been updated.
+     */
+    public onUpdateArea(callback: AreaUpdateCallback) {
+        this.gameMap.onUpdateArea(callback);
     }
 
     /**
@@ -713,6 +719,14 @@ export class GameMapFrontWrapper {
         this.gameMap.getGameMapAreas()?.triggerSpecificAreaOnEnter(area);
     }
 
+    public triggerSpecificAreaOnUpdate(
+        area: AreaData,
+        oldProperties: AreaDataProperties | undefined,
+        newProperties: AreaDataProperties | undefined
+    ): void {
+        this.gameMap.getGameMapAreas()?.triggerSpecificAreaOnUpdate(area, oldProperties, newProperties);
+    }
+
     public triggerSpecificAreaOnLeave(area: AreaData): void {
         this.gameMap.getGameMapAreas()?.triggerSpecificAreaOnLeave(area);
     }
@@ -729,21 +743,6 @@ export class GameMapFrontWrapper {
         return this.dynamicAreas.get(name);
     }
 
-    public updateArea(id: string, config: Partial<AreaData>): void {
-        const gameMapAreas = this.gameMap.getGameMapAreas();
-        if (!gameMapAreas) {
-            return;
-        }
-        const area = gameMapAreas.updateArea(id, config);
-        if (this.position && area && gameMapAreas.isPlayerInsideArea(id, this.position)) {
-            this.triggerSpecificAreaOnEnter(area);
-        }
-    }
-
-    public deleteArea(id: string): void {
-        this.gameMap.getGameMapAreas()?.deleteArea(id, this.position);
-    }
-
     public deleteDynamicArea(name: string): void {
         this.dynamicAreas.delete(name);
     }
@@ -755,6 +754,77 @@ export class GameMapFrontWrapper {
         return this.gameMap.getGameMapAreas()?.isPlayerInsideArea(id, this.position) || false;
     }
 
+    private isPlayerInsideAreaByCoordinates(
+        areaCoordinates: { x: number; y: number; width: number; height: number },
+        playerPosition: { x: number; y: number }
+    ): boolean {
+        return (
+            playerPosition.x >= areaCoordinates.x &&
+            playerPosition.x <= areaCoordinates.x + areaCoordinates.width &&
+            playerPosition.y >= areaCoordinates.y &&
+            playerPosition.y <= areaCoordinates.y + areaCoordinates.height
+        );
+    }
+
+    public listenAreaCreation(areaData: AreaData): void {
+        if (this.position === undefined) {
+            return;
+        }
+
+        if (this.isPlayerInsideAreaByCoordinates(areaData, this.position)) {
+            this.triggerSpecificAreaOnEnter(areaData);
+        }
+    }
+
+    public listenAreaChanges(oldConfig: AtLeast<AreaData, "id">, newConfig: AtLeast<AreaData, "id">): void {
+        if (this.position === undefined) {
+            return;
+        }
+
+        const isOldCoordinates = AreaCoordinates.safeParse(oldConfig);
+        const isNewCoordinates = AreaCoordinates.safeParse(newConfig);
+
+        if (!isOldCoordinates.success) {
+            throw new Error("Something wrong happen! Area coordinates are not defined");
+        }
+
+        const area = this.gameMap.getGameMapAreas()?.getArea(oldConfig.id);
+
+        if (!area) {
+            console.error("Area with id " + oldConfig.id + " does not exist, this not supposed to happen");
+            return;
+        }
+
+        const oldAreaCoordinates = isOldCoordinates.data;
+        const newAreaCoordinates = isNewCoordinates.success ? isNewCoordinates.data : oldAreaCoordinates;
+
+        const isPlayerWasInsideArea = this.isPlayerInsideAreaByCoordinates(oldAreaCoordinates, this.position);
+        const isPlayerInsideArea = this.isPlayerInsideAreaByCoordinates(newAreaCoordinates, this.position);
+
+        if (isPlayerWasInsideArea && isPlayerInsideArea) {
+            if (JSON.stringify(oldConfig.properties) !== JSON.stringify(newConfig.properties)) {
+                this.triggerSpecificAreaOnUpdate(area, oldConfig.properties, newConfig.properties);
+            }
+        } else if (isPlayerWasInsideArea && !isPlayerInsideArea) {
+            this.triggerSpecificAreaOnLeave(area);
+            return;
+        } else if (!isPlayerWasInsideArea && isPlayerInsideArea) {
+            this.triggerSpecificAreaOnEnter(area);
+            return;
+        }
+    }
+
+    public listenAreaDeletion(areaData: AreaData | undefined) {
+        if (areaData === undefined || this.position === undefined) {
+            console.error('Area with id "' + areaData?.id + '" does not exist, this not supposed to happen');
+            return;
+        }
+
+        if (this.isPlayerInsideAreaByCoordinates(areaData, this.position)) {
+            this.triggerSpecificAreaOnLeave(areaData);
+        }
+    }
+
     public getMapChangedObservable(): Observable<number[][]> {
         return this.mapChangedSubject.asObservable();
     }
@@ -762,10 +832,6 @@ export class GameMapFrontWrapper {
     public getFlatLayers(): ITiledMapLayer[] {
         return this.gameMap.flatLayers;
     }
-
-    /*public getTiledAreas(): ITiledMapObject[] {
-        return this.tiledAreas;
-    }*/
 
     public getExitUrls(): Array<string> {
         return this.gameMap.exitUrls;

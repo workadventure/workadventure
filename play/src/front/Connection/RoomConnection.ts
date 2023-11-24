@@ -37,6 +37,7 @@ import {
     AddSpaceFilterMessage,
     UpdateSpaceFilterMessage,
     RemoveSpaceFilterMessage,
+    UpdateSpaceMetadataMessage,
     AddSpaceUserMessage,
     UpdateSpaceUserMessage,
     RemoveSpaceUserMessage,
@@ -200,6 +201,8 @@ export class RoomConnection implements RoomConnection {
     public readonly updateSpaceUserMessageStream = this._updateSpaceUserMessageStream.asObservable();
     private readonly _removeSpaceUserMessageStream = new Subject<RemoveSpaceUserMessage>();
     public readonly removeSpaceUserMessageStream = this._removeSpaceUserMessageStream.asObservable();
+    private readonly _updateSpaceMetadataMessageStream = new Subject<UpdateSpaceMetadataMessage>();
+    public readonly updateSpaceMetadataMessageStream = this._updateSpaceMetadataMessageStream.asObservable();
     private readonly _megaphoneSettingsMessageStream = new BehaviorSubject<MegaphoneSettings | undefined>(undefined);
     public readonly megaphoneSettingsMessageStream = this._megaphoneSettingsMessageStream.asObservable();
 
@@ -388,6 +391,10 @@ export class RoomConnection implements RoomConnection {
                             }
                             case "removeSpaceUserMessage": {
                                 this._removeSpaceUserMessageStream.next(subMessage.removeSpaceUserMessage);
+                                break;
+                            }
+                            case "updateSpaceMetadataMessage": {
+                                this._updateSpaceMetadataMessageStream.next(subMessage.updateSpaceMetadataMessage);
                                 break;
                             }
                             case "megaphoneSettingsMessage": {
@@ -936,6 +943,7 @@ export class RoomConnection implements RoomConnection {
         this._addSpaceUserMessageStream.complete();
         this._updateSpaceUserMessageStream.complete();
         this._removeSpaceUserMessageStream.complete();
+        this._updateSpaceMetadataMessageStream.complete();
         this._megaphoneSettingsMessageStream.complete();
         this._receivedEventMessageStream.complete();
     }
@@ -1427,7 +1435,7 @@ export class RoomConnection implements RoomConnection {
 
     public emitWatchSpaceLiveStreaming(spaceName: string) {
         const spaceFilter: SpaceFilterMessage = {
-            filterName: "testFilter",
+            filterName: "watchSpaceLiveStreaming",
             spaceName,
             filter: {
                 $case: "spaceFilterLiveStreaming",
@@ -1452,6 +1460,18 @@ export class RoomConnection implements RoomConnection {
                 $case: "unwatchSpaceMessage",
                 unwatchSpaceMessage: UnwatchSpaceMessage.fromPartial({
                     spaceName,
+                }),
+            },
+        });
+    }
+
+    public emitUpdateSpaceMetadata(spaceName: string, metadata: { [key: string]: unknown }): void {
+        this.send({
+            message: {
+                $case: "updateSpaceMetadataMessage",
+                updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
+                    spaceName,
+                    metadata: JSON.stringify(metadata),
                 }),
             },
         });

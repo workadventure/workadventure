@@ -44,12 +44,14 @@ import {
     AddSpaceUserMessage,
     RemoveSpaceUserMessage,
     SendEventQuery,
+    UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
 import Debug from "debug";
 import * as Sentry from "@sentry/node";
 import { WAMSettingsUtils } from "@workadventure/map-editor";
+import { z } from "zod";
 import { GameRoom } from "../Model/GameRoom";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -129,8 +131,6 @@ export class SocketManager {
                     }
                 );
             });
-        } else {
-            emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
         }
 
         if (!socket.writable) {
@@ -1444,6 +1444,20 @@ export class SocketManager {
         const space = this.spaces.get(removeSpaceUserMessage.spaceName);
         if (space) {
             space.removeUser(pusher, removeSpaceUserMessage.userId);
+        }
+    }
+
+    handleUpdateSpaceMetadataMessage(pusher: SpacesWatcher, updateSpaceMetadataMessage: UpdateSpaceMetadataMessage) {
+        const space = this.spaces.get(updateSpaceMetadataMessage.spaceName);
+
+        const isMetadata = z.record(z.string(), z.unknown()).safeParse(JSON.parse(updateSpaceMetadataMessage.metadata));
+        if (!isMetadata.success) {
+            console.error("Metadata is not a valid json object");
+            return;
+        }
+
+        if (space) {
+            space.updateMetadata(pusher, isMetadata.data);
         }
     }
 

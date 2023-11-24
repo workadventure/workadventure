@@ -9,8 +9,9 @@ import {
 } from "@workadventure/messages";
 import Debug from "debug";
 import * as Sentry from "@sentry/node";
+import { Socket } from "../services/SocketManager";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
-import { BackSpaceConnection, ExSocketInterface } from "./Websocket/ExSocketInterface";
+import { BackSpaceConnection } from "./Websocket/SocketData";
 
 type SpaceUserExtended = { lowercaseName: string } & SpaceUser;
 
@@ -19,25 +20,29 @@ const debug = Debug("space");
 export class Space implements CustomJsonReplacerInterface {
     private readonly users: Map<number, SpaceUserExtended>;
 
-    private clientWatchers: Map<number, ExSocketInterface>;
+    private clientWatchers: Map<number, Socket>;
 
     constructor(
         public readonly name: string,
         private spaceStreamToPusher: BackSpaceConnection,
         public backId: number,
-        watcher: ExSocketInterface
+        watcher: Socket
     ) {
         this.users = new Map<number, SpaceUserExtended>();
-        this.clientWatchers = new Map<number, ExSocketInterface>();
+        this.clientWatchers = new Map<number, Socket>();
         this.addClientWatcher(watcher);
         debug(`created : ${name}`);
     }
 
-    public addClientWatcher(watcher: ExSocketInterface) {
-        this.clientWatchers.set(watcher.userId, watcher);
+    public addClientWatcher(watcher: Socket) {
+        const socketData = watcher.getUserData();
+        if (!socketData.userId) {
+            throw new Error("User id not found");
+        }
+        this.clientWatchers.set(socketData.userId, watcher);
         this.users.forEach((user) => {
             if (this.isWatcherTargeted(watcher, user)) {
-                const filterOfThisSpace = watcher.spacesFilters.get(this.name) ?? [];
+                const filterOfThisSpace = socketData.spacesFilters.get(this.name) ?? [];
                 const filtersTargeted = filterOfThisSpace.filter((spaceFilter) =>
                     this.filterOneUser(spaceFilter, user)
                 );
@@ -48,12 +53,16 @@ export class Space implements CustomJsonReplacerInterface {
                 }
             }
         });
-        debug(`${this.name} : watcher added ${watcher.name}`);
+        debug(`${this.name} : watcher added ${socketData.name}`);
     }
 
-    public removeClientWatcher(watcher: ExSocketInterface) {
-        this.clientWatchers.delete(watcher.userId);
-        debug(`${this.name} : watcher removed ${watcher.name}`);
+    public removeClientWatcher(watcher: Socket) {
+        const socketData = watcher.getUserData();
+        if (!socketData.userId) {
+            throw new Error("User id not found");
+        }
+        this.clientWatchers.delete(socketData.userId);
+        debug(`${this.name} : watcher removed ${socketData.name}`);
     }
 
     public addUser(spaceUser: SpaceUser) {
@@ -210,11 +219,36 @@ export class Space implements CustomJsonReplacerInterface {
         }
     }
 
+    public localUpdateMetadata(metadata: { [key: string]: unknown }) {
+        const subMessage: SubMessage = {
+            message: {
+                $case: "updateSpaceMetadataMessage",
+                updateSpaceMetadataMessage: {
+                    spaceName: this.name,
+                    metadata: JSON.stringify(metadata),
+                    filterName: undefined,
+                },
+            },
+        };
+        this.notifyAllMetadata(subMessage);
+    }
+
+    private notifyAllMetadata(subMessage: SubMessage) {
+        this.clientWatchers.forEach((watcher) => {
+            const socketData = watcher.getUserData();
+            if (subMessage.message?.$case === "updateSpaceMetadataMessage") {
+                debug(`${this.name} : metadata update sent to ${socketData.name}`);
+                socketData.emitInBatch(subMessage);
+            }
+        });
+    }
+
     private notifyAll(subMessage: SubMessage, youngUser: SpaceUserExtended, oldUser: SpaceUserExtended | null = null) {
         this.clientWatchers.forEach((watcher) => {
+            const socketData = watcher.getUserData();
             if (this.isWatcherTargeted(watcher, youngUser) || (oldUser && this.isWatcherTargeted(watcher, oldUser))) {
-                debug(`${this.name} : ${watcher.name} targeted`);
-                const filterOfThisSpace = watcher.spacesFilters.get(this.name) ?? [];
+                debug(`${this.name} : ${socketData.name} targeted`);
+                const filterOfThisSpace = socketData.spacesFilters.get(this.name) ?? [];
                 const filtersTargeted = filterOfThisSpace.filter(
                     (spaceFilter) =>
                         this.filterOneUser(spaceFilter, youngUser) ||
@@ -224,8 +258,8 @@ export class Space implements CustomJsonReplacerInterface {
                     filtersTargeted.forEach((spaceFilter) => {
                         if (subMessage.message?.$case === "addSpaceUserMessage") {
                             subMessage.message.addSpaceUserMessage.filterName = spaceFilter.filterName;
-                            debug(`${this.name} : user ${youngUser.lowercaseName} add sent to ${watcher.name}`);
-                            watcher.emitInBatch(subMessage);
+                            debug(`${this.name} : user ${youngUser.lowercaseName} add sent to ${socketData.name}`);
+                            socketData.emitInBatch(subMessage);
                         } else if (subMessage.message?.$case === "updateSpaceUserMessage") {
                             if (
                                 oldUser &&
@@ -241,13 +275,15 @@ export class Space implements CustomJsonReplacerInterface {
                                 this.notifyMeRemoveUser(watcher, youngUser, spaceFilter.filterName);
                             } else {
                                 subMessage.message.updateSpaceUserMessage.filterName = spaceFilter.filterName;
-                                watcher.emitInBatch(subMessage);
-                                debug(`${this.name} : user ${youngUser.lowercaseName} update sent to ${watcher.name}`);
+                                socketData.emitInBatch(subMessage);
+                                debug(
+                                    `${this.name} : user ${youngUser.lowercaseName} update sent to ${socketData.name}`
+                                );
                             }
                         } else if (subMessage.message?.$case === "removeSpaceUserMessage") {
                             subMessage.message.removeSpaceUserMessage.filterName = spaceFilter.filterName;
-                            watcher.emitInBatch(subMessage);
-                            debug(`${this.name} : user ${youngUser.lowercaseName} remove sent to ${watcher.name}`);
+                            socketData.emitInBatch(subMessage);
+                            debug(`${this.name} : user ${youngUser.lowercaseName} remove sent to ${socketData.name}`);
                         }
                     });
                 }
@@ -255,12 +291,12 @@ export class Space implements CustomJsonReplacerInterface {
         });
     }
 
-    public notifyMe(watcher: ExSocketInterface, subMessage: SubMessage) {
-        watcher.emitInBatch(subMessage);
+    public notifyMe(watcher: Socket, subMessage: SubMessage) {
+        watcher.getUserData().emitInBatch(subMessage);
     }
 
-    private isWatcherTargeted(watcher: ExSocketInterface, user: SpaceUserExtended) {
-        const filtersOfThisSpace = watcher.spacesFilters.get(this.name) ?? [];
+    private isWatcherTargeted(watcher: Socket, user: SpaceUserExtended) {
+        const filtersOfThisSpace = watcher.getUserData().spacesFilters.get(this.name) ?? [];
         return filtersOfThisSpace.filter((spaceFilter) => this.filterOneUser(spaceFilter, user)).length > 0;
     }
 
@@ -303,23 +339,24 @@ export class Space implements CustomJsonReplacerInterface {
         return false;
     }
 
-    public handleAddFilter(watcher: ExSocketInterface, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
+    public handleAddFilter(watcher: Socket, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
         const newFilter = updateSpaceFilterMessage.spaceFilterMessage;
         if (newFilter) {
-            debug(`${this.name} : filter added (${newFilter.filterName}) for ${watcher.userId}`);
+            debug(`${this.name} : filter added (${newFilter.filterName}) for ${watcher.getUserData().userId}`);
             const newData = this.filter(newFilter);
             this.delta(watcher, this.users, newData, newFilter.filterName);
         }
     }
 
-    public handleUpdateFilter(watcher: ExSocketInterface, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
+    public handleUpdateFilter(watcher: Socket, updateSpaceFilterMessage: UpdateSpaceFilterMessage) {
         const newFilter = updateSpaceFilterMessage.spaceFilterMessage;
         if (newFilter) {
-            const oldFilter = watcher.spacesFilters
-                .get(this.name)
+            const oldFilter = watcher
+                .getUserData()
+                .spacesFilters.get(this.name)
                 ?.find((filter) => filter.filterName === newFilter.filterName);
             if (oldFilter) {
-                debug(`${this.name} : filter updated (${newFilter.filterName}) for ${watcher.userId}`);
+                debug(`${this.name} : filter updated (${newFilter.filterName}) for ${watcher.getUserData().userId}`);
                 const oldData = this.filter(oldFilter);
                 const newData = this.filter(newFilter);
                 this.delta(watcher, oldData, newData, newFilter.filterName);
@@ -327,17 +364,17 @@ export class Space implements CustomJsonReplacerInterface {
         }
     }
 
-    public handleRemoveFilter(watcher: ExSocketInterface, removeSpaceFilterMessage: RemoveSpaceFilterMessage) {
+    public handleRemoveFilter(watcher: Socket, removeSpaceFilterMessage: RemoveSpaceFilterMessage) {
         const oldFilter = removeSpaceFilterMessage.spaceFilterMessage;
         if (oldFilter) {
-            debug(`${this.name} : filter removed (${oldFilter.filterName}) for ${watcher.userId}`);
+            debug(`${this.name} : filter removed (${oldFilter.filterName}) for ${watcher.getUserData().userId}`);
             const oldData = this.filter(oldFilter);
             this.delta(watcher, oldData, this.users, undefined);
         }
     }
 
     private delta(
-        watcher: ExSocketInterface,
+        watcher: Socket,
         oldData: Map<number, SpaceUserExtended>,
         newData: Map<number, SpaceUserExtended>,
         filterName: string | undefined
@@ -359,10 +396,14 @@ export class Space implements CustomJsonReplacerInterface {
             }
         });
 
-        debug(`${this.name} : filter calculated for ${watcher.userId} (${addedUsers} added, ${removedUsers} removed)`);
+        debug(
+            `${this.name} : filter calculated for ${
+                watcher.getUserData().userId
+            } (${addedUsers} added, ${removedUsers} removed)`
+        );
     }
 
-    private notifyMeAddUser(watcher: ExSocketInterface, user: SpaceUserExtended, filterName: string | undefined) {
+    private notifyMeAddUser(watcher: Socket, user: SpaceUserExtended, filterName: string | undefined) {
         const subMessage: SubMessage = {
             message: {
                 $case: "addSpaceUserMessage",
@@ -376,7 +417,7 @@ export class Space implements CustomJsonReplacerInterface {
         this.notifyMe(watcher, subMessage);
     }
 
-    private notifyMeRemoveUser(watcher: ExSocketInterface, user: SpaceUserExtended, filterName: string | undefined) {
+    private notifyMeRemoveUser(watcher: Socket, user: SpaceUserExtended, filterName: string | undefined) {
         const subMessage: SubMessage = {
             message: {
                 $case: "removeSpaceUserMessage",

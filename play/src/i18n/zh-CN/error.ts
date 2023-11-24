@@ -15,7 +15,14 @@ const error: DeepPartial<Translation["error"]> = {
     connectionRetry: {
         unableConnect: "无法链接到 WorkAdventure. 请检查互联网连接。",
     },
-    error: "错误",
+    errorDialog: {
+        title: "错误 😱",
+        hasReportIssuesUrl: "如果你想了解更多信息，你可以联系管理员或在以下网址报告问题:",
+        noReportIssuesUrl: "如果你想了解更多信息，你可以联系世界管理员。",
+        messageFAQ: "你也可以查看我们的:",
+        reload: "重新加载",
+        close: "关闭",
+    },
 };
 
 export default error;

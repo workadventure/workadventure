@@ -75,8 +75,8 @@ export function validateWebsocketQuery<T extends ZodObject<ZodRawShape>>(
             {
                 rejected: true,
                 reason: "error",
-                status: 400,
                 error: {
+                    status: "error",
                     type: "error",
                     title: "400 Bad Request",
                     subtitle: "Something wrong while connection!",

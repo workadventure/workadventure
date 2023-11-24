@@ -14,7 +14,14 @@ const error: BaseTranslation = {
     connectionRetry: {
         unableConnect: "Unable to connect to WorkAdventure. Are you connected to internet?",
     },
-    error: "Error",
+    errorDialog: {
+        title: "Error 😱",
+        hasReportIssuesUrl: "If you want more information, you may contact administrator or report an issue at:",
+        noReportIssuesUrl: "If you want more information, you may contact the administrator of the world.",
+        messageFAQ: "You may also check our:",
+        reload: "Reload",
+        close: "Close",
+    },
 };
 
 export default error;

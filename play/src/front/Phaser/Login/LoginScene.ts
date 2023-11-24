@@ -43,7 +43,7 @@ export class LoginScene extends ResizableScene {
         }
     }
 
-    public login(name: string): void {
+    public async login(name: string): Promise<void> {
         if (isUserNameTooLong(name)) {
             throw new NameTooLongError();
         }
@@ -53,6 +53,7 @@ export class LoginScene extends ResizableScene {
 
         analyticsClient.validationName();
         name = name.trim();
+        await connectionManager.saveName(name);
         gameManager.setPlayerName(name);
 
         this.scene.stop(LoginSceneName);

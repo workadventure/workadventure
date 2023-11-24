@@ -48,19 +48,20 @@
         }
     }
 
-    function submit() {
+    async function submit() {
         startValidating = true;
 
         let finalName = name.trim();
         if (finalName !== "") {
             try {
-                loginScene.login(finalName);
+                await loginScene.login(finalName);
             } catch (err) {
                 if (err instanceof NameTooLongError) {
                     errorName = $LL.login.input.name.tooLongError();
                 } else if (err instanceof NameNotValidError) {
                     errorName = $LL.login.input.name.notValidError();
                 } else {
+                    errorName = $LL.login.genericError();
                     throw err;
                 }
             }

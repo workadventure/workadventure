@@ -1,246 +1,143 @@
-import { derived, get, Readable, Unsubscriber, writable } from "svelte/store";
-import { ForwardableStore } from "@workadventure/store-utils";
-// eslint-disable-next-line import/no-unresolved
-import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
-import pLimit from "p-limit";
-import { SpaceFilterMessage } from "@workadventure/messages";
+import { writable } from "svelte/store";
 import debug from "debug";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import { megaphoneEnabledStore } from "../Stores/MegaphoneStore";
+import { SpaceFilterMessage } from "@workadventure/messages";
+import { ConcatenateMapStore } from "@workadventure/store-utils";
 import { RoomConnection } from "../Connection/RoomConnection";
-import { Space } from "../Space/Space";
-import { gameManager } from "../Phaser/Game/GameManager";
-import { JITSI_DOMAIN, JITSI_MUC_DOMAIN, JITSI_XMPP_DOMAIN } from "../Enum/EnvironmentVariable";
-import { JitsiTrackWrapper } from "./Jitsi/JitsiTrackWrapper";
-import { jitsiConferencesStore } from "./Jitsi/JitsiConferencesStore";
-import { JitsiConferenceWrapper } from "./Jitsi/JitsiConferenceWrapper";
-import { libJitsiFactory } from "./Jitsi/LibJitsiFactory";
+import { screenWakeLock } from "../Utils/ScreenWakeLock";
+import { BroadcastSpace } from "./Common/BroadcastSpace";
+import { BroadcastConnection } from "./Common/BroadcastConnection";
+import { TrackWrapper } from "./Common/TrackWrapper";
 
 export const jitsiLoadingStore = writable<boolean>(false);
 
-const limit = pLimit(1);
+const broadcastServiceLogger = debug("BroadcastService");
 
-const broadcastServiceLogger = debug("jitsi");
-
-class BroadcastSpace extends Space {
-    public jitsiConference: JitsiConferenceWrapper | undefined;
-    public unsubscribes: Unsubscriber[] = [];
-    constructor(
-        connection: RoomConnection,
-        spaceName: string,
-        spaceFilter: SpaceFilterMessage,
-        private broadcastService: BroadcastService,
-        public playSound: boolean
-    ) {
-        super(connection, spaceName, spaceFilter);
-        this.unsubscribes.push(
-            this.users.subscribe((users) => {
-                if (users.size === 0) {
-                    if (this.jitsiConference !== undefined) {
-                        limit(() => this.jitsiConference?.leave("Nobody is streaming anymore ..."))
-                            .then(() => {
-                                this.jitsiConference = undefined;
-                            })
-                            .catch((e) => {
-                                // TODO : Handle the error and retry to leave the conference
-                                console.error(e);
-                            })
-                            .finally(() => {
-                                jitsiLoadingStore.set(false);
-                                broadcastService.checkIfCanDisconnect();
-                            });
-                    }
-                } else {
-                    limit(async () => {
-                        if (this.jitsiConference === undefined) {
-                            jitsiLoadingStore.set(true);
-                            this.jitsiConference = await broadcastService.joinJitsiConference(spaceName, this);
-                            broadcastService.emitJitsiParticipantIdSpace(spaceName, this.jitsiConference.participantId);
-                            jitsiLoadingStore.set(false);
-                        }
-                    }).catch((e) => {
-                        // TODO : Handle the error and retry to join the conference
-                        console.error("Error while joining the conference", e);
-                    });
-                }
-            })
-        );
-    }
-    destroy() {
-        limit(() => this.jitsiConference?.leave("I want to leave this space ..."))
-            .then(() => {
-                this.jitsiConference = undefined;
-            })
-            .catch((e) => {
-                console.error(e);
-            })
-            .finally(() => {
-                this.broadcastService.checkIfCanDisconnect();
-                jitsiLoadingStore.set(false);
-            });
-        this.unsubscribes.forEach((unsubscribe) => unsubscribe());
-        super.destroy();
-    }
-}
+export type BroadcastSpaceFactory = (
+    connection: RoomConnection,
+    spaceName: string,
+    spaceFilter: SpaceFilterMessage,
+    broadcastService: BroadcastService,
+    playSound: boolean
+) => BroadcastSpace;
 
 export class BroadcastService {
-    private megaphoneEnabledUnsubscribe: Unsubscriber;
-    private jitsiConnection: JitsiConnection | undefined;
-    private broadcastSpaces: BroadcastSpace[];
-    private readonly _jitsiTracks: ForwardableStore<Map<string, JitsiTrackWrapper>>;
+    private broadcastConnections: Map<string, BroadcastConnection> = new Map<string, BroadcastConnection>();
+    private broadcastSpaces: BroadcastSpace[] = [];
+    private tracks = new ConcatenateMapStore<string, TrackWrapper>();
+    private screenWakeRelease: (() => Promise<void>) | undefined;
 
-    constructor(private connection: RoomConnection) {
-        /**
-         * This service is in charge of:
-         * - tracking in which broadcast zone the user is
-         * - sending this zone to the server
-         * - listening for clicks on the broadcast button + listening to people entering the stage
-         * - listening for a signal we should join a broadcast
-         * - keep track of the Jitsi connexion / room and restart it if connexion is lost
-         */
-        this._jitsiTracks = new ForwardableStore<Map<string, JitsiTrackWrapper>>(new Map());
+    constructor(private roomConnection: RoomConnection, private defaultBroadcastSpaceFactory: BroadcastSpaceFactory) {}
 
-        this.broadcastSpaces = [];
-
-        this.megaphoneEnabledUnsubscribe = megaphoneEnabledStore.subscribe((megaphoneEnabled) => {
-            if (megaphoneEnabled) {
-                this.broadcastSpaces.forEach((broadcastSpace) => {
-                    if (broadcastSpace.jitsiConference) {
-                        broadcastSpace.jitsiConference.broadcast(["video", "audio"]);
-                        broadcastSpace.jitsiConference.firstLocalTrackInit().catch((e) => {
-                            console.error(e);
-                        });
-                    }
-                });
-            } else {
-                this.broadcastSpaces.forEach((broadcastSpace) => {
-                    broadcastSpace.jitsiConference?.broadcast([]);
-                });
-            }
-        });
-
-        //libJitsiFactory.createConnection("jitsi.test.workadventu.re", "prosody.test.workadventu.re", "muc.prosody.test.workadventu.re").then((connection) => {
-    }
-
-    public joinSpace(spaceName_: string, playSound = true) {
-        const spaceName = slugify(spaceName_);
-        const spaceFilter = this.connection.emitWatchSpaceLiveStreaming(spaceName);
-        const broadcastSpace = new BroadcastSpace(this.connection, spaceName, spaceFilter, this, playSound);
+    /**
+     * Join a broadcast space
+     * @param spaceName The name of the space to join
+     * @param playSound Whether to play a sound when joining the space
+     * @param broadcastSpaceFactory A factory to create the broadcast space. If not provided, the default one will be used.
+     * @returns The broadcast space
+     */
+    public joinSpace(
+        spaceName: string,
+        playSound = true,
+        broadcastSpaceFactory?: BroadcastSpaceFactory
+    ): BroadcastSpace {
+        const spaceNameSlugify = slugify(spaceName);
+        const spaceFilter = this.roomConnection.emitWatchSpaceLiveStreaming(spaceNameSlugify);
+        const broadcastSpace = broadcastSpaceFactory
+            ? broadcastSpaceFactory(this.roomConnection, spaceNameSlugify, spaceFilter, this, playSound)
+            : this.defaultBroadcastSpaceFactory(this.roomConnection, spaceNameSlugify, spaceFilter, this, playSound);
         this.broadcastSpaces.push(broadcastSpace);
-        broadcastServiceLogger("BroadcastService => joinSpace", spaceName);
+        this.tracks.addStore(broadcastSpace.tracks);
+        broadcastServiceLogger("joinSpace", spaceNameSlugify);
+        screenWakeLock
+            .requestWakeLock()
+            .then((release) => (this.screenWakeRelease = release))
+            .catch((error) => console.error(error));
+        return broadcastSpace;
     }
 
-    public leaveSpace(spaceName_: string) {
-        const spaceName = slugify(spaceName_);
-        const space = this.broadcastSpaces.find((space) => space.name === spaceName);
+    /**
+     * Leave a broadcast space
+     * @param spaceName The name of the space to leave
+     */
+    public leaveSpace(spaceName: string) {
+        const spaceNameSlugify = slugify(spaceName);
+        const space = this.broadcastSpaces.find((space) => space.space.name === spaceNameSlugify);
         if (space) {
-            this.connection.emitUnwatchSpaceLiveStreaming(spaceName);
+            this.roomConnection.emitUnwatchSpaceLiveStreaming(spaceNameSlugify);
             space.destroy();
-            this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.name !== spaceName);
-            broadcastServiceLogger("BroadcastService => leaveSpace", spaceName);
+            this.broadcastSpaces = this.broadcastSpaces.filter((space) => space.space.name !== spaceNameSlugify);
+            broadcastServiceLogger("leaveSpace", spaceNameSlugify);
         }
         jitsiLoadingStore.set(false);
-    }
-
-    private async connect() {
-        if (!JITSI_DOMAIN || !JITSI_XMPP_DOMAIN || !JITSI_MUC_DOMAIN) {
-            throw new Error("Cannot use Jitsi with a no domain defined, please check your environment variables");
+        if (this.screenWakeRelease) {
+            this.screenWakeRelease()
+                .then(() => {
+                    this.screenWakeRelease = undefined;
+                })
+                .catch((error) => console.error(error));
         }
-        this.jitsiConnection = await libJitsiFactory.createConnection(
-            JITSI_DOMAIN,
-            JITSI_XMPP_DOMAIN,
-            JITSI_MUC_DOMAIN
-        );
     }
 
-    async joinJitsiConference(roomName: string, broadcastSpace: BroadcastSpace): Promise<JitsiConferenceWrapper> {
-        if (!this.jitsiConnection) {
-            try {
-                await this.connect();
-            } catch (e) {
-                broadcastServiceLogger("Error while connecting to Jitsi", e);
-            }
-            if (!this.jitsiConnection) {
-                jitsiLoadingStore.set(false);
-                throw new Error("Could not connect to Jitsi");
-            }
-        }
-
-        debug("Joining Jitsi conference, jitsiConnection is defined " + roomName);
-
-        const jitsiConference = await JitsiConferenceWrapper.join(this.jitsiConnection, roomName);
-        jitsiConferencesStore.set(roomName, jitsiConference);
-
-        if (get(megaphoneEnabledStore)) {
-            jitsiConference.broadcast(["video", "audio"]);
-        } else if (broadcastSpace.playSound) {
-            gameManager.getCurrentGameScene().playSound("audio-megaphone");
-        }
-
-        const associatedStreamStore: Readable<Map<string, JitsiTrackWrapper>> = derived(
-            [jitsiConference.streamStore, broadcastSpace.users],
-            ([$streamStore, $users]) => {
-                const filtered = new Map<string, JitsiTrackWrapper>();
-                for (const [participantId, stream] of $streamStore) {
-                    let found = false;
-                    if (stream.spaceUser !== undefined) {
-                        if ($users.has(stream.spaceUser.id)) {
-                            filtered.set(participantId, stream);
-                        }
-                        continue;
-                    }
-                    for (const user of $users.values()) {
-                        if (user.jitsiParticipantId === stream.uniqueId) {
-                            stream.spaceUser = user;
-                            filtered.set(participantId, stream);
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        broadcastServiceLogger(
-                            "BroadcastService => joinJitsiConference => No associated spaceUser found for participantId" +
-                                stream.uniqueId +
-                                $users.values()
-                        );
-                    }
-                }
-                return filtered;
-            }
-        );
-
-        this._jitsiTracks.forward(associatedStreamStore);
-        return jitsiConference;
+    /**
+     * Get the list of tracks from all broadcast spaces
+     * @returns The list of tracks from all broadcast spaces
+     */
+    public getTracks(): ConcatenateMapStore<string, TrackWrapper> {
+        return this.tracks;
     }
 
-    private canDisconnect(): boolean {
-        return this.broadcastSpaces.every((space) => space.isEmpty);
+    /**
+     * Get the broadcast connection for a given provider
+     * @param provider Provider name
+     * @returns The broadcast connection or undefined if not found
+     */
+    public getBroadcastConnection(provider: string): BroadcastConnection | undefined {
+        return this.broadcastConnections.get(provider);
     }
 
+    /**
+     * Set the broadcast connection for a given provider
+     * @param provider Provider name
+     * @param connection The broadcast connection
+     */
+    public setBroadcastConnection(provider: string, connection: BroadcastConnection) {
+        this.broadcastConnections.set(provider, connection);
+    }
+
+    /**
+     * Leave all broadcast spaces for a given provider
+     * @param provider Provider name
+     * @returns The broadcast connection or undefined if not found
+     */
+    private canDisconnectProvider(provider: string): boolean {
+        return this.broadcastSpaces
+            .filter((space) => space.provider === provider)
+            .every((space) => space.space.isEmpty);
+    }
+
+    /**
+     * Destroy the broadcast service
+     */
     public destroy(): void {
-        this.megaphoneEnabledUnsubscribe();
         this.broadcastSpaces.forEach((space) => space.destroy());
     }
 
-    public get jitsiTracks(): Readable<Map<string, JitsiTrackWrapper>> {
-        return this._jitsiTracks;
-    }
-
-    public emitJitsiParticipantIdSpace(spaceName: string, participantId: string) {
-        this.connection.emitJitsiParticipantIdSpace(spaceName, participantId);
-    }
-
-    public checkIfCanDisconnect() {
-        if (this.canDisconnect() && this.jitsiConnection !== undefined) {
-            broadcastServiceLogger("Disconnecting from Jitsi");
-            this.jitsiConnection
+    /**
+     * Check if the broadcast service can disconnect
+     * @param provider Provider name
+     */
+    public checkIfCanDisconnect(provider: string) {
+        const providerConnection = this.broadcastConnections.get(provider);
+        if (this.canDisconnectProvider(provider) && providerConnection !== undefined) {
+            broadcastServiceLogger("Disconnecting from broadcast connection");
+            providerConnection
                 .disconnect()
                 .then(() => {
-                    this.jitsiConnection = undefined;
+                    this.broadcastConnections.delete(provider);
                 })
                 .catch((e) => {
                     console.error(e);
-                    jitsiLoadingStore.set(false);
                 });
         }
     }

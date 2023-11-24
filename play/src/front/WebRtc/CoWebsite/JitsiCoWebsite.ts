@@ -9,6 +9,7 @@ import { requestedCameraState, requestedMicrophoneState } from "../../Stores/Med
 import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
+import { screenWakeLock } from "../../Utils/ScreenWakeLock";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 
 const JitsiConfig = z
@@ -136,6 +137,8 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
     private dominantSpeakerChangedCallback = this.onDominantSpeakerChanged.bind(this);
     private participantsCountChangeCallback = this.onParticipantsCountChange.bind(this);
 
+    private screenWakeRelease: (() => Promise<void>) | undefined;
+
     constructor(
         url: URL,
         widthPercent: number | undefined,
@@ -194,6 +197,14 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
                         this.jitsiApi.addListener("videoConferenceJoined", () => {
                             this.jitsiApi?.executeCommand("displayName", this.playerName);
                             this.jitsiApi?.executeCommand("avatarUrl", get(currentPlayerWokaStore));
+                            this.jitsiApi?.executeCommand("setNoiseSuppressionEnabled", {
+                                enabled: window.navigator.userAgent.toLowerCase().indexOf("firefox") === -1,
+                            });
+
+                            screenWakeLock
+                                .requestWakeLock()
+                                .then((release) => (this.screenWakeRelease = release))
+                                .catch((error) => console.error(error));
 
                             this.updateParticipantsCountStore();
                         });
@@ -256,6 +267,13 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
     }
 
     private closeOrUnload() {
+        if (this.screenWakeRelease) {
+            this.screenWakeRelease()
+                .then(() => {
+                    this.screenWakeRelease = undefined;
+                })
+                .catch((error) => console.error(error));
+        }
         if (this.isClosable()) {
             coWebsiteManager.closeCoWebsite(this);
         } else {

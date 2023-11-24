@@ -16,6 +16,7 @@ import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { EmptySceneName } from "../Login/EmptyScene";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraStore } from "../../Stores/MyMediaStore";
+import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { GameScene } from "./GameScene";
 
 /**
@@ -46,7 +47,7 @@ export class GameManager {
             // so we need to redirect to an empty Phaser scene, waiting for the redirection to take place
             return EmptySceneName;
         }
-        this.startRoom = result;
+        this.startRoom = result.room;
         this.loadMap(this.startRoom);
 
         const preferredAudioInputDeviceId = localUserStore.getPreferredAudioInputDevice();
@@ -59,9 +60,10 @@ export class GameManager {
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
         if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
             return LoginSceneName;
-        } else if (!this.characterTextureIds) {
-            console.info("Any Woka texture has been found, you will be redirect to the Woka selection scene");
+        } else if (result.nextScene === "selectCharacterScene") {
             return SelectCharacterSceneName;
+        } else if (result.nextScene === "selectCompanionScene") {
+            return SelectCompanionSceneName;
         } else if (preferredVideoInputDeviceId === undefined || preferredAudioInputDeviceId === undefined) {
             return EnableCameraSceneName;
         } else {
@@ -81,7 +83,11 @@ export class GameManager {
 
     public setPlayerName(name: string): void {
         this.playerName = name;
-        localUserStore.setName(name);
+        // Only save the name if the user is not logged in
+        // If the user is logged in, the name will be fetched from the server. No need to save it locally.
+        if (!localUserStore.isLogged()) {
+            localUserStore.setName(name);
+        }
     }
 
     public setVisitCardUrl(visitCardUrl: string): void {
@@ -90,7 +96,11 @@ export class GameManager {
 
     public setCharacterTextureIds(textureIds: string[]): void {
         this.characterTextureIds = textureIds;
-        localUserStore.setCharacterTextures(textureIds);
+        // Only save the textures if the user is not logged in
+        // If the user is logged in, the textures will be fetched from the server. No need to save them locally.
+        if (!localUserStore.isLogged()) {
+            localUserStore.setCharacterTextures(textureIds);
+        }
     }
 
     getPlayerName(): string | null {
@@ -101,10 +111,7 @@ export class GameManager {
         return this.visitCardUrl;
     }
 
-    getCharacterTextureIds(): string[] {
-        if (!this.characterTextureIds) {
-            throw new Error("characterTextures are not set");
-        }
+    getCharacterTextureIds(): string[] | null {
         return this.characterTextureIds;
     }
 

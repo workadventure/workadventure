@@ -42,14 +42,12 @@ function createErrorStore() {
         },
         clearMessageById: (id: string): void => {
             update((messages: ErrorMessage[]) => {
-                messages = messages.filter((message) => message.id !== id);
-                return messages;
+                return messages.filter((message) => message.id !== id);
             });
         },
         clearClosableMessages: (): void => {
             update((messages: ErrorMessage[]) => {
-                messages = messages.filter((message) => message.closable);
-                return messages;
+                return messages.filter((message) => !message.closable);
             });
         },
     };

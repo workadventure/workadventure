@@ -8,6 +8,7 @@
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
         cameraListStore,
+        localStreamStore,
         microphoneListStore,
         speakerListStore,
         requestedCameraState,
@@ -188,6 +189,7 @@
     }
 
     function toggleMapEditorMode() {
+        if (isMobile) return;
         analyticsClient.toggleMapEditor(!$mapEditorModeStore);
         mapEditorModeStore.switchMode(!$mapEditorModeStore);
     }
@@ -363,19 +365,47 @@
         chatTotalMessagesSubscription = iframeListener.chatTotalMessagesToSeeStream.subscribe((total) =>
             totalMessagesToSee.set(total)
         );
+        resizeObserver.observe(mainHtmlDiv);
     });
 
     onDestroy(() => {
         subscribers.map((subscriber) => subscriber());
+        unsubscribeLocalStreamStore();
         chatTotalMessagesSubscription?.unsubscribe();
     });
 
-    const isMobile = isMediaBreakpointUp("md");
+    let stream: MediaStream | null;
+    const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
+        if (value.type === "success") {
+            stream = value.stream;
+
+            if (stream !== null) {
+                const audioTracks = stream.getAudioTracks();
+                if (audioTracks.length > 0) {
+                    // set default speaker selected
+                    if ($speakerListStore && $speakerListStore.length > 0) {
+                        speakerSelectedStore.set($speakerListStore[0].deviceId);
+                    }
+                }
+            }
+        } else {
+            stream = null;
+        }
+    });
 
     function buttonActionBarTrigger(id: string) {
         const button = $additionnalButtonsMenu.get(id) as AddButtonActionBarEvent;
         return iframeListener.sendButtonActionBarTriggered(button);
     }
+
+    let mainHtmlDiv: HTMLDivElement;
+    let isMobile = isMediaBreakpointUp("md");
+    const resizeObserver = new ResizeObserver(() => {
+        isMobile = isMediaBreakpointUp("md");
+        if (isMobile) {
+            mapEditorModeStore.set(false);
+        }
+    });
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -383,6 +413,7 @@
 <div
     class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
     class:animated={$bottomActionBarVisibilityStore}
+    bind:this={mainHtmlDiv}
 >
     <div class="bottom-action-bar tw-absolute">
         {#if $bottomActionBarVisibilityStore}
@@ -779,13 +810,24 @@
                         on:click={toggleMapEditorMode}
                         class="bottom-action-button"
                     >
-                        <Tooltip text={$LL.actionbar.mapEditor()} />
+                        {#if isMobile}
+                            <Tooltip text={$LL.actionbar.mapEditorMobileLocked()} />
+                        {:else}
+                            <Tooltip text={$LL.actionbar.mapEditor()} />
+                        {/if}
                         <button
                             id="mapEditorIcon"
-                            class:border-top-light={$mapEditorModeStore}
+                            class:border-top-light={$mapEditorModeStore && !isMobile}
                             name="toggle-map-editor"
+                            disabled={isMobile}
                         >
-                            <img draggable="false" src={mapBuilder} style="padding: 2px" alt="toggle-map-editor" />
+                            <img
+                                draggable="false"
+                                src={mapBuilder}
+                                class:disable-opacity={isMobile}
+                                style="padding: 2px"
+                                alt="toggle-map-editor"
+                            />
                         </button>
                     </div>
                 {/if}

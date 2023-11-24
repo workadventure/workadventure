@@ -1,3 +1,4 @@
+import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { Easing } from "../../types";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Box } from "../../WebRtc/LayoutManager";
@@ -52,6 +53,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     private readonly EDITOR_MODE_SCROLL_SPEED: number = 5;
 
+    private unsubscribeMapEditorModeStore: () => void;
+
     constructor(scene: GameScene, cameraBounds: { x: number; y: number }, waScaleManager: WaScaleManager) {
         super();
         this.scene = scene;
@@ -65,10 +68,21 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.initCamera();
 
         this.bindEventHandlers();
+
+        // Subscribe to map editor mode store to change camera bounds when the map editor is opened or closed
+        this.unsubscribeMapEditorModeStore = mapEditorModeStore.subscribe((isOpened) => {
+            // Define new bounds for camera if the map editor is opened
+            if (isOpened) {
+                this.camera.setBounds(0, 0, this.cameraBounds.x * 2, this.cameraBounds.y);
+            } else {
+                this.camera.setBounds(0, 0, this.cameraBounds.x, this.cameraBounds.y);
+            }
+        });
     }
 
     public destroy(): void {
         this.scene.game.events.off(WaScaleManagerEvent.RefreshFocusOnTarget);
+        this.unsubscribeMapEditorModeStore();
         super.destroy();
     }
 

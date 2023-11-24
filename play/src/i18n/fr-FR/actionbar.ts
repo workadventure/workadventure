@@ -13,6 +13,7 @@ const actionbar: BaseTranslation = {
     disableMegaphone: "Couper le mégaphone",
     menu: "Ouvrir / Fermer le menu",
     mapEditor: "Ouvrir / Fermer l'éditeur de carte",
+    mapEditorMobileLocked: "L'éditeur de carte est verrouillé en mode mobile",
     bo: "Ouvrir le back office",
     subtitle: {
         microphone: "Microphone",

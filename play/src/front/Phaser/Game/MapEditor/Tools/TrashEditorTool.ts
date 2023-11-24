@@ -5,6 +5,7 @@ import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/Are
 import { DeleteAreaFrontCommand } from "../Commands/Area/DeleteAreaFrontCommand";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
+import { Entity } from "../../../ECS/Entity";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
 export class TrashEditorTool extends EntityRelatedEditorTool {
@@ -16,7 +17,7 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
         super(mapEditorModeManager);
 
         this.active = false;
-        this.ctrlKey = this.scene.input.keyboard?.addKey("CTRL");
+        this.ctrlKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
         this.areaPreviews = this.createAreaPreviews();
         this.bindEventHandlers();
     }
@@ -107,6 +108,14 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
         if (!this.active) {
             return;
         }
+
+        const firstGameObject = gameObjects[0];
+
+        if (firstGameObject && firstGameObject instanceof Entity) {
+            firstGameObject.delete();
+            return;
+        }
+
         const areaEditorToolObjects = this.getAreaEditorToolObjectsFromGameObjects(gameObjects);
         if (areaEditorToolObjects.length === 1) {
             if (this.isAreaPreview(areaEditorToolObjects[0])) {
@@ -172,7 +181,9 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
         this.scene.input.off(Phaser.Input.Events.POINTER_OUT, this.pointerOutEventHandler);
     }
 
-    public handleAreaPreviewDeletion(id: string): void {
+    public handleAreaDeletion(id: string, areaData: AreaData | undefined): void {
+        this.scene.getGameMapFrontWrapper().listenAreaDeletion(areaData);
+
         if (!this.active) {
             return;
         }
@@ -180,6 +191,17 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
         this.deleteAreaPreview(id);
         this.scene.markDirty();
         mapEditorSelectedAreaPreviewStore.set(undefined);
+    }
+
+    public handleAreaCreation(config: AreaData, localCommand: boolean): void {
+        this.scene.getGameMapFrontWrapper().listenAreaCreation(config);
+
+        if (!this.active) {
+            return;
+        }
+
+        this.createAreaPreview(config);
+        this.scene.markDirty();
     }
 
     public handleAreaPreviewCreation(config: AreaData, localCommand: boolean): void {
