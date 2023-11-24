@@ -419,18 +419,6 @@ export class IoSocketController {
                                         // If the response points to nowhere, don't attempt an upgrade
                                         return;
                                     }
-                                    return res.upgrade(
-                                        {
-                                            rejected: true,
-                                            reason: null,
-                                            message: err?.response?.data,
-                                            roomId: roomId,
-                                        } satisfies UpgradeFailedData,
-                                        websocketKey,
-                                        websocketProtocol,
-                                        websocketExtensions,
-                                        context
-                                    );
                                 }
                                 throw err;
                             }
@@ -471,34 +459,6 @@ export class IoSocketController {
                             console.info("Ouch! Client disconnected before we could upgrade it!");
                             /* You must not upgrade now */
                             return;
-                        }
-
-                        if (characterTextureIds.length !== characterTextures.length) {
-                            return res.upgrade(
-                                {
-                                    rejected: true,
-                                    reason: "invalidTexture",
-                                    entityType: "character",
-                                } satisfies UpgradeFailedInvalidTexture,
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context
-                            );
-                        }
-
-                        if (companionTextureId && !companionTexture) {
-                            return res.upgrade(
-                                {
-                                    rejected: true,
-                                    reason: "invalidTexture",
-                                    entityType: "companion",
-                                } satisfies UpgradeFailedInvalidTexture,
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context
-                            );
                         }
 
                         const socketData: SocketData = {

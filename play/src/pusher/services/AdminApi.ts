@@ -380,8 +380,8 @@ class AdminApi implements AdminInterface {
             return fetchMemberDataByUuidResponse.data;
         }
 
-        console.error(fetchMemberDataByUuidResponse.error.issues);
-        Sentry.captureException(fetchMemberDataByUuidResponse.error.issues);
+        console.error(fetchMemberDataByUuidResponse.error.flatten());
+        Sentry.captureException(fetchMemberDataByUuidResponse.error.flatten());
         throw new Error(
             "Invalid answer received from the admin for the /api/room/access endpoint. Received: " +
                 JSON.stringify(res.data)

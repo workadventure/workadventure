@@ -281,6 +281,7 @@ export class GameScene extends DirtyScene {
     private throttledSendViewportToServer!: () => void;
     private playersDebugLogAlreadyDisplayed = false;
     private _broadcastService: BroadcastService | undefined;
+    private hideTimeout: ReturnType<typeof setTimeout> | undefined;
 
     constructor(private _room: Room, customKey?: string | undefined) {
         super({
@@ -806,7 +807,8 @@ export class GameScene extends DirtyScene {
                 }, 0);
             } else if (this.connection === undefined) {
                 // Let's wait 1 second before printing the "connecting" screen to avoid blinking
-                setTimeout(() => {
+                this.hideTimeout = setTimeout(() => {
+                    this.hideTimeout = undefined;
                     if (this.connection === undefined) {
                         try {
                             this.hide();
@@ -2436,6 +2438,10 @@ ${escapedMessage}
         gameSceneIsLoadedStore.set(false);
         gameSceneStore.set(undefined);
         this.cleanupDone = true;
+        if (this.hideTimeout) {
+            clearTimeout(this.hideTimeout);
+            this.hideTimeout = undefined;
+        }
     }
 
     private removeAllRemotePlayers(): void {
