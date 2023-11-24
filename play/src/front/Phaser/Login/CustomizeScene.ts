@@ -19,6 +19,7 @@ import type { IconButtonConfig } from "../Components/Ui/IconButton";
 import { IconButton, IconButtonEvent } from "../Components/Ui/IconButton";
 import { selectCharacterCustomizeSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
+import { connectionManager } from "../../Connection/ConnectionManager";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { EnableCameraSceneName } from "./EnableCameraScene";
@@ -161,6 +162,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         analyticsClient.validationWoka("CustomizeWoka");
 
         gameManager.setCharacterTextureIds(layers);
+        connectionManager.saveTextures(layers).catch((e) => console.error(e));
         this.scene.stop(CustomizeSceneName);
         gameManager.tryResumingGame(EnableCameraSceneName);
     }
@@ -177,9 +179,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             const savedWokaTextureIds = gameManager.getCharacterTextureIds();
             if (savedWokaTextureIds) {
                 for (let i = 0; i < savedWokaTextureIds.length; i += 1) {
-                    const index = this.layers[i].findIndex(
-                        (item) => item.id === gameManager.getCharacterTextureIds()[i]
-                    );
+                    const index = this.layers[i].findIndex((item) => item.id === savedWokaTextureIds[i]);
                     // set first item as default if not found
                     this.selectedTextures[i] = index !== -1 ? index : 0;
                 }

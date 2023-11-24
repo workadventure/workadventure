@@ -23,6 +23,7 @@ import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
 import { gameManager } from "../Game/GameManager";
 import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
 import { batchGetUserMediaStore } from "../../Stores/MediaStore";
+import { connectionManager } from "../../Connection/ConnectionManager";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { CustomizeSceneName } from "./CustomizeScene";
 import { EnableCameraSceneName } from "./EnableCameraScene";
@@ -142,7 +143,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         }
     }
 
-    public nextSceneToCameraScene(): void {
+    public async nextSceneToCameraScene(): Promise<void> {
         if (this.selectedWoka !== null && !areCharacterTexturesValid([this.selectedWoka.texture.key])) {
             return;
         }
@@ -153,6 +154,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         analyticsClient.validationWoka("SelectWoka");
 
         gameManager.setCharacterTextureIds([this.selectedWoka.texture.key]);
+        await connectionManager.saveTextures([this.selectedWoka.texture.key]);
         this.selectedWoka = null;
         this.scene.stop(SelectCharacterSceneName);
         gameManager.tryResumingGame(EnableCameraSceneName);

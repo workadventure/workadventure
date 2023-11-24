@@ -1,5 +1,5 @@
 import { v4 } from "uuid";
-import { ErrorApiData, RegisterData } from "@workadventure/messages";
+import { ErrorApiData, RegisterData, MeResponse, MeRequest } from "@workadventure/messages";
 import { isAxiosError } from "axios";
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
@@ -10,12 +10,10 @@ import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
 import { adminService } from "../services/AdminService";
 import { validateQuery } from "../services/QueryValidator";
 import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService";
-import { adminApi } from "../services/AdminApi";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class AuthenticateController extends BaseHttpController {
     routes(): void {
-        this.roomAccess();
         this.openIDLogin();
         this.me();
         this.openIDCallback();
@@ -23,35 +21,6 @@ export class AuthenticateController extends BaseHttpController {
         this.register();
         this.anonymLogin();
         this.profileCallback();
-    }
-
-    private roomAccess(): void {
-        this.app.get("/room/access", async (req, res) => {
-            try {
-                const query = validateQuery(
-                    req,
-                    res,
-                    z.object({
-                        uuid: z.string(),
-                        playUri: z.string(),
-                        token: z.string().optional(),
-                    })
-                );
-                if (query === undefined) {
-                    return;
-                }
-
-                const { uuid, playUri, token } = query;
-
-                res.json(await adminService.fetchMemberDataByUuid(uuid, token, playUri, req.ip, []));
-                return;
-            } catch (e) {
-                console.warn(e);
-            }
-            res.status(500);
-            res.send("User cannot be identified.");
-            return;
-        });
     }
 
     private openIDLogin(): void {
@@ -101,7 +70,7 @@ export class AuthenticateController extends BaseHttpController {
             }
 
             // Let's validate the playUri (we don't want a hacker to forge a URL that will redirect to a malicious URL)
-            const verifyDomainService_ = VerifyDomainService.get(adminApi.getCapabilities());
+            const verifyDomainService_ = VerifyDomainService.get(await adminService.getCapabilities());
             const verifyDomainResult = await verifyDomainService_.verifyDomain(query.playUri);
             if (!verifyDomainResult) {
                 res.status(403);
@@ -149,69 +118,20 @@ export class AuthenticateController extends BaseHttpController {
          *        type: "string"
          *     responses:
          *       200:
-         *         description: NOTE - THERE ARE ADDITIONAL PROPERTIES NOT DISPLAYED HERE. THEY COME FROM THE CALL TO openIDClient.checkTokenAuth
-         *         content:
-         *           application/json:
-         *             schema:
-         *               type: object
-         *               properties:
-         *                 authToken:
-         *                   type: string
-         *                   description: A new JWT token (if no token was passed in parameter), or returns the token that was passed in parameter if one was supplied
-         *                 username:
-         *                   type: string|undefined
-         *                   description: Contains the username stored in the JWT token passed in parameter. If no token was passed, contains the data from OpenID.
-         *                   example: John Doe
-         *                 locale:
-         *                   type: string|undefined
-         *                   description: Contains the locale stored in the JWT token passed in parameter. If no token was passed, contains the data from OpenID.
-         *                   example: fr_FR
-         *                 email:
-         *                   type: string
-         *                   description: TODO
-         *                   example: TODO
-         *                 userUuid:
-         *                   type: string
-         *                   description: TODO
-         *                   example: TODO
-         *                 visitCardUrl:
-         *                   type: string|null
-         *                   description: TODO
-         *                   example: TODO
-         *                 tags:
-         *                   type: array
-         *                   description: The list of tags of the user
-         *                   items:
-         *                     type: string
-         *                     example: speaker
-         *                 textures:
-         *                   type: array
-         *                   description: The list of textures of the user
-         *                   items:
-         *                     type: TODO
-         *                     example: TODO
-         *                 messages:
-         *                   type: array
-         *                   description: The list of messages to be displayed to the user
-         *                   items:
-         *                     type: TODO
-         *                     example: TODO
+         *         description: Response to the /me endpoint
+         *         schema:
+         *           $ref: '#/definitions/MeResponse'
+         *       401:
+         *         description: Thrown when the token is invalid
          */
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/me", async (req, res) => {
             const IPAddress = req.header("x-forwarded-for");
-            const query = validateQuery(
-                req,
-                res,
-                z.object({
-                    token: z.string(),
-                    playUri: z.string(),
-                })
-            );
+            const query = validateQuery(req, res, MeRequest);
             if (query === undefined) {
                 return;
             }
-            const { token, playUri } = query;
+            const { token, playUri, localStorageCharacterTextureIds, localStorageCompanionTextureId } = query;
             try {
                 const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token, false);
 
@@ -222,9 +142,17 @@ export class AuthenticateController extends BaseHttpController {
                     authTokenData.accessToken,
                     playUri,
                     IPAddress,
-                    [],
+                    localStorageCharacterTextureIds ?? [],
+                    localStorageCompanionTextureId,
                     req.header("accept-language")
                 );
+
+                if (resUserData.status === "error") {
+                    res.atomic(() => {
+                        res.json(resUserData);
+                    });
+                    return;
+                }
 
                 if (authTokenData.accessToken == undefined) {
                     //if not nonce and code, anonymous user connected
@@ -233,8 +161,9 @@ export class AuthenticateController extends BaseHttpController {
                         authToken: token,
                         username: authTokenData?.username,
                         locale: authTokenData?.locale,
+                        // TODO: replace ... with each property
                         ...resUserData,
-                    });
+                    } satisfies MeResponse);
                     return;
                 }
 
@@ -244,9 +173,10 @@ export class AuthenticateController extends BaseHttpController {
                         username: authTokenData?.username,
                         authToken: token,
                         locale: authTokenData?.locale,
+                        // TODO: replace ... with each property
                         ...resUserData,
                         ...resCheckTokenAuth,
-                    });
+                    } satisfies MeResponse);
                 } catch (err) {
                     console.warn("Error while checking token auth", err);
                     throw new JsonWebTokenError("Invalid token");

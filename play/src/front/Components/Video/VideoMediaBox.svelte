@@ -251,7 +251,7 @@
         {#if videoEnabled}
             {#if displayNoVideoWarning}
                 <div
-                    class="tw-flex media-box-camera-on-size tw-absolute tw-justify-center tw-items-center tw-bg-danger/50 tw-text-white"
+                    class="tw-flex media-box-camera-on-size tw-absolute tw-w-full tw-h-full ntw-justify-center tw-items-center tw-bg-danger/50 tw-text-white"
                 >
                     <div class="tw-text-center">
                         <h1>{$LL.video.connection_issue()}</h1>
