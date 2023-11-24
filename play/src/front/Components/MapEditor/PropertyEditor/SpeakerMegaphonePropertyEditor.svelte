@@ -28,6 +28,16 @@
     </span>
     <span slot="content">
         <div class="value-input">
+            <label for="tabLink">{$LL.mapEditor.properties.speakerMegaphoneProperties.id()}</label>
+            <input
+                id="tabLink"
+                class="!tw-bg-gray-200 !tw-text-gray-500 tw-cursor-not-allowed"
+                type="text"
+                value={property.id}
+                disabled
+            />
+        </div>
+        <div class="value-input">
             <label for="tabLink">{$LL.mapEditor.properties.speakerMegaphoneProperties.nameLabel()}</label>
             <input
                 id="tabLink"
