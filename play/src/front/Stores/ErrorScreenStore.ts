@@ -81,18 +81,30 @@ function createErrorScreenStore() {
             }
             if (error instanceof ApiError) {
                 const errorApi = error.errorApiData;
+                const { status: _exhaustiveCheck, ...errorApiWithoutStatus } = errorApi;
 
-                if (errorApi.type === "error" || errorApi.type === "redirect") {
-                    set(ErrorScreenMessage.fromPartial(errorApi));
-                } else if (errorApi.type === "retry" || errorApi.type === "unauthorized") {
-                    set(
-                        ErrorScreenMessage.fromPartial({
-                            ...errorApi,
-                            buttonTitle: errorApi.buttonTitle ?? undefined,
-                        })
-                    );
-                } else {
-                    const _exhaustiveCheck: never = errorApi;
+                switch (errorApiWithoutStatus.type) {
+                    case "error":
+                    case "redirect": {
+                        set(ErrorScreenMessage.fromPartial(errorApiWithoutStatus));
+                        return;
+                    }
+                    case "retry":
+                    case "unauthorized": {
+                        set(
+                            ErrorScreenMessage.fromPartial({
+                                ...errorApiWithoutStatus,
+                                buttonTitle: errorApiWithoutStatus.buttonTitle ?? undefined,
+                            })
+                        );
+                        return;
+                    }
+                    default: {
+                        // Typescript compiler is lost because of the removal of the status field.
+                        //@ts-ignore
+                        const _exhaustiveCheck: never = errorApi;
+                        throw new Error("This should never happen.");
+                    }
                 }
                 return;
             }

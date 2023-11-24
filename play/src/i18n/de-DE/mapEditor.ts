@@ -81,6 +81,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "Erweiterte Optionen",
         speakerMegaphoneProperties: {
+            id: "Sprecherzonenidentfier für die Erstellung eines eindeutigen Raums",
             label: "Sprecherzone für Megaphon",
             description: "",
             nameLabel: "Sprecherzonenname",

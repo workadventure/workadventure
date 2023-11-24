@@ -76,13 +76,17 @@ export class MapController extends BaseHttpController {
                     mapDetails.authenticationMandatory = true;
                 }
 
-                res.json(mapDetails);
+                res.atomic(() => {
+                    res.json(mapDetails);
+                });
                 return;
             } catch (error) {
                 if (error instanceof JsonWebTokenError) {
                     console.warn("Invalid token received", error);
-                    res.status(401);
-                    res.send("The Token is invalid");
+                    res.atomic(() => {
+                        res.status(401);
+                        res.send("The Token is invalid");
+                    });
                     return;
                 } else if (isAxiosError(error)) {
                     if (error.response?.status === 404) {
@@ -91,8 +95,11 @@ export class MapController extends BaseHttpController {
                         throw error;
                     }
                     console.warn("Error while fetching map details", error);
-                    res.status(error.response?.status ?? 404);
-                    res.send("Error while fetching map details");
+                    const status = error.response?.status ?? 404;
+                    res.atomic(() => {
+                        res.status(status);
+                        res.send("Error while fetching map details");
+                    });
                     return;
                 } else {
                     throw error;

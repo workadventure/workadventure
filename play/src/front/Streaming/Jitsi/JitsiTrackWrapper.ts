@@ -70,11 +70,16 @@ export class JitsiTrackWrapper {
     setJitsiTrack(jitsiTrack: JitsiTrack, allowOverride = false) {
         // Let's start by suppressing any "echo". setJitsiTrack can be called multiple times for the same track
         // For some reason, Jitsi can trigger the remoteTrack event several times.
+        console.log(
+            "this.cameraTrackWrapper.getVideoTrack()?.getTrack().getSettings() === jitsiTrack.getTrack().getSettings()",
+            this.cameraTrackWrapper.getVideoTrack()?.getTrack().getSettings() === jitsiTrack.getTrack().getSettings()
+        );
         if (
             this.cameraTrackWrapper.getAudioTrack() === jitsiTrack ||
             this.cameraTrackWrapper.getVideoTrack() === jitsiTrack ||
             this.screenSharingTrackWrapper.getVideoTrack() === jitsiTrack ||
-            this.screenSharingTrackWrapper.getAudioTrack() === jitsiTrack
+            this.screenSharingTrackWrapper.getAudioTrack() === jitsiTrack ||
+            this.cameraTrackWrapper.getVideoTrack()?.getTrack().getSettings() === jitsiTrack.getTrack().getSettings()
         ) {
             return;
         }

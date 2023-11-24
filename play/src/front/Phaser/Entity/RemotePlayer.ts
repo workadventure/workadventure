@@ -10,6 +10,7 @@ import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import { LL } from "../../../i18n/i18n-svelte";
 import { blackListManager } from "../../WebRtc/BlackListManager";
 import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
+import { iframeListener } from "../../Api/IframeListener";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",
@@ -104,6 +105,15 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
         }
+
+        const userFound = this.scene.getRemotePlayersRepository().getPlayers().get(this.userId);
+
+        if (!userFound) {
+            console.error("Undefined clicked player!");
+            return;
+        }
+
+        iframeListener.sendRemotePlayerClickedEvent(userFound);
     }
 
     private getDefaultActionsMenuActions(): ActionsMenuAction[] {

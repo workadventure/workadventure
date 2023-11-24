@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const isGameStateEvent = z.object({
     roomId: z.string(),
+    hashParameters: z.record(z.string(), z.string()),
     mapUrl: z.string(),
     nickname: z.string(),
     language: z.string().optional(),

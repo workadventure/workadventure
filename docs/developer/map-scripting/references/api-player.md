@@ -474,3 +474,24 @@ WA.player.proximityMeeting.onParticipantLeave().subscribe(async (player: RemoteP
     WA.chat.sendChatMessage("A participant left the proximity chat", "System");
 });
 ```
+
+## Playing a sound to players in the same meeting
+
+:::warning
+This feature is experimental. The signature of the function might change in the future.
+:::
+
+```ts
+WA.player.proximityMeeting.playSound(url: string): Promise<void>
+```
+
+The `playSound` function plays a sound to all the players in the same bubble.
+The sound will appear to come from the microphone of the player who called the function.
+
+Example:
+
+```ts
+await WA.player.proximityMeeting.playSound("https://example.com/my_sound.mp3");
+```
+
+The method returns a promise that resolves when the sound has been played.

@@ -16,6 +16,7 @@ import trigger from "./trigger";
 import muc from "./muc";
 import notification from "./notification";
 import actionbar from "./actionbar";
+import video from "./video";
 
 const zh_CN = merge(en_US, {
     audio,
@@ -34,6 +35,7 @@ const zh_CN = merge(en_US, {
     muc,
     notification,
     actionbar,
+    video,
 });
 
 export default zh_CN;

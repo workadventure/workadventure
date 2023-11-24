@@ -1,6 +1,7 @@
 import type { Translation } from "../i18n-types";
+import { DeepPartial } from "../DeepPartial";
 
-const hsb_DE: Translation = {
+const hsb_DE: DeepPartial<Translation> = {
     users: "wužiwar",
     userList: {
         disconnected: "dźěleny",

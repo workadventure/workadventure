@@ -548,11 +548,18 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
-
     turnTestTimeout(): void {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture(`wa_turn_test_timeout`);
+            })
+            .catch((e) => console.error(e));
+    }
+
+    noVideoStreamReceived(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_no_video_stream_received`);
             })
             .catch((e) => console.error(e));
     }

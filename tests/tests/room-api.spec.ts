@@ -122,7 +122,7 @@ test.describe('Room API', async () => {
 
         const listenEvent = client.listenToEvent({
             name: "my-event",
-            room: 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json',
+            room: protocol + '://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json',
         });
 
         let resolved = false;
@@ -135,7 +135,7 @@ test.describe('Room API', async () => {
             resolved = true;
         })
 
-        await page.goto('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json');
+        await page.goto(protocol + '://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json');
         await login(page);
 
         await evaluateScript(page, async () => {
@@ -155,7 +155,7 @@ test.describe('Room API', async () => {
             return;
         }
 
-        await page.goto('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json');
+        await page.goto(protocol + '://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json');
         await login(page);
 
         let gotExpectedBroadcastNotification = false;
@@ -183,7 +183,7 @@ test.describe('Room API', async () => {
 
         await client.broadcastEvent({
             name: "key",
-            room: 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json',
+            room: protocol + '://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json',
             data: "value",
         });
 

@@ -7,6 +7,12 @@ import { FileMessageManager } from "./FileMessageManager";
 
 const webLinkCaches = new Map();
 
+declare global {
+    interface HTMLIFrameElement {
+        loading?: "lazy" | "eager";
+    }
+}
+
 export enum linkFunction {
     openCowebsite = "open-cowebsite",
     copyLink = "copy-link",

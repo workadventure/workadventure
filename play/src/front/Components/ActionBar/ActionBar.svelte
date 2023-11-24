@@ -35,7 +35,6 @@
     import mapBuilder from "../images/maps-builder.png";
     import screenshareOn from "../images/screenshare-on.png";
     import screenshareOff from "../images/screenshare-off.png";
-    import screenshareOffAlt from "../images/screenshare-off-alt.png";
     import emojiPickOn from "../images/emoji-on.png";
     import closeImg from "../images/close.png";
     import penImg from "../images/pen.png";
@@ -708,7 +707,7 @@
                             {:else}
                                 <img
                                     draggable="false"
-                                    src={screenshareOffAlt}
+                                    src={screenshareOff}
                                     style="padding: 2px;"
                                     alt="Start screen sharing"
                                 />

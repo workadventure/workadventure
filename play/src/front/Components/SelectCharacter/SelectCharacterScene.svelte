@@ -23,7 +23,9 @@
     }
 
     function cameraScene() {
-        selectCharacterScene.nextSceneToCameraScene();
+        selectCharacterScene.nextSceneToCameraScene().catch((e) => {
+            console.error(e);
+        });
     }
 
     function customizeScene() {

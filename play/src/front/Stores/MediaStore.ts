@@ -240,7 +240,7 @@ export const videoConstraintStore = derived(
         const constraints = {
             width: { min: 640, ideal: 1280, max: 1920 },
             height: { min: 400, ideal: 720, max: 1080 },
-            frameRate: { ideal: undefined },
+            frameRate: { min: 15, ideal: 30, max: 30 },
             facingMode: "user",
             resizeMode: "crop-and-scale",
             aspectRatio: 1.777777778,
@@ -529,7 +529,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                         return stream;
                     })
                     .catch((e) => {
-                        if (e instanceof OverconstrainedError && e.constraint === "deviceId") {
+                        if (isOverConstrainedError(e) && e.constraint === "deviceId") {
                             console.info(
                                 "Could not access the requested microphone or webcam. Falling back to default microphone and webcam",
                                 constraints,
@@ -638,6 +638,17 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
         };
     }
 );
+
+/**
+ * Firefox does not support the OverconstrainedError class.
+ * Instead, it throw an error whose name is "OverconstrainedError"
+ */
+interface OverconstrainedErrorInterface {
+    constraint: string;
+}
+function isOverConstrainedError(e: unknown): e is OverconstrainedErrorInterface {
+    return e instanceof Error && e.name === "OverconstrainedError";
+}
 
 let obtainedMediaConstraint: ObtainedMediaStreamConstraints = {
     audio: true,
