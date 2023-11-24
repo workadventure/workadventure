@@ -3,6 +3,7 @@ import { extendApi } from "@anatine/zod-openapi";
 
 export const isErrorApiErrorData = extendApi(
   z.object({
+    status: z.literal("error"),
     type: z.literal("error"),
     code: extendApi(z.string(), {
       description:
@@ -38,6 +39,7 @@ export const isErrorApiErrorData = extendApi(
 
 export const isErrorApiRetryData = extendApi(
   z.object({
+    status: z.literal("error"),
     type: z.literal("retry"),
     code: extendApi(z.string(), {
       description:
@@ -88,6 +90,7 @@ export const isErrorApiRetryData = extendApi(
 
 export const isErrorApiRedirectData = extendApi(
   z.object({
+    status: z.literal("error"),
     type: z.literal("redirect"),
     urlToRedirect: extendApi(z.string(), {
       description: "A URL specified to redirect the user onto it directly",
@@ -103,6 +106,7 @@ export const isErrorApiRedirectData = extendApi(
 
 export const isErrorApiUnauthorizedData = extendApi(
   z.object({
+    status: z.literal("error"),
     type: z.literal("unauthorized"),
     code: extendApi(z.string(), {
       description:

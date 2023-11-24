@@ -22,7 +22,7 @@
     }
 
     function selectCompanion() {
-        selectCompanionScene.selectCompanion();
+        selectCompanionScene.selectCompanion().catch((e) => console.error(e));
     }
 
     function selectLeftCollection() {

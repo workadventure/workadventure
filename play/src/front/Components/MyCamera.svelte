@@ -11,7 +11,7 @@
     } from "../Stores/MediaStore";
     import { LL } from "../../i18n/i18n-svelte";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
-    import { localUserStore } from "../Connection/LocalUserStore";
+    import { gameManager } from "../Phaser/Game/GameManager";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";
@@ -19,7 +19,7 @@
     import cameraOffImg from "./images/camera-off.png";
 
     let stream: MediaStream | null;
-    let userName = localUserStore.getName();
+    let userName = gameManager.getPlayerName();
     let backgroundColor = Color.getColorByString(userName ?? "default");
     let textColor = Color.getTextColorByBackgroundColor(backgroundColor);
 

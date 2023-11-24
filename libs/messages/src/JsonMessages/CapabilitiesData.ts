@@ -18,6 +18,10 @@ export const isCapabilities = z.object({
         description: "Means the api can save the name of the Woka when configured in WorkAdventure.",
         example: "v1",
     }),
+    "api/save-textures": extendApi(z.optional(z.string()), {
+        description: "Means the api can save the textures of the Woka when configured in WorkAdventure.",
+        example: "v1",
+    }),
 });
 
 export type Capabilities = z.infer<typeof isCapabilities>;

@@ -4,6 +4,7 @@ import type { AdminApiData, MapDetailsData, RoomRedirect } from "@workadventure/
 import {
     Capabilities,
     CompanionDetail,
+    ErrorApiData,
     isAdminApiData,
     isApplicationDefinitionInterface,
     isCapabilities,
@@ -32,7 +33,11 @@ export interface AdminBannedData {
     message: string;
 }
 
-export const isFetchMemberDataByUuidResponse = z.object({
+export const isFetchMemberDataByUuidSuccessResponse = z.object({
+    status: extendApi(z.literal("ok"), {
+        description: "MUST be 'ok' if the system successfully authenticated the user.",
+        example: "ok",
+    }),
     email: extendApi(z.string().nullable(), {
         description: "The email of the fetched user, it can be an email, an uuid or null.",
         example: "example@workadventu.re",
@@ -53,8 +58,19 @@ export const isFetchMemberDataByUuidResponse = z.object({
         description: "URL of the visitCard of the user fetched.",
         example: "https://mycompany.com/contact/me",
     }),
+    isCharacterTexturesValid: extendApi(z.boolean(), {
+        description:
+            "True if the character textures are valid, false if we need to redirect the user to the Woka selection page.",
+        example: true,
+    }),
     characterTextures: extendApi(z.array(WokaDetail), {
-        description: "This data represents the textures (WOKA) that will be available to users.",
+        description:
+            "This data represents the textures (WOKA) that will be available to users. If an empty array is returned, the user is redirected to the Woka selection page.",
+    }),
+    isCompanionTextureValid: extendApi(z.boolean(), {
+        description:
+            "True if the companion texture is valid, false if we need to redirect the user to the companion selection page.",
+        example: true,
     }),
     companionTexture: extendApi(CompanionDetail.optional().nullable(), {
         description: "This data represents the companion texture that will be use.",
@@ -88,6 +104,10 @@ export const isFetchMemberDataByUuidResponse = z.object({
         description: "True if the user can edit the map",
     }),
 });
+
+export type FetchMemberDataByUuidSuccessResponse = z.infer<typeof isFetchMemberDataByUuidSuccessResponse>;
+
+export const isFetchMemberDataByUuidResponse = z.union([isFetchMemberDataByUuidSuccessResponse, ErrorApiData]);
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
 
@@ -340,19 +360,6 @@ class AdminApi implements AdminInterface {
          *         description: The details of the member
          *         schema:
          *             $ref: "#/definitions/FetchMemberDataByUuidResponse"
-         *       401:
-         *         description: Error while retrieving the data because you are not authorized
-         *         schema:
-         *             $ref: '#/definitions/ErrorApiRedirectData'
-         *       403:
-         *         description: Error while retrieving the data because you are not authorized
-         *         schema:
-         *             $ref: '#/definitions/ErrorApiUnauthorizedData'
-         *       404:
-         *         description: Error while retrieving the data
-         *         schema:
-         *             $ref: '#/definitions/ErrorApiErrorData'
-         *
          */
         const res = await axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/room/access", {
             params: {
@@ -373,8 +380,8 @@ class AdminApi implements AdminInterface {
             return fetchMemberDataByUuidResponse.data;
         }
 
-        console.error(fetchMemberDataByUuidResponse.error.issues);
-        Sentry.captureException(fetchMemberDataByUuidResponse.error.issues);
+        console.error(fetchMemberDataByUuidResponse.error.flatten());
+        Sentry.captureException(fetchMemberDataByUuidResponse.error.flatten());
         throw new Error(
             "Invalid answer received from the admin for the /api/room/access endpoint. Received: " +
                 JSON.stringify(res.data)
@@ -746,6 +753,134 @@ class AdminApi implements AdminInterface {
                 playUri: roomUrl,
                 userIdentifier,
                 name,
+            },
+            {
+                headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            }
+        );
+        if (response.status !== 204) {
+            throw new Error(
+                "Error while saving name. Got unexpected status code. Expected 204, got " + response.status
+            );
+        }
+        return;
+    }
+
+    async saveTextures(userIdentifier: string, textures: string[], roomUrl: string): Promise<void> {
+        if (this.capabilities["api/save-textures"] === undefined) {
+            // Save-name is not implemented in admin. Do nothing.
+            return;
+        }
+
+        /**
+         * @openapi
+         * /api/save-textures:
+         *   post:
+         *     tags: ["AdminAPI"]
+         *     description: Saves the textures of the Woka on the admin side.
+         *     security:
+         *      - Bearer: []
+         *     requestBody:
+         *       required: true
+         *       content:
+         *         application/json:
+         *           schema:
+         *             type: "object"
+         *             properties:
+         *               roomUrl:
+         *                 type: string
+         *                 required: true
+         *                 description: The URL of the room
+         *                 example: "https://play.workadventu.re/@/teamSlug/worldSlug/roomSlug"
+         *               textures:
+         *                 type: array
+         *                 items:
+         *                   type: string
+         *                 required: true
+         *                 description: The IDs of the textures
+         *                 example: ["ab7ce839-3dea-4698-8b41-ebbdf7688ad9"]
+         *               userIdentifier:
+         *                 type: string
+         *                 required: true
+         *                 description: "It can be an uuid or an email"
+         *                 example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
+         *     responses:
+         *       204:
+         *         description: Save succeeded
+         *       404:
+         *         description: User or room not found
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiErrorData'
+         */
+        const response = await axios.post<unknown>(
+            ADMIN_API_URL + "/api/save-textures",
+            {
+                playUri: roomUrl,
+                userIdentifier,
+                textures,
+            },
+            {
+                headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            }
+        );
+        if (response.status !== 204) {
+            throw new Error(
+                "Error while saving name. Got unexpected status code. Expected 204, got " + response.status
+            );
+        }
+        return;
+    }
+
+    async saveCompanionTexture(userIdentifier: string, texture: string, roomUrl: string): Promise<void> {
+        if (this.capabilities["api/save-textures"] === undefined) {
+            // Save-name is not implemented in admin. Do nothing.
+            return;
+        }
+
+        /**
+         * @openapi
+         * /api/save-companion-texture:
+         *   post:
+         *     tags: ["AdminAPI"]
+         *     description: Saves the texture of the companion on the admin side.
+         *     security:
+         *      - Bearer: []
+         *     requestBody:
+         *       required: true
+         *       content:
+         *         application/json:
+         *           schema:
+         *             type: "object"
+         *             properties:
+         *               roomUrl:
+         *                 type: string
+         *                 required: true
+         *                 description: The URL of the room
+         *                 example: "https://play.workadventu.re/@/teamSlug/worldSlug/roomSlug"
+         *               texture:
+         *                 type: string
+         *                 required: true
+         *                 description: The ID of the textures
+         *                 example: "ab7ce839-3dea-4698-8b41-ebbdf7688ad9"
+         *               userIdentifier:
+         *                 type: string
+         *                 required: true
+         *                 description: "It can be an uuid or an email"
+         *                 example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
+         *     responses:
+         *       204:
+         *         description: Save succeeded
+         *       404:
+         *         description: User or room not found
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiErrorData'
+         */
+        const response = await axios.post<unknown>(
+            ADMIN_API_URL + "/api/save-companion-texture",
+            {
+                playUri: roomUrl,
+                userIdentifier,
+                texture,
             },
             {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },

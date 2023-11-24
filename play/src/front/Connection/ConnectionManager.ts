@@ -1,5 +1,5 @@
 import type { AvailabilityStatus } from "@workadventure/messages";
-import { isRegisterData } from "@workadventure/messages";
+import { isRegisterData, MeRequest, MeResponse } from "@workadventure/messages";
 import { isAxiosError } from "axios";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { subMenusStore, userIsConnected, warningContainerStore } from "../Stores/MenuStore";
@@ -85,9 +85,17 @@ class ConnectionManager {
      *
      * @return returns a promise to the Room we are going to load OR a pointer to the URL we must redirect to if authentication is needed.
      */
-    public async initGameConnexion(): Promise<Room | URL> {
+    public async initGameConnexion(): Promise<
+        | {
+              room: Room;
+              nextScene: "selectCharacterScene" | "selectCompanionScene" | "gameScene";
+          }
+        | URL
+    > {
         this.connexionType = urlManager.getGameConnexionType();
         this._currentRoom = null;
+
+        let nextScene: "selectCharacterScene" | "selectCompanionScene" | "gameScene" = "gameScene";
 
         const urlParams = new URLSearchParams(window.location.search);
         let token = urlParams.get("token");
@@ -194,6 +202,11 @@ class ConnectionManager {
             if (!this.authToken) {
                 if (!this._currentRoom.authenticationMandatory) {
                     await this.anonymousLogin();
+
+                    const characterTextures = localUserStore.getCharacterTextures();
+                    if (characterTextures === null || characterTextures.length === 0) {
+                        nextScene = "selectCharacterScene";
+                    }
                 } else {
                     const redirect = this.loadOpenIDScreen();
                     if (redirect === null) {
@@ -203,8 +216,33 @@ class ConnectionManager {
                 }
             } else {
                 try {
-                    await this.checkAuthUserConnexion(this.authToken);
+                    const response = await this.checkAuthUserConnexion(this.authToken);
+                    if (response.status === "error") {
+                        if (response.type === "retry") {
+                            console.warn("Token expired, trying to login anonymously");
+                        } else {
+                            console.error(response);
+                        }
+
+                        // if the user must be connected to the current room or if the pusher error is not openid provider access error
+                        if (this._currentRoom.authenticationMandatory) {
+                            const redirect = this.loadOpenIDScreen();
+                            if (redirect === null) {
+                                throw new Error("Unable to redirect on login page.");
+                            }
+                            return redirect;
+                        } else {
+                            await this.anonymousLogin();
+                        }
+                    }
                     analyticsClient.loggedWithSso();
+                    if (response.status === "ok") {
+                        if (response.isCharacterTexturesValid === false) {
+                            nextScene = "selectCharacterScene";
+                        } else if (response.isCompanionTextureValid === false) {
+                            nextScene = "selectCompanionScene";
+                        }
+                    }
                 } catch (err) {
                     if (isAxiosError(err) && err.response?.status === 401) {
                         console.warn("Token expired, trying to login anonymously");
@@ -250,7 +288,10 @@ class ConnectionManager {
         // add report issue menu
         subMenusStore.addReportIssuesMenu();
 
-        return Promise.resolve(this._currentRoom);
+        return Promise.resolve({
+            room: this._currentRoom,
+            nextScene,
+        });
     }
 
     public async anonymousLogin(isBenchmark = false): Promise<void> {
@@ -384,13 +425,33 @@ class ConnectionManager {
         //set connected store for menu at false
         userIsConnected.set(false);
 
-        const { authToken, userUuid, email, username, locale, textures, visitCardUrl } = await axiosToPusher
+        const playUri = this.currentRoom?.key;
+        if (playUri == undefined) {
+            throw new Error("playUri is undefined");
+        }
+
+        // TODO: the call to "/me" could be completely removed and the request data could come from the FrontController
+        // For this to work, the authToken should be stored in a cookie instead of localStorage.
+        const data = await axiosToPusher
             .get("me", {
-                params: { token, playUri: this.currentRoom?.key },
+                params: {
+                    token,
+                    playUri,
+                    localStorageCharacterTextureIds: localUserStore.getCharacterTextures() ?? undefined,
+                    localStorageCompanionTextureId: localUserStore.getCompanionTextureId() ?? undefined,
+                } satisfies MeRequest,
             })
             .then((res) => {
                 return res.data;
             });
+
+        const response = MeResponse.parse(data);
+
+        if (response.status === "error") {
+            return response;
+        }
+
+        const { authToken, userUuid, email, username, locale, visitCardUrl } = response;
 
         localUserStore.setAuthToken(authToken);
         this.localUser = new LocalUser(userUuid, email);
@@ -416,7 +477,7 @@ class ConnectionManager {
 
         if (locale) {
             try {
-                if (locales.indexOf(locale) !== -1) {
+                if (locales.indexOf(locale as Locales) !== -1) {
                     await setCurrentLocale(locale as Locales);
                 } else {
                     const nonRegionSpecificLocale = locales.find((l) => l.startsWith(locale.split("-")[0]));
@@ -429,30 +490,54 @@ class ConnectionManager {
             }
         }
 
-        if (textures) {
-            const textureIds: string[] = [];
-            for (const texture of textures) {
-                if (texture !== undefined) {
-                    textureIds.push(texture.id);
-                }
-            }
-            if (textureIds.length > 0) {
-                gameManager.setCharacterTextureIds(textureIds);
-            }
-        }
-
         //user connected, set connected store for menu at true
         if (localUserStore.isLogged()) {
             userIsConnected.set(true);
         }
+
+        return response;
     }
 
     async saveName(name: string): Promise<void> {
-        if (this.authToken !== undefined) {
+        if (hasCapability("api/save-name") && this.authToken !== undefined) {
             await axiosToPusher.post(
                 "save-name",
                 {
                     name,
+                    roomUrl: this.currentRoom?.key,
+                },
+                {
+                    headers: {
+                        Authorization: this.authToken,
+                    },
+                }
+            );
+        }
+    }
+
+    async saveTextures(textures: string[]): Promise<void> {
+        if (hasCapability("api/save-textures") && this.authToken !== undefined) {
+            await axiosToPusher.post(
+                "save-textures",
+                {
+                    textures,
+                    roomUrl: this.currentRoom?.key,
+                },
+                {
+                    headers: {
+                        Authorization: this.authToken,
+                    },
+                }
+            );
+        }
+    }
+
+    async saveCompanionTexture(texture: string): Promise<void> {
+        if (hasCapability("api/save-textures") && this.authToken !== undefined) {
+            await axiosToPusher.post(
+                "save-companion-texture",
+                {
+                    texture,
                     roomUrl: this.currentRoom?.key,
                 },
                 {
