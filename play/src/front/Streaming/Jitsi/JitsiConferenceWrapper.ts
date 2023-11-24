@@ -23,19 +23,17 @@ import {
 import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+import { DeviceBroadcastable } from "../Common/ConferenceWrapper";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 import { JitsiLocalTracks } from "./JitsiLocalTracks";
 
-export type DeviceType = "video" | "audio" | "desktop";
-
-const debug = Debug("libjitsi");
+const debug = Debug("JitsiConferenceWrapper");
 
 export class JitsiConferenceWrapper {
-    //public readonly participantStore: MapStore<string, JitsiParticipant>;
     private myParticipantId: string | undefined;
     private _streamStore: Writable<Map<string, JitsiTrackWrapper>>;
 
-    private readonly _broadcastDevicesStore: Writable<DeviceType[]>;
+    private readonly _broadcastDevicesStore: Writable<DeviceBroadcastable[]>;
 
     private requestedCameraStateUnsubscriber: Unsubscriber | undefined;
     private requestedMicrophoneStateUnsubscriber: Unsubscriber | undefined;
@@ -56,9 +54,26 @@ export class JitsiConferenceWrapper {
 
     private firstLocalTrackInitialization = false;
 
+    private megaphoneEnabledUnsubscribe: Unsubscriber;
+
     constructor(private jitsiConference: JitsiConference) {
         this._streamStore = writable<Map<string, JitsiTrackWrapper>>(new Map<string, JitsiTrackWrapper>());
-        this._broadcastDevicesStore = writable<DeviceType[]>([]);
+        this._broadcastDevicesStore = writable<DeviceBroadcastable[]>([]);
+
+        this.megaphoneEnabledUnsubscribe = megaphoneEnabledStore.subscribe((megaphoneEnabled) => {
+            if (megaphoneEnabled) {
+                this.broadcast(["video", "audio"]).catch((e) => {
+                    console.error(e);
+                });
+                this.firstLocalTrackInit().catch((e) => {
+                    console.error(e);
+                });
+            } else {
+                this.broadcast([]).catch((e) => {
+                    console.error(e);
+                });
+            }
+        });
     }
 
     public static join(connection: JitsiConnection, jitsiRoomName: string): Promise<JitsiConferenceWrapper> {
@@ -271,8 +286,9 @@ export class JitsiConferenceWrapper {
         });
     }
 
-    public broadcast(devices: ("video" | "audio" | "desktop")[]) {
+    public async broadcast(devices: DeviceBroadcastable[]) {
         this._broadcastDevicesStore.set(devices);
+        await this.firstLocalTrackInit();
     }
 
     public async leave(reason?: string): Promise<void> {
@@ -316,9 +332,11 @@ export class JitsiConferenceWrapper {
             });
             return new Map<string, JitsiTrackWrapper>();
         });
+
+        this.megaphoneEnabledUnsubscribe();
     }
 
-    private async createLocalTracks(types: DeviceType[]): Promise<JitsiLocalTrack[]> {
+    private async createLocalTracks(types: DeviceBroadcastable[]): Promise<JitsiLocalTrack[]> {
         this.cameraDeviceId = get(requestedCameraDeviceIdStore);
         this.microphoneDeviceId = get(requestedMicrophoneDeviceIdStore);
 
@@ -389,7 +407,7 @@ export class JitsiConferenceWrapper {
     public async firstLocalTrackInit() {
         debug("JitsiConferenceWrapper => firstLocalTrackInit");
         if (get(megaphoneEnabledStore)) {
-            const requestedDevices: DeviceType[] = [];
+            const requestedDevices: DeviceBroadcastable[] = [];
             if (get(requestedCameraState)) {
                 requestedDevices.push("video");
             }
@@ -436,7 +454,7 @@ export class JitsiConferenceWrapper {
         }
     }
 
-    private async handleLocalTrackState(type: DeviceType, state: boolean) {
+    private async handleLocalTrackState(type: DeviceBroadcastable, state: boolean) {
         debug("JitsiConferenceWrapper => handleLocalTrackState", type, state);
         let newTrack: JitsiLocalTrack | undefined = undefined;
         if (state) {
@@ -576,7 +594,7 @@ export class JitsiConferenceWrapper {
         });
     }
 
-    get broadcastDevicesStore(): Readable<DeviceType[]> {
+    get broadcastDevicesStore(): Readable<DeviceBroadcastable[]> {
         return this._broadcastDevicesStore;
     }
 

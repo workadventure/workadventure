@@ -775,6 +775,28 @@ export class IoSocketController {
                             );
                             break;
                         }
+                        case "updateSpaceMetadataMessage": {
+                            const isMetadata = z
+                                .record(z.string(), z.unknown())
+                                .safeParse(JSON.parse(message.message.updateSpaceMetadataMessage.metadata));
+                            if (!isMetadata.success) {
+                                Sentry.captureException(
+                                    `Invalid metadata received. ${message.message.updateSpaceMetadataMessage.metadata}`
+                                );
+                                console.error(
+                                    "Invalid metadata received.",
+                                    message.message.updateSpaceMetadataMessage.metadata
+                                );
+                                return;
+                            }
+
+                            await socketManager.handleUpdateSpaceMetadata(
+                                socket,
+                                message.message.updateSpaceMetadataMessage.spaceName,
+                                isMetadata.data
+                            );
+                            break;
+                        }
                         case "unwatchSpaceMessage": {
                             void socketManager.handleLeaveSpace(socket, message.message.unwatchSpaceMessage.spaceName);
                             break;

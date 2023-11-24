@@ -4,6 +4,7 @@ import {
     PartialSpaceUser,
     RemoveSpaceUserMessage,
     SpaceUser,
+    UpdateSpaceMetadataMessage,
     UpdateSpaceUserMessage,
 } from "@workadventure/messages";
 import Debug from "debug";
@@ -15,10 +16,12 @@ const debug = Debug("space");
 export class Space implements CustomJsonReplacerInterface {
     readonly name: string;
     private users: Map<SpacesWatcher, Map<number, SpaceUser>>;
+    private metadata: Map<string, unknown>;
 
     constructor(name: string) {
         this.name = name;
         this.users = new Map<SpacesWatcher, Map<number, SpaceUser>>();
+        this.metadata = new Map<string, unknown>();
         debug(`${name} => created`);
     }
 
@@ -114,6 +117,23 @@ export class Space implements CustomJsonReplacerInterface {
         debug(`${this.name} : user => removed ${id}`);
     }
 
+    public updateMetadata(watcher: SpacesWatcher, metadata: { [key: string]: unknown }) {
+        for (const key in metadata) {
+            this.metadata.set(key, metadata[key]);
+        }
+
+        this.notifyWatchers(watcher, {
+            message: {
+                $case: "updateSpaceMetadataMessage",
+                updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
+                    spaceName: this.name,
+                    metadata: JSON.stringify(metadata),
+                }),
+            },
+        });
+        debug(`${this.name} : metadata => updated`);
+    }
+
     public addWatcher(watcher: SpacesWatcher) {
         this.users.set(watcher, new Map<number, SpaceUser>());
         debug(`Space ${this.name} => watcher added ${watcher.id}`);
@@ -130,6 +150,22 @@ export class Space implements CustomJsonReplacerInterface {
                 });
             }
         }
+
+        const metadata: { [key: string]: unknown } = {};
+
+        for (const key of this.metadata.keys()) {
+            metadata[key] = this.metadata.get(key);
+        }
+
+        watcher.write({
+            message: {
+                $case: "updateSpaceMetadataMessage",
+                updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
+                    spaceName: this.name,
+                    metadata: JSON.stringify(metadata),
+                }),
+            },
+        });
     }
     public removeWatcher(watcher: SpacesWatcher) {
         this.users.delete(watcher);
@@ -138,7 +174,7 @@ export class Space implements CustomJsonReplacerInterface {
 
     private notifyWatchers(watcher: SpacesWatcher, message: BackToPusherSpaceMessage) {
         for (const watcher_ of this.users.keys()) {
-            if (watcher_.id !== watcher.id) {
+            if (watcher_.id !== watcher.id || message.message?.$case === "updateSpaceMetadataMessage") {
                 watcher_.write(message);
             }
         }
