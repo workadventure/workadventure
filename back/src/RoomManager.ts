@@ -30,7 +30,6 @@ import {
     ServerWritableStream,
 } from "@grpc/grpc-js";
 import Debug from "debug";
-import { Value } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/struct";
 import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import * as Sentry from "@sentry/node";
 import { socketManager } from "./Services/SocketManager";
@@ -510,7 +509,7 @@ const roomManager = {
         socketManager
             .readVariable(call.request.room, call.request.name)
             .then((value) => {
-                callback(null, Value.wrap(value === undefined ? undefined : JSON.parse(value)));
+                callback(null, value === undefined ? undefined : JSON.parse(value));
             })
             .catch((error) => {
                 throw error;

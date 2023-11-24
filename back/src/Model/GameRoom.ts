@@ -18,7 +18,6 @@ import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-typ
 import { Jitsi } from "@workadventure/shared-utils";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
-import { Value } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/struct";
 import * as Sentry from "@sentry/node";
 import { GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
 import { PositionInterface } from "../Model/PositionInterface";
@@ -596,12 +595,12 @@ export class GameRoom implements BrothersFinder {
             // Dispatch the variable update to variable listeners
             const listeners = this.variableListeners.get(name);
             for (const listener of listeners ?? []) {
-                listener.write(Value.wrap(JSON.parse(value)));
+                listener.write(JSON.parse(value));
             }
         } catch (e) {
             if (e instanceof VariableError) {
                 // Ok, we have an error setting a variable. Either the user is trying to hack the map... or the map
-                // is not up to date. So let's try to reload the map from scratch.
+                // is not up-to-date. So let's try to reload the map from scratch.
                 if (this.variableManagerLastLoad === undefined) {
                     throw e;
                 }
