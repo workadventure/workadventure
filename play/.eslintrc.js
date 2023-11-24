@@ -45,7 +45,11 @@ module.exports = {
         "eol-last": ["error", "always"],
         "@typescript-eslint/no-explicit-any": "error",
         "no-throw-literal": "error",
-        "@typescript-eslint/no-unused-vars": ["error", { "args": "none", "caughtErrors": "all", "varsIgnorePattern": "_exhaustiveCheck" }],
+        "@typescript-eslint/no-unused-vars": "off",
+        "unused-imports/no-unused-imports": "error",
+        "unused-imports/no-unused-vars": [
+            "error", { "args": "none", "caughtErrors": "all", "varsIgnorePattern": "_exhaustiveCheck" }
+        ],
         // TODO: remove those ignored rules and write a stronger code!
         "@typescript-eslint/no-unsafe-call": "off",
         "@typescript-eslint/restrict-plus-operands": "off",

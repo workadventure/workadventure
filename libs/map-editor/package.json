@@ -42,6 +42,7 @@
     "eslint-import-resolver-typescript": "^3.5.3",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-unused-imports": "^2.0.0",
     "lint-staged": "^13.1.0",
     "prettier": "^2.8.2",
     "ts-jest": "^29.0.3",
