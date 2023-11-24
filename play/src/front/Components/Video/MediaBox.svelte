@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import type { Readable } from "svelte/store";
+    import { type Readable } from "svelte/store";
     import { onMount, onDestroy } from "svelte";
     import { PeerStatus, VideoPeer } from "../../WebRtc/VideoPeer";
     import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
@@ -33,7 +33,6 @@
 
     onMount(() => {
         gameScene.reposition();
-        console.log("streamable", streamable);
     });
 
     onDestroy(() => {

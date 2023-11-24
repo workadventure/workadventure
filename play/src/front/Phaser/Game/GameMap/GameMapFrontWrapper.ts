@@ -997,7 +997,7 @@ export class GameMapFrontWrapper {
                     properties.push({
                         name: GameMapProperties.SPEAKER_MEGAPHONE,
                         type: "string",
-                        value: property.name,
+                        value: `${property.id}-${property.name}`,
                     });
                     break;
                 }

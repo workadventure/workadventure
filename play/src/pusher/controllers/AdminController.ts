@@ -61,7 +61,10 @@ export class AdminController extends BaseHttpController {
                 });
             });
 
-            res.send("ok");
+            res.atomic(() => {
+                res.send("ok");
+            });
+
             return;
         });
     }
@@ -149,7 +152,9 @@ export class AdminController extends BaseHttpController {
                 })
             );
 
-            res.send("ok");
+            res.atomic(() => {
+                res.send("ok");
+            });
         });
     }
 
@@ -221,7 +226,9 @@ export class AdminController extends BaseHttpController {
                 }
             }
 
-            res.setHeader("Content-Type", "application/json").send(JSON.stringify(rooms));
+            res.atomic(() => {
+                res.setHeader("Content-Type", "application/json").send(JSON.stringify(rooms));
+            });
             return;
         });
     }
@@ -316,7 +323,9 @@ export class AdminController extends BaseHttpController {
                 }
             }
 
-            res.send("ok");
+            res.atomic(() => {
+                res.send("ok");
+            });
             return;
         });
     }
@@ -381,7 +390,9 @@ export class AdminController extends BaseHttpController {
                 throw new Error("sendChatMessagePrompt => error" + err);
             }
 
-            res.send("ok");
+            res.atomic(() => {
+                res.send("ok");
+            });
             return;
         });
     }

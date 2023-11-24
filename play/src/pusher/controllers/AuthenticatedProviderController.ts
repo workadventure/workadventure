@@ -18,7 +18,9 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
      */
     setupRoutes(endpoint: string): void {
         this.app.options(endpoint, (req: Request, res: Response) => {
-            res.status(200).send("");
+            res.atomic(() => {
+                res.status(200).send("");
+            });
             return;
         });
 
@@ -26,7 +28,9 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
             const token = req.header("Authorization");
 
             if (!token) {
-                res.status(401).send("Undefined authorization header");
+                res.atomic(() => {
+                    res.status(401).send("Undefined authorization header");
+                });
                 return;
             }
             let uuid: string | undefined;
@@ -38,7 +42,9 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
                 Sentry.captureException(`Connection refused for token: ${token} ${e}`);
                 console.error("Connection refused for token: " + token, e);
 
-                res.status(401).send("Invalid token sent");
+                res.atomic(() => {
+                    res.status(401).send("Invalid token sent");
+                });
                 return;
             }
 
@@ -51,16 +57,25 @@ export abstract class AuthenticatedProviderController<T> extends BaseHttpControl
             );
 
             if (query === undefined) {
-                return res.status(400).send("bad roomUrl URL parameter");
+                res.atomic(() => {
+                    res.status(400).send("bad roomUrl URL parameter");
+                });
+                return;
             }
 
             const data = await this.getData(decodeURIComponent(query.roomUrl), uuid);
 
             if (!data) {
-                return res.status(500).send("Error on getting data");
+                res.atomic(() => {
+                    res.status(500).send("Error on getting data");
+                });
+                return;
             }
 
-            return res.status(200).json(data);
+            res.atomic(() => {
+                res.status(200).json(data);
+            });
+            return;
         });
     }
 

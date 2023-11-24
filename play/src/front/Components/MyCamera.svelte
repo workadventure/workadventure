@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { Color } from "@workadventure/shared-utils";
+    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import {
         cameraEnergySavingStore,
         localVolumeStore,
@@ -12,6 +13,7 @@
     import { LL } from "../../i18n/i18n-svelte";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
     import { gameManager } from "../Phaser/Game/GameManager";
+    import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";
@@ -19,19 +21,30 @@
     import cameraOffImg from "./images/camera-off.png";
 
     let stream: MediaStream | null;
+    let videoElement: HTMLVideoElement;
     let userName = gameManager.getPlayerName();
     let backgroundColor = Color.getColorByString(userName ?? "default");
     let textColor = Color.getTextColorByBackgroundColor(backgroundColor);
 
+    let aspectRatio = 1;
+
     const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
             stream = value.stream;
+            // TODO: remove this hack
+            setTimeout(() => {
+                aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
+            }, 100);
         } else {
             stream = null;
         }
     });
 
     let cameraContainer: HTMLDivElement;
+    let isMobile = isMediaBreakpointUp("md");
+    const resizeObserver = new ResizeObserver(() => {
+        isMobile = isMediaBreakpointUp("md");
+    });
 
     onDestroy(() => {
         unsubscribeLocalStreamStore();
@@ -49,10 +62,15 @@
                 cameraContainer.style.visibility = "visible";
             }
         });
+        resizeObserver.observe(cameraContainer);
     });
 </script>
 
-<div class="tw-transition-all tw-self-end tw-relative tw-w-full" bind:this={cameraContainer}>
+<div
+    bind:this={cameraContainer}
+    class="tw-transition-all tw-self-end tw-relative tw-w-full"
+    class:tw-opacity-50={isMobile && $streamableCollectionStore.size === 0}
+>
     <!--If we are in a silent zone-->
     {#if $silentStore}
         <div
@@ -91,8 +109,9 @@
             </div>
             <div class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all">
                 <video
+                    bind:this={videoElement}
                     class="tw-h-full tw-w-full tw-rounded md:tw-object-cover"
-                    class:object-contain={stream}
+                    class:object-contain={stream && (isMobile || aspectRatio < 1)}
                     class:tw-max-h-[230px]={stream}
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}

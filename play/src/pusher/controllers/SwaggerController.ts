@@ -20,7 +20,9 @@ export class SwaggerController extends BaseHttpController {
                 apis: ["./src/pusher/controllers/*.ts"],
             };
 
-            res.json(swaggerJsdoc(options));
+            res.atomic(() => {
+                res.json(swaggerJsdoc(options));
+            });
         });
 
         this.app.get("/openapi/admin", (req, res) => {
@@ -57,7 +59,9 @@ export class SwaggerController extends BaseHttpController {
             if (ADMIN_URL && options.swaggerDefinition) {
                 options.swaggerDefinition.host = "pusher." + ADMIN_URL.replace("//", "");
             }
-            res.json(swaggerJsdoc(options));
+            res.atomic(() => {
+                res.json(swaggerJsdoc(options));
+            });
         });
 
         this.app.get("/openapi/external-admin", (req, res) => {
@@ -210,7 +214,9 @@ export class SwaggerController extends BaseHttpController {
                     },
                 },
             };
-            res.json(options);
+            res.atomic(() => {
+                res.json(options);
+            });
         });
 
         // Create static serve route to serve index.html

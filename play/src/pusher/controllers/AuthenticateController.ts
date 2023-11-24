@@ -73,18 +73,22 @@ export class AuthenticateController extends BaseHttpController {
             const verifyDomainService_ = VerifyDomainService.get(await adminService.getCapabilities());
             const verifyDomainResult = await verifyDomainService_.verifyDomain(query.playUri);
             if (!verifyDomainResult) {
-                res.status(403);
-                res.send("Unauthorized domain in playUri");
+                res.atomic(() => {
+                    res.status(403);
+                    res.send("Unauthorized domain in playUri");
+                });
                 return;
             }
 
             const loginUri = await openIDClient.authorizationUrl(res, query.redirect, query.playUri, req);
-            res.cookie("playUri", query.playUri, undefined, {
-                httpOnly: true, // dont let browser javascript access cookie ever
-                secure: req.secure, // only use cookie over https
-            });
+            res.atomic(() => {
+                res.cookie("playUri", query.playUri, undefined, {
+                    httpOnly: true, // dont let browser javascript access cookie ever
+                    secure: req.secure, // only use cookie over https
+                });
 
-            res.redirect(loginUri);
+                res.redirect(loginUri);
+            });
             return;
         });
     }
@@ -157,26 +161,30 @@ export class AuthenticateController extends BaseHttpController {
                 if (authTokenData.accessToken == undefined) {
                     //if not nonce and code, anonymous user connected
                     //get data with identifier and return token
-                    res.json({
-                        authToken: token,
-                        username: authTokenData?.username,
-                        locale: authTokenData?.locale,
-                        // TODO: replace ... with each property
-                        ...resUserData,
-                    } satisfies MeResponse);
+                    res.atomic(() => {
+                        res.json({
+                            authToken: token,
+                            username: authTokenData?.username,
+                            locale: authTokenData?.locale,
+                            // TODO: replace ... with each property
+                            ...resUserData,
+                        } satisfies MeResponse);
+                    });
                     return;
                 }
 
                 try {
                     const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
-                    res.json({
-                        username: authTokenData?.username,
-                        authToken: token,
-                        locale: authTokenData?.locale,
-                        // TODO: replace ... with each property
-                        ...resUserData,
-                        ...resCheckTokenAuth,
-                    } satisfies MeResponse);
+                    res.atomic(() => {
+                        res.json({
+                            username: authTokenData?.username,
+                            authToken: token,
+                            locale: authTokenData?.locale,
+                            // TODO: replace ... with each property
+                            ...resUserData,
+                            ...resCheckTokenAuth,
+                        } satisfies MeResponse);
+                    });
                 } catch (err) {
                     console.warn("Error while checking token auth", err);
                     throw new JsonWebTokenError("Invalid token");
@@ -184,16 +192,21 @@ export class AuthenticateController extends BaseHttpController {
                 return;
             } catch (err) {
                 if (err instanceof JsonWebTokenError) {
-                    res.status(401);
-                    res.send("Invalid token");
+                    res.atomic(() => {
+                        res.status(401);
+                        res.send("Invalid token");
+                    });
                     return;
                 }
 
                 if (isAxiosError(err)) {
                     const errorType = ErrorApiData.safeParse(err?.response?.data);
                     if (errorType.success) {
-                        res.sendStatus(err?.response?.status ?? 500);
-                        res.json(errorType.data);
+                        const status = err?.response?.status ?? 500;
+                        res.atomic(() => {
+                            res.sendStatus(status);
+                            res.json(errorType.data);
+                        });
                         return;
                     }
                 }
@@ -242,7 +255,9 @@ export class AuthenticateController extends BaseHttpController {
                 console.error("openIDCallback => logout-callback", error);
             }
 
-            res.status(200).send("");
+            res.atomic(() => {
+                res.status(200).send("");
+            });
             return;
         });
     }
@@ -282,8 +297,10 @@ export class AuthenticateController extends BaseHttpController {
                 //if no access on openid provider, return error
                 Sentry.captureException("An error occurred while connecting to OpenID Provider => " + err);
                 console.error("An error occurred while connecting to OpenID Provider => ", err);
-                res.status(500);
-                res.send("An error occurred while connecting to OpenID Provider");
+                res.atomic(() => {
+                    res.status(500);
+                    res.send("An error occurred while connecting to OpenID Provider");
+                });
                 return;
             }
             const email = userInfo.email || userInfo.sub;
@@ -297,9 +314,11 @@ export class AuthenticateController extends BaseHttpController {
                 userInfo?.locale
             );
 
-            res.clearCookie("playUri");
-            // FIXME: possibly redirect to Admin instead.
-            res.redirect(playUri + "?token=" + encodeURIComponent(authToken));
+            res.atomic(() => {
+                res.clearCookie("playUri");
+                // FIXME: possibly redirect to Admin instead.
+                res.redirect(playUri + "?token=" + encodeURIComponent(authToken));
+            });
             return;
         });
     }
@@ -352,7 +371,9 @@ export class AuthenticateController extends BaseHttpController {
      */
     private register(): void {
         this.app.options("/register", (req, res) => {
-            res.status(200).send("");
+            res.atomic(() => {
+                res.status(200).send("");
+            });
         });
 
         this.app.post("/register", async (req, res) => {
@@ -375,14 +396,16 @@ export class AuthenticateController extends BaseHttpController {
 
             const authToken = jwtTokenManager.createAuthToken(email || userUuid);
 
-            res.json({
-                authToken,
-                userUuid,
-                email,
-                roomUrl,
-                mapUrlStart,
-                organizationMemberToken,
-            } satisfies RegisterData);
+            res.atomic(() => {
+                res.json({
+                    authToken,
+                    userUuid,
+                    email,
+                    roomUrl,
+                    mapUrlStart,
+                    organizationMemberToken,
+                } satisfies RegisterData);
+            });
         });
     }
 
@@ -411,14 +434,18 @@ export class AuthenticateController extends BaseHttpController {
     private anonymLogin(): void {
         this.app.post("/anonymLogin", (req, res) => {
             if (DISABLE_ANONYMOUS) {
-                res.status(403);
+                res.atomic(() => {
+                    res.status(403);
+                });
                 return;
             } else {
                 const userUuid = v4();
                 const authToken = jwtTokenManager.createAuthToken(userUuid);
-                res.json({
-                    authToken,
-                    userUuid,
+                res.atomic(() => {
+                    res.json({
+                        authToken,
+                        userUuid,
+                    });
                 });
                 return;
             }
@@ -460,10 +487,13 @@ export class AuthenticateController extends BaseHttpController {
             }
             await openIDClient.checkTokenAuth(authTokenData.accessToken);
 
+            const accessToken = authTokenData.accessToken;
             //get login profile
-            res.status(302);
-            res.setHeader("Location", adminService.getProfileUrl(authTokenData.accessToken, playUri));
-            res.send("");
+            res.atomic(() => {
+                res.status(302);
+                res.setHeader("Location", adminService.getProfileUrl(accessToken, playUri));
+                res.send("");
+            });
             return;
         });
     }

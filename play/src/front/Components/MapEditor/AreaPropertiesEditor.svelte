@@ -5,6 +5,7 @@
         AreaDataPropertiesKeys,
         AreaDataProperties,
         OpenWebsiteTypePropertiesKeys,
+        PlayAudioPropertyData,
     } from "@workadventure/map-editor";
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
     import { LL } from "../../../i18n/i18n-svelte";
@@ -130,7 +131,9 @@
                 return {
                     id,
                     type,
+                    hideButtonLabel: true,
                     audioLink: "",
+                    volume: 1,
                 };
             case "speakerMegaphone":
                 return {
@@ -240,6 +243,11 @@
                 onUpdateProperty(app);
             }
         );
+    }
+
+    // Fixme: this is a hack to force the map editor to update the property
+    function onUpdateAudioProperty(data: CustomEvent<PlayAudioPropertyData>) {
+        onUpdateProperty(data.detail);
     }
 </script>
 
@@ -457,7 +465,7 @@
                         on:close={() => {
                             onDeleteProperty(property.id);
                         }}
-                        on:change={() => onUpdateProperty(property)}
+                        on:audioLink={onUpdateAudioProperty}
                     />
                 {:else if property.type === "openWebsite"}
                     <OpenWebsitePropertyEditor

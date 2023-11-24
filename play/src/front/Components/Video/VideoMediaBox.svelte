@@ -48,6 +48,8 @@
 
     let displayNoVideoWarning = false;
 
+    let aspectRatio = 1;
+
     const debug = Debug("VideoMediaBox");
 
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
@@ -103,6 +105,7 @@
                 }
                 return;
             });
+            updateRatio();
         });
 
         // Let's display a warning if the video stream never reaches the user.
@@ -136,6 +139,7 @@
             }
 
             wasVideoEnabled = constraints?.video ?? false;
+            updateRatio();
         });
     });
 
@@ -204,6 +208,13 @@
             }
         });
     }
+
+    function updateRatio() {
+        // TODO: remove this hack
+        setTimeout(() => {
+            aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
+        }, 1000);
+    }
 </script>
 
 <div
@@ -238,7 +249,7 @@
             bind:this={videoElement}
             class:tw-h-0={!videoEnabled}
             class:tw-w-0={!videoEnabled}
-            class:object-contain={videoEnabled}
+            class:object-contain={minimized || isHightlighted || aspectRatio < 1}
             class:tw-max-h-[230px]={videoEnabled && !isHightlighted}
             class:tw-max-h-[80vh]={videoEnabled && isHightlighted}
             class:tw-h-full={videoEnabled}
