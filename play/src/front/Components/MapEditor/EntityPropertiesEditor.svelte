@@ -136,6 +136,7 @@
                     type,
                     buttonLabel: $LL.mapEditor.properties.audioProperties.label(),
                     audioLink: "",
+                    volume: 1,
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);
