@@ -32,9 +32,11 @@ import {
     WatchSpaceMessage,
     QueryMessage,
     MegaphoneStateMessage,
+    UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { isAxiosError } from "axios";
+import { z } from "zod";
 import { PusherRoom } from "../models/PusherRoom";
 import type { BackSpaceConnection, SocketData } from "../models/Websocket/SocketData";
 
@@ -318,6 +320,34 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
+    public async handleUpdateSpaceMetadata(
+        client: Socket,
+        spaceName: string,
+        metadata: { [key: string]: unknown }
+    ): Promise<void> {
+        try {
+            const backId = apiClientRepository.getIndex(spaceName);
+            const spaceStreamToPusherPromise = this.spaceStreamsToPusher.get(backId);
+            if (!spaceStreamToPusherPromise) {
+                throw new Error("Space stream to pusher not found");
+            }
+            await spaceStreamToPusherPromise.then((spaceStreamToPusher) => {
+                spaceStreamToPusher.write({
+                    message: {
+                        $case: "updateSpaceMetadataMessage",
+                        updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
+                            spaceName,
+                            metadata: JSON.stringify(metadata),
+                        }),
+                    },
+                });
+            });
+        } catch (error) {
+            Sentry.captureException(`An error occurred on "update_space_metadata" event ${error}`);
+            console.error(`An error occurred on "update_space_metadata" event ${error}`);
+        }
+    }
+
     public async handleJoinSpace(
         client: Socket,
         spaceName: string,
@@ -361,6 +391,28 @@ export class SocketManager implements ZoneEventListener {
                                     const space = this.spaces.get(removeSpaceUserMessage.spaceName);
                                     if (space) {
                                         space.localRemoveUser(removeSpaceUserMessage.userId);
+                                    }
+                                    break;
+                                }
+                                case "updateSpaceMetadataMessage": {
+                                    const updateSpaceMetadataMessage = message.message.updateSpaceMetadataMessage;
+                                    const space = this.spaces.get(updateSpaceMetadataMessage.spaceName);
+                                    console.log("updateSpaceMetadataMessage", updateSpaceMetadataMessage);
+                                    const isMetadata = z
+                                        .record(z.string(), z.unknown())
+                                        .safeParse(JSON.parse(message.message.updateSpaceMetadataMessage.metadata));
+                                    if (!isMetadata.success) {
+                                        Sentry.captureException(
+                                            `Invalid metadata received. ${message.message.updateSpaceMetadataMessage.metadata}`
+                                        );
+                                        console.error(
+                                            "Invalid metadata received.",
+                                            message.message.updateSpaceMetadataMessage.metadata
+                                        );
+                                        return;
+                                    }
+                                    if (space) {
+                                        space.localUpdateMetadata(isMetadata.data);
                                     }
                                     break;
                                 }

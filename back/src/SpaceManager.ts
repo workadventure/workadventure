@@ -41,6 +41,13 @@ const spaceManager = {
                         socketManager.handleUpdateSpaceUserMessage(pusher, message.message.updateSpaceUserMessage);
                         break;
                     }
+                    case "updateSpaceMetadataMessage": {
+                        socketManager.handleUpdateSpaceMetadataMessage(
+                            pusher,
+                            message.message.updateSpaceMetadataMessage
+                        );
+                        break;
+                    }
                     case "removeSpaceUserMessage": {
                         socketManager.handleRemoveSpaceUserMessage(pusher, message.message.removeSpaceUserMessage);
                         break;
