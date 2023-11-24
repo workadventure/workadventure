@@ -28,6 +28,7 @@ async function init() {
     room: roomUrl,
   });
 
+  console.log("Value read plain:", value);
   console.log("Value read:", Value.unwrap(value));
 
   // Save a variable in 5sec
@@ -48,6 +49,7 @@ async function init() {
   });
 
   for await (const value of listenVariable) {
+    console.log("Value listened plain:", value);
     console.log("Value listened:", Value.unwrap(value));
     break;
   }
