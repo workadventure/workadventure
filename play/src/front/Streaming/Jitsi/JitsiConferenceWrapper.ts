@@ -23,9 +23,11 @@ import {
 import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import { DeviceBroadcastable } from "../Common/ConferenceWrapper";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 import { JitsiLocalTracks } from "./JitsiLocalTracks";
+import { JitsiTrackStreamWrapper } from "./JitsiTrackStreamWrapper";
 
 const debug = Debug("JitsiConferenceWrapper");
 
@@ -40,6 +42,7 @@ export class JitsiConferenceWrapper {
     private cameraDeviceIdStoreUnsubscriber: Unsubscriber | undefined;
     private microphoneDeviceIdStoreUnsubscriber: Unsubscriber | undefined;
     private requestedScreenSharingStateUnsubscriber: Unsubscriber | undefined;
+    private requestHighlightedEmbedScreenSubscribtion: Unsubscriber | undefined;
     private cameraDeviceId: string | undefined = undefined;
     private microphoneDeviceId: string | undefined = undefined;
 
@@ -74,9 +77,6 @@ export class JitsiConferenceWrapper {
                 });
             }
         });
-        // set the desired resolution to send to JVB or the peer (180, 360, 720).
-        console.info('Jitsi setSenderVideoConstraint => 180');
-        this.jitsiConference.setSenderVideoConstraint(180);
     }
 
     public static join(connection: JitsiConnection, jitsiRoomName: string): Promise<JitsiConferenceWrapper> {
@@ -206,6 +206,33 @@ export class JitsiConferenceWrapper {
                 }
             );
 
+            jitsiConferenceWrapper.requestHighlightedEmbedScreenSubscribtion = highlightedEmbedScreen.subscribe(
+                (highlightedEmbedScreen_) => {
+                    console.log(
+                        "requestHighlightedEmbedScreenSubscribtion => highlightedEmbedScreen_",
+                        highlightedEmbedScreen_
+                    );
+                    if (highlightedEmbedScreen_ == undefined) {
+                        jitsiConferenceWrapper.jitsiConference.setReceiverVideoConstraint(180);
+                        return;
+                    }
+                    console.log(
+                        'requestHighlightedEmbedScreenSubscribtion => highlightedEmbedScreen_.type === "streamable"',
+                        highlightedEmbedScreen_.type === "streamable"
+                    );
+                    console.log(
+                        "requestHighlightedEmbedScreenSubscribtion => highlightedEmbedScreen_.embed instanceof JitsiTrackStreamWrapper",
+                        highlightedEmbedScreen_.embed instanceof JitsiTrackStreamWrapper
+                    );
+                    if (
+                        highlightedEmbedScreen_.type === "streamable" &&
+                        highlightedEmbedScreen_.embed instanceof JitsiTrackStreamWrapper
+                    ) {
+                        jitsiConferenceWrapper.jitsiConference.setReceiverVideoConstraint(720);
+                    }
+                }
+            );
+
             /**
              * Handles remote tracks
              * @param track JitsiTrackWrapper object
@@ -313,6 +340,9 @@ export class JitsiConferenceWrapper {
         }
         if (this.requestedScreenSharingStateUnsubscriber) {
             this.requestedScreenSharingStateUnsubscriber();
+        }
+        if (this.requestHighlightedEmbedScreenSubscribtion) {
+            this.requestHighlightedEmbedScreenSubscribtion();
         }
 
         await this.jitsiConference.leave(reason).then(async () => {
