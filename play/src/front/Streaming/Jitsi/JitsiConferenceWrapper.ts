@@ -77,6 +77,13 @@ export class JitsiConferenceWrapper {
                 });
             }
         });
+        const videoConstraints = {
+            colibriClass: "ReceiverVideoConstraints",
+            lastN: 2,
+            defaultConstraints: { maxHeight: 180, maxFrameRate: 15 }, // Default resolution requested for all endpoints.
+        };
+        console.log("requestHighlightedEmbedScreenSubscribtion => videoConstraints", videoConstraints);
+        this.jitsiConference.setReceiverConstraints(videoConstraints);
     }
 
     public static join(connection: JitsiConnection, jitsiRoomName: string): Promise<JitsiConferenceWrapper> {
@@ -213,7 +220,7 @@ export class JitsiConferenceWrapper {
                         highlightedEmbedScreen_
                     );
                     if (highlightedEmbedScreen_ == undefined) {
-                        jitsiConferenceWrapper.jitsiConference.setReceiverVideoConstraint(180);
+                        //jitsiConferenceWrapper.jitsiConference.setReceiverVideoConstraint(180);
                         return;
                     }
                     console.log(
@@ -228,7 +235,20 @@ export class JitsiConferenceWrapper {
                         highlightedEmbedScreen_.type === "streamable" &&
                         highlightedEmbedScreen_.embed instanceof JitsiTrackStreamWrapper
                     ) {
-                        jitsiConferenceWrapper.jitsiConference.setReceiverVideoConstraint(720);
+                        const participantId = highlightedEmbedScreen_.embed.jitsiTrackWrapper.uniqueId;
+                        const videoConstraints = {
+                            colibriClass: "ReceiverVideoConstraints",
+                            lastN: 2,
+                            onStageSources: [participantId], // The source names of the video tracks that are prioritized up to a higher resolution.
+                            defaultConstraints: { maxHeight: 180, maxFrameRate: 15 }, // Default resolution requested for all endpoints.
+                            constraints: {
+                                // Source specific resolution.
+                                [participantId]: { maxHeight: 720, maxFrameRate: 30 },
+                            },
+                        };
+                        console.log("requestHighlightedEmbedScreenSubscribtion => videoConstraints", videoConstraints);
+                        jitsiConferenceWrapper.jitsiConference.setReceiverConstraints(videoConstraints);
+                        //jitsiConferenceWrapper.jitsiConference.setReceiverVideoConstraint(720);
                     }
                 }
             );
