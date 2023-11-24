@@ -3,7 +3,7 @@ import {Subscriber, Unsubscriber, derived} from "svelte/store";
 import { ForwardableStore } from "./ForwardableStore";
 
 /**
- * A store built by concatenating the result of stores that return arrays of items
+ * A store built by concatenating the result of stores that return maps of items
  */
 export class ConcatenateMapStore<K, V> implements Readable<Map<K, V>> {
     private stores: Array<Readable<Map<K, V>>> = [];

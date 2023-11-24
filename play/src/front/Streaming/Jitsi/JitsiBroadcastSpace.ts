@@ -44,6 +44,9 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
     ) {
         super();
         this.space = new Space(roomConnection, spaceName, spaceFilter);
+        this.roomConnection.emitUpdateSpaceMetadata(this.space.name, {
+            test: "test",
+        });
         this.jitsiTracks = new ForwardableStore<Map<string, JitsiTrackWrapper>>(new Map());
 
         // When the user leaves the space, we leave the Jitsi conference

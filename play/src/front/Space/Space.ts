@@ -3,6 +3,7 @@ import { MapStore } from "@workadventure/store-utils";
 import debug from "debug";
 import { Subject, Subscription } from "rxjs";
 import { Readable } from "svelte/store";
+import { z } from "zod";
 import { RoomConnection } from "../Connection/RoomConnection";
 import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
 
@@ -15,13 +16,15 @@ export interface SpaceUserExtended extends SpaceUser {
     }>;
 }
 
-const spaceLogger = debug("space");
+const spaceLogger = debug("Space");
 export class Space {
     private readonly _users: MapStore<number, SpaceUserExtended>;
+    private readonly _metadata: MapStore<string, unknown>;
     private subscribers: Subscription[];
 
     constructor(private connection: RoomConnection, readonly name: string, private spaceFilter: SpaceFilterMessage) {
         this._users = new MapStore<number, SpaceUserExtended>();
+        this._metadata = new MapStore<string, unknown>();
         this.subscribers = [];
         this.subscribers.push(
             this.connection.addSpaceUserMessageStream.subscribe((message) => {
@@ -110,6 +113,22 @@ export class Space {
                 }
             })
         );
+        this.subscribers.push(
+            this.connection.updateSpaceMetadataMessageStream.subscribe((message) => {
+                spaceLogger(`Space => ${this.name} => updateSpaceMetadataMessageStream`, message);
+                const isMetadata = z.record(z.string(), z.unknown()).safeParse(JSON.parse(message.metadata));
+                if (!isMetadata.success) {
+                    console.error("Error while parsing metadata", isMetadata.error);
+                    return;
+                }
+
+                if (message.spaceName === name) {
+                    for (const [key, value] of Object.entries(isMetadata.data)) {
+                        this._metadata.set(key, value);
+                    }
+                }
+            })
+        );
     }
 
     public destroy() {
@@ -119,6 +138,10 @@ export class Space {
 
     get users(): Readable<Map<number, SpaceUserExtended>> {
         return this._users;
+    }
+
+    get metadata(): Readable<Map<string, unknown>> {
+        return this._metadata;
     }
 
     get isEmpty() {

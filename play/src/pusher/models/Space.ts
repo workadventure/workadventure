@@ -219,6 +219,30 @@ export class Space implements CustomJsonReplacerInterface {
         }
     }
 
+    public localUpdateMetadata(metadata: { [key: string]: unknown }) {
+        const subMessage: SubMessage = {
+            message: {
+                $case: "updateSpaceMetadataMessage",
+                updateSpaceMetadataMessage: {
+                    spaceName: this.name,
+                    metadata: JSON.stringify(metadata),
+                    filterName: undefined,
+                },
+            },
+        };
+        this.notifyAllMetadata(subMessage);
+    }
+
+    private notifyAllMetadata(subMessage: SubMessage) {
+        this.clientWatchers.forEach((watcher) => {
+            const socketData = watcher.getUserData();
+            if (subMessage.message?.$case === "updateSpaceMetadataMessage") {
+                debug(`${this.name} : metadata update sent to ${socketData.name}`);
+                socketData.emitInBatch(subMessage);
+            }
+        });
+    }
+
     private notifyAll(subMessage: SubMessage, youngUser: SpaceUserExtended, oldUser: SpaceUserExtended | null = null) {
         this.clientWatchers.forEach((watcher) => {
             const socketData = watcher.getUserData();

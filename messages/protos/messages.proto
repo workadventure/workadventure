@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/struct.proto";
+import "google/protobuf/any.proto";
 
 /*********** PARTIAL MESSAGES **************/
 
@@ -246,6 +247,7 @@ message ClientToServerMessage {
     MegaphoneStateMessage megaphoneStateMessage = 32;
     ScreenSharingStateMessage screenSharingStateMessage = 33;
     JitsiParticipantIdSpaceMessage  jitsiParticipantIdSpaceMessage = 34;
+    UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 35;
   }
 }
 
@@ -426,6 +428,7 @@ message SubMessage {
     RemoveSpaceUserMessage removeSpaceUserMessage = 18;
     MegaphoneSettings megaphoneSettingsMessage = 19;
     ReceivedEventMessage receivedEventMessage = 20;
+    UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 21;
   }
 }
 
@@ -949,6 +952,7 @@ message PusherToBackSpaceMessage{
     UpdateSpaceUserMessage updateSpaceUserMessage = 4;
     RemoveSpaceUserMessage removeSpaceUserMessage = 5;
     PingMessage pongMessage = 6;
+    UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 7;
   }
 }
 
@@ -958,6 +962,7 @@ message BackToPusherSpaceMessage{
     UpdateSpaceUserMessage updateSpaceUserMessage = 2;
     RemoveSpaceUserMessage removeSpaceUserMessage = 3;
     PingMessage pingMessage = 4;
+    UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 5;
   }
 }
 
@@ -1022,6 +1027,11 @@ message UpdateSpaceUserMessage{
 message RemoveSpaceUserMessage{
   string spaceName = 1;
   int32 userId = 2;
+  google.protobuf.StringValue filterName = 3;
+}
+message UpdateSpaceMetadataMessage{
+  string spaceName = 1;
+  string metadata = 2;
   google.protobuf.StringValue filterName = 3;
 }
 
