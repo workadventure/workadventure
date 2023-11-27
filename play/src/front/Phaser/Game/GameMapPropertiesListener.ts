@@ -18,17 +18,9 @@ import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connection/Room";
 import { LL } from "../../../i18n/i18n-svelte";
-import {
-    inJitsiStore,
-    inBbbStore,
-    silentStore,
-    inOpenWebsite,
-    requestedCameraState,
-    requestedMicrophoneState,
-    isSpeakerStore,
-} from "../../Stores/MediaStore";
+import { inJitsiStore, inBbbStore, silentStore, inOpenWebsite, isSpeakerStore } from "../../Stores/MediaStore";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
-import { currentMegaphoneNameStore, requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
+import { currentLiveStreamingNameStore } from "../../Stores/MegaphoneStore";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
@@ -523,12 +515,12 @@ export class GameMapPropertiesListener {
         }
         const speakerZone = place.properties.find((property) => property.name === GameMapProperties.SPEAKER_MEGAPHONE);
         if (speakerZone && speakerZone.type === "string" && speakerZone.value !== undefined) {
-            currentMegaphoneNameStore.set(speakerZone.value);
+            currentLiveStreamingNameStore.set(speakerZone.value);
             this.scene.broadcastService.joinSpace(speakerZone.value, false);
             isSpeakerStore.set(true);
-            if (get(requestedCameraState) || get(requestedMicrophoneState)) {
+            /*if (get(requestedCameraState) || get(requestedMicrophoneState)) {
                 requestedMegaphoneStore.set(true);
-            }
+            }*/
         }
     }
 
@@ -538,9 +530,9 @@ export class GameMapPropertiesListener {
         }
         const speakerZone = place.properties.find((property) => property.name === GameMapProperties.SPEAKER_MEGAPHONE);
         if (speakerZone && speakerZone.type === "string" && speakerZone.value !== undefined) {
-            currentMegaphoneNameStore.set(undefined);
+            currentLiveStreamingNameStore.set(undefined);
             this.scene.broadcastService.leaveSpace(speakerZone.value);
-            requestedMegaphoneStore.set(false);
+            //requestedMegaphoneStore.set(false);
             isSpeakerStore.set(false);
         }
     }
@@ -558,7 +550,7 @@ export class GameMapPropertiesListener {
                 listenerZone.value
             );
             if (speakerZoneName) {
-                currentMegaphoneNameStore.set(speakerZoneName);
+                currentLiveStreamingNameStore.set(speakerZoneName);
                 this.scene.broadcastService.joinSpace(speakerZoneName, false);
             }
         }
@@ -577,7 +569,7 @@ export class GameMapPropertiesListener {
                 listenerZone.value
             );
             if (speakerZoneName) {
-                currentMegaphoneNameStore.set(undefined);
+                currentLiveStreamingNameStore.set(undefined);
                 this.scene.broadcastService.leaveSpace(speakerZoneName);
             }
         }

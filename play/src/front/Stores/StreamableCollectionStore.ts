@@ -50,7 +50,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
                 if (trackWrapper instanceof JitsiTrackWrapper) {
                     const cameraTrackWrapper = trackWrapper.cameraTrackWrapper;
                     console.log("cameraTrackWrapper", cameraTrackWrapper);
-                    if (!cameraTrackWrapper.isEmpty() && !trackWrapper.isLocal) {
+                    if (/*!cameraTrackWrapper.isEmpty() &&*/ !trackWrapper.isLocal) {
                         addPeer(cameraTrackWrapper);
                     }
                     const screenSharingTrackWrapper = trackWrapper.screenSharingTrackWrapper;
@@ -84,9 +84,9 @@ export const myJitsiCameraStore = derived([jitsiTracksStore], ([$jitsiTracksStor
     for (const jitsiTrackWrapper of $jitsiTracksStore.values()) {
         if (jitsiTrackWrapper.isLocal) {
             const cameraTrackWrapper = jitsiTrackWrapper.cameraTrackWrapper;
-            if (cameraTrackWrapper.isEmpty()) {
+            /*if (cameraTrackWrapper.isEmpty()) {
                 return null;
-            }
+            }*/
             return cameraTrackWrapper;
         }
     }

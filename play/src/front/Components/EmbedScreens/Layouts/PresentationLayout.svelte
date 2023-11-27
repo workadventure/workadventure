@@ -8,7 +8,7 @@
     import { myCameraStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import MyCamera from "../../MyCamera.svelte";
     import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
-    import { megaphoneEnabledStore } from "../../../Stores/MegaphoneStore";
+    import { liveStreamingEnabledStore } from "../../../Stores/MegaphoneStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
 
@@ -118,7 +118,7 @@
                 {#if $streamableCollectionStore.size > 0}
                     <CamerasContainer highlightedEmbedScreen={$highlightedEmbedScreen} />
                 {/if}
-                {#if $myCameraStore && !$megaphoneEnabledStore}
+                {#if $myCameraStore && !$liveStreamingEnabledStore}
                     <MyCamera />
                 {/if}
                 {#if $myJitsiCameraStore}

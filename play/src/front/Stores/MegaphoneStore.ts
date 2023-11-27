@@ -2,12 +2,15 @@ import { derived, Readable, writable } from "svelte/store";
 import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "./MediaStore";
 import { requestedScreenSharingState } from "./ScreenSharingStore";
 
-export const currentMegaphoneNameStore = writable<string | undefined>();
+export const currentLiveStreamingNameStore = writable<string | undefined>();
 export const megaphoneCanBeUsedStore = writable<boolean>(false);
 
 export const requestedMegaphoneStore = writable<boolean>(false);
 
-export const megaphoneEnabledStore: Readable<boolean> = derived(
+/**
+ * This store is true if the user is livestreaming, i.e. if the user is a speaker or (if the user has requested the megaphone and is enabling its camera or microphone or screen)
+ */
+export const liveStreamingEnabledStore: Readable<boolean> = derived(
     [
         isSpeakerStore,
         requestedMegaphoneStore,
@@ -26,11 +29,12 @@ export const megaphoneEnabledStore: Readable<boolean> = derived(
         set
     ) => {
         set(
-            ($isSpeakerStore || $requestedMegaphoneStore) &&
-                ($requestedCameraState || $requestedMicrophoneState || $requestedScreenSharingState)
+            $isSpeakerStore ||
+                ($requestedMegaphoneStore &&
+                    ($requestedCameraState || $requestedMicrophoneState || $requestedScreenSharingState))
         );
         if (
-            ($isSpeakerStore || $requestedMegaphoneStore) &&
+            $requestedMegaphoneStore &&
             !$requestedCameraState &&
             !$requestedMicrophoneState &&
             !$requestedScreenSharingState

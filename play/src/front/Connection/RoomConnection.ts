@@ -74,7 +74,7 @@ import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene";
 import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
-import { currentMegaphoneNameStore } from "../Stores/MegaphoneStore";
+import { currentLiveStreamingNameStore } from "../Stores/MegaphoneStore";
 import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
 import { localUserStore } from "./LocalUserStore";
 import { connectionManager } from "./ConnectionManager";
@@ -1511,7 +1511,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMegaphoneState(state: boolean) {
-        const currentMegaphoneName = get(currentMegaphoneNameStore);
+        const currentMegaphoneName = get(currentLiveStreamingNameStore);
         this.send({
             message: {
                 $case: "megaphoneStateMessage",
