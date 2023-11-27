@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Request } from "hyper-express";
+import { Response } from "hyper-express";
 import { adminService } from "../services/AdminService";
 import { validatePostQuery } from "../services/QueryValidator";
 import { authenticated, ResponseWithUserIdentifier } from "../middlewares/Authenticated";
@@ -49,6 +50,13 @@ export class UserController extends BaseHttpController {
      *             $ref: '#/definitions/ErrorApiErrorData'
      */
     private saveName(): void {
+        this.app.options("/save-name", (req: Request, res: Response) => {
+            res.atomic(() => {
+                res.status(200).send("");
+            });
+            return;
+        });
+
         this.app.post("/save-name", [authenticated], async (req: Request, res: ResponseWithUserIdentifier) => {
             const body = await validatePostQuery(
                 req,
@@ -118,6 +126,13 @@ export class UserController extends BaseHttpController {
      *             $ref: '#/definitions/ErrorApiErrorData'
      */
     private saveTextures(): void {
+        this.app.options("/save-textures", (req: Request, res: Response) => {
+            res.atomic(() => {
+                res.status(200).send("");
+            });
+            return;
+        });
+
         this.app.post("/save-textures", [authenticated], async (req: Request, res: ResponseWithUserIdentifier) => {
             const body = await validatePostQuery(
                 req,
@@ -185,6 +200,13 @@ export class UserController extends BaseHttpController {
      *             $ref: '#/definitions/ErrorApiErrorData'
      */
     private saveCompanionTexture(): void {
+        this.app.options("/save-companion-texture", (req: Request, res: Response) => {
+            res.atomic(() => {
+                res.status(200).send("");
+            });
+            return;
+        });
+
         this.app.post(
             "/save-companion-texture",
             [authenticated],
