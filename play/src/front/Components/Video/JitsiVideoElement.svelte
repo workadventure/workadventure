@@ -28,6 +28,7 @@
     }
 </script>
 
+<!-- svelte-ignore a11y-media-has-caption -->
 <video
     bind:this={videoElement}
     class="tw-h-full tw-max-w-full tw-rounded-sm"

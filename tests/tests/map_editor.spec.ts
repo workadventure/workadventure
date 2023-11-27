@@ -376,11 +376,7 @@ test.describe('Map editor', () => {
 
   // Create test for Google picker docs
   // test('Successfully open Google picker for docs', async ({ page, browser, request, browserName }) => {});
-
   // Create test for Google picker spreadsheet
-
   // Create test fir Google picker presentation
-
   // Create test for Google picker drive
-
 });

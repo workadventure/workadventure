@@ -369,6 +369,17 @@
                     .then(handlerLinkSelected)
                     .catch(handlerLinkError);
             }
+
+            // property application is "googleDrive", open picker with google drive view id
+            if (property.application == "googleDrive") {
+                GoogleWorkSpaceService.initGooglePicker(
+                    GOOGLE_DRIVE_PICKER_CLIENT_ID,
+                    GOOGLE_DRIVE_PICKER_APP_ID,
+                    window.google.picker.ViewId.DOCS
+                )
+                    .then(handlerLinkSelected)
+                    .catch(handlerLinkError);
+            }
         }
     }
 </script>
@@ -462,7 +473,7 @@
                     on:click={onClickInputHandler}
                     disabled={embeddableLoading}
                 />
-                {#if property.application === "googleDocs" || property.application === "googleSheets" || property.application === "googleSlides" || property.application === "klaxoon"}
+                {#if property.application === "googleDocs" || property.application === "googleSheets" || property.application === "googleSlides" || property.application === "klaxoon" || property.application === "googleDrive"}
                     <div class="tw-flex tw-flex-row tw-items-center tw-justify-center">
                         <img
                             class="tw-w-6 tw-ml-4 tw-items-center tw-cursor-pointer"
