@@ -868,7 +868,7 @@ jobs:
       - uses: rlespinasse/github-slug-action@4.2.3
 
       - name: Set ADMIN_URL if "deploy-connect-to-admin" label is set
-        run: echo "ADMIN_API_URL=https://${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re" >> $GITHUB_ENV
+        run: echo "ADMIN_API_URL=https://admin-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re" >> $GITHUB_ENV
         if: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin')) || env.GITHUB_REF_SLUG == 'develop'  }}
 
       - name: Write certificate
