@@ -29,6 +29,7 @@
     // relative to your source root folder.
     "sourceRoot": "/"
   },
+  "include": ["src/**/*", "types/**/*"],
   "exclude": [
     "dist",
     "public/iframe_api.js",

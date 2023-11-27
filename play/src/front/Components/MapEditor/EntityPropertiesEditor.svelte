@@ -98,8 +98,7 @@
                         buttonLabel = $LL.mapEditor.properties.klaxoonProperties.label();
                         break;
                     case "googleDrive":
-                        placeholder =
-                            "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit";
+                        placeholder = "https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview";
                         buttonLabel = $LL.mapEditor.properties.googleDriveProperties.label();
                         break;
                     case "googleDocs":
@@ -187,6 +186,7 @@
     <div class="header-container">
         <h2>Editing: {$mapEditorSelectedEntityStore.getPrefab().name}</h2>
     </div>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <p on:click|preventDefault={backToSelectObject} class="tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0">
         <ArrowLeftIcon size="12" class="tw-cursor-pointer" />
         <span class="tw-ml-1 tw-cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>

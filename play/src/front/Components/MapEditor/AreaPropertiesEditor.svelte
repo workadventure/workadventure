@@ -99,8 +99,7 @@
                         placeholder = "https://app.klaxoon.com/";
                         break;
                     case "googleDrive":
-                        placeholder =
-                            "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit";
+                        placeholder = "https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview";
                         break;
                     case "googleDocs":
                         placeholder =
