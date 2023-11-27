@@ -262,6 +262,12 @@ test.describe('Map editor', () => {
     // fill Google Slides link
     await page.getByPlaceholder('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit').first().fill('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit');
 
+    // add property Google Slides
+    await AreaEditor.addProperty(page, 'Open Google Drive');
+    // fill Google Slides link
+    await page.getByPlaceholder('https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview').first().fill('https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview');
+    
+
     await Menu.closeMapEditor(page);
 
     // walk on the area position and open the popup
@@ -317,6 +323,11 @@ test.describe('Map editor', () => {
     // fill Google Slides link
     await page.getByPlaceholder('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit').first().fill('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit');
 
+    // add property Google Drive
+    await EntityEditor.addProperty(page, 'Open Google Drive');
+    // fill Google Drive link
+    await page.getByPlaceholder('https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview').first().fill('https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview');
+
     // close object selector
     await Menu.closeMapEditor(page);
 
@@ -327,6 +338,7 @@ test.describe('Map editor', () => {
     await expect(page.locator('.actions-menu .actions button').nth(0)).toContainText('Open Google Docs');
     await expect(page.locator('.actions-menu .actions button').nth(1)).toContainText('Open Google Sheets');
     await expect(page.locator('.actions-menu .actions button').nth(2)).toContainText('Open Google Slides');
+    await expect(page.locator('.actions-menu .actions button').nth(3)).toContainText('Open Google Drive');
   });
 
   test('Successfully set Klaxoon\'s application entity in the map editor', async ({ page, browser, request, browserName }) => {
@@ -373,4 +385,10 @@ test.describe('Map editor', () => {
     // check if the popup with application is opened
     await expect(page.locator('.actions-menu .actions button').nth(0)).toContainText('Open Klaxoon');
   });
+
+  // Create test for Google picker docs
+  // test('Successfully open Google picker for docs', async ({ page, browser, request, browserName }) => {});
+  // Create test for Google picker spreadsheet
+  // Create test fir Google picker presentation
+  // Create test for Google picker drive
 });

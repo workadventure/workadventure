@@ -82,6 +82,7 @@ const mapEditor: BaseTranslation = {
             warningEmbeddableLink: "This link cannot be embedded.",
             errorInvalidUrl: 'Please enter a valid URL (starting with "https://")',
             findOutMoreHere: "Find out more here",
+            openPickerSelector: "Open picker selector",
         },
         advancedOptions: "Advanced Options",
         speakerMegaphoneProperties: {
@@ -149,6 +150,12 @@ const mapEditor: BaseTranslation = {
             defaultButtonLabel: "Erase",
             error: "Please enter a valid Eraser URL",
             disabled: "Eraser integration is disabled.",
+        },
+        googleDriveProperties: {
+            label: "Open Google Drive",
+            description: "Open Google Drive within WorkAdventure or as a new tab.",
+            error: "Please enter a valid Google Drive URL",
+            disabled: "Google Drive integration is disabled.",
         },
     },
     areaEditor: {

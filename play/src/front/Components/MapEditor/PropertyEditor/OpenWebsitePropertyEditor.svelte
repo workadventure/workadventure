@@ -20,7 +20,10 @@
     import googleSheetsSvg from "../../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../../images/applications/icon_google_slides.svg";
     import eraserSvg from "../../images/applications/icon_eraser.svg";
+    import pickerSvg from "../../images/applications/picker.svg";
     import { connectionManager } from "../../../Connection/ConnectionManager";
+    import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
+    import Tooltip from "../../Util/Tooltip.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenWebsitePropertyData;
@@ -41,10 +44,12 @@
     }
 
     onMount(() => {
-        // if klaxoon, open Activity Picker
-        if (property.application === "klaxoon" && (property.link == undefined || property.link === "")) {
-            openKlaxoonActivityPicker();
+        // if the link is not set, try to open the picker
+        if (property.link == undefined || property.link === "") {
+            openPicker();
         }
+
+        // check if the link is embeddable
         checkWebsiteProperty().catch((e) => {
             console.error("Error checking embeddable website", e);
         });
@@ -310,6 +315,73 @@
             }
         );
     }
+
+    function openPicker() {
+        // if klaxoon, open Activity Picker
+        if (property.application === "klaxoon" && (property.link == undefined || property.link === "")) {
+            openKlaxoonActivityPicker();
+        }
+
+        // create function to handle link seclected
+        const handlerLinkSelected = (link: string): void => {
+            property.link = link;
+            checkWebsiteProperty().catch((e) => {
+                console.error("Error checking embeddable website", e);
+            });
+        };
+
+        // create function to handle error
+        const handlerLinkError = (error: string): void => {
+            console.error("Error Google Picker", error);
+        };
+
+        // if google, open Google Picker
+        if (GOOGLE_DRIVE_PICKER_CLIENT_ID && GOOGLE_DRIVE_PICKER_APP_ID) {
+            // property application is "googleDocs", open picker with google docs view id
+            if (property.application == "googleDocs") {
+                GoogleWorkSpaceService.initGooglePicker(
+                    GOOGLE_DRIVE_PICKER_CLIENT_ID,
+                    GOOGLE_DRIVE_PICKER_APP_ID,
+                    window.google.picker.ViewId.DOCUMENTS
+                )
+                    .then(handlerLinkSelected)
+                    .catch(handlerLinkError);
+            }
+
+            // property application is "googleSheets", open picker with google sheets view id
+            if (property.application == "googleSheets") {
+                GoogleWorkSpaceService.initGooglePicker(
+                    GOOGLE_DRIVE_PICKER_CLIENT_ID,
+                    GOOGLE_DRIVE_PICKER_APP_ID,
+                    window.google.picker.ViewId.SPREADSHEETS
+                )
+                    .then(handlerLinkSelected)
+                    .catch(handlerLinkError);
+            }
+
+            // property application is "googleSlides", open picker with google slides view id
+            if (property.application == "googleSlides") {
+                GoogleWorkSpaceService.initGooglePicker(
+                    GOOGLE_DRIVE_PICKER_CLIENT_ID,
+                    GOOGLE_DRIVE_PICKER_APP_ID,
+                    window.google.picker.ViewId.PRESENTATIONS
+                )
+                    .then(handlerLinkSelected)
+                    .catch(handlerLinkError);
+            }
+
+            // property application is "googleDrive", open picker with google drive view id
+            if (property.application == "googleDrive") {
+                GoogleWorkSpaceService.initGooglePicker(
+                    GOOGLE_DRIVE_PICKER_CLIENT_ID,
+                    GOOGLE_DRIVE_PICKER_APP_ID,
+                    window.google.picker.ViewId.DOCS
+                )
+                    .then(handlerLinkSelected)
+                    .catch(handlerLinkError);
+            }
+        }
+    }
 </script>
 
 <PropertyEditorBase
@@ -388,18 +460,37 @@
         {/if}
         <div class="value-input tw-flex tw-flex-col">
             <label for="tabLink">{$LL.mapEditor.properties.linkProperties.linkLabel()}</label>
-            <input
-                id="tabLink"
-                type="url"
-                bind:this={linkElement}
-                placeholder={property.placeholder ?? $LL.mapEditor.properties.linkProperties.linkPlaceholder()}
-                bind:value={property.link}
-                on:keypress={onKeyPressed}
-                on:change={onValueChange}
-                on:blur={checkWebsiteProperty}
-                on:click={onClickInputHandler}
-                disabled={embeddableLoading}
-            />
+            <div class="tw-flex tw-flex-row">
+                <input
+                    id="tabLink"
+                    type="url"
+                    bind:this={linkElement}
+                    placeholder={property.placeholder ?? $LL.mapEditor.properties.linkProperties.linkPlaceholder()}
+                    bind:value={property.link}
+                    on:keypress={onKeyPressed}
+                    on:change={onValueChange}
+                    on:blur={checkWebsiteProperty}
+                    on:click={onClickInputHandler}
+                    disabled={embeddableLoading}
+                />
+                {#if property.application === "googleDocs" || property.application === "googleSheets" || property.application === "googleSlides" || property.application === "klaxoon" || property.application === "googleDrive"}
+                    <div class="tw-flex tw-flex-row tw-items-center tw-justify-center">
+                        <img
+                            class="tw-w-6 tw-ml-4 tw-items-center tw-cursor-pointer"
+                            src={pickerSvg}
+                            alt={$LL.mapEditor.properties.linkProperties.openPickerSelector()}
+                            on:keydown
+                            on:keyup
+                            on:keypress
+                            on:click|preventDefault|stopPropagation={openPicker}
+                        />
+                        <Tooltip
+                            text={$LL.mapEditor.properties.linkProperties.openPickerSelector()}
+                            leftPosition="true"
+                        />
+                    </div>
+                {/if}
+            </div>
             {#if error !== ""}
                 <span class="err tw-text-pop-red tw-text-xs tw-italic tw-mt-1">{error}</span>
             {/if}

@@ -19,6 +19,7 @@
     import webSvg from "../images/web-white.svg";
     import youtubeSvg from "../images/applications/icon_youtube.svg";
     import klaxoonSvg from "../images/applications/icon_klaxoon.svg";
+    import googleDriveSvg from "../images/applications/icon_google_drive.svg";
     import googleDocsSvg from "../images/applications/icon_google_docs.svg";
     import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
@@ -95,6 +96,10 @@
                     case "klaxoon":
                         placeholder = "https://app.klaxoon.com/";
                         buttonLabel = $LL.mapEditor.properties.klaxoonProperties.label();
+                        break;
+                    case "googleDrive":
+                        placeholder = "https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview";
+                        buttonLabel = $LL.mapEditor.properties.googleDriveProperties.label();
                         break;
                     case "googleDocs":
                         placeholder =
@@ -181,6 +186,7 @@
     <div class="header-container">
         <h2>Editing: {$mapEditorSelectedEntityStore.getPrefab().name}</h2>
     </div>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <p on:click|preventDefault={backToSelectObject} class="tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0">
         <ArrowLeftIcon size="12" class="tw-cursor-pointer" />
         <span class="tw-ml-1 tw-cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
@@ -239,6 +245,18 @@
             disabled={!connectionManager.currentRoom?.youtubeToolActivated}
             on:click={() => {
                 onAddProperty("openWebsite", "youtube");
+            }}
+        />
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.googleDriveProperties.label()}
+            descriptionText={connectionManager.currentRoom?.googleDriveToolActivated
+                ? $LL.mapEditor.properties.googleDriveProperties.description()
+                : $LL.mapEditor.properties.googleDriveProperties.disabled()}
+            img={googleDriveSvg}
+            style="z-index: 3;"
+            disabled={!connectionManager.currentRoom?.googleDriveToolActivated}
+            on:click={() => {
+                onAddProperty("openWebsite", "googleDrive");
             }}
         />
         <AddPropertyButton
