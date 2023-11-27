@@ -330,7 +330,7 @@ export class Space implements CustomJsonReplacerInterface {
                 return true;
             }
             case "spaceFilterLiveStreaming": {
-                return (user.screenSharingState || user.microphoneState || user.cameraState) && user.megaphoneState;
+                return /*(user.screenSharingState || user.microphoneState || user.cameraState) &&*/ user.megaphoneState;
             }
             default: {
                 const _exhaustiveCheck: never = spaceFilters.filter;

@@ -87,7 +87,7 @@
     import { Emoji } from "../../Stores/Utils/emojiSchema";
     import {
         megaphoneCanBeUsedStore,
-        megaphoneEnabledStore,
+        liveStreamingEnabledStore,
         requestedMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
@@ -178,7 +178,7 @@
             streamingMegaphoneStore.set(false);
             return;
         }
-        if ($requestedMegaphoneStore || $megaphoneEnabledStore) {
+        if ($requestedMegaphoneStore || $liveStreamingEnabledStore) {
             analyticsClient.stopMegaphone();
             requestedMegaphoneStore.set(false);
             return;
@@ -687,7 +687,7 @@
                     {/if}
                 {/if}
 
-                {#if $isSpeakerStore || $streamingMegaphoneStore || $megaphoneEnabledStore}
+                {#if $isSpeakerStore || $streamingMegaphoneStore || $liveStreamingEnabledStore}
                     <div
                         class="tw-transition-all bottom-action-button"
                         on:click={() => analyticsClient.screenSharing()}
@@ -763,19 +763,19 @@
                             <MegaphoneConfirm />
                         {:else}
                             <Tooltip
-                                text={$megaphoneEnabledStore
+                                text={$liveStreamingEnabledStore
                                     ? $LL.actionbar.disableMegaphone()
                                     : $LL.actionbar.enableMegaphone()}
                             />
                         {/if}
 
                         <button
-                            class:border-top-warning={$megaphoneEnabledStore || $streamingMegaphoneStore}
+                            class:border-top-warning={$liveStreamingEnabledStore || $streamingMegaphoneStore}
                             id="megaphone"
                         >
                             <img draggable="false" src={megaphoneImg} style="padding: 2px" alt="Toggle megaphone" />
                         </button>
-                        {#if $megaphoneEnabledStore}
+                        {#if $liveStreamingEnabledStore}
                             <div class="tw-absolute tw-top-[1.05rem] tw-right-1">
                                 <span
                                     class="tw-w-3 tw-h-3 tw-bg-warning tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping tw-cursor-pointer"

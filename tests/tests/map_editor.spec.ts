@@ -129,7 +129,21 @@ test.describe('Map editor', () => {
     await login(page2, "test2", 5);
     await Map.teleportToPosition(page2, 4*32, 7*32);
 
+    // The user in the listener zone can see the speaker
     await expect(await page2.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 20_000});
+    // The speaker cannot see the listener
+    await expect(await page.locator('.cameras-container .other-cameras .jitsi-video')).toBeHidden({timeout: 20_000});
+
+    // Now, let's move player 2 to the speaker zone
+    await Map.walkToPosition(page2, 4*32, 2*32);
+    // FIXME: if we use Map.teleportToPosition, the test fails. Why?
+    //await Map.teleportToPosition(page2, 4*32, 2*32);
+
+    // The first speaker (player 1) can now see player2
+    await expect(await page.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 20_000});
+    // And the opposite is still true (player 2 can see player 1)
+    await expect(await page2.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 20_000});
+
   });
 
   test('Successfully set start area in the map editor', async ({ page, browser, request, browserName }) => {

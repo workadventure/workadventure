@@ -84,7 +84,7 @@
             <div />
         {:then wokaBase64}
             <UserTag
-                isMe={$audioTrackStore?.isLocal() || $videoTrackStore?.isLocal()}
+                isMe={peer.jitsiTrackWrapper.isLocal}
                 name={peer.jitsiTrackWrapper.spaceUser?.name ?? ""}
                 wokaSrc={wokaBase64}
                 minimal={!!$videoTrackStore}
