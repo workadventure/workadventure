@@ -36,7 +36,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     protected readonly statusDot: PlayerStatusDot;
     protected readonly speakerIcon: SpeakerIcon;
     protected readonly megaphoneIcon: MegaphoneIcon;
-    public playerName: string;
+    public readonly playerName: string;
     public sprites: Map<string, Sprite>;
     protected _lastDirection: PositionMessage_Direction = PositionMessage_Direction.DOWN;
     //private teleportation: Sprite;
@@ -165,7 +165,7 @@ export abstract class Character extends Container implements OutlineableInterfac
 
             // Reposition status dot and megaphone icon
             this.statusDot.x = (this.playerNameText.getLeftCenter().x ?? 0) - 6;
-            this.megaphoneIcon.x = this.playerNameText.width - 10;
+            this.megaphoneIcon.setX((this.playerNameText.getRightCenter().x ?? 0) + 8);
             this.statusDot.visible = true;
             this.megaphoneIcon.visible = true;
 
