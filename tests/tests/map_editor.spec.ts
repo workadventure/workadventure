@@ -262,6 +262,12 @@ test.describe('Map editor', () => {
     // fill Google Slides link
     await page.getByPlaceholder('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit').first().fill('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit');
 
+    // add property Google Slides
+    await AreaEditor.addProperty(page, 'Open Google Drive');
+    // fill Google Slides link
+    await page.getByPlaceholder('https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview').first().fill('https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview');
+    
+
     await Menu.closeMapEditor(page);
 
     // walk on the area position and open the popup
@@ -320,7 +326,7 @@ test.describe('Map editor', () => {
     // add property Google Drive
     await EntityEditor.addProperty(page, 'Open Google Drive');
     // fill Google Drive link
-    await page.getByPlaceholder('https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit').first().fill('https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview');
+    await page.getByPlaceholder('https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview').first().fill('https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview');
 
     // close object selector
     await Menu.closeMapEditor(page);
