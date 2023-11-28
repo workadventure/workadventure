@@ -29,7 +29,7 @@ class App {
     private app: HyperExpress.compressors.TemplatedApp;
     private webserver: Server;
 
-    constructor() {
+    constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
         this.webserver = new HyperExpress.Server();
         this.app = this.webserver.uws_instance;
 
@@ -80,7 +80,7 @@ class App {
         });
 
         // Socket controllers
-        new IoSocketController(this.app);
+        new IoSocketController(this.app, this.webserver);
 
         // Http controllers
         new AuthenticateController(this.webserver);

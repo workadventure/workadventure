@@ -52,6 +52,7 @@ import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
 import { adminService } from "./AdminService";
 import { ShortMapDescription } from "./ShortMapDescription";
+import {Websocket} from "hyper-express";
 
 const debug = Debug("socket");
 
@@ -829,7 +830,7 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitTokenExpiredMessage(client: SocketUpgradeFailed): void {
+    public emitTokenExpiredMessage(client: Websocket): void {
         client.send(
             ServerToClientMessage.encode({
                 message: {
@@ -841,7 +842,7 @@ export class SocketManager implements ZoneEventListener {
         );
     }
 
-    public emitInvalidCharacterTextureMessage(client: SocketUpgradeFailed): void {
+    public emitInvalidCharacterTextureMessage(client: Websocket): void {
         client.send(
             ServerToClientMessage.encode({
                 message: {
@@ -855,7 +856,7 @@ export class SocketManager implements ZoneEventListener {
         );
     }
 
-    public emitInvalidCompanionTextureMessage(client: SocketUpgradeFailed): void {
+    public emitInvalidCompanionTextureMessage(client: Websocket): void {
         client.send(
             ServerToClientMessage.encode({
                 message: {
@@ -883,7 +884,7 @@ export class SocketManager implements ZoneEventListener {
         );
     }
 
-    public emitErrorScreenMessage(client: SocketUpgradeFailed, errorApi: ErrorApiData): void {
+    public emitErrorScreenMessage(client: Websocket, errorApi: ErrorApiData): void {
         // FIXME: improve typing of ErrorScreenMessage
         const errorScreenMessage: ErrorScreenMessage = {
             type: errorApi.type,

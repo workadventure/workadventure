@@ -36,6 +36,7 @@ import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
 import { SocketData } from "../models/Websocket/SocketData";
 import { emitInBatch } from "../services/IoSocketHelpers";
+import {Server} from "hyper-express";
 
 type UpgradeFailedInvalidData = {
     rejected: true;
@@ -59,7 +60,8 @@ type UpgradeFailedInvalidTexture = {
 export type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData | UpgradeFailedInvalidTexture;
 
 export class IoSocketController {
-    constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
+    // TODO: Remove app from constructor and use webserver instead
+    constructor(private readonly app: HyperExpress.compressors.TemplatedApp, private readonly webserver: Server) {
         this.ioConnection();
         if (ADMIN_SOCKETS_TOKEN) {
             this.adminRoomSocket();
@@ -217,691 +219,1039 @@ export class IoSocketController {
     }
 
     ioConnection(): void {
-        this.app.ws<SocketData | UpgradeFailedData>("/room", {
-            /* Options */
-            //compression: uWS.SHARED_COMPRESSOR,
-            idleTimeout: SOCKET_IDLE_TIMER,
-            maxPayloadLength: 16 * 1024 * 1024,
-            maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
-            upgrade: (res, req, context) => {
-                (async () => {
-                    /* Keep track of abortions */
-                    const upgradeAborted = { aborted: false };
+        type WsContext = {
+            req: HyperExpress.Request<HyperExpress.DefaultRequestLocals>;
+        }
 
-                    res.onAborted(() => {
-                        /* We can simply signal that we were aborted */
-                        upgradeAborted.aborted = true;
+        this.webserver.upgrade("/room", (req, res) => {
+            res.upgrade({
+                req,
+            } satisfies WsContext);
+        });
+
+        this.webserver.ws<WsContext>("/room", {
+            idle_timeout: SOCKET_IDLE_TIMER,
+            max_payload_length: 16 * 1024 * 1024,
+            max_backpressure: 65536, // Maximum 64kB of data in the buffer.
+        },(ws) => {
+
+            // Hyperexpress fails to type the context properly so we need to cast it to unknown then to WsContext
+            const context = ws.context as unknown as WsContext;
+            const req = context.req;
+
+            const urlSearchParams = new URLSearchParams(req.path_query);
+            const params: Record<string, string | string[]> = {};
+            for (const key of [...new Set(urlSearchParams.keys())]) {
+                const values = urlSearchParams.getAll(key);
+                params[key] = values.length > 1 ? values : values[0];
+            }
+
+            const result = z.object({
+                roomId: z.string(),
+                token: z.string().optional(),
+                name: z.string(),
+                characterTextureIds: z.union([z.string(), z.string().array()]).optional(),
+                x: z.coerce.number(),
+                y: z.coerce.number(),
+                top: z.coerce.number(),
+                bottom: z.coerce.number(),
+                left: z.coerce.number(),
+                right: z.coerce.number(),
+                companionTextureId: z.string().optional(),
+                availabilityStatus: z.coerce.number(),
+                lastCommandId: z.string().optional(),
+                version: z.string(),
+            }).safeParse(params);
+
+            if (!result.success) {
+                const messages = result.error.issues.map((issue) => "Parameter " + issue.path + ": " + issue.message);
+
+                socketManager.emitErrorScreenMessage(ws, {
+                    status: "error",
+                    type: "error",
+                    title: "400 Bad Request",
+                    subtitle: "Something wrong while connection!",
+                    image: "",
+                    code: "WS_BAD_REQUEST",
+                    details: messages.join("\n"),
+                });
+                //ws.close(1007, "Invalid message received!");
+                ws.close(1000, "Error message sent");
+                return;
+            }
+
+            const query = result.data;
+
+            const ipAddress = req.header("x-forwarded-for");
+            const locale = req.header("accept-language");
+
+            const {
+                roomId,
+                token,
+                x,
+                y,
+                top,
+                bottom,
+                left,
+                right,
+                name,
+                availabilityStatus,
+                lastCommandId,
+                version,
+                companionTextureId,
+            } = query;
+
+            (async () => {
+                if (version !== apiVersionHash) {
+                    socketManager.emitErrorScreenMessage(ws, {
+                        status: "error",
+                        type: "retry",
+                        title: "Please refresh",
+                        subtitle: "New version available",
+                        image: "/resources/icons/new_version.png",
+                        code: "NEW_VERSION",
+                        details:
+                            "A new version of WorkAdventure is available. Please refresh your window",
+                        canRetryManual: true,
+                        buttonTitle: "Refresh",
+                        timeToRetry: 999999,
                     });
-
-                    const query = validateWebsocketQuery(
-                        req,
-                        res,
-                        context,
-                        z.object({
-                            roomId: z.string(),
-                            token: z.string().optional(),
-                            name: z.string(),
-                            characterTextureIds: z.union([z.string(), z.string().array()]).optional(),
-                            x: z.coerce.number(),
-                            y: z.coerce.number(),
-                            top: z.coerce.number(),
-                            bottom: z.coerce.number(),
-                            left: z.coerce.number(),
-                            right: z.coerce.number(),
-                            companionTextureId: z.string().optional(),
-                            availabilityStatus: z.coerce.number(),
-                            lastCommandId: z.string().optional(),
-                            version: z.string(),
-                        })
-                    );
-
-                    if (query === undefined) {
-                        return;
-                    }
-
-                    const websocketKey = req.getHeader("sec-websocket-key");
-                    const websocketProtocol = req.getHeader("sec-websocket-protocol");
-                    const websocketExtensions = req.getHeader("sec-websocket-extensions");
-                    const ipAddress = req.getHeader("x-forwarded-for");
-                    const locale = req.getHeader("accept-language");
-
-                    const {
-                        roomId,
-                        token,
-                        x,
-                        y,
-                        top,
-                        bottom,
-                        left,
-                        right,
-                        name,
-                        availabilityStatus,
-                        lastCommandId,
-                        version,
-                        companionTextureId,
-                    } = query;
-
-                    try {
-                        if (version !== apiVersionHash) {
-                            if (upgradeAborted.aborted) {
-                                // If the response points to nowhere, don't attempt an upgrade
-                                return;
-                            }
-                            return res.upgrade(
-                                {
-                                    rejected: true,
-                                    reason: "error",
-                                    error: {
-                                        status: "error",
-                                        type: "retry",
-                                        title: "Please refresh",
-                                        subtitle: "New version available",
-                                        image: "/resources/icons/new_version.png",
-                                        code: "NEW_VERSION",
-                                        details:
-                                            "A new version of WorkAdventure is available. Please refresh your window",
-                                        canRetryManual: true,
-                                        buttonTitle: "Refresh",
-                                        timeToRetry: 999999,
-                                    },
-                                } satisfies UpgradeFailedData,
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context
-                            );
-                        }
-
-                        const characterTextureIds: string[] =
-                            query.characterTextureIds === undefined
-                                ? []
-                                : typeof query.characterTextureIds === "string"
-                                ? [query.characterTextureIds]
-                                : query.characterTextureIds;
-
-                        const tokenData = token ? jwtTokenManager.verifyJWTToken(token) : null;
-
-                        if (DISABLE_ANONYMOUS && !tokenData) {
-                            throw new Error("Expecting token");
-                        }
-
-                        const userIdentifier = tokenData ? tokenData.identifier : "";
-                        const isLogged = !!tokenData?.accessToken;
-
-                        let memberTags: string[] = [];
-                        let memberVisitCardUrl: string | null = null;
-                        let memberUserRoomToken: string | undefined;
-                        let userData: FetchMemberDataByUuidResponse = {
-                            status: "ok",
-                            email: userIdentifier,
-                            userUuid: userIdentifier,
-                            tags: [],
-                            visitCardUrl: null,
-                            isCharacterTexturesValid: true,
-                            characterTextures: [],
-                            isCompanionTextureValid: true,
-                            companionTexture: undefined,
-                            messages: [],
-                            anonymous: true,
-                            userRoomToken: undefined,
-                            jabberId: null,
-                            jabberPassword: null,
-                            mucRooms: [],
-                            activatedInviteUser: true,
-                            canEdit: false,
-                        };
-
-                        let characterTextures: WokaDetail[];
-                        let companionTexture: CompanionDetail | undefined;
-
-                        try {
-                            try {
-                                userData = await adminService.fetchMemberDataByUuid(
-                                    userIdentifier,
-                                    tokenData?.accessToken,
-                                    roomId,
-                                    ipAddress,
-                                    characterTextureIds,
-                                    companionTextureId,
-                                    locale
-                                );
-
-                                if (userData.status === "ok" && !userData.isCharacterTexturesValid) {
-                                    return res.upgrade(
-                                        {
-                                            rejected: true,
-                                            reason: "invalidTexture",
-                                            entityType: "character",
-                                        } satisfies UpgradeFailedInvalidTexture,
-                                        websocketKey,
-                                        websocketProtocol,
-                                        websocketExtensions,
-                                        context
-                                    );
-                                }
-                                if (userData.status === "ok" && !userData.isCompanionTextureValid) {
-                                    return res.upgrade(
-                                        {
-                                            rejected: true,
-                                            reason: "invalidTexture",
-                                            entityType: "companion",
-                                        } satisfies UpgradeFailedInvalidTexture,
-                                        websocketKey,
-                                        websocketProtocol,
-                                        websocketExtensions,
-                                        context
-                                    );
-                                }
-
-                                if (userData.status !== "ok") {
-                                    if (upgradeAborted.aborted) {
-                                        // If the response points to nowhere, don't attempt an upgrade
-                                        return;
-                                    }
-
-                                    return res.upgrade(
-                                        {
-                                            rejected: true,
-                                            reason: "error",
-                                            error: userData,
-                                        } satisfies UpgradeFailedData,
-                                        websocketKey,
-                                        websocketProtocol,
-                                        websocketExtensions,
-                                        context
-                                    );
-                                }
-                            } catch (err) {
-                                if (isAxiosError(err)) {
-                                    Sentry.captureException(`Unknown error on room connection ${err}`);
-                                    console.error("Unknown error on room connection", err);
-                                    if (upgradeAborted.aborted) {
-                                        // If the response points to nowhere, don't attempt an upgrade
-                                        return;
-                                    }
-                                }
-                                throw err;
-                            }
-                            memberTags = userData.tags;
-                            memberVisitCardUrl = userData.visitCardUrl;
-                            characterTextures = userData.characterTextures;
-                            companionTexture = userData.companionTexture ?? undefined;
-                            memberUserRoomToken = userData.userRoomToken;
-                        } catch (e) {
-                            console.info(
-                                "access not granted for user " + (userIdentifier || "anonymous") + " and room " + roomId
-                            );
-                            Sentry.captureException(e);
-                            console.error(e);
-                            throw new Error("User cannot access this world");
-                        }
-
-                        if (!userData.jabberId) {
-                            // If there is no admin, or no user, let's log users using JWT tokens
-                            userData.jabberId = JID.create({
-                                local: userIdentifier,
-                                domain: EJABBERD_DOMAIN,
-                                resource: uuid(),
-                            });
-                            if (EJABBERD_JWT_SECRET) {
-                                userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
-                                    expiresIn: "1d",
-                                    algorithm: "HS256",
-                                });
-                            } else {
-                                userData.jabberPassword = "no_password_set";
-                            }
-                        } else {
-                            userData.jabberId = `${userData.jabberId}/${uuid()}`;
-                        }
-
-                        if (upgradeAborted.aborted) {
-                            console.info("Ouch! Client disconnected before we could upgrade it!");
-                            /* You must not upgrade now */
-                            return;
-                        }
-
-                        const socketData: SocketData = {
-                            rejected: false,
-                            disconnecting: false,
-                            token: token && typeof token === "string" ? token : "",
-                            roomId,
-                            userId: undefined,
-                            userUuid: userData.userUuid,
-                            userJid: userData.jabberId,
-                            isLogged,
-                            ipAddress,
-                            name,
-                            characterTextures,
-                            companionTexture,
-                            position: {
-                                x: x,
-                                y: y,
-                                direction: "down",
-                                moving: false,
-                            },
-                            viewport: {
-                                top,
-                                right,
-                                bottom,
-                                left,
-                            },
-                            availabilityStatus,
-                            lastCommandId,
-                            messages: [],
-                            tags: memberTags,
-                            visitCardUrl: memberVisitCardUrl,
-                            userRoomToken: memberUserRoomToken,
-                            jabberId: userData.jabberId,
-                            jabberPassword: userData.jabberPassword,
-                            activatedInviteUser: userData.activatedInviteUser || undefined,
-                            mucRooms: userData.mucRooms || [],
-                            applications: userData.applications,
-                            canEdit: userData.canEdit ?? false,
-                            spaceUser: SpaceUser.fromPartial({
-                                id: 0,
-                                uuid: userData.userUuid,
-                                name,
-                                playUri: roomId,
-                                // FIXME : Get room name from admin
-                                roomName: "",
-                                availabilityStatus,
-                                isLogged,
-                                color: Color.getColorByString(name),
-                                tags: memberTags,
-                                cameraState: false,
-                                screenSharingState: false,
-                                microphoneState: false,
-                                megaphoneState: false,
-                                characterTextures: characterTextures.map((characterTexture) => ({
-                                    url: characterTexture.url,
-                                    id: characterTexture.id,
-                                })),
-                                visitCardUrl: memberVisitCardUrl ?? undefined,
-                            }),
-                            emitInBatch: (payload: SubMessage): void => {},
-                            batchedMessages: {
-                                event: "",
-                                payload: [],
-                            },
-                            batchTimeout: null,
-                            backConnection: undefined,
-                            listenedZones: new Set<Zone>(),
-                            pusherRoom: undefined,
-                            spaces: [],
-                            spacesFilters: new Map<string, SpaceFilterMessage[]>(),
-                            cameraState: undefined,
-                            microphoneState: undefined,
-                            screenSharingState: undefined,
-                            megaphoneState: undefined,
-                        };
-
-                        /* This immediately calls open handler, you must not use res after this call */
-                        res.upgrade<SocketData>(
-                            socketData,
-                            /* Spell these correctly */
-                            websocketKey,
-                            websocketProtocol,
-                            websocketExtensions,
-                            context
-                        );
-                    } catch (e) {
-                        if (e instanceof Error) {
-                            if (!(e instanceof JsonWebTokenError)) {
-                                Sentry.captureException(e);
-                                console.error(e);
-                            }
-                            if (upgradeAborted.aborted) {
-                                // If the response points to nowhere, don't attempt an upgrade
-                                return;
-                            }
-                            res.upgrade(
-                                {
-                                    rejected: true,
-                                    reason: e instanceof JsonWebTokenError ? tokenInvalidException : null,
-                                    message: e.message,
-                                    roomId,
-                                } satisfies UpgradeFailedData,
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context
-                            );
-                        } else {
-                            if (upgradeAborted.aborted) {
-                                // If the response points to nowhere, don't attempt an upgrade
-                                return;
-                            }
-                            res.upgrade(
-                                {
-                                    rejected: true,
-                                    reason: null,
-                                    message: "500 Internal Server Error",
-                                    roomId,
-                                } satisfies UpgradeFailedData,
-                                websocketKey,
-                                websocketProtocol,
-                                websocketExtensions,
-                                context
-                            );
-                        }
-                    }
-                })().catch((e) => {
-                    Sentry.captureException(e);
-                    console.error(e);
-                });
-            },
-            /* Handlers */
-            open: (ws) => {
-                (async () => {
-                    const socketData = ws.getUserData();
-                    if (socketData.rejected === true) {
-                        const socket = ws as SocketUpgradeFailed;
-                        // If there is a room in the error, let's check if we need to clean it.
-                        if ("roomId" in socketData) {
-                            socketManager.deleteRoomIfEmptyFromId(socketData.roomId);
-                        }
-
-                        if (socketData.reason === tokenInvalidException) {
-                            socketManager.emitTokenExpiredMessage(socket);
-                        } else if (socketData.reason === "error") {
-                            socketManager.emitErrorScreenMessage(socket, socketData.error);
-                        } else if (socketData.reason === "invalidTexture") {
-                            if (socketData.entityType === "character") {
-                                socketManager.emitInvalidCharacterTextureMessage(socket);
-                            } else {
-                                socketManager.emitInvalidCompanionTextureMessage(socket);
-                            }
-                        } else {
-                            socketManager.emitConnectionErrorMessage(socket, socketData.message);
-                        }
-                        ws.end(1000, "Error message sent");
-                        return;
-                    }
-
-                    // Mandatory for typing hint
-                    const socket = ws as Socket;
-
-                    socketData.emitInBatch = (payload: SubMessage): void => {
-                        emitInBatch(socket, payload);
-                    };
-
-                    await socketManager.handleJoinRoom(socket);
-
-                    socketManager.emitXMPPSettings(socket);
-
-                    //get data information and show messages
-                    if (socketData.messages && Array.isArray(socketData.messages)) {
-                        socketData.messages.forEach((c: unknown) => {
-                            const messageToSend = z.object({ type: z.string(), message: z.string() }).parse(c);
-
-                            const bytes = ServerToClientMessageTsProto.encode({
-                                message: {
-                                    $case: "sendUserMessage",
-                                    sendUserMessage: {
-                                        type: messageToSend.type,
-                                        message: messageToSend.message,
-                                    },
-                                },
-                            }).finish();
-
-                            if (!socketData.disconnecting) {
-                                socket.send(bytes, true);
-                            }
-                        });
-                    }
-
-                    // Performance test
-                    /*
-                    const positionMessage = new PositionMessage();
-                    positionMessage.setMoving(true);
-                    positionMessage.setX(300);
-                    positionMessage.setY(300);
-                    positionMessage.setDirection(PositionMessage.Direction.DOWN);
-
-                    const userMovedMessage = new UserMovedMessage();
-                    userMovedMessage.setUserid(1);
-                    userMovedMessage.setPosition(positionMessage);
-
-                    const subMessage = new SubMessage();
-                    subMessage.setUsermovedmessage(userMovedMessage);
-
-                    const startTimestamp2 = Date.now();
-                    for (let i = 0; i < 100000; i++) {
-                        const batchMessage = new BatchMessage();
-                        batchMessage.setEvent("");
-                        batchMessage.setPayloadList([
-                            subMessage
-                        ]);
-
-                        const serverToClientMessage = new ServerToClientMessage();
-                        serverToClientMessage.setBatchmessage(batchMessage);
-
-                        client.send(serverToClientMessage.serializeBinary().buffer, true);
-                    }
-                    const endTimestamp2 = Date.now();
-
-                    const startTimestamp = Date.now();
-                    for (let i = 0; i < 100000; i++) {
-                        // Let's do a performance test!
-                        const bytes = ServerToClientMessageTsProto.encode({
-                            message: {
-                                $case: "batchMessage",
-                                batchMessage: {
-                                    event: '',
-                                    payload: [
-                                        {
-                                            message: {
-                                                $case: "userMovedMessage",
-                                                userMovedMessage: {
-                                                    userId: 1,
-                                                    position: {
-                                                        moving: true,
-                                                        x: 300,
-                                                        y: 300,
-                                                        direction: PositionMessage_Direction.DOWN,
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        }).finish();
-
-                        client.send(bytes);
-                    }
-                    const endTimestamp = Date.now();
-                    */
-                })().catch((e) => {
-                    Sentry.captureException(e);
-                    console.error(e);
-                });
-            },
-            message: (ws, arrayBuffer): void => {
-                (async () => {
-                    const socket = ws as Socket;
-                    const message = ClientToServerMessage.decode(new Uint8Array(arrayBuffer));
-
-                    if (!message.message) {
-                        console.warn("Empty message received.");
-                        return;
-                    }
-
-                    switch (message.message.$case) {
-                        case "viewportMessage": {
-                            socketManager.handleViewport(socket, message.message.viewportMessage);
-                            break;
-                        }
-                        case "userMovesMessage": {
-                            socketManager.handleUserMovesMessage(socket, message.message.userMovesMessage);
-                            break;
-                        }
-                        case "playGlobalMessage": {
-                            await socketManager.emitPlayGlobalMessage(socket, message.message.playGlobalMessage);
-                            break;
-                        }
-                        case "reportPlayerMessage": {
-                            await socketManager.handleReportMessage(socket, message.message.reportPlayerMessage);
-                            break;
-                        }
-                        case "addSpaceFilterMessage": {
-                            socketManager.handleAddSpaceFilterMessage(socket, message.message.addSpaceFilterMessage);
-                            break;
-                        }
-                        case "updateSpaceFilterMessage": {
-                            socketManager.handleUpdateSpaceFilterMessage(
-                                socket,
-                                message.message.updateSpaceFilterMessage
-                            );
-                            break;
-                        }
-                        case "removeSpaceFilterMessage": {
-                            socketManager.handleRemoveSpaceFilterMessage(
-                                socket,
-                                message.message.removeSpaceFilterMessage
-                            );
-                            break;
-                        }
-                        case "setPlayerDetailsMessage": {
-                            socketManager.handleSetPlayerDetails(socket, message.message.setPlayerDetailsMessage);
-                            break;
-                        }
-                        case "watchSpaceMessage": {
-                            void socketManager.handleJoinSpace(
-                                socket,
-                                message.message.watchSpaceMessage.spaceName,
-                                message.message.watchSpaceMessage.spaceFilter
-                            );
-                            break;
-                        }
-                        case "updateSpaceMetadataMessage": {
-                            const isMetadata = z
-                                .record(z.string(), z.unknown())
-                                .safeParse(JSON.parse(message.message.updateSpaceMetadataMessage.metadata));
-                            if (!isMetadata.success) {
-                                Sentry.captureException(
-                                    `Invalid metadata received. ${message.message.updateSpaceMetadataMessage.metadata}`
-                                );
-                                console.error(
-                                    "Invalid metadata received.",
-                                    message.message.updateSpaceMetadataMessage.metadata
-                                );
-                                return;
-                            }
-
-                            await socketManager.handleUpdateSpaceMetadata(
-                                socket,
-                                message.message.updateSpaceMetadataMessage.spaceName,
-                                isMetadata.data
-                            );
-                            break;
-                        }
-                        case "unwatchSpaceMessage": {
-                            void socketManager.handleLeaveSpace(socket, message.message.unwatchSpaceMessage.spaceName);
-                            break;
-                        }
-                        case "cameraStateMessage": {
-                            socketManager.handleCameraState(socket, message.message.cameraStateMessage.value);
-                            break;
-                        }
-                        case "microphoneStateMessage": {
-                            socketManager.handleMicrophoneState(socket, message.message.microphoneStateMessage.value);
-                            break;
-                        }
-                        case "screenSharingStateMessage": {
-                            socketManager.handleScreenSharingState(
-                                socket,
-                                message.message.screenSharingStateMessage.value
-                            );
-                            break;
-                        }
-                        case "megaphoneStateMessage": {
-                            socketManager.handleMegaphoneState(socket, message.message.megaphoneStateMessage);
-                            break;
-                        }
-                        case "jitsiParticipantIdSpaceMessage": {
-                            socketManager.handleJitsiParticipantIdSpace(
-                                socket,
-                                message.message.jitsiParticipantIdSpaceMessage.spaceName,
-                                message.message.jitsiParticipantIdSpaceMessage.value
-                            );
-                            break;
-                        }
-                        case "queryMessage": {
-                            switch (message.message.queryMessage.query?.$case) {
-                                case "roomTagsQuery": {
-                                    void socketManager.handleRoomTagsQuery(socket, message.message.queryMessage);
-                                    break;
-                                }
-                                case "embeddableWebsiteQuery": {
-                                    void socketManager.handleEmbeddableWebsiteQuery(
-                                        socket,
-                                        message.message.queryMessage
-                                    );
-                                    break;
-                                }
-                                case "roomsFromSameWorldQuery": {
-                                    void socketManager.handleRoomsFromSameWorldQuery(
-                                        socket,
-                                        message.message.queryMessage
-                                    );
-                                    break;
-                                }
-                                default: {
-                                    socketManager.forwardMessageToBack(socket, message.message);
-                                }
-                            }
-                            break;
-                        }
-                        case "itemEventMessage":
-                        case "variableMessage":
-                        case "webRtcSignalToServerMessage":
-                        case "webRtcScreenSharingSignalToServerMessage":
-                        case "emotePromptMessage":
-                        case "followRequestMessage":
-                        case "followConfirmationMessage":
-                        case "followAbortMessage":
-                        case "lockGroupPromptMessage":
-                        case "pingMessage":
-                        case "editMapCommandMessage":
-                        case "askPositionMessage": {
-                            socketManager.forwardMessageToBack(socket, message.message);
-                            break;
-                        }
-                        default: {
-                            const _exhaustiveCheck: never = message.message;
-                        }
-                    }
-
-                    /* Ok is false if backpressure was built up, wait for drain */
-                    //let ok = ws.send(message, isBinary);
-                })().catch((e) => {
-                    Sentry.captureException(e);
-                    console.error(e);
-                });
-            },
-            drain: (ws) => {
-                console.info("WebSocket backpressure: " + ws.getBufferedAmount());
-            },
-            close: (ws) => {
-                const socketData = ws.getUserData();
-
-                if (socketData.rejected === true) {
+                    ws.close(1000, "Error message sent");
                     return;
                 }
 
-                const socket = ws as Socket;
+                const characterTextureIds: string[] =
+                    query.characterTextureIds === undefined
+                        ? []
+                        : typeof query.characterTextureIds === "string"
+                        ? [query.characterTextureIds]
+                        : query.characterTextureIds;
+
+                const tokenData = token ? jwtTokenManager.verifyJWTToken(token) : null;
+
+                if (DISABLE_ANONYMOUS && !tokenData) {
+                    throw new Error("Expecting token");
+                }
+
+                const userIdentifier = tokenData ? tokenData.identifier : "";
+                const isLogged = !!tokenData?.accessToken;
+
+                let memberTags: string[] = [];
+                let memberVisitCardUrl: string | null = null;
+                let memberUserRoomToken: string | undefined;
+                let userData: FetchMemberDataByUuidResponse = {
+                    status: "ok",
+                    email: userIdentifier,
+                    userUuid: userIdentifier,
+                    tags: [],
+                    visitCardUrl: null,
+                    isCharacterTexturesValid: true,
+                    characterTextures: [],
+                    isCompanionTextureValid: true,
+                    companionTexture: undefined,
+                    messages: [],
+                    anonymous: true,
+                    userRoomToken: undefined,
+                    jabberId: null,
+                    jabberPassword: null,
+                    mucRooms: [],
+                    activatedInviteUser: true,
+                    canEdit: false,
+                };
+
+                let characterTextures: WokaDetail[];
+                let companionTexture: CompanionDetail | undefined;
 
                 try {
-                    socketData.disconnecting = true;
-                    socketManager.leaveRoom(socket);
-                    socketManager.leaveSpaces(socket);
+                    userData = await adminService.fetchMemberDataByUuid(
+                        userIdentifier,
+                        tokenData?.accessToken,
+                        roomId,
+                        ipAddress,
+                        characterTextureIds,
+                        companionTextureId,
+                        locale
+                    );
+
+                    if (userData.status === "ok" && !userData.isCharacterTexturesValid) {
+                        socketManager.emitInvalidCharacterTextureMessage(ws);
+                        ws.close(1000, "Error message sent");
+                        return;
+                    }
+                    if (userData.status === "ok" && !userData.isCompanionTextureValid) {
+                        socketManager.emitInvalidCompanionTextureMessage(ws);
+                        ws.close(1000, "Error message sent");
+                        return;
+                    }
+
+                    if (userData.status !== "ok") {
+                        socketManager.emitErrorScreenMessage(ws, userData);
+                        ws.close(1000, "Error message sent");
+                        return;
+                    }
+
+                    memberTags = userData.tags;
+                    memberVisitCardUrl = userData.visitCardUrl;
+                    characterTextures = userData.characterTextures;
+                    companionTexture = userData.companionTexture ?? undefined;
+                    memberUserRoomToken = userData.userRoomToken;
                 } catch (e) {
-                    Sentry.captureException(`An error occurred on "disconnect" ${e}`);
+                    Sentry.captureException(e);
                     console.error(e);
+
+                    let message = "Unknown error";
+                    if (e instanceof Error) {
+                        message = e.message;
+                    }
+                    socketManager.emitErrorScreenMessage(ws, {
+                        status: "error",
+                        type: "error",
+                        title: "An error occurred",
+                        subtitle: "Something wrong while connection!",
+                        image: "",
+                        code: "ERROR",
+                        details: message,
+                    });
+                    ws.close(1000, "Error message sent");
+                    return;
                 }
-            },
+
+                if (!userData.jabberId) {
+                    // If there is no admin, or no user, let's log users using JWT tokens
+                    userData.jabberId = JID.create({
+                        local: userIdentifier,
+                        domain: EJABBERD_DOMAIN,
+                        resource: uuid(),
+                    });
+                    if (EJABBERD_JWT_SECRET) {
+                        userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
+                            expiresIn: "1d",
+                            algorithm: "HS256",
+                        });
+                    } else {
+                        userData.jabberPassword = "no_password_set";
+                    }
+                } else {
+                    userData.jabberId = `${userData.jabberId}/${uuid()}`;
+                }
+
+                const socketData: SocketData = {
+                    rejected: false,
+                    disconnecting: false,
+                    token: token && typeof token === "string" ? token : "",
+                    roomId,
+                    userId: undefined,
+                    userUuid: userData.userUuid,
+                    userJid: userData.jabberId,
+                    isLogged,
+                    ipAddress,
+                    name,
+                    characterTextures,
+                    companionTexture,
+                    position: {
+                        x: x,
+                        y: y,
+                        direction: "down",
+                        moving: false,
+                    },
+                    viewport: {
+                        top,
+                        right,
+                        bottom,
+                        left,
+                    },
+                    availabilityStatus,
+                    lastCommandId,
+                    messages: [],
+                    tags: memberTags,
+                    visitCardUrl: memberVisitCardUrl,
+                    userRoomToken: memberUserRoomToken,
+                    jabberId: userData.jabberId,
+                    jabberPassword: userData.jabberPassword,
+                    activatedInviteUser: userData.activatedInviteUser || undefined,
+                    mucRooms: userData.mucRooms || [],
+                    applications: userData.applications,
+                    canEdit: userData.canEdit ?? false,
+                    spaceUser: SpaceUser.fromPartial({
+                        id: 0,
+                        uuid: userData.userUuid,
+                        name,
+                        playUri: roomId,
+                        // FIXME : Get room name from admin
+                        roomName: "",
+                        availabilityStatus,
+                        isLogged,
+                        color: Color.getColorByString(name),
+                        tags: memberTags,
+                        cameraState: false,
+                        screenSharingState: false,
+                        microphoneState: false,
+                        megaphoneState: false,
+                        characterTextures: characterTextures.map((characterTexture) => ({
+                            url: characterTexture.url,
+                            id: characterTexture.id,
+                        })),
+                        visitCardUrl: memberVisitCardUrl ?? undefined,
+                    }),
+                    emitInBatch: (payload: SubMessage): void => {},
+                    batchedMessages: {
+                        event: "",
+                        payload: [],
+                    },
+                    batchTimeout: null,
+                    backConnection: undefined,
+                    listenedZones: new Set<Zone>(),
+                    pusherRoom: undefined,
+                    spaces: [],
+                    spacesFilters: new Map<string, SpaceFilterMessage[]>(),
+                    cameraState: undefined,
+                    microphoneState: undefined,
+                    screenSharingState: undefined,
+                    megaphoneState: undefined,
+                };
+
+                /* This immediately calls open handler, you must not use res after this call */
+                res.upgrade<SocketData>(
+                    socketData,
+                    /* Spell these correctly */
+                    websocketKey,
+                    websocketProtocol,
+                    websocketExtensions,
+                    context
+                );
+            })().catch(e => {
+                if (e instanceof Error) {
+                    if (e instanceof JsonWebTokenError) {
+                        socketManager.emitTokenExpiredMessage(ws);
+                        ws.close(1000, "Error message sent");
+                        return;
+                    }
+
+                    Sentry.captureException(e);
+                    console.error(e);
+
+
+
+                    res.upgrade(
+                        {
+                            rejected: true,
+                            reason: e instanceof JsonWebTokenError ? tokenInvalidException : null,
+                            message: e.message,
+                            roomId,
+                        } satisfies UpgradeFailedData,
+                        websocketKey,
+                        websocketProtocol,
+                        websocketExtensions,
+                        context
+                    );
+                } else {
+                    if (upgradeAborted.aborted) {
+                        // If the response points to nowhere, don't attempt an upgrade
+                        return;
+                    }
+                    res.upgrade(
+                        {
+                            rejected: true,
+                            reason: null,
+                            message: "500 Internal Server Error",
+                            roomId,
+                        } satisfies UpgradeFailedData,
+                        websocketKey,
+                        websocketProtocol,
+                        websocketExtensions,
+                        context
+                    );
+                }
+            });
+
         });
+
+
+        // this.app.ws<SocketData | UpgradeFailedData>("/room", {
+        //     /* Options */
+        //     //compression: uWS.SHARED_COMPRESSOR,
+        //     idleTimeout: SOCKET_IDLE_TIMER,
+        //     maxPayloadLength: 16 * 1024 * 1024,
+        //     maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
+        //     upgrade: (res, req, context) => {
+        //         (async () => {
+        //             /* Keep track of abortions */
+        //             const upgradeAborted = { aborted: false };
+        //
+        //             res.onAborted(() => {
+        //                 /* We can simply signal that we were aborted */
+        //                 upgradeAborted.aborted = true;
+        //             });
+        //
+        //             const query = validateWebsocketQuery(
+        //                 req,
+        //                 res,
+        //                 context,
+        //                 z.object({
+        //                     roomId: z.string(),
+        //                     token: z.string().optional(),
+        //                     name: z.string(),
+        //                     characterTextureIds: z.union([z.string(), z.string().array()]).optional(),
+        //                     x: z.coerce.number(),
+        //                     y: z.coerce.number(),
+        //                     top: z.coerce.number(),
+        //                     bottom: z.coerce.number(),
+        //                     left: z.coerce.number(),
+        //                     right: z.coerce.number(),
+        //                     companionTextureId: z.string().optional(),
+        //                     availabilityStatus: z.coerce.number(),
+        //                     lastCommandId: z.string().optional(),
+        //                     version: z.string(),
+        //                 })
+        //             );
+        //
+        //             if (query === undefined) {
+        //                 return;
+        //             }
+        //
+        //             const websocketKey = req.getHeader("sec-websocket-key");
+        //             const websocketProtocol = req.getHeader("sec-websocket-protocol");
+        //             const websocketExtensions = req.getHeader("sec-websocket-extensions");
+        //             const ipAddress = req.getHeader("x-forwarded-for");
+        //             const locale = req.getHeader("accept-language");
+        //
+        //             const {
+        //                 roomId,
+        //                 token,
+        //                 x,
+        //                 y,
+        //                 top,
+        //                 bottom,
+        //                 left,
+        //                 right,
+        //                 name,
+        //                 availabilityStatus,
+        //                 lastCommandId,
+        //                 version,
+        //                 companionTextureId,
+        //             } = query;
+        //
+        //             try {
+        //                 if (version !== apiVersionHash) {
+        //                     if (upgradeAborted.aborted) {
+        //                         // If the response points to nowhere, don't attempt an upgrade
+        //                         return;
+        //                     }
+        //                     return res.upgrade(
+        //                         {
+        //                             rejected: true,
+        //                             reason: "error",
+        //                             error: {
+        //                                 status: "error",
+        //                                 type: "retry",
+        //                                 title: "Please refresh",
+        //                                 subtitle: "New version available",
+        //                                 image: "/resources/icons/new_version.png",
+        //                                 code: "NEW_VERSION",
+        //                                 details:
+        //                                     "A new version of WorkAdventure is available. Please refresh your window",
+        //                                 canRetryManual: true,
+        //                                 buttonTitle: "Refresh",
+        //                                 timeToRetry: 999999,
+        //                             },
+        //                         } satisfies UpgradeFailedData,
+        //                         websocketKey,
+        //                         websocketProtocol,
+        //                         websocketExtensions,
+        //                         context
+        //                     );
+        //                 }
+        //
+        //                 const characterTextureIds: string[] =
+        //                     query.characterTextureIds === undefined
+        //                         ? []
+        //                         : typeof query.characterTextureIds === "string"
+        //                         ? [query.characterTextureIds]
+        //                         : query.characterTextureIds;
+        //
+        //                 const tokenData = token ? jwtTokenManager.verifyJWTToken(token) : null;
+        //
+        //                 if (DISABLE_ANONYMOUS && !tokenData) {
+        //                     throw new Error("Expecting token");
+        //                 }
+        //
+        //                 const userIdentifier = tokenData ? tokenData.identifier : "";
+        //                 const isLogged = !!tokenData?.accessToken;
+        //
+        //                 let memberTags: string[] = [];
+        //                 let memberVisitCardUrl: string | null = null;
+        //                 let memberUserRoomToken: string | undefined;
+        //                 let userData: FetchMemberDataByUuidResponse = {
+        //                     status: "ok",
+        //                     email: userIdentifier,
+        //                     userUuid: userIdentifier,
+        //                     tags: [],
+        //                     visitCardUrl: null,
+        //                     isCharacterTexturesValid: true,
+        //                     characterTextures: [],
+        //                     isCompanionTextureValid: true,
+        //                     companionTexture: undefined,
+        //                     messages: [],
+        //                     anonymous: true,
+        //                     userRoomToken: undefined,
+        //                     jabberId: null,
+        //                     jabberPassword: null,
+        //                     mucRooms: [],
+        //                     activatedInviteUser: true,
+        //                     canEdit: false,
+        //                 };
+        //
+        //                 let characterTextures: WokaDetail[];
+        //                 let companionTexture: CompanionDetail | undefined;
+        //
+        //                 try {
+        //                     try {
+        //                         userData = await adminService.fetchMemberDataByUuid(
+        //                             userIdentifier,
+        //                             tokenData?.accessToken,
+        //                             roomId,
+        //                             ipAddress,
+        //                             characterTextureIds,
+        //                             companionTextureId,
+        //                             locale
+        //                         );
+        //
+        //                         if (userData.status === "ok" && !userData.isCharacterTexturesValid) {
+        //                             return res.upgrade(
+        //                                 {
+        //                                     rejected: true,
+        //                                     reason: "invalidTexture",
+        //                                     entityType: "character",
+        //                                 } satisfies UpgradeFailedInvalidTexture,
+        //                                 websocketKey,
+        //                                 websocketProtocol,
+        //                                 websocketExtensions,
+        //                                 context
+        //                             );
+        //                         }
+        //                         if (userData.status === "ok" && !userData.isCompanionTextureValid) {
+        //                             return res.upgrade(
+        //                                 {
+        //                                     rejected: true,
+        //                                     reason: "invalidTexture",
+        //                                     entityType: "companion",
+        //                                 } satisfies UpgradeFailedInvalidTexture,
+        //                                 websocketKey,
+        //                                 websocketProtocol,
+        //                                 websocketExtensions,
+        //                                 context
+        //                             );
+        //                         }
+        //
+        //                         if (userData.status !== "ok") {
+        //                             if (upgradeAborted.aborted) {
+        //                                 // If the response points to nowhere, don't attempt an upgrade
+        //                                 return;
+        //                             }
+        //
+        //                             return res.upgrade(
+        //                                 {
+        //                                     rejected: true,
+        //                                     reason: "error",
+        //                                     error: userData,
+        //                                 } satisfies UpgradeFailedData,
+        //                                 websocketKey,
+        //                                 websocketProtocol,
+        //                                 websocketExtensions,
+        //                                 context
+        //                             );
+        //                         }
+        //                     } catch (err) {
+        //                         if (isAxiosError(err)) {
+        //                             Sentry.captureException(`Unknown error on room connection ${err}`);
+        //                             console.error("Unknown error on room connection", err);
+        //                             if (upgradeAborted.aborted) {
+        //                                 // If the response points to nowhere, don't attempt an upgrade
+        //                                 return;
+        //                             }
+        //                         }
+        //                         throw err;
+        //                     }
+        //                     memberTags = userData.tags;
+        //                     memberVisitCardUrl = userData.visitCardUrl;
+        //                     characterTextures = userData.characterTextures;
+        //                     companionTexture = userData.companionTexture ?? undefined;
+        //                     memberUserRoomToken = userData.userRoomToken;
+        //                 } catch (e) {
+        //                     console.info(
+        //                         "access not granted for user " + (userIdentifier || "anonymous") + " and room " + roomId
+        //                     );
+        //                     Sentry.captureException(e);
+        //                     console.error(e);
+        //                     throw new Error("User cannot access this world");
+        //                 }
+        //
+        //                 if (!userData.jabberId) {
+        //                     // If there is no admin, or no user, let's log users using JWT tokens
+        //                     userData.jabberId = JID.create({
+        //                         local: userIdentifier,
+        //                         domain: EJABBERD_DOMAIN,
+        //                         resource: uuid(),
+        //                     });
+        //                     if (EJABBERD_JWT_SECRET) {
+        //                         userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
+        //                             expiresIn: "1d",
+        //                             algorithm: "HS256",
+        //                         });
+        //                     } else {
+        //                         userData.jabberPassword = "no_password_set";
+        //                     }
+        //                 } else {
+        //                     userData.jabberId = `${userData.jabberId}/${uuid()}`;
+        //                 }
+        //
+        //                 if (upgradeAborted.aborted) {
+        //                     console.info("Ouch! Client disconnected before we could upgrade it!");
+        //                     /* You must not upgrade now */
+        //                     return;
+        //                 }
+        //
+        //                 const socketData: SocketData = {
+        //                     rejected: false,
+        //                     disconnecting: false,
+        //                     token: token && typeof token === "string" ? token : "",
+        //                     roomId,
+        //                     userId: undefined,
+        //                     userUuid: userData.userUuid,
+        //                     userJid: userData.jabberId,
+        //                     isLogged,
+        //                     ipAddress,
+        //                     name,
+        //                     characterTextures,
+        //                     companionTexture,
+        //                     position: {
+        //                         x: x,
+        //                         y: y,
+        //                         direction: "down",
+        //                         moving: false,
+        //                     },
+        //                     viewport: {
+        //                         top,
+        //                         right,
+        //                         bottom,
+        //                         left,
+        //                     },
+        //                     availabilityStatus,
+        //                     lastCommandId,
+        //                     messages: [],
+        //                     tags: memberTags,
+        //                     visitCardUrl: memberVisitCardUrl,
+        //                     userRoomToken: memberUserRoomToken,
+        //                     jabberId: userData.jabberId,
+        //                     jabberPassword: userData.jabberPassword,
+        //                     activatedInviteUser: userData.activatedInviteUser || undefined,
+        //                     mucRooms: userData.mucRooms || [],
+        //                     applications: userData.applications,
+        //                     canEdit: userData.canEdit ?? false,
+        //                     spaceUser: SpaceUser.fromPartial({
+        //                         id: 0,
+        //                         uuid: userData.userUuid,
+        //                         name,
+        //                         playUri: roomId,
+        //                         // FIXME : Get room name from admin
+        //                         roomName: "",
+        //                         availabilityStatus,
+        //                         isLogged,
+        //                         color: Color.getColorByString(name),
+        //                         tags: memberTags,
+        //                         cameraState: false,
+        //                         screenSharingState: false,
+        //                         microphoneState: false,
+        //                         megaphoneState: false,
+        //                         characterTextures: characterTextures.map((characterTexture) => ({
+        //                             url: characterTexture.url,
+        //                             id: characterTexture.id,
+        //                         })),
+        //                         visitCardUrl: memberVisitCardUrl ?? undefined,
+        //                     }),
+        //                     emitInBatch: (payload: SubMessage): void => {},
+        //                     batchedMessages: {
+        //                         event: "",
+        //                         payload: [],
+        //                     },
+        //                     batchTimeout: null,
+        //                     backConnection: undefined,
+        //                     listenedZones: new Set<Zone>(),
+        //                     pusherRoom: undefined,
+        //                     spaces: [],
+        //                     spacesFilters: new Map<string, SpaceFilterMessage[]>(),
+        //                     cameraState: undefined,
+        //                     microphoneState: undefined,
+        //                     screenSharingState: undefined,
+        //                     megaphoneState: undefined,
+        //                 };
+        //
+        //                 /* This immediately calls open handler, you must not use res after this call */
+        //                 res.upgrade<SocketData>(
+        //                     socketData,
+        //                     /* Spell these correctly */
+        //                     websocketKey,
+        //                     websocketProtocol,
+        //                     websocketExtensions,
+        //                     context
+        //                 );
+        //             } catch (e) {
+        //                 if (e instanceof Error) {
+        //                     if (!(e instanceof JsonWebTokenError)) {
+        //                         Sentry.captureException(e);
+        //                         console.error(e);
+        //                     }
+        //                     if (upgradeAborted.aborted) {
+        //                         // If the response points to nowhere, don't attempt an upgrade
+        //                         return;
+        //                     }
+        //                     res.upgrade(
+        //                         {
+        //                             rejected: true,
+        //                             reason: e instanceof JsonWebTokenError ? tokenInvalidException : null,
+        //                             message: e.message,
+        //                             roomId,
+        //                         } satisfies UpgradeFailedData,
+        //                         websocketKey,
+        //                         websocketProtocol,
+        //                         websocketExtensions,
+        //                         context
+        //                     );
+        //                 } else {
+        //                     if (upgradeAborted.aborted) {
+        //                         // If the response points to nowhere, don't attempt an upgrade
+        //                         return;
+        //                     }
+        //                     res.upgrade(
+        //                         {
+        //                             rejected: true,
+        //                             reason: null,
+        //                             message: "500 Internal Server Error",
+        //                             roomId,
+        //                         } satisfies UpgradeFailedData,
+        //                         websocketKey,
+        //                         websocketProtocol,
+        //                         websocketExtensions,
+        //                         context
+        //                     );
+        //                 }
+        //             }
+        //         })().catch((e) => {
+        //             Sentry.captureException(e);
+        //             console.error(e);
+        //         });
+        //     },
+        //     /* Handlers */
+        //     open: (ws) => {
+        //         (async () => {
+        //             const socketData = ws.getUserData();
+        //             if (socketData.rejected === true) {
+        //                 const socket = ws as SocketUpgradeFailed;
+        //                 // If there is a room in the error, let's check if we need to clean it.
+        //                 if ("roomId" in socketData) {
+        //                     socketManager.deleteRoomIfEmptyFromId(socketData.roomId);
+        //                 }
+        //
+        //                 if (socketData.reason === tokenInvalidException) {
+        //                     socketManager.emitTokenExpiredMessage(socket);
+        //                 } else if (socketData.reason === "error") {
+        //                     socketManager.emitErrorScreenMessage(socket, socketData.error);
+        //                 } else if (socketData.reason === "invalidTexture") {
+        //                     if (socketData.entityType === "character") {
+        //                         socketManager.emitInvalidCharacterTextureMessage(socket);
+        //                     } else {
+        //                         socketManager.emitInvalidCompanionTextureMessage(socket);
+        //                     }
+        //                 } else {
+        //                     socketManager.emitConnectionErrorMessage(socket, socketData.message);
+        //                 }
+        //                 ws.end(1000, "Error message sent");
+        //                 return;
+        //             }
+        //
+        //             // Mandatory for typing hint
+        //             const socket = ws as Socket;
+        //
+        //             socketData.emitInBatch = (payload: SubMessage): void => {
+        //                 emitInBatch(socket, payload);
+        //             };
+        //
+        //             await socketManager.handleJoinRoom(socket);
+        //
+        //             socketManager.emitXMPPSettings(socket);
+        //
+        //             //get data information and show messages
+        //             if (socketData.messages && Array.isArray(socketData.messages)) {
+        //                 socketData.messages.forEach((c: unknown) => {
+        //                     const messageToSend = z.object({ type: z.string(), message: z.string() }).parse(c);
+        //
+        //                     const bytes = ServerToClientMessageTsProto.encode({
+        //                         message: {
+        //                             $case: "sendUserMessage",
+        //                             sendUserMessage: {
+        //                                 type: messageToSend.type,
+        //                                 message: messageToSend.message,
+        //                             },
+        //                         },
+        //                     }).finish();
+        //
+        //                     if (!socketData.disconnecting) {
+        //                         socket.send(bytes, true);
+        //                     }
+        //                 });
+        //             }
+        //
+        //             // Performance test
+        //             /*
+        //             const positionMessage = new PositionMessage();
+        //             positionMessage.setMoving(true);
+        //             positionMessage.setX(300);
+        //             positionMessage.setY(300);
+        //             positionMessage.setDirection(PositionMessage.Direction.DOWN);
+        //
+        //             const userMovedMessage = new UserMovedMessage();
+        //             userMovedMessage.setUserid(1);
+        //             userMovedMessage.setPosition(positionMessage);
+        //
+        //             const subMessage = new SubMessage();
+        //             subMessage.setUsermovedmessage(userMovedMessage);
+        //
+        //             const startTimestamp2 = Date.now();
+        //             for (let i = 0; i < 100000; i++) {
+        //                 const batchMessage = new BatchMessage();
+        //                 batchMessage.setEvent("");
+        //                 batchMessage.setPayloadList([
+        //                     subMessage
+        //                 ]);
+        //
+        //                 const serverToClientMessage = new ServerToClientMessage();
+        //                 serverToClientMessage.setBatchmessage(batchMessage);
+        //
+        //                 client.send(serverToClientMessage.serializeBinary().buffer, true);
+        //             }
+        //             const endTimestamp2 = Date.now();
+        //
+        //             const startTimestamp = Date.now();
+        //             for (let i = 0; i < 100000; i++) {
+        //                 // Let's do a performance test!
+        //                 const bytes = ServerToClientMessageTsProto.encode({
+        //                     message: {
+        //                         $case: "batchMessage",
+        //                         batchMessage: {
+        //                             event: '',
+        //                             payload: [
+        //                                 {
+        //                                     message: {
+        //                                         $case: "userMovedMessage",
+        //                                         userMovedMessage: {
+        //                                             userId: 1,
+        //                                             position: {
+        //                                                 moving: true,
+        //                                                 x: 300,
+        //                                                 y: 300,
+        //                                                 direction: PositionMessage_Direction.DOWN,
+        //                                             }
+        //                                         }
+        //                                     }
+        //                                 }
+        //                             ]
+        //                         }
+        //                     }
+        //                 }).finish();
+        //
+        //                 client.send(bytes);
+        //             }
+        //             const endTimestamp = Date.now();
+        //             */
+        //         })().catch((e) => {
+        //             Sentry.captureException(e);
+        //             console.error(e);
+        //         });
+        //     },
+        //     message: (ws, arrayBuffer): void => {
+        //         (async () => {
+        //             const socket = ws as Socket;
+        //             const message = ClientToServerMessage.decode(new Uint8Array(arrayBuffer));
+        //
+        //             if (!message.message) {
+        //                 console.warn("Empty message received.");
+        //                 return;
+        //             }
+        //
+        //             switch (message.message.$case) {
+        //                 case "viewportMessage": {
+        //                     socketManager.handleViewport(socket, message.message.viewportMessage);
+        //                     break;
+        //                 }
+        //                 case "userMovesMessage": {
+        //                     socketManager.handleUserMovesMessage(socket, message.message.userMovesMessage);
+        //                     break;
+        //                 }
+        //                 case "playGlobalMessage": {
+        //                     await socketManager.emitPlayGlobalMessage(socket, message.message.playGlobalMessage);
+        //                     break;
+        //                 }
+        //                 case "reportPlayerMessage": {
+        //                     await socketManager.handleReportMessage(socket, message.message.reportPlayerMessage);
+        //                     break;
+        //                 }
+        //                 case "addSpaceFilterMessage": {
+        //                     socketManager.handleAddSpaceFilterMessage(socket, message.message.addSpaceFilterMessage);
+        //                     break;
+        //                 }
+        //                 case "updateSpaceFilterMessage": {
+        //                     socketManager.handleUpdateSpaceFilterMessage(
+        //                         socket,
+        //                         message.message.updateSpaceFilterMessage
+        //                     );
+        //                     break;
+        //                 }
+        //                 case "removeSpaceFilterMessage": {
+        //                     socketManager.handleRemoveSpaceFilterMessage(
+        //                         socket,
+        //                         message.message.removeSpaceFilterMessage
+        //                     );
+        //                     break;
+        //                 }
+        //                 case "setPlayerDetailsMessage": {
+        //                     socketManager.handleSetPlayerDetails(socket, message.message.setPlayerDetailsMessage);
+        //                     break;
+        //                 }
+        //                 case "watchSpaceMessage": {
+        //                     void socketManager.handleJoinSpace(
+        //                         socket,
+        //                         message.message.watchSpaceMessage.spaceName,
+        //                         message.message.watchSpaceMessage.spaceFilter
+        //                     );
+        //                     break;
+        //                 }
+        //                 case "updateSpaceMetadataMessage": {
+        //                     const isMetadata = z
+        //                         .record(z.string(), z.unknown())
+        //                         .safeParse(JSON.parse(message.message.updateSpaceMetadataMessage.metadata));
+        //                     if (!isMetadata.success) {
+        //                         Sentry.captureException(
+        //                             `Invalid metadata received. ${message.message.updateSpaceMetadataMessage.metadata}`
+        //                         );
+        //                         console.error(
+        //                             "Invalid metadata received.",
+        //                             message.message.updateSpaceMetadataMessage.metadata
+        //                         );
+        //                         return;
+        //                     }
+        //
+        //                     await socketManager.handleUpdateSpaceMetadata(
+        //                         socket,
+        //                         message.message.updateSpaceMetadataMessage.spaceName,
+        //                         isMetadata.data
+        //                     );
+        //                     break;
+        //                 }
+        //                 case "unwatchSpaceMessage": {
+        //                     void socketManager.handleLeaveSpace(socket, message.message.unwatchSpaceMessage.spaceName);
+        //                     break;
+        //                 }
+        //                 case "cameraStateMessage": {
+        //                     socketManager.handleCameraState(socket, message.message.cameraStateMessage.value);
+        //                     break;
+        //                 }
+        //                 case "microphoneStateMessage": {
+        //                     socketManager.handleMicrophoneState(socket, message.message.microphoneStateMessage.value);
+        //                     break;
+        //                 }
+        //                 case "screenSharingStateMessage": {
+        //                     socketManager.handleScreenSharingState(
+        //                         socket,
+        //                         message.message.screenSharingStateMessage.value
+        //                     );
+        //                     break;
+        //                 }
+        //                 case "megaphoneStateMessage": {
+        //                     socketManager.handleMegaphoneState(socket, message.message.megaphoneStateMessage);
+        //                     break;
+        //                 }
+        //                 case "jitsiParticipantIdSpaceMessage": {
+        //                     socketManager.handleJitsiParticipantIdSpace(
+        //                         socket,
+        //                         message.message.jitsiParticipantIdSpaceMessage.spaceName,
+        //                         message.message.jitsiParticipantIdSpaceMessage.value
+        //                     );
+        //                     break;
+        //                 }
+        //                 case "queryMessage": {
+        //                     switch (message.message.queryMessage.query?.$case) {
+        //                         case "roomTagsQuery": {
+        //                             void socketManager.handleRoomTagsQuery(socket, message.message.queryMessage);
+        //                             break;
+        //                         }
+        //                         case "embeddableWebsiteQuery": {
+        //                             void socketManager.handleEmbeddableWebsiteQuery(
+        //                                 socket,
+        //                                 message.message.queryMessage
+        //                             );
+        //                             break;
+        //                         }
+        //                         case "roomsFromSameWorldQuery": {
+        //                             void socketManager.handleRoomsFromSameWorldQuery(
+        //                                 socket,
+        //                                 message.message.queryMessage
+        //                             );
+        //                             break;
+        //                         }
+        //                         default: {
+        //                             socketManager.forwardMessageToBack(socket, message.message);
+        //                         }
+        //                     }
+        //                     break;
+        //                 }
+        //                 case "itemEventMessage":
+        //                 case "variableMessage":
+        //                 case "webRtcSignalToServerMessage":
+        //                 case "webRtcScreenSharingSignalToServerMessage":
+        //                 case "emotePromptMessage":
+        //                 case "followRequestMessage":
+        //                 case "followConfirmationMessage":
+        //                 case "followAbortMessage":
+        //                 case "lockGroupPromptMessage":
+        //                 case "pingMessage":
+        //                 case "editMapCommandMessage":
+        //                 case "askPositionMessage": {
+        //                     socketManager.forwardMessageToBack(socket, message.message);
+        //                     break;
+        //                 }
+        //                 default: {
+        //                     const _exhaustiveCheck: never = message.message;
+        //                 }
+        //             }
+        //
+        //             /* Ok is false if backpressure was built up, wait for drain */
+        //             //let ok = ws.send(message, isBinary);
+        //         })().catch((e) => {
+        //             Sentry.captureException(e);
+        //             console.error(e);
+        //         });
+        //     },
+        //     drain: (ws) => {
+        //         console.info("WebSocket backpressure: " + ws.getBufferedAmount());
+        //     },
+        //     close: (ws) => {
+        //         const socketData = ws.getUserData();
+        //
+        //         if (socketData.rejected === true) {
+        //             return;
+        //         }
+        //
+        //         const socket = ws as Socket;
+        //
+        //         try {
+        //             socketData.disconnecting = true;
+        //             socketManager.leaveRoom(socket);
+        //             socketManager.leaveSpaces(socket);
+        //         } catch (e) {
+        //             Sentry.captureException(`An error occurred on "disconnect" ${e}`);
+        //             console.error(e);
+        //         }
+        //     },
+        // });
     }
 }

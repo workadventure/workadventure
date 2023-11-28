@@ -307,85 +307,115 @@ class AdminApi implements AdminInterface {
         companionTextureId?: string,
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
-        /**
-         * @openapi
-         * /api/room/access:
-         *   get:
-         *     tags: ["AdminAPI"]
-         *     description: Returns the member's information if he can access this room
-         *     security:
-         *      - Bearer: []
-         *     produces:
-         *      - "application/json"
-         *     parameters:
-         *      - name: "userIdentifier"
-         *        in: "query"
-         *        description: "The identifier of the current user \n It can be undefined or an uuid or an email"
-         *        type: "string"
-         *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
-         *      - name: "isLogged"
-         *        in: "query"
-         *        description: "Whether the current user is identified using OpenID Connect... or not. Can be 0 or 1"
-         *        deprecated: true
-         *        type: "string"
-         *        example: "1"
-         *      - name: "accessToken"
-         *        in: "query"
-         *        description: "The OpenID access token (if the user is logged)"
-         *        type: "string"
-         *      - name: "playUri"
-         *        in: "query"
-         *        description: "The full URL of WorkAdventure"
-         *        required: true
-         *        type: "string"
-         *        example: "http://play.workadventure.localhost/@/teamSlug/worldSLug/roomSlug"
-         *      - name: "ipAddress"
-         *        in: "query"
-         *        description: "IP Address of the user logged in, allows you to check whether a user has been banned or not"
-         *        required: true
-         *        type: "string"
-         *        example: "127.0.0.1"
-         *      - name: "characterTextureIds"
-         *        in: "query"
-         *        type: "array"
-         *        items:
-         *          type: string
-         *        example: ["male1"]
-         *      - name: "companionTextureId"
-         *        in: "query"
-         *        type: "string"
-         *        example: "dog1"
-         *     responses:
-         *       200:
-         *         description: The details of the member
-         *         schema:
-         *             $ref: "#/definitions/FetchMemberDataByUuidResponse"
-         */
-        const res = await axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/room/access", {
-            params: {
-                userIdentifier,
-                playUri,
-                ipAddress,
-                characterTextureIds,
-                companionTextureId,
-                accessToken,
-                isLogged: accessToken ? "1" : "0", // deprecated, use accessToken instead
-            },
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
-        });
+        try {
+            /**
+             * @openapi
+             * /api/room/access:
+             *   get:
+             *     tags: ["AdminAPI"]
+             *     description: Returns the member's information if he can access this room
+             *     security:
+             *      - Bearer: []
+             *     produces:
+             *      - "application/json"
+             *     parameters:
+             *      - name: "userIdentifier"
+             *        in: "query"
+             *        description: "The identifier of the current user \n It can be undefined or an uuid or an email"
+             *        type: "string"
+             *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
+             *      - name: "isLogged"
+             *        in: "query"
+             *        description: "Whether the current user is identified using OpenID Connect... or not. Can be 0 or 1"
+             *        deprecated: true
+             *        type: "string"
+             *        example: "1"
+             *      - name: "accessToken"
+             *        in: "query"
+             *        description: "The OpenID access token (if the user is logged)"
+             *        type: "string"
+             *      - name: "playUri"
+             *        in: "query"
+             *        description: "The full URL of WorkAdventure"
+             *        required: true
+             *        type: "string"
+             *        example: "http://play.workadventure.localhost/@/teamSlug/worldSLug/roomSlug"
+             *      - name: "ipAddress"
+             *        in: "query"
+             *        description: "IP Address of the user logged in, allows you to check whether a user has been banned or not"
+             *        required: true
+             *        type: "string"
+             *        example: "127.0.0.1"
+             *      - name: "characterTextureIds"
+             *        in: "query"
+             *        type: "array"
+             *        items:
+             *          type: string
+             *        example: ["male1"]
+             *      - name: "companionTextureId"
+             *        in: "query"
+             *        type: "string"
+             *        example: "dog1"
+             *     responses:
+             *       200:
+             *         description: The details of the member
+             *         schema:
+             *             $ref: "#/definitions/FetchMemberDataByUuidResponse"
+             */
+            const res = await axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/room/access", {
+                params: {
+                    userIdentifier,
+                    playUri,
+                    ipAddress,
+                    characterTextureIds,
+                    companionTextureId,
+                    accessToken,
+                    isLogged: accessToken ? "1" : "0", // deprecated, use accessToken instead
+                },
+                headers: {Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en"},
+            });
 
-        const fetchMemberDataByUuidResponse = isFetchMemberDataByUuidResponse.safeParse(res.data);
+            const fetchMemberDataByUuidResponse = isFetchMemberDataByUuidResponse.safeParse(res.data);
 
-        if (fetchMemberDataByUuidResponse.success) {
-            return fetchMemberDataByUuidResponse.data;
+            if (fetchMemberDataByUuidResponse.success) {
+                return fetchMemberDataByUuidResponse.data;
+            }
+
+            console.error(fetchMemberDataByUuidResponse.error.flatten());
+            console.error("Message received from /api/room/access is not in the expected format. Message: ", res.data);
+            Sentry.captureException(fetchMemberDataByUuidResponse.error.flatten());
+
+            return {
+                status: "error",
+                type: "error",
+                title: "Invalid server response",
+                subtitle: "Something wrong happened while connecting!",
+                image: "",
+                code: "ROOM_ACCESS_VALIDATION",
+                details: "The server answered with an invalid response. The administrator has been notified.",
+            };
+        } catch (err) {
+            let message = "Unknown error";
+            if (isAxiosError(err)) {
+                Sentry.captureException(`An error occurred during call to /room/access endpoint. HTTP Status: ${err.status}. ${err}`);
+                console.error(`An error occurred during call to /room/access endpoint. HTTP Status: ${err.status}.`, err);
+            } else {
+                Sentry.captureException(`An error occurred during call to /room/access endpoint. ${err}`);
+                console.error(`An error occurred during call to /room/access endpoint.`, err);
+            }
+            if (err instanceof Error) {
+                message = err.message;
+            }
+            return {
+                status: "error",
+                type: "error",
+                title: "Connection error",
+                subtitle: "Something wrong happened while connecting!",
+                image: "",
+                code: "ROOM_ACCESS_ERROR",
+                details: message,
+            };
         }
-
-        console.error(fetchMemberDataByUuidResponse.error.flatten());
-        Sentry.captureException(fetchMemberDataByUuidResponse.error.flatten());
-        throw new Error(
-            "Invalid answer received from the admin for the /api/room/access endpoint. Received: " +
-                JSON.stringify(res.data)
-        );
     }
 
     async fetchMemberDataByToken(

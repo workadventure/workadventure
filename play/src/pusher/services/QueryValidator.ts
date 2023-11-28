@@ -49,8 +49,8 @@ export async function validatePostQuery<T extends ZodObject<ZodRawShape>>(
  * or fills the response with a HTTP 400 message and returns undefined.
  */
 export function validateWebsocketQuery<T extends ZodObject<ZodRawShape>>(
-    req: HyperExpress.compressors.HttpRequest,
-    res: HyperExpress.compressors.HttpResponse,
+    req: HyperExpress.Request<HyperExpress.DefaultRequestLocals>,
+    res: HyperExpress.Response<HyperExpress.DefaultResponseLocals>,
     context: HyperExpress.compressors.us_socket_context_t,
     validator: T
 ): z.infer<T> | undefined {

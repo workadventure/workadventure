@@ -199,7 +199,7 @@ export class AuthenticateController extends BaseHttpController {
                     return;
                 }
 
-                if (isAxiosError(err)) {
+                /*if (isAxiosError(err)) {
                     const errorType = ErrorApiData.safeParse(err?.response?.data);
                     if (errorType.success) {
                         const status = err?.response?.status ?? 500;
@@ -209,7 +209,7 @@ export class AuthenticateController extends BaseHttpController {
                         });
                         return;
                     }
-                }
+                }*/
                 throw err;
             }
         });
