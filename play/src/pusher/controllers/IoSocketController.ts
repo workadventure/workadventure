@@ -1,4 +1,3 @@
-import { isAxiosError } from "axios";
 import type HyperExpress from "hyper-express";
 import { z } from "zod";
 import {
@@ -342,7 +341,6 @@ export class IoSocketController {
                             isCompanionTextureValid: true,
                             companionTexture: undefined,
                             messages: [],
-                            anonymous: true,
                             userRoomToken: undefined,
                             jabberId: null,
                             jabberPassword: null,
@@ -412,13 +410,9 @@ export class IoSocketController {
                                     );
                                 }
                             } catch (err) {
-                                if (isAxiosError(err)) {
-                                    Sentry.captureException(`Unknown error on room connection ${err}`);
-                                    console.error("Unknown error on room connection", err);
-                                    if (upgradeAborted.aborted) {
-                                        // If the response points to nowhere, don't attempt an upgrade
-                                        return;
-                                    }
+                                if (upgradeAborted.aborted) {
+                                    // If the response points to nowhere, don't attempt an upgrade
+                                    return;
                                 }
                                 throw err;
                             }

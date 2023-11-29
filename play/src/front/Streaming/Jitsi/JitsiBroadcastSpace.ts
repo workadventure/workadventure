@@ -7,7 +7,7 @@ import { ForwardableStore } from "@workadventure/store-utils";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { Space } from "../../Space/Space";
-import { megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
+import { liveStreamingEnabledStore } from "../../Stores/MegaphoneStore";
 import { BroadcastService, jitsiLoadingStore } from "../BroadcastService";
 import { BroadcastSpace } from "../Common/BroadcastSpace";
 import { JITSI_DOMAIN, JITSI_MUC_DOMAIN, JITSI_XMPP_DOMAIN } from "../../Enum/EnvironmentVariable";
@@ -112,13 +112,13 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
 
         const certifiedJitsiConnection = jitsiConnection as JitsiConnection;
 
-        debug("Joining Jitsi conference, jitsiConnection is defined " + roomName);
+        jitsiBroadcastSpaceLogger("Joining Jitsi conference, jitsiConnection is defined " + roomName);
 
         const jitsiConference = await JitsiConferenceWrapper.join(certifiedJitsiConnection, roomName);
         jitsiConferencesStore.set(roomName, jitsiConference);
 
-        if (get(megaphoneEnabledStore)) {
-            await jitsiConference.broadcast(["video", "audio"]);
+        if (get(liveStreamingEnabledStore)) {
+            jitsiConference.broadcast(["video", "audio"]);
         } else if (this.playSound) {
             gameManager.getCurrentGameScene().playSound("audio-megaphone");
         }
