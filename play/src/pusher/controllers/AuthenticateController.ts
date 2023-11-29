@@ -1,6 +1,5 @@
 import { v4 } from "uuid";
-import { ErrorApiData, RegisterData, MeResponse, MeRequest } from "@workadventure/messages";
-import { isAxiosError } from "axios";
+import { RegisterData, MeResponse, MeRequest } from "@workadventure/messages";
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
 import { JsonWebTokenError } from "jsonwebtoken";
@@ -199,7 +198,7 @@ export class AuthenticateController extends BaseHttpController {
                     return;
                 }
 
-                if (isAxiosError(err)) {
+                /*if (isAxiosError(err)) {
                     const errorType = ErrorApiData.safeParse(err?.response?.data);
                     if (errorType.success) {
                         const status = err?.response?.status ?? 500;
@@ -209,7 +208,7 @@ export class AuthenticateController extends BaseHttpController {
                         });
                         return;
                     }
-                }
+                }*/
                 throw err;
             }
         });
