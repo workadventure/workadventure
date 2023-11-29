@@ -157,6 +157,12 @@ const mapEditor: BaseTranslation = {
             error: "Please enter a valid Google Drive URL",
             disabled: "Google Drive integration is disabled.",
         },
+        oneDriveProperties: {
+            label: "Open OneDrive",
+            description: "Open OneDrive within WorkAdventure or as a new tab.",
+            error: "Please enter a valid OneDrive URL",
+            disabled: "OneDrive integration is disabled.",
+        },
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",

@@ -74,6 +74,7 @@ export class Room {
     private _googleSlidesToolActivated: boolean | undefined;
     private _eraserToolActivated: boolean | undefined;
     private _googleDriveActivated: boolean | undefined;
+    private _oneDriveActivated: boolean | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -219,6 +220,8 @@ export class Room {
                 this._googleSlidesToolActivated = data.thirdParty?.googleSlidesToolActivated ?? GOOGLE_SLIDES_ENABLED;
                 this._eraserToolActivated = data.thirdParty?.eraserToolActivated ?? ERASER_ENABLED;
                 this._googleDriveActivated = data.thirdParty?.googleDriveToolActivated ?? GOOGLE_DRIVE_ENABLED;
+                // TODO change
+                this._oneDriveActivated = true;
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {
@@ -453,5 +456,8 @@ export class Room {
     }
     get googleDriveToolActivated(): boolean {
         return this._googleDriveActivated ?? false;
+    }
+    get oneDriveToolActivated(): boolean {
+        return this._oneDriveActivated ?? false;
     }
 }

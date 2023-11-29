@@ -155,6 +155,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             error: "Veuillez entrer une URL Google Drive valide",
             disabled: "L'intégration Google Drive est désactivée.",
         },
+        oneDriveProperties: {
+            label: "Ouvrir OneDrive",
+            description: "Ouvrir un lien OneDrive dans l'application ou dans un nouvel onglet.",
+            error: "Veuillez entrer une URL OneDrive valide",
+            disabled: "L'intégration OneDrive est désactivée.",
+        },
     },
     areaEditor: {
         editInstructions: "Sélectionnez une zone pour modifier ses propriétés.",

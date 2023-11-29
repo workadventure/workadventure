@@ -18,6 +18,7 @@
     import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
     import eraserSvg from "../images/applications/icon_eraser.svg";
+    import oneDriveSvg from "../images/applications/icon_onedrive.svg";
     import { FEATURE_FLAG_BROADCAST_AREAS } from "../../Enum/EnvironmentVariable";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { connectionManager } from "../../Connection/ConnectionManager";
@@ -115,6 +116,9 @@
                         break;
                     case "eraser":
                         placeholder = "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU";
+                        break;
+                    case "oneDrive":
+                        placeholder = "https://1drv.ms/b/s!AtSuTy9uInfxZtCymwFdKHvbCi0?e=FQmnHW";
                         break;
                     default:
                         placeholder = "https://workadventu.re";
@@ -442,6 +446,19 @@
             disabled={!connectionManager.currentRoom?.eraserToolActivated}
             on:click={() => {
                 onAddProperty("openWebsite", "eraser");
+            }}
+        />
+
+        <AddPropertyButton
+            headerText={$LL.mapEditor.properties.oneDriveProperties.label()}
+            descriptionText={connectionManager.currentRoom?.oneDriveToolActivated
+                ? $LL.mapEditor.properties.oneDriveProperties.description()
+                : $LL.mapEditor.properties.oneDriveProperties.disabled()}
+            img={oneDriveSvg}
+            style="z-index: 1;"
+            disabled={!connectionManager.currentRoom?.oneDriveToolActivated}
+            on:click={() => {
+                onAddProperty("openWebsite", "oneDrive");
             }}
         />
     </div>

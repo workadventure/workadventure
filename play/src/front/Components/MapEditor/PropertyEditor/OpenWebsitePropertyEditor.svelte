@@ -11,6 +11,7 @@
         YoutubeService,
         EraserService,
         EraserException,
+        OneDriveService,
     } from "@workadventure/shared-utils";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -21,6 +22,7 @@
     import googleSlidesSvg from "../../images/applications/icon_google_slides.svg";
     import eraserSvg from "../../images/applications/icon_eraser.svg";
     import pickerSvg from "../../images/applications/picker.svg";
+    import oneDriveSvg from "../../images/applications/icon_onedrive.svg";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
     import Tooltip from "../../Util/Tooltip.svelte";
@@ -381,6 +383,19 @@
                     .catch(handlerLinkError);
             }
         }
+
+        if (property.application == "oneDrive") {
+            OneDriveService.initOneDrivePicker(
+                "c78e1959-2a6b-40d3-8d2c-00013670bb5a",
+                "https://login.microsoftonline.com/common"
+            )
+                .then(() => {
+                    console.info("OneDrive Picker initialized");
+                })
+                .catch((error) => {
+                    console.error("Error OneDrive Picker", error);
+                });
+        }
     }
 </script>
 
@@ -429,6 +444,13 @@
         {:else if property.application === "eraser"}
             <img class="tw-w-6 tw-mr-1" src={eraserSvg} alt={$LL.mapEditor.properties.eraserProperties.description()} />
             {$LL.mapEditor.properties.eraserProperties.label()}
+        {:else if property.application === "oneDrive"}
+            <img
+                class="tw-w-6 tw-mr-1"
+                src={oneDriveSvg}
+                alt={$LL.mapEditor.properties.oneDriveProperties.description()}
+            />
+            {$LL.mapEditor.properties.oneDriveProperties.label()}
         {:else}
             <img class="tw-w-6 tw-mr-1" src={icon} alt={$LL.mapEditor.properties.linkProperties.description()} />
             {$LL.mapEditor.properties.linkProperties.label()}
@@ -473,7 +495,7 @@
                     on:click={onClickInputHandler}
                     disabled={embeddableLoading}
                 />
-                {#if property.application === "googleDocs" || property.application === "googleSheets" || property.application === "googleSlides" || property.application === "klaxoon" || property.application === "googleDrive"}
+                {#if property.application === "googleDocs" || property.application === "googleSheets" || property.application === "googleSlides" || property.application === "klaxoon" || property.application === "googleDrive" || property.application === "oneDrive"}
                     <div class="tw-flex tw-flex-row tw-items-center tw-justify-center">
                         <img
                             class="tw-w-6 tw-ml-4 tw-items-center tw-cursor-pointer"

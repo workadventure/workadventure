@@ -149,6 +149,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             error: "Prošu zapodaś płaćiwy Google Drive-URL",
             disabled: "Google Drive-wótcynjenje je deaktiwěrowane.",
         },
+        oneDriveProperties: {
+            label: "OneDrive wótcyniś",
+            description: "OneDrive wótcyniś, gaž stupijośo nutś.",
+            error: "Prošu zapodaś płaćiwy OneDrive-URL",
+            disabled: "OneDrive-wótcynjenje je deaktiwěrowane.",
+        },
     },
     areaEditor: {
         editInstructions: "Klikniśo na wobceŕk, aby jogo kakosći pśeměnili.",

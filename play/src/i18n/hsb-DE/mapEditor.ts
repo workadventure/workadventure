@@ -148,6 +148,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             error: "Prošu zapodać płaćiwy Google Drive-URL",
             disabled: "Google Drive-wočinjenje je deaktiwowane.",
         },
+        oneDriveProperties: {
+            label: "OneDrive wočinić",
+            description: "OneDrive při zastupje wočinić.",
+            error: "Prošu zapodać płaćiwy OneDrive-URL",
+            disabled: "OneDrive-wočinjenje je deaktiwowane.",
+        },
     },
     areaEditor: {
         editInstructions: "Klikńće na płoninu, zo byšće jeje kajkosće změnili.",
