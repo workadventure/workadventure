@@ -1,6 +1,5 @@
 import { getEnvConfig } from "@geprog/vite-plugin-env-config/getEnvConfig"; // eslint-disable-line import/no-unresolved
 
-const PUSHER_URL = getEnvConfig("PUSHER_URL") || "//play.workadventure.localhost";
 const ADMIN_API_URL = getEnvConfig("ADMIN_API_URL") || undefined;
 const ENABLE_CHAT_UPLOAD = getEnvConfig("ENABLE_CHAT_UPLOAD") !== "false";
 const FALLBACK_LOCALE = getEnvConfig("FALLBACK_LOCALE") || undefined;
@@ -20,7 +19,6 @@ const SENTRY_RELEASE = getEnvConfig("SENTRY_RELEASE");
 const SENTRY_TRACES_SAMPLE_RATE = getEnvConfig("SENTRY_TRACES_SAMPLE_RATE");
 
 export {
-    PUSHER_URL,
     FALLBACK_LOCALE,
     UPLOADER_URL,
     EMBEDLY_KEY,

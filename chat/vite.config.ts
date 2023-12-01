@@ -47,7 +47,6 @@ export default defineConfig(({ mode }) => {
             envConfig({
                 variables: [
                     "ADMIN_API_URL",
-                    "PUSHER_URL",
                     "FALLBACK_LOCALE",
                     "UPLOADER_URL",
                     "EMBEDLY_KEY",
