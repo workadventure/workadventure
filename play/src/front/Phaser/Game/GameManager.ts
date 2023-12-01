@@ -17,6 +17,7 @@ import { EmptySceneName } from "../Login/EmptyScene";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraStore } from "../../Stores/MyMediaStore";
 import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
+import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import { GameScene } from "./GameScene";
 
 /**
@@ -45,6 +46,14 @@ export class GameManager {
             window.location.assign(result.toString());
             // window.location.assign is not immediate and Javascript keeps running after.
             // so we need to redirect to an empty Phaser scene, waiting for the redirection to take place
+            return EmptySceneName;
+        }
+        if (result.nextScene === "errorScene") {
+            if (result.error instanceof Error) {
+                errorScreenStore.setException(result.error);
+            } else {
+                errorScreenStore.setErrorFromApi(result.error);
+            }
             return EmptySceneName;
         }
         this.startRoom = result.room;
