@@ -773,12 +773,12 @@ export class GameRoom implements BrothersFinder {
         }
 
         console.error(result.error.issues);
-        console.error("Unexpected room redirect received while querying map details", result);
+        console.error("Unexpected room redirect or error received while querying map details", result);
         Sentry.captureException(result.error.issues);
         Sentry.captureException(
-            `Unexpected room redirect received while querying map details ${JSON.stringify(result)}`
+            `Unexpected room redirect or error received while querying map details ${JSON.stringify(result)}`
         );
-        throw new Error("Unexpected room redirect received while querying map details");
+        throw new Error("Unexpected room redirect received or error while querying map details");
     }
 
     private mapPromise: Promise<ITiledMap> | undefined;

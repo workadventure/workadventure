@@ -1,5 +1,13 @@
+import * as Sentry from "@sentry/svelte";
 import type { AvailabilityStatus } from "@workadventure/messages";
-import { isRegisterData, MeRequest, MeResponse } from "@workadventure/messages";
+import {
+    ErrorApiErrorData,
+    ErrorApiRetryData,
+    ErrorApiUnauthorizedData,
+    isRegisterData,
+    MeRequest,
+    MeResponse,
+} from "@workadventure/messages";
 import { isAxiosError } from "axios";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { subMenusStore, userIsConnected, warningContainerStore } from "../Stores/MenuStore";
@@ -89,6 +97,10 @@ class ConnectionManager {
         | {
               room: Room;
               nextScene: "selectCharacterScene" | "selectCompanionScene" | "gameScene";
+          }
+        | {
+              nextScene: "errorScene";
+              error: ErrorApiErrorData | ErrorApiRetryData | ErrorApiUnauthorizedData | Error;
           }
         | URL
     > {
@@ -218,21 +230,35 @@ class ConnectionManager {
                 try {
                     const response = await this.checkAuthUserConnexion(this.authToken);
                     if (response.status === "error") {
-                        if (response.type === "retry") {
+                        /*if (response.type === "retry") {
                             console.warn("Token expired, trying to login anonymously");
                         } else {
                             console.error(response);
+                        }*/
+
+                        if (response.type === "redirect") {
+                            return new URL(response.urlToRedirect);
                         }
 
-                        // if the user must be connected to the current room or if the pusher error is not openid provider access error
-                        if (this._currentRoom.authenticationMandatory) {
-                            const redirect = this.loadOpenIDScreen();
-                            if (redirect === null) {
-                                throw new Error("Unable to redirect on login page.");
+                        if (response.type === "unauthorized") {
+                            // if the user must be connected to the current room or if the pusher error is not openid provider access error
+                            if (this._currentRoom.authenticationMandatory) {
+                                const redirect = this.loadOpenIDScreen();
+                                if (redirect === null) {
+                                    return {
+                                        nextScene: "errorScene",
+                                        error: response,
+                                    };
+                                }
+                                return redirect;
+                            } else {
+                                await this.anonymousLogin();
                             }
-                            return redirect;
                         } else {
-                            await this.anonymousLogin();
+                            return {
+                                nextScene: "errorScene",
+                                error: response,
+                            };
                         }
                     }
                     analyticsClient.loggedWithSso();
@@ -246,19 +272,30 @@ class ConnectionManager {
                 } catch (err) {
                     if (isAxiosError(err) && err.response?.status === 401) {
                         console.warn("Token expired, trying to login anonymously");
-                    } else {
-                        console.error(err);
-                    }
-
-                    // if the user must be connected to the current room or if the pusher error is not openid provider access error
-                    if (this._currentRoom.authenticationMandatory) {
-                        const redirect = this.loadOpenIDScreen();
-                        if (redirect === null) {
-                            throw new Error("Unable to redirect on login page.");
+                        // if the user must be connected to the current room or if the pusher error is not openid provider access error
+                        if (this._currentRoom.authenticationMandatory) {
+                            const redirect = this.loadOpenIDScreen();
+                            if (redirect === null) {
+                                throw new Error("Unable to redirect on login page.");
+                            }
+                            return redirect;
+                        } else {
+                            await this.anonymousLogin();
                         }
-                        return redirect;
                     } else {
-                        await this.anonymousLogin();
+                        Sentry.captureException(err);
+                        if (err instanceof Error) {
+                            return {
+                                nextScene: "errorScene",
+                                error: err,
+                            };
+                        } else {
+                            console.error("An unknown error occurred", err);
+                            return {
+                                nextScene: "errorScene",
+                                error: new Error("An unknown error occurred"),
+                            };
+                        }
                     }
                 }
             }
