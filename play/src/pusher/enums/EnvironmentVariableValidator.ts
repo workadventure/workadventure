@@ -30,6 +30,7 @@ export const EnvironmentVariables = z.object({
     // Use "*" to allow any domain
     ALLOWED_CORS_ORIGIN: z.string().url().or(z.literal("*")).optional(),
     PUSHER_URL: AbsoluteOrRelativeUrl.optional(),
+    FRONT_URL: AbsoluteOrRelativeUrl.optional(),
     PUBLIC_MAP_STORAGE_URL: z
         .string()
         .url()
@@ -47,7 +48,6 @@ export const EnvironmentVariables = z.object({
     OPID_PROMPT: z.string().optional(),
     OPID_USERNAME_CLAIM: z.string().optional(),
     OPID_LOCALE_CLAIM: z.string().optional(),
-    OPID_LOGOUT_REDIRECT_URL: z.string().optional(),
     USERNAME_POLICY: z.string().optional(),
     DISABLE_ANONYMOUS: BoolAsString.optional().transform((val) => toBool(val, false)),
     PROMETHEUS_AUTHORIZATION_TOKEN: z.string().optional(),

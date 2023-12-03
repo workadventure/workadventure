@@ -95,7 +95,7 @@
           "API_URL": "back1:50051,back2:50051",
           "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
           "FRONT_URL": "https://play-"+url,
-          "PUSHER_URL": "https://play-"+url,
+          "PUSHER_URL": "https://pusher-"+url,
           "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
           "ENABLE_OPENAPI_ENDPOINT": "true",
           "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",

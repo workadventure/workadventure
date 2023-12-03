@@ -510,7 +510,7 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "tokenExpiredMessage": {
-                    connectionManager.logout().catch((e) => console.error(e));
+                    connectionManager.logout();
                     this.closeConnection(); //technically, this isn't needed since loadOpenIDScreen() will do window.location.assign() but I prefer to leave it for consistency
                     break;
                 }

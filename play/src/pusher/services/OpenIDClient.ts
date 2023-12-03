@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import type { Client, IntrospectionResponse, OpenIDCallbackChecks } from "openid-client";
+import type { Client, EndSessionParameters, IntrospectionResponse, OpenIDCallbackChecks } from "openid-client";
 import { Issuer, generators } from "openid-client";
 import { v4 } from "uuid";
 import type { Request, Response } from "hyper-express";
@@ -177,6 +177,12 @@ class OpenIDClient {
         let decrypted = decipher.update(encryptedText);
         decrypted = Buffer.concat([decrypted, decipher.final()]);
         return decrypted.toString();
+    }
+
+    public endSessionUrl(params: EndSessionParameters): Promise<string> {
+        return this.initClient().then((client) => {
+            return client.endSessionUrl(params);
+        });
     }
 }
 
