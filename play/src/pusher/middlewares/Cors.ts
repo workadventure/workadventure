@@ -8,7 +8,12 @@ export function cors(req: Request, res: Response, next: MiddlewareNext): Middlew
             "Origin, X-Requested-With, Content-Type, Accept, Authorization, Pragma, Cache-Control"
         );
         res.setHeader("access-control-allow-methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
-        if (ALLOWED_CORS_ORIGIN === "*") {
+        if (
+            ALLOWED_CORS_ORIGIN == undefined ||
+            ALLOWED_CORS_ORIGIN == "null" ||
+            ALLOWED_CORS_ORIGIN == "undefined" ||
+            ALLOWED_CORS_ORIGIN == ""
+        ) {
             res.setHeader("access-control-allow-origin", req.header("Origin"));
         } else {
             res.setHeader("access-control-allow-origin", ALLOWED_CORS_ORIGIN);
