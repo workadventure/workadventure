@@ -25,7 +25,26 @@ class OpenIDClient {
 
     private initClient(): Promise<Client> {
         if (!this.issuerPromise) {
-            this.issuerPromise = Issuer.discover(OPID_CLIENT_ISSUER)
+            const issuer = new Issuer({
+                issuer: OPID_CLIENT_ISSUER,
+                authorization_endpoint: OPID_CLIENT_ISSUER + "/oauth/authorize",
+                token_endpoint: OPID_CLIENT_ISSUER + "/oauth/token",
+                userinfo_endpoint: OPID_CLIENT_ISSUER + "/oauth/userinfo",
+                jwks_uri: OPID_CLIENT_ISSUER + "/oauth/jwks",
+                //token_endpoint_auth_signing_alg_values_supported: ["HS256"],
+                //id_token_signed_response_alg: "HS256",
+            });
+
+            this.issuerPromise = Promise.resolve(
+                new issuer.Client({
+                    client_id: OPID_CLIENT_ID,
+                    client_secret: OPID_CLIENT_SECRET,
+                    redirect_uris: [OPID_CLIENT_REDIRECT_URL],
+                    response_types: ["code"],
+                })
+            );
+
+            /*this.issuerPromise = Issuer.discover(OPID_CLIENT_ISSUER)
                 .then((issuer) => {
                     return new issuer.Client({
                         client_id: OPID_CLIENT_ID,
@@ -53,7 +72,7 @@ class OpenIDClient {
                             throw e;
                         });
                     return this.issuerPromise;
-                });
+                });*/
         }
         return this.issuerPromise;
     }
