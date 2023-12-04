@@ -10,6 +10,7 @@ const authenticator: AuthenticatorInterface = (apiKey, room) => {
             return;
         }
 
+        // FIXME: change this to use FRONT_URL instead of PUSHER_URL
         if (PUSHER_URL !== "/" && !room.startsWith(PUSHER_URL)) {
             reject(new GuardError(Status.PERMISSION_DENIED, "You cannot interact with this room!"));
             return;
