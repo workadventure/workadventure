@@ -57,7 +57,7 @@ services:
             ENABLE_MAP_EDITOR: "$ENABLE_MAP_EDITOR"
             HOST: "0.0.0.0"
             NODE_ENV: development
-            ALLOWED_CORS_ORIGIN: "*"
+            ALLOWED_CORS_ORIGIN: "http://play.workadventure.localhost"
             VITE_URL: "http://front.workadventure.localhost"
             PUSHER_URL: http://play.workadventure.localhost
             FRONT_URL: http://play.workadventure.localhost
