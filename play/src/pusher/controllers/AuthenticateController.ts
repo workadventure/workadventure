@@ -525,6 +525,9 @@ export class AuthenticateController extends BaseHttpController {
             if (authTokenData.accessToken == undefined) {
                 throw Error("Cannot log out, no access token found.");
             }
+            // TODO: change that to use end session endpoint
+            // Use post logout redirect and id token hint to redirect on the logut session endpoint of the OpenId provider
+            // https://openid.net/specs/openid-connect-session-1_0.html#RPLogout
             await openIDClient.logoutUser(authTokenData.accessToken);
 
             res.atomic(() => {
