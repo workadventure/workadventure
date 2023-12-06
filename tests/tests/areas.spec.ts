@@ -3,6 +3,7 @@ import {} from "../../play/packages/iframe-api-typings/iframe_api";
 import {expect, test} from '@playwright/test';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
+import {RENDERER_MODE} from "./utils/environment";
 
 test.describe('Areas', () => {
     test('can edit Tiled area from scripting API', async ({ page, browser }) => {
@@ -12,7 +13,7 @@ test.describe('Areas', () => {
         // We check the silent zone applies to the Woka.
 
         await page.goto(
-            'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Areas/AreaFromTiledMap/map.json'
+            `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Areas/AreaFromTiledMap/map.json?phaserMode=${RENDERER_MODE}`
         );
         await login(page, 'Alice');
 

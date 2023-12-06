@@ -12,6 +12,7 @@ import {
 import {getBackDump, getPusherDump, getPusherRooms} from './utils/debug';
 import {assertLogMessage, startRecordLogs} from './utils/log';
 import { login } from './utils/roles';
+import {RENDERER_MODE} from "./utils/environment";
 
 test.setTimeout(360000);
 test.describe('Variables', () => {
@@ -22,7 +23,7 @@ test.describe('Variables', () => {
 
     await Promise.all([rebootBack(), rebootPlay()]);
 
-    await gotoWait200(page, 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json?somerandomparam=1');
+    await gotoWait200(page, `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json?somerandomparam=1&phaserMode=${RENDERER_MODE}`);
 
     await login(page);
 
@@ -35,7 +36,7 @@ test.describe('Variables', () => {
     await textField.press('Tab');
 
     await page.goto(
-      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json'
+      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json?phaserMode=${RENDERER_MODE}`
     );
     await expect(textField).toHaveValue('new value');
 
@@ -80,7 +81,7 @@ test.describe('Variables', () => {
 
     await gotoWait200(
         page,
-      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json'
+      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json?phaserMode=${RENDERER_MODE}`
     );
     // Redis will reconnect automatically and will store the variable on reconnect!
     // So we should see the new value.
@@ -93,7 +94,7 @@ test.describe('Variables', () => {
 
     await gotoWait200(
         page,
-      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json'
+      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json?phaserMode=${RENDERER_MODE}`
     );
     await expect(textField).toHaveValue('value set while Redis stopped', {
       timeout: 60000,
@@ -103,7 +104,7 @@ test.describe('Variables', () => {
     await textField.press('Tab');
 
     await page.goto(
-      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json'
+      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json?phaserMode=${RENDERER_MODE}`
     );
     // Redis will reconnect automatically and will store the variable on reconnect!
     // So we should see the new value.
@@ -112,7 +113,7 @@ test.describe('Variables', () => {
     // Now, let's try to kill / reboot the back
     await rebootPlay();
 
-    await gotoWait200(page, 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json');
+    await gotoWait200(page, `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json?phaserMode=${RENDERER_MODE}`);
 
     await expect(textField).toHaveValue('value set after back restart', {
       timeout: 60000,
@@ -122,7 +123,7 @@ test.describe('Variables', () => {
     await textField.press('Tab');
 
     await page.goto(
-      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json'
+      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json?phaserMode=${RENDERER_MODE}`
     );
     // Redis will reconnect automatically and will store the variable on reconnect!
     // So we should see the new value.
@@ -142,7 +143,7 @@ test.describe('Variables', () => {
     );
 
     await page.goto(
-      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'
+      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page, 'Alice', 2);
@@ -163,7 +164,7 @@ test.describe('Variables', () => {
     startRecordLogs(page2);
 
     await page2.goto(
-      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'
+      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page2, 'Chapelier', 3);

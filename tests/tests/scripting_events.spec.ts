@@ -1,12 +1,13 @@
 import {expect, test} from '@playwright/test';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
+import {RENDERER_MODE} from "./utils/environment";
 
 test.describe('Scripting API Events', () => {
     test('test events', async ({ page, browser, request }) => {
         // Go to 
         await page.goto(
-            'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+            `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
         );
         await login(page, "Alice");
 
@@ -47,7 +48,7 @@ test.describe('Scripting API Events', () => {
         const page2 = await newBrowser.newPage();
 
         await page2.goto(
-            'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+            `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
         );
 
         await login(page2, 'Bob');
