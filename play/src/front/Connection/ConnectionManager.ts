@@ -75,17 +75,23 @@ class ConnectionManager {
     /**
      * Logout
      */
-    public async logout() {
+    public logout() {
+        // save the current token to use it in the redirect logout url
+        const tokenTmp = localUserStore.getAuthToken();
+        //remove token in localstorage
+        localUserStore.setAuthToken(null);
         //user logout, set connected store for menu at false
         userIsConnected.set(false);
-
-        //Logout user in pusher and hydra
-        const token = localUserStore.getAuthToken();
-        await axiosToPusher.get("logout-callback", { params: { token } }).then((res) => res.data);
-        localUserStore.setAuthToken(null);
-
-        //Go on root page
-        window.location.assign(this._currentRoom?.opidLogoutRedirectUrl ?? "/");
+        // check if we are in a room
+        if (!ENABLE_OPENID || !this._currentRoom) {
+            window.location.assign("/login");
+            return;
+        }
+        // redirect to logout url
+        const redirectUrl = new URL(`${this._currentRoom.opidLogoutRedirectUrl}`, window.location.href);
+        redirectUrl.searchParams.append("playUri", this._currentRoom.key);
+        redirectUrl.searchParams.append("token", tokenTmp ?? "");
+        window.location.assign(redirectUrl);
     }
 
     /**
@@ -458,7 +464,7 @@ class ConnectionManager {
         return this.connexionType;
     }
 
-    async checkAuthUserConnexion(token: string) {
+    private async checkAuthUserConnexion(token: string) {
         //set connected store for menu at false
         userIsConnected.set(false);
 
