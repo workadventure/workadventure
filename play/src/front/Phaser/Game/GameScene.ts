@@ -1542,7 +1542,10 @@ export class GameScene extends DirtyScene {
         context.fillStyle = "#ffffff44";
         context.stroke();
         context.fill();
-        this.circleTexture.refresh();
+        // Phaser crashes in headless mode if we try to refresh the texture
+        if (this.game.renderer) {
+            this.circleTexture.refresh();
+        }
 
         //create red circle canvas use to create sprite
         texture = this.textures.createCanvas("circleSprite-red", 96, 96);
@@ -1559,7 +1562,10 @@ export class GameScene extends DirtyScene {
         contextRed.fillStyle = "#ff000044";
         contextRed.stroke();
         contextRed.fill();
-        this.circleRedTexture.refresh();
+        // Phaser crashes in headless mode if we try to refresh the texture
+        if (this.game.renderer) {
+            this.circleRedTexture.refresh();
+        }
     }
 
     private listenToIframeEvents(): void {
