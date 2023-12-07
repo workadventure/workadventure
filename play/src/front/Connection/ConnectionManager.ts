@@ -5,7 +5,6 @@ import {
     ErrorApiRetryData,
     ErrorApiUnauthorizedData,
     isRegisterData,
-    MeRequest,
     MeResponse,
 } from "@workadventure/messages";
 import { isAxiosError } from "axios";
@@ -482,7 +481,7 @@ class ConnectionManager {
                     playUri,
                     localStorageCharacterTextureIds: localUserStore.getCharacterTextures() ?? undefined,
                     localStorageCompanionTextureId: localUserStore.getCompanionTextureId() ?? undefined,
-                } satisfies MeRequest,
+                },
             })
             .then((res) => {
                 return res.data;

@@ -3,7 +3,7 @@ import {z} from "zod";
 export const MeRequest = z.object({
     token: z.string(),
     playUri: z.string(),
-    localStorageCharacterTextureIds: z.array(z.string()).optional(),
+    "localStorageCharacterTextureIds[]": z.union([z.string(), z.array(z.string())]).optional(),
     localStorageCompanionTextureId: z.string().optional(),
 });
 
