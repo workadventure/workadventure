@@ -66,6 +66,7 @@ class ConnectionManager {
             loginSceneVisibleIframeStore.set(false);
             return null;
         }
+        analyticsClient.loggedWithSso();
         const redirectUrl = new URL(`${this._currentRoom.iframeAuthentication}`, window.location.href);
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
         return redirectUrl;
@@ -266,7 +267,6 @@ class ConnectionManager {
                             };
                         }
                     }
-                    analyticsClient.loggedWithSso();
                     if (response.status === "ok") {
                         if (response.isCharacterTexturesValid === false) {
                             nextScene = "selectCharacterScene";
