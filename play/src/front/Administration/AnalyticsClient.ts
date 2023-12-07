@@ -504,7 +504,12 @@ class AnalyticsClient {
     addMapEditorProperty(type: string, propertyName: string): void {
         this.posthogPromise
             ?.then((posthog) => {
-                posthog.capture(`wa_mapeditor_${type}_add_${propertyName}_property`);
+                // 8 decembre 2023: this event is not used anymore
+                // posthog.capture(`wa_map-editor_${type}_add_${propertyName}_property`);
+                posthog.capture(`wa_mapeditor_add_property`, {
+                    name: propertyName,
+                    type,
+                });
             })
             .catch((e) => console.error(e));
     }
@@ -512,7 +517,12 @@ class AnalyticsClient {
     removeMapEditorProperty(type: string, propertyName: string): void {
         this.posthogPromise
             ?.then((posthog) => {
-                posthog.capture(`wa_map-editor_${type}_remove_${propertyName}_property`);
+                // 8 decembre 2023: this event is not used anymore
+                // posthog.capture(`wa_map-editor_${type}_remove_${propertyName}_property`);
+                posthog.capture(`wa_map-editor_remove_property`, {
+                    name: propertyName,
+                    type,
+                });
             })
             .catch((e) => console.error(e));
     }
@@ -520,7 +530,44 @@ class AnalyticsClient {
     openMapEditorTool(toolName: string): void {
         this.posthogPromise
             ?.then((posthog) => {
-                posthog.capture(`wa_map-editor_open_${toolName}`);
+                // 8 decembre 2023: this event is not used anymore
+                // posthog.capture(`wa_map-editor_open_${toolName}`);
+                posthog.capture(`wa_map-editor_open_tool`, {
+                    name: toolName,
+                });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    clicPropertykMapEditor(name: string, style?: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_map-editor_click_property`, {
+                    name,
+                    style,
+                });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    enterAreaMapEditor(id: string, name: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_map-editor_enter_area`, {
+                    id,
+                    name,
+                });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    leaveAreaMapEditor(id: string, name: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_map-editor_leaver_area`, {
+                    id,
+                    name,
+                });
             })
             .catch((e) => console.error(e));
     }
