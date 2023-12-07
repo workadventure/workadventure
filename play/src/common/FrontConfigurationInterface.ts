@@ -3,6 +3,7 @@ import type { OpidWokaNamePolicy } from "@workadventure/messages";
 export interface FrontConfigurationInterface {
     DEBUG_MODE: boolean;
     PUSHER_URL: string;
+    FRONT_URL: string;
     ADMIN_URL: string | undefined;
     UPLOADER_URL: string;
     ICON_URL: string;
@@ -24,7 +25,6 @@ export interface FrontConfigurationInterface {
     DISABLE_ANONYMOUS: boolean;
     ENABLE_OPENID: boolean;
     OPID_PROFILE_SCREEN_PROVIDER: string | undefined;
-    OPID_LOGOUT_REDIRECT_URL: string | undefined;
     CHAT_URL: string | undefined;
     ENABLE_CHAT_UPLOAD: boolean;
     FALLBACK_LOCALE: string | undefined;

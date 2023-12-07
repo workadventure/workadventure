@@ -38,9 +38,10 @@ export const ADMIN_SOCKETS_TOKEN = env.ADMIN_SOCKETS_TOKEN;
 export const CPU_OVERHEAT_THRESHOLD = env.CPU_OVERHEAT_THRESHOLD;
 export const PUSHER_HTTP_PORT = env.PUSHER_HTTP_PORT;
 export const SOCKET_IDLE_TIMER = env.SOCKET_IDLE_TIMER; // maximum time (in second) without activity before a socket is closed. Should be greater than 60 seconds in order to cope for Chrome intensive throttling (https://developer.chrome.com/blog/timer-throttling-in-chrome-88/#intensive-throttling)
-export const VITE_URL = env.VITE_URL || "http://front.workadventure.localhost"; // Used only in development
 export const ALLOWED_CORS_ORIGIN = env.ALLOWED_CORS_ORIGIN; // Use "*" to allow any domain
 export const PUSHER_URL = env.PUSHER_URL || "";
+export const FRONT_URL = env.FRONT_URL || "";
+export const VITE_URL = env.VITE_URL || FRONT_URL; // Used only in development
 export const PUBLIC_MAP_STORAGE_URL = env.PUBLIC_MAP_STORAGE_URL || "";
 export const INTERNAL_MAP_STORAGE_URL = env.INTERNAL_MAP_STORAGE_URL;
 export const OPID_CLIENT_ID = env.OPID_CLIENT_ID || "";
@@ -50,6 +51,7 @@ if (OPID_CLIENT_ID && !PUSHER_URL) {
     throw new Error("Missing PUSHER_URL environment variable.");
 }
 export const OPID_CLIENT_REDIRECT_URL = PUSHER_URL + "/openid-callback";
+export const OPID_CLIENT_REDIRECT_LOGOUT_URL = PUSHER_URL + "/logout-callback";
 export const OPID_PROFILE_SCREEN_PROVIDER =
     env.OPID_PROFILE_SCREEN_PROVIDER || (ADMIN_URL ? ADMIN_URL + "/profile" : undefined);
 export const OPID_SCOPE = env.OPID_SCOPE || "openid email";
@@ -111,6 +113,7 @@ export const GOOGLE_DRIVE_PICKER_APP_ID = env.GOOGLE_DRIVE_PICKER_APP_ID;
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DEBUG_MODE: env.DEBUG_MODE,
     PUSHER_URL,
+    FRONT_URL,
     ADMIN_URL,
     UPLOADER_URL: env.UPLOADER_URL,
     ICON_URL: env.ICON_URL,
@@ -132,11 +135,10 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DISABLE_ANONYMOUS,
     ENABLE_OPENID: !!env.OPID_CLIENT_ID,
     OPID_PROFILE_SCREEN_PROVIDER: env.OPID_PROFILE_SCREEN_PROVIDER,
-    OPID_LOGOUT_REDIRECT_URL: env.OPID_LOGOUT_REDIRECT_URL,
+    OPID_WOKA_NAME_POLICY,
     CHAT_URL: env.CHAT_URL,
     ENABLE_CHAT_UPLOAD,
     FALLBACK_LOCALE,
-    OPID_WOKA_NAME_POLICY,
     ENABLE_REPORT_ISSUES_MENU: env.ENABLE_REPORT_ISSUES_MENU,
     REPORT_ISSUES_URL: env.REPORT_ISSUES_URL,
     SENTRY_DSN_FRONT: env.SENTRY_DSN_FRONT,

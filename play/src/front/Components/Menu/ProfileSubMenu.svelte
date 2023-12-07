@@ -48,7 +48,7 @@
         gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
     }
 
-    async function logOut() {
+    function logOut() {
         disableMenuStores();
         return connectionManager.logout();
     }

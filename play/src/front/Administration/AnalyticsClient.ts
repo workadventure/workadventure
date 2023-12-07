@@ -133,14 +133,6 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    openRegister(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-opened-register");
-            })
-            .catch((e) => console.error(e));
-    }
-
     openInvite(): void {
         this.posthogPromise
             ?.then((posthog) => {

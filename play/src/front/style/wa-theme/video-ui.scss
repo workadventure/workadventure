@@ -1,8 +1,7 @@
-//* GENERAL */
+/* GENERAL */
 .media-box-camera-on-size {
     @apply tw-max-w-full;
 }
-
 .media-box-camera-on-position {
     @apply tw-absolute tw-justify-end tw-items-end;
 }
@@ -52,7 +51,7 @@
         .report-ban-container,
         .nametag-screenshare-container,
         .report-ban-screenshare-container {
-            @apply tw-h-full tw-w-full;
+            @apply tw-h-full tw-w-full tw-bottom-0;
         }
     }
 
@@ -149,12 +148,12 @@
     }
 }
 
-//* VOICE METER */
+/* VOICE METER */
 .voice-meter-bar {
     @apply tw-rounded tw-flex tw-w-1 md:tw-w-0.5 lg:tw-w-1 tw-drop-shadow-lg tw-transition-transform;
 }
 
-//* NAMETAGS */
+/* NAMETAGS */
 .nametag-text {
     @apply tw-font-semibold tw-text-xs tw-leading-[0.875rem] tw-not-italic tw-break-words;
 }
@@ -163,7 +162,7 @@
     @apply tw-rounded-tr-lg tw-rounded-bl tw-overflow-auto tw-max-w-full;
 }
 
-//* MY CAMERA */
+/* MY CAMERA */
 
 .my-webcam-container,
 .voice-meter-my-container {
@@ -171,10 +170,6 @@
 }
 
 /* MOZAIC MODE */
-
-#mozaic-layout {
-}
-
 .mozaic-full-width {
     @apply mozaic-full-size;
 
@@ -182,7 +177,7 @@
     .woka-webcam-container,
     .voice-meter-webcam-container,
     .report-ban-container {
-        @apply mozaic-full-size;
+        @apply mozaic-full-size tw-bottom-0;
     }
 
     .video-container {
@@ -201,7 +196,7 @@
     .woka-webcam-container,
     .voice-meter-webcam-container,
     .report-ban-container {
-        @apply mozaic-duo-size;
+        @apply mozaic-duo-size tw-bottom-0;
     }
 }
 
@@ -222,10 +217,11 @@
 
 
 
-
-////////////////////
+/*
+///////////////////
 // Loading.svelte //
 ////////////////////
+*/
 #loading {
     @apply tw-h-fit tw-flex tw-bg-warning tw-relative tw-rounded tw-py-2 tw-my-2;
     transition: all 0.2s ease;
@@ -240,10 +236,11 @@
 
 
 
-
+/*
 ////////////////////
 // UserTag.svelte //
 ////////////////////
+*/
 #tag {
     @apply tw-flex tw-rounded-sm tw-items-center tw-w-full tw-p-2 tw-h-fit;
     &.minimal {
@@ -262,10 +259,11 @@
 
 
 
-
+/*
 //////////////////////////
 // JitsiMediaBox.svelte //
 //////////////////////////
+*/
 .jitsi-video{
     @apply tw-flex tw-w-full tw-border-warning tw-border-2 tw-border-solid tw-relative tw-rounded;
     transition: all 0.2s ease;
