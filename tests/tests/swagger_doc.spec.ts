@@ -3,7 +3,7 @@ import {expect, test} from '@playwright/test';
 test.describe('Swagger documentation', () => {
     test('Admin -> External Admin', async ({page}) => {
         await page.goto(
-            'http://play.workadventure.localhost/swagger-ui/?urls.primaryName=Admin%20->%20External%20Admin'
+            `http://play.workadventure.localhost/swagger-ui/?urls.primaryName=Admin%20->%20External%20Admin`
         );
 
         // Test if the component "operations-ExternalAdminAPI-get_api_mapinformation" is visible
@@ -36,7 +36,7 @@ test.describe('Swagger documentation', () => {
 
     test('Pusher -> Admin', async ({page}) => {
         await page.goto(
-            'http://play.workadventure.localhost/swagger-ui/?urls.primaryName=Pusher%20->%20Admin'
+            `http://play.workadventure.localhost/swagger-ui/?urls.primaryName=Pusher%20->%20Admin`
         );
 
         // Test if the component "model-AdminApiData" is visible

@@ -3,6 +3,16 @@ export class TexturesHelper {
         scene: Phaser.Scene,
         ...sprites: { sprite: Phaser.GameObjects.Sprite; frame?: string | number }[]
     ): Promise<string> {
+        if (!scene.game.renderer) {
+            // In headless mode, we cannot take snapshots.
+            // TODO: send a correct PNG????
+            // TODO: send a correct PNG????
+            // TODO: send a correct PNG????
+            // TODO: send a correct PNG????
+            // TODO: send a correct PNG????
+            // TODO: send a correct PNG????
+            return "";
+        }
         const rt = scene.make.renderTexture({}, false);
         try {
             for (const { sprite, frame } of sprites) {
