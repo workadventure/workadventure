@@ -1,6 +1,8 @@
+/*
 ////////////////////////
 // ButtonState.svelte //
 ////////////////////////
+*/
 button.button-state {
   transition: all 0.2s ease-in-out;
   @apply tw-mx-auto;
@@ -10,8 +12,6 @@ button.button-state {
       filter: initial;
     }
   }
-  &.loading {
-  }
   &.success {
     @apply tw-bg-pop-green tw-text-white;
   }
@@ -20,10 +20,11 @@ button.button-state {
   }
 }
 
-
+/*
 ////////////////////////
 // InputSelect.svelte //
 ////////////////////////
+*/
 .input-select {
   @apply tw-mb-2;
   label {
@@ -41,10 +42,11 @@ button.button-state {
   }
 }
 
-
+/*
 //////////////////////
 // InputTags.svelte //
 //////////////////////
+*/
 .input-tags {
   @apply tw-mb-2;
   label {
@@ -75,10 +77,11 @@ button.button-state {
   padding: 0 5px !important;
 }
 
-
+/*
 //////////////////////
 // InputText.svelte //
 //////////////////////
+*/
 .input-text {
   @apply tw-mb-2;
   label {
