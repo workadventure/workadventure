@@ -168,7 +168,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
     public get onPlayerEnters(): Observable<RemotePlayerInterface> {
         if (!this.trackingPlayers) {
             throw new Error(
-                "Cannot call WA.players.onPlayerEnters(). You forgot to call WA.players.configureTracking() first."
+                "Cannot call WA.players.onPlayerEnters. You forgot to call WA.players.configureTracking() first."
             );
         }
         return newRemotePlayersStream;
@@ -190,7 +190,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
     public get onPlayerLeaves(): Observable<RemotePlayerInterface> {
         if (!this.trackingPlayers) {
             throw new Error(
-                "Cannot call WA.players.onPlayerLeaves(). You forgot to call WA.players.configureTracking() first."
+                "Cannot call WA.players.onPlayerLeaves. You forgot to call WA.players.configureTracking() first."
             );
         }
         return removeRemotePlayersStream;

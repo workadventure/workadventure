@@ -12,13 +12,13 @@
         window.addEventListener('load', () => {
 
             try {
-                WA.players.onPlayerEnters();
+                WA.players.onPlayerEnters;
             } catch (e) {
                 document.getElementById('onPlayerEntersException').innerText = "Yes";
             }
 
             try {
-                WA.players.onPlayerLeaves();
+                WA.players.onPlayerLeaves;
             } catch (e) {
                 document.getElementById('onPlayerLeavesException').innerText = "Yes";
             }
