@@ -52,7 +52,7 @@
         .report-ban-container,
         .nametag-screenshare-container,
         .report-ban-screenshare-container {
-            @apply tw-h-full tw-w-full;
+            @apply tw-h-full tw-w-full tw-bottom-0;
         }
     }
 
@@ -182,7 +182,7 @@
     .woka-webcam-container,
     .voice-meter-webcam-container,
     .report-ban-container {
-        @apply mozaic-full-size;
+        @apply mozaic-full-size tw-bottom-0;
     }
 
     .video-container {
@@ -201,7 +201,7 @@
     .woka-webcam-container,
     .voice-meter-webcam-container,
     .report-ban-container {
-        @apply mozaic-duo-size;
+        @apply mozaic-duo-size tw-bottom-0;
     }
 }
 

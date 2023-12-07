@@ -220,6 +220,7 @@
 <div
     class="video-container"
     class:video-off={!videoEnabled}
+    class:tw-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
     bind:this={videoContainer}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
@@ -251,6 +252,7 @@
             class:tw-w-0={!videoEnabled}
             class:object-contain={minimized || isHightlighted || aspectRatio < 1}
             class:tw-max-h-[230px]={videoEnabled && !isHightlighted}
+            class:tw-max-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
             class:tw-max-h-[80vh]={videoEnabled && isHightlighted}
             class:tw-h-full={videoEnabled}
             class:tw-rounded={videoEnabled}
