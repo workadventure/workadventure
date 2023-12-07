@@ -36,6 +36,7 @@ test.describe('Chat', () => {
     const ejabberd = await findContainer('ejabberd');
 
     await test.step('all tests of chat', async () => {
+      await Map.goToRoom(page, '#Out_LiveZone_a');
       await Chat.slideToUsers(page);
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
 
@@ -52,7 +53,9 @@ test.describe('Chat', () => {
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
         await hideNoCamera(page2);
       }
-      
+
+      await Map.goToRoom(page2, '#Out_LiveZone_b');
+
       await Menu.openChat(page2);
       await Chat.slideToUsers(page2);
       await Chat.checkNameInChat(page2, nickname, TIMEOUT_TO_GET_LIST);
