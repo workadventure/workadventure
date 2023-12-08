@@ -1,7 +1,9 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { SpeakerMegaphonePropertyData } from "@workadventure/map-editor";
+    import { getJitsiRoomId } from "@workadventure/shared-utils/src/Jitsi/slugify";
     import { LL } from "../../../../i18n/i18n-svelte";
+    import { connectionManager } from "../../../Connection/ConnectionManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: SpeakerMegaphonePropertyData;
@@ -28,14 +30,16 @@
     </span>
     <span slot="content">
         <div class="value-input">
-            <label for="tabLink">{$LL.mapEditor.properties.speakerMegaphoneProperties.id()}</label>
-            <input
-                id="tabLink"
-                class="!tw-bg-gray-200 !tw-text-gray-500 tw-cursor-not-allowed"
-                type="text"
-                value={property.id}
-                disabled
-            />
+            {#if connectionManager.currentRoom}
+                <label for="tabLink">{$LL.mapEditor.properties.speakerMegaphoneProperties.id()}</label>
+                <input
+                    id="tabLink"
+                    class="!tw-bg-gray-200 !tw-text-gray-500 tw-cursor-not-allowed"
+                    type="text"
+                    value={getJitsiRoomId(connectionManager.currentRoom?.href)}
+                    disabled
+                />
+            {/if}
         </div>
         <div class="value-input">
             <label for="tabLink">{$LL.mapEditor.properties.speakerMegaphoneProperties.nameLabel()}</label>
