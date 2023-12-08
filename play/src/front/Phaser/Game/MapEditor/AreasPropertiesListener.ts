@@ -540,28 +540,30 @@ export class AreasPropertiesListener {
 
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined && property.id !== undefined) {
-            const jitsiUniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
-            console.log("handleSpeakerMegaphonePropertyOnEnter => jitsiUniqRoomName : ", jitsiUniqRoomName);
-            currentLiveStreamingNameStore.set(jitsiUniqRoomName);
-            this.scene.broadcastService.joinSpace(jitsiUniqRoomName, false);
+            const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
+            // TODO remove this console.log after testing
+            console.info("handleSpeakerMegaphonePropertyOnEnter => uniqRoomName : ", uniqRoomName);
+            currentLiveStreamingNameStore.set(uniqRoomName);
+            this.scene.broadcastService.joinSpace(uniqRoomName, false);
             isSpeakerStore.set(true);
             //requestedMegaphoneStore.set(true);
             if (property.chatEnabled) {
-                this.handleJoinMucRoom(jitsiUniqRoomName, "live");
+                this.handleJoinMucRoom(uniqRoomName, "live");
             }
         }
     }
 
     private handleSpeakerMegaphonePropertyOnLeave(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined && property.id !== undefined) {
-            const jitsiUniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
-            console.log("handleSpeakerMegaphonePropertyOnEnter => jitsiUniqRoomName : ", jitsiUniqRoomName);
+            const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
+            // TODO remove this console.log after testing
+            console.info("handleSpeakerMegaphonePropertyOnEnter => uniqRoomName : ", uniqRoomName);
             currentLiveStreamingNameStore.set(undefined);
-            this.scene.broadcastService.leaveSpace(jitsiUniqRoomName);
+            this.scene.broadcastService.leaveSpace(uniqRoomName);
             //requestedMegaphoneStore.set(false);
             isSpeakerStore.set(false);
             if (property.chatEnabled) {
-                this.handleLeaveMucRoom(jitsiUniqRoomName);
+                this.handleLeaveMucRoom(uniqRoomName);
             }
         }
     }
@@ -573,11 +575,13 @@ export class AreasPropertiesListener {
                 property.speakerZoneName
             );
             if (speakerZoneName) {
-                console.log("handleListenerMegaphonePropertyOnEnter => speakerZoneName", speakerZoneName);
-                currentLiveStreamingNameStore.set(speakerZoneName);
-                this.scene.broadcastService.joinSpace(speakerZoneName, false);
+                const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
+                // TODO remove this console.log after testing
+                console.info("handleListenerMegaphonePropertyOnEnter => uniqRoomName", uniqRoomName);
+                currentLiveStreamingNameStore.set(uniqRoomName);
+                this.scene.broadcastService.joinSpace(uniqRoomName, false);
                 if (property.chatEnabled) {
-                    this.handleJoinMucRoom(speakerZoneName, "live");
+                    this.handleJoinMucRoom(uniqRoomName, "live");
                 }
             }
         }
@@ -590,11 +594,13 @@ export class AreasPropertiesListener {
                 property.speakerZoneName
             );
             if (speakerZoneName) {
-                console.log("handleListenerMegaphonePropertyOnEnter => speakerZoneName", speakerZoneName);
+                const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
+                // TODO remove this console.log after testing
+                console.info("handleListenerMegaphonePropertyOnLeave => uniqRoomName", uniqRoomName);
                 currentLiveStreamingNameStore.set(undefined);
-                this.scene.broadcastService.leaveSpace(speakerZoneName);
+                this.scene.broadcastService.leaveSpace(uniqRoomName);
                 if (property.chatEnabled) {
-                    this.handleLeaveMucRoom(speakerZoneName);
+                    this.handleLeaveMucRoom(uniqRoomName);
                 }
             }
         }

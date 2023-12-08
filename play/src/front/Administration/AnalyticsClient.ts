@@ -506,7 +506,7 @@ class AnalyticsClient {
             ?.then((posthog) => {
                 // 8 decembre 2023: this event is not used anymore
                 // posthog.capture(`wa_map-editor_${type}_add_${propertyName}_property`);
-                posthog.capture(`wa_mapeditor_add_property`, {
+                posthog.capture(`wa_map-editor_add_property`, {
                     name: propertyName,
                     type,
                 });
