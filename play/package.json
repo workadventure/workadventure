@@ -99,9 +99,6 @@
   "dependencies": {
     "@16bits/nes.css": "^2.3.2",
     "@anatine/zod-openapi": "^1.9.8",
-    "@azure/communication-calling": "^1.19.1-beta.2",
-    "@azure/communication-common": "^2.3.0",
-    "@azure/logger": "^1.0.4",
     "@fontsource/press-start-2p": "^4.3.0",
     "@fontsource/roboto": "^4.5.8",
     "@fontsource/roboto-condensed": "^4.5.9",
