@@ -540,7 +540,8 @@ export class AreasPropertiesListener {
 
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined && property.id !== undefined) {
-            const jitsiUniqRoomName = `${property.id}-${property.name}`;
+            const jitsiUniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
+            console.log("handleSpeakerMegaphonePropertyOnEnter => jitsiUniqRoomName : ", jitsiUniqRoomName);
             currentLiveStreamingNameStore.set(jitsiUniqRoomName);
             this.scene.broadcastService.joinSpace(jitsiUniqRoomName, false);
             isSpeakerStore.set(true);
@@ -553,7 +554,8 @@ export class AreasPropertiesListener {
 
     private handleSpeakerMegaphonePropertyOnLeave(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined && property.id !== undefined) {
-            const jitsiUniqRoomName = `${property.id}-${property.name}`;
+            const jitsiUniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
+            console.log("handleSpeakerMegaphonePropertyOnEnter => jitsiUniqRoomName : ", jitsiUniqRoomName);
             currentLiveStreamingNameStore.set(undefined);
             this.scene.broadcastService.leaveSpace(jitsiUniqRoomName);
             //requestedMegaphoneStore.set(false);
@@ -571,6 +573,7 @@ export class AreasPropertiesListener {
                 property.speakerZoneName
             );
             if (speakerZoneName) {
+                console.log("handleListenerMegaphonePropertyOnEnter => speakerZoneName", speakerZoneName);
                 currentLiveStreamingNameStore.set(speakerZoneName);
                 this.scene.broadcastService.joinSpace(speakerZoneName, false);
                 if (property.chatEnabled) {
@@ -587,6 +590,7 @@ export class AreasPropertiesListener {
                 property.speakerZoneName
             );
             if (speakerZoneName) {
+                console.log("handleListenerMegaphonePropertyOnEnter => speakerZoneName", speakerZoneName);
                 currentLiveStreamingNameStore.set(undefined);
                 this.scene.broadcastService.leaveSpace(speakerZoneName);
                 if (property.chatEnabled) {

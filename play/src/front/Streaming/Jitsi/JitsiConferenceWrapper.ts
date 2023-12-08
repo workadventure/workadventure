@@ -73,6 +73,7 @@ export class JitsiConferenceWrapper {
     }
 
     public static join(connection: JitsiConnection, jitsiRoomName: string): Promise<JitsiConferenceWrapper> {
+        console.log("JitsiConferenceWrapper => join", jitsiRoomName);
         return new Promise((resolve, reject) => {
             const JitsiMeetJS = window.JitsiMeetJS;
             const room = connection.initJitsiConference(jitsiRoomName, {});

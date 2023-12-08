@@ -16,4 +16,8 @@ function slugifyJitsiRoomName(roomName: string, roomId: string, noPrefix = false
     return slugify((noPrefix ? "" : shortHash(roomId) + "-") + roomName);
 }
 
-export { slugifyJitsiRoomName };
+function getJitsiRoomId(roomId: string) {
+    return shortHash(roomId);
+}
+
+export { slugifyJitsiRoomName, getJitsiRoomId };
