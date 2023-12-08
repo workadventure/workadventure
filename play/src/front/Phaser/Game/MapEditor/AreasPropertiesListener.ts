@@ -539,25 +539,27 @@ export class AreasPropertiesListener {
     }
 
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
-        if (property.name !== undefined) {
-            currentLiveStreamingNameStore.set(property.name);
-            this.scene.broadcastService.joinSpace(property.name, false);
+        if (property.name !== undefined && property.id !== undefined) {
+            const jitsiUniqRoomName = `${property.id}-${property.name}`;
+            currentLiveStreamingNameStore.set(jitsiUniqRoomName);
+            this.scene.broadcastService.joinSpace(jitsiUniqRoomName, false);
             isSpeakerStore.set(true);
             //requestedMegaphoneStore.set(true);
             if (property.chatEnabled) {
-                this.handleJoinMucRoom(property.name, "live");
+                this.handleJoinMucRoom(jitsiUniqRoomName, "live");
             }
         }
     }
 
     private handleSpeakerMegaphonePropertyOnLeave(property: SpeakerMegaphonePropertyData): void {
-        if (property.name !== undefined) {
+        if (property.name !== undefined && property.id !== undefined) {
+            const jitsiUniqRoomName = `${property.id}-${property.name}`;
             currentLiveStreamingNameStore.set(undefined);
-            this.scene.broadcastService.leaveSpace(property.name);
+            this.scene.broadcastService.leaveSpace(jitsiUniqRoomName);
             //requestedMegaphoneStore.set(false);
             isSpeakerStore.set(false);
             if (property.chatEnabled) {
-                this.handleLeaveMucRoom(property.name);
+                this.handleLeaveMucRoom(jitsiUniqRoomName);
             }
         }
     }
