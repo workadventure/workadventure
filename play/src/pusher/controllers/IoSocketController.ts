@@ -863,6 +863,14 @@ export class IoSocketController {
                             socketManager.forwardMessageToBack(socket, message.message);
                             break;
                         }
+                        case "kickParticipantIdSpaceMessage": {
+                            socketManager.handleKickParticipantIdSpaceMessage(
+                                socket,
+                                message.message.kickParticipantIdSpaceMessage.spaceName,
+                                message.message.kickParticipantIdSpaceMessage.value
+                            );
+                            break;
+                        }
                         default: {
                             const _exhaustiveCheck: never = message.message;
                         }

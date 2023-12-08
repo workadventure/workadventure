@@ -1591,4 +1591,39 @@ export class RoomConnection implements RoomConnection {
         }
         return value;
     }
+
+    public emitKickParticipantIdSpace(spaceName: string, participantId: string) {
+        this.send({
+            message: {
+                $case: "kickParticipantIdSpaceMessage",
+                kickParticipantIdSpaceMessage: {
+                    spaceName,
+                    value: participantId,
+                },
+            },
+        });
+    }
+
+    public emitMuteParticipantIdSpace(spaceName: string, participantId: string) {
+        this.send({
+            message: {
+                $case: "muteParticipantIdSpaceMessage",
+                muteParticipantIdSpaceMessage: {
+                    spaceName,
+                    value: participantId,
+                },
+            },
+        });
+    }
+
+    public emitMuteEveryBodySpace(spaceName: string) {
+        this.send({
+            message: {
+                $case: "muteEveryBodySpaceMessage",
+                muteEveryBodySpaceMessage: {
+                    spaceName,
+                },
+            },
+        });
+    }
 }

@@ -446,4 +446,20 @@ export class Space implements CustomJsonReplacerInterface {
         }
         return undefined;
     }
+
+    public notifyUserToKick(userId: number) {
+        const user = this.users.get(userId);
+        if (!user) return;
+        const kickUserMessage: PusherToBackSpaceMessage = {
+            message: {
+                $case: "kickUserMessage",
+                kickUserMessage: {
+                    spaceName: this.name,
+                    user,
+                    filterName: undefined,
+                },
+            },
+        };
+        this.spaceStreamToPusher.write(kickUserMessage);
+    }
 }

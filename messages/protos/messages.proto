@@ -248,6 +248,9 @@ message ClientToServerMessage {
     ScreenSharingStateMessage screenSharingStateMessage = 33;
     JitsiParticipantIdSpaceMessage  jitsiParticipantIdSpaceMessage = 34;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 35;
+    KickParticipantIdSpaceMessage kickParticipantIdSpaceMessage = 36;
+    MuteParticipantIdSpaceMessage muteParticipantIdSpaceMessage = 37;
+    MuteEveryBodySpaceMessage muteEveryBodySpaceMessage = 38;
   }
 }
 
@@ -429,6 +432,7 @@ message SubMessage {
     MegaphoneSettings megaphoneSettingsMessage = 19;
     ReceivedEventMessage receivedEventMessage = 20;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 21;
+    KickUserMessage kickUserMessage = 22;
   }
 }
 
@@ -622,6 +626,19 @@ message MegaphoneEnabledMessage {
   bool value = 1;
 }
 
+message KickParticipantIdSpaceMessage {
+  string spaceName = 1;
+  string value = 2;
+}
+
+message MuteParticipantIdSpaceMessage {
+  string spaceName = 1;
+  string value = 2;
+}
+
+message MuteEveryBodySpaceMessage {
+  string spaceName = 1;
+}
 
 /**
  * Messages going from back and pusher to the front
@@ -953,6 +970,7 @@ message PusherToBackSpaceMessage{
     RemoveSpaceUserMessage removeSpaceUserMessage = 5;
     PingMessage pongMessage = 6;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 7;
+    KickUserMessage kickUserMessage = 8;
   }
 }
 
@@ -963,6 +981,7 @@ message BackToPusherSpaceMessage{
     RemoveSpaceUserMessage removeSpaceUserMessage = 3;
     PingMessage pingMessage = 4;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 5;
+    KickUserMessage kickUserMessage = 6;
   }
 }
 
@@ -1032,6 +1051,11 @@ message RemoveSpaceUserMessage{
 message UpdateSpaceMetadataMessage{
   string spaceName = 1;
   string metadata = 2;
+  google.protobuf.StringValue filterName = 3;
+}
+message KickUserMessage{
+  string spaceName = 1;
+  SpaceUser user = 2;
   google.protobuf.StringValue filterName = 3;
 }
 

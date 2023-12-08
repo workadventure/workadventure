@@ -1324,6 +1324,12 @@ export class SocketManager implements ZoneEventListener {
                 }
             });
     }
+
+    handleKickParticipantIdSpaceMessage(client: Socket, spaceName: string, participantId: string) {
+        const socketData = client.getUserData();
+        const space = socketData.spaces.find((space) => space.name === spaceName);
+        if (!space) return;
+    }
 }
 
 // Verify that the domain of the url in parameter is in the white list of embeddable domains defined in the .env file (EMBEDDED_DOMAINS_WHITELIST)
