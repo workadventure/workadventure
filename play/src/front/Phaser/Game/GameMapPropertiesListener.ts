@@ -348,7 +348,7 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.TEAMS_ROOM, (newValue, oldValue, allProps) => {
-            console.log("Teams room property changed", newValue, oldValue, allProps)
+            console.log("Teams room property changed", newValue, oldValue, allProps);
             if (newValue !== undefined && oldValue === undefined) {
                 // Enter in a Teams room
                 callAgentManager.createMeeting();
