@@ -4,6 +4,7 @@ import {Value} from "../../libs/room-api-clients/room-api-client-js/src/compiled
 import { gotoWait200 } from './utils/containers';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
+import {RENDERER_MODE} from "./utils/environment";
 
 const apiKey = process.env.ROOM_API_SECRET_KEY;
 
@@ -15,7 +16,7 @@ const client = createRoomApiClient(apiKey, process.env.ROOM_API_HOSTNAME ?? "roo
 
 const protocol = process.env.ROOM_API_HOSTNAME && process.env.ROOM_API_HOSTNAME.startsWith("https") ? "https" : "http";
 
-const roomUrl = protocol + "://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json";
+const roomUrl = `${protocol}://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json`;
 const variableName = "textField";
 
 test.describe('Room API', async () => {
@@ -52,7 +53,7 @@ test.describe('Room API', async () => {
 
         const newValue =  "New Value - " + Math.random().toString(36).substring(2,7);
 
-        await gotoWait200(page, roomUrl);
+        await gotoWait200(page, roomUrl+"?phaserMode="+RENDERER_MODE);
         await login(page);
 
         const textField = page
@@ -92,7 +93,7 @@ test.describe('Room API', async () => {
             room: roomUrl,
         });
 
-        await gotoWait200(page, roomUrl);
+        await gotoWait200(page, roomUrl+"?phaserMode="+RENDERER_MODE);
         await login(page);
 
         const textField = page
@@ -137,7 +138,7 @@ test.describe('Room API', async () => {
             resolved = true;
         })
 
-        await page.goto(protocol + '://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json');
+        await page.goto(`${protocol}://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`);
         await login(page);
 
         await evaluateScript(page, async () => {
@@ -157,7 +158,7 @@ test.describe('Room API', async () => {
             return;
         }
 
-        await page.goto(protocol + '://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json');
+        await page.goto(`${protocol}://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`);
         await login(page);
 
         let gotExpectedBroadcastNotification = false;

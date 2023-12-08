@@ -1092,14 +1092,14 @@ export class GameScene extends DirtyScene {
 
                 // When connection is performed, let's connect SimplePeer
                 //eslint-disable-next-line @typescript-eslint/no-this-alias
-                const me = this;
+                /*const me = this;
                 this.events.once("render", () => {
-                    if (me.connection) {
-                        this.simplePeer = new SimplePeer(me.connection);
-                    } else {
+                    if (me.connection) {*/
+                this.simplePeer = new SimplePeer(this.connection);
+                /*} else {
                         console.warn("Connection to peers not started!");
                     }
-                });
+                });*/
 
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
@@ -1542,7 +1542,10 @@ export class GameScene extends DirtyScene {
         context.fillStyle = "#ffffff44";
         context.stroke();
         context.fill();
-        this.circleTexture.refresh();
+        // Phaser crashes in headless mode if we try to refresh the texture
+        if (this.game.renderer) {
+            this.circleTexture.refresh();
+        }
 
         //create red circle canvas use to create sprite
         texture = this.textures.createCanvas("circleSprite-red", 96, 96);
@@ -1559,7 +1562,10 @@ export class GameScene extends DirtyScene {
         contextRed.fillStyle = "#ff000044";
         contextRed.stroke();
         contextRed.fill();
-        this.circleRedTexture.refresh();
+        // Phaser crashes in headless mode if we try to refresh the texture
+        if (this.game.renderer) {
+            this.circleRedTexture.refresh();
+        }
     }
 
     private listenToIframeEvents(): void {

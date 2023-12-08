@@ -21,6 +21,7 @@ import { waScaleManager } from "./front/Phaser/Services/WaScaleManager";
 import { Game } from "./front/Phaser/Game/Game";
 import App from "./front/Components/App.svelte";
 import { HtmlUtils } from "./front/WebRtc/HtmlUtils";
+import { urlManager } from "./front/Url/UrlManager";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 
 if (SENTRY_DSN_FRONT != undefined) {
@@ -71,13 +72,22 @@ const fps: Phaser.Types.Core.FPSConfig = {
     smoothStep: false,
 };
 
-// the ?phaserMode=canvas parameter can be used to force Canvas usage
-const params = new URLSearchParams(document.location.search.substring(1));
-const phaserMode = params.get("phaserMode");
+// the ?phaserMode=canvas or #phaserMode=canvas parameter can be used to force Canvas usage
+function getRendererMode(): string | undefined {
+    const params = new URLSearchParams(document.location.search.substring(1));
+    let phaserMode: string | null | undefined = params.get("phaserMode");
+
+    if (phaserMode === null) {
+        phaserMode = urlManager.getHashParameter("phaserMode");
+    }
+
+    return phaserMode;
+}
+
 let mode: number;
-switch (phaserMode) {
+switch (getRendererMode()) {
     case "auto":
-    case null:
+    case undefined:
         mode = Phaser.AUTO;
         break;
     case "canvas":

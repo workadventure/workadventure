@@ -49,6 +49,9 @@ export class AreasPropertiesListener {
 
     public onEnterAreasHandler(areas: AreaData[]): void {
         for (const area of areas) {
+            // analytics event for area
+            analyticsClient.enterAreaMapEditor(area.id, area.name);
+
             if (!area.properties) {
                 continue;
             }
@@ -98,6 +101,9 @@ export class AreasPropertiesListener {
 
     public onLeaveAreasHandler(areas: AreaData[]): void {
         for (const area of areas) {
+            // analytics event for area
+            analyticsClient.leaveAreaMapEditor(area.id, area.name);
+
             if (!area.properties) {
                 continue;
             }

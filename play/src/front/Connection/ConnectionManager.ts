@@ -5,7 +5,6 @@ import {
     ErrorApiRetryData,
     ErrorApiUnauthorizedData,
     isRegisterData,
-    MeRequest,
     MeResponse,
 } from "@workadventure/messages";
 import { isAxiosError } from "axios";
@@ -67,6 +66,7 @@ class ConnectionManager {
             loginSceneVisibleIframeStore.set(false);
             return null;
         }
+        analyticsClient.loggedWithSso();
         const redirectUrl = new URL(`${this._currentRoom.iframeAuthentication}`, window.location.href);
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
         return redirectUrl;
@@ -267,7 +267,6 @@ class ConnectionManager {
                             };
                         }
                     }
-                    analyticsClient.loggedWithSso();
                     if (response.status === "ok") {
                         if (response.isCharacterTexturesValid === false) {
                             nextScene = "selectCharacterScene";
@@ -482,7 +481,7 @@ class ConnectionManager {
                     playUri,
                     localStorageCharacterTextureIds: localUserStore.getCharacterTextures() ?? undefined,
                     localStorageCompanionTextureId: localUserStore.getCompanionTextureId() ?? undefined,
-                } satisfies MeRequest,
+                },
             })
             .then((res) => {
                 return res.data;

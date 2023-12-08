@@ -25,6 +25,11 @@ export class Loader {
     }
 
     public addLoader(): void {
+        if (!this.scene.game.renderer) {
+            // No need to add a loader if the game is in headless mode
+            return;
+        }
+
         // If there is nothing to load, do not display the loader.
         if (this.scene.load.list.entries.length === 0) {
             return;

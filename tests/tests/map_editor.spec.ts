@@ -9,11 +9,12 @@ import Map from "./utils/map";
 import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import {resetWamMaps} from "./utils/map-editor/uploader";
 import {evaluateScript} from "./utils/scripting";
+import {RENDERER_MODE} from "./utils/environment";
 
 
 const protocol = process.env.MAP_STORAGE_PROTOCOL ?? 'http';
 
-const url = (end) => `${protocol}://play.workadventure.localhost/~/maps/${end}.wam`;
+const url = (end) => `${protocol}://play.workadventure.localhost/~/maps/${end}.wam?phaserMode=${RENDERER_MODE}`;
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({

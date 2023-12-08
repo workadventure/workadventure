@@ -135,7 +135,11 @@ export class AuthenticateController extends BaseHttpController {
             if (query === undefined) {
                 return;
             }
-            const { token, playUri, localStorageCharacterTextureIds, localStorageCompanionTextureId } = query;
+            const { token, playUri, localStorageCompanionTextureId } = query;
+            let localStorageCharacterTextureIds = query["localStorageCharacterTextureIds[]"];
+            if (typeof localStorageCharacterTextureIds === "string") {
+                localStorageCharacterTextureIds = [localStorageCharacterTextureIds];
+            }
             try {
                 const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token, false);
 

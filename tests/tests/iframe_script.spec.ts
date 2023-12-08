@@ -2,13 +2,14 @@ import { expect, test } from '@playwright/test';
 import { login } from './utils/roles';
 import Menu from "./utils/menu";
 import {evaluateScript} from "./utils/scripting";
+import {RENDERER_MODE} from "./utils/environment";
 
 test.describe('Iframe API', () => {
   test('can be called from an iframe loading a script', async ({
     page,
   }) => {
     await page.goto(
-      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Metadata/cowebsiteAllowApi.json'
+      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Metadata/cowebsiteAllowApi.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page);
@@ -21,7 +22,7 @@ test.describe('Iframe API', () => {
     page
   }) => {
     await page.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page);
@@ -82,7 +83,7 @@ test.describe('Iframe API', () => {
                                                           page
                                                         }) => {
     await page.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json#foo=bar'
+        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}#foo=bar`
     );
 
     await login(page);

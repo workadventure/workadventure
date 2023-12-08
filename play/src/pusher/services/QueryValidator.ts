@@ -29,6 +29,8 @@ export function validateQuery<T extends ZodObject<ZodRawShape>>(
     res: Response,
     validator: T
 ): z.infer<T> | undefined {
+    console.log("validateQuery", req.query);
+
     return validateObject(req.query_parameters, res, validator);
 }
 

@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test';
 import { login } from './utils/roles';
+import {RENDERER_MODE} from "./utils/environment";
 
 test.describe('Translation', () => {
   test('can be switched to French', async ({
     page,
   }) => {
     await page.goto(
-      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json'
+      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page);

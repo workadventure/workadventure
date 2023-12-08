@@ -6,11 +6,12 @@ import {getCoWebsiteIframe} from "./utils/iframe";
 import {assertLogMessage, startRecordLogs} from "./utils/log";
 import {evaluateScript} from "./utils/scripting";
 import {oidcLogin, oidcLogout} from "./utils/oidc";
+import {RENDERER_MODE} from "./utils/environment";
 
 test.describe('API WA.players', () => {
   test('enter leave events are received', async ({ page, browser }) => {
     await page.goto(
-      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/RemotePlayers/remote_players.json'
+      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/RemotePlayers/remote_players.json?phaserMode=${RENDERER_MODE}`
     );
     await login(page, 'Alice');
 
@@ -18,7 +19,7 @@ test.describe('API WA.players', () => {
     const page2 = await newBrowser.newPage();
 
     await page2.goto(
-      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/RemotePlayers/remote_players.json'
+      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/RemotePlayers/remote_players.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page2, 'Bob');
@@ -53,7 +54,7 @@ test.describe('API WA.players', () => {
 
   test('exception if we forget to call WA.players.configureTracking', async ({ page }) => {
     await page.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/RemotePlayers/remote_players_no_init.json'
+        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/RemotePlayers/remote_players_no_init.json?phaserMode=${RENDERER_MODE}`
     );
     await login(page);
 
@@ -63,7 +64,7 @@ test.describe('API WA.players', () => {
 
   test('Test that player B arriving after player A set his variables can read the variable.', async ({ page, browser }) => {
     await page.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page, "Alice");
@@ -82,7 +83,7 @@ test.describe('API WA.players', () => {
     const page2 = await newBrowser.newPage();
 
     await page2.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page2, 'Bob');
@@ -183,7 +184,7 @@ test.describe('API WA.players', () => {
     const page2 = await newBrowser.newPage();
 
     await page2.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page2, 'Bob');
@@ -276,7 +277,7 @@ test.describe('API WA.players', () => {
 
   test('Test variable persistence for anonymous users.', async ({ page, browser }) => {
     await page.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page, "Alice");
@@ -287,7 +288,7 @@ test.describe('API WA.players', () => {
   test('Test variable persistence for logged users. @oidc', async ({ page, browser }) => {
     test.setTimeout(120_000); // Fix Webkit that can take more than 60s
     await page.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page, "Alice");
@@ -301,7 +302,7 @@ test.describe('API WA.players', () => {
 
   test('Test variables are sent across frames.', async ({ page }) => {
     await page.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty_2_frames.json'
+        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty_2_frames.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page, "Alice");
@@ -337,7 +338,7 @@ test.describe('API WA.players', () => {
   // All players with same UUID should share the same state (public or private as long as it is persisted)
   test('Test that 2 players sharing the same UUID are notified of persisted private variable changes.', async ({ page, context }) => {
     await page.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page, "Alice");
@@ -351,7 +352,7 @@ test.describe('API WA.players', () => {
     const page2 = await context.newPage();
 
     await page2.goto(
-      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
     );
 
     /*console.log("PAGE 2 MY ID", await evaluateScript(page2, async () => {
@@ -414,7 +415,7 @@ test.describe('API WA.players', () => {
 
   test('Test that a variable changed can be listened to locally.', async ({ page, browser }) => {
     await page.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page, "Alice");
