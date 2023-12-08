@@ -24,6 +24,7 @@ import { liveStreamingEnabledStore } from "../../Stores/MegaphoneStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { DeviceBroadcastable } from "../Common/ConferenceWrapper";
+import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 import { JitsiLocalTracks } from "./JitsiLocalTracks";
 
@@ -281,6 +282,9 @@ export class JitsiConferenceWrapper {
                 () => debug(`${room.getPhoneNumber()} - ${room.getPhonePin()}`));*/
             jitsiConferenceWrapper.myParticipantId = room.myUserId();
             room.join("");
+
+            // send notification that the user joined the conference
+            notificationPlayingStore.playNotification(jitsiRoomName, "jitsi.png");
         });
     }
 

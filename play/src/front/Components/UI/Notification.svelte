@@ -15,9 +15,9 @@
 
 <div class="notification-playing tw-bg-dark-blue/95 tw-mt-1" transition:fly={{ x: 210, duration: 500 }}>
     <img
-        src={`/src/front/Components/UI/images/${notification.icon}`}
+        src={`/src/front/Components/images/${notification.icon}`}
         alt="Audio playing"
-        class="tw-bg-medium-purple tw-rounded-full"
+        class="tw-bg-medium-purple tw-rounded-full tw-h-14"
     />
     <p>{notification.text}</p>
 </div>
@@ -32,6 +32,7 @@
         //background-color: black;
         border-radius: 30px 0 0 30px;
         display: inline-flex;
+        align-items: center;
         z-index: 750;
 
         img {

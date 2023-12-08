@@ -14,12 +14,12 @@ function createNotificationStore() {
 
     return {
         subscribe,
-        playNotification: (test: string, icon: string) => {
+        playNotification: (text: string, icon: string) => {
             update((list) => {
                 list.add({
                     id: crypto.randomUUID(),
-                    text: test,
-                    icon: icon,
+                    text,
+                    icon,
                 });
                 return list;
             });
