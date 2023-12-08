@@ -56,6 +56,14 @@ const spaceManager = {
                         pusher.receivedPong();
                         break;
                     }
+                    case "pongMessage": {
+                        pusher.receivedPong();
+                        break;
+                    }
+                    case "kickUserMessage": {
+                        socketManager.handleKickUserMessage(pusher, message.message.kickUserMessage);
+                        break;
+                    }
                     default: {
                         const _exhaustiveCheck: never = message.message;
                     }

@@ -447,9 +447,7 @@ export class Space implements CustomJsonReplacerInterface {
         return undefined;
     }
 
-    public notifyUserToKick(userId: number) {
-        const user = this.users.get(userId);
-        if (!user) return;
+    public notifyUserToKick(user: SpaceUser) {
         const kickUserMessage: PusherToBackSpaceMessage = {
             message: {
                 $case: "kickUserMessage",

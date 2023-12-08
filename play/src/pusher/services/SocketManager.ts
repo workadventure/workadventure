@@ -443,6 +443,13 @@ export class SocketManager implements ZoneEventListener {
                                     }
                                     break;
                                 }
+                                case "kickUserMessage": {
+                                    const kickUserMessage = message.message.kickUserMessage;
+                                    const space = this.spaces.get(kickUserMessage.spaceName);
+                                    if (!space || !kickUserMessage.user) break;
+                                    space.notifyUserToKick(kickUserMessage.user);
+                                    break;
+                                }
                                 default: {
                                     const _exhaustiveCheck: never = message.message;
                                 }

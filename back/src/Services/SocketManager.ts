@@ -45,6 +45,7 @@ import {
     RemoveSpaceUserMessage,
     SendEventQuery,
     UpdateSpaceMetadataMessage,
+    KickUserMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -1459,6 +1460,21 @@ export class SocketManager {
         if (space) {
             space.updateMetadata(pusher, isMetadata.data);
         }
+    }
+
+    handleKickUserMessage(pusher: SpacesWatcher, kickUserMessage: KickUserMessage) {
+        const space = this.spaces.get(kickUserMessage.spaceName);
+        if (!space && !kickUserMessage.user) return;
+        pusher.write({
+            message: {
+                $case: "kickUserMessage",
+                kickUserMessage: {
+                    spaceName: kickUserMessage.spaceName,
+                    user: kickUserMessage.user,
+                    filterName: kickUserMessage.filterName,
+                },
+            },
+        });
     }
 
     private handleSendEventQuery(gameRoom: GameRoom, user: User, sendEventQuery: SendEventQuery) {
