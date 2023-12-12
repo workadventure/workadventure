@@ -24,10 +24,10 @@ class AdminWokaService implements WokaServiceInterface {
          *     parameters:
          *      - name: "roomUrl"
          *        in: "query"
-         *        description: "The slug of the room"
+         *        description: "The room URL"
          *        type: "string"
          *        required: true
-         *        example: "/@/teamSlug/worldSlug/roomSlug"
+         *        example: "https://play.workadventu.re/@/teamSlug/worldSlug/roomSlug"
          *      - name: "uuid"
          *        in: "query"
          *        description: "The uuid of the user \n It can be an uuid or an email"
