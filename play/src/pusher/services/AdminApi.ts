@@ -18,6 +18,7 @@ import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
 import * as Sentry from "@sentry/node";
 import { Deferred } from "ts-deferred";
+import { JsonWebTokenError } from "jsonwebtoken";
 import {
     ADMIN_API_RETRY_DELAY,
     ADMIN_API_TOKEN,
@@ -312,6 +313,9 @@ class AdminApi implements AdminInterface {
                 details: "The server answered with an invalid response. The administrator has been notified.",
             };
         } catch (err) {
+            if (err instanceof JsonWebTokenError) {
+                throw err;
+            }
             let message = "Unknown error";
             if (isAxiosError(err)) {
                 Sentry.captureException(

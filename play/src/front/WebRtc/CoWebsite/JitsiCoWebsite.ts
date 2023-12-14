@@ -289,11 +289,16 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         } else {
             console.log("CLOSING NOOOOT unload JitsiCoWebsite");
         }
-        this.loadPromise?.cancel();
-        this.destroy();
-        inExternalServiceStore.set(false);
+        try {
+            this.loadPromise?.cancel();
+            this.destroy();
+            inExternalServiceStore.set(false);
 
-        return super.unload();
+            return super.unload();
+        } catch (e) {
+            console.error("Cannot unload Jitsi co-website", e);
+            return Promise.reject(e);
+        }
     }
 
     public stop() {
