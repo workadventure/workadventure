@@ -22,6 +22,7 @@
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import BanReportBox from "./BanReportBox.svelte";
+    import ActionMediaBox from "./ActionMediaBox.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
     // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
@@ -233,6 +234,8 @@
     bind:this={videoContainer}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
+    <ActionMediaBox {embedScreen} trackStreamWraper={peer} />
+    
     <div
         style={videoEnabled
             ? ""

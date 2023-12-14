@@ -7,12 +7,12 @@
     import NoVideoSvg from "../images/no-video.svg";
     import PinSvg from "../images/pin.svg";
     import BubbleTalkPng from "../images/bubble-talk.png";
-    import { TackStreamWrapper } from "../../Streaming/Contract/TackStreamWrapper";
+    import { TackStreamWrapperInterface } from "../../Streaming/Contract/TackStreamWrapperInterface";
     import Tooltip from "../Util/Tooltip.svelte";
     import { LL } from "../../../i18n/i18n-svelte";
 
     export let embedScreen: EmbedScreen;
-    export let trackStreamWraper: TackStreamWrapper;
+    export let trackStreamWraper: TackStreamWrapperInterface;
 
     let moreActionOpened = writable<boolean>(false);
 
@@ -29,11 +29,15 @@
     }
 
     function muteVideoEveryBody() {
-        trackStreamWraper.muteAudioEveryBody();
+        trackStreamWraper.muteVideoEverybody();
     }
 
     function ban() {
         trackStreamWraper.ban();
+    }
+
+    function kickoff(){
+        trackStreamWraper.kickoff();
     }
 
     function pin() {
@@ -87,7 +91,7 @@
             on:click|preventDefault|stopPropagation={() => muteAudio()}
         >
             <img src={MicrophoneCloseSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
-            <Tooltip text={$LL.camera.menu.muteAudioEveryBody()} leftPosition="true" />
+            <Tooltip text={$LL.camera.menu.muteAudioUser()} leftPosition="true" />
         </button>
 
         <!-- Mute audio every body -->
@@ -96,7 +100,7 @@
             on:click|preventDefault|stopPropagation={() => muteAudioEveryBody()}
         >
             <img src={MicrophoneCloseSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
-            <Tooltip text={$LL.camera.menu.muteAudioUser()} leftPosition="true" />
+            <Tooltip text={$LL.camera.menu.muteAudioEveryBody()} leftPosition="true" />
         </button>
 
         <!-- Mute video -->
@@ -117,10 +121,10 @@
             <Tooltip text={$LL.camera.menu.muteVideoEveryBody()} leftPosition="true" />
         </button>
 
-        <!-- Ban user -->
+        <!-- Kickoff user -->
         <button
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
-            on:click|preventDefault|stopPropagation={() => ban()}
+            on:click|preventDefault|stopPropagation={() => kickoff()}
         >
             <img src={banUserSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
             <Tooltip text={$LL.camera.menu.banUser()} leftPosition="true" />

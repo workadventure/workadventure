@@ -199,6 +199,18 @@ const roomManager = {
                                 socketManager.handleAskPositionMessage(room, user, message.message.askPositionMessage);
                                 break;
                             }
+                            case "kickOffUserMessage": {
+                                socketManager.handleKickOffUserMessage(user, message.message.kickOffUserMessage.userId);
+                                break;
+                            }
+                            case "muteParticipantIdSpaceMessage": {
+                                socketManager.handerMuteParticipantIdSpaceMessage(user, message.message.muteParticipantIdSpaceMessage.value);
+                                break;
+                            }
+                            case "muteEveryBodySpaceMessage": {
+                                socketManager.handlerMuteEveryBodySpaceMessage(user);
+                                break;
+                            }
                             default: {
                                 const _exhaustiveCheck: never = message.message;
                             }

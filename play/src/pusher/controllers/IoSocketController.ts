@@ -859,16 +859,11 @@ export class IoSocketController {
                         case "lockGroupPromptMessage":
                         case "pingMessage":
                         case "editMapCommandMessage":
-                        case "askPositionMessage": {
+                        case "askPositionMessage": 
+                        case "kickOffUserMessage":
+                        case "muteParticipantIdSpaceMessage":
+                        case "muteEveryBodySpaceMessage": {
                             socketManager.forwardMessageToBack(socket, message.message);
-                            break;
-                        }
-                        case "kickParticipantIdSpaceMessage": {
-                            socketManager.handleKickParticipantIdSpaceMessage(
-                                socket,
-                                message.message.kickParticipantIdSpaceMessage.spaceName,
-                                message.message.kickParticipantIdSpaceMessage.value
-                            );
                             break;
                         }
                         default: {

@@ -1,0 +1,34 @@
+import { Readable } from "svelte/store";
+import { TrackInterface } from "./TrackInterface";
+
+export interface TackStreamWrapperInterface {
+    get uniqueId(): string;
+
+    get videoTrackStore(): Readable<TrackInterface | undefined>;
+
+    get audioTrackStore(): Readable<TrackInterface | undefined>;
+
+    getVideoTrack(): TrackInterface | undefined;
+
+    getAudioTrack(): TrackInterface | undefined;
+
+    setAudioTrack(audioTrack: TrackInterface | undefined): void;
+
+    setVideoTrack(videoTrack: TrackInterface | undefined): void;
+
+    isEmpty(): boolean;
+
+    isLocal(): boolean;
+
+    muteAudio(): void;
+
+    muteAudioEveryBody(): void;
+
+    muteVideo(): void;
+
+    muteVideoEverybody(): void;
+
+    ban(): void;
+
+    kickoff(): void;
+}

@@ -122,6 +122,10 @@ message LockGroupPromptMessage {
   bool lock = 1;
 }
 
+message KickOffUserMessage {
+  string userId = 1;
+}
+
 /*********** MAP EDITOR MESSAGES *************/
 
 message EditMapMessage {
@@ -248,7 +252,7 @@ message ClientToServerMessage {
     ScreenSharingStateMessage screenSharingStateMessage = 33;
     JitsiParticipantIdSpaceMessage  jitsiParticipantIdSpaceMessage = 34;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 35;
-    KickParticipantIdSpaceMessage kickParticipantIdSpaceMessage = 36;
+    KickOffUserMessage kickOffUserMessage = 36;
     MuteParticipantIdSpaceMessage muteParticipantIdSpaceMessage = 37;
     MuteEveryBodySpaceMessage muteEveryBodySpaceMessage = 38;
   }
@@ -626,11 +630,6 @@ message MegaphoneEnabledMessage {
   bool value = 1;
 }
 
-message KickParticipantIdSpaceMessage {
-  string spaceName = 1;
-  string value = 2;
-}
-
 message MuteParticipantIdSpaceMessage {
   string spaceName = 1;
   string value = 2;
@@ -638,6 +637,11 @@ message MuteParticipantIdSpaceMessage {
 
 message MuteEveryBodySpaceMessage {
   string spaceName = 1;
+}
+
+message MutedMessage {
+  string userUuid = 1;
+  string message = 2;
 }
 
 /**
@@ -672,6 +676,7 @@ message ServerToClientMessage {
     XmppSettingsMessage xmppSettingsMessage = 29;
     MoveToPositionMessage moveToPositionMessage = 31;
     InvalidCompanionTextureMessage invalidCompanionTextureMessage = 32;
+    MutedMessage mutedMessage = 33;
   }
 }
 
@@ -772,6 +777,9 @@ message PusherToBackMessage {
     AskPositionMessage askPositionMessage = 22;
     EditMapCommandMessage editMapCommandMessage = 23;
     PingMessage pingMessage = 24;
+    KickOffUserMessage kickOffUserMessage = 25;
+    MuteParticipantIdSpaceMessage muteParticipantIdSpaceMessage = 26;
+    MuteEveryBodySpaceMessage muteEveryBodySpaceMessage = 27;
   }
 }
 

@@ -2,16 +2,18 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
     import { LL } from "../../../i18n/i18n-svelte";
+    import { onMount } from "svelte";
+    import { GameScene } from "../../Phaser/Game/GameScene";
 
-    const gameScene = gameManager.getCurrentGameScene();
+    let gameScene: GameScene|undefined;
 
     function name(userId: number): string {
-        const user = gameScene.MapPlayersByKey.get(userId);
+        const user = gameScene?.MapPlayersByKey.get(userId);
         return user ? user.playerName : "";
     }
 
     function acceptFollowRequest() {
-        gameScene.CurrentPlayer.startFollowing();
+        gameScene?.CurrentPlayer.startFollowing();
     }
 
     function abortEnding() {
@@ -19,7 +21,7 @@
     }
 
     function reset() {
-        gameScene.connection?.emitFollowAbort();
+        gameScene?.connection?.emitFollowAbort();
         followUsersStore.stopFollowing();
     }
 
@@ -28,6 +30,10 @@
             reset();
         }
     }
+
+    onMount(() => {
+        gameScene = gameManager.getCurrentGameScene();
+    });
 </script>
 
 <svelte:window on:keydown={onKeyDown} />

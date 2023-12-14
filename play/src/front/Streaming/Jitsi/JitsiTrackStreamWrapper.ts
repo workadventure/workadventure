@@ -1,12 +1,12 @@
 import { get, Readable, writable, Writable } from "svelte/store";
 import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-import { TackStreamWrapper } from "../Contract/TackStreamWrapper";
+import { TackStreamWrapperInterface } from "../Contract/TackStreamWrapperInterface";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 import { jitsiConferencesStore } from "./JitsiConferencesStore";
 /**
  * An object that wraps a JitsiTrackWrapper and points only to "video/audio" or "desktop" track
  */
-export class JitsiTrackStreamWrapper implements TackStreamWrapper {
+export class JitsiTrackStreamWrapper implements TackStreamWrapperInterface {
     //public readonly uniqueId: string;
     private readonly _audioTrackStore: Writable<JitsiTrack | undefined> = writable<JitsiTrack | undefined>(undefined);
     private readonly _videoTrackStore: Writable<JitsiTrack | undefined> = writable<JitsiTrack | undefined>(undefined);
@@ -75,5 +75,9 @@ export class JitsiTrackStreamWrapper implements TackStreamWrapper {
         jitsiConferencesStore
             .get(this.jitsiTrackWrapper.jitsiRoomName)
             ?.kickParticipant(this.jitsiTrackWrapper.participantId);
+    }
+
+    public kickoff(): void{
+        console.info("Not implemented yet!");
     }
 }

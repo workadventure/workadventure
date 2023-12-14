@@ -89,6 +89,9 @@ import type {
     ViewportInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
+import { requestedMicrophoneState } from "../Stores/MediaStore";
+import { notificationPlayingStore } from "../Stores/NotificationStore";
+import LL from "../../i18n/i18n-svelte";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -656,6 +659,11 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "xmppSettingsMessage": {
                     this._xmppSettingsMessageStream.next(message.xmppSettingsMessage);
+                    break;
+                }
+                case "mutedMessage": {
+                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteMicrophone(), 'audio-mute.svg');
+                    requestedMicrophoneState.disableMicrophone();
                     break;
                 }
                 default: {
@@ -1592,18 +1600,6 @@ export class RoomConnection implements RoomConnection {
         return value;
     }
 
-    public emitKickParticipantIdSpace(spaceName: string, participantId: string) {
-        this.send({
-            message: {
-                $case: "kickParticipantIdSpaceMessage",
-                kickParticipantIdSpaceMessage: {
-                    spaceName,
-                    value: participantId,
-                },
-            },
-        });
-    }
-
     public emitMuteParticipantIdSpace(spaceName: string, participantId: string) {
         this.send({
             message: {
@@ -1617,11 +1613,23 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMuteEveryBodySpace(spaceName: string) {
+        console.log('RoomConnection => emitMuteEveryBodySpace');
         this.send({
             message: {
                 $case: "muteEveryBodySpaceMessage",
                 muteEveryBodySpaceMessage: {
                     spaceName,
+                },
+            },
+        });
+    }
+
+    public emitKickOffUserMessage(userId: string): void {
+        this.send({
+            message: {
+                $case: "kickOffUserMessage",
+                kickOffUserMessage: {
+                    userId,
                 },
             },
         });

@@ -167,8 +167,8 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         this.roomConnection.emitJitsiParticipantIdSpace(spaceName, participantId);
     }
 
-    emtKickParticipantIdSpace(spaceName: string, participantId: string): void {
-        this.roomConnection.emitKickParticipantIdSpace(spaceName, participantId);
+    emtKickParticipantIdSpace(participantId: string): void {
+        this.roomConnection.emitKickOffUserMessage(participantId);
     }
 
     emitKickParticipantIdSpace(spaceName: string, participantId: string): void {

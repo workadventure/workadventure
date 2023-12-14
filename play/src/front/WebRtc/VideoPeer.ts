@@ -20,16 +20,18 @@ import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
 import { MessageMessage } from "./P2PMessages/MessageMessage";
 import { MessageStatusMessage } from "./P2PMessages/MessageStatusMessage";
-import { P2PMessage } from "./P2PMessages/P2PMessage";
+import { KickOffMessage, P2PMessage } from "./P2PMessages/P2PMessage";
 import { BlockMessage } from "./P2PMessages/BlockMessage";
 import { UnblockMessage } from "./P2PMessages/UnblockMessage";
+import { TackStreamWrapperInterface } from "../Streaming/Contract/TackStreamWrapperInterface";
+import { TrackInterface } from "../Streaming/Contract/TrackInterface";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
-export class VideoPeer extends Peer {
+export class VideoPeer extends Peer implements TackStreamWrapperInterface {
     public toClose = false;
     public _connected = false;
     public remoteStream!: MediaStream;
@@ -208,6 +210,15 @@ export class VideoPeer extends Peer {
                         this.toggleRemoteStream(true);
                         break;
                     }
+                    case "kickoff": {
+                        if(message.value !== this.userUuid) break;   
+                        this._statusStore.set("closed");
+                        this._connected = false;
+                        this.toClose = true;
+                        this._onFinish();
+                        this.destroy();
+                        break;
+                    }
                     default: {
                         const _exhaustiveCheck: never = message;
                     }
@@ -300,6 +311,7 @@ export class VideoPeer extends Peer {
     public destroy(): void {
         try {
             this._connected = false;
+            console.log('destroy => this.toClose', this.toClose, this.closing);
             if (!this.toClose || this.closing) {
                 return;
             }
@@ -336,5 +348,48 @@ export class VideoPeer extends Peer {
 
     get statusStore(): Readable<PeerStatus> {
         return this._statusStore;
+    }
+
+    get videoTrackStore(): Readable<TrackInterface | undefined> {
+        throw new Error("Method not implemented.");
+    }
+    get audioTrackStore(): Readable<TrackInterface | undefined> {
+        throw new Error("Method not implemented.");
+    }
+    getVideoTrack(): TrackInterface | undefined {
+        throw new Error("Method not implemented.");
+    }
+    getAudioTrack(): TrackInterface | undefined {
+        throw new Error("Method not implemented.");
+    }
+    setAudioTrack(jitsiTrack: TrackInterface | undefined): void {
+        throw new Error("Method not implemented.");
+    }
+    setVideoTrack(jitsiTrack: TrackInterface | undefined): void {
+        throw new Error("Method not implemented.");
+    }
+    isEmpty(): boolean {
+        throw new Error("Method not implemented.");
+    }
+    isLocal(): boolean {
+        throw new Error("Method not implemented.");
+    }
+    muteAudio(): void {
+        this.connection.emitMuteParticipantIdSpace('peer', this.userUuid);
+    }
+    muteAudioEveryBody(): void {
+        this.connection.emitMuteEveryBodySpace('peer');
+    }
+    muteVideo(): void {
+        throw new Error("Method not implemented.");
+    }
+    muteVideoEverybody(): void {
+        throw new Error("Method not implemented.");
+    }
+    ban(){
+        throw new Error("Method not implemented.");
+    }
+    kickoff(): void {
+        this.connection.emitKickOffUserMessage(this.userUuid);
     }
 }
