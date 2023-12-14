@@ -36,7 +36,7 @@ const mapEditor: BaseTranslation = {
             defaultButtonLabel: "Open Jitsi Room",
             audioMutedLabel: "Muted by default",
             moreOptionsLabel: "More Options",
-            trigger: "Interaction",
+            trigger: "Open trigger",
             triggerMessage: "Toast Message",
             triggerShowImmediately: "Show immediately on enter",
             triggerOnClick: "Start as minimized in bottom bar",
