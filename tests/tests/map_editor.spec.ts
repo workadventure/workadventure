@@ -111,10 +111,10 @@ test.describe('Map editor', () => {
     await Menu.openMapEditor(page);
     await MapEditor.openAreaEditor(page);
     await AreaEditor.drawArea(page, {x: 1*32*1.5, y: 5}, {x: 9*32*1.5, y: 4*32*1.5});
-    await AreaEditor.addProperty(page, 'Speaker zone for megaphone');
+    await AreaEditor.addProperty(page, 'Speaker zone');
     await AreaEditor.setSpeakerMegaphoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
     await AreaEditor.drawArea(page, {x: 1*32*1.5, y: 6*32*1.5}, {x: 9*32*1.5, y: 9*32*1.5});
-    await AreaEditor.addProperty(page, 'ListenerZone for megaphone');
+    await AreaEditor.addProperty(page, 'Attendees zone');
     await AreaEditor.setListenerZoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
     await Menu.closeMapEditor(page);
     await Map.teleportToPosition(page, 4*32, 2*32);
