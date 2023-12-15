@@ -6,7 +6,7 @@
     import logoImg from "../images/logo.png";
     import poweredByWorkAdventureImg from "../images/Powered_By_WorkAdventure_Big.png";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import LL, { locale } from "../../../i18n/i18n-svelte";
+    import { LL, locale } from "../../../i18n/i18n-svelte";
     import { NameNotValidError, NameTooLongError } from "../../Exception/NameError";
 
     export let game: Game;
@@ -40,7 +40,7 @@
     let legalString: string | undefined;
     if (legalStrings.length > 0) {
         if (Intl.ListFormat) {
-            const formatter = new Intl.ListFormat(locale as unknown as string, { style: "long", type: "conjunction" });
+            const formatter = new Intl.ListFormat($locale, { style: "long", type: "conjunction" });
             legalString = formatter.format(legalStrings);
         } else {
             // For old browsers
@@ -48,19 +48,20 @@
         }
     }
 
-    function submit() {
+    async function submit() {
         startValidating = true;
 
         let finalName = name.trim();
         if (finalName !== "") {
             try {
-                loginScene.login(finalName);
+                await loginScene.login(finalName);
             } catch (err) {
                 if (err instanceof NameTooLongError) {
                     errorName = $LL.login.input.name.tooLongError();
                 } else if (err instanceof NameNotValidError) {
                     errorName = $LL.login.input.name.notValidError();
                 } else {
+                    errorName = $LL.login.genericError();
                     throw err;
                 }
             }
@@ -71,6 +72,8 @@
         if (!gameManager.currentStartedRoom) return undefined;
         return gameManager.currentStartedRoom.backgroundColor;
     }
+
+    /* eslint-disable svelte/no-at-html-tags */
 </script>
 
 <form

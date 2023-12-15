@@ -4,16 +4,12 @@ import type { Request, Response } from "hyper-express";
 import type HyperExpress from "hyper-express";
 import { UpgradeFailedData } from "../controllers/IoSocketController";
 
-/**
- * Either validates the query and returns the parsed query data (according to the validator passed in parameter)
- * or fills the response with a HTTP 400 message and returns undefined.
- */
-export function validateQuery<T extends ZodObject<ZodRawShape>>(
-    req: Request,
+function validateObject<T extends ZodObject<ZodRawShape>>(
+    obj: unknown,
     res: Response,
     validator: T
 ): z.infer<T> | undefined {
-    const result = validator.safeParse(req.query_parameters);
+    const result = validator.safeParse(obj);
 
     if (result.success) {
         return result.data;
@@ -22,6 +18,32 @@ export function validateQuery<T extends ZodObject<ZodRawShape>>(
         res.status(400).json(messages);
         return undefined;
     }
+}
+
+/**
+ * Either validates the GET query and returns the parsed query data (according to the validator passed in parameter)
+ * or fills the response with a HTTP 400 message and returns undefined.
+ */
+export function validateQuery<T extends ZodObject<ZodRawShape>>(
+    req: Request,
+    res: Response,
+    validator: T
+): z.infer<T> | undefined {
+    console.log("validateQuery", req.query);
+
+    return validateObject(req.query_parameters, res, validator);
+}
+
+/**
+ * Either validates the POST query and returns the parsed query data (according to the validator passed in parameter)
+ * or fills the response with a HTTP 400 message and returns undefined.
+ */
+export async function validatePostQuery<T extends ZodObject<ZodRawShape>>(
+    req: Request,
+    res: Response,
+    validator: T
+): Promise<z.infer<T> | undefined> {
+    return validateObject(await req.json(), res, validator);
 }
 
 /**
@@ -35,7 +57,11 @@ export function validateWebsocketQuery<T extends ZodObject<ZodRawShape>>(
     validator: T
 ): z.infer<T> | undefined {
     const urlSearchParams = new URLSearchParams(req.getQuery());
-    const params = Object.fromEntries(urlSearchParams.entries());
+    const params: Record<string, string | string[]> = {};
+    for (const key of [...new Set(urlSearchParams.keys())]) {
+        const values = urlSearchParams.getAll(key);
+        params[key] = values.length > 1 ? values : values[0];
+    }
     const result = validator.safeParse(params);
 
     if (result.success) {
@@ -51,8 +77,8 @@ export function validateWebsocketQuery<T extends ZodObject<ZodRawShape>>(
             {
                 rejected: true,
                 reason: "error",
-                status: 400,
                 error: {
+                    status: "error",
                     type: "error",
                     title: "400 Bad Request",
                     subtitle: "Something wrong while connection!",

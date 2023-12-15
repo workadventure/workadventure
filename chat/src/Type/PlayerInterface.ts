@@ -1,15 +1,14 @@
 import { AvailabilityStatus } from "@workadventure/messages";
 
-export interface BodyResourceDescriptionInterface {
+export interface WokaTextureDescriptionInterface {
     id: string;
-    img: string;
-    level?: number;
+    url: string;
 }
 
 export interface PlayerInterface {
     userId: number;
     name: string;
-    characterLayers: BodyResourceDescriptionInterface[];
+    characterTextures: WokaTextureDescriptionInterface[];
     visitCardUrl: string | null;
     companion: string | null;
     userUuid: string;

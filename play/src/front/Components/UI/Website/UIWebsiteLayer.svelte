@@ -1,15 +1,16 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import type { UIWebsite } from "../../../Api/Events/Ui/UIWebsite";
+    import type { UIWebsiteEvent } from "../../../Api/Events/Ui/UIWebsiteEvent";
     import { iframeListener } from "../../../Api/IframeListener";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
 
-    export let uiWebsite: UIWebsite;
+    export let uiWebsite: UIWebsiteEvent;
     let main: HTMLDivElement;
     const iframe = document.createElement("iframe");
     iframe.id = `ui-website-${uiWebsite.id}`;
     iframe.tabIndex = -1;
     $: {
-        iframe.src = uiWebsite.url;
+        iframe.src = new URL(uiWebsite.url, gameManager.getCurrentGameScene().getMapUrl()).toString();
         iframe.title = uiWebsite.url;
         iframe.style.border = "0";
         iframe.allow = uiWebsite.allowPolicy ?? "";

@@ -2,8 +2,8 @@
 	import {Writable} from "svelte/store";
 	import {MatrixEvent} from "matrix-js-sdk";
 	import Event from "../Ui/Event.svelte";
-	import Message from "./Message.svelte";
 	import {chatConnectionManager} from "../../../Connection/ChatConnectionManager";
+	import Message from "./Message.svelte";
 
 	export let messages: Writable<MatrixEvent[]>;
 </script>

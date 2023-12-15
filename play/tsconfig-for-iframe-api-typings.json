@@ -5,7 +5,7 @@
         "outDir": "./packages/iframe-api-typings/",
         "declaration": true,
         "emitDeclarationOnly": true,
-        "types": ["phaser"]
+        "types": ["phaser", "node"]
     },
-    "include": ["src/iframe_api.ts"]
+    "include": ["src/iframe_api.ts"],
 }

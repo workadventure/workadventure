@@ -1,5 +1,5 @@
-import { AreaType, GameMapProperties } from "@workadventure/map-editor";
-import type { AreaChangeCallback, AreaData, GameMap } from "@workadventure/map-editor";
+import { AreaCoordinates, AreaDataProperties, AreaUpdateCallback, GameMapProperties } from "@workadventure/map-editor";
+import type { AreaChangeCallback, AreaData, AtLeast, GameMap } from "@workadventure/map-editor";
 import type {
     ITiledMap,
     ITiledMapLayer,
@@ -8,20 +8,40 @@ import type {
     ITiledMapTileLayer,
     Json,
 } from "@workadventure/tiled-map-type-guard";
-import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
-import { PathTileType } from "../../../Utils/PathfindingManager";
 import { MathUtils } from "@workadventure/math-utils";
+import { Deferred } from "ts-deferred";
+import { PathTileType } from "../../../Utils/PathfindingManager";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 import type { GameScene } from "../GameScene";
-import { EntitiesManager } from "./EntitiesManager";
 import { Entity } from "../../ECS/Entity";
-import { TexturesHelper } from "../../Helpers/TexturesHelper";
+import { ITiledPlace } from "../GameMapPropertiesListener";
+import { EntitiesManager } from "./EntitiesManager";
+import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
+
+export type DynamicArea = {
+    name: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    properties: { [key: string]: unknown };
+};
 
 export type LayerChangeCallback = (
     layersChangedByAction: Array<ITiledMapLayer>,
     allLayersOnNewPosition: Array<ITiledMapLayer>
+) => void;
+
+export type TiledAreaChangeCallback = (
+    areasChangedByAction: Array<ITiledMapObject>,
+    allAreasOnNewPosition: Array<ITiledMapObject>
+) => void;
+
+export type DynamicAreaChangeCallback = (
+    areasChangedByAction: Array<DynamicArea>,
+    allAreasOnNewPosition: Array<DynamicArea>
 ) => void;
 
 export type PropertyChangeCallback = (
@@ -55,6 +75,10 @@ export class GameMapFrontWrapper {
 
     public readonly phaserMap: Phaser.Tilemaps.Tilemap;
     public readonly phaserLayers: TilemapLayer[] = [];
+    /**
+     * Areas that we can do CRUD operations on via scripting API
+     */
+    public readonly dynamicAreas: Map<string, DynamicArea> = new Map<string, DynamicArea>();
 
     public collisionGrid: number[][];
     private entitiesCollisionLayer: Phaser.Tilemaps.TilemapLayer;
@@ -67,11 +91,25 @@ export class GameMapFrontWrapper {
     private enterLayerCallbacks = Array<LayerChangeCallback>();
     private leaveLayerCallbacks = Array<LayerChangeCallback>();
 
+    private enterTiledAreaCallbacks = Array<TiledAreaChangeCallback>();
+    private leaveTiledAreaCallbacks = Array<TiledAreaChangeCallback>();
+
+    private enterDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
+    private leaveDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
+
     /**
      * Firing on map change, containing newest collision grid array
      */
     private mapChangedSubject = new Subject<number[][]>();
-    private areaUpdatedSubject = new Subject<AreaData>();
+
+    /**
+     * HACK: We need to make sure we are using an existing Tile index in order to place it inside entitieCollisionLayer.
+     * This is needed since 3.60.0. For some reason, index of -1 value is no longer working properly with default collision system
+     * for tiles. To make it work as intended, we also need to make entitiesCollisionLayer invisible.
+     */
+    private readonly existingTileIndex;
+
+    public readonly initializedPromise = new Deferred<void>();
 
     constructor(
         scene: GameScene,
@@ -83,36 +121,96 @@ export class GameMapFrontWrapper {
         this.gameMap = gameMap;
         this.phaserMap = phaserMap;
 
+        this.existingTileIndex = terrains.length > 0 ? terrains[0].firstgid : -1;
+
+        this.entitiesManager = new EntitiesManager(this.scene, this);
+
+        this.gameMap.initialize();
+
+        this.updateCollisionGrid(undefined, false);
+
         let depth = -2;
         for (const layer of this.gameMap.flatLayers) {
             if (layer.type === "tilelayer") {
-                this.phaserLayers.push(
-                    phaserMap
-                        .createLayer(layer.name, terrains, (layer.x || 0) * 32, (layer.y || 0) * 32)
-                        .setDepth(depth)
-                        .setScrollFactor(layer.parallaxx ?? 1, layer.parallaxy ?? 1)
-                        .setAlpha(layer.opacity)
-                        .setVisible(layer.visible)
-                        .setSize(layer.width, layer.height)
+                const phaserLayer = phaserMap.createLayer(
+                    layer.name,
+                    terrains,
+                    (layer.x || 0) * 32,
+                    (layer.y || 0) * 32
                 );
+                if (phaserLayer) {
+                    this.phaserLayers.push(
+                        phaserLayer
+                            .setDepth(depth)
+                            .setScrollFactor(layer.parallaxx ?? 1, layer.parallaxy ?? 1)
+                            .setAlpha(layer.opacity)
+                            .setVisible(layer.visible)
+                            .setSize(layer.width, layer.height)
+                    );
+                }
             }
             if (layer.type === "objectgroup" && layer.name === "floorLayer") {
                 depth = DEPTH_OVERLAY_INDEX;
             }
         }
 
+        let nbUnnamedTileArea = 0;
+
+        // NOTE: We leave "zone" for legacy reasons
+        this.gameMap.tiledObjects
+            .filter((object) => ["zone", "area"].includes(object.class ?? ""))
+            .forEach((tiledArea: ITiledMapObject) => {
+                if (!tiledArea.name) {
+                    tiledArea.name = "unnamed_tiled_area_" + nbUnnamedTileArea;
+                    nbUnnamedTileArea++;
+                }
+
+                if (tiledArea.width === undefined || tiledArea.height === undefined) {
+                    console.warn("Areas must be square objects. Object " + tiledArea.name + " is not square.");
+                    return;
+                }
+                // In case an area already exists with the same name, we rename it to avoid conflicts
+                if (this.dynamicAreas.get(tiledArea.name)) {
+                    console.warn("There are several '" + tiledArea.name + "' areas existing in your Tiled map.");
+                    tiledArea.name = "unnamed_tiled_area_" + nbUnnamedTileArea;
+                    nbUnnamedTileArea++;
+                }
+                this.dynamicAreas.set(tiledArea.name, {
+                    name: tiledArea.name,
+                    width: tiledArea.width,
+                    height: tiledArea.height,
+                    x: tiledArea.x,
+                    y: tiledArea.y,
+                    properties: this.mapTiledPropertiesToDynamicAreaProperties(tiledArea.properties ?? []),
+                });
+            });
+
         this.collisionGrid = [];
-        this.entitiesCollisionLayer = phaserMap.createBlankLayer("__entitiesCollisionLayer", terrains);
-        this.entitiesCollisionLayer.setDepth(-2).setCollisionByProperty({ collides: true });
+        // NOTE: We cannot really proceed without it
+        const phaserBlankCollisionsLayer = phaserMap.createBlankLayer("__entitiesCollisionLayer", terrains);
+        if (!phaserBlankCollisionsLayer) {
+            throw new Error("Could not create collision layer");
+        }
+        this.entitiesCollisionLayer = phaserBlankCollisionsLayer;
+        this.entitiesCollisionLayer.setDepth(-2).setCollisionByProperty({ collides: true }).setVisible(false);
 
         this.phaserLayers.push(this.entitiesCollisionLayer);
+        this.updateCollisionGrid(undefined, false);
+    }
 
-        this.entitiesManager = new EntitiesManager(this.scene, this);
-        for (const entityData of this.gameMap.getGameMapEntities().getEntities()) {
-            this.entitiesManager.addEntity(entityData, TexturesHelper.ENTITIES_TEXTURES_DIRECTORY);
+    public initialize(): Promise<void> {
+        // Spawn first entities from WAM file on the map
+        const addEntityPromises: Promise<Entity>[] = [];
+        for (const [entityId, entityData] of Object.entries(this.gameMap.getGameMapEntities()?.getEntities() ?? {})) {
+            addEntityPromises.push(this.entitiesManager.addEntity(entityId, entityData, undefined, undefined, false));
+            // We need to AWAIT for all entities to be created.
+            // OTHERWISE, delete commands might pass FIRST!
         }
 
-        this.updateCollisionGrid(undefined, false);
+        return Promise.allSettled(addEntityPromises).then(() => {
+            this.updateCollisionGrid(this.entitiesCollisionLayer, false);
+            this.initializedPromise.resolve();
+        });
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {
@@ -147,13 +245,23 @@ export class GameMapFrontWrapper {
      * @param collisionGrid Collisions map representing tiles
      * @returns
      */
-    public modifyToCollisionsLayer(x: number, y: number, name: string, collisionGrid: number[][]): void {
+    public modifyToCollisionsLayer(
+        x: number,
+        y: number,
+        name: string,
+        collisionGrid: number[][],
+        withGridUpdate = true
+    ): void {
         const coords = this.entitiesCollisionLayer.worldToTileXY(x, y, true);
         for (let y = 0; y < collisionGrid.length; y += 1) {
             for (let x = 0; x < collisionGrid[y].length; x += 1) {
                 // add tiles
                 if (collisionGrid[y][x] === 1) {
-                    const tile = this.entitiesCollisionLayer.putTileAt(-1, coords.x + x, coords.y + y);
+                    const tile = this.entitiesCollisionLayer.putTileAt(
+                        this.existingTileIndex,
+                        coords.x + x,
+                        coords.y + y
+                    );
                     tile.properties["collides"] = true;
                     continue;
                 }
@@ -164,7 +272,9 @@ export class GameMapFrontWrapper {
             }
         }
         this.entitiesCollisionLayer.setCollisionByProperty({ collides: true });
-        this.updateCollisionGrid(this.entitiesCollisionLayer, false);
+        if (withGridUpdate) {
+            this.updateCollisionGrid(this.entitiesCollisionLayer, false);
+        }
     }
 
     public getPropertiesForIndex(index: number): Array<ITiledMapProperty> {
@@ -189,7 +299,7 @@ export class GameMapFrontWrapper {
         }
         // go through all tilemap layers on map. Maintain order
         for (const layer of this.phaserLayers) {
-            if (!layer.visible) {
+            if (!layer.visible && layer !== this.entitiesCollisionLayer) {
                 continue;
             }
             if (!useCache) {
@@ -238,8 +348,9 @@ export class GameMapFrontWrapper {
         }
         this.oldPosition = this.position;
         this.position = { x, y };
-        const areasChanged = this.gameMap.getGameMapAreas().triggerAreasChange(this.oldPosition, this.position);
-        if (areasChanged) {
+        const areasChanged = this.gameMap.getGameMapAreas()?.triggerAreasChange(this.oldPosition, this.position);
+        const dynamicAreasChanged = this.triggerDynamicAreasChange(this.oldPosition, this.position);
+        if (areasChanged || dynamicAreasChanged) {
             this.triggerAllProperties();
         }
 
@@ -297,6 +408,55 @@ export class GameMapFrontWrapper {
         this.leaveLayerCallbacks.push(callback);
     }
 
+    /**
+     * Registers a callback called when the user moves inside another Tiled Area.
+     */
+    public onEnterTiledArea(callback: TiledAreaChangeCallback) {
+        this.enterTiledAreaCallbacks.push(callback);
+    }
+
+    /**
+     * Registers a callback called when the user moves outside another Tiled Area.
+     */
+    public onLeaveTiledArea(callback: TiledAreaChangeCallback) {
+        this.leaveTiledAreaCallbacks.push(callback);
+    }
+
+    /**
+     * Registers a callback called when the user moves inside another Dynamic Area.
+     */
+    public onEnterDynamicArea(callback: DynamicAreaChangeCallback) {
+        this.enterDynamicAreaCallbacks.push(callback);
+    }
+
+    /**
+     * Registers a callback called when the user moves outside another Dynamic Area.
+     */
+    public onLeaveDynamicArea(callback: DynamicAreaChangeCallback) {
+        this.leaveDynamicAreaCallbacks.push(callback);
+    }
+
+    /**
+     * Registers a callback called when the user moves inside another area.
+     */
+    public onEnterArea(callback: AreaChangeCallback) {
+        this.gameMap.onEnterArea(callback);
+    }
+
+    /**
+     * Registers a callback called when an area has been updated.
+     */
+    public onUpdateArea(callback: AreaUpdateCallback) {
+        this.gameMap.onUpdateArea(callback);
+    }
+
+    /**
+     * Registers a callback called when the user moves outside another area.
+     */
+    public onLeaveArea(callback: AreaChangeCallback) {
+        this.gameMap.getGameMapAreas()?.onLeaveArea(callback);
+    }
+
     public findLayer(layerName: string): ITiledMapLayer | undefined {
         return this.gameMap.findLayer(layerName);
     }
@@ -349,7 +509,8 @@ export class GameMapFrontWrapper {
         width: number,
         height: number,
         collisionGrid?: number[][],
-        oldTopLeftPos?: { x: number; y: number }
+        oldTopLeftPos?: { x: number; y: number },
+        ignoreCollisionGrid?: boolean
     ): boolean {
         const isOutOfBounds = this.scene
             .getGameMapFrontWrapper()
@@ -391,7 +552,11 @@ export class GameMapFrontWrapper {
                 if (
                     !this.scene
                         .getGameMapFrontWrapper()
-                        .isSpaceAvailable(topLeftPos.x + x * tileDim.width, topLeftPos.y + y * tileDim.height)
+                        .isSpaceAvailable(
+                            topLeftPos.x + x * tileDim.width,
+                            topLeftPos.y + y * tileDim.height,
+                            ignoreCollisionGrid
+                        )
                 ) {
                     return false;
                 }
@@ -400,7 +565,7 @@ export class GameMapFrontWrapper {
         return true;
     }
 
-    public isSpaceAvailable(topLeftX: number, topLeftY: number): boolean {
+    public isSpaceAvailable(topLeftX: number, topLeftY: number, ignoreCollisionGrid?: boolean): boolean {
         if (this.collisionGrid.length === 0) {
             return false;
         }
@@ -429,7 +594,10 @@ export class GameMapFrontWrapper {
                 return false;
             }
         }
-        // TODO: Check if it's colliding with other players
+
+        if (ignoreCollisionGrid) {
+            return true;
+        }
 
         // Check if position is not colliding
         const height = this.collisionGrid.length;
@@ -516,110 +684,149 @@ export class GameMapFrontWrapper {
         return this.gameMap.getObjectWithName(name);
     }
 
-    /**
-     * Registers a callback called when the user moves inside another area.
-     */
-    public onEnterArea(callback: AreaChangeCallback) {
-        this.gameMap.onEnterArea(callback);
-    }
-
-    /**
-     * Registers a callback called when the user moves outside another area.
-     */
-    public onLeaveArea(callback: AreaChangeCallback) {
-        this.gameMap.getGameMapAreas().onLeaveArea(callback);
-    }
-
-    public setAreaProperty(
-        areaName: string,
-        areaType: AreaType,
-        propertyName: string,
-        propertyValue: string | number | boolean | undefined
-    ): void {
-        const area = this.getAreaByName(areaName, areaType);
+    public setDynamicAreaProperty(areaName: string, propertyName: string, propertyValue: unknown): void {
+        const area = this.dynamicAreas.get(areaName);
         if (area === undefined) {
-            console.warn('Could not find area "' + areaName + '" when calling setProperty');
+            console.warn('Could not find dynamic area "' + areaName + '" when calling setProperty');
             return;
         }
-        this.gameMap.setAreaProperty(area, propertyName, propertyValue);
+        area.properties[propertyName] = propertyValue;
         this.triggerAllProperties();
-        this.gameMap.getGameMapAreas().triggerAreasChange(this.oldPosition, this.position);
+        this.triggerDynamicAreasChange(this.oldPosition, this.position);
     }
 
-    public mapAreaToTiledObject(area: AreaData): ITiledMapObject {
-        return this.gameMap.getGameMapAreas().mapAreaDataToTiledObject(area);
+    public getAreas(): Map<string, AreaData> | undefined {
+        return this.gameMap.getGameMapAreas()?.getAreas();
     }
 
-    public getAreas(areaType: AreaType): AreaData[] {
-        return this.gameMap.getGameMapAreas().getAreas(areaType);
+    public addArea(area: AreaData): void {
+        this.gameMap.getGameMapAreas()?.addArea(area, true, this.position);
     }
 
-    public addArea(area: AreaData, type: AreaType): void {
-        this.gameMap.getGameMapAreas().addArea(area, type, this.position);
+    public addDynamicArea(area: DynamicArea): boolean {
+        if (this.dynamicAreas.has(area.name)) {
+            return false;
+        }
+        this.dynamicAreas.set(area.name, area);
+
+        // Trigger properties (in case the player is inside the new area)
+        this.triggerAllProperties();
+
+        return true;
     }
 
     public triggerSpecificAreaOnEnter(area: AreaData): void {
-        this.gameMap.getGameMapAreas().triggerSpecificAreaOnEnter(area);
+        this.gameMap.getGameMapAreas()?.triggerSpecificAreaOnEnter(area);
+    }
+
+    public triggerSpecificAreaOnUpdate(
+        area: AreaData,
+        oldProperties: AreaDataProperties | undefined,
+        newProperties: AreaDataProperties | undefined
+    ): void {
+        this.gameMap.getGameMapAreas()?.triggerSpecificAreaOnUpdate(area, oldProperties, newProperties);
     }
 
     public triggerSpecificAreaOnLeave(area: AreaData): void {
-        this.gameMap.getGameMapAreas().triggerSpecificAreaOnLeave(area);
+        this.gameMap.getGameMapAreas()?.triggerSpecificAreaOnLeave(area);
     }
 
-    public getAreaByName(name: string, type: AreaType): AreaData | undefined {
-        return this.gameMap.getGameMapAreas().getAreaByName(name, type);
+    public getAreaByName(name: string): AreaData | undefined {
+        return this.gameMap.getGameMapAreas()?.getAreaByName(name);
     }
 
-    public getArea(id: number, type: AreaType): AreaData | undefined {
-        return this.gameMap.getGameMapAreas().getArea(id, type);
+    public getArea(id: string): AreaData | undefined {
+        return this.gameMap.getGameMapAreas()?.getArea(id);
     }
 
-    public updateAreaByName(name: string, type: AreaType, config: Partial<AreaData>): void {
-        const gameMapAreas = this.gameMap.getGameMapAreas();
-        const area = gameMapAreas.updateAreaByName(name, type, config);
-        if (this.position && area && gameMapAreas.isPlayerInsideAreaByName(name, type, this.position)) {
-            gameMapAreas.triggerSpecificAreaOnEnter(area);
+    public getDynamicArea(name: string): DynamicArea | undefined {
+        return this.dynamicAreas.get(name);
+    }
+
+    public deleteDynamicArea(name: string): void {
+        this.dynamicAreas.delete(name);
+    }
+
+    public isPlayerInsideArea(id: string): boolean {
+        if (!this.position) {
+            return false;
         }
-        this.areaUpdatedSubject.next(gameMapAreas.getAreaByName(name, AreaType.Static));
+        return this.gameMap.getGameMapAreas()?.isPlayerInsideArea(id, this.position) || false;
     }
 
-    public updateAreaById(id: number, type: AreaType, config: Partial<AreaData>): void {
-        const gameMapAreas = this.gameMap.getGameMapAreas();
-        const area = gameMapAreas.updateAreaById(id, type, config);
-        if (this.position && area && gameMapAreas.isPlayerInsideArea(id, type, this.position)) {
+    private isPlayerInsideAreaByCoordinates(
+        areaCoordinates: { x: number; y: number; width: number; height: number },
+        playerPosition: { x: number; y: number }
+    ): boolean {
+        return (
+            playerPosition.x >= areaCoordinates.x &&
+            playerPosition.x <= areaCoordinates.x + areaCoordinates.width &&
+            playerPosition.y >= areaCoordinates.y &&
+            playerPosition.y <= areaCoordinates.y + areaCoordinates.height
+        );
+    }
+
+    public listenAreaCreation(areaData: AreaData): void {
+        if (this.position === undefined) {
+            return;
+        }
+
+        if (this.isPlayerInsideAreaByCoordinates(areaData, this.position)) {
+            this.triggerSpecificAreaOnEnter(areaData);
+        }
+    }
+
+    public listenAreaChanges(oldConfig: AtLeast<AreaData, "id">, newConfig: AtLeast<AreaData, "id">): void {
+        if (this.position === undefined) {
+            return;
+        }
+
+        const isOldCoordinates = AreaCoordinates.safeParse(oldConfig);
+        const isNewCoordinates = AreaCoordinates.safeParse(newConfig);
+
+        if (!isOldCoordinates.success) {
+            throw new Error("Something wrong happen! Area coordinates are not defined");
+        }
+
+        const area = this.gameMap.getGameMapAreas()?.getArea(oldConfig.id);
+
+        if (!area) {
+            console.error("Area with id " + oldConfig.id + " does not exist, this not supposed to happen");
+            return;
+        }
+
+        const oldAreaCoordinates = isOldCoordinates.data;
+        const newAreaCoordinates = isNewCoordinates.success ? isNewCoordinates.data : oldAreaCoordinates;
+
+        const isPlayerWasInsideArea = this.isPlayerInsideAreaByCoordinates(oldAreaCoordinates, this.position);
+        const isPlayerInsideArea = this.isPlayerInsideAreaByCoordinates(newAreaCoordinates, this.position);
+
+        if (isPlayerWasInsideArea && isPlayerInsideArea) {
+            if (JSON.stringify(oldConfig.properties) !== JSON.stringify(newConfig.properties)) {
+                this.triggerSpecificAreaOnUpdate(area, oldConfig.properties, newConfig.properties);
+            }
+        } else if (isPlayerWasInsideArea && !isPlayerInsideArea) {
+            this.triggerSpecificAreaOnLeave(area);
+            return;
+        } else if (!isPlayerWasInsideArea && isPlayerInsideArea) {
             this.triggerSpecificAreaOnEnter(area);
+            return;
         }
-        this.areaUpdatedSubject.next(gameMapAreas.getArea(id, AreaType.Static));
     }
 
-    public deleteAreaByName(name: string, type: AreaType): void {
-        this.gameMap.getGameMapAreas().deleteAreaByName(name, type, this.position);
-    }
-
-    public deleteAreaById(id: number, type: AreaType): void {
-        this.gameMap.getGameMapAreas().deleteAreaById(id, type, this.position);
-    }
-
-    public isPlayerInsideArea(id: number, type: AreaType): boolean {
-        if (!this.position) {
-            return false;
+    public listenAreaDeletion(areaData: AreaData | undefined) {
+        if (areaData === undefined || this.position === undefined) {
+            console.error('Area with id "' + areaData?.id + '" does not exist, this not supposed to happen');
+            return;
         }
-        return this.gameMap.getGameMapAreas().isPlayerInsideArea(id, type, this.position);
-    }
 
-    public isPlayerInsideAreaByName(name: string, type: AreaType): boolean {
-        if (!this.position) {
-            return false;
+        if (this.isPlayerInsideAreaByCoordinates(areaData, this.position)) {
+            this.triggerSpecificAreaOnLeave(areaData);
         }
-        return this.gameMap.getGameMapAreas().isPlayerInsideAreaByName(name, type, this.position);
     }
 
     public getMapChangedObservable(): Observable<number[][]> {
         return this.mapChangedSubject.asObservable();
-    }
-
-    public getAreaUpdatedObservable(): Observable<AreaData> {
-        return this.areaUpdatedSubject.asObservable();
     }
 
     public getFlatLayers(): ITiledMapLayer[] {
@@ -650,7 +857,163 @@ export class GameMapFrontWrapper {
         this.triggerAllProperties();
     }
 
-    private triggerAllProperties(): void {
+    /**
+     * Parse map-editor AreaData to ITiledMapObject format in order to handle properties changes
+     */
+    public mapAreaToTiledObject(areaData: AreaData): ITiledPlace {
+        return {
+            id: areaData.id,
+            type: "area",
+            class: "area",
+            name: areaData.name,
+            visible: true,
+            x: areaData.x,
+            y: areaData.y,
+            width: areaData.width,
+            height: areaData.height,
+            properties: this.mapAreaPropertiesToTiledProperties(areaData.properties),
+        };
+    }
+
+    public mapDynamicAreaToTiledObject(dynamicArea: DynamicArea): ITiledPlace {
+        return {
+            id: dynamicArea.name,
+            type: "area",
+            class: "area",
+            name: dynamicArea.name,
+            visible: true,
+            x: dynamicArea.x,
+            y: dynamicArea.y,
+            width: dynamicArea.width,
+            height: dynamicArea.height,
+            properties: this.mapDynamicAreaPropertiesToTiledProperties(dynamicArea.properties),
+        };
+    }
+
+    private mapDynamicAreaPropertiesToTiledProperties(dynamicAreaProperties: {
+        [key: string]: unknown;
+    }): ITiledMapProperty[] {
+        const properties: ITiledMapProperty[] = [];
+        for (const key in dynamicAreaProperties) {
+            const property = dynamicAreaProperties[key];
+            if (typeof property === "string") {
+                properties.push({ name: key, type: "string", value: property });
+                continue;
+            }
+            if (typeof property === "number") {
+                properties.push({ name: key, type: "float", value: property });
+                continue;
+            }
+            if (typeof property === "boolean") {
+                properties.push({ name: key, type: "bool", value: property });
+                continue;
+            }
+        }
+        return properties;
+    }
+
+    private mapTiledPropertiesToDynamicAreaProperties(tiledProperties: ITiledMapProperty[]): {
+        [key: string]: unknown;
+    } {
+        const properties: { [key: string]: unknown } = {};
+        for (const tiledProperty of tiledProperties) {
+            properties[tiledProperty.name] = tiledProperty.value;
+        }
+        return properties;
+    }
+
+    private mapAreaPropertiesToTiledProperties(areaProperties: AreaDataProperties): ITiledMapProperty[] {
+        const properties: ITiledMapProperty[] = [];
+
+        for (const property of areaProperties) {
+            switch (property.type) {
+                case "focusable": {
+                    properties.push({ name: GameMapProperties.FOCUSABLE, type: "bool", value: true });
+                    if (property.zoom_margin) {
+                        properties.push({
+                            name: GameMapProperties.ZOOM_MARGIN,
+                            type: "float",
+                            value: property.zoom_margin,
+                        });
+                    }
+                    break;
+                }
+                case "jitsiRoomProperty": {
+                    properties.push({
+                        name: GameMapProperties.JITSI_ROOM,
+                        type: "string",
+                        value: property.roomName ?? "",
+                    });
+                    if (property.jitsiRoomConfig) {
+                        properties.push({
+                            name: GameMapProperties.JITSI_CONFIG,
+                            type: "class",
+                            value: property.jitsiRoomConfig,
+                        });
+                    }
+                    break;
+                }
+                case "openWebsite": {
+                    if (property.newTab) {
+                        properties.push({
+                            name: GameMapProperties.OPEN_TAB,
+                            type: "string",
+                            value: property.link ?? undefined,
+                        });
+                    } else {
+                        properties.push({
+                            name: GameMapProperties.OPEN_WEBSITE,
+                            type: "string",
+                            value: property.link ?? undefined,
+                        });
+                    }
+                    break;
+                }
+                case "playAudio": {
+                    properties.push({
+                        name: GameMapProperties.PLAY_AUDIO,
+                        type: "string",
+                        value: property.audioLink,
+                    });
+                    break;
+                }
+                case "silent": {
+                    properties.push({
+                        name: GameMapProperties.SILENT,
+                        type: "bool",
+                        value: true,
+                    });
+                    break;
+                }
+                case "start": {
+                    properties.push({
+                        name: GameMapProperties.START,
+                        type: "bool",
+                        value: true,
+                    });
+                    break;
+                }
+                case "speakerMegaphone": {
+                    properties.push({
+                        name: GameMapProperties.SPEAKER_MEGAPHONE,
+                        type: "string",
+                        value: `${property.id}-${property.name}`,
+                    });
+                    break;
+                }
+                case "listenerMegaphone": {
+                    properties.push({
+                        name: GameMapProperties.LISTENER_MEGAPHONE,
+                        type: "string",
+                        value: property.speakerZoneName,
+                    });
+                }
+            }
+        }
+        return properties;
+    }
+
+    public triggerAllProperties(): void {
         const newProps = this.getProperties(this.key ?? 0);
         const oldProps = this.lastProperties;
         this.lastProperties = newProps;
@@ -694,16 +1057,34 @@ export class GameMapFrontWrapper {
     }
 
     private getProperties(key: number): Map<string, string | boolean | number> {
-        const properties = this.position
-            ? this.gameMap.getGameMapAreas().getProperties(this.position)
-            : new Map<string, string | boolean | number>();
+        const properties = new Map<string, string | boolean | number>();
+        // NOTE: WE DO NOT WANT AREAS TO BE THE PART OF THE OLD PROPERTIES CHANGE SYSTEM
+        // CHECK FOR AREAS PROPERTIES
+        // if (this.position) {
+        //     const areasProperties = this.gameMap.getGameMapAreas()?.getProperties(this.position);
+        //     if (areasProperties) {
+        //         properties = areasProperties;
+        //     }
+        // }
 
-        if (this.entitiesManager) {
-            for (const property of this.entitiesManager.getProperties()) {
-                properties.set(property[0], property[1]);
+        // CHECK FOR DYNAMIC AREAS PROPERTIES
+        if (this.position) {
+            const dynamicAreasProperties = this.getDynamicAreasProperties(this.position);
+            if (dynamicAreasProperties) {
+                for (const [key, value] of dynamicAreasProperties) {
+                    properties.set(key, value);
+                }
             }
         }
 
+        // CHECK FOR ENTITIES PROPERTIES
+        if (this.entitiesManager) {
+            for (const [key, value] of this.entitiesManager.getProperties()) {
+                properties.set(key, value);
+            }
+        }
+
+        // CHECK FOR LAYERS PROPERTIES
         for (const layer of this.getFlatLayers()) {
             if (layer.type !== "tilelayer") {
                 continue;
@@ -738,7 +1119,6 @@ export class GameMapFrontWrapper {
                 });
             }
         }
-
         return properties;
     }
 
@@ -783,5 +1163,80 @@ export class GameMapFrontWrapper {
                 callback(layerArray, layersByNewKey);
             }
         }
+    }
+
+    private triggerDynamicAreasChange(
+        oldPosition: { x: number; y: number } | undefined,
+        position: { x: number; y: number } | undefined
+    ): boolean {
+        const areasByOldPosition = oldPosition ? this.getDynamicAreasOnPosition(oldPosition) : [];
+        const areasByNewPosition = position ? this.getDynamicAreasOnPosition(position) : [];
+
+        const enterAreas = new Set(areasByNewPosition);
+        const leaveAreas = new Set(areasByOldPosition);
+
+        enterAreas.forEach((area) => {
+            if (leaveAreas.has(area)) {
+                leaveAreas.delete(area);
+                enterAreas.delete(area);
+            }
+        });
+
+        let areasChange = false;
+        if (enterAreas.size > 0) {
+            const areasArray = Array.from(enterAreas);
+
+            for (const callback of this.enterDynamicAreaCallbacks) {
+                callback(areasArray, areasByNewPosition);
+            }
+            areasChange = true;
+        }
+
+        if (leaveAreas.size > 0) {
+            const areasArray = Array.from(leaveAreas);
+            for (const callback of this.leaveDynamicAreaCallbacks) {
+                callback(areasArray, areasByNewPosition);
+            }
+            areasChange = true;
+        }
+        return areasChange;
+    }
+
+    private getDynamicAreasOnPosition(position: { x: number; y: number }, offsetY = 16): DynamicArea[] {
+        const overlappedDynamicAreas: DynamicArea[] = [];
+        for (const dynamicArea of this.dynamicAreas.values()) {
+            if (
+                MathUtils.isOverlappingWithRectangle(
+                    { x: position.x, y: position.y + offsetY },
+                    { x: dynamicArea.x, y: dynamicArea.y, width: dynamicArea.width, height: dynamicArea.height }
+                )
+            ) {
+                overlappedDynamicAreas.push(dynamicArea);
+            }
+        }
+        return overlappedDynamicAreas;
+    }
+
+    private getDynamicAreasProperties(position: { x: number; y: number }): Map<string, string | number | boolean> {
+        const properties = new Map<string, string | number | boolean>();
+        for (const dynamicArea of this.getDynamicAreasOnPosition(position, 16)) {
+            if (dynamicArea.properties === undefined) {
+                continue;
+            }
+            for (const key in dynamicArea.properties) {
+                const property = dynamicArea.properties[key];
+                if (property === undefined) {
+                    continue;
+                }
+                if (typeof property === "string" || typeof property === "number" || typeof property === "boolean") {
+                    properties.set(key, property);
+                }
+            }
+        }
+        return properties;
+    }
+
+    public close() {
+        this.entitiesManager.close();
     }
 }

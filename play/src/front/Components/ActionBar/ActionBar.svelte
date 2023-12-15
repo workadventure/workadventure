@@ -1,7 +1,12 @@
 <script lang="ts">
+    import type { Unsubscriber } from "svelte/store";
+    import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "svelte-feather-icons";
+    import { fly } from "svelte/transition";
+    import { onDestroy, onMount } from "svelte";
+    import { writable } from "svelte/store";
+    import { Subscription } from "rxjs";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
-        audioConstraintStore,
         cameraListStore,
         localStreamStore,
         microphoneListStore,
@@ -9,10 +14,14 @@
         requestedCameraState,
         requestedMicrophoneState,
         silentStore,
-        videoConstraintStore,
         speakerSelectedStore,
+        requestedMicrophoneDeviceIdStore,
+        requestedCameraDeviceIdStore,
+        usedCameraDeviceIdStore,
+        usedMicrophoneDeviceIdStore,
+        streamingMegaphoneStore,
+        isSpeakerStore,
     } from "../../Stores/MediaStore";
-    import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "svelte-feather-icons";
     import cameraImg from "../images/camera.png";
     import cameraOffImg from "../images/camera-off.png";
     import microphoneImg from "../images/microphone.png";
@@ -23,13 +32,14 @@
     import followImg from "../images/follow.png";
     import lockOpenImg from "../images/lock-opened.png";
     import lockCloseImg from "../images/lock-closed.png";
-    import logoRegister from "../images/logo-register-pixel.png";
+    import mapBuilder from "../images/maps-builder.png";
     import screenshareOn from "../images/screenshare-on.png";
     import screenshareOff from "../images/screenshare-off.png";
     import emojiPickOn from "../images/emoji-on.png";
     import closeImg from "../images/close.png";
     import penImg from "../images/pen.png";
     import hammerImg from "../images/hammer.png";
+    import megaphoneImg from "../images/megaphone.svg";
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
@@ -38,8 +48,12 @@
     import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatVisibilityStore, chatZoneLiveStore } from "../../Stores/ChatStore";
-    import { proximityMeetingStore } from "../../Stores/MyMediaStore";
-    import type { MenuItem, TranslatedMenu } from "../../Stores/MenuStore";
+    import {
+        proximityMeetingStore,
+        inExternalServiceStore,
+        myCameraStore,
+        myMicrophoneStore,
+    } from "../../Stores/MyMediaStore";
     import {
         activeSubMenuStore,
         menuVisiblilityStore,
@@ -59,31 +73,32 @@
         emoteMenuSubStore,
         emoteStore,
     } from "../../Stores/EmoteStore";
-    import LL from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
-    import { fly } from "svelte/transition";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
     import { iframeListener } from "../../Api/IframeListener";
-    import { onDestroy, onMount } from "svelte";
-    import type { Unsubscriber } from "svelte/store";
-    import { writable } from "svelte/store";
     import { peerStore } from "../../Stores/PeerStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import Tooltip from "../Util/Tooltip.svelte";
     import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
-    import { localUserStore } from "../../Connexion/LocalUserStore";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
+    import {
+        megaphoneCanBeUsedStore,
+        liveStreamingEnabledStore,
+        requestedMegaphoneStore,
+    } from "../../Stores/MegaphoneStore";
+    import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
+    import { localUserStore } from "../../Connection/LocalUserStore";
+    import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
+    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
     let cameraActive = false;
     let microphoneActive = false;
-    let selectedCamera: string | undefined = undefined;
-    let selectedMicrophone: string | undefined = undefined;
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -100,6 +115,7 @@
             requestedCameraState.disableWebcam();
         } else {
             requestedCameraState.enableWebcam();
+            layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone");
         }
     }
 
@@ -109,6 +125,7 @@
             requestedMicrophoneState.disableMicrophone();
         } else {
             requestedMicrophoneState.enableMicrophone();
+            layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone");
         }
     }
 
@@ -143,16 +160,37 @@
     function toggleChat() {
         if (!$chatVisibilityStore) {
             menuVisiblilityStore.set(false);
-            activeSubMenuStore.set(0);
+            activeSubMenuStore.activateByIndex(0);
         }
         chatVisibilityStore.set(!$chatVisibilityStore);
     }
 
     function toggleEmojiPicker() {
-        $emoteMenuSubStore == true ? emoteMenuSubStore.closeEmoteMenu() : emoteMenuSubStore.openEmoteMenu();
+        if ($emoteMenuSubStore == true) {
+            emoteMenuSubStore.closeEmoteMenu();
+        } else {
+            emoteMenuSubStore.openEmoteMenu();
+        }
+    }
+
+    function toggleMegaphone() {
+        if ($streamingMegaphoneStore) {
+            streamingMegaphoneStore.set(false);
+            return;
+        }
+        if ($requestedMegaphoneStore || $liveStreamingEnabledStore) {
+            analyticsClient.stopMegaphone();
+            requestedMegaphoneStore.set(false);
+            return;
+        }
+
+        analyticsClient.startMegaphone();
+        streamingMegaphoneStore.set(true);
     }
 
     function toggleMapEditorMode() {
+        if (isMobile) return;
+        analyticsClient.toggleMapEditor(!$mapEditorModeStore);
         mapEditorModeStore.switchMode(!$mapEditorModeStore);
     }
 
@@ -237,19 +275,13 @@
     function showInvite() {
         modalVisibilityStore.set(false);
 
-        const indexInviteMenu = $subMenusStore.findIndex(
-            (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.invite
-        );
-        if (indexInviteMenu === -1) {
-            console.error(`Menu key: ${SubMenusInterface.invite} was not founded in subMenusStore: `, $subMenusStore);
-            return;
-        }
-        if ($menuVisiblilityStore && $activeSubMenuStore === indexInviteMenu) {
+        const inviteMenu = subMenusStore.findByKey(SubMenusInterface.invite);
+        if ($menuVisiblilityStore && activeSubMenuStore.isActive(inviteMenu)) {
             menuVisiblilityStore.set(false);
-            activeSubMenuStore.set(0);
+            activeSubMenuStore.activateByIndex(0);
             return;
         }
-        activeSubMenuStore.set(indexInviteMenu);
+        activeSubMenuStore.activateByMenuItem(inviteMenu);
         menuVisiblilityStore.set(true);
 
         resetChatVisibility();
@@ -257,19 +289,13 @@
     }
 
     function showMenu() {
-        const indexInviteMenu = $subMenusStore.findIndex(
-            (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.profile
-        );
-        if (indexInviteMenu === -1) {
-            console.error(`Menu key: ${SubMenusInterface.profile} was not founded in subMenusStore: `, $subMenusStore);
-            return;
-        }
-        if ($menuVisiblilityStore && $activeSubMenuStore === indexInviteMenu) {
+        const profileMenu = subMenusStore.findByKey(SubMenusInterface.profile);
+        if ($menuVisiblilityStore && activeSubMenuStore.isActive(profileMenu)) {
             menuVisiblilityStore.set(false);
-            activeSubMenuStore.set(0);
+            activeSubMenuStore.activateByIndex(0);
             return;
         }
-        activeSubMenuStore.set(indexInviteMenu);
+        activeSubMenuStore.activateByMenuItem(profileMenu);
         menuVisiblilityStore.set(true);
 
         resetChatVisibility();
@@ -277,25 +303,25 @@
     }
 
     function openBo() {
-        window.open(`https://workadventu.re/admin`, "_blanck");
+        window.open(ADMIN_URL, "_blank");
     }
 
     /*function register() {
-        modalIframeStore.set(
-            {
-                src: https://workadventu.re/funnel/connection?roomUrl=${window.location.toString()},
-                allow: "fullscreen",
-                allowApi: true,
-                position: "center",
-                title: $LL.menu.icon.open.register()
-            }
-        );
+		modalIframeStore.set(
+			{
+				src: https://workadventu.re/funnel/connection?roomUrl=${window.location.toString()},
+				allow: "fullscreen",
+				allowApi: true,
+				position: "center",
+				title: $LL.menu.icon.open.register()
+			}
+		);
 
-        //resetMenuVisibility();
-        //resetChatVisibility();
+		//resetMenuVisibility();
+		//resetChatVisibility();
 
-        window.open("https://workadventu.re/getting-started", "_blank");
-    }*/
+		window.open("https://workadventu.re/getting-started", "_blank");
+	}*/
 
     function resetModalVisibility() {
         modalVisibilityStore.set(false);
@@ -303,9 +329,9 @@
     }
 
     /*function resetMenuVisibility() {
-        menuVisiblilityStore.set(false);
-        activeSubMenuStore.set(0);
-    }*/
+		menuVisiblilityStore.set(false);
+		activeSubMenuStore.set(0);
+	}*/
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -316,12 +342,14 @@
     }
 
     function selectCamera(deviceId: string) {
-        videoConstraintStore.setDeviceId(deviceId);
+        requestedCameraDeviceIdStore.set(deviceId);
+        localUserStore.setPreferredVideoInputDevice(deviceId);
         cameraActive = false;
     }
 
     function selectMicrophone(deviceId: string) {
-        audioConstraintStore.setDeviceId(deviceId);
+        requestedMicrophoneDeviceIdStore.set(deviceId);
+        localUserStore.setPreferredAudioInputDevice(deviceId);
         microphoneActive = false;
     }
 
@@ -331,14 +359,19 @@
     }
 
     let subscribers = new Array<Unsubscriber>();
+    let chatTotalMessagesSubscription: Subscription | undefined;
     let totalMessagesToSee = writable<number>(0);
     onMount(() => {
-        iframeListener.chatTotalMessagesToSeeStream.subscribe((total) => totalMessagesToSee.set(total));
+        chatTotalMessagesSubscription = iframeListener.chatTotalMessagesToSeeStream.subscribe((total) =>
+            totalMessagesToSee.set(total)
+        );
+        resizeObserver.observe(mainHtmlDiv);
     });
 
     onDestroy(() => {
         subscribers.map((subscriber) => subscriber());
         unsubscribeLocalStreamStore();
+        chatTotalMessagesSubscription?.unsubscribe();
     });
 
     let stream: MediaStream | null;
@@ -347,34 +380,32 @@
             stream = value.stream;
 
             if (stream !== null) {
-                const videoTracks = stream.getVideoTracks();
-                if (videoTracks.length > 0) {
-                    selectedCamera = videoTracks[0].getSettings().deviceId;
-                }
                 const audioTracks = stream.getAudioTracks();
                 if (audioTracks.length > 0) {
-                    // set first track
-                    selectedMicrophone = audioTracks[0].getSettings().deviceId;
-
                     // set default speaker selected
-                    if ($speakerListStore.length > 0) {
+                    if ($speakerListStore && $speakerListStore.length > 0) {
                         speakerSelectedStore.set($speakerListStore[0].deviceId);
                     }
                 }
             }
         } else {
             stream = null;
-            selectedCamera = undefined;
-            selectedMicrophone = undefined;
         }
     });
-
-    const isMobile = isMediaBreakpointUp("md");
 
     function buttonActionBarTrigger(id: string) {
         const button = $additionnalButtonsMenu.get(id) as AddButtonActionBarEvent;
         return iframeListener.sendButtonActionBarTriggered(button);
     }
+
+    let mainHtmlDiv: HTMLDivElement;
+    let isMobile = isMediaBreakpointUp("md");
+    const resizeObserver = new ResizeObserver(() => {
+        isMobile = isMediaBreakpointUp("md");
+        if (isMobile) {
+            mapEditorModeStore.set(false);
+        }
+    });
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -382,6 +413,7 @@
 <div
     class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
     class:animated={$bottomActionBarVisibilityStore}
+    bind:this={mainHtmlDiv}
 >
     <div class="bottom-action-bar tw-absolute">
         {#if $bottomActionBarVisibilityStore}
@@ -393,6 +425,7 @@
                 class:tw-translate-x-0={$bottomActionBarVisibilityStore}
                 class:translate-right={!$bottomActionBarVisibilityStore}
             >
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="tw-transition-all bottom-action-button"
                     class:disabled={$followStateStore !== "off"}
@@ -406,6 +439,7 @@
                     </button>
                 </div>
 
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="tw-transition-all bottom-action-button"
                     on:click={() => analyticsClient.layoutPresentChange()}
@@ -432,6 +466,7 @@
                     </button>
                 </div>
 
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="tw-transition-all bottom-action-button"
                     class:disabled={$currentPlayerGroupLockStateStore}
@@ -454,6 +489,7 @@
                     </button>
                 </div>
 
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="tw-transition-all bottom-action-button"
                     on:click={() => analyticsClient.screenSharing()}
@@ -487,6 +523,7 @@
             <div class="bottom-action-section tw-flex tw-flex-initial">
                 {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                     {#if $myCameraStore}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             class="bottom-action-button tw-relative"
                             on:click={() => analyticsClient.camera()}
@@ -516,7 +553,7 @@
                                 {/if}
                             </button>
 
-                            {#if $requestedCameraState && $cameraListStore.length > 1}
+                            {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
                                 <button
                                     class="camera tw-absolute tw-text-light-purple focus:outline-none tw-m-0"
                                     on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
@@ -534,7 +571,8 @@
                                     style="bottom: 15px;right: 0;"
                                     on:mouseleave={() => (cameraActive = false)}
                                 >
-                                    {#each $cameraListStore as camera}
+                                    {#each $cameraListStore as camera (camera.deviceId)}
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <span
                                             class="wa-dropdown-item tw-flex"
                                             on:click={() => {
@@ -544,7 +582,7 @@
                                                 selectCamera(camera.deviceId)}
                                         >
                                             {StringUtils.normalizeDeviceName(camera.label)}
-                                            {#if selectedCamera === camera.deviceId}
+                                            {#if $usedCameraDeviceIdStore === camera.deviceId}
                                                 <CheckIcon size="13" class="tw-ml-1" />
                                             {/if}
                                         </span>
@@ -555,6 +593,7 @@
                     {/if}
 
                     {#if $myMicrophoneStore}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             class="bottom-action-button tw-relative"
                             on:click={() => analyticsClient.microphone()}
@@ -581,7 +620,7 @@
                                 {/if}
                             </button>
 
-                            {#if $requestedMicrophoneState && $microphoneListStore.length > 1}
+                            {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 1}
                                 <button
                                     class="microphone tw-absolute tw-text-light-purple focus:outline-none tw-m-0"
                                     on:click|stopPropagation|preventDefault={() =>
@@ -604,7 +643,7 @@
                                         <span class="tw-underline tw-font-bold tw-text-xs tw-p-1"
                                             >{$LL.actionbar.subtitle.microphone()} 🎙️</span
                                         >
-                                        {#each $microphoneListStore as microphone}
+                                        {#each $microphoneListStore as microphone (microphone.deviceId)}
                                             <span
                                                 class="wa-dropdown-item"
                                                 on:click={() => {
@@ -614,7 +653,7 @@
                                                     selectMicrophone(microphone.deviceId)}
                                             >
                                                 {StringUtils.normalizeDeviceName(microphone.label)}
-                                                {#if selectedMicrophone === microphone.deviceId}
+                                                {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
                                                     <CheckIcon size="13" />
                                                 {/if}
                                             </span>
@@ -622,11 +661,11 @@
                                     {/if}
 
                                     <!-- speaker list -->
-                                    {#if $speakerSelectedStore != undefined && $speakerListStore.length > 0}
+                                    {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
                                         <span class="tw-underline tw-font-bold tw-text-xs tw-p-1"
                                             >{$LL.actionbar.subtitle.speaker()} 🔈</span
                                         >
-                                        {#each $speakerListStore as speaker}
+                                        {#each $speakerListStore as speaker (speaker.deviceId)}
                                             <span
                                                 class="wa-dropdown-item"
                                                 on:click={() => {
@@ -648,6 +687,36 @@
                     {/if}
                 {/if}
 
+                {#if $isSpeakerStore || $streamingMegaphoneStore || $liveStreamingEnabledStore}
+                    <div
+                        class="tw-transition-all bottom-action-button"
+                        on:click={() => analyticsClient.screenSharing()}
+                        on:click={screenSharingClick}
+                        class:enabled={$requestedScreenSharingState}
+                    >
+                        <Tooltip text={$LL.actionbar.screensharing()} />
+
+                        <button class:border-top-light={$requestedScreenSharingState}>
+                            {#if $requestedScreenSharingState}
+                                <img
+                                    draggable="false"
+                                    src={screenshareOn}
+                                    style="padding: 2px;"
+                                    alt="Stop screen sharing"
+                                />
+                            {:else}
+                                <img
+                                    draggable="false"
+                                    src={screenshareOff}
+                                    style="padding: 2px;"
+                                    alt="Start screen sharing"
+                                />
+                            {/if}
+                        </button>
+                    </div>
+                {/if}
+
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     on:click={() => analyticsClient.openedChat()}
                     on:click={toggleChat}
@@ -679,6 +748,7 @@
                         </span>
                     {/if}
                 </div>
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div on:click={toggleEmojiPicker} class="bottom-action-button">
                     <Tooltip text={$LL.actionbar.emoji()} />
 
@@ -686,9 +756,41 @@
                         <img draggable="false" src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
                     </button>
                 </div>
+                {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div on:click={toggleMegaphone} class="bottom-action-button tw-relative">
+                        {#if $streamingMegaphoneStore}
+                            <MegaphoneConfirm />
+                        {:else}
+                            <Tooltip
+                                text={$liveStreamingEnabledStore
+                                    ? $LL.actionbar.disableMegaphone()
+                                    : $LL.actionbar.enableMegaphone()}
+                            />
+                        {/if}
+
+                        <button
+                            class:border-top-warning={$liveStreamingEnabledStore || $streamingMegaphoneStore}
+                            id="megaphone"
+                        >
+                            <img draggable="false" src={megaphoneImg} style="padding: 2px" alt="Toggle megaphone" />
+                        </button>
+                        {#if $liveStreamingEnabledStore}
+                            <div class="tw-absolute tw-top-[1.05rem] tw-right-1">
+                                <span
+                                    class="tw-w-3 tw-h-3 tw-bg-warning tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping tw-cursor-pointer"
+                                />
+                                <span
+                                    class="tw-w-2 tw-h-2 tw-bg-warning tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5 tw-cursor-pointer"
+                                />
+                            </div>
+                        {/if}
+                    </div>
+                {/if}
             </div>
 
             <div class="bottom-action-section tw-flex tw-flex-initial">
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     on:dragstart|preventDefault={noDrag}
                     on:click={() => analyticsClient.openedMenu()}
@@ -702,18 +804,35 @@
                     </button>
                 </div>
                 {#if $mapEditorActivated}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         on:dragstart|preventDefault={noDrag}
                         on:click={toggleMapEditorMode}
                         class="bottom-action-button"
                     >
-                        <Tooltip text={$LL.actionbar.mapEditor()} />
-                        <button id="mapEditorIcon" class:border-top-light={$mapEditorModeStore}>
-                            <img draggable="false" src={logoRegister} style="padding: 2px" alt="toggle-map-editor" />
+                        {#if isMobile}
+                            <Tooltip text={$LL.actionbar.mapEditorMobileLocked()} />
+                        {:else}
+                            <Tooltip text={$LL.actionbar.mapEditor()} />
+                        {/if}
+                        <button
+                            id="mapEditorIcon"
+                            class:border-top-light={$mapEditorModeStore && !isMobile}
+                            name="toggle-map-editor"
+                            disabled={isMobile}
+                        >
+                            <img
+                                draggable="false"
+                                src={mapBuilder}
+                                class:disable-opacity={isMobile}
+                                style="padding: 2px"
+                                alt="toggle-map-editor"
+                            />
                         </button>
                     </div>
                 {/if}
                 {#if $userHasAccessToBackOfficeStore}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         on:dragstart|preventDefault={noDrag}
                         on:click={() => analyticsClient.openBackOffice()}
@@ -723,7 +842,7 @@
                         <Tooltip text={$LL.actionbar.bo()} />
 
                         <button id="backOfficeIcon">
-                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-map-editor" />
+                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-bo" />
                         </button>
                     </div>
                 {/if}
@@ -731,7 +850,8 @@
 
             {#if $addActionButtonActionBarEvent.length > 0}
                 <div class="bottom-action-section tw-flex tw-flex-initial">
-                    {#each $addActionButtonActionBarEvent as button}
+                    {#each $addActionButtonActionBarEvent as button (button.id)}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             in:fly={{}}
                             on:dragstart|preventDefault={noDrag}
@@ -764,6 +884,7 @@
             {/if}
 
             {#if $inviteUserActivated}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
                     in:fly={{}}
@@ -780,28 +901,8 @@
                     </button>
                 </div>
             {/if}
-
-            <!-- TODO button must displayed by scripting API -->
-            <!--
-            {#if ENABLE_OPENID && !$userIsConnected && }
-                <div
-                    class="bottom-action-section tw-flex tw-flex-initial"
-                    in:fly={{}}
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openRegister()}
-                    on:click={register}
-                >
-                    <button
-                        class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
-                        id="register-btn"
-                        class:border-top-light={$menuVisiblilityStore}
-                    >
-                        {$LL.menu.icon.open.register()}
-                    </button>
-                </div>
-            {/if}
-            -->
-            {#each $addClassicButtonActionBarEvent as button}
+            {#each $addClassicButtonActionBarEvent as button (button.id)}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
                     in:fly={{}}
@@ -827,7 +928,7 @@
     >
         <div class="bottom-action-bar">
             <div class="bottom-action-section tw-flex animate">
-                {#each [...$emoteDataStore.keys()] as key}
+                {#each [...$emoteDataStore.keys()] as key (key)}
                     <div class="tw-transition-all bottom-action-button">
                         <button
                             on:click={() => {

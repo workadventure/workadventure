@@ -28,11 +28,12 @@
          "BBB_URL": "https://test-install.blindsidenetworks.com/bigbluebutton/",
          "MAP_STORAGE_URL": "map-storage:50053",
          "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
+         "INTERNAL_MAP_STORAGE_URL": "http://map-storage:3000",
          "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
          "EJABBERD_USER": "admin",
          "EJABBERD_PASSWORD": "apideo",
-         "ENABLE_FEATURE_MAP_EDITOR":"true",
-         "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
+         "ENABLE_MAP_EDITOR":"true",
+         "DEBUG": "*",
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -64,10 +65,11 @@
               "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
               "MAP_STORAGE_URL": "map-storage:50053",
               "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
+              "INTERNAL_MAP_STORAGE_URL": "http://map-storage:3000",
               "EJABBERD_USER": "admin",
               "EJABBERD_PASSWORD": "apideo",
-              "ENABLE_FEATURE_MAP_EDITOR":"true",
-              "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
+              "ENABLE_MAP_EDITOR":"true",
+              "DEBUG": "*",
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -83,6 +85,7 @@
         "image": "thecodingmachine/workadventure-play:"+tag,
         "host": {
           "url": "play-"+url,
+          "containerPort": 3000
         },
         "ports": [3000],
         "env": {
@@ -92,7 +95,7 @@
           "API_URL": "back1:50051,back2:50051",
           "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
           "FRONT_URL": "https://play-"+url,
-          "PUSHER_URL": "https://play-"+url,
+          "PUSHER_URL": "https://pusher-"+url,
           "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
           "ENABLE_OPENAPI_ENDPOINT": "true",
           "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
@@ -102,11 +105,28 @@
           "POSTHOG_URL": if namespace == "master" then env.POSTHOG_URL else "",
           "TURN_SERVER": "turn:coturn.workadventure.fr:443,turns:coturn.workadventure.fr:443",
           "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
-          "ENABLE_FEATURE_MAP_EDITOR":"true",
-          "ENABLE_MAP_EDITOR_AREAS_TOOL":"false",
+          "ENABLE_MAP_EDITOR":"true",
+          "FEATURE_FLAG_BROADCAST_AREAS":"true",
           "ICON_URL": "https://icon-"+url,
           "CHAT_URL": "https://chat-"+url,
           "LOGROCKET_ID": env.LOGROCKET_ID,
+          "ROOM_API_PORT": "50051",
+          "DEBUG": "*",
+          "PEER_VIDEO_LOW_BANDWIDTH": "150",
+          "PEER_VIDEO_RECOMMENDED_BANDWIDTH": "600",
+          "PEER_SCREEN_SHARE_LOW_BANDWIDTH": "250",
+          "PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH":"1000",
+          "JITSI_DOMAIN": "coremeet.workadventu.re",
+          "JITSI_XMPP_DOMAIN": "prosody.workadventu.re",
+          "JITSI_MUC_DOMAIN": "muc.prosody.workadventu.re",
+          # Integration tools
+          "KLAXOON_ENABLED": "true",
+          "KLAXOON_CLIENT_ID": env.KLAXOON_CLIENT_ID,
+          "YOUTUBE_ENABLED": "true",
+          "GOOGLE_DOCS_ENABLED": "true",
+          "GOOGLE_SHEETS_ENABLED": "true",
+          "GOOGLE_SLIDES_ENABLED": "true",
+          "ERASER_ENABLED": "true",
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,
@@ -117,11 +137,13 @@
           "OPID_CLIENT_ID": "auth-code-client",
           "OPID_CLIENT_SECRET": env.ADMIN_API_TOKEN,
           "OPID_CLIENT_ISSUER": "https://publichydra-"+url,
-          "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
+          "START_ROOM_URL": "/~/maps/map.wam",
         } else {
           # Ejabberd
           "EJABBERD_DOMAIN": "xmpp-"+url,
           "EJABBERD_JWT_SECRET": env.EJABBERD_JWT_SECRET,
+          # Room API
+          "ROOM_API_SECRET_KEY": "ROOM_API_SECRET_KEY",
         })
       },
     "chat": {
@@ -150,12 +172,14 @@
            },
            "ports": [3000, 50053],
            "env": {
+             "API_URL": "back1:50051,back2:50051",
              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
              "AUTHENTICATION_STRATEGY": if (adminUrl == null) then "Basic" else "Bearer",
              "AUTHENTICATION_USER": "john.doe",
              "AUTHENTICATION_PASSWORD": "password",
              "AUTHENTICATION_TOKEN": "SomeSecretToken",
              "USE_DOMAIN_NAME_IN_PATH": if (adminUrl == null) then "false" else "true",
+             "DEBUG": "*",
            }
          },
     "uploaderredis":{
@@ -199,7 +223,7 @@
       "ports": [6379]
     },
     "iconserver": {
-      "image": "matthiasluedtke/iconserver:v3.13.0",
+      "image": "matthiasluedtke/iconserver:v3.15.0",
       "host": {
         "url": "icon-"+url,
         "containerPort": 8080,
@@ -283,10 +307,54 @@
                 }
               }
             },
+            serviceroomapi: {
+                "apiVersion": "v1",
+                "kind": "Service",
+                "metadata": {
+                    "annotations": {
+                        "traefik.ingress.kubernetes.io/service.serversscheme": "h2c"
+                    },
+                    "name": "room-api"
+                },
+                "spec": {
+                    "ports": [
+                        {
+                            "name": "room-api-p50051",
+                            "port": 50051,
+                            "protocol": "TCP",
+                            "targetPort": 50051
+                        }
+                    ],
+                    "selector": {
+                        "name": "play"
+                    },
+                    "type": "ClusterIP"
+                }
+            },
             ingress+: {
               spec+: {
+                rules+:[
+                  {
+                    host: "room-api-"+url,
+                    http: {
+                      paths: [
+                        {
+                          backend: {
+                            service: {
+                              name: "room-api",
+                              port: {
+                                number: 50051
+                              }
+                            }
+                          },
+                          pathType: "ImplementationSpecific"
+                        }
+                      ]
+                    }
+                  }
+                ],
                 tls+: [{
-                  hosts: ["play-"+url],
+                  hosts: ["play-"+url, "room-api-"+url],
                   secretName: "certificate-tls"
                 }]
               }

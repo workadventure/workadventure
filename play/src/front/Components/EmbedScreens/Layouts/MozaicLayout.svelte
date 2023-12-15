@@ -1,10 +1,10 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { highlightedEmbedScreen } from "../../../Stores/EmbedScreensStore";
+    import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import MediaBox from "../../Video/MediaBox.svelte";
     import MyCamera from "../../MyCamera.svelte";
-    import { myCameraStore } from "../../../Stores/MyMediaStore";
+    import { myCameraStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 
     let layoutDom: HTMLDivElement;
@@ -26,7 +26,7 @@
         class:tw-grid-cols-1={$streamableCollectionStore.size === 1}
         class:tw-grid-cols-2={$streamableCollectionStore.size >= 2}
     >
-        {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
+        {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
             <MediaBox
                 streamable={peer}
                 mozaicSolo={$streamableCollectionStore.size === 1}
@@ -34,7 +34,7 @@
                 mozaicQuarter={$streamableCollectionStore.size === 3 || $streamableCollectionStore.size >= 4}
             />
         {/each}
-        {#if $myCameraStore && displayFullMedias}
+        {#if $myCameraStore && displayFullMedias && $proximityMeetingStore === true}
             <MyCamera />
         {/if}
     </div>

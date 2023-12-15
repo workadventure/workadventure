@@ -1,13 +1,16 @@
 <script lang="ts">
-    import LL from "../../../i18n/i18n-svelte";
     import type { EntityPrefab } from "@workadventure/map-editor";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
+    import { ArrowLeftIcon } from "svelte-feather-icons";
+    import { get } from "svelte/store";
+    import { LL } from "../../../i18n/i18n-svelte";
     import {
+        mapEditorEntityModeStore,
         mapEditorSelectedEntityPrefabStore,
-        onMapEditorInputFocus,
-        onMapEditorInputUnfocus,
+        mapEditorSelectedEntityStore,
     } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import closeImg from "../images/close.png";
 
     const entitiesCollectionsManager = gameManager.getCurrentGameScene().getEntitiesCollectionsManager();
 
@@ -27,9 +30,19 @@
     let tags = entitiesCollectionsManager.getTags();
 
     onMount(() => {
-        entitiesCollectionsManager.setNameFilter(filter);
+        entitiesCollectionsManager.setFilter(filter);
         updateVisiblePrefabs();
     });
+
+    onDestroy(() => {
+        mapEditorSelectedEntityPrefabStoreUnsubscriber();
+    });
+
+    const mapEditorSelectedEntityPrefabStoreUnsubscriber = mapEditorSelectedEntityPrefabStore.subscribe(
+        (prefab?: EntityPrefab) => {
+            pickedItem = prefab;
+        }
+    );
 
     function onPickItemVariant(variant: EntityPrefab) {
         pickedVariant = variant;
@@ -43,7 +56,10 @@
         }
         itemVariants = entitiesCollectionsManager
             .getEntitiesPrefabs()
-            .filter((item: EntityPrefab) => item.name == pickedItem?.name);
+            .filter(
+                (item: EntityPrefab) =>
+                    item.name === pickedItem?.name && item.collectionName === pickedItem?.collectionName
+            );
         itemVariants = itemVariants.sort(
             (a, b) =>
                 a.direction.localeCompare(b.direction) +
@@ -75,12 +91,17 @@
         if (selectedTag !== "") {
             filter = selectedTag;
             selectedTag = "";
-            onFilterChange();
+            onTagChange();
         }
     }
 
-    function onFilterChange() {
-        entitiesCollectionsManager.setNameFilter(filter);
+    function onNameChange() {
+        entitiesCollectionsManager.setFilter(filter);
+        updateVisiblePrefabs();
+    }
+
+    function onTagChange() {
+        entitiesCollectionsManager.setFilter(filter, true);
         updateVisiblePrefabs();
     }
 
@@ -91,8 +112,8 @@
         rootItem = [];
         for (let entityPrefab of prefabs) {
             entityPrefab.tags.forEach((v: string) => tags.add(v));
-            if (!uniqId.has(entityPrefab.name)) {
-                uniqId.add(entityPrefab.name);
+            if (!uniqId.has(`${entityPrefab.collectionName}:${entityPrefab.name}`)) {
+                uniqId.add(`${entityPrefab.collectionName}:${entityPrefab.name}`);
                 rootItem.push(entityPrefab);
             }
         }
@@ -102,68 +123,96 @@
             onPickItem(rootItem[0]);
         }
     }
+
+    function backToSelectObject() {
+        get(mapEditorSelectedEntityStore)?.delete();
+        mapEditorSelectedEntityStore.set(undefined);
+        mapEditorSelectedEntityPrefabStore.set(undefined);
+        mapEditorEntityModeStore.set("ADD");
+    }
 </script>
 
 <div class="item-picker">
     <div class="item-filter">
         <input
-            class="filter-input"
+            class="filter-input tw-h-8"
             type="search"
             bind:value={filter}
-            on:input={onFilterChange}
-            on:focus={onMapEditorInputFocus}
-            on:blur={onMapEditorInputUnfocus}
+            on:input={onNameChange}
             placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
         />
-        <select class="tag-selector" bind:value={selectedTag} on:change={() => onTagPick()}>
-            {#each tags as tag}
+        <select class="tag-selector tw-h-8" bind:value={selectedTag} on:change={() => onTagPick()}>
+            {#each tags as tag (tag)}
                 <option>{tag}</option>
             {/each}
         </select>
     </div>
-    <div class="item-name">{pickedItem?.name ?? "no entity selected"}</div>
-    <div class="item-picker-container">
-        {#each rootItem as item (item.name)}
-            <div
-                class="pickable-item {item.name === pickedItem?.name ? 'active' : ''}"
-                on:click={() => onPickItem(item)}
+    <div class="item-variations">
+        {#if pickedItem}
+            <p
+                on:click|preventDefault={backToSelectObject}
+                class="tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0"
             >
+                <ArrowLeftIcon size="12" class="tw-cursor-pointer" />
+                <span class="tw-ml-1 tw-cursor-pointer"
+                    >{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span
+                >
+            </p>
+            <div class="item-name">
+                {pickedItem?.name ?? "this entity"}
+                <img
+                    class="tw-absolute tw-h-2 tw-mx-2 tw-mt-2 tw-cursor-pointer"
+                    src={closeImg}
+                    alt="Unselect object picked"
+                    on:keyup
+                    on:click={backToSelectObject}
+                />
+            </div>
+            <div class="item-variant-picker-container tw-h-28">
+                {#each currentVariants as item (item.id)}
+                    <div
+                        class="pickable-item {item.imagePath === pickedVariant?.imagePath ? 'active' : ''}"
+                        on:click={() => onPickItemVariant(item)}
+                    >
+                        <img class="item-image" src={item.imagePath} alt={item.name} />
+                    </div>
+                {/each}
+            </div>
+            <div class="color-container">
+                {#each variantColors as color (color)}
+                    <div class={currentColor === color ? "active" : ""}>
+                        <button
+                            class="color-selector"
+                            style="background-color: {color};"
+                            on:click={() => onColorChange(color)}
+                        />
+                    </div>
+                {/each}
+            </div>
+        {:else}
+            <div class="item-name">{$LL.mapEditor.entityEditor.selectObject()}</div>
+            <div class="item-variant-picker-container tw-h-28" />
+        {/if}
+    </div>
+    <div class="item-picker-container">
+        {#each rootItem as item (item.id)}
+            <div class="pickable-item {item.id === pickedItem?.id ? 'active' : ''}" on:click={() => onPickItem(item)}>
                 <img class="item-image" src={item.imagePath} alt={item.name} />
             </div>
         {/each}
     </div>
-    <div class="separator">{$LL.mapEditor.entityEditor.itemPicker.selectVariationInstructions()}</div>
-    {#if pickedItem !== null}
-        <div class="item-variant-picker-container">
-            {#each currentVariants as item}
-                <div
-                    class="pickable-item {item.imagePath === pickedVariant?.imagePath ? 'active' : ''}"
-                    on:click={() => onPickItemVariant(item)}
-                >
-                    <img class="item-image" src={item.imagePath} alt={item.name} />
-                </div>
-            {/each}
-        </div>
-        <div class="color-container">
-            {#each variantColors as color}
-                <div class={currentColor === color ? "active" : ""}>
-                    <button
-                        class="color-selector"
-                        style="background-color: {color};"
-                        on:click={() => onColorChange(color)}
-                    />
-                </div>
-            {/each}
-        </div>
-    {/if}
 </div>
 
 <style lang="scss">
     .item-picker {
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
         align-content: center;
         .item-filter {
             .filter-input {
                 max-width: 90%;
+                margin-bottom: 0;
             }
             .tag-selector {
                 max-width: 10%;
@@ -172,10 +221,19 @@
                 overflow-y: auto;
             }
         }
+        .item-variations {
+            margin-top: 10px;
+            margin-bottom: 30px;
+            .item-name {
+                font-weight: bold;
+            }
+        }
         .item-picker-container,
         .item-variant-picker-container {
+            display: flex;
+            justify-content: center;
             width: 19em;
-            height: 16em;
+            max-height: 80vh;
             padding: 0.5em;
             display: flex;
             flex-wrap: wrap;
@@ -185,6 +243,7 @@
                 flex: 0 0 4em;
                 height: 4em;
                 display: flex;
+                margin: 0 0.25rem;
                 cursor: pointer;
                 * {
                     cursor: pointer;
@@ -207,6 +266,7 @@
         .item-variant-picker-container {
             overflow-y: hidden;
             height: 5em;
+            min-height: 80px;
         }
         .color-container {
             display: flex;

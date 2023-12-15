@@ -1,6 +1,6 @@
-import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
+import { Subject, Subscription } from "rxjs";
 import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events/HasPlayerMovedEvent";
-import { Subject } from "rxjs";
+import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import { playerState } from "./playerState";
 import type { WorkadventureProximityMeetingCommands } from "./Player/ProximityMeeting";
@@ -175,17 +175,20 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
      * {@link https://workadventu.re/map-building/api-player.md#listen-to-player-movement | Website documentation}
      *
      * @param {HasPlayerMovedEventCallback} callback Function that will be called when the current player is moving. It contains the event
+     * @return {Subscription} Subscription to the stream. Use ".unsubscribe()" to stop listening.
      */
-    onPlayerMove(callback: HasPlayerMovedEventCallback): void {
-        moveStream.subscribe(callback);
+    onPlayerMove(callback: HasPlayerMovedEventCallback): Subscription {
+        const subscription = moveStream.subscribe(callback);
         sendToWorkadventure({
             type: "onPlayerMove",
             data: undefined,
         });
+        // TODO: we should instead return an object with an unsubscribe method that unsubscribes from the stream and sends the message to the iframe (with a counter WA side to avoid stopping the stream for other listeners)
+        return subscription;
     }
 
     /**
-     * Player will try to find shortest path to the destination point and proceed to move there.
+     * Player will try to find the shortest path to the destination point and proceed to move there.
      * {@link https://workadventu.re/map-building/api-player.md#move-player-to-position | Website documentation}
      *
      * @param {number} x Horizontal position
@@ -197,6 +200,13 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         return await queryWorkadventure({
             type: "movePlayerTo",
             data: { x, y, speed },
+        });
+    }
+
+    public async teleport(x: number, y: number): Promise<void> {
+        return await queryWorkadventure({
+            type: "teleportPlayerTo",
+            data: { x, y },
         });
     }
 

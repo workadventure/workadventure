@@ -1,7 +1,8 @@
+import Debug from "debug";
 import type { UserSimplePeerInterface } from "../../WebRtc/SimplePeer";
 import { STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER } from "../../Enum/EnvironmentVariable";
 import { helpWebRtcSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
-import Debug from "debug";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
 
 export const debug = Debug("CheckTurn");
 
@@ -47,7 +48,7 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
     }
 
     if (window.navigator.userAgent.toLowerCase().indexOf("firefox") != -1) {
-        debug("RTC Peer Connection detection development is not available for Firefox browser!");
+        debug("RTC Peer Connection detection is not available for Firefox browser!");
         return;
     }
 
@@ -67,6 +68,7 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
             debug("onicecandidate => gathering is complete");
             if (!turnServerReached) {
                 debug("onicecandidate => no turn server found after gathering complete");
+                analyticsClient.turnTestFailure();
                 helpWebRtcSettingsVisibleStore.set("error");
             }
             if (checkPeerConnexionStatusTimeOut) {
@@ -90,6 +92,7 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
             debug("onicecandidate => The TURN server is reachable!");
             turnServerReached = true;
             helpWebRtcSettingsVisibleStore.set("hidden");
+            analyticsClient.turnTestSuccess(e.candidate.protocol);
             pc.close();
         }
     };
@@ -125,10 +128,52 @@ export function checkCoturnServer(user: UserSimplePeerInterface) {
     checkPeerConnexionStatusTimeOut = setTimeout(() => {
         if (!turnServerReached) {
             helpWebRtcSettingsVisibleStore.set("pending");
+            analyticsClient.turnTestTimeout();
         }
         if (checkPeerConnexionStatusTimeOut) {
             clearTimeout(checkPeerConnexionStatusTimeOut);
             checkPeerConnexionStatusTimeOut = null;
         }
     }, 5000);
+}
+
+export function getSdpTransform(videoBandwidth = 0) {
+    return (sdp: string) => {
+        sdp = updateBandwidthRestriction(sdp, videoBandwidth, "video");
+
+        return sdp;
+    };
+}
+
+function updateBandwidthRestriction(sdp: string, bandwidth: integer, mediaType: string): string {
+    if (bandwidth <= 0) {
+        return sdp;
+    }
+
+    for (
+        let targetMediaPos = sdp.indexOf(`m=${mediaType}`);
+        targetMediaPos !== -1;
+        targetMediaPos = sdp.indexOf(`m=${mediaType}`, targetMediaPos + 1)
+    ) {
+        // offer TIAS and AS (in this order)
+        for (const modifier of ["AS", "TIAS"]) {
+            const nextMediaPos = sdp.indexOf(`m=`, targetMediaPos + 1);
+            const newBandwidth = modifier === "TIAS" ? (bandwidth >>> 0) * 1000 : bandwidth;
+            const nextBWPos = sdp.indexOf(`b=${modifier}:`, targetMediaPos + 1);
+
+            let mediaSlice = sdp.slice(targetMediaPos);
+            const bwFieldAlreadyExists = nextBWPos !== -1 && (nextBWPos < nextMediaPos || nextMediaPos === -1);
+            if (bwFieldAlreadyExists) {
+                // delete it
+                mediaSlice = mediaSlice.replace(new RegExp(`b=${modifier}:.*[\r?\n]`), "");
+            }
+            // insert b= after c= line.
+            mediaSlice = mediaSlice.replace(/c=IN (.*)(\r?\n)/, `c=IN $1$2b=${modifier}:${newBandwidth}$2`);
+
+            // update the sdp
+            sdp = sdp.slice(0, targetMediaPos) + mediaSlice;
+        }
+    }
+
+    return sdp;
 }

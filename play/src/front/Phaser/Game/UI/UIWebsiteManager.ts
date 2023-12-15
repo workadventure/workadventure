@@ -1,11 +1,13 @@
 import { get } from "svelte/store";
-import type { CreateUIWebsiteEvent, ModifyUIWebsiteEvent, UIWebsite } from "../../../Api/Events/Ui/UIWebsite";
-import { iframeListener } from "../../../Api/IframeListener";
 import { v4 as uuidv4 } from "uuid";
+import type { CreateUIWebsiteEvent, ModifyUIWebsiteEvent, UIWebsiteEvent } from "../../../Api/Events/Ui/UIWebsiteEvent";
+import { iframeListener } from "../../../Api/IframeListener";
 import { uiWebsitesStore } from "../../../Stores/UIWebsiteStore";
 
 class UIWebsiteManager {
     constructor() {
+        // This is a singleton, so we subscribe to iframeListener only once and never unsubscribe.
+        //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
         iframeListener.modifyUIWebsiteStream.subscribe((websiteEvent: ModifyUIWebsiteEvent) => {
             const website = get(uiWebsitesStore).find((currentWebsite) => currentWebsite.id === websiteEvent.id);
             if (!website) {
@@ -64,8 +66,8 @@ class UIWebsiteManager {
         });
     }
 
-    public open(websiteConfig: CreateUIWebsiteEvent): UIWebsite {
-        const newWebsite: UIWebsite = {
+    public open(websiteConfig: CreateUIWebsiteEvent): UIWebsiteEvent {
+        const newWebsite: UIWebsiteEvent = {
             ...websiteConfig,
             id: uuidv4(),
             visible: websiteConfig.visible ?? true,
@@ -76,11 +78,11 @@ class UIWebsiteManager {
         return newWebsite;
     }
 
-    public getAll(): UIWebsite[] {
+    public getAll(): UIWebsiteEvent[] {
         return get(uiWebsitesStore);
     }
 
-    public getById(websiteId: string): UIWebsite | undefined {
+    public getById(websiteId: string): UIWebsiteEvent | undefined {
         return get(uiWebsitesStore).find((currentWebsite) => currentWebsite.id === websiteId);
     }
 
@@ -95,7 +97,7 @@ class UIWebsiteManager {
     }
 
     public closeAll() {
-        get(uiWebsitesStore).forEach((uiWebsite: UIWebsite) => {
+        get(uiWebsitesStore).forEach((uiWebsite: UIWebsiteEvent) => {
             uiWebsitesStore.remove(uiWebsite);
         });
     }

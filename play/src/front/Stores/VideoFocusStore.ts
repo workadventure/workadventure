@@ -1,4 +1,5 @@
 import { get, writable } from "svelte/store";
+import { JitsiTrackStreamWrapper } from "../Streaming/Jitsi/JitsiTrackStreamWrapper";
 import type { Streamable } from "./StreamableCollectionStore";
 import { peerStore } from "./PeerStore";
 
@@ -29,8 +30,13 @@ function createVideoFocusStore() {
 
 export const videoFocusStore = createVideoFocusStore();
 
+// It is ok to not unsubscribe to this store because it is a singleton.
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
 peerStore.subscribe((peers) => {
     const focusedMedia: Streamable | null = get(videoFocusStore);
+    if (focusedMedia instanceof JitsiTrackStreamWrapper) {
+        return;
+    }
     if (focusedMedia && focusedMedia.userId !== undefined && !peers.get(focusedMedia.userId)) {
         videoFocusStore.removeFocus();
     }

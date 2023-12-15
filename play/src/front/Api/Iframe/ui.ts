@@ -1,22 +1,22 @@
+import type { Observable } from "rxjs";
+import { Subject } from "rxjs";
+import { v4 } from "uuid";
+import type { RequireOnlyOne } from "../types";
+import type { ActionsMenuActionClickedEvent } from "../Events/ActionsMenuActionClickedEvent";
+import type { AddPlayerEvent } from "../Events/AddPlayerEvent";
 import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import type { ButtonClickedCallback, ButtonDescriptor } from "./Ui/ButtonDescriptor";
 import { Popup } from "./Ui/Popup";
 import { ActionMessage } from "./Ui/ActionMessage";
 import { Menu } from "./Ui/Menu";
-import type { RequireOnlyOne } from "../types";
-import type { ActionsMenuActionClickedEvent } from "../Events/ActionsMenuActionClickedEvent";
-import type { Observable } from "rxjs";
-import { Subject } from "rxjs";
 import type { UIWebsiteCommands } from "./Ui/UIWebsite";
 import website from "./Ui/UIWebsite";
 import { RemotePlayer } from "./Players/RemotePlayer";
-import type { AddPlayerEvent } from "../Events/AddPlayerEvent";
 import modal from "./Ui/Modal";
 import type { WorkadventureModalCommands } from "./Ui/Modal";
 import buttonActionBar, { WorkAdventureButtonActionBarCommands } from "./Ui/ButtonActionBar";
-import { WorkadventureBannerCommands } from "./Ui/Banner";
-import banner from "./Ui/Banner";
+import banner, { WorkadventureBannerCommands } from "./Ui/Banner";
 
 let popupId = 0;
 const popups: Map<number, Popup> = new Map<number, Popup>();
@@ -33,6 +33,10 @@ interface MenuDescriptor {
     callback?: (commandDescriptor: string) => void;
     iframe?: string;
     allowApi?: boolean;
+    /**
+     * A unique technical key identifying this menu
+     */
+    key?: string;
 }
 
 export type MenuOptions = RequireOnlyOne<MenuDescriptor, "callback" | "iframe">;
@@ -183,52 +187,62 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         commandDescriptor: string,
         options: MenuOptions | ((commandDescriptor: string) => void)
     ): Menu {
-        const menu = new Menu(commandDescriptor);
-
         if (typeof options === "function") {
-            menuCallbacks.set(commandDescriptor, options);
+            options = {
+                callback: options,
+            };
+        }
+
+        const finalOptions = {
+            ...options,
+            allowApi: options.allowApi === undefined ? options.iframe !== undefined : options.allowApi,
+            key: options.key ?? v4(),
+        };
+
+        const menu = new Menu(finalOptions.key);
+
+        if (finalOptions.iframe !== undefined) {
             sendToWorkadventure({
                 type: "registerMenu",
                 data: {
                     name: commandDescriptor,
+                    iframe: finalOptions.iframe,
+                    key: finalOptions.key,
                     options: {
-                        allowApi: false,
+                        allowApi: finalOptions.allowApi,
+                    },
+                },
+            });
+        } else if (finalOptions.callback !== undefined) {
+            menuCallbacks.set(finalOptions.key, finalOptions.callback);
+            sendToWorkadventure({
+                type: "registerMenu",
+                data: {
+                    name: commandDescriptor,
+                    key: finalOptions.key,
+                    options: {
+                        allowApi: finalOptions.allowApi,
                     },
                 },
             });
         } else {
-            options.allowApi = options.allowApi === undefined ? options.iframe !== undefined : options.allowApi;
-
-            if (options.iframe !== undefined) {
-                sendToWorkadventure({
-                    type: "registerMenu",
-                    data: {
-                        name: commandDescriptor,
-                        iframe: options.iframe,
-                        options: {
-                            allowApi: options.allowApi,
-                        },
-                    },
-                });
-            } else if (options.callback !== undefined) {
-                menuCallbacks.set(commandDescriptor, options.callback);
-                sendToWorkadventure({
-                    type: "registerMenu",
-                    data: {
-                        name: commandDescriptor,
-                        options: {
-                            allowApi: options.allowApi,
-                        },
-                    },
-                });
-            } else {
-                throw new Error(
-                    "When adding a menu with WA.ui.registerMenuCommand, you must pass either an iframe or a callback"
-                );
-            }
+            throw new Error(
+                "When adding a menu with WA.ui.registerMenuCommand, you must pass either an iframe or a callback"
+            );
         }
-        menus.set(commandDescriptor, menu);
+
+        menus.set(finalOptions.key, menu);
         return menu;
+    }
+
+    /**
+     * Retrieves a menu from its key.
+     * Keys are set when the menu is created with `registerMenuCommand`
+     * In addition, the standard menus have the following keys: "settings", "profile", "invite", "credit", "globalMessages", "contact", "report"
+     */
+    public getMenuCommand(key: string): Promise<Menu> {
+        // Note: we return a promise because in the future, we might want to check that the key we pass does indeed exist.
+        return Promise.resolve(new Menu(key));
     }
 
     public addActionsMenuKeyToRemotePlayer(id: number, actionKey: string): void {

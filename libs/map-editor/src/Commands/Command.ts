@@ -1,13 +1,12 @@
 import { v4 as uuidv4 } from "uuid";
-import type { CommandConfig } from "../types";
 
 export abstract class Command {
-    public readonly id: string;
+    public readonly commandId: string;
 
-    constructor(id?: string) {
-        this.id = id ?? uuidv4();
+    constructor(commandId?: string) {
+        this.commandId = commandId ?? uuidv4();
     }
 
-    public abstract execute(): CommandConfig;
-    public abstract undo(): CommandConfig;
+    public abstract execute(): Promise<void>;
+    //public abstract undo(): Promise<void>;
 }

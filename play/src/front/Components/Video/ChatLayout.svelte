@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import { afterUpdate, onDestroy } from "svelte";
+    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
     import MediaBox from "./MediaBox.svelte";
 
@@ -29,7 +29,7 @@
 </script>
 
 <div class="chat-mode {cssClass}">
-    {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
+    {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
         <MediaBox streamable={peer} />
     {/each}
 </div>

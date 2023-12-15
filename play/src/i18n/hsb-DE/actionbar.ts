@@ -11,6 +11,11 @@ const actionbar: BaseTranslation = {
     emoji: "emojijowy meni wočinić/začinić",
     menu: "meni wočinić/začinić",
     bo: "pozadkowy běrow wočinić",
+    subtitle: {
+        microphone: "mikrofon",
+        speaker: "wótřerěčak",
+    },
+    app: "aplikacije wočinić/začinić",
 };
 
 export default actionbar;

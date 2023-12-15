@@ -1,27 +1,33 @@
 import { get } from "svelte/store";
-import { connectionManager } from "../../Connexion/ConnectionManager";
-import { localUserStore } from "../../Connexion/LocalUserStore";
-import type { Room } from "../../Connexion/Room";
+import { connectionManager } from "../../Connection/ConnectionManager";
+import { localUserStore } from "../../Connection/LocalUserStore";
+import type { Room } from "../../Connection/Room";
 import { helpCameraSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
-import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import {
+    requestedCameraDeviceIdStore,
+    requestedCameraState,
+    requestedMicrophoneDeviceIdStore,
+    requestedMicrophoneState,
+} from "../../Stores/MediaStore";
 import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
 import { EnableCameraSceneName } from "../Login/EnableCameraScene";
 import { LoginSceneName } from "../Login/LoginScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
-import { GameScene } from "./GameScene";
 import { EmptySceneName } from "../Login/EmptyScene";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraStore } from "../../Stores/MyMediaStore";
+import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
+import { errorScreenStore } from "../../Stores/ErrorScreenStore";
+import { GameScene } from "./GameScene";
 
 /**
  * This class should be responsible for any scene starting/stopping
  */
 export class GameManager {
     private playerName: string | null;
-    private characterLayers: string[] | null;
-    private companion: string | null;
+    private characterTextureIds: string[] | null;
+    private companionTextureId: string | null;
     private startRoom!: Room;
-    private cameraSetup?: { video: unknown; audio: unknown };
     private currentGameSceneName: string | null = null;
     // Note: this scenePlugin is the scenePlugin of the EntryScene. We should always provide a key in methods called on this scenePlugin.
     private scenePlugin!: Phaser.Scenes.ScenePlugin;
@@ -29,9 +35,8 @@ export class GameManager {
 
     constructor() {
         this.playerName = localUserStore.getName();
-        this.characterLayers = localUserStore.getCharacterLayers();
-        this.companion = localUserStore.getCompanion();
-        this.cameraSetup = localUserStore.getCameraSetup();
+        this.characterTextureIds = localUserStore.getCharacterTextures();
+        this.companionTextureId = localUserStore.getCompanionTextureId();
     }
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
@@ -43,20 +48,42 @@ export class GameManager {
             // so we need to redirect to an empty Phaser scene, waiting for the redirection to take place
             return EmptySceneName;
         }
-        this.startRoom = result;
+        if (result.nextScene === "errorScene") {
+            if (result.error instanceof Error) {
+                errorScreenStore.setException(result.error);
+            } else {
+                errorScreenStore.setErrorFromApi(result.error);
+            }
+            return EmptySceneName;
+        }
+        this.startRoom = result.room;
         this.loadMap(this.startRoom);
+
+        const preferredAudioInputDeviceId = localUserStore.getPreferredAudioInputDevice();
+        const preferredVideoInputDeviceId = localUserStore.getPreferredVideoInputDevice();
+
+        console.info("Preferred audio input device: " + preferredAudioInputDeviceId);
+        console.info("Preferred video input device: " + preferredVideoInputDeviceId);
 
         //If player name was not set show login scene with player name
         //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
         if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
             return LoginSceneName;
-        } else if (!this.characterLayers || !this.characterLayers.length) {
-            // TODO: Remove this debug line
-            console.info("Your Woka texture is invalid for this world, got to select Woka scene. Init game manager.");
+        } else if (result.nextScene === "selectCharacterScene") {
             return SelectCharacterSceneName;
-        } else if (this.cameraSetup == undefined) {
+        } else if (result.nextScene === "selectCompanionScene") {
+            return SelectCompanionSceneName;
+        } else if (preferredVideoInputDeviceId === undefined || preferredAudioInputDeviceId === undefined) {
             return EnableCameraSceneName;
         } else {
+            if (preferredVideoInputDeviceId !== "") {
+                requestedCameraDeviceIdStore.set(preferredVideoInputDeviceId);
+            }
+
+            if (preferredAudioInputDeviceId !== "") {
+                requestedMicrophoneDeviceIdStore.set(preferredAudioInputDeviceId);
+            }
+
             this.activeMenuSceneAndHelpCameraSettings();
             //TODO fix to return href with # saved in localstorage
             return this.startRoom.key;
@@ -65,16 +92,24 @@ export class GameManager {
 
     public setPlayerName(name: string): void {
         this.playerName = name;
-        localUserStore.setName(name);
+        // Only save the name if the user is not logged in
+        // If the user is logged in, the name will be fetched from the server. No need to save it locally.
+        if (!localUserStore.isLogged()) {
+            localUserStore.setName(name);
+        }
     }
 
-    public setVisitCardurl(visitCardUrl: string): void {
+    public setVisitCardUrl(visitCardUrl: string): void {
         this.visitCardUrl = visitCardUrl;
     }
 
-    public setCharacterLayers(layers: string[]): void {
-        this.characterLayers = layers;
-        localUserStore.setCharacterLayers(layers);
+    public setCharacterTextureIds(textureIds: string[]): void {
+        this.characterTextureIds = textureIds;
+        // Only save the textures if the user is not logged in
+        // If the user is logged in, the textures will be fetched from the server. No need to save them locally.
+        if (!localUserStore.isLogged()) {
+            localUserStore.setCharacterTextures(textureIds);
+        }
     }
 
     getPlayerName(): string | null {
@@ -85,19 +120,16 @@ export class GameManager {
         return this.visitCardUrl;
     }
 
-    getCharacterLayers(): string[] {
-        if (!this.characterLayers) {
-            throw new Error("characterLayers are not set");
-        }
-        return this.characterLayers;
+    getCharacterTextureIds(): string[] | null {
+        return this.characterTextureIds;
     }
 
-    setCompanion(companion: string | null): void {
-        this.companion = companion;
+    setCompanionTextureId(textureId: string | null): void {
+        this.companionTextureId = textureId;
     }
 
-    getCompanion(): string | null {
-        return this.companion;
+    getCompanionTextureId(): string | null {
+        return this.companionTextureId;
     }
 
     public loadMap(room: Room) {
@@ -105,13 +137,13 @@ export class GameManager {
 
         const gameIndex = this.scenePlugin.getIndex(roomID);
         if (gameIndex === -1) {
-            const game: Phaser.Scene = new GameScene(room, room.mapUrl);
+            const game: Phaser.Scene = new GameScene(room);
             this.scenePlugin.add(roomID, game, false);
         }
     }
 
     public goToStartingMap(): void {
-        console.log("starting " + (this.currentGameSceneName || this.startRoom.key));
+        console.info("starting " + (this.currentGameSceneName || this.startRoom.key));
         this.scenePlugin.start(this.currentGameSceneName || this.startRoom.key);
         this.activeMenuSceneAndHelpCameraSettings();
     }
@@ -144,10 +176,9 @@ export class GameManager {
      * This will close the socket connections and stop the gameScene, but won't remove it.
      */
     leaveGame(targetSceneName: string, sceneClass: Phaser.Scene): void {
-        if (this.currentGameSceneName === null) throw new Error("No current scene id set!");
         gameSceneIsLoadedStore.set(false);
 
-        const gameScene = this.scenePlugin.get(this.currentGameSceneName);
+        const gameScene = this.scenePlugin.get(this.currentGameSceneName ?? "default");
 
         if (!(gameScene instanceof GameScene)) {
             throw new Error("Not the Game Scene");
@@ -175,8 +206,9 @@ export class GameManager {
     }
 
     public getCurrentGameScene(): GameScene {
-        if (this.currentGameSceneName === null) throw new Error("No current scene id set!");
-        const gameScene = this.scenePlugin.get(this.currentGameSceneName);
+        const gameScene = this.scenePlugin.get(
+            this.currentGameSceneName == undefined ? "default" : this.currentGameSceneName
+        );
         if (!(gameScene instanceof GameScene)) {
             throw new Error("Not the Game Scene");
         }

@@ -1,13 +1,15 @@
+import { get, Unsubscriber } from "svelte/store";
+import type CancelablePromise from "cancelable-promise";
+import { PositionMessage_Direction } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
 import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
 import { Character } from "../Entity/Character";
 
-import { get } from "svelte/store";
 import { userMovingStore } from "../../Stores/GameStore";
 import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
-import type CancelablePromise from "cancelable-promise";
-import { PositionMessage_Direction } from "@workadventure/messages";
+import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
+import { visibilityStore } from "../../Stores/VisibilityStore";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -16,6 +18,7 @@ export class Player extends Character {
     private pathToFollow?: { x: number; y: number }[];
     private followingPathPromiseResolve?: (result: { x: number; y: number; cancelled: boolean }) => void;
     private pathWalkingSpeed?: number;
+    private readonly unsubscribeVisibilityStore: Unsubscriber;
 
     constructor(
         Scene: GameScene,
@@ -25,12 +28,18 @@ export class Player extends Character {
         texturesPromise: CancelablePromise<string[]>,
         direction: PositionMessage_Direction,
         moving: boolean,
-        companion: string | null,
         companionTexturePromise?: CancelablePromise<string>
     ) {
-        super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companion, companionTexturePromise, "me");
+        super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companionTexturePromise, "me");
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
+
+        this.unsubscribeVisibilityStore = visibilityStore.subscribe((isVisible) => {
+            if (!isVisible) {
+                this.stop();
+                this.finishFollowingPath(true);
+            }
+        });
     }
 
     public moveUser(delta: number, activeUserInputEvents: ActiveEventList): void {
@@ -58,6 +67,18 @@ export class Player extends Character {
             [x, y] = this.computeFollowPathMovement();
         }
         this.inputStep(activeUserInputEvents, x, y);
+    }
+
+    public rotate(): void {
+        const direction = (this._lastDirection + 1) % (PositionMessage_Direction.LEFT + 1);
+        this.emit(hasMovedEventName, {
+            moving: false,
+            direction: (this._lastDirection + 1) % (PositionMessage_Direction.LEFT + 1),
+            x: this.x,
+            y: this.y,
+        });
+        this._lastDirection = direction;
+        this.playAnimation(this._lastDirection, false);
     }
 
     public sendFollowRequest() {
@@ -99,7 +120,7 @@ export class Player extends Character {
     }
 
     private deduceSpeed(speedUp: boolean, followMode: boolean): number {
-        return this.pathWalkingSpeed ? this.pathWalkingSpeed : speedUp && !followMode ? 25 : 9;
+        return this.pathWalkingSpeed ? this.pathWalkingSpeed : speedUp && !followMode ? 2.5 * WOKA_SPEED : WOKA_SPEED;
     }
 
     private adjustPathToFollowToColliderBounds(path: { x: number; y: number }[]): { x: number; y: number }[] {
@@ -134,7 +155,7 @@ export class Player extends Character {
         const moving = x !== 0 || y !== 0 || joystickMovement;
 
         // Compute direction
-        let direction = this.lastDirection;
+        let direction = this._lastDirection;
         if (moving && !joystickMovement) {
             if (Math.abs(x) > Math.abs(y)) {
                 direction = x < 0 ? PositionMessage_Direction.LEFT : PositionMessage_Direction.RIGHT;
@@ -197,5 +218,10 @@ export class Player extends Character {
 
     private getMovementDirection(xDistance: number, yDistance: number, distance: number): [number, number] {
         return [xDistance / Math.sqrt(distance), yDistance / Math.sqrt(distance)];
+    }
+
+    destroy(): void {
+        this.unsubscribeVisibilityStore();
+        super.destroy();
     }
 }

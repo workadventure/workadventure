@@ -1,41 +1,54 @@
 <script lang="ts">
+    import { onDestroy, onMount } from "svelte";
+    import { Color } from "@workadventure/shared-utils";
+    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import {
         cameraEnergySavingStore,
         localVolumeStore,
         mediaStreamConstraintsStore,
         requestedCameraState,
         silentStore,
+        localStreamStore,
     } from "../Stores/MediaStore";
-    import { localStreamStore } from "../Stores/MediaStore";
+    import { LL } from "../../i18n/i18n-svelte";
+    import { inExternalServiceStore } from "../Stores/MyMediaStore";
+    import { gameManager } from "../Phaser/Game/GameManager";
+    import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
-    import { onDestroy, onMount } from "svelte";
     import { srcObject } from "./Video/utils";
-    import { Color } from "@workadventure/shared-utils";
-    import LL from "../../i18n/i18n-svelte";
-    import Woka from "./Woka/Woka.svelte";
-    import { localUserStore } from "../Connexion/LocalUserStore";
+    import Woka from "./Woka/WokaFromUserId.svelte";
     import microphoneOffImg from "./images/microphone-off.png";
     import cameraOffImg from "./images/camera-off.png";
-    import { inExternalServiceStore } from "../Stores/MyMediaStore";
 
     let stream: MediaStream | null;
-    let userName = localUserStore.getName();
+    let videoElement: HTMLVideoElement;
+    let userName = gameManager.getPlayerName();
     let backgroundColor = Color.getColorByString(userName ?? "default");
     let textColor = Color.getTextColorByBackgroundColor(backgroundColor);
+
+    let aspectRatio = 1;
 
     const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
             stream = value.stream;
+            // TODO: remove this hack
+            setTimeout(() => {
+                aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
+            }, 100);
         } else {
             stream = null;
         }
     });
 
+    let cameraContainer: HTMLDivElement;
+    let isMobile = isMediaBreakpointUp("md");
+    const resizeObserver = new ResizeObserver(() => {
+        isMobile = isMediaBreakpointUp("md");
+    });
+
     onDestroy(() => {
         unsubscribeLocalStreamStore();
     });
-
-    let cameraContainer: HTMLDivElement;
 
     onMount(() => {
         cameraContainer.addEventListener("transitionend", () => {
@@ -49,10 +62,15 @@
                 cameraContainer.style.visibility = "visible";
             }
         });
+        resizeObserver.observe(cameraContainer);
     });
 </script>
 
-<div class="tw-transition-all tw-self-end" bind:this={cameraContainer}>
+<div
+    bind:this={cameraContainer}
+    class="tw-transition-all tw-self-end tw-relative tw-w-full"
+    class:tw-opacity-50={isMobile && $streamableCollectionStore.size === 0}
+>
     <!--If we are in a silent zone-->
     {#if $silentStore}
         <div
@@ -91,7 +109,10 @@
             </div>
             <div class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all">
                 <video
+                    bind:this={videoElement}
                     class="tw-h-full tw-w-full tw-rounded md:tw-object-cover"
+                    class:object-contain={stream && (isMobile || aspectRatio < 1)}
+                    class:tw-max-h-[230px]={stream}
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay
@@ -99,7 +120,7 @@
                     playsinline
                 />
 
-                <div class="voice-meter-my-container tw-justify-end tw-z-[251] tw-pr-2 tw-absolute">
+                <div class="voice-meter-my-container tw-justify-end tw-z-[251] tw-pr-2 tw-absolute tw-w-full">
                     {#if $mediaStreamConstraintsStore.audio}
                         <SoundMeterWidget volume={$localVolumeStore} classcss="tw-absolute" barColor="blue" />
                     {:else}
@@ -141,4 +162,11 @@
 
 <style lang="scss">
     @import "../style/breakpoints.scss";
+    video {
+        object-fit: cover;
+        &.object-contain {
+            object-fit: contain;
+            max-height: 230px;
+        }
+    }
 </style>

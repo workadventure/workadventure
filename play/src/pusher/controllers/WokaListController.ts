@@ -1,8 +1,8 @@
-import { AuthenticatedProviderController } from "./AuthenticatedProviderController";
 import { WokaList } from "@workadventure/messages";
 import type { Server } from "hyper-express";
 import type { JWTTokenManager } from "../services/JWTTokenManager";
 import type { WokaServiceInterface } from "../services/WokaServiceInterface";
+import { AuthenticatedProviderController } from "./AuthenticatedProviderController";
 
 /**
  * A controller to expose the woka list

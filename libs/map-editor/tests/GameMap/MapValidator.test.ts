@@ -1,21 +1,22 @@
-import { describe, expect, it } from "@jest/globals";
-import { ErrorType, isFailure, MapValidation, MapValidator } from "../../src/GameMap/MapValidator";
-import * as fs from "fs";
 import path from "node:path";
+import * as fs from "fs";
+import { describe, expect, it } from "vitest";
+import { ErrorType, isFailure, MapValidation, MapValidator } from "../../src/GameMap/MapValidator";
+import { ZipFileFetcher } from "../../src/GameMap/Validator/ZipFileFetcher";
 
-function loadMap(mapPath: string, logLevel: ErrorType = "info"): MapValidation {
-    const mapValidator = new MapValidator(logLevel);
+async function loadMap(mapPath: string, logLevel: ErrorType = "info"): Promise<MapValidation> {
     const file = fs.readFileSync(mapPath);
     const files = fs.readdirSync(path.dirname(mapPath)).map((dir) => path.resolve(path.dirname(mapPath), dir));
+    const mapValidator = new MapValidator(logLevel, new ZipFileFetcher(mapPath, files));
 
-    return mapValidator.validateStringMap(file.toString(), mapPath, files);
+    return await mapValidator.validateStringMap(file.toString());
 }
 
 describe("Map validator", () => {
-    it("should fail on not parsable JSON", () => {
-        const mapValidator = new MapValidator("warning");
+    it("should fail on not parsable JSON", async () => {
+        const mapValidator = new MapValidator("warning", new ZipFileFetcher("map.json", ["map.json"]));
 
-        const result = mapValidator.validateStringMap("not valid JSON", "map.json", ["map.json"]);
+        const result = await mapValidator.validateStringMap("not valid JSON");
 
         expect(result.ok).toBe(false);
 
@@ -34,10 +35,10 @@ describe("Map validator", () => {
         expect(errors.map[0].type).toBe("error");
     });
 
-    it("should fail on invalid JSON", () => {
-        const mapValidator = new MapValidator("error");
+    it("should fail on invalid JSON", async () => {
+        const mapValidator = new MapValidator("error", new ZipFileFetcher("map.json", ["map.json"]));
 
-        const result = mapValidator.validateMap({ foo: "bar" }, "map.json", ["map.json"]);
+        const result = await mapValidator.validateMap({ foo: "bar" });
 
         expect(result.ok).toBe(false);
 
@@ -57,8 +58,8 @@ describe("Map validator", () => {
         expect(errors.map[0].details).toContain('For field "type": Invalid literal value, expected "map"');
     });
 
-    it("should detect none orthogonal maps", () => {
-        const result = loadMap(__dirname + "/../../../../maps/tests/Validation/orientation.json");
+    it("should detect none orthogonal maps", async () => {
+        const result = await loadMap(__dirname + "/../../../../maps/tests/Validation/orientation.json");
 
         expect(result.ok).toBe(false);
 
@@ -77,8 +78,8 @@ describe("Map validator", () => {
         expect(errors.map[0].type).toBe("error");
     });
 
-    it("should detect invalid entities map property type", () => {
-        const result = loadMap(__dirname + "/../../../../maps/tests/Validation/invalidEntitiesPropertyType.json");
+    it("should detect invalid entities map property type", async () => {
+        const result = await loadMap(__dirname + "/../../../../maps/tests/Validation/invalidEntitiesPropertyType.json");
 
         expect(result.ok).toBe(false);
 
@@ -98,8 +99,8 @@ describe("Map validator", () => {
         expect(errors.map[0].details).toBe('For field "properties.0": Invalid input');
     });
 
-    it("should detect invalid entities", () => {
-        const result = loadMap(__dirname + "/../../../../maps/tests/Validation/invalidEntities.json");
+    it("should detect invalid entities", async () => {
+        const result = await loadMap(__dirname + "/../../../../maps/tests/Validation/invalidEntities.json");
 
         expect(result.ok).toBe(false);
 
@@ -118,8 +119,8 @@ describe("Map validator", () => {
         expect(errors.entities[0].type).toBe("error");
     });
 
-    it("should not be infinite", () => {
-        const result = loadMap(__dirname + "/../../../../maps/tests/Validation/Infini.json");
+    it("should not be infinite", async () => {
+        const result = await loadMap(__dirname + "/../../../../maps/tests/Validation/Infini.json");
 
         expect(result.ok).toBe(false);
 
@@ -138,8 +139,8 @@ describe("Map validator", () => {
         expect(errors.map[0].type).toBe("error");
     });
 
-    it("should warn on != 32x32 tiles", () => {
-        const result = loadMap(__dirname + "/../../../../maps/tests/Validation/tileheight.json");
+    it("should warn on != 32x32 tiles", async () => {
+        const result = await loadMap(__dirname + "/../../../../maps/tests/Validation/tileheight.json");
 
         expect(result.ok).toBe(false);
 
@@ -161,8 +162,8 @@ describe("Map validator", () => {
         expect(errors.map[0].type).toBe("warning");
     });
 
-    it("should detect missing floorLayer", () => {
-        const result = loadMap(__dirname + "/../../../../maps/tests/Validation/floorLayer.json");
+    it("should detect missing floorLayer", async () => {
+        const result = await loadMap(__dirname + "/../../../../maps/tests/Validation/floorLayer.json");
 
         expect(result.ok).toBe(false);
 
@@ -181,8 +182,8 @@ describe("Map validator", () => {
         expect(errors.layers[0].type).toBe("error");
     });
 
-    it("should detect missing start layer", () => {
-        const result = loadMap(__dirname + "/../../../../maps/tests/Validation/start.json");
+    it("should detect missing start layer", async () => {
+        const result = await loadMap(__dirname + "/../../../../maps/tests/Validation/start.json");
 
         expect(result.ok).toBe(false);
 
@@ -204,8 +205,8 @@ describe("Map validator", () => {
         expect(errors.layers[0].type).toBe("warning");
     });
 
-    it("should detect issues in layer properties", () => {
-        const result = loadMap(__dirname + "/../../../../maps/tests/Validation/layerProperties.json");
+    it("should detect issues in layer properties", async () => {
+        const result = await loadMap(__dirname + "/../../../../maps/tests/Validation/layerProperties.json");
 
         expect(result.ok).toBe(false);
 
@@ -255,8 +256,8 @@ describe("Map validator", () => {
         expect(errors.tilesets[0].type).toBe("info");
     });
 
-    it("should detect false collides", () => {
-        const result = loadMap(__dirname + "/../../../../maps/tests/Validation/CollidesFalse.json");
+    it("should detect false collides", async () => {
+        const result = await loadMap(__dirname + "/../../../../maps/tests/Validation/CollidesFalse.json");
 
         expect(result.ok).toBe(false);
 
@@ -278,14 +279,14 @@ describe("Map validator", () => {
         expect(errors.tilesets[0].type).toBe("info");
     });
 
-    it("should not output 'info' logs if minimum level is 'warn'", () => {
-        const result = loadMap(__dirname + "/../../../../maps/tests/Validation/CollidesFalse.json", "warning");
+    it("should not output 'info' logs if minimum level is 'warn'", async () => {
+        const result = await loadMap(__dirname + "/../../../../maps/tests/Validation/CollidesFalse.json", "warning");
 
         expect(result.ok).toBe(true);
     });
 
-    it("should detect no collides", () => {
-        const result = loadMap(__dirname + "/../../../../maps/tests/Validation/NoCollides.json");
+    it("should detect no collides", async () => {
+        const result = await loadMap(__dirname + "/../../../../maps/tests/Validation/NoCollides.json");
 
         expect(result.ok).toBe(false);
 
@@ -304,8 +305,8 @@ describe("Map validator", () => {
         expect(errors.tilesets[0].type).toBe("info");
     });
 
-    it("should detect no image", () => {
-        const result = loadMap(__dirname + "/../../../../maps/tests/Validation/NoImage.json");
+    it("should detect no image", async () => {
+        const result = await loadMap(__dirname + "/../../../../maps/tests/Validation/NoImage.json");
 
         expect(result.ok).toBe(false);
 
@@ -326,8 +327,8 @@ describe("Map validator", () => {
         expect(errors.tilesets[0].type).toBe("error");
     });
 
-    it("should detect not embedded tilesets", () => {
-        const result = loadMap(__dirname + "/../../../../maps/tests/Validation/embarquer.json");
+    it("should detect not embedded tilesets", async () => {
+        const result = await loadMap(__dirname + "/../../../../maps/tests/Validation/embarquer.json");
 
         expect(result.ok).toBe(false);
 
@@ -349,14 +350,14 @@ describe("Map validator", () => {
         expect(errors.tilesets[0].type).toBe("error");
     });
 
-    it("validates a map", () => {
-        const result = loadMap(__dirname + "/../../../../maps/tests/Validation/simplicity.json");
+    it("validates a map", async () => {
+        const result = await loadMap(__dirname + "/../../../../maps/tests/Validation/simplicity.json");
 
         expect(result.ok).toBe(true);
     });
 
     it("knows if a string looks like a map", () => {
-        const mapValidator = new MapValidator("info");
+        const mapValidator = new MapValidator("info", new ZipFileFetcher("map.json", ["map.json"]));
         const file = fs.readFileSync(__dirname + "/../../../../maps/tests/Validation/simplicity.json");
 
         expect(mapValidator.doesStringLooksLikeMap(file.toString())).toBe(true);

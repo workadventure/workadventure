@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package roomApi;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/empty.proto";
+
+message VariableRequest {
+    string room = 1;
+    string name = 2;
+}
+
+message SaveVariableRequest {
+    string room = 1;
+    string name = 2;
+    google.protobuf.Value value = 3;
+}
+
+message EventRequest {
+    string room = 1;
+    string name = 2;
+}
+
+message EventResponse {
+    google.protobuf.Value data = 1;
+    optional int32 senderId = 2;
+}
+
+message DispatchEventRequest {
+    string room = 1;
+    string name = 2;
+    google.protobuf.Value data = 3;
+    repeated int32 targetUserIds = 4;
+}
+
+service RoomApi {
+    rpc readVariable(VariableRequest) returns (google.protobuf.Value); // Get the current value of the given variable
+    rpc listenVariable(VariableRequest) returns (stream google.protobuf.Value); // Listen to value updates for a given variable
+    rpc saveVariable(SaveVariableRequest) returns (google.protobuf.Empty); // Set the value of the given variable
+    rpc broadcastEvent(DispatchEventRequest) returns (google.protobuf.Empty); // Dispatch an event to all users in the room
+    rpc listenToEvent(EventRequest) returns (stream EventResponse); // Listen to events dispatched in the room
+}

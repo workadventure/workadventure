@@ -1,12 +1,14 @@
-import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
+import { Capabilities } from "@workadventure/messages";
+import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import { ShortMapDescriptionList } from "./ShortMapDescription";
 
 export interface AdminInterface {
     /**
      * @var playUri is url of the room
      * @var userIdentifier can to be undefined or email or uuid
      * @var ipAddress
-     * @var characterLayers
+     * @var characterTextures
      * @return MapDetailsData|RoomRedirect
      */
     fetchMemberDataByUuid(
@@ -14,7 +16,8 @@ export interface AdminInterface {
         accessToken: string | undefined,
         playUri: string,
         ipAddress: string,
-        characterLayers: string[],
+        characterTextureIds: string[],
+        companionTextureId?: string,
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse>;
 
@@ -76,7 +79,7 @@ export interface AdminInterface {
      * @param roomUrl
      * @return string[]
      */
-    getUrlRoomsFromSameWorld(roomUrl: string, locale?: string): Promise<string[]>;
+    getUrlRoomsFromSameWorld(roomUrl: string, locale?: string): Promise<ShortMapDescriptionList>;
 
     /**
      * @param accessToken
@@ -97,4 +100,17 @@ export interface AdminInterface {
         message: string,
         byUserEmail: string
     ): Promise<boolean>;
+
+    getTagsList(roomUrl: string): Promise<string[]>;
+
+    /**
+     * Saves the name of the user in the (admin) database
+     */
+    saveName(userIdentifier: string, name: string, roomUrl: string): Promise<void>;
+
+    saveTextures(userIdentifier: string, textures: string[], roomUrl: string): Promise<void>;
+
+    saveCompanionTexture(userIdentifier: string, texture: string, roomUrl: string): Promise<void>;
+
+    getCapabilities(): Promise<Capabilities>;
 }

@@ -9,6 +9,7 @@ const login: BaseTranslation = {
             notValidError: "Incorrect name format",
         },
     },
+    genericError: "An error occurred",
     terms: "By continuing, you are agreeing our {links}.",
     termsOfUse: "terms of use",
     privacyPolicy: "privacy policy",

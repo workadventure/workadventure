@@ -1,23 +1,36 @@
 <script lang="ts">
-    import AreaPreviewWindow from "./AreaPreviewWindow.svelte";
-    import PropertyPreviewSidebar from "./PropertyPreviewSidebar.svelte";
-    import MapEditorSideBar from "./MapEditorSideBar.svelte";
-    import MapEntityEditor from "./MapEntityEditor.svelte";
+    import { fly } from "svelte/transition";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import { mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
+    import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
+    import MapEditorSideBar from "./MapEditorSideBar.svelte";
+    import EntityEditor from "./EntityEditor.svelte";
+    import AreaEditor from "./AreaEditor.svelte";
+    import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
+    import TrashEditor from "./TrashEditor.svelte";
+
+    function closeChat() {
+        mapEditorModeStore.switchMode(false);
+    }
 </script>
 
 <MapEditorSideBar />
-<div class="map-editor tw-bg-dark-blue/95">
-    <div class="sidebar">
-        {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
-            <MapEntityEditor />
-        {/if}
-        {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
-            <AreaPreviewWindow />
-            <PropertyPreviewSidebar />
-        {/if}
-    </div>
+<div class={`map-editor tw-bg-dark-blue/95 ${$mapEditorSelectedToolStore}`}>
+    {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
+        <ConfigureMyRoom />
+    {:else}
+        <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
+            <button class="close-window" on:click={closeChat}>&#215;</button>
+            {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
+                <TrashEditor />
+            {/if}
+            {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
+                <EntityEditor />
+            {/if}
+            {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
+                <AreaEditor />
+            {/if}
+        </div>
+    {/if}
 </div>
 
 <style lang="scss">
@@ -30,6 +43,16 @@
 
         pointer-events: auto;
         color: whitesmoke;
+
+        button.close-window {
+            right: 0.5rem;
+        }
+
+        &.WAMSettingsEditor {
+            width: 80% !important;
+            left: 10%;
+            height: 0 !important;
+        }
 
         .sidebar {
             position: relative !important;

@@ -1,25 +1,27 @@
 <script lang="ts">
-    import type { Game } from "../../Phaser/Game/Game";
+    import { onDestroy, onMount } from "svelte";
     import type { EnableCameraScene } from "../../Phaser/Login/EnableCameraScene";
     import { EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import {
-        audioConstraintStore,
+        requestedCameraDeviceIdStore,
+        batchGetUserMediaStore,
         cameraListStore,
         localStreamStore,
         localVolumeStore,
+        requestedMicrophoneDeviceIdStore,
         microphoneListStore,
         requestedCameraState,
         requestedMicrophoneState,
-        videoConstraintStore,
     } from "../../Stores/MediaStore";
-    import { onDestroy, onMount } from "svelte";
-    import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
+    import type { Game } from "../../Phaser/Game/Game";
     import cinemaCloseImg from "../images/no-video.svg";
     import cinemaImg from "../images/cinema.svg";
     import microphoneImg from "../images/microphone.svg";
-    import LL from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
     import { StringUtils } from "../../Utils/StringUtils";
     import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
+    import { localUserStore } from "../../Connection/LocalUserStore";
+    import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
 
     export let game: Game;
     let selectedCamera: string | undefined = undefined;
@@ -28,6 +30,8 @@
     const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
 
     function submit() {
+        selectCamera();
+        selectMicrophone();
         enableCameraScene.login();
     }
 
@@ -70,29 +74,35 @@
     });
 
     onMount(() => {
-        //init the componenent to enable webcam and microphone
+        //init the component to enable webcam and microphone
+        batchGetUserMediaStore.startBatch();
         myCameraStore.set(true);
         myMicrophoneStore.set(true);
         requestedCameraState.enableWebcam();
         requestedMicrophoneState.enableMicrophone();
+        batchGetUserMediaStore.commitChanges();
     });
 
     function selectCamera() {
-        if (selectedCamera === null) {
+        if (selectedCamera === undefined) {
+            localUserStore.setPreferredVideoInputDevice("");
             requestedCameraState.disableWebcam();
             return;
         }
         requestedCameraState.enableWebcam();
-        videoConstraintStore.setDeviceId(selectedCamera);
+        requestedCameraDeviceIdStore.set(selectedCamera);
+        localUserStore.setPreferredVideoInputDevice(selectedCamera);
     }
 
     function selectMicrophone() {
-        if (selectedMicrophone === null) {
+        if (selectedMicrophone === undefined) {
+            localUserStore.setPreferredAudioInputDevice("");
             requestedMicrophoneState.disableMicrophone();
             return;
         }
         requestedMicrophoneState.enableMicrophone();
-        audioConstraintStore.setDeviceId(selectedMicrophone);
+        requestedMicrophoneDeviceIdStore.set(selectedMicrophone);
+        localUserStore.setPreferredAudioInputDevice(selectedMicrophone);
     }
 </script>
 
@@ -129,9 +139,9 @@
                     <div class="is-dark">
                         <select bind:value={selectedCamera} on:change={selectCamera} class="tw-w-52 md:tw-w-96">
                             <!-- start with camera off -->
-                            <option value={null}>{$LL.camera.disable()}</option>
+                            <option value={undefined}>{$LL.camera.disable()}</option>
 
-                            {#each $cameraListStore as camera}
+                            {#each $cameraListStore ?? [] as camera (camera.deviceId)}
                                 <option value={camera.deviceId}>
                                     {StringUtils.normalizeDeviceName(camera.label)}
                                 </option>
@@ -145,9 +155,9 @@
                     <div class="is-dark">
                         <select bind:value={selectedMicrophone} on:change={selectMicrophone} class="tw-w-52 md:tw-w-96">
                             <!-- start with microphone off -->
-                            <option value={null}>{$LL.audio.disable()}</option>
+                            <option value={undefined}>{$LL.audio.disable()}</option>
 
-                            {#each $microphoneListStore as microphone}
+                            {#each $microphoneListStore ?? [] as microphone (microphone.deviceId)}
                                 <option value={microphone.deviceId}>
                                     {StringUtils.normalizeDeviceName(microphone.label)}
                                 </option>

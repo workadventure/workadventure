@@ -7,7 +7,7 @@ import { get, writable, Writable } from "svelte/store";
 import { logger } from "matrix-js-sdk/src/logger";
 
 import debug from "debug";
-import { localUserStore } from "../Stores/LocalUserStore";
+import { userStore } from "../Stores/LocalUserStore";
 
 const debugLog = debug("matrix");
 
@@ -166,7 +166,7 @@ export class MatrixClient {
             await client.initCrypto();
             await client.startClient();
             client.setGlobalErrorOnUnknownDevices(false);
-            await client.setDisplayName(localUserStore.getPlayerName());
+            await client.setDisplayName(get(userStore).name);
             this.matrix = client;
         } catch (error) {
             if (error instanceof MatrixError) {

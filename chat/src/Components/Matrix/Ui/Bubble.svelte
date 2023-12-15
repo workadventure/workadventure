@@ -28,16 +28,16 @@
     .bubble {
         @apply tw-text-white tw-px-2.5 tw-py-1 tw-rounded-2xl tw-relative tw-text-sm tw-cursor-default;
         &.received {
-            @apply tw-self-start tw-ml-1 tw-bg-green;
+            @apply tw-self-start tw-ml-1 tw-bg-green-500;
         }
         &.sent {
-            @apply tw-self-end tw-mr-1 tw-bg-light-blue;
+            @apply tw-self-end tw-mr-1 tw-bg-blue-400;
         }
         svg.left {
-            @apply tw-absolute tw-bottom-0 tw-left-[-4.7px] tw-w-[10px] tw-fill-green;
+            @apply tw-absolute tw-bottom-0 tw-left-[-4.7px] tw-w-[10px] tw-fill-green-500;
         }
         svg.right {
-            @apply tw-absolute tw-bottom-0 tw-right-[-4.7px] tw-w-[10px] tw-fill-light-blue;
+            @apply tw-absolute tw-bottom-0 tw-right-[-4.7px] tw-w-[10px] tw-fill-blue-400;
         }
     }
 </style>

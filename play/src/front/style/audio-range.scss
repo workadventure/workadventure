@@ -2,7 +2,7 @@ div.main-audio-manager {
   @apply tw-rounded tw-px-2 tw-py-1;
   position: absolute;
   top: 1%;
-  max-height: clamp(150px, 10vh, 15vh); //replace @media for small screen
+  max-height: clamp(150px, 10vh, 15vh); /*replace @media for small screen*/
   width: clamp(200px, 15vw, 15vw);
   margin-left: auto;
   margin-right: auto;

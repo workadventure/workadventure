@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { BackToPusherSpaceMessage, PartialSpaceUser, SpaceUser } from "@workadventure/messages";
+import { mock } from "vitest-mock-extended";
 import { Space } from "../src/Model/Space";
 import { SpacesWatcher } from "../src/Model/SpacesWatcher";
-import { BackToPusherSpaceMessage, PartialSpaceUser, SpaceUser } from "@workadventure/messages";
 import { SpaceSocket } from "../src/SpaceManager";
-import { mock } from "vitest-mock-extended";
 
 describe("Space", () => {
     const space = new Space("test");
@@ -45,6 +45,7 @@ describe("Space", () => {
         space.addWatcher(watcher2);
 
         const spaceUser: SpaceUser = SpaceUser.fromPartial({
+            id: 1,
             uuid: "uuid-test",
             name: "test",
             playUri: "test",
@@ -52,9 +53,10 @@ describe("Space", () => {
             roomName: "test",
             isLogged: false,
             availabilityStatus: 0,
-            videoSharing: false,
-            audioSharing: false,
-            screenSharing: false,
+            cameraState: false,
+            microphoneState: false,
+            megaphoneState: false,
+            screenSharingState: false,
         });
         // Add user to space from watcher1
         space.addUser(watcher1, spaceUser);
@@ -81,6 +83,7 @@ describe("Space", () => {
         space.addWatcher(watcher3);
 
         const spaceUser: PartialSpaceUser = PartialSpaceUser.fromPartial({
+            id: 1,
             uuid: "uuid-test",
             name: "test2",
             playUri: "test2",
@@ -88,9 +91,10 @@ describe("Space", () => {
             roomName: "test2",
             isLogged: true,
             availabilityStatus: 1,
-            videoSharing: true,
-            audioSharing: true,
-            screenSharing: true,
+            cameraState: true,
+            microphoneState: true,
+            megaphoneState: true,
+            screenSharingState: true,
             visitCardUrl: "test2",
         });
 
@@ -110,9 +114,10 @@ describe("Space", () => {
             expect(user?.roomName).toBe("test2");
             expect(user?.isLogged).toBe(true);
             expect(user?.availabilityStatus).toBe(1);
-            expect(user?.videoSharing).toBe(true);
-            expect(user?.audioSharing).toBe(true);
-            expect(user?.screenSharing).toBe(true);
+            expect(user?.cameraState).toBe(true);
+            expect(user?.microphoneState).toBe(true);
+            expect(user?.megaphoneState).toBe(true);
+            expect(user?.screenSharingState).toBe(true);
             expect(user?.visitCardUrl).toBe("test2");
         }
 
@@ -123,7 +128,7 @@ describe("Space", () => {
         const watcher3 = new SpacesWatcher("uuid-watcher-3", spaceSocketToPusher3);
         space.addWatcher(watcher3);
 
-        space.removeUser(watcher1, "uuid-test");
+        space.removeUser(watcher1, 1);
 
         // should have received the removeUser event
         expect(eventsWatcher3.some((message) => message.message?.$case === "removeSpaceUserMessage")).toBe(true);

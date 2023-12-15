@@ -1,5 +1,5 @@
-import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
 import type { PostHog } from "posthog-js";
+import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
 import { Emoji } from "../Stores/Utils/emojiSchema";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare let window: any;
@@ -129,14 +129,6 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa-opened-chat");
-            })
-            .catch((e) => console.error(e));
-    }
-
-    openRegister(): void {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-opened-register");
             })
             .catch((e) => console.error(e));
     }
@@ -307,6 +299,14 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    openedWebsite(url: URL): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_opened_website", { url: url.toString() });
+            })
+            .catch((e) => console.error(e));
+    }
+
     closeMultiIframe(): void {
         this.posthogPromise
             ?.then((posthog) => {
@@ -465,6 +465,140 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_spontaneous_discussion");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openMegaphone(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_action_megaphone");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    startMegaphone(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_start_megaphone");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    stopMegaphone(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_stop_megaphone");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    toggleMapEditor(open: boolean): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_mapeditor_${open ? "open" : "close"}`);
+            })
+            .catch((e) => console.error(e));
+    }
+
+    addMapEditorProperty(type: string, propertyName: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                // 8 decembre 2023: this event is not used anymore
+                // posthog.capture(`wa_map-editor_${type}_add_${propertyName}_property`);
+                posthog.capture(`wa_map-editor_add_property`, {
+                    name: propertyName,
+                    type,
+                });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    removeMapEditorProperty(type: string, propertyName: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                // 8 decembre 2023: this event is not used anymore
+                // posthog.capture(`wa_map-editor_${type}_remove_${propertyName}_property`);
+                posthog.capture(`wa_map-editor_remove_property`, {
+                    name: propertyName,
+                    type,
+                });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    openMapEditorTool(toolName: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                // 8 decembre 2023: this event is not used anymore
+                // posthog.capture(`wa_map-editor_open_${toolName}`);
+                posthog.capture(`wa_map-editor_open_tool`, {
+                    name: toolName,
+                });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    clicPropertykMapEditor(name: string, style?: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_map-editor_click_property`, {
+                    name,
+                    style,
+                });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    enterAreaMapEditor(id: string, name: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_map-editor_enter_area`, {
+                    id,
+                    name,
+                });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    leaveAreaMapEditor(id: string, name: string): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_map-editor_leaver_area`, {
+                    id,
+                    name,
+                });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    turnTestSuccess(protocol: string | null): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_turn_test_success`, { protocol });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    turnTestFailure(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_turn_test_failure`);
+            })
+            .catch((e) => console.error(e));
+    }
+    turnTestTimeout(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_turn_test_timeout`);
+            })
+            .catch((e) => console.error(e));
+    }
+
+    noVideoStreamReceived(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_no_video_stream_received`);
             })
             .catch((e) => console.error(e));
     }

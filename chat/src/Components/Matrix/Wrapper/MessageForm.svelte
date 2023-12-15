@@ -1,8 +1,8 @@
 <script lang="ts">
 
+	import {SendIcon} from "svelte-feather-icons";
 	import TextArea from "../Ui/TextArea.svelte";
 	import Button from "../Ui/Button.svelte";
-	import {SendIcon} from "svelte-feather-icons";
 
 	export let onSend: (text: string) => void;
 

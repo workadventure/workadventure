@@ -1,13 +1,13 @@
+import type { Direction } from "phaser3-rex-plugins/plugins/virtualjoystick.js";
+import { get, Unsubscriber } from "svelte/store";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { MobileJoystick } from "../Components/MobileJoystick";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
-import type { Direction } from "phaser3-rex-plugins/plugins/virtualjoystick.js";
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
-import { get } from "svelte/store";
 
 interface UserInputManagerDatum {
-    keyInstance: Phaser.Input.Keyboard.Key;
+    keyInstance?: Phaser.Input.Keyboard.Key;
     event: UserInputEvent;
 }
 
@@ -63,6 +63,7 @@ export class UserInputManager {
     private joystickForceAccuY = 0;
 
     private userInputHandler: UserInputHandlerInterface;
+    private enableUserInputsStoreUnsubscribe: Unsubscriber;
 
     constructor(scene: Phaser.Scene, userInputHandler: UserInputHandlerInterface) {
         this.scene = scene;
@@ -75,7 +76,7 @@ export class UserInputManager {
             this.initVirtualJoystick();
         }
 
-        enableUserInputsStore.subscribe((enable) => {
+        this.enableUserInputsStoreUnsubscribe = enableUserInputsStore.subscribe((enable) => {
             enable ? this.restoreControls() : this.disableControls();
         });
     }
@@ -110,81 +111,89 @@ export class UserInputManager {
         this.keysCode = [
             {
                 event: UserInputEvent.MoveUp,
-                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z, false),
+                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.Z, false),
             },
             {
                 event: UserInputEvent.MoveUp,
-                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W, false),
+                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.W, false),
             },
             {
                 event: UserInputEvent.MoveLeft,
-                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q, false),
+                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.Q, false),
             },
             {
                 event: UserInputEvent.MoveLeft,
-                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A, false),
+                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.A, false),
             },
             {
                 event: UserInputEvent.MoveDown,
-                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S, false),
+                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.S, false),
             },
             {
                 event: UserInputEvent.MoveRight,
-                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D, false),
+                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.D, false),
             },
 
             {
                 event: UserInputEvent.MoveUp,
-                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP, false),
+                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.UP, false),
             },
             {
                 event: UserInputEvent.MoveLeft,
-                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT, false),
+                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT, false),
             },
             {
                 event: UserInputEvent.MoveDown,
-                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN, false),
+                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN, false),
             },
             {
                 event: UserInputEvent.MoveRight,
-                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT, false),
+                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT, false),
             },
 
             {
                 event: UserInputEvent.SpeedUp,
-                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT, false),
+                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT, false),
             },
 
             {
                 event: UserInputEvent.Interact,
-                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E, false),
+                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.E, false),
             },
             {
                 event: UserInputEvent.Interact,
-                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false),
+                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false),
             },
             {
                 event: UserInputEvent.Follow,
-                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
+                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
             },
             {
                 event: UserInputEvent.Shout,
-                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
+                keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
             },
         ];
     }
 
     clearAllListeners() {
-        this.scene.input.keyboard.removeAllListeners();
+        this.scene.input.keyboard?.removeAllListeners();
     }
 
     disableControls() {
-        this.scene.input.keyboard.disableGlobalCapture();
+        try {
+            this.scene.input.keyboard?.disableGlobalCapture();
+        } catch (e) {
+            console.warn(e);
+        }
         this.isInputDisabled = true;
     }
 
     restoreControls() {
-        this.scene.input.keyboard.enableGlobalCapture();
+        try {
+            this.scene.input.keyboard?.enableGlobalCapture();
+        } catch (e) {
+            console.warn(e);
+        }
         this.isInputDisabled = false;
     }
 
@@ -221,7 +230,7 @@ export class UserInputManager {
         });
         eventsMap.set(UserInputEvent.JoystickMove, this.joystickEvents.any());
         this.keysCode.forEach((d) => {
-            if (d.keyInstance.isDown) {
+            if (d.keyInstance?.isDown) {
                 eventsMap.set(d.event, true);
             }
         });
@@ -236,6 +245,7 @@ export class UserInputManager {
     }
 
     destroy(): void {
+        this.enableUserInputsStoreUnsubscribe();
         this.joystick?.destroy();
         this.joystick = undefined;
     }
@@ -298,14 +308,14 @@ export class UserInputManager {
             }
         );
 
-        this.scene.input.keyboard.on("keyup", (event: KeyboardEvent) => {
+        this.scene.input.keyboard?.on("keyup", (event: KeyboardEvent) => {
             if (this.isInputDisabled) {
                 return;
             }
             this.userInputHandler.handleKeyUpEvent(event);
         });
 
-        this.scene.input.keyboard.on("keydown", (event: KeyboardEvent) => {
+        this.scene.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
             if (this.isInputDisabled) {
                 return;
             }

@@ -1,18 +1,18 @@
 import { XmppSettingsMessage } from "@workadventure/messages";
-import { EJABBERD_WS_URI } from "../Enum/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
 import Debug from "debug";
-import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
-import { MucRoom } from "./MucRoom";
 import { get } from "svelte/store";
-import { activeThreadStore } from "../Stores/ActiveThreadStore";
-import { userStore } from "../Stores/LocalUserStore";
 import * as Stanza from "stanza";
-import WaCustomPlugin, { WaReceivedReactions } from "./Lib/Plugin";
 import * as StanzaProtocol from "stanza/protocol";
 import { JSONData } from "stanza/jxt";
 import { ChatStateMessage, JID } from "stanza";
 import { ParsedJID } from "stanza/JID";
+import { userStore } from "../Stores/LocalUserStore";
+import { activeThreadStore } from "../Stores/ActiveThreadStore";
+import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
+import { EJABBERD_WS_URI } from "../Enum/EnvironmentVariable";
+import WaCustomPlugin, { WaReceivedReactions } from "./Lib/Plugin";
+import { MucRoom } from "./MucRoom";
 import Timer = NodeJS.Timer;
 
 const debug = Debug("chat");
@@ -133,7 +133,7 @@ export class XmppClient {
         });
         client.on("disconnected", (message) => {
             this.status = "disconnected";
-            console.log("disconnected", message);
+            console.info("disconnected", message);
             this.restart();
         });
         client.on("auth:success", () => {
@@ -258,7 +258,7 @@ export class XmppClient {
             xmpp.on("disconnect", () => {
                 debug("XmppClient => createClient => disconnect => status", status);
                 if (status !== "disconnected") {
-                    console.log("Disconnected from xmpp server");
+                    console.info("Disconnected from xmpp server");
                     //if connection manager is not closed or be closing,
                     //continue with the same WebSocket and wait information from server
                     //if (!connectionManager.isClose) {
@@ -367,6 +367,12 @@ export class XmppClient {
             console.trace("clientPromise => receive => error", err);
             this.clientPromise.cancel();
         }));
+    }
+
+    public get readyPromise(): Promise<void> {
+        return this.clientPromise.then(() => {
+            return;
+        });
     }
 
     private xmlRestrictionsToEjabberd(element: string): void {

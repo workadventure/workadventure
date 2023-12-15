@@ -1,10 +1,10 @@
-import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
 import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
+import type { AddPlayerEvent } from "../Events/AddPlayerEvent";
+import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import type { RemotePlayerInterface, RemotePlayerMoved } from "./Players/RemotePlayer";
 import { RemotePlayer, remotePlayers } from "./Players/RemotePlayer";
-import type { AddPlayerEvent } from "../Events/AddPlayerEvent";
 
 export interface PlayerVariableChanged {
     player: RemotePlayer;
@@ -36,6 +36,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
                     return;
                 }
 
+                remotePlayer.setVariable(payloadData.key, payloadData.value);
                 const stream = sharedPlayersVariableStream.get(payloadData.key);
                 if (stream) {
                     stream.next({
@@ -43,7 +44,6 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
                         value: payloadData.value,
                     });
                 }
-                remotePlayer.setVariable(payloadData.key, payloadData.value);
             },
         }),
         apiCallback({
@@ -137,7 +137,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      *
      * ```ts
      * WA.players.onVariableChange("score").subscribe({ player, value } => {
-     *     console.log("Score for player", player.name, "has been updated to", value);
+     *     console.info("Score for player", player.name, "has been updated to", value);
      * });
      * ```
      *
@@ -168,7 +168,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
     public get onPlayerEnters(): Observable<RemotePlayerInterface> {
         if (!this.trackingPlayers) {
             throw new Error(
-                "Cannot call WA.players.onPlayerEnters(). You forgot to call WA.players.configureTracking() first."
+                "Cannot call WA.players.onPlayerEnters. You forgot to call WA.players.configureTracking() first."
             );
         }
         return newRemotePlayersStream;
@@ -190,7 +190,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
     public get onPlayerLeaves(): Observable<RemotePlayerInterface> {
         if (!this.trackingPlayers) {
             throw new Error(
-                "Cannot call WA.players.onPlayerLeaves(). You forgot to call WA.players.configureTracking() first."
+                "Cannot call WA.players.onPlayerLeaves. You forgot to call WA.players.configureTracking() first."
             );
         }
         return removeRemotePlayersStream;

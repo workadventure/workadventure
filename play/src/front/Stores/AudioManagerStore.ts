@@ -66,22 +66,12 @@ function createAudioManagerFileStore() {
 
     return {
         subscribe,
-        playAudio: (
-            url: string | number | boolean,
-            mapDirUrl: string,
-            volume: number | undefined,
-            loop = false
-        ): void => {
+        playAudio: (url: string | number | boolean, mapUrl: string, volume: number | undefined, loop = false): void => {
             update((file: string) => {
                 const audioPath = String(url);
 
-                if (audioPath.indexOf("://") > 0) {
-                    // remote file or stream
-                    file = audioPath;
-                } else {
-                    // local file, include it relative to map directory
-                    file = mapDirUrl + "/" + url;
-                }
+                file = new URL(audioPath, mapUrl).toString();
+
                 audioManagerVolumeStore.setVolume(
                     volume ? Math.min(volume, get(audioManagerVolumeStore).volume) : get(audioManagerVolumeStore).volume
                 );
@@ -105,6 +95,8 @@ export const audioManagerVolumeStore = createAudioManagerVolumeStore();
 
 export const audioManagerFileStore = createAudioManagerFileStore();
 
+// Not unsubscribing is ok, this is a singleton.
+//eslint-disable-next-line svelte/no-ignored-unsubscribe
 peerStore.subscribe((peers) => {
     audioManagerVolumeStore.setTalking(peers.size > 0);
 });

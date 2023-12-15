@@ -1,91 +1,55 @@
-import type { ExSocketInterface } from "../models/Websocket/ExSocketInterface";
-import { PointInterface } from "../models/Websocket/PointInterface";
-import type { AdminSocketTokenData } from "../services/JWTTokenManager";
-import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
-import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
-import { socketManager } from "../services/SocketManager";
-import { emitInBatch } from "../services/IoSocketHelpers";
-import { ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../enums/EnvironmentVariable";
-import type { Zone } from "../models/Zone";
-import type { ExAdminSocketInterface } from "../models/Websocket/ExAdminSocketInterface";
-import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
-import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
-import Axios from "axios";
-import { InvalidTokenError } from "./InvalidTokenError";
 import type HyperExpress from "hyper-express";
 import { z } from "zod";
-import { adminService } from "../services/AdminService";
 import {
     apiVersionHash,
-    AvailabilityStatus,
     ClientToServerMessage,
-    CompanionMessage,
     ErrorApiData,
     ServerToClientMessage as ServerToClientMessageTsProto,
     SubMessage,
     WokaDetail,
-    ApplicationDefinitionInterface,
     SpaceFilterMessage,
+    SpaceUser,
+    CompanionDetail,
 } from "@workadventure/messages";
+import { JsonWebTokenError } from "jsonwebtoken";
+import * as Sentry from "@sentry/node";
+import { Color } from "@workadventure/shared-utils";
+import type { AdminSocketTokenData } from "../services/JWTTokenManager";
+import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
+import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
+import { Socket, socketManager, SocketUpgradeFailed } from "../services/SocketManager";
+import { ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../enums/EnvironmentVariable";
+import type { Zone } from "../models/Zone";
+import type { AdminSocketData } from "../models/Websocket/AdminSocketData";
+import type { AdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
+import { isAdminMessageInterface } from "../models/Websocket/Admin/AdminMessages";
+import { adminService } from "../services/AdminService";
 import { validateWebsocketQuery } from "../services/QueryValidator";
-
-type WebSocket = HyperExpress.compressors.WebSocket;
-
-/**
- * The object passed between the "open" and the "upgrade" methods when opening a websocket
- */
-type UpgradeData = {
-    // Data passed here is accessible on the "websocket" socket object.
-    rejected: false;
-    token: string;
-    userUuid: string;
-    IPAddress: string;
-    userIdentifier: string;
-    roomId: string;
-    name: string;
-    companion?: CompanionMessage;
-    availabilityStatus: AvailabilityStatus;
-    lastCommandId?: string;
-    characterLayers: WokaDetail[];
-    messages: unknown[];
-    tags: string[];
-    visitCardUrl: string | null;
-    userRoomToken?: string;
-    textures: WokaDetail[];
-    applications?: ApplicationDefinitionInterface[] | null;
-    position: PointInterface;
-    viewport: {
-        top: number;
-        right: number;
-        bottom: number;
-        left: number;
-    };
-    activatedInviteUser?: boolean;
-    isLogged: boolean;
-    canEdit: boolean;
-    matrixUserId: string | null | undefined;
-};
+import { SocketData } from "../models/Websocket/SocketData";
+import { emitInBatch } from "../services/IoSocketHelpers";
 
 type UpgradeFailedInvalidData = {
     rejected: true;
-    reason: "tokenInvalid" | "textureInvalid" | "invalidVersion" | null;
+    reason: "tokenInvalid" | "invalidVersion" | null;
     message: string;
-    status: number;
     roomId: string;
 };
 
 type UpgradeFailedErrorData = {
     rejected: true;
     reason: "error";
-    status: number;
     error: ErrorApiData;
 };
 
-export type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
+type UpgradeFailedInvalidTexture = {
+    rejected: true;
+    reason: "invalidTexture";
+    entityType: "character" | "companion";
+};
+
+export type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData | UpgradeFailedInvalidTexture;
 
 export class IoSocketController {
-    private nextUserId = 1;
-
     constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
         this.ioConnection();
         if (ADMIN_SOCKETS_TOKEN) {
@@ -94,17 +58,28 @@ export class IoSocketController {
     }
 
     adminRoomSocket(): void {
-        this.app.ws("/admin/rooms", {
+        this.app.ws<AdminSocketData>("/admin/rooms", {
             upgrade: (res, req, context) => {
                 const websocketKey = req.getHeader("sec-websocket-key");
                 const websocketProtocol = req.getHeader("sec-websocket-protocol");
                 const websocketExtensions = req.getHeader("sec-websocket-extensions");
 
-                res.upgrade({}, websocketKey, websocketProtocol, websocketExtensions, context);
+                res.upgrade<AdminSocketData>(
+                    {
+                        adminConnections: new Map(),
+                        disconnecting: false,
+                    },
+                    websocketKey,
+                    websocketProtocol,
+                    websocketExtensions,
+                    context
+                );
             },
             open: (ws) => {
-                console.log("Admin socket connect to client on " + Buffer.from(ws.getRemoteAddressAsText()).toString());
-                ws.disconnecting = false;
+                console.info(
+                    "Admin socket connect to client on " + Buffer.from(ws.getRemoteAddressAsText()).toString()
+                );
+                ws.getUserData().disconnecting = false;
             },
             message: (ws, arrayBuffer): void => {
                 try {
@@ -117,7 +92,9 @@ export class IoSocketController {
                     } catch (err) {
                         if (err instanceof z.ZodError) {
                             console.error(err.issues);
+                            Sentry.captureException(err.issues);
                         }
+                        Sentry.captureException(`Invalid message received. ${message}`);
                         console.error("Invalid message received.", message);
                         ws.send(
                             JSON.stringify({
@@ -127,7 +104,7 @@ export class IoSocketController {
                                 },
                             })
                         );
-                        ws.close();
+                        ws.end(1007, "Invalid message received!");
                         return;
                     }
 
@@ -138,6 +115,7 @@ export class IoSocketController {
                     try {
                         data = jwtTokenManager.verifyAdminSocketToken(token);
                     } catch (e) {
+                        Sentry.captureException(`Admin socket access refused for token: ${token} ${e}`);
                         console.error("Admin socket access refused for token: " + token, e);
                         ws.send(
                             JSON.stringify({
@@ -147,7 +125,7 @@ export class IoSocketController {
                                 },
                             })
                         );
-                        ws.close();
+                        ws.end(1008, "Access refused");
                         return;
                     }
 
@@ -162,6 +140,7 @@ export class IoSocketController {
                             const errorMessage = `Admin socket refused for client on ${Buffer.from(
                                 ws.getRemoteAddressAsText()
                             ).toString()} listening of : \n${JSON.stringify(notAuthorizedRoom)}`;
+                            Sentry.captureException(errorMessage);
                             console.error(errorMessage);
                             ws.send(
                                 JSON.stringify({
@@ -171,14 +150,15 @@ export class IoSocketController {
                                     },
                                 })
                             );
-                            ws.close();
+                            ws.end(1008, "Access refused");
                             return;
                         }
 
                         for (const roomId of message.roomIds) {
-                            socketManager
-                                .handleAdminRoom(ws as ExAdminSocketInterface, roomId)
-                                .catch((e) => console.error(e));
+                            socketManager.handleAdminRoom(ws, roomId).catch((e) => {
+                                console.error(e);
+                                Sentry.captureException(e);
+                            });
                         }
                     } else if (message.event === "user-message") {
                         const messageToEmit = message.message;
@@ -191,7 +171,10 @@ export class IoSocketController {
                             if (messageToEmit.type === "banned") {
                                 socketManager
                                     .emitBan(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type, roomId)
-                                    .catch((error) => console.error(error));
+                                    .catch((error) => {
+                                        Sentry.captureException(error);
+                                        console.error(error);
+                                    });
                             } else if (messageToEmit.type === "ban") {
                                 socketManager
                                     .emitSendUserMessage(
@@ -200,29 +183,32 @@ export class IoSocketController {
                                         messageToEmit.type,
                                         roomId
                                     )
-                                    .catch((error) => console.error(error));
+                                    .catch((error) => {
+                                        Sentry.captureException(error);
+                                        console.error(error);
+                                    });
                             }
                         }
                     }
                 } catch (err) {
+                    Sentry.captureException(err);
                     console.error(err);
                 }
             },
             close: (ws) => {
-                const Client = ws as ExAdminSocketInterface;
                 try {
-                    Client.disconnecting = true;
-                    socketManager.leaveAdminRoom(Client);
+                    ws.getUserData().disconnecting = true;
+                    socketManager.leaveAdminRoom(ws);
                 } catch (e) {
-                    console.error('An error occurred on admin "disconnect"');
-                    console.error(e);
+                    Sentry.captureException(`An error occurred on admin "disconnect" ${e}`);
+                    console.error(`An error occurred on admin "disconnect" ${e}`);
                 }
             },
         });
     }
 
     ioConnection(): void {
-        this.app.ws("/room", {
+        this.app.ws<SocketData | UpgradeFailedData>("/room", {
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
             idleTimeout: SOCKET_IDLE_TIMER,
@@ -246,14 +232,14 @@ export class IoSocketController {
                             roomId: z.string(),
                             token: z.string().optional(),
                             name: z.string(),
-                            characterLayers: z.union([z.string(), z.string().array()]),
+                            characterTextureIds: z.union([z.string(), z.string().array()]).optional(),
                             x: z.coerce.number(),
                             y: z.coerce.number(),
                             top: z.coerce.number(),
                             bottom: z.coerce.number(),
                             left: z.coerce.number(),
                             right: z.coerce.number(),
-                            companion: z.string().optional(),
+                            companionTextureId: z.string().optional(),
                             availabilityStatus: z.coerce.number(),
                             lastCommandId: z.string().optional(),
                             version: z.string(),
@@ -267,7 +253,7 @@ export class IoSocketController {
                     const websocketKey = req.getHeader("sec-websocket-key");
                     const websocketProtocol = req.getHeader("sec-websocket-protocol");
                     const websocketExtensions = req.getHeader("sec-websocket-extensions");
-                    const IPAddress = req.getHeader("x-forwarded-for");
+                    const ipAddress = req.getHeader("x-forwarded-for");
                     const locale = req.getHeader("accept-language");
 
                     const {
@@ -283,6 +269,7 @@ export class IoSocketController {
                         availabilityStatus,
                         lastCommandId,
                         version,
+                        companionTextureId,
                     } = query;
 
                     try {
@@ -295,8 +282,8 @@ export class IoSocketController {
                                 {
                                     rejected: true,
                                     reason: "error",
-                                    status: 419,
                                     error: {
+                                        status: "error",
                                         type: "retry",
                                         title: "Please refresh",
                                         subtitle: "New version available",
@@ -316,14 +303,12 @@ export class IoSocketController {
                             );
                         }
 
-                        const companion: CompanionMessage | undefined = query.companion
-                            ? {
-                                  name: query.companion,
-                              }
-                            : undefined;
-
-                        const characterLayers: string[] =
-                            typeof query.characterLayers === "string" ? [query.characterLayers] : query.characterLayers;
+                        const characterTextureIds: string[] =
+                            query.characterTextureIds === undefined
+                                ? []
+                                : typeof query.characterTextureIds === "string"
+                                ? [query.characterTextureIds]
+                                : query.characterTextureIds;
 
                         const tokenData = token ? jwtTokenManager.verifyJWTToken(token) : null;
 
@@ -338,21 +323,24 @@ export class IoSocketController {
                         let memberTags: string[] = [];
                         let memberVisitCardUrl: string | null = null;
                         let memberUserRoomToken: string | undefined;
-                        let memberTextures: WokaDetail[] = [];
                         let userData: FetchMemberDataByUuidResponse = {
+                            status: "ok",
                             email: userIdentifier,
                             userUuid: userIdentifier,
                             tags: [],
                             visitCardUrl: null,
-                            textures: [],
+                            isCharacterTexturesValid: true,
+                            characterTextures: [],
+                            isCompanionTextureValid: true,
+                            companionTexture: undefined,
                             messages: [],
-                            anonymous: true,
                             userRoomToken: undefined,
                             activatedInviteUser: true,
                             canEdit: false,
                         };
 
-                        let characterLayerObjs: WokaDetail[];
+                        let characterTextures: WokaDetail[];
+                        let companionTexture: CompanionDetail | undefined;
 
                         try {
                             try {
@@ -360,103 +348,96 @@ export class IoSocketController {
                                     userIdentifier,
                                     tokenData?.accessToken,
                                     roomId,
-                                    IPAddress,
-                                    characterLayers,
+                                    ipAddress,
+                                    characterTextureIds,
+                                    companionTextureId,
                                     locale
                                 );
-                            } catch (err) {
-                                if (Axios.isAxiosError(err)) {
-                                    const errorType = ErrorApiData.safeParse(err?.response?.data);
-                                    if (errorType.success) {
-                                        if (upgradeAborted.aborted) {
-                                            // If the response points to nowhere, don't attempt an upgrade
-                                            return;
-                                        }
 
-                                        console.error(
-                                            "Axios error on room connection",
-                                            err?.response?.status,
-                                            errorType.data
-                                        );
+                                if (userData.status === "ok" && !userData.isCharacterTexturesValid) {
+                                    return res.upgrade(
+                                        {
+                                            rejected: true,
+                                            reason: "invalidTexture",
+                                            entityType: "character",
+                                        } satisfies UpgradeFailedInvalidTexture,
+                                        websocketKey,
+                                        websocketProtocol,
+                                        websocketExtensions,
+                                        context
+                                    );
+                                }
+                                if (userData.status === "ok" && !userData.isCompanionTextureValid) {
+                                    return res.upgrade(
+                                        {
+                                            rejected: true,
+                                            reason: "invalidTexture",
+                                            entityType: "companion",
+                                        } satisfies UpgradeFailedInvalidTexture,
+                                        websocketKey,
+                                        websocketProtocol,
+                                        websocketExtensions,
+                                        context
+                                    );
+                                }
 
-                                        return res.upgrade(
-                                            {
-                                                rejected: true,
-                                                reason: "error",
-                                                status: err?.response?.status || 500,
-                                                error: errorType.data,
-                                            } satisfies UpgradeFailedData,
-                                            websocketKey,
-                                            websocketProtocol,
-                                            websocketExtensions,
-                                            context
-                                        );
-                                    } else {
-                                        console.error("Unknown error on room connection", err);
-                                        if (upgradeAborted.aborted) {
-                                            // If the response points to nowhere, don't attempt an upgrade
-                                            return;
-                                        }
-                                        return res.upgrade(
-                                            {
-                                                rejected: true,
-                                                reason: null,
-                                                status: 500,
-                                                message: err?.response?.data,
-                                                roomId: roomId,
-                                            } satisfies UpgradeFailedData,
-                                            websocketKey,
-                                            websocketProtocol,
-                                            websocketExtensions,
-                                            context
-                                        );
+                                if (userData.status !== "ok") {
+                                    if (upgradeAborted.aborted) {
+                                        // If the response points to nowhere, don't attempt an upgrade
+                                        return;
                                     }
+
+                                    return res.upgrade(
+                                        {
+                                            rejected: true,
+                                            reason: "error",
+                                            error: userData,
+                                        } satisfies UpgradeFailedData,
+                                        websocketKey,
+                                        websocketProtocol,
+                                        websocketExtensions,
+                                        context
+                                    );
+                                }
+                            } catch (err) {
+                                if (upgradeAborted.aborted) {
+                                    // If the response points to nowhere, don't attempt an upgrade
+                                    return;
                                 }
                                 throw err;
                             }
                             memberTags = userData.tags;
                             memberVisitCardUrl = userData.visitCardUrl;
-                            memberTextures = userData.textures;
+                            characterTextures = userData.characterTextures;
+                            companionTexture = userData.companionTexture ?? undefined;
                             memberUserRoomToken = userData.userRoomToken;
-                            characterLayerObjs = memberTextures;
                         } catch (e) {
-                            console.log(
+                            console.info(
                                 "access not granted for user " + (userIdentifier || "anonymous") + " and room " + roomId
                             );
+                            Sentry.captureException(e);
                             console.error(e);
                             throw new Error("User cannot access this world");
                         }
 
-                        // Generate characterLayers objects from characterLayers string[]
-                        /*const characterLayerObjs: CharacterLayer[] =
-                                SocketManager.mergeCharacterLayersAndCustomTextures(characterLayers, memberTextures);*/
-
                         if (upgradeAborted.aborted) {
-                            console.log("Ouch! Client disconnected before we could upgrade it!");
+                            console.info("Ouch! Client disconnected before we could upgrade it!");
                             /* You must not upgrade now */
                             return;
                         }
 
-                        const responseData: UpgradeData = {
-                            // Data passed here is accessible on the "websocket" socket object.
+                        const socketData: SocketData = {
                             rejected: false,
+                            disconnecting: false,
                             token: token && typeof token === "string" ? token : "",
-                            userUuid: userData.userUuid,
-                            IPAddress,
-                            userIdentifier,
                             roomId,
+                            userId: undefined,
+                            userUuid: userData.userUuid,
+                            isLogged,
+                            ipAddress,
                             name,
-                            companion,
-                            availabilityStatus,
-                            lastCommandId,
-                            characterLayers: characterLayerObjs,
-                            tags: memberTags,
-                            visitCardUrl: memberVisitCardUrl,
-                            userRoomToken: memberUserRoomToken,
-                            textures: memberTextures,
-                            activatedInviteUser: userData.activatedInviteUser || undefined,
-                            canEdit: userData.canEdit ?? false,
-                            applications: userData.applications,
+                            characterTextures,
+                            companionTexture,
                             position: {
                                 x: x,
                                 y: y,
@@ -469,14 +450,57 @@ export class IoSocketController {
                                 bottom,
                                 left,
                             },
-                            isLogged,
+                            availabilityStatus,
+                            lastCommandId,
                             messages: [],
+                            tags: memberTags,
+                            visitCardUrl: memberVisitCardUrl,
+                            userRoomToken: memberUserRoomToken,
+                            activatedInviteUser: userData.activatedInviteUser || undefined,
+                            applications: userData.applications,
+                            canEdit: userData.canEdit ?? false,
+                            spaceUser: SpaceUser.fromPartial({
+                                id: 0,
+                                uuid: userData.userUuid,
+                                name,
+                                playUri: roomId,
+                                // FIXME : Get room name from admin
+                                roomName: "",
+                                availabilityStatus,
+                                isLogged,
+                                color: Color.getColorByString(name),
+                                tags: memberTags,
+                                cameraState: false,
+                                screenSharingState: false,
+                                microphoneState: false,
+                                megaphoneState: false,
+                                characterTextures: characterTextures.map((characterTexture) => ({
+                                    url: characterTexture.url,
+                                    id: characterTexture.id,
+                                })),
+                                visitCardUrl: memberVisitCardUrl ?? undefined,
+                            }),
+                            emitInBatch: (payload: SubMessage): void => {},
+                            batchedMessages: {
+                                event: "",
+                                payload: [],
+                            },
+                            batchTimeout: null,
+                            backConnection: undefined,
+                            listenedZones: new Set<Zone>(),
+                            pusherRoom: undefined,
+                            spaces: [],
+                            spacesFilters: new Map<string, SpaceFilterMessage[]>(),
+                            cameraState: undefined,
+                            microphoneState: undefined,
+                            screenSharingState: undefined,
+                            megaphoneState: undefined,
                             matrixUserId,
                         };
 
                         /* This immediately calls open handler, you must not use res after this call */
-                        res.upgrade(
-                            responseData,
+                        res.upgrade<SocketData>(
+                            socketData,
                             /* Spell these correctly */
                             websocketKey,
                             websocketProtocol,
@@ -485,7 +509,8 @@ export class IoSocketController {
                         );
                     } catch (e) {
                         if (e instanceof Error) {
-                            if (!(e instanceof InvalidTokenError)) {
+                            if (!(e instanceof JsonWebTokenError)) {
+                                Sentry.captureException(e);
                                 console.error(e);
                             }
                             if (upgradeAborted.aborted) {
@@ -495,8 +520,7 @@ export class IoSocketController {
                             res.upgrade(
                                 {
                                     rejected: true,
-                                    reason: e instanceof InvalidTokenError ? tokenInvalidException : null,
-                                    status: 401,
+                                    reason: e instanceof JsonWebTokenError ? tokenInvalidException : null,
                                     message: e.message,
                                     roomId,
                                 } satisfies UpgradeFailedData,
@@ -515,7 +539,6 @@ export class IoSocketController {
                                     rejected: true,
                                     reason: null,
                                     message: "500 Internal Server Error",
-                                    status: 500,
                                     roomId,
                                 } satisfies UpgradeFailedData,
                                 websocketKey,
@@ -525,50 +548,51 @@ export class IoSocketController {
                             );
                         }
                     }
-                })().catch((e) => console.error(e));
+                })().catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
             },
             /* Handlers */
-            open: (_ws: WebSocket) => {
+            open: (ws) => {
                 (async () => {
-                    const ws = _ws as WebSocket & (UpgradeData | UpgradeFailedData);
-                    if (ws.rejected === true) {
+                    const socketData = ws.getUserData();
+                    if (socketData.rejected === true) {
+                        const socket = ws as SocketUpgradeFailed;
                         // If there is a room in the error, let's check if we need to clean it.
-                        if (ws.roomId) {
-                            socketManager.deleteRoomIfEmptyFromId(ws.roomId);
+                        if ("roomId" in socketData) {
+                            socketManager.deleteRoomIfEmptyFromId(socketData.roomId);
                         }
 
-                        //FIX ME to use status code
-                        if (ws.reason === tokenInvalidException) {
-                            socketManager.emitTokenExpiredMessage(ws);
-                        } else if (ws.reason === "textureInvalid") {
-                            socketManager.emitInvalidTextureMessage(ws);
-                        } else if (ws.reason === "error") {
-                            socketManager.emitErrorScreenMessage(ws, ws.error);
+                        if (socketData.reason === tokenInvalidException) {
+                            socketManager.emitTokenExpiredMessage(socket);
+                        } else if (socketData.reason === "error") {
+                            socketManager.emitErrorScreenMessage(socket, socketData.error);
+                        } else if (socketData.reason === "invalidTexture") {
+                            if (socketData.entityType === "character") {
+                                socketManager.emitInvalidCharacterTextureMessage(socket);
+                            } else {
+                                socketManager.emitInvalidCompanionTextureMessage(socket);
+                            }
                         } else {
-                            socketManager.emitConnexionErrorMessage(ws, ws.message);
+                            socketManager.emitConnectionErrorMessage(socket, socketData.message);
                         }
-                        setTimeout(() => ws.close(), 0);
+                        ws.end(1000, "Error message sent");
                         return;
                     }
 
-                    // Let's join the room
-                    const client = this.initClient(ws);
-                    await socketManager.handleJoinRoom(client);
-                    // TODO : Get prefix from Admin and joinSpace prefixed
-                    const spaceName = client.roomId + "/space";
+                    // Mandatory for typing hint
+                    const socket = ws as Socket;
 
-                    await socketManager.handleJoinSpace(client, spaceName, {
-                        filterName: "default",
-                        spaceName,
-                        filter: {
-                            $case: "spaceFilterEverybody",
-                            spaceFilterEverybody: {},
-                        },
-                    });
+                    socketData.emitInBatch = (payload: SubMessage): void => {
+                        emitInBatch(socket, payload);
+                    };
+
+                    await socketManager.handleJoinRoom(socket);
 
                     //get data information and show messages
-                    if (client.messages && Array.isArray(client.messages)) {
-                        client.messages.forEach((c: unknown) => {
+                    if (socketData.messages && Array.isArray(socketData.messages)) {
+                        socketData.messages.forEach((c: unknown) => {
                             const messageToSend = z.object({ type: z.string(), message: z.string() }).parse(c);
 
                             const bytes = ServerToClientMessageTsProto.encode({
@@ -581,8 +605,8 @@ export class IoSocketController {
                                 },
                             }).finish();
 
-                            if (!client.disconnecting) {
-                                client.send(bytes, true);
+                            if (!socketData.disconnecting) {
+                                socket.send(bytes, true);
                             }
                         });
                     }
@@ -616,7 +640,6 @@ export class IoSocketController {
                         client.send(serverToClientMessage.serializeBinary().buffer, true);
                     }
                     const endTimestamp2 = Date.now();
-                    console.log("Time taken 2: " + (endTimestamp2 - startTimestamp2) + "ms");
 
                     const startTimestamp = Date.now();
                     for (let i = 0; i < 100000; i++) {
@@ -649,14 +672,15 @@ export class IoSocketController {
                         client.send(bytes);
                     }
                     const endTimestamp = Date.now();
-                    console.log("Time taken: " + (endTimestamp - startTimestamp) + "ms");
                     */
-                })().catch((e) => console.error(e));
+                })().catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
             },
             message: (ws, arrayBuffer): void => {
                 (async () => {
-                    const client = ws as ExSocketInterface;
-
+                    const socket = ws as Socket;
                     const message = ClientToServerMessage.decode(new Uint8Array(arrayBuffer));
 
                     if (!message.message) {
@@ -666,48 +690,134 @@ export class IoSocketController {
 
                     switch (message.message.$case) {
                         case "viewportMessage": {
-                            socketManager.handleViewport(client, message.message.viewportMessage);
+                            socketManager.handleViewport(socket, message.message.viewportMessage);
                             break;
                         }
                         case "userMovesMessage": {
-                            socketManager.handleUserMovesMessage(client, message.message.userMovesMessage);
+                            socketManager.handleUserMovesMessage(socket, message.message.userMovesMessage);
                             break;
                         }
                         case "playGlobalMessage": {
-                            await socketManager.emitPlayGlobalMessage(client, message.message.playGlobalMessage);
+                            await socketManager.emitPlayGlobalMessage(socket, message.message.playGlobalMessage);
                             break;
                         }
                         case "reportPlayerMessage": {
-                            await socketManager.handleReportMessage(client, message.message.reportPlayerMessage);
+                            await socketManager.handleReportMessage(socket, message.message.reportPlayerMessage);
                             break;
                         }
                         case "addSpaceFilterMessage": {
-                            socketManager.handleAddSpaceFilterMessage(client, message.message.addSpaceFilterMessage);
+                            socketManager.handleAddSpaceFilterMessage(socket, message.message.addSpaceFilterMessage);
                             break;
                         }
                         case "updateSpaceFilterMessage": {
                             socketManager.handleUpdateSpaceFilterMessage(
-                                client,
+                                socket,
                                 message.message.updateSpaceFilterMessage
                             );
                             break;
                         }
                         case "removeSpaceFilterMessage": {
                             socketManager.handleRemoveSpaceFilterMessage(
-                                client,
+                                socket,
                                 message.message.removeSpaceFilterMessage
                             );
                             break;
                         }
                         case "setPlayerDetailsMessage": {
-                            socketManager.handleSetPlayerDetails(client, message.message.setPlayerDetailsMessage);
+                            socketManager.handleSetPlayerDetails(socket, message.message.setPlayerDetailsMessage);
+                            break;
+                        }
+                        case "watchSpaceMessage": {
+                            void socketManager.handleJoinSpace(
+                                socket,
+                                message.message.watchSpaceMessage.spaceName,
+                                message.message.watchSpaceMessage.spaceFilter
+                            );
+                            break;
+                        }
+                        case "updateSpaceMetadataMessage": {
+                            const isMetadata = z
+                                .record(z.string(), z.unknown())
+                                .safeParse(JSON.parse(message.message.updateSpaceMetadataMessage.metadata));
+                            if (!isMetadata.success) {
+                                Sentry.captureException(
+                                    `Invalid metadata received. ${message.message.updateSpaceMetadataMessage.metadata}`
+                                );
+                                console.error(
+                                    "Invalid metadata received.",
+                                    message.message.updateSpaceMetadataMessage.metadata
+                                );
+                                return;
+                            }
+
+                            await socketManager.handleUpdateSpaceMetadata(
+                                socket,
+                                message.message.updateSpaceMetadataMessage.spaceName,
+                                isMetadata.data
+                            );
+                            break;
+                        }
+                        case "unwatchSpaceMessage": {
+                            void socketManager.handleLeaveSpace(socket, message.message.unwatchSpaceMessage.spaceName);
+                            break;
+                        }
+                        case "cameraStateMessage": {
+                            socketManager.handleCameraState(socket, message.message.cameraStateMessage.value);
+                            break;
+                        }
+                        case "microphoneStateMessage": {
+                            socketManager.handleMicrophoneState(socket, message.message.microphoneStateMessage.value);
+                            break;
+                        }
+                        case "screenSharingStateMessage": {
+                            socketManager.handleScreenSharingState(
+                                socket,
+                                message.message.screenSharingStateMessage.value
+                            );
+                            break;
+                        }
+                        case "megaphoneStateMessage": {
+                            socketManager.handleMegaphoneState(socket, message.message.megaphoneStateMessage);
+                            break;
+                        }
+                        case "jitsiParticipantIdSpaceMessage": {
+                            socketManager.handleJitsiParticipantIdSpace(
+                                socket,
+                                message.message.jitsiParticipantIdSpaceMessage.spaceName,
+                                message.message.jitsiParticipantIdSpaceMessage.value
+                            );
+                            break;
+                        }
+                        case "queryMessage": {
+                            switch (message.message.queryMessage.query?.$case) {
+                                case "roomTagsQuery": {
+                                    void socketManager.handleRoomTagsQuery(socket, message.message.queryMessage);
+                                    break;
+                                }
+                                case "embeddableWebsiteQuery": {
+                                    void socketManager.handleEmbeddableWebsiteQuery(
+                                        socket,
+                                        message.message.queryMessage
+                                    );
+                                    break;
+                                }
+                                case "roomsFromSameWorldQuery": {
+                                    void socketManager.handleRoomsFromSameWorldQuery(
+                                        socket,
+                                        message.message.queryMessage
+                                    );
+                                    break;
+                                }
+                                default: {
+                                    socketManager.forwardMessageToBack(socket, message.message);
+                                }
+                            }
                             break;
                         }
                         case "itemEventMessage":
                         case "variableMessage":
                         case "webRtcSignalToServerMessage":
                         case "webRtcScreenSharingSignalToServerMessage":
-                        case "queryMessage":
                         case "emotePromptMessage":
                         case "followRequestMessage":
                         case "followConfirmationMessage":
@@ -716,7 +826,7 @@ export class IoSocketController {
                         case "pingMessage":
                         case "editMapCommandMessage":
                         case "askPositionMessage": {
-                            socketManager.forwardMessageToBack(client, message.message);
+                            socketManager.forwardMessageToBack(socket, message.message);
                             break;
                         }
                         default: {
@@ -726,74 +836,32 @@ export class IoSocketController {
 
                     /* Ok is false if backpressure was built up, wait for drain */
                     //let ok = ws.send(message, isBinary);
-                })().catch((e) => console.error(e));
+                })().catch((e) => {
+                    Sentry.captureException(e);
+                    console.error(e);
+                });
             },
             drain: (ws) => {
-                console.log("WebSocket backpressure: " + ws.getBufferedAmount());
+                console.info("WebSocket backpressure: " + ws.getBufferedAmount());
             },
             close: (ws) => {
-                const client = ws as ExSocketInterface;
+                const socketData = ws.getUserData();
+
+                if (socketData.rejected === true) {
+                    return;
+                }
+
+                const socket = ws as Socket;
+
                 try {
-                    client.disconnecting = true;
-                    socketManager.leaveRoom(client);
-                    socketManager.leaveSpaces(client);
+                    socketData.disconnecting = true;
+                    socketManager.leaveRoom(socket);
+                    socketManager.leaveSpaces(socket);
                 } catch (e) {
-                    console.error('An error occurred on "disconnect"');
+                    Sentry.captureException(`An error occurred on "disconnect" ${e}`);
                     console.error(e);
-                } finally {
-                    if (client.pingIntervalId) {
-                        clearInterval(client.pingIntervalId);
-                    }
-                    if (client.pongTimeoutId) {
-                        clearTimeout(client.pongTimeoutId);
-                    }
                 }
             },
         });
-    }
-
-    //eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private initClient(ws: any): ExSocketInterface {
-        const client: ExSocketInterface = ws;
-        client.userId = this.nextUserId;
-        this.nextUserId++;
-        client.userUuid = ws.userUuid;
-        client.IPAddress = ws.IPAddress;
-        client.token = ws.token;
-        client.batchedMessages = {
-            event: "",
-            payload: [],
-        };
-        client.batchTimeout = null;
-        client.emitInBatch = (payload: SubMessage): void => {
-            emitInBatch(client, payload);
-        };
-        client.disconnecting = false;
-
-        client.messages = ws.messages;
-        client.name = ws.name;
-        client.userIdentifier = ws.userIdentifier;
-        client.tags = ws.tags;
-        client.visitCardUrl = ws.visitCardUrl;
-        client.characterLayers = ws.characterLayers;
-        client.companion = ws.companion;
-        client.availabilityStatus = ws.availabilityStatus;
-        client.lastCommandId = ws.lastCommandId;
-        client.roomId = ws.roomId;
-        client.listenedZones = new Set<Zone>();
-        client.activatedInviteUser = ws.activatedInviteUser;
-        client.canEdit = ws.canEdit;
-        client.isLogged = ws.isLogged;
-        client.applications = ws.applications;
-        client.matrixUserId = ws.matrixUserId;
-        client.customJsonReplacer = (key: unknown, value: unknown): string | undefined => {
-            if (key === "listenedZones") {
-                return (value as Set<Zone>).size + " listened zone(s)";
-            }
-            return undefined;
-        };
-        client.spaces = [];
-        client.spacesFilters = new Map<string, SpaceFilterMessage[]>();
-        return client;
     }
 }

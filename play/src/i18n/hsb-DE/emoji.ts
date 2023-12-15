@@ -14,9 +14,9 @@ const emoji: DeepPartial<Translation["emoji"]> = {
         objects: "objekty",
         symbols: "symbole",
         flags: "chorhoje",
-        custom: "wužiwarjo definowace",
+        custom: "wot wužiwarja definowane",
     },
-    notFound: "žane emojije namakali",
+    notFound: "žane emojije njejsu so namakali",
 };
 
 export default emoji;

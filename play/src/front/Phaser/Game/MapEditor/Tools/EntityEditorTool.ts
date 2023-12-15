@@ -1,134 +1,45 @@
-import { AtLeast, CommandConfig, EntityData, EntityPrefab } from "@workadventure/map-editor";
-import { GameMapEntities } from "@workadventure/map-editor/src/GameMap/GameMapEntities";
+import { EntityData, WAMEntityData } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
-import { get, Unsubscriber } from "svelte/store";
+import { get } from "svelte/store";
+import { Entity } from "../../../ECS/Entity";
+import { CopyEntityEventData, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
+import { MapEditorModeManager } from "../MapEditorModeManager";
+import { CreateEntityFrontCommand } from "../Commands/Entity/CreateEntityFrontCommand";
+import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand";
+import { UpdateEntityFrontCommand } from "../Commands/Entity/UpdateEntityFrontCommand";
+import { TexturesHelper } from "../../../Helpers/TexturesHelper";
 import {
     mapEditorCopiedEntityDataPropertiesStore,
-    mapEditorModeStore,
-    mapEditorSelectedEntityDraggedStore,
-    mapEditorSelectedEntityPrefabStore,
+    mapEditorEntityModeStore,
     mapEditorSelectedEntityStore,
-    MapEntityEditorMode,
-    mapEntityEditorModeStore,
 } from "../../../../Stores/MapEditorStore";
-import { Entity } from "../../../ECS/Entity";
-import { TexturesHelper } from "../../../Helpers/TexturesHelper";
-import { CopyEntityEventData, EntitiesManager, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
-import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
-import { GameScene } from "../../GameScene";
-import { MapEditorModeManager } from "../MapEditorModeManager";
-import { MapEditorTool } from "./MapEditorTool";
+import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
-export class EntityEditorTool extends MapEditorTool {
-    private scene: GameScene;
-    private mapEditorModeManager: MapEditorModeManager;
-
-    private entitiesManager: EntitiesManager;
-    private gameMapEntities: GameMapEntities;
-
-    private entityPrefab: EntityPrefab | undefined;
-    private entityPrefabPreview: Phaser.GameObjects.Image | undefined;
-    private entityOldPositionPreview: Phaser.GameObjects.Image | undefined;
-
-    private shiftKey: Phaser.Input.Keyboard.Key;
-
-    private mapEditorSelectedEntityPrefabStoreUnsubscriber!: Unsubscriber;
-    private mapEntityEditorModeStoreUnsubscriber!: Unsubscriber;
-    private mapEditorSelectedEntityStoreUnsubscriber!: Unsubscriber;
-    private mapEditorSelectedEntityDraggedStoreUnsubscriber!: Unsubscriber;
-
-    private pointerMoveEventHandler!: (pointer: Phaser.Input.Pointer) => void;
-    private pointerDownEventHandler!: (
+export class EntityEditorTool extends EntityRelatedEditorTool {
+    protected shiftKey?: Phaser.Input.Keyboard.Key;
+    protected pointerMoveEventHandler!: (pointer: Phaser.Input.Pointer) => void;
+    protected pointerDownEventHandler!: (
         pointer: Phaser.Input.Pointer,
         gameObjects: Phaser.GameObjects.GameObject[]
     ) => void;
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
-        super();
-        this.mapEditorModeManager = mapEditorModeManager;
-        this.scene = this.mapEditorModeManager.getScene();
+        super(mapEditorModeManager);
+        this.shiftKey = this.scene.input.keyboard?.addKey("SHIFT");
 
-        this.shiftKey = this.scene.input.keyboard.addKey("SHIFT");
-
-        this.entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
-        this.gameMapEntities = this.scene.getGameMap().getGameMapEntities();
-
-        this.entityPrefab = undefined;
-        this.entityPrefabPreview = undefined;
-        this.entityOldPositionPreview = undefined;
-
-        this.subscribeToStores();
+        this.bindEventHandlers();
         this.bindEntitiesManagerEventHandlers();
     }
 
-    public update(time: number, dt: number): void {}
-    public clear(): void {
-        mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
-        this.entitiesManager.clearAllEntitiesTint();
-        this.entitiesManager.clearAllEntitiesEditOutlines();
-        this.cleanPreview();
-        this.unbindEventHandlers();
-    }
-    public activate(): void {
-        this.entitiesManager.makeAllEntitiesInteractive();
-        this.bindEventHandlers();
-    }
-    public destroy(): void {
-        this.cleanPreview();
-        this.unbindEventHandlers();
-        this.mapEditorSelectedEntityPrefabStoreUnsubscriber();
-        this.mapEntityEditorModeStoreUnsubscriber();
-        this.mapEditorSelectedEntityStoreUnsubscriber();
-        this.mapEditorSelectedEntityDraggedStoreUnsubscriber();
-    }
-    public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
-        console.log("EntityEditorTool subscribeToGameMapFrontWrapperEvents");
-    }
-    public handleKeyDownEvent(event: KeyboardEvent): void {
-        switch (event.key.toLowerCase()) {
-            case "escape": {
-                mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
-                break;
-            }
-            case "delete": {
-                get(mapEditorSelectedEntityStore)?.delete();
-                mapEditorSelectedEntityStore.set(undefined);
-                mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
-                break;
-            }
-        }
-    }
-    /**
-     * Perform actions needed to see the changes instantly
-     */
-    public handleCommandExecution(commandConfig: CommandConfig, localCommand: boolean): void {
-        switch (commandConfig.type) {
-            case "UpdateEntityCommand": {
-                this.handleEntityUpdate(commandConfig.dataToModify);
-                break;
-            }
-            case "CreateEntityCommand": {
-                this.handleEntityCreation(commandConfig.entityData, localCommand);
-                break;
-            }
-            case "DeleteEntityCommand": {
-                this.handleEntityDeletion(commandConfig.id);
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-    }
     /**
      * React on commands coming from the outside
      */
-    public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
+    public async handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
         const commandId = editMapCommandMessage.id;
         switch (editMapCommandMessage.editMapMessage?.message?.$case) {
             case "createEntityMessage": {
                 const data = editMapCommandMessage.editMapMessage?.message.createEntityMessage;
-                const entityPrefab = this.scene
+                const entityPrefab = await this.scene
                     .getEntitiesCollectionsManager()
                     .getEntityPrefab(data.collectionName, data.prefabId);
 
@@ -145,215 +56,136 @@ export class EntityEditorTool extends MapEditorTool {
                         console.warn(reason);
                     });
 
-                const entityData: EntityData = {
+                const entityData: WAMEntityData = {
                     x: data.x,
                     y: data.y,
-                    id: data.id,
-                    prefab: entityPrefab,
+                    prefabRef: {
+                        id: entityPrefab.id,
+                        collectionName: entityPrefab.collectionName,
+                    },
                     properties: data.properties,
                 };
                 // execute command locally
-                this.mapEditorModeManager.executeCommand(
-                    {
-                        type: "CreateEntityCommand",
+                await this.mapEditorModeManager.executeCommand(
+                    new CreateEntityFrontCommand(
+                        this.scene.getGameMap(),
+                        data.id,
                         entityData,
-                    },
+                        commandId,
+                        this.entitiesManager
+                    ),
                     false,
-                    false,
-                    commandId
+                    false
                 );
                 break;
             }
             case "deleteEntityMessage": {
                 const id = editMapCommandMessage.editMapMessage?.message.deleteEntityMessage.id;
-                this.mapEditorModeManager.executeCommand(
-                    {
-                        type: "DeleteEntityCommand",
-                        id,
-                    },
+                await this.mapEditorModeManager.executeCommand(
+                    new DeleteEntityFrontCommand(this.scene.getGameMap(), id, commandId, this.entitiesManager),
                     false,
-                    false,
-                    commandId
+                    false
                 );
                 break;
             }
             case "modifyEntityMessage": {
                 const data = editMapCommandMessage.editMapMessage?.message.modifyEntityMessage;
-                this.mapEditorModeManager.executeCommand(
-                    {
-                        type: "UpdateEntityCommand",
-                        dataToModify: data as EntityData,
-                    },
+                await this.mapEditorModeManager.executeCommand(
+                    new UpdateEntityFrontCommand(
+                        this.scene.getGameMap(),
+                        data.id,
+                        {
+                            ...data,
+                            properties: data.modifyProperties ? data.properties : undefined,
+                        },
+                        commandId,
+                        undefined,
+                        this.entitiesManager,
+                        this.scene
+                    ),
                     false,
-                    false,
-                    commandId
+                    false
                 );
                 break;
             }
         }
     }
 
-    private handleEntityUpdate(config: AtLeast<EntityData, "id">): void {
-        const entity = this.entitiesManager.getEntities().get(config.id);
-        if (!entity) {
-            return;
-        }
-        const { x: oldX, y: oldY } = entity.getOldPosition();
-        entity?.updateEntity(config);
-        this.updateCollisionGrid(entity, oldX, oldY);
-        this.scene.markDirty();
-    }
-
-    private handleEntityCreation(config: EntityData, localCommand: boolean): void {
-        const entity = this.entitiesManager.addEntity(
-            structuredClone(config),
-            undefined,
-            get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode
-        );
-        if (localCommand) {
-            mapEditorSelectedEntityStore.set(entity);
-            mapEditorSelectedEntityPrefabStore.set(undefined);
-            mapEntityEditorModeStore.set(MapEntityEditorMode.EditMode);
-        }
-    }
-
-    private handleEntityDeletion(id: string): void {
-        this.entitiesManager.deleteEntity(id);
-    }
-
-    private updateCollisionGrid(entity: Entity, oldX: number, oldY: number): void {
-        const reversedGrid = entity.getReversedCollisionGrid();
-        const grid = entity.getCollisionGrid();
-        if (reversedGrid && grid) {
-            this.scene.getGameMapFrontWrapper().modifyToCollisionsLayer(oldX, oldY, "0", reversedGrid);
-            this.scene.getGameMapFrontWrapper().modifyToCollisionsLayer(entity.x, entity.y, "0", grid);
-        }
-    }
-
-    private subscribeToStores(): void {
-        this.mapEditorSelectedEntityPrefabStoreUnsubscriber = mapEditorSelectedEntityPrefabStore.subscribe(
-            (entityPrefab: EntityPrefab | undefined): void => {
-                this.entityPrefab = entityPrefab;
-                if (!entityPrefab) {
-                    this.entityPrefabPreview?.destroy();
-                    this.entityPrefabPreview = undefined;
-                } else {
-                    TexturesHelper.loadEntityImage(this.scene, entityPrefab.imagePath, entityPrefab.imagePath)
-                        .then(() => {
-                            if (this.entityPrefabPreview) {
-                                this.entityPrefabPreview.setTexture(entityPrefab.imagePath);
-                            } else {
-                                const pointer = this.scene.input.activePointer;
-                                this.entityPrefabPreview = this.scene.add.image(
-                                    Math.floor(pointer.worldX),
-                                    Math.floor(pointer.worldY),
-                                    entityPrefab.imagePath
-                                );
-                            }
-                            this.scene.markDirty();
-                        })
-                        .catch(() => {
-                            console.error("COULD NOT LOAD THE ENTITY PREVIEW TEXTURE");
-                        });
-                }
-                this.scene.markDirty();
-            }
-        );
-
-        this.mapEditorSelectedEntityDraggedStoreUnsubscriber = mapEditorSelectedEntityDraggedStore.subscribe(
-            (dragged) => {
-                if (!dragged) {
-                    this.entityOldPositionPreview?.destroy();
-                }
-            }
-        );
-
-        this.mapEditorSelectedEntityStoreUnsubscriber = mapEditorSelectedEntityStore.subscribe((entity) => {
-            this.entityOldPositionPreview?.destroy();
-            if (!entity) {
-                return;
-            }
-            this.entityOldPositionPreview = this.scene.add
-                .image(entity.x, entity.y, entity.texture)
-                .setOrigin(0)
-                .setAlpha(0.5);
+    protected bindEntitiesManagerEventHandlers(): void {
+        this.entitiesManager.on(EntitiesManagerEvent.DeleteEntity, (entity: Entity) => {
+            this.mapEditorModeManager
+                .executeCommand(
+                    new DeleteEntityFrontCommand(
+                        this.scene.getGameMap(),
+                        entity.entityId,
+                        undefined,
+                        this.entitiesManager
+                    )
+                )
+                .catch((e) => console.error(e));
         });
-
-        this.mapEntityEditorModeStoreUnsubscriber = mapEntityEditorModeStore.subscribe((mode) => {
-            if (!get(mapEditorModeStore)) {
-                return;
-            }
-            switch (mode) {
-                case MapEntityEditorMode.AddMode: {
-                    this.entitiesManager.makeAllEntitiesInteractive();
-                    break;
-                }
-                case MapEntityEditorMode.EditMode: {
-                    this.entitiesManager.makeAllEntitiesInteractive();
-                    this.cleanPreview();
-                    break;
-                }
-            }
-        });
-    }
-
-    private bindEntitiesManagerEventHandlers(): void {
-        this.entitiesManager.on(EntitiesManagerEvent.RemoveEntity, (entity: Entity) => {
-            this.mapEditorModeManager.executeCommand({
-                id: entity.getEntityData().id,
-                type: "DeleteEntityCommand",
-            });
-        });
-        this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, (entityData: AtLeast<EntityData, "id">) => {
-            this.mapEditorModeManager.executeCommand({
-                dataToModify: entityData,
-                type: "UpdateEntityCommand",
-            });
+        this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, (entityData: EntityData) => {
+            this.mapEditorModeManager
+                .executeCommand(
+                    new UpdateEntityFrontCommand(
+                        this.scene.getGameMap(),
+                        entityData.id,
+                        entityData,
+                        undefined,
+                        undefined,
+                        this.entitiesManager,
+                        this.scene
+                    )
+                )
+                .catch((e) => console.error(e));
         });
         this.entitiesManager.on(EntitiesManagerEvent.CopyEntity, (data: CopyEntityEventData) => {
             if (!CopyEntityEventData.parse(data)) {
                 return;
             }
-            const entityData: EntityData = {
+            const entityData: WAMEntityData = {
                 x: data.position.x,
                 y: data.position.y,
-                id: crypto.randomUUID(),
-                prefab: data.prefab,
-                properties: data.properties ?? {},
+                prefabRef: data.prefabRef,
+                properties: data.properties ?? [],
             };
-            this.mapEditorModeManager.executeCommand({
-                entityData,
-                type: "CreateEntityCommand",
-            });
+            this.mapEditorModeManager
+                .executeCommand(
+                    new CreateEntityFrontCommand(
+                        this.scene.getGameMap(),
+                        undefined,
+                        entityData,
+                        undefined,
+                        this.entitiesManager
+                    )
+                )
+                .catch((e) => console.error(e));
             this.cleanPreview();
         });
     }
 
-    private bindEventHandlers(): void {
-        this.pointerMoveEventHandler = (pointer: Phaser.Input.Pointer) => {
-            this.handlePointerMoveEvent(pointer);
-        };
-        this.pointerDownEventHandler = (
-            pointer: Phaser.Input.Pointer,
-            gameObjects: Phaser.GameObjects.GameObject[]
-        ) => {
-            this.handlePointerDownEvent(pointer, gameObjects);
-        };
-
+    protected bindEventHandlers() {
+        this.pointerMoveEventHandler = (pointer: Phaser.Input.Pointer) => this.handlePointerMoveEvent(pointer);
         this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
+
+        this.pointerDownEventHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) =>
+            this.handlePointerDownEvent(pointer, gameObjects);
         this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
+
+        this.shiftKey?.on(Phaser.Input.Keyboard.Events.DOWN, () => {
+            this.changePreviewTint();
+        });
+
+        this.shiftKey?.on(Phaser.Input.Keyboard.Events.UP, () => {
+            this.changePreviewTint();
+        });
     }
 
-    private unbindEventHandlers(): void {
-        this.scene.input.off(Phaser.Input.Events.POINTER_MOVE, this.pointerDownEventHandler);
-        this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
-    }
-
-    private handlePointerMoveEvent(pointer: Phaser.Input.Pointer): void {
+    protected handlePointerMoveEvent(pointer: Phaser.Input.Pointer): void {
         if (!this.entityPrefabPreview || !this.entityPrefab) {
             return;
         }
-        if (this.entityPrefab.collisionGrid || this.shiftKey.isDown) {
+        if (this.entityPrefab.collisionGrid || this.shiftKey?.isDown) {
             const offset = this.getEntityPrefabAlignWithGridOffset();
             this.entityPrefabPreview.setPosition(
                 Math.floor(pointer.worldX / 32) * 32 + offset.x,
@@ -367,6 +199,13 @@ export class EntityEditorTool extends MapEditorTool {
                 this.entityPrefabPreview.displayHeight * 0.5 +
                 (this.entityPrefab.depthOffset ?? 0)
         );
+        this.changePreviewTint();
+    }
+
+    protected changePreviewTint(): void {
+        if (!this.entityPrefabPreview || !this.entityPrefab) {
+            return;
+        }
         if (
             !this.scene
                 .getGameMapFrontWrapper()
@@ -374,19 +213,31 @@ export class EntityEditorTool extends MapEditorTool {
                     this.entityPrefabPreview.getTopLeft(),
                     this.entityPrefabPreview.displayWidth,
                     this.entityPrefabPreview.displayHeight,
-                    this.entityPrefab.collisionGrid
+                    this.entityPrefab.collisionGrid,
+                    undefined,
+                    this.shiftKey?.isDown
                 )
         ) {
             this.entityPrefabPreview.setTint(0xff0000);
         } else {
-            this.entityPrefabPreview.clearTint();
+            if (this.shiftKey?.isDown) {
+                this.entityPrefabPreview.setTint(0xffa500);
+            } else {
+                this.entityPrefabPreview.clearTint();
+            }
         }
         this.scene.markDirty();
     }
 
-    private handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        if (get(mapEntityEditorModeStore) === MapEntityEditorMode.EditMode && gameObjects.length === 0) {
-            mapEntityEditorModeStore.set(MapEntityEditorMode.AddMode);
+    protected handlePointerDownEvent(
+        pointer: Phaser.Input.Pointer,
+        gameObjects: Phaser.GameObjects.GameObject[]
+    ): void {
+        if (get(mapEditorEntityModeStore) === "EDIT" && gameObjects.length === 0) {
+            mapEditorEntityModeStore.set("ADD");
+            if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur();
+            }
             mapEditorSelectedEntityStore.set(undefined);
         }
         if (!this.entityPrefabPreview || !this.entityPrefab) {
@@ -399,7 +250,9 @@ export class EntityEditorTool extends MapEditorTool {
                     this.entityPrefabPreview.getTopLeft(),
                     this.entityPrefabPreview.displayWidth,
                     this.entityPrefabPreview.displayHeight,
-                    this.entityPrefab.collisionGrid
+                    this.entityPrefab.collisionGrid,
+                    undefined,
+                    this.shiftKey?.isDown
                 )
         ) {
             return;
@@ -411,52 +264,35 @@ export class EntityEditorTool extends MapEditorTool {
         let x = Math.floor(pointer.worldX);
         let y = Math.floor(pointer.worldY);
 
-        if (this.entityPrefab.collisionGrid || this.shiftKey.isDown) {
+        if (this.entityPrefab.collisionGrid || this.shiftKey?.isDown) {
             const offsets = this.getEntityPrefabAlignWithGridOffset();
             x = Math.floor(pointer.worldX / 32) * 32 + offsets.x;
             y = Math.floor(pointer.worldY / 32) * 32 + offsets.y;
         }
 
-        const entityData: EntityData = {
+        const entityData: WAMEntityData = {
             x: x - this.entityPrefabPreview.displayWidth * 0.5,
             y: y - this.entityPrefabPreview.displayHeight * 0.5,
-            id: crypto.randomUUID(),
-            prefab: this.entityPrefab,
-            properties: get(mapEditorCopiedEntityDataPropertiesStore) ?? {},
+            prefabRef: this.entityPrefab,
+            properties: get(mapEditorCopiedEntityDataPropertiesStore) ?? [],
         };
-        this.mapEditorModeManager.executeCommand({
-            entityData,
-            type: "CreateEntityCommand",
-        });
+        this.mapEditorModeManager
+            .executeCommand(
+                new CreateEntityFrontCommand(
+                    this.scene.getGameMap(),
+                    undefined,
+                    entityData,
+                    undefined,
+                    this.entitiesManager
+                )
+            )
+            .catch((e) => console.error(e));
     }
 
-    private cleanPreview(): void {
-        this.entityPrefabPreview?.destroy();
-        this.entityPrefabPreview = undefined;
-        this.entityPrefab = undefined;
-        mapEditorCopiedEntityDataPropertiesStore.set(undefined);
-        this.scene.markDirty();
+    protected unbindEventHandlers(): void {
+        this.scene.input.off(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
+        this.shiftKey?.off(Phaser.Input.Keyboard.Events.DOWN);
+        this.shiftKey?.off(Phaser.Input.Keyboard.Events.UP);
+        this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
     }
-
-    private getEntityPrefabAlignWithGridOffset(): { x: number; y: number } {
-        if (!this.entityPrefab || !this.entityPrefabPreview) {
-            return { x: 0, y: 0 };
-        }
-        const collisionGrid = this.entityPrefab.collisionGrid;
-        if (collisionGrid && collisionGrid.length > 0) {
-            return {
-                x: collisionGrid[0].length % 2 === 1 ? 16 : 0,
-                y: collisionGrid.length % 2 === 1 ? 16 : 0,
-            };
-        }
-        return {
-            x: Math.floor(this.entityPrefabPreview.displayWidth / 32) % 2 === 1 ? 16 : 0,
-            y: Math.floor(this.entityPrefabPreview.displayHeight / 32) % 2 === 1 ? 16 : 0,
-        };
-    }
-
-    // private setSelectedEntityStoreValue(entity: Entity | undefined): void {
-    //     get(mapEditorSelectedEntityStore)?.removeEditColor();
-    //     mapEditorSelectedEntityStore.set(entity);
-    // }
 }

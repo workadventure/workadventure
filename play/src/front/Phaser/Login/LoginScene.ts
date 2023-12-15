@@ -1,12 +1,12 @@
-import { SelectCharacterSceneName } from "./SelectCharacterScene";
-import { ResizableScene } from "./ResizableScene";
 import { loginSceneVisibleIframeStore, loginSceneVisibleStore } from "../../Stores/LoginSceneStore";
-import { localUserStore } from "../../Connexion/LocalUserStore";
-import { connectionManager } from "../../Connexion/ConnectionManager";
+import { localUserStore } from "../../Connection/LocalUserStore";
+import { connectionManager } from "../../Connection/ConnectionManager";
 import { gameManager } from "../Game/GameManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { isUserNameTooLong, isUserNameValid } from "../../Connexion/LocalUser";
+import { isUserNameTooLong, isUserNameValid } from "../../Connection/LocalUser";
 import { NameNotValidError, NameTooLongError } from "../../Exception/NameError";
+import { ResizableScene } from "./ResizableScene";
+import { SelectCharacterSceneName } from "./SelectCharacterScene";
 
 export const LoginSceneName = "LoginScene";
 
@@ -43,7 +43,7 @@ export class LoginScene extends ResizableScene {
         }
     }
 
-    public login(name: string): void {
+    public async login(name: string): Promise<void> {
         if (isUserNameTooLong(name)) {
             throw new NameTooLongError();
         }
@@ -53,6 +53,7 @@ export class LoginScene extends ResizableScene {
 
         analyticsClient.validationName();
         name = name.trim();
+        await connectionManager.saveName(name);
         gameManager.setPlayerName(name);
 
         this.scene.stop(LoginSceneName);

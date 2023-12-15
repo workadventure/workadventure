@@ -1,5 +1,5 @@
-import type { Room } from "../Connexion/Room";
-import { localUserStore } from "../Connexion/LocalUserStore";
+import type { Room } from "../Connection/Room";
+import { localUserStore } from "../Connection/LocalUserStore";
 
 export enum GameConnexionTypes {
     room = 1,
@@ -23,7 +23,7 @@ class UrlManager {
         } else if (url.includes("_/") || url.includes("*/") || url.includes("@/") || url.includes("~/")) {
             return GameConnexionTypes.room;
         }
-        //@deprecated register url will be replace by "?token=<private access token>"
+        //@deprecated register url will be replaced by "?token=<private access token>"
         else if (url.includes("register/")) {
             return GameConnexionTypes.register;
         } else if (url === "/") {
@@ -43,7 +43,7 @@ class UrlManager {
 
     public pushRoomIdToUrl(room: Room): void {
         if (window.location.pathname === room.id) return;
-        //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
+        //Set last room visited! (connected or nor, must to be saved in local storage and cache API)
         //use href to keep # value
         localUserStore.setLastRoomUrl(room.href).catch((e) => console.error(e));
         const hash = window.location.hash;
@@ -70,7 +70,7 @@ class UrlManager {
         history.pushState("", document.title, window.location.pathname + window.location.search);
     }
 
-    private getHashParameters(): Record<string, string> {
+    public getHashParameters(): Record<string, string> {
         return window.location.hash
             .substring(1)
             .split("&")
@@ -82,11 +82,12 @@ class UrlManager {
     }
 
     pushStartLayerNameToUrl(startLayerName: string): void {
-        window.location.hash = startLayerName;
-    }
-
-    getPlayUri(): string {
-        return document.location.toString();
+        if (startLayerName) {
+            window.location.hash = startLayerName;
+        } else {
+            // Remove the hash
+            history.pushState("", document.title, window.location.pathname + window.location.search);
+        }
     }
 }
 

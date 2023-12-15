@@ -1,33 +1,28 @@
-import { EnableCameraSceneName } from "./EnableCameraScene";
-import { loadAllLayers } from "../Entity/PlayerTexturesLoadingManager";
-import { gameManager } from "../Game/GameManager";
-import { localUserStore } from "../../Connexion/LocalUserStore";
-import { Loader } from "../Components/Loader";
-import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
-import { AbstractCharacterScene } from "./AbstractCharacterScene";
-import { areCharacterLayersValid } from "../../Connexion/LocalUser";
-import { SelectCharacterSceneName } from "./SelectCharacterScene";
+import { DraggableGrid } from "@home-based-studio/phaser3-utils";
+import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
+import { wokaList } from "@workadventure/messages";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 import type { CustomWokaPreviewerConfig } from "../Components/CustomizeWoka/CustomWokaPreviewer";
-import {
-    CustomWokaBodyPart,
-    CustomWokaBodyPartOrder,
-    CustomWokaPreviewer,
-    WokaBodyPart,
-    WokaBodyPartOrder,
-} from "../Components/CustomizeWoka/CustomWokaPreviewer";
-import { DraggableGrid } from "@home-based-studio/phaser3-utils";
+import { WokaBodyPartOrder, CustomWokaPreviewer, WokaBodyPart } from "../Components/CustomizeWoka/CustomWokaPreviewer";
 import type { WokaBodyPartSlotConfig } from "../Components/CustomizeWoka/WokaBodyPartSlot";
 import { WokaBodyPartSlot } from "../Components/CustomizeWoka/WokaBodyPartSlot";
-import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
 import { Button } from "../Components/Ui/Button";
-import { wokaList } from "@workadventure/messages";
+import { areCharacterTexturesValid } from "../../Connection/LocalUser";
+import type { WokaTextureDescriptionInterface } from "../Entity/PlayerTextures";
+import { Loader } from "../Components/Loader";
+import { localUserStore } from "../../Connection/LocalUserStore";
+import { gameManager } from "../Game/GameManager";
+import { loadAllLayers } from "../Entity/PlayerTexturesLoadingManager";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import type { IconButtonConfig } from "../Components/Ui/IconButton";
 import { IconButton, IconButtonEvent } from "../Components/Ui/IconButton";
 import { selectCharacterCustomizeSceneVisibleStore } from "../../Stores/SelectCharacterStore";
+import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
+import { connectionManager } from "../../Connection/ConnectionManager";
+import { SelectCharacterSceneName } from "./SelectCharacterScene";
+import { AbstractCharacterScene } from "./AbstractCharacterScene";
+import { EnableCameraSceneName } from "./EnableCameraScene";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -36,14 +31,14 @@ export class CustomizeScene extends AbstractCharacterScene {
     private bodyPartsDraggableGridLeftShadow!: Phaser.GameObjects.Image;
     private bodyPartsDraggableGridRightShadow!: Phaser.GameObjects.Image;
     private bodyPartsDraggableGrid!: DraggableGrid;
-    private bodyPartsButtons!: Record<CustomWokaBodyPart, IconButton>;
+    private bodyPartsButtons!: Record<WokaBodyPart, IconButton>;
 
     private randomizeButton!: Button;
     private finishButton!: Button;
 
-    private selectedLayers: number[] = [0, 0, 0, 0, 0, 0];
-    private layers: BodyResourceDescriptionInterface[][] = [];
-    private selectedBodyPartType?: CustomWokaBodyPart;
+    private selectedTextures: number[] = [0, 0, 0, 0, 0, 0];
+    private layers: WokaTextureDescriptionInterface[][] = [];
+    private selectedBodyPartType?: WokaBodyPart;
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
 
@@ -85,7 +80,10 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.superLoad
             .json(
                 wokaMetadataKey,
-                `${PUSHER_URL}/woka/list?roomUrl=` + encodeURIComponent(gameManager.currentStartedRoom.href),
+                new URL(
+                    "/woka/list?roomUrl=" + encodeURIComponent(gameManager.currentStartedRoom.href),
+                    ABSOLUTE_PUSHER_URL
+                ).toString(),
                 undefined,
                 {
                     responseType: "text",
@@ -109,7 +107,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     public create(): void {
         super.create();
 
-        this.selectedLayers = [0, 0, 0, 0, 0, 0];
+        this.selectedTextures = [0, 0, 0, 0, 0, 0];
         this.tryLoadLastUsedWokaLayers();
         waScaleManager.zoomModifier = 1;
         this.createSlotBackgroundTextures();
@@ -120,7 +118,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.initializeRandomizeButton();
         this.initializeFinishButton();
 
-        this.selectedBodyPartType = CustomWokaBodyPart.Body;
+        this.selectedBodyPartType = WokaBodyPart.Body;
         this.bodyPartsButtons.Body.select();
 
         this.bindEventHandlers();
@@ -148,7 +146,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         const layers: string[] = [];
         let i = 0;
-        for (const layerItem of this.selectedLayers) {
+        for (const layerItem of this.selectedTextures) {
             if (layerItem !== undefined) {
                 if (this.layers[i][layerItem] === undefined) {
                     continue;
@@ -157,13 +155,14 @@ export class CustomizeScene extends AbstractCharacterScene {
             }
             i++;
         }
-        if (!areCharacterLayersValid(layers)) {
+        if (!areCharacterTexturesValid(layers)) {
             return;
         }
 
         analyticsClient.validationWoka("CustomizeWoka");
 
-        gameManager.setCharacterLayers(layers);
+        gameManager.setCharacterTextureIds(layers);
+        connectionManager.saveTextures(layers).catch((e) => console.error(e));
         this.scene.stop(CustomizeSceneName);
         gameManager.tryResumingGame(EnableCameraSceneName);
     }
@@ -177,12 +176,12 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private tryLoadLastUsedWokaLayers(): void {
         try {
-            const savedWokaLayers = gameManager.getCharacterLayers();
-            if (savedWokaLayers && savedWokaLayers.length !== 0) {
-                for (let i = 0; i < savedWokaLayers.length; i += 1) {
-                    const index = this.layers[i].findIndex((item) => item.id === gameManager.getCharacterLayers()[i]);
+            const savedWokaTextureIds = gameManager.getCharacterTextureIds();
+            if (savedWokaTextureIds) {
+                for (let i = 0; i < savedWokaTextureIds.length; i += 1) {
+                    const index = this.layers[i].findIndex((item) => item.id === savedWokaTextureIds[i]);
                     // set first item as default if not found
-                    this.selectedLayers[i] = index !== -1 ? index : 0;
+                    this.selectedTextures[i] = index !== -1 ? index : 0;
                 }
             }
         } catch {
@@ -253,8 +252,8 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private initializeBodyPartsButtons(): void {
         const tempBodyPartsObject: Record<string, IconButton> = {};
-        for (const value of WokaBodyPart) {
-            if (this.layers[WokaBodyPartOrder[value]][this.selectedLayers[WokaBodyPartOrder[value]]] === undefined) {
+        for (const value of Object.values(WokaBodyPart)) {
+            if (this.layers[WokaBodyPartOrder[value]][this.selectedTextures[WokaBodyPartOrder[value]]] === undefined) {
                 continue;
             }
             tempBodyPartsObject[value] = new IconButton(this, 0, 0, this.getDefaultIconButtonConfig(`icon${value}`));
@@ -345,8 +344,8 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private refreshPlayerCurrentOutfit(): void {
         let i = 0;
-        for (const layerItem of this.selectedLayers) {
-            const bodyPart = CustomWokaBodyPart[CustomWokaBodyPartOrder[i] as CustomWokaBodyPart];
+        for (const layerItem of this.selectedTextures) {
+            const bodyPart = WokaBodyPart[WokaBodyPartOrder[i] as WokaBodyPart];
             if (this.layers[i][layerItem] === undefined) {
                 continue;
             }
@@ -355,15 +354,15 @@ export class CustomizeScene extends AbstractCharacterScene {
         }
     }
 
-    private getCurrentlySelectedWokaTexturesRecord(): Record<CustomWokaBodyPart, string> {
+    private getCurrentlySelectedWokaTexturesRecord(): Record<WokaBodyPart, string> {
         const currentlySelectedWokaTexturesRecordObject: Record<string, string> = {};
 
-        for (const value of WokaBodyPart) {
-            if (this.layers[WokaBodyPartOrder[value]][this.selectedLayers[WokaBodyPartOrder[value]]] === undefined) {
+        for (const value of Object.values(WokaBodyPart)) {
+            if (this.layers[WokaBodyPartOrder[value]][this.selectedTextures[WokaBodyPartOrder[value]]] === undefined) {
                 continue;
             }
             currentlySelectedWokaTexturesRecordObject[value] =
-                this.layers[WokaBodyPartOrder[value]][this.selectedLayers[WokaBodyPartOrder[value]]].id;
+                this.layers[WokaBodyPartOrder[value]][this.selectedTextures[WokaBodyPartOrder[value]]].id;
         }
         return currentlySelectedWokaTexturesRecordObject;
     }
@@ -379,7 +378,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         const slotDimension = WokaBodyPartSlot.SIZE;
 
         for (const part in this.bodyPartsButtons) {
-            this.bodyPartsButtons[part as CustomWokaBodyPart].setDisplaySize(slotDimension, slotDimension);
+            this.bodyPartsButtons[part as WokaBodyPart].setDisplaySize(slotDimension, slotDimension);
         }
 
         const slotSize = this.bodyPartsButtons.Body.displayHeight;
@@ -517,7 +516,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         };
     }
 
-    private getWokaBodyPartSlotConfig(bodyPart?: CustomWokaBodyPart, newTextureKey?: string): WokaBodyPartSlotConfig {
+    private getWokaBodyPartSlotConfig(bodyPart?: WokaBodyPart, newTextureKey?: string): WokaBodyPartSlotConfig {
         const textures = this.getCurrentlySelectedWokaTexturesRecord();
         if (bodyPart && newTextureKey) {
             textures[bodyPart] = newTextureKey;
@@ -547,14 +546,14 @@ export class CustomizeScene extends AbstractCharacterScene {
             this.nextSceneToCamera();
         });
 
-        for (const bodyPart in CustomWokaBodyPart) {
-            const button = this.bodyPartsButtons[bodyPart as CustomWokaBodyPart];
+        for (const bodyPart of Object.values(WokaBodyPart)) {
+            const button = this.bodyPartsButtons[bodyPart as WokaBodyPart];
             if (button === undefined) {
                 continue;
             }
             button.on(IconButtonEvent.Clicked, (selected: boolean) => {
                 if (!selected) {
-                    this.selectBodyPartType(bodyPart as CustomWokaBodyPart);
+                    this.selectBodyPartType(bodyPart as WokaBodyPart);
                 }
             });
         }
@@ -568,39 +567,42 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private bindKeyboardEventHandlers(): void {
-        this.input.keyboard.on("keyup-ENTER", () => {
+        this.input.keyboard?.on("keyup-ENTER", () => {
             this.nextSceneToCamera();
         });
-        this.input.keyboard.on("keyup-BACKSPACE", () => {
+        this.input.keyboard?.on("keyup-BACKSPACE", () => {
             this.backToPreviousScene();
         });
-        this.input.keyboard.on("keydown-LEFT", () => {
+        this.input.keyboard?.on("keyup-DELETE", () => {
+            this.backToPreviousScene();
+        });
+        this.input.keyboard?.on("keydown-LEFT", () => {
             this.selectNextGridItem(true);
         });
-        this.input.keyboard.on("keydown-RIGHT", () => {
+        this.input.keyboard?.on("keydown-RIGHT", () => {
             this.selectNextGridItem();
         });
-        this.input.keyboard.on("keydown-UP", () => {
+        this.input.keyboard?.on("keydown-UP", () => {
             this.selectNextCategory(true);
         });
-        this.input.keyboard.on("keydown-DOWN", () => {
+        this.input.keyboard?.on("keydown-DOWN", () => {
             this.selectNextCategory();
         });
-        this.input.keyboard.on("keydown-W", () => {
+        this.input.keyboard?.on("keydown-W", () => {
             this.selectNextCategory(true);
         });
-        this.input.keyboard.on("keydown-S", () => {
+        this.input.keyboard?.on("keydown-S", () => {
             this.selectNextCategory();
         });
-        this.input.keyboard.on("keydown-A", () => {
+        this.input.keyboard?.on("keydown-A", () => {
             this.selectNextGridItem(true);
         });
-        this.input.keyboard.on("keydown-D", () => {
+        this.input.keyboard?.on("keydown-D", () => {
             this.selectNextGridItem();
         });
     }
 
-    private selectBodyPartType(bodyPart: CustomWokaBodyPart): void {
+    private selectBodyPartType(bodyPart: WokaBodyPart): void {
         this.selectedBodyPartType = bodyPart;
         this.deselectAllButtons();
         const button = this.bodyPartsButtons[bodyPart];
@@ -632,9 +634,9 @@ export class CustomizeScene extends AbstractCharacterScene {
         return item;
     }
 
-    private getBodyPartSelectedItemId(bodyPartType: CustomWokaBodyPart): string {
-        const categoryIndex = CustomWokaBodyPartOrder[bodyPartType];
-        return this.layers[categoryIndex][this.selectedLayers[categoryIndex]].id;
+    private getBodyPartSelectedItemId(bodyPartType: WokaBodyPart): string {
+        const categoryIndex = WokaBodyPartOrder[bodyPartType];
+        return this.layers[categoryIndex][this.selectedTextures[categoryIndex]].id;
     }
 
     private selectNextGridItem(previous = false): void {
@@ -657,17 +659,17 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private selectNextCategory(previous = false): void {
         if (!this.selectedBodyPartType) {
-            this.selectBodyPartType(CustomWokaBodyPart.Body);
+            this.selectBodyPartType(WokaBodyPart.Body);
             return;
         }
-        if (previous && this.selectedBodyPartType === CustomWokaBodyPart.Body) {
+        if (previous && this.selectedBodyPartType === WokaBodyPart.Body) {
             return;
         }
-        if (!previous && this.selectedBodyPartType === CustomWokaBodyPart.Accessory) {
+        if (!previous && this.selectedBodyPartType === WokaBodyPart.Accessory) {
             return;
         }
-        const index = CustomWokaBodyPartOrder[this.selectedBodyPartType] + (previous ? -1 : 1);
-        this.selectBodyPartType(CustomWokaBodyPart[CustomWokaBodyPartOrder[index] as CustomWokaBodyPart]);
+        const index = WokaBodyPartOrder[this.selectedBodyPartType] + (previous ? -1 : 1);
+        this.selectBodyPartType(WokaBodyPart[WokaBodyPartOrder[index] as WokaBodyPart]);
     }
 
     private getCurrentlySelectedItemIndex(): number {
@@ -689,8 +691,8 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private randomizeOutfit(): void {
-        for (let i = 0; i < this.selectedLayers.length; i += 1) {
-            this.selectedLayers[i] = Math.floor(Math.random() * this.layers[i].length);
+        for (let i = 0; i < this.selectedTextures.length; i += 1) {
+            this.selectedTextures[i] = Math.floor(Math.random() * this.layers[i].length);
         }
     }
 
@@ -698,7 +700,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         if (this.selectedBodyPartType === undefined) {
             return;
         }
-        this.selectedLayers[CustomWokaBodyPartOrder[this.selectedBodyPartType]] = index;
+        this.selectedTextures[WokaBodyPartOrder[this.selectedBodyPartType]] = index;
     }
 
     private populateGrid(): void {
@@ -706,7 +708,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             return;
         }
 
-        const bodyPartsLayer = this.layers[CustomWokaBodyPartOrder[this.selectedBodyPartType]];
+        const bodyPartsLayer = this.layers[WokaBodyPartOrder[this.selectedBodyPartType]];
 
         this.clearGrid();
         for (let i = 0; i < bodyPartsLayer.length; i += 1) {
@@ -730,11 +732,11 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private deselectAllButtons(): void {
-        for (const bodyPart in CustomWokaBodyPart) {
-            if (this.bodyPartsButtons[bodyPart as CustomWokaBodyPart] === undefined) {
+        for (const bodyPart of Object.values(WokaBodyPart)) {
+            if (this.bodyPartsButtons[bodyPart as WokaBodyPart] === undefined) {
                 continue;
             }
-            this.bodyPartsButtons[bodyPart as CustomWokaBodyPart].select(false);
+            this.bodyPartsButtons[bodyPart as WokaBodyPart].select(false);
         }
     }
 

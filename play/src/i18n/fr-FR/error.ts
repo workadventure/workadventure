@@ -17,7 +17,16 @@ const error: DeepPartial<Translation["error"]> = {
     connectionRetry: {
         unableConnect: "Impossible de se connecter à WorkAdventure. Etes vous connecté à Internet?",
     },
-    error: "Erreur",
+    errorDialog: {
+        title: "Erreur 😱",
+        hasReportIssuesUrl:
+            "Si vous souhaitez obtenir de plus amples informations, vous pouvez contacter l'administrateur ou signaler un problème à l'adresse suivante:",
+        noReportIssuesUrl:
+            "Si vous souhaitez obtenir de plus amples informations, vous pouvez contacter l'administrateur du monde.",
+        messageFAQ: "Vous pouvez également consulter notre:",
+        reload: "Recharger",
+        close: "Fermer",
+    },
 };
 
 export default error;

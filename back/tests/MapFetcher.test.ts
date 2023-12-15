@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { mapFetcher } from "../src/Services/MapFetcher";
+import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 
+// TODO: move this test to libs/map-editor
 describe("MapFetcher", () => {
     it("should return true on localhost ending URLs", async () => {
         expect(await mapFetcher.isLocalUrl("https://localhost")).toBe(true);

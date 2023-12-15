@@ -1,10 +1,10 @@
-import { gameManager } from "../Game/GameManager";
 import { Scene } from "phaser";
+import { ErrorApiData } from "@workadventure/messages";
+import { gameManager } from "../Game/GameManager";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
 import { localeDetector } from "../../../i18n/locales";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
-import { ErrorApiData } from "@workadventure/messages";
 
 export const EntrySceneName = "EntryScene";
 
@@ -46,6 +46,7 @@ export class EntryScene extends Scene {
                         this.scene.start(nextSceneName);
                     })
                     .catch((err) => {
+                        // TODO: make this safer ?
                         const errorType = ErrorApiData.safeParse(err?.response?.data);
                         if (errorType.success) {
                             if (errorType.data.type === "redirect") {

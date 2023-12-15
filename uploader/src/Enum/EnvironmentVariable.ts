@@ -10,7 +10,7 @@ const AWS_ENDPOINT = process.env.AWS_ENDPOINT;
 const UPLOADER_AWS_SIGNED_URL_EXPIRATION = parseInt(process.env.UPLOADER_AWS_SIGNED_URL_EXPIRATION || "60")
 
 const REDIS_HOST = process.env.REDIS_HOST;
-const REDIS_PORT = process.env.REDIS_PORT;
+const REDIS_PORT = process.env.REDIS_PORT || "6379";
 const REDIS_DB_NUMBER = process.env.REDIS_DB_NUMBER;
 const REDIS_PASSWORD = process.env.REDIS_PASSWORD;
 

@@ -1,4 +1,4 @@
-import { detectLocale, navigatorDetector, initLocalStorageDetector } from "typesafe-i18n/detectors";
+import { detectLocale, navigatorDetector, initLocalStorageDetector } from "typesafe-i18n/detectors"; // eslint-disable-line import/no-unresolved
 import { setLocale } from "./i18n-svelte";
 import type { Locales } from "./i18n-types";
 import { baseLocale, isLocale, locales } from "./i18n-util";

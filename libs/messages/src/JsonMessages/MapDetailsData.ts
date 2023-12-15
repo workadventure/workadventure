@@ -5,11 +5,6 @@ import { isMetaTagManifestIcon } from "./MetaTagManifestIcon";
 import { OpidWokaNamePolicy } from "./OpidWokaNamePolicy";
 import { MucRoomDefinition } from "./MucRoomDefinition";
 
-/*
- * WARNING! The original file is in /messages/JsonMessages.
- * All other files are automatically copied from this file on container startup / build
- */
-
 const isBbbData = z.object({
     url: extendApi(z.string(), {
         description: 'The full URL to your BigBlueButton server. Do not forget the trailing "/bigbluebutton/".',
@@ -41,6 +36,35 @@ const isMapThirdPartyData = z.object({
     }),
     jitsi: extendApi(isJitsiData.nullable().optional(), {
         description: "Use these settings to override default Jitsi settings.",
+    }),
+    // The integration tool to use for the map
+    klaxoonToolActivated: extendApi(z.boolean().optional(), {
+        description: "Whether the klaxoon tool is activated or not on this room",
+        example: true,
+    }),
+    klaxoonToolClientId: extendApi(z.string().optional().nullable(), {
+        description: "The client id of the klaxoon tool",
+        example: "klaxoon-client-id",
+    }),
+    youtubeToolActivated: extendApi(z.boolean().optional(), {
+        description: "Whether the youtube tool is activated or not on this room",
+        example: true,
+    }),
+    googleDocsToolActivated: extendApi(z.boolean().optional(), {
+        description: "Whether the google docs tool is activated or not on this room",
+        example: true,
+    }),
+    googleSheetsToolActivated: extendApi(z.boolean().optional(), {
+        description: "Whether the google sheets tool is activated or not on this room",
+        example: true,
+    }),
+    googleSlidesToolActivated: extendApi(z.boolean().optional(), {
+        description: "Whether the google slides tool is activated or not on this room",
+        example: true,
+    }),
+    eraserToolActivated: extendApi(z.boolean().optional(), {
+        description: "Whether the eraser tool is activated or not on this room",
+        example: true,
     }),
 });
 
@@ -126,9 +150,13 @@ const CustomizeSceneData = z.object({
 });
 
 export const isMapDetailsData = z.object({
-    mapUrl: extendApi(z.string(), {
+    mapUrl: extendApi(z.string().optional(), {
         description: "The full URL to the JSON map file",
         example: "https://myuser.github.io/myrepo/map.json",
+    }),
+    wamUrl: extendApi(z.string().url().optional(), {
+        description: "The full URL to the WAM map file",
+        example: "https://map-storage.myworkadventure.com/myrepo/map.wam",
     }),
     authenticationMandatory: extendApi(z.boolean().nullable().optional(), {
         description: "Whether the authentication is mandatory or not for this map",
@@ -241,6 +269,11 @@ export const isMapDetailsData = z.object({
     entityCollectionsUrls: extendApi(z.array(z.string()).optional().nullable(), {
         description: "What entity collections are available for this map",
     }),
+    // The URL of the error image on "ErrorScene"
+    errorSceneLogo: extendApi(z.string().nullable().optional(), {
+        description: "The URL of the error image to be used on the ErrorScene",
+        example: "https://example.com/error_logo_login.png",
+    })
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;

@@ -1,4 +1,4 @@
-import { GameRoom } from "../Model/GameRoom";
+import crypto from "crypto";
 import {
     AnswerMessage,
     BanUserMessage,
@@ -43,27 +43,32 @@ import {
     UpdateSpaceUserMessage,
     AddSpaceUserMessage,
     RemoveSpaceUserMessage,
+    SendEventQuery,
+    UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
+import Jwt from "jsonwebtoken";
+import BigbluebuttonJs from "bigbluebutton-js";
+import Debug from "debug";
+import * as Sentry from "@sentry/node";
+import { WAMSettingsUtils } from "@workadventure/map-editor";
+import { z } from "zod";
+import { GameRoom } from "../Model/GameRoom";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { Group } from "../Model/Group";
-import { cpuTracker } from "./CpuTracker";
 import { GROUP_RADIUS, MINIMUM_DISTANCE, TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable";
 import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
-import Jwt from "jsonwebtoken";
-import BigbluebuttonJs from "bigbluebutton-js";
-import { clientEventsEmitter } from "./ClientEventsEmitter";
-import { gaugeManager } from "./GaugeManager";
-import { RoomSocket, ZoneSocket } from "../RoomManager";
+import { EventSocket, RoomSocket, VariableSocket, ZoneSocket } from "../RoomManager";
 import { Zone } from "../Model/Zone";
-import Debug from "debug";
 import { Admin } from "../Model/Admin";
-import crypto from "crypto";
-import { getMapStorageClient } from "./MapStorageClient";
-import { emitError } from "./MessageHelpers";
 import { Space } from "../Model/Space";
 import { SpacesWatcher } from "../Model/SpacesWatcher";
+import { gaugeManager } from "./GaugeManager";
+import { clientEventsEmitter } from "./ClientEventsEmitter";
+import { getMapStorageClient } from "./MapStorageClient";
+import { emitError } from "./MessageHelpers";
+import { cpuTracker } from "./CpuTracker";
 
 const debug = Debug("socketmanager");
 
@@ -105,9 +110,9 @@ export class SocketManager {
         const lastCommandId = joinRoomMessage.lastCommandId;
         let commandsToApply: EditMapCommandMessage[] | undefined = undefined;
 
-        if (lastCommandId) {
+        if (room.wamUrl) {
             const updateMapToNewestWithKeyMessage: UpdateMapToNewestWithKeyMessage = {
-                mapKey: room.mapUrl,
+                mapKey: room.wamUrl,
                 updateMapToNewestMessage: {
                     commandId: lastCommandId,
                 },
@@ -174,7 +179,8 @@ export class SocketManager {
         const roomJoinedMessage: Partial<RoomJoinedMessage> = {
             tag: joinRoomMessage.tag,
             userRoomToken: joinRoomMessage.userRoomToken,
-            characterLayer: joinRoomMessage.characterLayer,
+            characterTextures: joinRoomMessage.characterTextures,
+            companionTexture: joinRoomMessage.companionTexture,
             canEdit: joinRoomMessage.canEdit,
             editMapCommandsArrayMessage,
             item: itemStateMessage,
@@ -183,6 +189,14 @@ export class SocketManager {
             activatedInviteUser: user.activatedInviteUser != undefined ? user.activatedInviteUser : true,
             applications: user.applications ?? [],
             playerVariable: playerVariablesMessage,
+            megaphoneSettings: {
+                enabled: WAMSettingsUtils.canUseMegaphone(room.wamSettings, user.tags),
+                url: WAMSettingsUtils.getMegaphoneUrl(
+                    room.wamSettings,
+                    room.roomGroup ?? new URL(room.roomUrl).host,
+                    room.roomUrl
+                ),
+            },
         };
 
         if (TURN_STATIC_AUTH_SECRET) {
@@ -251,9 +265,17 @@ export class SocketManager {
         return room.setVariable(variableMessage.name, variableMessage.value, user);
     }
 
-    // handleSharedPlayerVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage): Promise<void> {
-    //     return room.setSharedPlayerVariable(variableMessage.getName(), variableMessage.getValue(), user);
-    // }
+    async readVariable(roomUrl: string, variable: string): Promise<string | undefined> {
+        const room = await this.getOrCreateRoom(roomUrl);
+        // Info: Admin tag is given to bypass the tags checking
+        const variables = await room.getVariablesForTags(undefined);
+        return variables.get(variable);
+    }
+
+    async saveVariable(roomUrl: string, variable: string, newValue: string): Promise<void> {
+        const room = await this.getOrCreateRoom(roomUrl);
+        await room.setVariable(variable, newValue, "RoomApi");
+    }
 
     emitVideo(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
         //send only at user
@@ -406,6 +428,7 @@ export class SocketManager {
             this.emitCreateUpdateGroupEvent(listener, fromZone, thing);
         } else {
             console.error("Unexpected type for Movable.");
+            Sentry.captureException("Unexpected type for Movable.");
         }
     }
 
@@ -418,7 +441,7 @@ export class SocketManager {
             userUuid: user.uuid,
             name: user.name,
             availabilityStatus: user.getAvailabilityStatus(),
-            characterLayers: ProtobufUtils.toCharacterLayerMessages(user.characterLayers),
+            characterTextures: user.characterTextures,
             position: ProtobufUtils.toPositionMessage(user.getPosition()),
         };
         if (fromZone) {
@@ -427,7 +450,7 @@ export class SocketManager {
         if (user.visitCardUrl) {
             userJoinedZoneMessage.visitCardUrl = user.visitCardUrl;
         }
-        userJoinedZoneMessage.companion = user.companion;
+        userJoinedZoneMessage.companionTexture = user.companionTexture;
         const outlineColor = user.getOutlineColor();
         if (outlineColor === undefined) {
             userJoinedZoneMessage.hasOutline = false;
@@ -471,6 +494,7 @@ export class SocketManager {
             this.emitCreateUpdateGroupEvent(listener, null, thing);
         } else {
             console.error("Unexpected type for Movable.");
+            Sentry.captureException("Unexpected type for Movable.");
         }
     }
 
@@ -481,6 +505,7 @@ export class SocketManager {
             this.emitDeleteGroupEvent(listener, thing.getId(), newZone);
         } else {
             console.error("Unexpected type for Movable.");
+            Sentry.captureException("Unexpected type for Movable.");
         }
     }
 
@@ -709,6 +734,7 @@ export class SocketManager {
     public async handleQueryMessage(gameRoom: GameRoom, user: User, queryMessage: QueryMessage): Promise<void> {
         if (!queryMessage.query) {
             console.error("QueryMessage has no query");
+            Sentry.captureException("QueryMessage has no query");
             return;
         }
         const queryCase = queryMessage.query.$case;
@@ -742,12 +768,28 @@ export class SocketManager {
                     };
                     break;
                 }
+                case "sendEventQuery": {
+                    // TODO: in the future, if the event system is abused, we can throttle message by user id, here.
+                    this.handleSendEventQuery(gameRoom, user, queryMessage.query.sendEventQuery);
+                    answerMessage.answer = {
+                        $case: "sendEventAnswer",
+                        sendEventAnswer: {},
+                    };
+                    break;
+                }
+                case "embeddableWebsiteQuery":
+                case "roomTagsQuery":
+                case "roomsFromSameWorldQuery": {
+                    // Nothing to do, the message will never be received in the back
+                    break;
+                }
                 default: {
                     const _exhaustiveCheck: never = queryCase;
                 }
             }
         } catch (e) {
             console.error("An error happened while answering a query:", e);
+            Sentry.captureException(`An error happened while answering a query: ${JSON.stringify(e)}`);
             answerMessage.answer = {
                 $case: "error",
                 error: {
@@ -795,6 +837,16 @@ export class SocketManager {
         const jwt = Jwt.sign(
             {
                 aud: "jitsi",
+                context: {
+                    user: {
+                        id: user.id,
+                        name: user.name,
+                    },
+                    features: {
+                        livestreaming: isAdmin,
+                        recording: isAdmin,
+                    },
+                },
                 iss: jitsiSettings.iss,
                 sub: jitsiSettings.url,
                 room: jitsiRoom,
@@ -945,6 +997,7 @@ export class SocketManager {
                 });
             } else {
                 console.error("Unexpected type for Movable returned by setViewport");
+                Sentry.captureException("Unexpected type for Movable returned by setViewport");
             }
         }
 
@@ -984,6 +1037,26 @@ export class SocketManager {
         room.removeRoomListener(call);
     }
 
+    async addVariableListener(call: VariableSocket) {
+        const room = await this.getOrCreateRoom(call.request.room);
+        if (!room) {
+            throw new Error("In addVariableListener, could not find room with id '" + call.request.room + "'");
+        }
+
+        room.addVariableListener(call);
+    }
+
+    async removeVariableListener(call: VariableSocket) {
+        const room = await this.roomsPromises.get(call.request.room);
+        if (!room) {
+            throw new Error("In removeVariableListener, could not find room with id '" + call.request.room + "'");
+        }
+
+        room.removeVariableListener(call);
+
+        this.cleanupRoomIfEmpty(room);
+    }
+
     public async handleJoinAdminRoom(admin: Admin, roomId: string): Promise<GameRoom> {
         const room = await socketManager.getOrCreateRoom(roomId);
 
@@ -999,7 +1072,6 @@ export class SocketManager {
 
     private cleanupRoomIfEmpty(room: GameRoom): void {
         if (room.isEmpty()) {
-            room.destroy();
             this.roomsPromises.delete(room.roomUrl);
             const deleted = this.resolvedRooms.delete(room.roomUrl);
             if (deleted) {
@@ -1017,12 +1089,22 @@ export class SocketManager {
                     roomId +
                     "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
+            Sentry.captureException(
+                "In sendAdminMessage, could not find room with id '" +
+                    roomId +
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+            );
             return;
         }
 
         const recipients = room.getUsersByUuid(recipientUuid);
         if (recipients.size === 0) {
             console.error(
+                "In sendAdminMessage, could not find user with id '" +
+                    recipientUuid +
+                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
+            );
+            Sentry.captureException(
                 "In sendAdminMessage, could not find user with id '" +
                     recipientUuid +
                     "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
@@ -1051,12 +1133,22 @@ export class SocketManager {
                     roomId +
                     "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
+            Sentry.captureException(
+                "In banUser, could not find room with id '" +
+                    roomId +
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+            );
             return;
         }
 
         const recipients = room.getUsersByUuid(recipientUuid);
         if (recipients.size === 0) {
             console.error(
+                "In banUser, could not find user with id '" +
+                    recipientUuid +
+                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
+            );
+            Sentry.captureException(
                 "In banUser, could not find user with id '" +
                     recipientUuid +
                     "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
@@ -1091,6 +1183,11 @@ export class SocketManager {
                     roomId +
                     "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
+            Sentry.captureException(
+                "In sendAdminRoomMessage, could not find room with id '" +
+                    roomId +
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+            );
             return;
         }
 
@@ -1112,6 +1209,11 @@ export class SocketManager {
         if (!room) {
             //todo: this should cause the http call to return a 500
             console.error(
+                "In dispatchWorldFullWarning, could not find room with id '" +
+                    roomId +
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+            );
+            Sentry.captureException(
                 "In dispatchWorldFullWarning, could not find room with id '" +
                     roomId +
                     "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
@@ -1201,27 +1303,6 @@ export class SocketManager {
         room.emitLockGroupEvent(user, group.getId());
     }
 
-    handleEditMapCommandMessage(room: GameRoom, user: User, message: EditMapCommandMessage) {
-        getMapStorageClient().handleEditMapCommandWithKeyMessage(
-            {
-                mapKey: room.mapUrl,
-                editMapCommandMessage: message,
-            },
-            (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
-                if (err) {
-                    emitError(user.socket, err);
-                    return;
-                }
-                room.dispatchRoomMessage({
-                    message: {
-                        $case: "editMapCommandMessage",
-                        editMapCommandMessage,
-                    },
-                });
-            }
-        );
-    }
-
     handleUpdateMapToNewestMessage(room: GameRoom, user: User, message: UpdateMapToNewestWithKeyMessage) {
         getMapStorageClient().handleUpdateMapToNewestMessage(
             message,
@@ -1283,13 +1364,14 @@ export class SocketManager {
 
     async dispatchChatMessagePrompt(chatMessagePrompt: ChatMessagePrompt): Promise<boolean> {
         const room = await this.roomsPromises.get(chatMessagePrompt.roomId);
-        console.log(chatMessagePrompt.roomId);
+
         if (!room) {
             return false;
         }
 
         if (!chatMessagePrompt.message) {
             console.error("ChatMessagePrompt has no message");
+            Sentry.captureException("ChatMessagePrompt has no message");
             return false;
         }
         switch (chatMessagePrompt.message.$case) {
@@ -1359,7 +1441,61 @@ export class SocketManager {
     handleRemoveSpaceUserMessage(pusher: SpacesWatcher, removeSpaceUserMessage: RemoveSpaceUserMessage) {
         const space = this.spaces.get(removeSpaceUserMessage.spaceName);
         if (space) {
-            space.removeUser(pusher, removeSpaceUserMessage.userUuid);
+            space.removeUser(pusher, removeSpaceUserMessage.userId);
+        }
+    }
+
+    handleUpdateSpaceMetadataMessage(pusher: SpacesWatcher, updateSpaceMetadataMessage: UpdateSpaceMetadataMessage) {
+        const space = this.spaces.get(updateSpaceMetadataMessage.spaceName);
+
+        const isMetadata = z.record(z.string(), z.unknown()).safeParse(JSON.parse(updateSpaceMetadataMessage.metadata));
+        if (!isMetadata.success) {
+            console.error("Metadata is not a valid json object");
+            return;
+        }
+
+        if (space) {
+            space.updateMetadata(pusher, isMetadata.data);
+        }
+    }
+
+    private handleSendEventQuery(gameRoom: GameRoom, user: User, sendEventQuery: SendEventQuery) {
+        gameRoom.dispatchEvent(sendEventQuery.name, sendEventQuery.data, user.id, sendEventQuery.targetUserIds);
+    }
+
+    async dispatchEvent(roomUrl: string, name: string, value: unknown, targetUserIds: number[]): Promise<void> {
+        const roomPromise = this.roomsPromises.get(roomUrl);
+        if (!roomPromise) {
+            // The room does not exist. No need to instantiate it, there is no one in.
+            return Promise.resolve();
+        }
+        const room = await roomPromise;
+        room.dispatchEvent(name, value, "RoomApi", targetUserIds);
+    }
+
+    async addEventListener(call: EventSocket) {
+        const room = await this.getOrCreateRoom(call.request.room);
+        if (!room) {
+            throw new Error("In addEventListener, could not find room with id '" + call.request.room + "'");
+        }
+
+        room.addEventListener(call);
+    }
+
+    async removeEventListener(call: EventSocket) {
+        const room = await this.roomsPromises.get(call.request.room);
+        if (!room) {
+            throw new Error("In removeEventListener, could not find room with id '" + call.request.room + "'");
+        }
+
+        room.removeEventListener(call);
+
+        this.cleanupRoomIfEmpty(room);
+    }
+
+    dispatchGlobalEvent(name: string, value: unknown) {
+        for (const room of this.resolvedRooms.values()) {
+            room.dispatchEvent(name, value, "RoomApi", []);
         }
     }
 }

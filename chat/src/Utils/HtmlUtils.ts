@@ -72,7 +72,7 @@ export class HtmlUtils {
                     itemReplaced.push(item.search);
                     text = text.replace(regex, item.html);
                 }
-                return this.replaceEmojy(text);
+                return this.replaceEmoji(text);
             })
             .catch((err) => {
                 console.error("error urlify => ", err);
@@ -80,7 +80,7 @@ export class HtmlUtils {
             });
     }
 
-    public static replaceEmojy(text: string): string {
+    public static replaceEmoji(text: string): string {
         return text.replace(emojiRegex, (emoji: string) => {
             emoji = HtmlUtils.htmlDecode(emoji);
             const span = document.createElement("span");

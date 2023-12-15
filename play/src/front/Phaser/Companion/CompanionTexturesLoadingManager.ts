@@ -1,26 +1,41 @@
-import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import CancelablePromise from "cancelable-promise";
-import { CompanionTexture, CompanionCollectionList, companionCollectionList } from "@workadventure/messages";
-import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
+import { CompanionTextureCollection, CompanionTexture } from "@workadventure/messages";
 import { gameManager } from "../Game/GameManager";
-import { localUserStore } from "../../Connexion/LocalUserStore";
+import { localUserStore } from "../../Connection/LocalUserStore";
 import type { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
+import { ABSOLUTE_PUSHER_URL } from "../../Enum/ComputedConst";
+import { CompanionTextureDescriptionInterface, CompanionTextures } from "./CompanionTextures";
+import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 
 export function companionListMetakey() {
     return "companion-list" + gameManager.currentStartedRoom.href;
 }
 
-let companionTextureList: CompanionCollectionList | null = null;
+export function lazyLoadPlayerCompanionTexture(
+    superLoaderPlugin: SuperLoaderPlugin,
+    texture: CompanionTextureDescriptionInterface
+): CancelablePromise<string> {
+    const promise = superLoaderPlugin.spritesheet(texture.id, texture.url, {
+        frameWidth: 32,
+        frameHeight: 32,
+    });
+
+    return promise.then(() => {
+        return texture.id;
+    });
+}
+
 export class CompanionTexturesLoadingManager {
     constructor(private superLoad: SuperLoaderPlugin, private loader: LoaderPlugin) {}
 
-    loadTextures(processListCallback: (_l: CompanionCollectionList) => void) {
-        if (companionTextureList) return processListCallback(companionTextureList);
-
+    loadTextures(processListCallback: (_l: CompanionTextureCollection[]) => void) {
         this.superLoad
             .json(
                 companionListMetakey(),
-                `${PUSHER_URL}/companion/list?roomUrl=` + encodeURIComponent(gameManager.currentStartedRoom.href),
+                new URL(
+                    `companion/list?roomUrl=` + encodeURIComponent(gameManager.currentStartedRoom.href),
+                    ABSOLUTE_PUSHER_URL
+                ).toString(),
                 undefined,
                 {
                     responseType: "text",
@@ -30,8 +45,7 @@ export class CompanionTexturesLoadingManager {
                     withCredentials: true,
                 },
                 (_key, _type, data) => {
-                    companionTextureList = companionCollectionList.parse(data);
-                    processListCallback(companionTextureList);
+                    processListCallback(CompanionTextureCollection.array().parse(data));
                 }
             )
             .catch((e: unknown) => {
@@ -39,34 +53,11 @@ export class CompanionTexturesLoadingManager {
             });
     }
 
-    public lazyLoadByName(textureName: string | null): CancelablePromise<string> | undefined {
-        if (!textureName) return undefined;
-        return new CancelablePromise((resolve, reject, cancel) => {
-            cancel(() => {
-                return;
-            });
-
-            this.loadTextures((companionList) => {
-                const texture = companionList
-                    .flatMap((collection) => collection.textures)
-                    .find((t) => t.name === textureName);
-
-                if (!texture) {
-                    console.error(`Companion texture ${textureName} not found`);
-                    return reject(`Companion texture '${textureName}' not found!`);
-                }
-
-                this.loadByTexture(texture, resolve);
-
-                this.loader.start(); // It's only automatically started during the Scene preload.
-            });
+    loadModels(load: LoaderPlugin, companionTextures: CompanionTextures): CompanionTexture[] {
+        const returnArray = Object.values(companionTextures.getCompanionResources());
+        returnArray.forEach((companionResource) => {
+            load.spritesheet(companionResource.id, companionResource.url, { frameWidth: 32, frameHeight: 32 });
         });
-    }
-
-    public loadByTexture(texture: CompanionTexture, onLoaded: (_textureName: string) => void = () => {}) {
-        if (this.loader.textureManager.exists(texture.name)) return onLoaded(texture.name);
-
-        this.loader.spritesheet(texture.name, texture.img, { frameWidth: 32, frameHeight: 32, endFrame: 12 });
-        this.loader.once(`filecomplete-spritesheet-${texture.name}`, () => onLoaded(texture.name));
+        return returnArray;
     }
 }

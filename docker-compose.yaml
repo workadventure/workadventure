@@ -11,6 +11,7 @@ services:
             - --providers.docker
             - --entryPoints.web.address=:80
             - --providers.docker.exposedbydefault=false
+            #- --log.level=DEBUG
         labels:
             - "traefik.enable=true"
             - "traefik.port=8080"
@@ -26,37 +27,40 @@ services:
                 aliases:
                     - 'front.workadventure.localhost'
                     - 'play.workadventure.localhost'
+                    - 'room-api.workadventure.localhost'
                     - 'maps.workadventure.localhost'
                     - 'oidc.workadventure.localhost'
                     - 'map-storage.workadventure.localhost'
                     - 'matrix.workadventure.localhost'
 
     play:
-        image: thecodingmachine/nodejs:v2-18-bullseye
+        image: thecodingmachine/nodejs:v2-20-bullseye
         command: npm run dev
         working_dir: /usr/src/app/play
         volumes:
             - .:/usr/src/app
         ports:
             - "9231:9229"
+            - "9235:9235"
         environment:
             # On startup, we ask the messages container to regenerate the files.
             # Note: we need to use this "messages" container because of ARM64 processors that are not supported with protoc (used in "messages" container)
-            STARTUP_COMMAND_1: ../npm-install.sh
-            STARTUP_COMMAND_2: npm run typesafe-i18n
-            DEBUG: "socket"
+            STARTUP_COMMAND_1: ../wait-proto.sh
+            STARTUP_COMMAND_2: ../npm-install.sh
+            STARTUP_COMMAND_3: npm run typesafe-i18n
+            DEBUG: "socket,space"
             DEBUG_COLORS: "true"
             DEBUG_ERROR_MESSAGES: "true"
             DEBUG_MODE: "$DEBUG_MODE"
             JITSI_URL: $JITSI_URL
             JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
-            ENABLE_FEATURE_MAP_EDITOR: "$ENABLE_FEATURE_MAP_EDITOR"
-            ENABLE_MAP_EDITOR_AREAS_TOOL: "$ENABLE_MAP_EDITOR_AREAS_TOOL"
+            ENABLE_MAP_EDITOR: "$ENABLE_MAP_EDITOR"
             HOST: "0.0.0.0"
             NODE_ENV: development
             ALLOWED_CORS_ORIGIN: "http://play.workadventure.localhost"
             VITE_URL: "http://front.workadventure.localhost"
             PUSHER_URL: http://play.workadventure.localhost
+            FRONT_URL: http://play.workadventure.localhost
             UPLOADER_URL: http://uploader.workadventure.localhost
             ICON_URL: http://icon.workadventure.localhost
             STUN_SERVER: "stun:stun.l.google.com:19302"
@@ -85,6 +89,7 @@ services:
             API_URL: back:50051
             DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
             PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
+            INTERNAL_MAP_STORAGE_URL: "http://map-storage:3000"
             ENABLE_OPENAPI_ENDPOINT: "true"
             START_ROOM_URL: "$START_ROOM_URL"
             ENABLE_CHAT: "$ENABLE_CHAT"
@@ -99,6 +104,37 @@ services:
             REPORT_ISSUES_URL: $REPORT_ISSUES_URL
             # LogRocket
             LOGROCKET_ID: $LOGROCKET_ID
+            # Sentry integration
+            SENTRY_DSN_FRONT: $SENTRY_DSN_FRONT
+            SENTRY_DSN_PUSHER: $SENTRY_DSN_PUSHER
+            SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
+            SENTRY_RELEASE: $SENTRY_RELEASE
+            SENTRY_ORG: $SENTRY_ORG
+            SENTRY_PROJECT: $SENTRY_PROJECT
+            # Room API
+            ROOM_API_PORT: "50051"
+            ROOM_API_SECRET_KEY: ${ROOM_API_SECRET_KEY}
+            #GRPC_VERBOSITY: DEBUG
+            #GRPC_TRACE: all
+            JITSI_DOMAIN: "$JITSI_DOMAIN"
+            JITSI_MUC_DOMAIN: "$JITSI_MUC_DOMAIN"
+            JITSI_XMPP_DOMAIN: "$JITSI_XMPP_DOMAIN"
+            FEATURE_FLAG_BROADCAST_AREAS: "true"
+            # Integration tools
+            KLAXOON_ENABLED: "$KLAXOON_ENABLED"
+            KLAXOON_CLIENT_ID: "$KLAXOON_CLIENT_ID"
+            YOUTUBE_ENABLED: "$YOUTUBE_ENABLED"
+            GOOGLE_DOCS_ENABLED: "$GOOGLE_DOCS_ENABLED"
+            GOOGLE_SHEETS_ENABLED: "$GOOGLE_SHEETS_ENABLED"
+            GOOGLE_SLIDES_ENABLED: "$GOOGLE_SLIDES_ENABLED"
+            EMBEDDED_DOMAINS_WHITELIST: "$EMBEDDED_DOMAINS_WHITELIST"
+            # Report issues menu
+            ACTIVE_REPORT_ISSUES_MENU: "true"
+            URL_REPORT_ISSUES: "https://github.com/workadventure/workadventure/issues"
+            PEER_VIDEO_LOW_BANDWIDTH: "$PEER_VIDEO_LOW_BANDWIDTH"
+            PEER_VIDEO_RECOMMENDED_BANDWIDTH: "$PEER_VIDEO_RECOMMENDED_BANDWIDTH"
+            PEER_SCREEN_SHARE_LOW_BANDWIDTH: "$PEER_SCREEN_SHARE_LOW_BANDWIDTH"
+            PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: "$PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH"
             # Matrix
             MATRIX_API_URI: http://synapse:8008/
             MATRIX_DOMAIN: '$MATRIX_DOMAIN'
@@ -109,24 +145,36 @@ services:
             - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"
             - "traefik.http.routers.front.service=front"
             - "traefik.http.services.front.loadbalancer.server.port=8080"
+            - "traefik.http.routers.room-api.rule=Host(`room-api.workadventure.localhost`)"
+            - "traefik.http.routers.room-api.service=room-api"
+            - "traefik.http.services.room-api.loadbalancer.server.port=50051"
+            - "traefik.http.services.room-api.loadbalancer.server.scheme=h2c"
             - "traefik.http.routers.play.rule=HostRegexp(`{domain:.*}`)"
             - "traefik.http.routers.play.priority=1"
             - "traefik.http.routers.play.service=play"
             - "traefik.http.services.play.loadbalancer.server.port=3000"
 
     chat:
-        image: thecodingmachine/nodejs:v2-18-bullseye
+        image: thecodingmachine/nodejs:v2-20-bullseye
         command: npm run start
         working_dir: /usr/src/app/chat
         environment:
+            STARTUP_COMMAND_1: ../wait-proto.sh
             STARTUP_COMMAND_2: ../npm-install.sh
             STARTUP_COMMAND_3: npm run typesafe-i18n
             PUSHER_URL: http://play.workadventure.localhost
             UPLOADER_URL: http://uploader.workadventure.localhost
-            EMBEDLY_KEY: $EMBEDLY_KEY
+            EMBEDLY_KEY: "$EMBEDLY_KEY"
             ICON_URL: http://icon.workadventure.localhost
             ENABLE_OPENID: "$OPID_CLIENT_ID"
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
+            # Sentry integration
+            SENTRY_DSN: "$SENTRY_DSN_CHAT"
+            SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
+            SENTRY_ORG: "$SENTRY_ORG"
+            SENTRY_PROJECT: "$SENTRY_PROJECT"
+            SENTRY_AUTH_TOKEN: "$SENTRY_AUTH_TOKEN"
+            SENTRY_RELEASE: "$SENTRY_RELEASE"
         volumes:
             - .:/usr/src/app
         labels:
@@ -156,23 +204,22 @@ services:
             - "traefik.http.services.maps.loadbalancer.server.port=80"
 
     back:
-        image: thecodingmachine/nodejs:v2-18-bullseye
+        image: thecodingmachine/nodejs:v2-20-bullseye
         command: npm run dev
         working_dir: /usr/src/app/back
-        #command: npm run profile
         environment:
             DEBUG: "*"
             PLAY_URL: http://play.workadventure.localhost
             # On startup, we ask the messages container to regenerate the files.
             # Note: we need to use this "messages" container because of ARM64 processors that are not supported with protoc (used in "messages" container)
             #STARTUP_COMMAND_0: touch /usr/src/app/back/src/Messages/generate_request/need_regenerate
-            STARTUP_COMMAND_1: ../npm-install.sh
+            STARTUP_COMMAND_1: ../wait-proto.sh
+            STARTUP_COMMAND_2: ../npm-install.sh
             # wait for files to be generated by "messages" container
             #STARTUP_COMMAND_2: while [ -f /usr/src/app/back/src/Messages/generate_request/need_regenerate ]; do sleep 1; done
             SECRET_KEY: "$SECRET_KEY"
             SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
-            ENABLE_FEATURE_MAP_EDITOR: "$ENABLE_FEATURE_MAP_EDITOR"
-            ENABLE_MAP_EDITOR_AREAS_TOOL: "$ENABLE_MAP_EDITOR_AREAS_TOOL"
+            ENABLE_MAP_EDITOR: "$ENABLE_MAP_EDITOR"
             ALLOW_ARTILLERY: "true"
             ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
             JITSI_URL: $JITSI_URL
@@ -187,9 +234,14 @@ services:
             PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
             MAP_STORAGE_URL: "map-storage:50053"
             PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
+            INTERNAL_MAP_STORAGE_URL: "http://map-storage:3000"
             PLAYER_VARIABLES_MAX_TTL: $PLAYER_VARIABLES_MAX_TTL
             ENABLE_CHAT: "$ENABLE_CHAT"
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
+            # Sentry integration
+            SENTRY_DSN: $SENTRY_DSN_BACK
+            SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
+            SENTRY_RELEASE: $SENTRY_RELEASE
         volumes:
             - .:/usr/src/app
         ports:
@@ -201,18 +253,25 @@ services:
             - "traefik.http.services.back.loadbalancer.server.port=8080"
 
     map-storage:
-        image: thecodingmachine/nodejs:v2-18-bullseye
+        image: thecodingmachine/nodejs:v2-20-bullseye
         command: npm run start:dev
         #command: npm run profile
         working_dir: /usr/src/app/map-storage
         environment:
-            DEBUG: "*"
-            STARTUP_COMMAND_1: ../npm-install.sh
+            #DEBUG: "*"
+            STARTUP_COMMAND_1: ../wait-proto.sh
+            STARTUP_COMMAND_2: ../npm-install.sh
             NODE_ENV: development
             PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
             AUTHENTICATION_STRATEGY: "Basic"
             AUTHENTICATION_USER: "john.doe"
             AUTHENTICATION_PASSWORD: "password"
+            API_URL: back:50051
+            # Sentry integration
+            SENTRY_DSN: $SENTRY_DSN_MAPSTORAGE
+            SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
+            SENTRY_RELEASE: $SENTRY_RELEASE
+            PATH_PREFIX: ""
         volumes:
             - .:/usr/src/app
         ports:
@@ -221,10 +280,15 @@ services:
             - "traefik.enable=true"
             - "traefik.http.routers.map-storage.rule=Host(`map-storage.workadventure.localhost`)"
             - "traefik.http.routers.map-storage.entryPoints=web"
+            - "traefik.http.routers.map-storage.service=map-storage"
             - "traefik.http.services.map-storage.loadbalancer.server.port=3000"
+            - "traefik.http.routers.map-storage-ui.rule=Host(`map-storage.workadventure.localhost`) && PathPrefix(`/ui/`)"
+            - "traefik.http.routers.map-storage-ui.entryPoints=web"
+            - "traefik.http.routers.map-storage-ui.service=map-storage-ui"
+            - "traefik.http.services.map-storage-ui.loadbalancer.server.port=8080"
 
     uploader:
-        image: thecodingmachine/nodejs:v2-18-bullseye
+        image: thecodingmachine/nodejs:v2-20-bullseye
         command: npm run dev
         #command: npm run profile
         working_dir: /usr/src/app/uploader
@@ -256,11 +320,8 @@ services:
             - "traefik.http.services.uploader.loadbalancer.server.port=8080"
 
     messages:
-        image: thecodingmachine/workadventure-back-base:v1-18
-        platform:
-          linux/amd64
+        image: thecodingmachine/nodejs:v2-20-bullseye-build
         environment:
-            #STARTUP_COMMAND_0: sudo apt-get install -y inotify-tools
             STARTUP_COMMAND_1: npm install
             STARTUP_COMMAND_2: npm run proto:watch
         volumes:
@@ -283,7 +344,7 @@ services:
             - "traefik.http.services.redisinsight.loadbalancer.server.port=8001"
 
     icon:
-        image: matthiasluedtke/iconserver:v3.13.0
+        image: matthiasluedtke/iconserver:v3.15.0
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.icon.rule=Host(`icon.workadventure.localhost`)"

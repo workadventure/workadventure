@@ -15,33 +15,30 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     visitCard: {
-        close: "Schliessen",
+        close: "Schließen",
     },
     profile: {
         edit: {
-            name: "Deinen Namen ändern",
-            woka: "Dein WOKA ändern",
-            companion: "Deinen Begleiter ändern",
+            name: "Namen ändern",
+            woka: "WOKA ändern",
+            companion: "Begleiter ändern",
             camera: "Kameraeinstellungen ändern",
         },
         login: "Einloggen",
         logout: "Ausloggen",
     },
     settings: {
-        videoQuality: {
-            title: "Video Qualität",
-            short: {
-                high: "Hoch (30 BpS)",
-                medium: "Mittel (20 BpS)",
-                small: "Gering (10 BpS)",
-                minimum: "Minimale (5 BpS)",
-            },
-            long: {
-                high: "Hohe Video Qualität (30 BpS)",
-                medium: "Mittlere Video Qualität (20 BpS, empfohlen)",
-                small: "Geringe Video Qualität (10 BpS)",
-                minimum: "Minimale Video Qualität (5 BpS)",
-            },
+        videoBandwidth: {
+            title: "Videoqualität",
+            low: "Niedrig",
+            recommended: "Empfohlen",
+            unlimited: "Unbegrenzt",
+        },
+        shareScreenBandwidth: {
+            title: "Bildschirmfreigabe-Qualität",
+            low: "Niedrig",
+            recommended: "Empfohlen",
+            unlimited: "Unbegrenzt",
         },
         language: {
             title: "Sprache",
@@ -52,10 +49,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             cameraToggle: "Kamera im „Abwesenheitsmodus“ aktiviert lassen.",
             microphoneToggle: "Mikrofon im „Abwesenheitsmodus“ aktiviert lassen.",
         },
-        save: {
-            warning: "(Das Spiel wird nach dem Speichern neugestartet)",
-            button: "Speichern",
-        },
+        save: "Speichern",
         fullscreen: "Vollbild",
         notifications: "Benachrichtigungen",
         cowebsiteTrigger: "Jedes mal nachfragen bevor Webseiten oder Jitsi Meet Räume geöffnet werden",
@@ -66,11 +60,12 @@ const menu: DeepPartial<Translation["menu"]> = {
         copy: "Kopieren",
         share: "Teilen",
         walkAutomaticallyToPosition: "Automatisch zu meiner Position gehen",
+        selectEntryPoint: "Startpunkt auswählen",
     },
     globalMessage: {
         text: "Text",
         audio: "Audio",
-        warning: "An alle Räume dieser Welt senden",
+        warning: "An alle Räume in dieser Welt senden",
         enter: "Trage hier deine Nachricht ein...",
         send: "Senden",
     },
@@ -84,7 +79,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         gettingStarted: {
             title: "Erste Schritte",
             description:
-                "Mit WorkAdventure kannst du eine Onlinewelt schaffen in der du dich spontan mit Anderen treffen und unterhalten kannst. Erstelle als erstes deine eigene Karte. Es steht dir eine großen Auswahl an vorgefertigten Karten von unserem Team zur Auswahl.",
+                "Mit WorkAdventure kannst du eine Onlinewelt erschaffen in der du dich spontan mit Anderen treffen und unterhalten kannst. Erstelle als erstes deine eigene Karte. Es steht dir eine große Auswahl an vorgefertigten Karten von unserem Team zur Verfügung.",
         },
         createMap: {
             title: "Eigene Karte erstellen ",
@@ -114,10 +109,10 @@ const menu: DeepPartial<Translation["menu"]> = {
         profile: "Profil",
         settings: "Einstellungen",
         invite: "Einladung",
-        credit: "Über die Karte",
+        credit: "Über diese Karte",
         globalMessages: "Globale Nachrichten",
         contact: "Kontakt",
-        report: "Report Issues",
+        report: "Einen Fehler melden",
     },
 };
 

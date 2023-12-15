@@ -1,5 +1,5 @@
-import { MATRIX_API_URI, MATRIX_DOMAIN } from "../enums/EnvironmentVariable";
 import axios from "axios";
+import { MATRIX_API_URI, MATRIX_DOMAIN } from "../enums/EnvironmentVariable";
 
 class MatrixProvider {
     private accessToken: string | undefined;
@@ -29,7 +29,7 @@ class MatrixProvider {
                         this.lastAccessTokenDate = Date.now();
                         return Promise.resolve();
                     } else {
-                        return Promise.reject();
+                        return Promise.reject(new Error("Failed with errcode " + response.data.errcode));
                     }
                 });
         }
@@ -57,7 +57,7 @@ class MatrixProvider {
                 if (response.status === 200) {
                     return Promise.resolve();
                 } else {
-                    return Promise.reject("Fail");
+                    return Promise.reject(new Error("Failed with status " + response.status));
                 }
             });
     }

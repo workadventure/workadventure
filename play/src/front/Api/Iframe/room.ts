@@ -1,6 +1,7 @@
 import type { Observable } from "rxjs";
-import { Subject } from "rxjs";
+import { Subject, Subscription } from "rxjs";
 
+import type { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import type { EnterLeaveEvent } from "../Events/EnterLeaveEvent";
 import type { ChangeLayerEvent } from "../Events/ChangeLayerEvent";
 
@@ -11,7 +12,6 @@ import type { WorkadventureRoomWebsiteCommands } from "./website";
 import website from "./website";
 import area from "./area";
 import type { WorkadventureAreaCommands } from "./area";
-import type { ITiledMap } from "@workadventure/tiled-map-type-guard";
 
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
@@ -19,7 +19,7 @@ const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subj
 const enterLayerStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
 const leaveLayerStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
 
-interface TileDescriptor {
+export interface TileDescriptor {
     x: number;
     y: number;
     tile: number | string | null;
@@ -30,6 +30,12 @@ let roomId: string | undefined;
 
 export const setRoomId = (id: string) => {
     roomId = id;
+};
+
+let hashParameters: Record<string, string> | undefined;
+
+export const setHashParameters = (theHashParameters: Record<string, string>) => {
+    hashParameters = theHashParameters;
 };
 
 let mapURL: string | undefined;
@@ -69,25 +75,25 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
     /**
      * @deprecated Use onEnterLayer instead
      */
-    onEnterZone(name: string, callback: () => void): void {
+    onEnterZone(name: string, callback: () => void): Subscription {
         let subject = enterStreams.get(name);
         if (subject === undefined) {
             subject = new Subject<EnterLeaveEvent>();
             enterStreams.set(name, subject);
         }
-        subject.subscribe(callback);
+        return subject.subscribe(callback);
     }
 
     /**
      * @deprecated Use onLeaveLayer instead
      */
-    onLeaveZone(name: string, callback: () => void): void {
+    onLeaveZone(name: string, callback: () => void): Subscription {
         let subject = leaveStreams.get(name);
         if (subject === undefined) {
             subject = new Subject<EnterLeaveEvent>();
             leaveStreams.set(name, subject);
         }
-        subject.subscribe(callback);
+        return subject.subscribe(callback);
     }
 
     /**
@@ -218,6 +224,19 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
             );
         }
         return mapURL;
+    }
+
+    /**
+     * The parameters behind the hash (#) of the URL are available from the WA.room.hashParameters property.
+     * They should follow the format key=value&key2=value2.
+     */
+    get hashParameters(): Record<string, string> {
+        if (hashParameters === undefined) {
+            throw new Error(
+                "hashParameters is not initialized yet. You should call WA.room.hashParameters within a WA.onInit callback."
+            );
+        }
+        return hashParameters;
     }
 
     /**

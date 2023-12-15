@@ -10,7 +10,7 @@ export enum PathTileType {
 export class PathfindingManager {
     private scene: Phaser.Scene;
 
-    private easyStar;
+    private easyStar: EasyStar.js;
     private grid: number[][];
     private tileDimensions: { width: number; height: number };
 
@@ -21,6 +21,7 @@ export class PathfindingManager {
         this.easyStar.enableDiagonals();
         this.easyStar.disableCornerCutting();
         this.easyStar.setTileCost(PathTileType.Exit, 100);
+        this.easyStar.setIterationsPerCalculation(1000);
 
         this.grid = collisionsGrid;
         this.tileDimensions = tileDimensions;
@@ -61,6 +62,7 @@ export class PathfindingManager {
                 return [];
             }
             // rejected Promise will return undefined for path
+            // eslint-disable-next-line no-await-in-loop
             path = await this.getPath(start, endPoint).catch();
             if (path && path.length > 0) {
                 return measuredInPixels ? this.mapTileUnitsToPixels(path) : path;
@@ -126,7 +128,7 @@ export class PathfindingManager {
     private logGridToTheConsole(grid: number[][]): void {
         let rowNumber = 0;
         for (const row of grid) {
-            console.log(`${rowNumber}:\t${row}`);
+            console.info(`${rowNumber}:\t${row}`);
             rowNumber += 1;
         }
     }

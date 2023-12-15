@@ -1,12 +1,12 @@
+import {ChildProcess} from "child_process";
 import {StartedTestContainer} from "testcontainers";
-import {AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, CHAT_URL} from "../src/Enum/EnvironmentVariable";
 import AWS from "aws-sdk";
+import {describe, expect, jest, it, beforeAll, beforeEach, afterAll, afterEach} from '@jest/globals';
+import {AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, CHAT_URL} from "../src/Enum/EnvironmentVariable";
 import {LocalStackContainer} from "./utils/LocalStackContainer";
 import {uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon";
 import startTestServer from "./startTestServer";
-import {ChildProcess} from "child_process";
 import isPortReachable from "./utils/isPortReachable";
-import {describe, expect, jest, it, beforeAll, beforeEach, afterAll, afterEach} from '@jest/globals';
 
 
 jest.mock('../src/Enum/EnvironmentVariable', () => ({

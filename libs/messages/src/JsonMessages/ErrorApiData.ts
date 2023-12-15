@@ -1,13 +1,9 @@
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
 
-/*
- * WARNING! The original file is in /messages/JsonMessages.
- * All other files are automatically copied from this file on container startup / build
- */
-
 export const isErrorApiErrorData = extendApi(
   z.object({
+    status: z.literal("error"),
     type: z.literal("error"),
     code: extendApi(z.string(), {
       description:
@@ -43,6 +39,7 @@ export const isErrorApiErrorData = extendApi(
 
 export const isErrorApiRetryData = extendApi(
   z.object({
+    status: z.literal("error"),
     type: z.literal("retry"),
     code: extendApi(z.string(), {
       description:
@@ -93,6 +90,7 @@ export const isErrorApiRetryData = extendApi(
 
 export const isErrorApiRedirectData = extendApi(
   z.object({
+    status: z.literal("error"),
     type: z.literal("redirect"),
     urlToRedirect: extendApi(z.string(), {
       description: "A URL specified to redirect the user onto it directly",
@@ -108,6 +106,7 @@ export const isErrorApiRedirectData = extendApi(
 
 export const isErrorApiUnauthorizedData = extendApi(
   z.object({
+    status: z.literal("error"),
     type: z.literal("unauthorized"),
     code: extendApi(z.string(), {
       description:
@@ -154,4 +153,8 @@ export const ErrorApiData = z.discriminatedUnion("type", [
   isErrorApiUnauthorizedData,
 ]);
 
+export type ErrorApiErrorData = z.infer<typeof isErrorApiErrorData>;
+export type ErrorApiRetryData = z.infer<typeof isErrorApiRetryData>;
+export type ErrorApiRedirectData = z.infer<typeof isErrorApiRedirectData>;
+export type ErrorApiUnauthorizedData = z.infer<typeof isErrorApiUnauthorizedData>;
 export type ErrorApiData = z.infer<typeof ErrorApiData>;

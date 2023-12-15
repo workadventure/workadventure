@@ -1,9 +1,9 @@
-import { User } from "./User";
+import { EmoteEventMessage, SetPlayerDetailsMessage, PlayerDetailsUpdatedMessage } from "@workadventure/messages";
 import { PositionInterface } from "../Model/PositionInterface";
+import { ZoneSocket } from "../RoomManager";
+import { User } from "./User";
 import { Movable } from "./Movable";
 import { Group } from "./Group";
-import { ZoneSocket } from "../RoomManager";
-import { EmoteEventMessage, SetPlayerDetailsMessage, PlayerDetailsUpdatedMessage } from "@workadventure/messages";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 
 export type EntersCallback = (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) => void;

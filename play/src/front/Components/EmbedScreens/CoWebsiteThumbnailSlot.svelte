@@ -3,17 +3,16 @@
 
     import { ICON_URL } from "../../Enum/EnvironmentVariable";
     import { mainCoWebsite } from "../../Stores/CoWebsiteStore";
-    import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
-    import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
-    import { iframeStates } from "../../WebRtc/CoWebsiteManager";
-    import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+    import { iframeStates, coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 
     import jitsiIcon from "../images/jitsi.png";
     import meetingIcon from "../images/meeting.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import LL from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
 
     export let index: number;
     export let coWebsite: CoWebsite;
@@ -37,9 +36,9 @@
             icon.src = meetingIcon;
             cowebsiteName = "BigBlueButton meeting";
         } else {
-            icon.src = `${ICON_URL}/icon?url=${
-                coWebsite.getUrl().hostname
-            }&size=64..96..256&fallback_icon_color=14304c`;
+            icon.src = `${ICON_URL}/icon?url=${encodeURIComponent(
+                coWebsite.getUrl().toString()
+            )}&size=64..96..256&fallback_icon_color=14304c`;
             cowebsiteName = coWebsite.getUrl().hostname;
         }
         icon.alt = coWebsite.getUrl().hostname;

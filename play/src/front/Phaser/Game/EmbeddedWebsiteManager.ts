@@ -1,7 +1,7 @@
-import type { GameScene } from "./GameScene";
-import { iframeListener } from "../../Api/IframeListener";
 import type { Subscription } from "rxjs";
+import { iframeListener } from "../../Api/IframeListener";
 import type { CreateEmbeddedWebsiteEvent, ModifyEmbeddedWebsiteEvent } from "../../Api/Events/EmbeddedWebsiteEvent";
+import type { GameScene } from "./GameScene";
 import DOMElement = Phaser.GameObjects.DOMElement;
 
 type EmbeddedWebsite = CreateEmbeddedWebsiteEvent & { iframe: HTMLIFrameElement; phaserObject: DOMElement };
@@ -82,7 +82,7 @@ export class EmbeddedWebsiteManager {
 
                 if (embeddedWebsiteEvent.url !== undefined) {
                     website.url = embeddedWebsiteEvent.url;
-                    const absoluteUrl = new URL(embeddedWebsiteEvent.url, this.gameScene.MapUrlFile).toString();
+                    const absoluteUrl = new URL(embeddedWebsiteEvent.url, this.gameScene.mapUrlFile).toString();
                     website.iframe.src = absoluteUrl;
                 }
 
@@ -175,7 +175,7 @@ height,*/
         embeddedWebsiteEvent: CreateEmbeddedWebsiteEvent,
         visible: boolean
     ): EmbeddedWebsite {
-        const absoluteUrl = new URL(embeddedWebsiteEvent.url, this.gameScene.MapUrlFile).toString();
+        const absoluteUrl = new URL(embeddedWebsiteEvent.url, this.gameScene.mapUrlFile).toString();
 
         const iframe = document.createElement("iframe");
         const scale = embeddedWebsiteEvent.scale ?? 1;
@@ -187,6 +187,11 @@ height,*/
         iframe.style.margin = "0";
         iframe.style.padding = "0";
         iframe.style.border = "none";
+        // There is a small glitch in Phaser where the iframe appears for a split second before the scene is loaded.
+        // We are dealing with this by hiding the iframe until the scene is loaded.
+        if (this.gameScene.scene.getStatus(this.gameScene.scene.key) <= Phaser.Scenes.CREATING) {
+            iframe.style.visibility = "hidden";
+        }
 
         const domElement = new DOMElement(
             this.gameScene,
@@ -199,6 +204,10 @@ height,*/
             domElement.scale = embeddedWebsiteEvent.scale;
         }
         domElement.setVisible(visible);
+
+        this.gameScene.load.once("complete", () => {
+            iframe.style.visibility = "visible";
+        });
 
         switch (embeddedWebsiteEvent.origin) {
             case "player":

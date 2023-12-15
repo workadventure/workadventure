@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, expect, it } from "vitest";
-import {ConnectCallback, DisconnectCallback, GameRoom} from "../src/Model/GameRoom";
-import {Point} from "../src/Model/Websocket/MessageUserPosition";
-import {Group} from "../src/Model/Group";
-import {User, UserSocket} from "../src/Model/User";
-import {JoinRoomMessage, PositionMessage, PositionMessage_Direction} from "@workadventure/messages";
-import {EmoteCallback} from "../src/Model/Zone";
+import { JoinRoomMessage, PositionMessage_Direction } from "@workadventure/messages";
+import { ConnectCallback, DisconnectCallback, GameRoom } from "../src/Model/GameRoom";
+import { Point } from "../src/Model/Websocket/MessageUserPosition";
+import { Group } from "../src/Model/Group";
+import { User, UserSocket } from "../src/Model/User";
+import { EmoteCallback } from "../src/Model/Zone";
 
 function createMockUser(userId: number): User {
     return {
@@ -28,7 +28,7 @@ function createJoinRoomMessage(uuid: string, x: number, y: number): JoinRoomMess
             y,
             direction: PositionMessage_Direction.DOWN,
             moving: false,
-        }
+        },
     } as const);
 }
 

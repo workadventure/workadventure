@@ -1,0 +1,54 @@
+name: Push @workadventure/room-api-client to NPM
+on:
+  release:
+    types: [created]
+  push:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      # Setup .npmrc file to publish to npm
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '18.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Replace version number
+        run: 'sed -i "s#VERSION_PLACEHOLDER#${{ github.ref_name }}#g" package.json'
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: Debug package.json
+        run: cat package.json
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          version: '3.x'
+
+      - name: "Install play dependencies"
+        run: npm ci
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Build proto"
+        run: npm run ts-proto
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Build"
+        run: npm run build
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: Publish package
+        run: npm publish
+        working-directory: "libs/room-api-clients/room-api-client-js"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        if: ${{ github.event_name == 'release' }}

@@ -1,4 +1,4 @@
-import { AdminMessageEventTypes, adminMessagesService } from "../Connexion/AdminMessagesService";
+import { AdminMessageEventTypes, adminMessagesService } from "../Connection/AdminMessagesService";
 import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
 import { soundPlayingStore } from "../Stores/SoundPlayingStore";
 import { UPLOADER_URL } from "../Enum/EnvironmentVariable";
@@ -8,6 +8,8 @@ class UserMessageManager {
     receiveBannedMessageListener!: () => void;
 
     constructor() {
+        // Not unsubscribing is ok, this is a singleton.
+        //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
         adminMessagesService.messageStream.subscribe((event) => {
             if (event.type === AdminMessageEventTypes.admin) {
                 textMessageStore.addMessage(event.text);

@@ -1,14 +1,9 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import SettingsSubMenu from "./SettingsSubMenu.svelte";
-    import ProfileSubMenu from "./ProfileSubMenu.svelte";
-    import AboutRoomSubMenu from "./AboutRoomSubMenu.svelte";
-    import ContactSubMenu from "./ContactSubMenu.svelte";
-    import CustomSubMenu from "./CustomSubMenu.svelte";
-    import GuestSubMenu from "./GuestSubMenu.svelte";
-    import ReportSubMenu from "./ReportSubMenu.svelte";
+    import { onDestroy, onMount } from "svelte";
+    import type { Unsubscriber } from "svelte/store";
     import chevronImg from "../images/chevron.svg";
-    import type { TranslatedMenu } from "../../Stores/MenuStore";
+    import type { MenuItem } from "../../Stores/MenuStore";
     import {
         activeSubMenuStore,
         checkSubMenuToShow,
@@ -18,12 +13,16 @@
         SubMenusInterface,
         subMenusStore,
     } from "../../Stores/MenuStore";
-    import type { MenuItem } from "../../Stores/MenuStore";
-    import { onDestroy, onMount } from "svelte";
-    import type { Unsubscriber } from "svelte/store";
     import { sendMenuClickedEvent } from "../../Api/Iframe/Ui/MenuItem";
-    import LL from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import SettingsSubMenu from "./SettingsSubMenu.svelte";
+    import ProfileSubMenu from "./ProfileSubMenu.svelte";
+    import AboutRoomSubMenu from "./AboutRoomSubMenu.svelte";
+    import ContactSubMenu from "./ContactSubMenu.svelte";
+    import CustomSubMenu from "./CustomSubMenu.svelte";
+    import GuestSubMenu from "./GuestSubMenu.svelte";
+    import ReportSubMenu from "./ReportSubMenu.svelte";
 
     let activeSubMenu: MenuItem = $subMenusStore[$activeSubMenuStore];
     let activeComponent: typeof ProfileSubMenu | typeof CustomSubMenu = ProfileSubMenu;
@@ -61,14 +60,7 @@
     async function switchMenu(menu: MenuItem) {
         if (menu.type === "translated") {
             activeSubMenu = menu;
-            const indexMenuSearch = $subMenusStore.findIndex(
-                (menuSearch) => (menuSearch as TranslatedMenu).key === menu.key
-            );
-            if (indexMenuSearch === -1) {
-                console.error(`Sub menu was not founded for key: ${menu.key} in the array: `, $activeSubMenuStore);
-                return;
-            }
-            activeSubMenuStore.set(indexMenuSearch);
+            activeSubMenuStore.activateByMenuItem(menu);
             switch (menu.key) {
                 case SubMenusInterface.profile:
                     activeComponent = ProfileSubMenu;
@@ -100,20 +92,20 @@
                     break;
             }
         } else {
-            const customMenu = customMenuIframe.get(menu.label);
+            const customMenu = customMenuIframe.get(menu.key);
             if (customMenu !== undefined) {
                 activeSubMenu = menu;
                 props = { url: customMenu.url, allowApi: customMenu.allowApi };
                 activeComponent = CustomSubMenu;
             } else {
-                sendMenuClickedEvent(menu.label);
+                sendMenuClickedEvent(menu.key);
                 menuVisiblilityStore.set(false);
             }
         }
     }
 
     function closeMenu() {
-        activeSubMenuStore.set(0);
+        activeSubMenuStore.activateByIndex(0);
         menuVisiblilityStore.set(false);
     }
 
@@ -136,7 +128,7 @@
     <div class="menu-nav-sidebar tw-min-w-[160px]" transition:fly={{ x: -1000, duration: 500 }}>
         <h2 class="tw-p-5 blue-title">{$LL.menu.title()}</h2>
         <nav>
-            {#each $subMenusStore as submenu, i}
+            {#each $subMenusStore as submenu, i (submenu.key + "_" + submenu.type)}
                 <div
                     class="menu-item-container {activeSubMenu === submenu ? 'active' : ''}"
                     on:click|preventDefault={() => switchMenu(submenu)}

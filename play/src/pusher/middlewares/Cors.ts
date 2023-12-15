@@ -14,6 +14,7 @@ export function cors(req: Request, res: Response, next: MiddlewareNext): Middlew
             res.setHeader("access-control-allow-origin", ALLOWED_CORS_ORIGIN);
         }
         res.setHeader("access-control-allow-credentials", "true");
+        res.setHeader("x-content-type-options", "nosniff");
     }
 
     next();

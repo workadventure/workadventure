@@ -17,6 +17,12 @@ const warning: DeepPartial<Translation["warning"]> = {
     connectionLostSubtitle: "Reconnexion",
     waitingConnectionTitle: "En attente du serveur",
     waitingConnectionSubtitle: "Connexion",
+    megaphoneNeeds: "Pour utiliser le megaphone, vous devez activer votre caméra ou votre microphone.",
+    popupBlocked: {
+        title: "Bloqueur de fenêtre pop-up",
+        content: "Veuillez autoriser les fenêtres pop-up pour ce site dans les paramètres de votre navigateur.",
+        done: "Done",
+    },
 };
 
 export default warning;

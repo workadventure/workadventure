@@ -1,19 +1,21 @@
 <script lang="ts">
-    import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
+    import { fly } from "svelte/transition";
     import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MediaBox from "../Video/MediaBox.svelte";
-    import { fly, fade } from "svelte/transition";
+    import { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 
     export let highlightedEmbedScreen: EmbedScreen | undefined;
     export let full = false;
     $: clickable = !full;
 </script>
 
-<aside class="cameras-container" class:full in:fly={{ x: 200, duration: 100 }} out:fade>
+<aside class="cameras-container" class:full in:fly|local={{ x: 200, duration: 100 }}>
     <div class="other-cameras">
-        {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
+        {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
             {#if !highlightedEmbedScreen || highlightedEmbedScreen.type !== "streamable" || (highlightedEmbedScreen.type === "streamable" && highlightedEmbedScreen.embed !== peer)}
-                <MediaBox streamable={peer} isClickable={clickable} />
+                {#key uniqueId}
+                    <MediaBox streamable={peer} isClickable={clickable} />
+                {/key}
             {/if}
         {/each}
     </div>

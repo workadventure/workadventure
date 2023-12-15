@@ -5,7 +5,8 @@ export const isBannerEvent = z.object({
     text: z.string(),
     bgColor: z.string().optional(),
     textColor: z.string().optional(),
-    closable: z.boolean().optional().default(true),
+    closable: z.boolean().default(true).optional(),
+    timeToClose: z.number().default(120000).optional(),
     link: z
         .object({
             url: z.string(),

@@ -1,4 +1,3 @@
-import { CommandConfig } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { GameScene } from "../../GameScene";
@@ -16,33 +15,28 @@ export class FloorEditorTool extends MapEditorTool {
     }
 
     public update(time: number, dt: number): void {
-        console.log("FloorEditorTool update");
+        console.info("FloorEditorTool update");
     }
     public clear(): void {
-        console.log("FloorEditorTool clear");
+        console.info("FloorEditorTool clear");
     }
     public activate(): void {
-        console.log("FloorEditorTool activate");
+        console.info("FloorEditorTool activate");
     }
     public destroy(): void {
-        console.log("FloorEditorTool destroy");
+        console.info("FloorEditorTool destroy");
     }
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
-        console.log("FloorEditorTool subscribeToGameMapFrontWrapperEvents");
+        console.info("FloorEditorTool subscribeToGameMapFrontWrapperEvents");
     }
     public handleKeyDownEvent(event: KeyboardEvent): void {
-        console.log("FloorEditorTool handleKeyDownEvent");
-    }
-    /**
-     * Perform actions needed to see the changes instantly
-     */
-    public handleCommandExecution(commandConfig: CommandConfig, localCommand: boolean): void {
-        console.log("FloorEditorTool handleCommandExecution");
+        console.info("FloorEditorTool handleKeyDownEvent");
     }
     /**
      * React on commands coming from the outside
      */
-    public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): void {
-        console.log("FloorEditorTool handleIncomingCommandMessage");
+    public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
+        console.info("FloorEditorTool handleIncomingCommandMessage");
+        return Promise.resolve();
     }
 }

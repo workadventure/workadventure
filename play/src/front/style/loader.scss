@@ -1,0 +1,9 @@
+.pure-loader{
+  .svg {
+    @apply tw-bg-contain tw-bg-no-repeat tw-bg-center tw-w-7 tw-h-7 tw-ml-3;
+    content: "";
+  }
+  p {
+    @apply tw-text-center tw-animate-pulse;
+  }
+}

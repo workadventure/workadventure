@@ -1,0 +1,101 @@
+/*
+////////////////////////
+// ButtonState.svelte //
+////////////////////////
+*/
+button.button-state {
+  transition: all 0.2s ease-in-out;
+  @apply tw-mx-auto;
+  &:disabled {
+    @apply tw-cursor-default;
+    &:hover {
+      filter: initial;
+    }
+  }
+  &.success {
+    @apply tw-bg-pop-green tw-text-white;
+  }
+  &.error {
+    @apply tw-bg-pop-red tw-text-white;
+  }
+}
+
+/*
+////////////////////////
+// InputSelect.svelte //
+////////////////////////
+*/
+.input-select {
+  @apply tw-mb-2;
+  label {
+    @apply tw-font-medium tw-mb-1.5;
+  }
+
+  select {
+    @apply tw-w-full tw-bg-white tw-text-brand-blue tw-border-lighter-purple tw-border-solid tw-m-0;
+    &.error {
+      @apply tw-border-pop-red;
+    }
+  }
+  span {
+    @apply tw-text-xs tw-text-pop-red;
+  }
+}
+
+/*
+//////////////////////
+// InputTags.svelte //
+//////////////////////
+*/
+.input-tags {
+  @apply tw-mb-2;
+  label {
+    @apply tw-font-medium tw-mb-1.5;
+  }
+  span.error {
+    @apply tw-text-xs tw-text-pop-red;
+  }
+  .svelte-select .value-container input {
+    @apply tw-border-0 tw-outline-0 tw-ring-0 tw-rounded-none;
+    color: rgb(20 48 76 / var(--tw-text-opacity)) !important;
+  }
+  .svelte-select .svelte-select-list, .value-container .multi-item :is(.multi-item-clear, .multi-item-text), .svelte-select .indicators svg {
+    @apply tw-text-brand-blue;
+  }
+}
+
+:global(.svelte-select) {
+  border-radius: 8px !important;
+  padding-left: 0.75rem !important;
+  border-color: rgb(146, 142, 187) !important;
+  transition: all ease-in-out 150ms !important;
+}
+:global(.svelte-select.focused) {
+  @apply tw-outline tw-outline-lighter-purple;
+}
+:global(.svelte-select .value-container) {
+  padding: 0 5px !important;
+}
+
+/*
+//////////////////////
+// InputText.svelte //
+//////////////////////
+*/
+.input-text {
+  @apply tw-mb-2;
+  label {
+    @apply tw-font-medium tw-mb-1.5;
+  }
+
+  input {
+    @apply tw-w-full tw-bg-white tw-text-brand-blue tw-border-lighter-purple tw-border-solid tw-m-0;
+    border-width: 1px !important;
+    &.error {
+      @apply tw-border-pop-red;
+    }
+  }
+  span {
+    @apply tw-text-xs tw-text-pop-red;
+  }
+}

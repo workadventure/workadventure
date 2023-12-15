@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import { Writable } from "stream";
 import { describe, expect, it } from "vitest";
 import { BackToPusherSpaceMessage } from "@workadventure/messages";
-import { SpacesWatcher } from "../src/Model/SpacesWatcher";
 import { mock } from "vitest-mock-extended";
+import { SpacesWatcher } from "../src/Model/SpacesWatcher";
 import { SpaceSocket } from "../src/SpaceManager";
-import { Writable } from "stream";
 
 describe("SpacesWatcher", () => {
     it("should close the socket because no pong was answered to the ping within 20sec", async () => {
@@ -24,7 +24,9 @@ describe("SpacesWatcher", () => {
 
         const watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher, 0);
         expect(eventsWatcher.some((message) => message?.message?.$case === "pingMessage")).toBe(true);
-        await new Promise((resolve) => setTimeout(resolve, 5));
+        await new Promise((resolve) => {
+            setTimeout(resolve, 5);
+        });
 
         expect(isClosed).toBe(true);
     });
@@ -52,7 +54,9 @@ describe("SpacesWatcher", () => {
         watcher = new SpacesWatcher("uuid-watcher", spaceSocketToPusher, 0.1);
         let isClosed = false;
         spaceSocketToPusher.on("end", () => (isClosed = true));
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await new Promise((resolve) => {
+            setTimeout(resolve, 300);
+        });
         expect(isClosed).toBe(false);
     });
 });

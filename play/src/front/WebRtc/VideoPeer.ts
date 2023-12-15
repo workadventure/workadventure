@@ -1,23 +1,23 @@
-import type { RoomConnection } from "../Connexion/RoomConnection";
-import { blackListManager } from "./BlackListManager";
+import { Buffer } from "buffer";
 import type { Subscription } from "rxjs";
-import type { UserSimplePeerInterface } from "./SimplePeer";
-import type { Readable, Writable, Unsubscriber } from "svelte/store";
-import { readable, writable } from "svelte/store";
-import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
-import { localStreamStore, obtainedMediaConstraintStore } from "../Stores/MediaStore";
+import { Readable, Writable, Unsubscriber, get, readable, writable } from "svelte/store";
+import Peer from "simple-peer/simplepeer.min.js";
+import type { RoomConnection } from "../Connection/RoomConnection";
+import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
 import {
-    chatMessagesStore,
+    chatMessagesService,
     newChatMessageSubject,
     newChatMessageWritingStatusSubject,
     writingStatusMessageStore,
 } from "../Stores/ChatStore";
-import { getIceServersConfig } from "../Components/Video/utils";
+import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import Peer from "simple-peer/simplepeer.min.js";
-import { Buffer } from "buffer";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
+import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
+import type { UserSimplePeerInterface } from "./SimplePeer";
+import { blackListManager } from "./BlackListManager";
 import { MessageMessage } from "./P2PMessages/MessageMessage";
 import { MessageStatusMessage } from "./P2PMessages/MessageStatusMessage";
 import { P2PMessage } from "./P2PMessages/P2PMessage";
@@ -48,7 +48,7 @@ export class VideoPeer extends Peer {
     private newWritingStatusMessageSubscription: Subscription | undefined;
     private volumeStoreSubscribe?: Unsubscriber;
     private readonly localStreamStoreSubscribe: Unsubscriber;
-    private readonly obtainedMediaConstraintStoreSubscribe: Unsubscriber;
+    private readonly apparentMediaConstraintStoreSubscribe: Unsubscriber;
 
     constructor(
         public user: UserSimplePeerInterface,
@@ -56,11 +56,13 @@ export class VideoPeer extends Peer {
         public readonly userName: string,
         private connection: RoomConnection
     ) {
+        const bandwidth = get(videoBandwidthStore);
         super({
             initiator,
             config: {
                 iceServers: getIceServersConfig(user),
             },
+            sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
         });
 
         this.userId = user.userId;
@@ -141,7 +143,7 @@ export class VideoPeer extends Peer {
             this._statusStore.set("connected");
 
             this._connected = true;
-            chatMessagesStore.addIncomingUser(this.userId);
+            chatMessagesService.addIncomingUser(this.userId);
 
             this.newMessageSubscription = newChatMessageSubject.subscribe((newMessage) => {
                 if (!newMessage) return;
@@ -156,7 +158,9 @@ export class VideoPeer extends Peer {
             });
 
             this.newWritingStatusMessageSubscription = newChatMessageWritingStatusSubject.subscribe((status) => {
-                if (status == undefined) return;
+                if (status === undefined) {
+                    return;
+                }
                 this.write(
                     new Buffer(
                         JSON.stringify({
@@ -179,7 +183,7 @@ export class VideoPeer extends Peer {
                     }
                     case "message": {
                         if (!blackListManager.isBlackListed(this.userUuid)) {
-                            chatMessagesStore.addExternalMessage(this.userId, message.message);
+                            chatMessagesService.addExternalMessage(this.userId, message.message);
                         }
                         break;
                     }
@@ -240,7 +244,7 @@ export class VideoPeer extends Peer {
         this.localStreamStoreSubscribe = localStreamStore.subscribe((streamValue) => {
             if (streamValue.type === "success" && streamValue.stream) this.addStream(streamValue.stream);
         });
-        this.obtainedMediaConstraintStoreSubscribe = obtainedMediaConstraintStore.subscribe((constraints) => {
+        this.apparentMediaConstraintStoreSubscribe = apparentMediaContraintStore.subscribe((constraints) => {
             this.write(
                 new Buffer(
                     JSON.stringify({
@@ -304,9 +308,9 @@ export class VideoPeer extends Peer {
             this.onUnBlockSubscribe.unsubscribe();
             this.newMessageSubscription?.unsubscribe();
             this.newWritingStatusMessageSubscription?.unsubscribe();
-            chatMessagesStore.addOutcomingUser(this.userId);
+            chatMessagesService.addOutcomingUser(this.userId);
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();
-            if (this.obtainedMediaConstraintStoreSubscribe) this.obtainedMediaConstraintStoreSubscribe();
+            if (this.apparentMediaConstraintStoreSubscribe) this.apparentMediaConstraintStoreSubscribe();
             if (this.volumeStoreSubscribe) this.volumeStoreSubscribe();
             super.destroy();
         } catch (err) {

@@ -1,8 +1,8 @@
 <script lang="ts">
     import { userStore } from "../../Stores/LocalUserStore";
     import { iframeListener } from "../../IframeListener";
-    import Chat from "./View/Chat.svelte";
     import LL from "../../i18n/i18n-svelte";
+    import Chat from "./View/Chat.svelte";
     import Header from "./Ui/Header.svelte";
 
     window.addEventListener("load", () => {

@@ -9,13 +9,17 @@ const actionbar: BaseTranslation = {
     camera: "Start / Stop camera",
     microphone: "Mute / Unmute",
     emoji: "Open / Close emoji",
+    enableMegaphone: "Enable megaphone",
+    disableMegaphone: "Disable megaphone",
     menu: "Open / Close menu",
     mapEditor: "Open / Close mapEditor",
+    mapEditorMobileLocked: "Map editor is locked on mobile mode",
     bo: "Open back office",
     subtitle: {
         microphone: "Microphone",
         speaker: "Speaker",
     },
+    app: "Open / Close applications",
 };
 
 export default actionbar;

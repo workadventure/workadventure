@@ -1,15 +1,16 @@
+import * as Sentry from "@sentry/svelte";
 import "phaser";
 import "./front/style/index.scss";
 
-import { DEBUG_MODE } from "./front/Enum/EnvironmentVariable";
+import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
+import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
+import { DEBUG_MODE, SENTRY_DSN_FRONT, SENTRY_RELEASE, SENTRY_ENVIRONMENT } from "./front/Enum/EnvironmentVariable";
 import { LoginScene } from "./front/Phaser/Login/LoginScene";
 import { ReconnectingScene } from "./front/Phaser/Reconnecting/ReconnectingScene";
 import { SelectCharacterScene } from "./front/Phaser/Login/SelectCharacterScene";
 import { SelectCompanionScene } from "./front/Phaser/Login/SelectCompanionScene";
 import { EnableCameraScene } from "./front/Phaser/Login/EnableCameraScene";
 import { CustomizeScene } from "./front/Phaser/Login/CustomizeScene";
-import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
-import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { EntryScene } from "./front/Phaser/Login/EntryScene";
 import { coWebsiteManager } from "./front/WebRtc/CoWebsiteManager";
 import { ErrorScene } from "./front/Phaser/Reconnecting/ErrorScene";
@@ -20,7 +21,28 @@ import { waScaleManager } from "./front/Phaser/Services/WaScaleManager";
 import { Game } from "./front/Phaser/Game/Game";
 import App from "./front/Components/App.svelte";
 import { HtmlUtils } from "./front/WebRtc/HtmlUtils";
+import { urlManager } from "./front/Url/UrlManager";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+
+if (SENTRY_DSN_FRONT != undefined) {
+    try {
+        const sentryOptions: Sentry.BrowserOptions = {
+            dsn: SENTRY_DSN_FRONT,
+            release: SENTRY_RELEASE,
+            environment: SENTRY_ENVIRONMENT,
+            integrations: [new Sentry.BrowserTracing()],
+            // Set tracesSampleRate to 1.0 to capture 100%
+            // of transactions for performance monitoring.
+            // We recommend adjusting this value in production
+            tracesSampleRate: 0.2,
+        };
+
+        Sentry.init(sentryOptions);
+        console.info("Sentry initialized");
+    } catch (e) {
+        console.error("Error while initializing Sentry", e);
+    }
+}
 
 const { width, height } = coWebsiteManager.getGameSize();
 const fps: Phaser.Types.Core.FPSConfig = {
@@ -50,13 +72,22 @@ const fps: Phaser.Types.Core.FPSConfig = {
     smoothStep: false,
 };
 
-// the ?phaserMode=canvas parameter can be used to force Canvas usage
-const params = new URLSearchParams(document.location.search.substring(1));
-const phaserMode = params.get("phaserMode");
+// the ?phaserMode=canvas or #phaserMode=canvas parameter can be used to force Canvas usage
+function getRendererMode(): string | undefined {
+    const params = new URLSearchParams(document.location.search.substring(1));
+    let phaserMode: string | null | undefined = params.get("phaserMode");
+
+    if (phaserMode === null) {
+        phaserMode = urlManager.getHashParameter("phaserMode");
+    }
+
+    return phaserMode;
+}
+
 let mode: number;
-switch (phaserMode) {
+switch (getRendererMode()) {
     case "auto":
-    case null:
+    case undefined:
         mode = Phaser.AUTO;
         break;
     case "canvas":
@@ -65,8 +96,11 @@ switch (phaserMode) {
     case "webgl":
         mode = Phaser.WEBGL;
         break;
+    case "headless":
+        mode = Phaser.HEADLESS;
+        break;
     default:
-        throw new Error('phaserMode parameter must be one of "auto", "canvas" or "webgl"');
+        throw new Error('phaserMode parameter must be one of "auto", "canvas", "webgl" or "headless"');
 }
 
 const hdpiManager = new HdpiManager(640 * 480, 196 * 196);
@@ -100,9 +134,9 @@ const config: Phaser.Types.Core.GameConfig = {
     },
     disableContextMenu: true,
     render: {
-        pixelArt: true,
+        pixelArt: mode !== Phaser.HEADLESS, // There is a bug in Phaser 3.60.0 that makes headless mode crash when pixelArt is enabled
         roundPixels: true,
-        antialias: false,
+        antialias: mode === Phaser.HEADLESS, // There is a bug in Phaser 3.60.0 that makes headless mode crash when antialias is disabled
         antialiasGL: false,
     },
     plugins: {
@@ -155,6 +189,8 @@ window.addEventListener("resize", function () {
     waScaleManager.refreshFocusOnTarget();
 });
 
+// coWebsiteManager.onResize is a singleton. No need to unsubscribe.
+//eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
 coWebsiteManager.onResize.subscribe(() => {
     waScaleManager.applyNewSize();
     waScaleManager.refreshFocusOnTarget();

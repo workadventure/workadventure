@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Color } from "@workadventure/shared-utils";
-    import { locale } from "../../../i18n/i18n-svelte";
     import { MatrixEvent } from "matrix-js-sdk";
+    import { locale } from "../../../i18n/i18n-svelte";
     import * as MatrixEventsUtils from "../../../Utils/MatrixEventUtils";
 
     export let event: MatrixEvent;

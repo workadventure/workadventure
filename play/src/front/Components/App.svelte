@@ -9,6 +9,10 @@
         selectCharacterCustomizeSceneVisibleStore,
     } from "../Stores/SelectCharacterStore";
     import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
+    import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
+    import { mapEditorModeStore } from "../Stores/MapEditorStore";
+    import { refreshPromptStore } from "../Stores/RefreshPromptStore";
+    import { forceRefreshChatStore } from "../Stores/ChatStore";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
@@ -17,24 +21,16 @@
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import ErrorScreen from "./UI/ErrorScreen.svelte";
     import Chat from "./Chat/Chat.svelte";
-    import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
-    import { mapEditorModeStore } from "../Stores/MapEditorStore";
-    import { refreshPromptStore } from "../Stores/RefreshPromptStore";
     import MapEditor from "./MapEditor/MapEditor.svelte";
-    import { afterUpdate } from "svelte";
     import RefreshPrompt from "./RefreshPrompt.svelte";
 
     export let game: Game;
 
     /**
      * When changing map from an exit on the current map, the Chat and the MainLayout are not really destroyed
-     * due to an internal issue of Svelte, this is a work-around to force the component to be reloaded
+     * due to an internal issue of Svelte, we use a #key directive to force the destruction of the components.
      * https://github.com/sveltejs/svelte/issues/5268
      */
-    let unique = {};
-    afterUpdate(() => {
-        unique = {};
-    });
 </script>
 
 {#if $errorScreenStore !== undefined}
@@ -62,13 +58,13 @@
         <EnableCameraScene {game} />
     </div>
 {:else if $gameSceneIsLoadedStore && !$selectCharacterCustomizeSceneVisibleStore}
-    {#key unique}
+    {#if $refreshPromptStore}
+        <RefreshPrompt />
+    {/if}
+    {#key $forceRefreshChatStore}
         <Chat />
         {#if $mapEditorModeStore}
             <MapEditor />
-        {/if}
-        {#if $refreshPromptStore}
-            <RefreshPrompt />
         {/if}
         <MainLayout />
     {/key}

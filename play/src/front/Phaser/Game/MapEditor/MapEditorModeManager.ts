@@ -1,23 +1,29 @@
-import { CommandConfig, Command, UpdateEntityCommand } from "@workadventure/map-editor";
-import { UpdateAreaCommand, CreateAreaCommand, DeleteAreaCommand } from "@workadventure/map-editor";
-import type { Unsubscriber } from "svelte/store";
-import type { RoomConnection } from "../../../Connexion/RoomConnection";
+import { Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
+import { Unsubscriber, get } from "svelte/store";
+import { EditMapCommandMessage } from "@workadventure/messages";
+import pLimit from "p-limit";
+import debug from "debug";
+import type { RoomConnection } from "../../../Connection/RoomConnection";
 import type { GameScene } from "../GameScene";
 import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
 import { EntityEditorTool } from "./Tools/EntityEditorTool";
-import { CreateEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/CreateEntityCommand";
-import { DeleteEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/DeleteEntityCommand";
-import { EditMapCommandMessage } from "@workadventure/messages";
-import { ENABLE_MAP_EDITOR_AREAS_TOOL } from "../../../Enum/EnvironmentVariable";
+import { WAMSettingsEditorTool } from "./Tools/WAMSettingsEditorTool";
+import { FrontCommandInterface } from "./Commands/FrontCommandInterface";
+import { FrontCommand } from "./Commands/FrontCommand";
+import { TrashEditorTool } from "./Tools/TrashEditorTool";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
     FloorEditor = "FloorEditor",
     EntityEditor = "EntityEditor",
+    WAMSettingsEditor = "WAMSettingsEditor",
+    TrashEditor = "TrashEditor",
 }
+
+const logger = debug("map-editor");
 
 export class MapEditorModeManager {
     private scene: GameScene;
@@ -36,16 +42,20 @@ export class MapEditorModeManager {
      * What tool are we using right now
      */
     private activeTool?: EditorToolName;
+    /**
+     * Last tool used before closing map editor
+     */
+    private lastlyUsedTool?: EditorToolName;
 
     /**
      * We are making use of CommandPattern to implement an Undo-Redo mechanism
      */
-    private localCommandsHistory: Command[];
+    private localCommandsHistory: FrontCommand[];
 
     /**
      * Commands sent by us that are still to be acknowledged by the server
      */
-    private pendingCommands: Command[];
+    private pendingCommands: FrontCommand[];
     /**
      * Which command was called most recently
      */
@@ -53,14 +63,16 @@ export class MapEditorModeManager {
 
     private mapEditorModeUnsubscriber!: Unsubscriber;
 
-    private ctrlKey: Phaser.Input.Keyboard.Key;
-    private shiftKey: Phaser.Input.Keyboard.Key;
+    private ctrlKey?: Phaser.Input.Keyboard.Key;
+    private shiftKey?: Phaser.Input.Keyboard.Key;
+
+    private isReverting: Promise<void> = Promise.resolve();
 
     constructor(scene: GameScene) {
         this.scene = scene;
 
-        this.ctrlKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
-        this.shiftKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+        this.ctrlKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
+        this.shiftKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
         this.localCommandsHistory = [];
         this.pendingCommands = [];
@@ -72,117 +84,96 @@ export class MapEditorModeManager {
             [EditorToolName.AreaEditor]: new AreaEditorTool(this),
             [EditorToolName.EntityEditor]: new EntityEditorTool(this),
             [EditorToolName.FloorEditor]: new FloorEditorTool(this),
+            [EditorToolName.WAMSettingsEditor]: new WAMSettingsEditorTool(this),
+            [EditorToolName.TrashEditor]: new TrashEditorTool(this),
         };
         this.activeTool = undefined;
+        this.lastlyUsedTool = undefined;
 
         this.subscribeToStores();
         this.subscribeToGameMapFrontWrapperEvents();
+
+        this.currentRunningCommand = this.scene.getGameMapFrontWrapper().initializedPromise.promise;
     }
 
     public update(time: number, dt: number): void {
         this.currentlyActiveTool?.update(time, dt);
     }
 
+    private currentRunningCommand: Promise<void>;
+
     /**
      * Creates new Command object from given command config and executes it, both local and from the back.
-     * @param commandConfig what to execute
+     * @param command what to execute
      * @param emitMapEditorUpdate Should the command be emitted further to the game room? Default true.
      * (for example if command came from the back)
      * @param addToLocalCommandsHistory Should the command be added to the local commands history to be used in undo/redo mechanism? Default true.
      */
-    public executeCommand(
-        commandConfig: CommandConfig,
+    public async executeCommand(
+        command: Command & FrontCommandInterface,
         emitMapEditorUpdate = true,
-        addToLocalCommandsHistory = true,
-        commandId?: string
-    ): boolean {
-        let command: Command;
-        const delay = 0;
-        try {
-            switch (commandConfig.type) {
-                case "UpdateAreaCommand": {
-                    command = new UpdateAreaCommand(this.scene.getGameMap(), commandConfig, commandId);
-                    break;
-                }
-                case "CreateAreaCommand": {
-                    command = new CreateAreaCommand(this.scene.getGameMap(), commandConfig, commandId);
-                    break;
-                }
-                case "DeleteAreaCommand": {
-                    command = new DeleteAreaCommand(this.scene.getGameMap(), commandConfig, commandId);
-                    break;
-                }
-                case "UpdateEntityCommand": {
-                    command = new UpdateEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
-                    break;
-                }
-                case "CreateEntityCommand": {
-                    command = new CreateEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
-                    break;
-                }
-                case "DeleteEntityCommand": {
-                    command = new DeleteEntityCommand(this.scene.getGameMap(), commandConfig, commandId);
-                    break;
-                }
-                default: {
-                    const _exhaustiveCheck: never = commandConfig;
-                    return false;
-                }
-            }
-            if (!command) {
-                return false;
-            }
-            // We do an execution instantly so there will be no lag from user's perspective
-            const executedCommandConfig = command.execute();
+        addToLocalCommandsHistory = true
+    ): Promise<void> {
+        await this.isReverting;
+        // Commands are throttled. Only one at a time.
+        return (this.currentRunningCommand = this.currentRunningCommand.then(async () => {
+            const delay = 0;
+            try {
+                // We do an execution instantly so there will be no lag from user's perspective
+                await command.execute();
 
-            // do any necessary changes for active tool interface
-            this.handleCommandExecutionByTools(executedCommandConfig, emitMapEditorUpdate);
-
-            if (emitMapEditorUpdate) {
-                this.emitMapEditorUpdate(command.id, commandConfig, delay);
-            }
-
-            if (addToLocalCommandsHistory) {
-                // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
-                if (this.currentCommandIndex !== this.localCommandsHistory.length - 1) {
-                    this.localCommandsHistory.splice(this.currentCommandIndex + 1);
+                if (emitMapEditorUpdate) {
+                    this.emitMapEditorUpdate(command, delay);
                 }
-                this.pendingCommands.push(command);
-                this.localCommandsHistory.push(command);
-                this.currentCommandIndex += 1;
-            }
 
-            this.scene.getGameMap().updateLastCommandIdProperty(command.id);
-            return true;
-        } catch (error) {
-            console.warn(error);
-            return false;
-        }
+                // FIXME: why the exception here regarding UpdateWAMSettingCommand ?
+                if (addToLocalCommandsHistory && !(command instanceof UpdateWAMSettingCommand)) {
+                    // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
+                    if (this.currentCommandIndex !== this.localCommandsHistory.length - 1) {
+                        this.localCommandsHistory.splice(this.currentCommandIndex + 1);
+                    }
+                    this.pendingCommands.push(command);
+                    logger("adding command to pendingList : ", command);
+                    this.localCommandsHistory.push(command);
+                    this.currentCommandIndex += 1;
+                }
+
+                this.scene.getGameMap().updateLastCommandIdProperty(command.commandId);
+                return;
+                //return true;
+            } catch (error) {
+                logger(error);
+                //return false;
+                return;
+            }
+        }));
     }
 
-    public undoCommand(): void {
+    // A simple queue to be sure we run only one undo or redo at once.
+    private runningUndoRedoCommand: Promise<void> = Promise.resolve();
+
+    public async undoCommand(): Promise<void> {
         if (this.localCommandsHistory.length === 0 || this.currentCommandIndex === -1) {
             return;
         }
         try {
             const command = this.localCommandsHistory[this.currentCommandIndex];
-            const commandConfig = command.undo();
-            this.pendingCommands.push(command);
-
-            // do any necessary changes for active tool interface
-            this.handleCommandExecutionByTools(commandConfig, true);
+            const undoCommand = command.getUndoCommand();
+            await undoCommand.execute();
+            this.pendingCommands.push(undoCommand);
+            logger("adding command to pendingList : ", undoCommand);
 
             // this should not be called with every change. Use some sort of debounce
-            this.emitMapEditorUpdate(`${command.id}`, commandConfig);
+            this.emitMapEditorUpdate(undoCommand);
             this.currentCommandIndex -= 1;
         } catch (e) {
             this.localCommandsHistory.splice(this.currentCommandIndex, 1);
             this.currentCommandIndex -= 1;
-            console.warn(e);
+            logger(e);
         }
     }
 
-    public redoCommand(): void {
+    public async redoCommand(): Promise<void> {
         if (
             this.localCommandsHistory.length === 0 ||
             this.currentCommandIndex === this.localCommandsHistory.length - 1
@@ -191,19 +182,20 @@ export class MapEditorModeManager {
         }
         try {
             const command = this.localCommandsHistory[this.currentCommandIndex + 1];
-            const commandConfig = command.execute();
+            await command.execute();
             this.pendingCommands.push(command);
+            logger("adding command to pendingList : ", command);
 
             // do any necessary changes for active tool interface
-            this.handleCommandExecutionByTools(commandConfig, true);
+            //this.handleCommandExecutionByTools(commandConfig, true);
 
             // this should not be called with every change. Use some sort of debounce
-            this.emitMapEditorUpdate(command.id, commandConfig);
+            this.emitMapEditorUpdate(command);
             this.currentCommandIndex += 1;
         } catch (e) {
             this.localCommandsHistory.splice(this.currentCommandIndex, 1);
             this.currentCommandIndex -= 1;
-            console.warn(e);
+            logger(e);
         }
     }
 
@@ -211,13 +203,14 @@ export class MapEditorModeManager {
      * Update local map with missing commands given from the map-storage on RoomJoinedEvent. This commands
      * are applied locally and are not being send further.
      */
-    public updateMapToNewest(commands: EditMapCommandMessage[]): void {
+    public async updateMapToNewest(commands: EditMapCommandMessage[]): Promise<void> {
         if (!commands) {
             return;
         }
         for (const command of commands) {
             for (const tool of Object.values(this.editorTools)) {
-                tool.handleIncomingCommandMessage(command);
+                //eslint-disable-next-line no-await-in-loop
+                await tool.handleIncomingCommandMessage(command);
             }
         }
     }
@@ -241,9 +234,7 @@ export class MapEditorModeManager {
                 break;
             }
             case "1": {
-                if (ENABLE_MAP_EDITOR_AREAS_TOOL) {
-                    this.equipTool(EditorToolName.AreaEditor);
-                }
+                this.equipTool(EditorToolName.AreaEditor);
                 break;
             }
             case "2": {
@@ -256,8 +247,21 @@ export class MapEditorModeManager {
                 break;
             }
             case "z": {
-                if (this.ctrlKey) {
-                    this.shiftKey.isDown ? this.redoCommand() : this.undoCommand();
+                // Todo replace with key combo https://photonstorm.github.io/phaser3-docs/Phaser.Input.Keyboard.KeyCombo.html
+                if (this.ctrlKey?.isDown) {
+                    if (this.shiftKey?.isDown) {
+                        this.runningUndoRedoCommand = this.runningUndoRedoCommand
+                            .then(() => {
+                                return this.redoCommand();
+                            })
+                            .catch((e) => console.error(e));
+                    } else {
+                        this.runningUndoRedoCommand = this.runningUndoRedoCommand
+                            .then(() => {
+                                return this.undoCommand();
+                            })
+                            .catch((e) => console.error(e));
+                    }
                 }
                 break;
             }
@@ -268,34 +272,68 @@ export class MapEditorModeManager {
     }
 
     public subscribeToRoomConnection(connection: RoomConnection): void {
+        const limit = pLimit(1);
+        // The editMapCommandMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+        //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
         connection.editMapCommandMessageStream.subscribe((editMapCommandMessage) => {
-            if (this.pendingCommands.length > 0) {
-                if (this.pendingCommands[0].id === editMapCommandMessage.id) {
-                    this.pendingCommands.shift();
+            limit(async () => {
+                if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
+                    logger(
+                        "ErrorCommandMessage received",
+                        editMapCommandMessage.editMapMessage?.message.errorCommandMessage
+                    );
+                    const command = this.pendingCommands.find(
+                        (command) => command.commandId === editMapCommandMessage.id
+                    );
+                    if (command) {
+                        logger("removing command of pendingList : ", editMapCommandMessage.id);
+                        this.pendingCommands.splice(this.pendingCommands.indexOf(command), 1);
+                    }
                     return;
                 }
-                this.revertPendingCommands();
-            }
 
-            for (const tool of Object.values(this.editorTools)) {
-                tool.handleIncomingCommandMessage(editMapCommandMessage);
-            }
+                logger("Received command from server", editMapCommandMessage.id);
+
+                // Local command execution (undo/redo)
+                if (this.pendingCommands.length > 0) {
+                    if (this.pendingCommands[0].commandId === editMapCommandMessage.id) {
+                        logger("removing command of pendingList : ", editMapCommandMessage.id);
+                        this.pendingCommands.shift();
+                        return;
+                    }
+                    await this.revertPendingCommands();
+                }
+
+                // Remote command execution
+                for (const tool of Object.values(this.editorTools)) {
+                    //eslint-disable-next-line no-await-in-loop
+                    await tool.handleIncomingCommandMessage(editMapCommandMessage);
+                }
+            }).catch((e) => console.error(e));
         });
     }
 
-    private revertPendingCommands(): void {
-        while (this.pendingCommands.length > 0) {
-            const command = this.pendingCommands.pop();
-            if (command) {
-                command.undo();
-                // also remove from local history of commands as this is invalid
-                const index = this.localCommandsHistory.findIndex((localCommand) => localCommand.id === command.id);
-                if (index !== -1) {
-                    this.localCommandsHistory.splice(index, 1);
-                    this.currentCommandIndex -= 1;
+    private async revertPendingCommands(): Promise<void> {
+        logger("Reverting pending commands");
+        // We are blocking the normal execution of commands until we revert all pending commands
+        this.isReverting = (async () => {
+            while (this.pendingCommands.length > 0) {
+                const command = this.pendingCommands.pop();
+                if (command) {
+                    //eslint-disable-next-line no-await-in-loop
+                    await command.getUndoCommand().execute();
+                    // also remove from local history of commands as this is invalid
+                    const index = this.localCommandsHistory.findIndex(
+                        (localCommand) => localCommand.commandId === command.commandId
+                    );
+                    if (index !== -1) {
+                        this.localCommandsHistory.splice(index, 1);
+                        this.currentCommandIndex -= 1;
+                    }
                 }
             }
-        }
+        })();
+        return this.isReverting;
     }
 
     public equipTool(tool?: EditorToolName): void {
@@ -311,37 +349,12 @@ export class MapEditorModeManager {
         mapEditorSelectedToolStore.set(tool);
     }
 
-    private emitMapEditorUpdate(commandId: string, commandConfig: CommandConfig, delay = 0): void {
+    private emitMapEditorUpdate(command: FrontCommandInterface, delay = 0): void {
         const func = () => {
-            switch (commandConfig.type) {
-                case "UpdateAreaCommand": {
-                    this.scene.connection?.emitMapEditorModifyArea(commandId, commandConfig.areaObjectConfig);
-                    break;
-                }
-                case "CreateAreaCommand": {
-                    this.scene.connection?.emitMapEditorCreateArea(commandId, commandConfig.areaObjectConfig);
-                    break;
-                }
-                case "DeleteAreaCommand": {
-                    this.scene.connection?.emitMapEditorDeleteArea(commandId, commandConfig.id);
-                    break;
-                }
-                case "UpdateEntityCommand": {
-                    this.scene.connection?.emitMapEditorModifyEntity(commandId, commandConfig.dataToModify);
-                    break;
-                }
-                case "CreateEntityCommand": {
-                    this.scene.connection?.emitMapEditorCreateEntity(commandId, commandConfig.entityData);
-                    break;
-                }
-                case "DeleteEntityCommand": {
-                    this.scene.connection?.emitMapEditorDeleteEntity(commandId, commandConfig.id);
-                    break;
-                }
-                default: {
-                    break;
-                }
+            if (this.scene.connection === undefined) {
+                throw new Error("No connection attached to room to emit map editor update");
             }
+            command.emitEvent(this.scene.connection);
         };
         if (delay === 0) {
             func();
@@ -367,19 +380,18 @@ export class MapEditorModeManager {
     private subscribeToStores(): void {
         this.mapEditorModeUnsubscriber = mapEditorModeStore.subscribe((active) => {
             this.active = active;
-            this.equipTool(this.active ? EditorToolName.EntityEditor : undefined);
+            if (!this.active) {
+                this.lastlyUsedTool = get(mapEditorSelectedToolStore);
+                this.equipTool(undefined);
+                return;
+            }
+            this.equipTool(this.lastlyUsedTool ?? EditorToolName.EntityEditor);
         });
     }
 
     private subscribeToGameMapFrontWrapperEvents(): void {
         for (const tool of Object.values(this.editorTools)) {
             tool.subscribeToGameMapFrontWrapperEvents(this.scene.getGameMapFrontWrapper());
-        }
-    }
-
-    private handleCommandExecutionByTools(commandConfig: CommandConfig, localCommand: boolean): void {
-        for (const tool of Object.values(this.editorTools)) {
-            tool.handleCommandExecution(commandConfig, localCommand);
         }
     }
 

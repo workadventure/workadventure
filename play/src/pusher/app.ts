@@ -1,3 +1,7 @@
+import fs from "fs";
+import type { Server } from "hyper-express";
+import HyperExpress from "hyper-express";
+import * as Sentry from "@sentry/node";
 import { IoSocketController } from "./controllers/IoSocketController";
 import { AuthenticateController } from "./controllers/AuthenticateController";
 import { MapController } from "./controllers/MapController";
@@ -7,19 +11,17 @@ import { AdminController } from "./controllers/AdminController";
 import { OpenIdProfileController } from "./controllers/OpenIdProfileController";
 import { WokaListController } from "./controllers/WokaListController";
 import { SwaggerController } from "./controllers/SwaggerController";
-import type { Server } from "hyper-express";
-import HyperExpress from "hyper-express";
 import { cors } from "./middlewares/Cors";
 import { ENABLE_OPENAPI_ENDPOINT } from "./enums/EnvironmentVariable";
 import { PingController } from "./controllers/PingController";
 import { CompanionListController } from "./controllers/CompanionListController";
 import { FrontController } from "./controllers/FrontController";
-import fs from "fs";
 import { globalErrorHandler } from "./services/GlobalErrorHandler";
 import { adminApi } from "./services/AdminApi";
 import { jwtTokenManager } from "./services/JWTTokenManager";
 import { CompanionService } from "./services/CompanionService";
 import { WokaService } from "./services/WokaService";
+import { UserController } from "./controllers/UserController";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LiveDirectory = require("live-directory");
 
@@ -67,6 +69,7 @@ class App {
                     ".ttf",
                     ".woff2",
                     ".map",
+                    ".gif",
                 ],
             },
             hot_reload: process.env.NODE_ENV !== "production",
@@ -91,18 +94,21 @@ class App {
             new SwaggerController(this.webserver);
         }
         new FrontController(this.webserver, liveAssets);
+        new UserController(this.webserver);
+    }
+
+    public async init() {
         const companionListController = new CompanionListController(this.webserver, jwtTokenManager);
         const wokaListController = new WokaListController(this.webserver, jwtTokenManager);
-        adminApi
-            .initialise()
-            .then((capabilities) => {
-                companionListController.setCompanionService(CompanionService.get(capabilities));
-                wokaListController.setWokaService(WokaService.get(capabilities));
-                console.debug("Initialized companion and woka services");
-            })
-            .catch((reason) => {
-                console.error(`Failed to initialized companion and woka services : ${reason}`);
-            });
+
+        try {
+            const capabilities = await adminApi.initialise();
+            companionListController.setCompanionService(CompanionService.get(capabilities));
+            wokaListController.setWokaService(WokaService.get(capabilities));
+        } catch (error) {
+            console.error("Failed to initialize: problem getting AdminAPI capabilities", error);
+            Sentry.captureException(`Failed to initialized companion and woka services : ${error}`);
+        }
     }
 
     public listen(port: number, host?: string): Promise<HyperExpress.compressors.us_listen_socket | string> {

@@ -1,5 +1,5 @@
-import { requestedCameraState, requestedMicrophoneState, silentStore } from "../../Stores/MediaStore";
 import { get } from "svelte/store";
+import { requestedCameraState, requestedMicrophoneState, silentStore } from "../../Stores/MediaStore";
 import type { WorkAdventureDesktopApi } from "../../Interfaces/DesktopAppInterfaces";
 
 declare global {
@@ -16,7 +16,7 @@ class DesktopApi {
             return;
         }
 
-        console.log("Yipee you are using the desktop app ;)");
+        console.info("Yipee you are using the desktop app ;)");
 
         window.WAD.onMuteToggle(() => {
             if (this.isSilent) return;
@@ -36,6 +36,8 @@ class DesktopApi {
             }
         });
 
+        // Not unsubscribing is ok, this is a singleton.
+        //eslint-disable-next-line svelte/no-ignored-unsubscribe
         silentStore.subscribe((silent) => {
             this.isSilent = silent;
         });

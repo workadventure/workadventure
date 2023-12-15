@@ -1,10 +1,12 @@
 import { derived, writable } from "svelte/store";
 import { Subject } from "rxjs";
+import { v4 as uuid } from "uuid";
+import { ChatMessageTypes } from "@workadventure/shared-utils";
 import { FileExt, UploadedFile, uploadingState } from "../Services/FileMessageManager";
 import { User } from "../Xmpp/AbstractRoom";
+import { Message } from "../Model/Message";
 import { mucRoomsStore } from "./MucRoomsStore";
 import { userStore } from "./LocalUserStore";
-import { Message } from "../Model/Message";
 
 // Global config store for the whole chat
 export const enableChat = writable<boolean>(true);
@@ -18,16 +20,8 @@ export const newChatMessageSubject = _newChatMessageSubject.asObservable();
 export const _newChatMessageWritingStatusSubject = new Subject<number>();
 export const newChatMessageWritingStatusSubject = _newChatMessageWritingStatusSubject.asObservable();
 
-export enum ChatMessageTypes {
-    text = 1,
-    me,
-    userIncoming,
-    userOutcoming,
-    userWriting,
-    userStopWriting,
-}
-
 export interface ChatMessage {
+    id: string;
     type: ChatMessageTypes;
     date: Date;
     author?: User;
@@ -44,6 +38,7 @@ function createChatMessagesStore() {
         addIncomingUser(user: User) {
             update((list) => {
                 list.push({
+                    id: uuid(),
                     type: ChatMessageTypes.userIncoming,
                     targets: [user],
                     date: new Date(),
@@ -54,6 +49,7 @@ function createChatMessagesStore() {
         addOutcomingUser(user: User) {
             update((list) => {
                 list.push({
+                    id: uuid(),
                     type: ChatMessageTypes.userOutcoming,
                     targets: [user],
                     date: new Date(),
@@ -66,6 +62,7 @@ function createChatMessagesStore() {
             update((list) => {
                 const defaultRoom = mucRoomsStore.getDefaultRoom();
                 list.push({
+                    id: uuid(),
                     type: ChatMessageTypes.me,
                     text: [text],
                     author: defaultRoom ? defaultRoom.getUserByJid(defaultRoom.myJID) : undefined,
@@ -81,6 +78,7 @@ function createChatMessagesStore() {
         addExternalMessage(user: User | undefined, text: string, authorName?: string, origin?: Window) {
             update((list) => {
                 list.push({
+                    id: uuid(),
                     type: ChatMessageTypes.text,
                     text: [text],
                     author: user,
@@ -123,7 +121,12 @@ export const timelineActiveStore = writable<boolean>(false);
 
 export const lastTimelineMessageRead = writable<Date>(new Date());
 
-export const writingStatusMessageStore = writable<Set<string>>(new Set<string>());
+export const writingStatusMessageStore = writable<
+    Array<{
+        jid?: string;
+        name?: string;
+    }>
+>([]);
 
 export const chatInputFocusStore = writable(false);
 

@@ -9,7 +9,7 @@ describe("Main store", () => {
 
         let triggered = false;
 
-        mapStore.subscribe((map) => {
+        const unsubscribe = mapStore.subscribe((map) => {
             triggered = true;
             expect(map).toBe(mapStore);
         });
@@ -31,6 +31,7 @@ describe("Main store", () => {
         triggered = false;
         mapStore.clear();
         expect(triggered).toBe(true);
+        unsubscribe();
     });
 
     it("generates stores for keys with getStore", () => {
@@ -41,7 +42,7 @@ describe("Main store", () => {
 
         mapStore.set("foo", "someValue");
 
-        mapStore.getStore("foo").subscribe((value) => {
+        const unsubscribe = mapStore.getStore("foo").subscribe((value) => {
             valueReceivedInStoreForFoo = value;
         });
         const unsubscribeBar = mapStore.getStore("bar").subscribe((value) => {
@@ -61,6 +62,7 @@ describe("Main store", () => {
         unsubscribeBar();
         mapStore.set("bar", "fiz");
         expect(valueReceivedInStoreForBar).toBe(undefined);
+        unsubscribe();
     });
 
     it("generates stores with getStoreByAccessor", () => {
@@ -97,5 +99,56 @@ describe("Main store", () => {
         mapStore.delete("foo");
 
         expect(get(fooStore)).toBeUndefined();
+    });
+
+    it("can aggregate stores", () => {
+        const mapStore = new MapStore<
+            string,
+            {
+                store: Writable<number>;
+            }
+        >();
+
+        mapStore.set("foo", {
+            store: writable(12),
+        });
+        mapStore.set("bar", {
+            store: writable(24),
+        });
+
+        const sumStore = mapStore.getAggregatedStore(
+            (value) => value.store,
+            (stores) => stores.reduce((partialSum, a) => partialSum + a, 0)
+        );
+
+        let value: number | undefined;
+
+        const unsubscribe = sumStore.subscribe((val) => {
+            value = val;
+        });
+
+        expect(get(sumStore)).toBe(36);
+
+        mapStore.get("foo")?.store.set(24);
+
+        expect(value).toBe(48);
+
+        mapStore.set("baz", {
+            store: writable(1),
+        });
+
+        expect(value).toBe(49);
+
+        mapStore.set("baz", {
+            store: writable(2),
+        });
+
+        expect(value).toBe(50);
+
+        mapStore.delete("baz");
+
+        expect(value).toBe(48);
+
+        unsubscribe();
     });
 });

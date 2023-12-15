@@ -1,6 +1,6 @@
-import type { PointInterface } from "./PointInterface";
 import type { PositionMessage } from "@workadventure/messages";
 import { PositionMessage_Direction } from "@workadventure/messages";
+import type { PointInterface } from "./PointInterface";
 
 export class ProtobufUtils {
     public static toPositionMessage(point: PointInterface): PositionMessage {

@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
-    import { onDestroy } from "svelte";
-
-    import type { ActionsMenuAction } from "../../Stores/ActionsMenuStore";
     import type { Unsubscriber } from "svelte/store";
-    import type { ActionsMenuData } from "../../Stores/ActionsMenuStore";
+    import { onDestroy } from "svelte";
+    import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
+
+    import type { ActionsMenuAction, ActionsMenuData } from "../../Stores/ActionsMenuStore";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     let actionsMenuData: ActionsMenuData | undefined;
     let sortedActions: ActionsMenuAction[] | undefined;
@@ -49,56 +49,74 @@
 <svelte:window on:keydown={onKeyDown} />
 
 {#if actionsMenuData}
-    <div class="actions-menu nes-container is-rounded">
-        <button type="button" class="nes-btn is-error close" on:click={closeActionsMenu}>&times;</button>
-        <h2 class="name">{actionsMenuData.menuName}</h2>
-        <div class="actions">
-            {#each sortedActions ?? [] as action}
-                <button
-                    type="button"
-                    class="nes-btn {action.style ?? ''}"
-                    on:click|preventDefault={() => {
-                        action.callback();
-                    }}
+    <div class="tw-flex tw-w-full tw-h-full tw-justify-center tw-items-center">
+        <div class="actions-menu tw-p-4 is-rounded tw-max-w-xs">
+            <button type="button" class="close-window" on:click={closeActionsMenu}>×</button>
+            {#if actionsMenuData.menuName}
+                <h2 class="name tw-mb-2 tw-mx-2 margin-close">{actionsMenuData.menuName}</h2>
+            {/if}
+            {#if sortedActions}
+                <div
+                    class="actions tw-flex tw tw-flex-col tw-items-center"
+                    class:margin-close={!actionsMenuData.menuName}
                 >
-                    {action.actionName}
-                </button>
-            {/each}
+                    {#each sortedActions ?? [] as action (action.actionName)}
+                        <button
+                            type="button"
+                            class="btn light tw-justify-center tw-font-bold tw-text-xs sm:tw-text-base tw-text-center tw-h-fit tw-m-2 tw-w-full {action.style ??
+                                ''}"
+                            on:click={analyticsClient.clicPropertykMapEditor(action.actionName, action.style)}
+                            on:click|preventDefault={() => {
+                                action.callback();
+                            }}
+                        >
+                            {action.actionName}
+                        </button>
+                    {/each}
+                </div>
+            {/if}
         </div>
     </div>
 {/if}
 
 <style lang="scss">
     .actions-menu {
-        position: absolute;
-        left: 50%;
-        transform: translate(-50%, 0);
-        width: 260px !important;
+        position: relative;
+        width: auto !important;
         height: max-content !important;
         max-height: 50vh;
         margin-top: 200px;
+        overflow-y: auto;
         z-index: 425;
-
+        word-break: break-all;
         pointer-events: auto;
-        font-family: "Press Start 2P";
-        background-color: #333333;
         color: whitesmoke;
+        border-radius: 0.25rem;
+        background-color: rgb(27 27 41 / 0.95);
+
+        .close-window {
+            position: absolute;
+            right: 0rem;
+            top: 0rem;
+            margin-top: 0.3rem;
+            margin-right: 0.2rem;
+        }
+
+        .margin-close {
+            margin-top: 15px;
+        }
 
         .actions {
             max-height: 30vh;
             width: 100%;
-            display: block;
             overflow-x: hidden;
             overflow-y: auto;
-
-            button {
-                width: calc(100% - 10px);
-                margin-bottom: 10px;
-            }
         }
 
         .name {
-            max-height: 15vh;
+            max-height: 25vh;
+            margin: 20px 20px 0 20px;
+            overflow-y: auto;
         }
 
         .actions::-webkit-scrollbar {
@@ -107,8 +125,6 @@
 
         h2 {
             text-align: center;
-            margin-bottom: 20px;
-            font-family: "Press Start 2P";
         }
 
         .nes-btn.is-error.close {

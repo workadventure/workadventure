@@ -3,7 +3,7 @@ import type { Readable, Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
 import { coWebsiteManager } from "../CoWebsiteManager";
-import type { CoWebsite, CoWebsiteState } from "./CoWesbite";
+import type { CoWebsite, CoWebsiteState } from "./CoWebsite";
 
 export class SimpleCoWebsite implements CoWebsite {
     protected id: string;
@@ -76,6 +76,7 @@ export class SimpleCoWebsite implements CoWebsite {
             }
 
             this.iframe.classList.add("pixel");
+            this.iframe.style.backgroundColor = "white";
 
             const onloadPromise = new Promise<void>((resolve) => {
                 if (this.iframe) {

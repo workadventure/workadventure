@@ -1,7 +1,7 @@
+import type CancelablePromise from "cancelable-promise";
 import { DirtyScene } from "../Game/DirtyScene";
 import { gameManager } from "../Game/GameManager";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
-import type CancelablePromise from "cancelable-promise";
 import Texture = Phaser.Textures.Texture;
 
 const TextName = "Loading...";
@@ -25,6 +25,11 @@ export class Loader {
     }
 
     public addLoader(): void {
+        if (!this.scene.game.renderer) {
+            // No need to add a loader if the game is in headless mode
+            return;
+        }
+
         // If there is nothing to load, do not display the loader.
         if (this.scene.load.list.entries.length === 0) {
             return;

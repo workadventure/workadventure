@@ -1,13 +1,9 @@
-import { Group } from "./Group";
-import { PointInterface } from "./Websocket/PointInterface";
-import { Zone } from "../Model/Zone";
-import { Movable } from "../Model/Movable";
-import { PositionNotifier } from "../Model/PositionNotifier";
 import { ServerDuplexStream } from "@grpc/grpc-js";
 import {
     ApplicationMessage,
     AvailabilityStatus,
-    CompanionMessage,
+    CharacterTextureMessage,
+    CompanionTextureMessage,
     PusherToBackMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
@@ -15,9 +11,14 @@ import {
     SetPlayerVariableMessage_Scope,
     SubMessage,
 } from "@workadventure/messages";
-import { CharacterLayer } from "../Model/Websocket/CharacterLayer";
+import * as Sentry from "@sentry/node";
+import { Zone } from "../Model/Zone";
+import { Movable } from "../Model/Movable";
+import { PositionNotifier } from "../Model/PositionNotifier";
 import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
 import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository";
+import { PointInterface } from "./Websocket/PointInterface";
+import { Group } from "./Group";
 import { BrothersFinder } from "./BrothersFinder";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
 
@@ -42,10 +43,10 @@ export class User implements Movable, CustomJsonReplacerInterface {
         public readonly tags: string[],
         public readonly visitCardUrl: string | null,
         public readonly name: string,
-        public readonly characterLayers: CharacterLayer[],
+        public readonly characterTextures: CharacterTextureMessage[],
         private readonly variables: PlayerVariables,
         private readonly brothersFinder: BrothersFinder,
-        public readonly companion?: CompanionMessage,
+        public readonly companionTexture?: CompanionTextureMessage,
         private outlineColor?: number,
         private voiceIndicatorShown?: boolean,
         public readonly activatedInviteUser?: boolean,
@@ -68,11 +69,11 @@ export class User implements Movable, CustomJsonReplacerInterface {
         tags: string[],
         visitCardUrl: string | null,
         name: string,
-        characterLayers: CharacterLayer[],
+        characterTextures: CharacterTextureMessage[],
         roomUrl: string,
         roomGroup: string | undefined,
         brothersFinder: BrothersFinder,
-        companion?: CompanionMessage,
+        companionTexture?: CompanionTextureMessage,
         outlineColor?: number,
         voiceIndicatorShown?: boolean,
         activatedInviteUser?: boolean,
@@ -94,10 +95,10 @@ export class User implements Movable, CustomJsonReplacerInterface {
             tags,
             visitCardUrl,
             name,
-            characterLayers,
+            characterTextures,
             variables,
             brothersFinder,
-            companion,
+            companionTexture,
             outlineColor,
             voiceIndicatorShown,
             activatedInviteUser,
@@ -164,7 +165,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
             this.availabilityStatus === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
             this.availabilityStatus === AvailabilityStatus.SILENT ||
             this.availabilityStatus === AvailabilityStatus.JITSI ||
-            this.availabilityStatus === AvailabilityStatus.BBB
+            this.availabilityStatus === AvailabilityStatus.BBB ||
+            this.availabilityStatus === AvailabilityStatus.SPEAKER
         );
     }
 
@@ -234,7 +236,10 @@ export class User implements Movable, CustomJsonReplacerInterface {
                         setVariable.ttl,
                         setVariable.persist
                     )
-                    .catch((e) => console.error("An error occurred while saving world variable: ", e));
+                    .catch((e) => {
+                        console.error("An error occurred while saving world variable: ", e);
+                        Sentry.captureException(`An error occurred while saving world variable: ${JSON.stringify(e)}`);
+                    });
 
                 this.updateDataUserSameUUID(setVariable, details);
             } else if (scope === SetPlayerVariableMessage_Scope.ROOM) {
@@ -246,7 +251,10 @@ export class User implements Movable, CustomJsonReplacerInterface {
                         setVariable.ttl,
                         setVariable.persist
                     )
-                    .catch((e) => console.error("An error occurred while saving room variable: ", e));
+                    .catch((e) => {
+                        console.error("An error occurred while saving room variable: ", e);
+                        Sentry.captureException(`An error occurred while saving room variable: ${JSON.stringify(e)}`);
+                    });
 
                 this.updateDataUserSameUUID(setVariable, details);
             } else if (scope === SetPlayerVariableMessage_Scope.UNRECOGNIZED) {
@@ -283,9 +291,14 @@ export class User implements Movable, CustomJsonReplacerInterface {
                         // We don't need to persist this for every player as this will write in the same place in DB.
                         false
                     )
-                    .catch((e) =>
-                        console.error("An error occurred while saving room variable for a user with same UUID: ", e)
-                    );
+                    .catch((e) => {
+                        console.error("An error occurred while saving room variable for a user with same UUID: ", e);
+                        Sentry.captureException(
+                            `An error occurred while saving room variable for a user with same UUID: ${JSON.stringify(
+                                e
+                            )}`
+                        );
+                    });
 
                 // Let's dispatch the message to the user.
                 brother.emitInBatch({

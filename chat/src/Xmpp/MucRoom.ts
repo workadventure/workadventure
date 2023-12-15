@@ -1,7 +1,13 @@
 import type { Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
-import { mucRoomsStore } from "../Stores/MucRoomsStore";
 import { v4 as uuid } from "uuid";
+import * as StanzaProtocol from "stanza/protocol";
+import { ParsedJID } from "stanza/JID";
+import { ChatStateMessage, JID } from "stanza";
+import { ChatState, MUCAffiliation } from "stanza/Constants";
+import { SearchableArrayStore } from "@workadventure/store-utils";
+import Debug from "debug";
+import { mucRoomsStore } from "../Stores/MucRoomsStore";
 import { userStore } from "../Stores/LocalUserStore";
 import { fileMessageManager } from "../Services/FileMessageManager";
 import { mediaManager, NotificationType } from "../Media/MediaManager";
@@ -11,16 +17,10 @@ import {
     filesUploadStore,
     mentionsUserStore,
 } from "../Stores/ChatStore";
+import { Message } from "../Model/Message";
 import { AbstractRoom, MessageType, User } from "./AbstractRoom";
 import { XmppClient } from "./XmppClient";
-import * as StanzaProtocol from "stanza/protocol";
 import { WaLink, WaReceivedReactions, WaUserInfo } from "./Lib/Plugin";
-import { ParsedJID } from "stanza/JID";
-import { ChatStateMessage, JID } from "stanza";
-import { ChatState, MUCAffiliation } from "stanza/Constants";
-import { Message } from "../Model/Message";
-import { SearchableArrayStore } from "@workadventure/store-utils";
-import Debug from "debug";
 
 const debug = Debug("chat");
 
@@ -42,6 +42,7 @@ export class MucRoom extends AbstractRoom {
         public subscribe: boolean
     ) {
         super(xmppClient);
+        //@ts-ignore NO MORE JID , NO MORE MUCROOM
         this.presenceStore = new SearchableArrayStore<string, Writable<User>>((user) => get(user).jid);
         this.canLoadOlderMessagesStore = writable<boolean>(true);
         this.showDisabledLoadOlderMessagesStore = writable<boolean>(false);
@@ -60,10 +61,12 @@ export class MucRoom extends AbstractRoom {
         return this.roomJid.bare;
     }
 
-    public getUserByJid(jid: string): User {
+    public getUserByJid(jid: string): User | undefined {
         const user = this.presenceStore.get(jid);
         if (!user) {
-            throw new Error("No user found for this JID");
+            //throw new Error("No user found for this JID");
+            console.error("No user found for this JID");
+            return undefined;
         }
         return get(user);
     }
@@ -135,6 +138,7 @@ export class MucRoom extends AbstractRoom {
             });
             debug(`[XMPP][${this.name}] << Get all subscribers received`);
             response.subscriptions.usersJid.forEach((userJid, i) => {
+                //@ts-ignore NO MORE JID , NO MORE MUCROOM
                 if (!this.presenceStore.find((user) => get(user).jid.includes(userJid))) {
                     this.addUserInactive(userJid, response.subscriptions.usersNick[i]);
                 }

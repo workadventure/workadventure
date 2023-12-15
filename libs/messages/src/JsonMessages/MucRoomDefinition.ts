@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
 
+// TODO: delete this and all references to it (or migrate it to Matrix)
 export const MucRoomDefinition = z.object({
   name: extendApi(z.string(), {
     description: "The name of the MUC room",

@@ -1,10 +1,10 @@
-import { BaseHttpController } from "./BaseHttpController";
 import fs from "fs";
+import path from "path";
+import swaggerJsdoc from "swagger-jsdoc";
+import * as cheerio from "cheerio";
 import { ADMIN_URL } from "../enums/EnvironmentVariable";
 import SwaggerGenerator from "../services/SwaggerGenerator";
-import swaggerJsdoc from "swagger-jsdoc";
-import path from "path";
-import * as cheerio from "cheerio";
+import { BaseHttpController } from "./BaseHttpController";
 
 export class SwaggerController extends BaseHttpController {
     routes(): void {
@@ -17,10 +17,12 @@ export class SwaggerController extends BaseHttpController {
                         version: "1.0.0",
                     },
                 },
-                apis: ["./src/Controller/*.ts"],
+                apis: ["./src/pusher/controllers/*.ts"],
             };
 
-            res.json(swaggerJsdoc(options));
+            res.atomic(() => {
+                res.json(swaggerJsdoc(options));
+            });
         });
 
         this.app.get("/openapi/admin", (req, res) => {
@@ -52,12 +54,14 @@ export class SwaggerController extends BaseHttpController {
                     },
                     ...SwaggerGenerator.definitions(null),
                 },
-                apis: ["./src/Services/*.ts"],
+                apis: ["./src/pusher/services/*.ts"],
             };
             if (ADMIN_URL && options.swaggerDefinition) {
                 options.swaggerDefinition.host = "pusher." + ADMIN_URL.replace("//", "");
             }
-            res.json(swaggerJsdoc(options));
+            res.atomic(() => {
+                res.json(swaggerJsdoc(options));
+            });
         });
 
         this.app.get("/openapi/external-admin", (req, res) => {
@@ -210,7 +214,9 @@ export class SwaggerController extends BaseHttpController {
                     },
                 },
             };
-            res.json(options);
+            res.atomic(() => {
+                res.json(options);
+            });
         });
 
         // Create static serve route to serve index.html

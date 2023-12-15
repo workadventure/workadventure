@@ -1,10 +1,8 @@
+import { get } from "svelte/store";
 import type { UserInputManager } from "../Phaser/UserInput/UserInputManager";
 import { localStreamStore } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { helpCameraSettingsVisibleStore } from "../Stores/HelpSettingsStore";
-
-export type StartScreenSharingCallback = (media: MediaStream) => void;
-export type StopScreenSharingCallback = (media: MediaStream) => void;
 
 import {
     myCameraBlockedStore,
@@ -15,10 +13,12 @@ import {
 } from "../Stores/MyMediaStore";
 import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
-import { localUserStore } from "../Connexion/LocalUserStore";
-import LL from "../../i18n/i18n-svelte";
-import { get } from "svelte/store";
+import { localUserStore } from "../Connection/LocalUserStore";
+import { LL } from "../../i18n/i18n-svelte";
 import { localeDetector } from "../../i18n/locales";
+
+export type StartScreenSharingCallback = (media: MediaStream) => void;
+export type StopScreenSharingCallback = (media: MediaStream) => void;
 
 export enum NotificationType {
     discussion = 1,
@@ -40,6 +40,8 @@ export class MediaManager {
                 throw new Error("Cannot load locale on media manager");
             })
             .finally(() => {
+                // It is ok to not unsubscribe to this store because it is a singleton.
+                // eslint-disable-next-line svelte/no-ignored-unsubscribe
                 localStreamStore.subscribe((result) => {
                     if (result.type === "error") {
                         if (result.error.name !== MediaStreamConstraintsError.NAME && get(myCameraStore)) {
@@ -61,6 +63,8 @@ export class MediaManager {
                     }
                 });
 
+                // It is ok to not unsubscribe to this store because it is a singleton.
+                // eslint-disable-next-line svelte/no-ignored-unsubscribe
                 screenSharingLocalStreamStore.subscribe((result) => {
                     if (result.type === "error") {
                         console.error(result.error);
@@ -120,14 +124,6 @@ export class MediaManager {
             return localUserStore.getNotification();
         } else {
             return false;
-        }
-    }
-
-    public requestNotification() {
-        if (window.Notification && Notification.permission !== "granted") {
-            return Notification.requestPermission();
-        } else {
-            return Promise.reject();
         }
     }
 

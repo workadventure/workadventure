@@ -1,7 +1,7 @@
 import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard/dist";
-import Axios from "axios";
-import { EjabberdClient, ejabberdClient } from "./EjabberdClient";
+import { isAxiosError } from "axios";
 import { MapDetailsData } from "@workadventure/messages";
+import { EjabberdClient, ejabberdClient } from "./EjabberdClient";
 
 export interface ChatZone {
     chatName?: string;
@@ -34,7 +34,7 @@ export class MucManager {
     public async init(mapDetails: MapDetailsData) {
         const allMucRooms = await ejabberdClient.getAllMucRooms();
         const allMucRoomsOfWorld: string[] = [];
-        if (Axios.isAxiosError(allMucRooms)) {
+        if (isAxiosError(allMucRooms)) {
             console.warn("Error to get allMucRooms (AxiosError) : ", allMucRooms.message, allMucRooms);
         } else if (allMucRooms instanceof Error) {
             console.warn("Error to get allMucRooms : ", allMucRooms);
@@ -48,6 +48,7 @@ export class MucManager {
                     }
                 });
             }
+            const promises: Promise<void>[] = [];
             if (allMucRoomsOfWorld) {
                 for (const mucRoom of allMucRoomsOfWorld) {
                     let found = false;
@@ -61,7 +62,7 @@ export class MucManager {
                         }
                     });
                     if (!found) {
-                        await ejabberdClient.destroyMucRoom(mucRoom);
+                        promises.push(ejabberdClient.destroyMucRoom(mucRoom));
                     }
                 }
             }
@@ -69,11 +70,12 @@ export class MucManager {
                 for (const [, chatZone] of this.chatZones) {
                     if (chatZone.mucCreated) return;
                     if (chatZone.mucUrl) {
-                        await ejabberdClient.createMucRoom(chatZone);
+                        promises.push(ejabberdClient.createMucRoom(chatZone));
                         chatZone.mucCreated = true;
                     }
                 }
             }
+            await Promise.all(promises);
         }
     }
 

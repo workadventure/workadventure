@@ -1,10 +1,11 @@
 import {expect, test} from '@playwright/test';
 import {hideNoCamera, login} from './utils/roles';
-import {openChat} from "./utils/menu";
 import Chat from './utils/chat';
 import Map from './utils/map';
 import {findContainer, startContainer, stopContainer} from "./utils/containers";
 import {createFileOfSize, deleteFile, fileExist} from "./utils/file";
+import Menu from "./utils/menu";
+import {RENDERER_MODE} from "./utils/environment";
 
 const TIMEOUT_TO_GET_LIST = 60_000;
 
@@ -12,16 +13,16 @@ test.setTimeout(750_000);
 
 test.describe('Chat', () => {
   test('main', async ({ page, browser, browserName }) => {
-    page.on('console', msg => console.log(browserName + ' - ' + msg.type() + ' - ' + msg.text()));
+    /*page.on('console', msg => console.log(browserName + ' - ' + msg.type() + ' - ' + msg.text()));
     page.on('response', response => {
       if (response.status() >= 400) {
         console.log('>>', response.status(), response.url());
       }
-    });
+    });*/
 
 
     await page.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json'
+        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
     );
     const nickname = getUniqueNickname('A');
     await login(page, nickname, 2);
@@ -31,10 +32,11 @@ test.describe('Chat', () => {
       await hideNoCamera(page);
     }
 
-    await openChat(page);
+    await Menu.openChat(page);
     const ejabberd = await findContainer('ejabberd');
 
     await test.step('all tests of chat', async () => {
+      await Map.goToRoom(page, '#Out_LiveZone_a');
       await Chat.slideToUsers(page);
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
 
@@ -42,7 +44,7 @@ test.describe('Chat', () => {
       const newBrowser = await browser.browserType().launch();
       const page2 = await newBrowser.newPage();
       await page2.goto(
-          'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json'
+          `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
       );
       const nickname2 = getUniqueNickname('B');
       await login(page2, nickname2, 3);
@@ -51,8 +53,10 @@ test.describe('Chat', () => {
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
         await hideNoCamera(page2);
       }
-      
-      await openChat(page2);
+
+      await Map.goToRoom(page2, '#Out_LiveZone_b');
+
+      await Menu.openChat(page2);
       await Chat.slideToUsers(page2);
       await Chat.checkNameInChat(page2, nickname, TIMEOUT_TO_GET_LIST);
       await Chat.checkNameInChat(page2, nickname2, TIMEOUT_TO_GET_LIST);
@@ -60,14 +64,12 @@ test.describe('Chat', () => {
       // Enter in liveZone
       await Chat.slideToChat(page);
       await page.locator('#game canvas').click();
-      await Map.walkTo(page, 'ArrowRight', 2_500);
-      await Map.walkTo(page, 'ArrowUp', 500);
+      await Map.goToRoom(page, '#LiveZone_a');
       await Chat.chatZoneExist(page, 'liveZone');
 
       await Chat.slideToChat(page2);
       await page2.locator('#game canvas').click();
-      await Map.walkTo(page2, 'ArrowRight', 2_500);
-      await Map.walkTo(page2, 'ArrowDown', 500);
+      await Map.goToRoom(page2, '#LiveZone_b');
       await Chat.chatZoneExist(page2, 'liveZone');
 
 
@@ -80,6 +82,7 @@ test.describe('Chat', () => {
       await Chat.AT_sendMessage(page, 'Hello, how are you ?');
       await Chat.AT_checkLastMessageSent(page);
       // Receive the message
+      await page2.pause();
       await Chat.AT_lastMessageContain(page2, 'Hello, how are you ?');
 
 
@@ -157,18 +160,18 @@ test.describe('Chat', () => {
 
       // Exit of liveZone
       await page.locator('#game canvas').click();
-      await Map.walkTo(page, 'ArrowLeft', 2_000);
+      await Map.goToRoom(page, '#Out_LiveZone_a');
       await Chat.slideToChat(page);
       await Chat.noChatZone(page);
       await page2.locator('#game canvas').click();
-      await Map.walkTo(page2, 'ArrowLeft', 2_000);
+      await Map.goToRoom(page2, '#Out_LiveZone_b');
       await Chat.slideToChat(page2);
       await Chat.noChatZone(page2);
     });
 
     await test.step('default forum exist', async () => {
       await page.reload();
-      await openChat(page);
+      await Menu.openChat(page);
       await Chat.slideToUsers(page);
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
 
@@ -176,7 +179,7 @@ test.describe('Chat', () => {
       await Chat.forumExist(page, 'Welcome');
     });
 
-    await test.step('disconnect and reconnect to ejabberd and pusher', async () => {
+    await test.step('disconnect and reconnect to ejabberd and pusher @docker', async () => {
       const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await Chat.slideToUsers(page);
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
@@ -195,6 +198,69 @@ test.describe('Chat', () => {
       await Chat.slideToUsers(page);
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
     });
+  });
+});
+
+test.describe('Use application into TimeLine', () => {
+  test('main', async ({ page, browser, browserName }) => {
+
+    await page.goto(
+        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
+    );
+    const nickname = getUniqueNickname('A');
+    await login(page, nickname, 2);
+
+    if(browserName === "webkit"){
+      // Because webkit in playwright does not support Camera/Microphone Permission by settings
+      await hideNoCamera(page);
+    }
+
+    await Menu.openChat(page);
+    await Chat.openTimeline(page);
+
+    // Create test to use Docs application
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.actions').first().click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.wa-message-form .actions button.action:has-text("Google Docs")').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit').fill('https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit')
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#timeLine-messageList').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#send').click();
+
+    await expect(page.frameLocator('#chatWorkAdventure').getByRole('link', { name: 'https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit?embedded=true'})).toContainText('https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit?embedded=true');
+
+
+    // Create test to use Sheets application
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.actions').first().click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.wa-message-form .actions button.action:has-text("Google Sheets")').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit').fill('https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit')
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#timeLine-messageList').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#send').click();
+
+    await expect(page.frameLocator('#chatWorkAdventure').getByRole('link', { name: 'https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit?embedded=true' })).toContainText('https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit?embedded=true');
+
+
+    // Create test to use Slides application
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.actions').first().click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.wa-message-form .actions button.action:has-text("Google Slides")').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit').fill('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit')
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#timeLine-messageList').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#send').click();
+
+    await expect(page.frameLocator('#chatWorkAdventure').getByRole('link', { name: 'https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit?embedded=true' })).toContainText('https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit?embedded=true');
+
+    // Create test to use Youtube application
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.actions').first().click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('.wa-message-form .actions button.action:has-text("Youtube")').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://www.youtube.com/watch?v=Y9ubBWf5w20').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').getByPlaceholder('https://www.youtube.com/watch?v=Y9ubBWf5w20').fill('https://www.youtube.com/embed/Y9ubBWf5w20?feature=oembed')
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#timeLine-messageList').click();
+    await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').locator('#send').click();
+
+    await expect(page.frameLocator('#chatWorkAdventure').getByRole('link', { name: 'https://www.youtube.com/embed/Y9ubBWf5w20?feature=oembed' })).toContainText('https://www.youtube.com/embed/Y9ubBWf5w20?feature=oembed');
+
+    // Create test to use Klaxoon application
   });
 });
 

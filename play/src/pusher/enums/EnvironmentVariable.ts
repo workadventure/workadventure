@@ -1,86 +1,5 @@
-import { OpidWokaNamePolicy } from "@workadventure/messages";
-import { z } from "zod";
 import type { FrontConfigurationInterface } from "../../common/FrontConfigurationInterface";
-
-const BoolAsString = z.union([z.literal("true"), z.literal("false"), z.literal("0"), z.literal("1"), z.literal("")]);
-type BoolAsString = z.infer<typeof BoolAsString>;
-
-const PositiveIntAsString = z.string().regex(/^\d*$/, { message: "Must be a positive integer number" });
-type PositiveIntAsString = z.infer<typeof PositiveIntAsString>;
-
-const AbsoluteOrRelativeUrl = z.string().url().or(z.string().startsWith("/"));
-
-const EnvironmentVariables = z.object({
-    // Pusher related environment variables
-    SECRET_KEY: z.string().min(1),
-    API_URL: z.string().min(1),
-    ADMIN_API_URL: AbsoluteOrRelativeUrl.optional(),
-    ADMIN_URL: AbsoluteOrRelativeUrl.optional(),
-    ADMIN_API_TOKEN: z.string().optional(),
-    ADMIN_SOCKETS_TOKEN: z.string().optional(),
-    CPU_OVERHEAT_THRESHOLD: PositiveIntAsString.optional(),
-    PUSHER_HTTP_PORT: PositiveIntAsString.optional(),
-    // Maximum time (in second) without activity before a socket is closed. Should be greater than 60 seconds in order to cope for Chrome intensive throttling (https://developer.chrome.com/blog/timer-throttling-in-chrome-88/#intensive-throttling)
-    SOCKET_IDLE_TIMER: PositiveIntAsString.optional(),
-    // Used only in development
-    VITE_URL: z.string().url().optional(),
-    // Use "*" to allow any domain
-    ALLOWED_CORS_ORIGIN: z.string().url().or(z.literal("*")).optional(),
-    PUSHER_URL: AbsoluteOrRelativeUrl.optional(),
-    PUBLIC_MAP_STORAGE_URL: AbsoluteOrRelativeUrl.optional(),
-    OPID_CLIENT_ID: z.string().optional(),
-    OPID_CLIENT_SECRET: z.string().optional(),
-    OPID_CLIENT_ISSUER: z.string().optional(),
-    OPID_PROFILE_SCREEN_PROVIDER: z.string().optional(),
-    OPID_SCOPE: z.string().optional(),
-    OPID_PROMPT: z.string().optional(),
-    OPID_USERNAME_CLAIM: z.string().optional(),
-    OPID_LOCALE_CLAIM: z.string().optional(),
-    OPID_LOGOUT_REDIRECT_URL: z.string().optional(),
-    USERNAME_POLICY: z.string().optional(),
-    DISABLE_ANONYMOUS: BoolAsString.optional(),
-    PROMETHEUS_AUTHORIZATION_TOKEN: z.string().optional(),
-    EJABBERD_DOMAIN: z.string().optional(),
-    EJABBERD_JWT_SECRET: z.string().optional(),
-    ENABLE_CHAT: BoolAsString.optional(),
-    ENABLE_CHAT_UPLOAD: BoolAsString.optional(),
-    ENABLE_CHAT_ONLINE_LIST: BoolAsString.optional(),
-    ENABLE_CHAT_DISCONNECTED_LIST: BoolAsString.optional(),
-    DEBUG_ERROR_MESSAGES: BoolAsString.optional(),
-    ENABLE_OPENAPI_ENDPOINT: BoolAsString.optional(),
-    START_ROOM_URL: z.string().optional(),
-    MATRIX_DOMAIN: z.string(),
-    MATRIX_API_URI: z.string(),
-
-    // Front related environment variables
-    DEBUG_MODE: BoolAsString.optional(),
-    UPLOADER_URL: AbsoluteOrRelativeUrl,
-    ICON_URL: AbsoluteOrRelativeUrl,
-    STUN_SERVER: z.string().optional(),
-    TURN_SERVER: z.string().optional(),
-    SKIP_RENDER_OPTIMIZATIONS: BoolAsString.optional(),
-    DISABLE_NOTIFICATIONS: BoolAsString.optional(),
-    TURN_USER: z.string().optional(),
-    TURN_PASSWORD: z.string().optional(),
-    JITSI_URL: z.string().optional(),
-    JITSI_PRIVATE_MODE: BoolAsString.optional(),
-    ENABLE_FEATURE_MAP_EDITOR: BoolAsString.optional(),
-    ENABLE_MAP_EDITOR_AREAS_TOOL: BoolAsString.optional(),
-    MAX_USERNAME_LENGTH: PositiveIntAsString.optional(),
-    MAX_PER_GROUP: PositiveIntAsString.optional(),
-    NODE_ENV: z.string().optional(),
-    CONTACT_URL: AbsoluteOrRelativeUrl.optional(),
-    POSTHOG_API_KEY: z.string().optional(),
-    POSTHOG_URL: z.string().url().optional().or(z.literal("")),
-    FALLBACK_LOCALE: z.string().optional(),
-    CHAT_URL: AbsoluteOrRelativeUrl,
-    OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional(),
-    ENABLE_REPORT_ISSUES_MENU: BoolAsString.optional(),
-    REPORT_ISSUES_URL: z.string().url().optional().or(z.literal("")),
-    LOGROCKET_ID: z.string().optional(),
-});
-
-type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
+import { EnvironmentVariables } from "./EnvironmentVariableValidator";
 
 const envChecking = EnvironmentVariables.safeParse(process.env);
 
@@ -109,20 +28,6 @@ if (!envChecking.success) {
 
 const env = envChecking.data;
 
-function toNumber(value: string | undefined, defaultValue: number): number {
-    if (value === undefined || value === "") {
-        return defaultValue;
-    }
-    return Number(value);
-}
-
-function toBool(value: BoolAsString | undefined, defaultValue: boolean): boolean {
-    if (value === undefined || value === "") {
-        return defaultValue;
-    }
-    return value === "true" || value === "1";
-}
-
 export const SECRET_KEY = env.SECRET_KEY;
 export const API_URL = env.API_URL;
 export const ADMIN_API_URL = env.ADMIN_API_URL;
@@ -130,13 +35,15 @@ export const ADMIN_API_RETRY_DELAY = parseInt(process.env.ADMIN_API_RETRY_DELAY 
 export const ADMIN_URL = env.ADMIN_URL;
 export const ADMIN_API_TOKEN = env.ADMIN_API_TOKEN;
 export const ADMIN_SOCKETS_TOKEN = env.ADMIN_SOCKETS_TOKEN;
-export const CPU_OVERHEAT_THRESHOLD = toNumber(env.CPU_OVERHEAT_THRESHOLD, 80);
-export const PUSHER_HTTP_PORT = toNumber(env.PUSHER_HTTP_PORT, 3000);
-export const SOCKET_IDLE_TIMER = toNumber(env.SOCKET_IDLE_TIMER, 120); // maximum time (in second) without activity before a socket is closed. Should be greater than 60 seconds in order to cope for Chrome intensive throttling (https://developer.chrome.com/blog/timer-throttling-in-chrome-88/#intensive-throttling)
-export const VITE_URL = env.VITE_URL || "http://front.workadventure.localhost"; // Used only in development
+export const CPU_OVERHEAT_THRESHOLD = env.CPU_OVERHEAT_THRESHOLD;
+export const PUSHER_HTTP_PORT = env.PUSHER_HTTP_PORT;
+export const SOCKET_IDLE_TIMER = env.SOCKET_IDLE_TIMER; // maximum time (in second) without activity before a socket is closed. Should be greater than 60 seconds in order to cope for Chrome intensive throttling (https://developer.chrome.com/blog/timer-throttling-in-chrome-88/#intensive-throttling)
 export const ALLOWED_CORS_ORIGIN = env.ALLOWED_CORS_ORIGIN; // Use "*" to allow any domain
 export const PUSHER_URL = env.PUSHER_URL || "";
+export const FRONT_URL = env.FRONT_URL || "";
+export const VITE_URL = env.VITE_URL || FRONT_URL; // Used only in development
 export const PUBLIC_MAP_STORAGE_URL = env.PUBLIC_MAP_STORAGE_URL || "";
+export const INTERNAL_MAP_STORAGE_URL = env.INTERNAL_MAP_STORAGE_URL;
 export const OPID_CLIENT_ID = env.OPID_CLIENT_ID || "";
 export const OPID_CLIENT_SECRET = env.OPID_CLIENT_SECRET || "";
 export const OPID_CLIENT_ISSUER = env.OPID_CLIENT_ISSUER || "";
@@ -144,6 +51,7 @@ if (OPID_CLIENT_ID && !PUSHER_URL) {
     throw new Error("Missing PUSHER_URL environment variable.");
 }
 export const OPID_CLIENT_REDIRECT_URL = PUSHER_URL + "/openid-callback";
+export const OPID_CLIENT_REDIRECT_LOGOUT_URL = PUSHER_URL + "/logout-callback";
 export const OPID_PROFILE_SCREEN_PROVIDER =
     env.OPID_PROFILE_SCREEN_PROVIDER || (ADMIN_URL ? ADMIN_URL + "/profile" : undefined);
 export const OPID_SCOPE = env.OPID_SCOPE || "openid email";
@@ -151,18 +59,18 @@ export const OPID_PROMPT = env.OPID_PROMPT || "login";
 export const OPID_USERNAME_CLAIM = env.OPID_USERNAME_CLAIM || "username";
 export const OPID_LOCALE_CLAIM = env.OPID_LOCALE_CLAIM || "locale";
 export const OPID_WOKA_NAME_POLICY = env.OPID_WOKA_NAME_POLICY || "user_input";
-export const DISABLE_ANONYMOUS: boolean = toBool(env.DISABLE_ANONYMOUS, false);
+export const DISABLE_ANONYMOUS: boolean = env.DISABLE_ANONYMOUS;
 export const PROMETHEUS_AUTHORIZATION_TOKEN = env.PROMETHEUS_AUTHORIZATION_TOKEN;
 export const EJABBERD_DOMAIN: string = env.EJABBERD_DOMAIN || "";
 export const EJABBERD_JWT_SECRET: string = env.EJABBERD_JWT_SECRET || "";
-export const ENABLE_CHAT: boolean = toBool(env.ENABLE_CHAT, true);
-export const ENABLE_CHAT_UPLOAD: boolean = toBool(env.ENABLE_CHAT_UPLOAD, true);
-export const ENABLE_CHAT_ONLINE_LIST: boolean = toBool(env.ENABLE_CHAT_ONLINE_LIST, true);
-export const ENABLE_CHAT_DISCONNECTED_LIST: boolean = toBool(env.ENABLE_CHAT_DISCONNECTED_LIST, true);
-export const DEBUG_ERROR_MESSAGES = toBool(env.DEBUG_ERROR_MESSAGES, false);
+export const ENABLE_CHAT: boolean = env.ENABLE_CHAT;
+export const ENABLE_CHAT_UPLOAD: boolean = env.ENABLE_CHAT_UPLOAD;
+export const ENABLE_CHAT_ONLINE_LIST: boolean = env.ENABLE_CHAT_ONLINE_LIST;
+export const ENABLE_CHAT_DISCONNECTED_LIST: boolean = env.ENABLE_CHAT_DISCONNECTED_LIST;
+export const DEBUG_ERROR_MESSAGES = env.DEBUG_ERROR_MESSAGES;
 
 // If set to the string "true", the /openapi route will return the OpenAPI definition and the swagger-ui/ route will display the documentation
-export const ENABLE_OPENAPI_ENDPOINT = toBool(env.ENABLE_OPENAPI_ENDPOINT, false);
+export const ENABLE_OPENAPI_ENDPOINT = env.ENABLE_OPENAPI_ENDPOINT;
 
 // The URL to use if the user is visiting the first time and hitting the "/" route.
 export const START_ROOM_URL: string = env.START_ROOM_URL || "/_/global/maps.workadventu.re/starter/map.json";
@@ -170,28 +78,54 @@ export const FALLBACK_LOCALE: string | undefined = env.FALLBACK_LOCALE;
 
 // Logrocket id
 export const LOGROCKET_ID: string | undefined = env.LOGROCKET_ID;
+
+// Matrix
 export const MATRIX_DOMAIN: string = env.MATRIX_DOMAIN || "";
 export const MATRIX_API_URI: string = env.MATRIX_API_URI || "";
 
+// Sentry integration
+export const SENTRY_DSN: string | undefined = env.SENTRY_DSN_PUSHER;
+export const SENTRY_ENVIRONMENT: string | undefined = env.SENTRY_ENVIRONMENT;
+export const SENTRY_RELEASE: string | undefined = env.SENTRY_RELEASE;
+export const SENTRY_TRACES_SAMPLE_RATE: number | undefined = env.SENTRY_TRACES_SAMPLE_RATE;
+
+// RoomAPI
+export const ROOM_API_PORT = env.ROOM_API_PORT;
+export const ROOM_API_SECRET_KEY = env.ROOM_API_SECRET_KEY;
+
+// Map editor
+export const ENABLE_MAP_EDITOR: boolean = env.ENABLE_MAP_EDITOR;
+export const MAP_EDITOR_ALLOWED_USERS: string[] = env.MAP_EDITOR_ALLOWED_USERS;
+
+// Integration tools
+export const KLAXOON_ENABLED = env.KLAXOON_ENABLED;
+export const KLAXOON_CLIENT_ID = env.KLAXOON_CLIENT_ID;
+export const YOUTUBE_ENABLED = env.YOUTUBE_ENABLED;
+export const GOOGLE_DOCS_ENABLED = env.GOOGLE_DOCS_ENABLED;
+export const GOOGLE_SHEETS_ENABLED = env.GOOGLE_SHEETS_ENABLED;
+export const GOOGLE_SLIDES_ENABLED = env.GOOGLE_SLIDES_ENABLED;
+export const ERASER_ENABLED = env.ERASER_ENABLED;
+export const EMBEDDED_DOMAINS_WHITELIST = env.EMBEDDED_DOMAINS_WHITELIST;
+
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
-    DEBUG_MODE: toBool(env.DEBUG_MODE, false),
+    DEBUG_MODE: env.DEBUG_MODE,
     PUSHER_URL,
+    FRONT_URL,
     ADMIN_URL,
     UPLOADER_URL: env.UPLOADER_URL,
     ICON_URL: env.ICON_URL,
     STUN_SERVER: env.STUN_SERVER,
     TURN_SERVER: env.TURN_SERVER,
-    SKIP_RENDER_OPTIMIZATIONS: toBool(env.SKIP_RENDER_OPTIMIZATIONS, false),
-    DISABLE_NOTIFICATIONS: toBool(env.DISABLE_NOTIFICATIONS, false),
+    SKIP_RENDER_OPTIMIZATIONS: env.SKIP_RENDER_OPTIMIZATIONS,
+    DISABLE_NOTIFICATIONS: env.DISABLE_NOTIFICATIONS,
     TURN_USER: env.TURN_USER,
     TURN_PASSWORD: env.TURN_PASSWORD,
     JITSI_URL: env.JITSI_URL,
-    JITSI_PRIVATE_MODE: toBool(env.JITSI_PRIVATE_MODE, false),
-    ENABLE_FEATURE_MAP_EDITOR: toBool(env.ENABLE_FEATURE_MAP_EDITOR, false),
-    ENABLE_MAP_EDITOR_AREAS_TOOL: toBool(env.ENABLE_MAP_EDITOR_AREAS_TOOL, false),
-    MAX_USERNAME_LENGTH: toNumber(env.MAX_USERNAME_LENGTH, 10),
-    MAX_PER_GROUP: toNumber(env.MAX_PER_GROUP, 4),
+    JITSI_PRIVATE_MODE: env.JITSI_PRIVATE_MODE,
+    ENABLE_MAP_EDITOR: env.ENABLE_MAP_EDITOR,
+    MAX_USERNAME_LENGTH: env.MAX_USERNAME_LENGTH,
+    MAX_PER_GROUP: env.MAX_PER_GROUP,
     NODE_ENV: env.NODE_ENV || "development",
     CONTACT_URL: env.CONTACT_URL,
     POSTHOG_API_KEY: env.POSTHOG_API_KEY,
@@ -199,11 +133,31 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     DISABLE_ANONYMOUS,
     ENABLE_OPENID: !!env.OPID_CLIENT_ID,
     OPID_PROFILE_SCREEN_PROVIDER: env.OPID_PROFILE_SCREEN_PROVIDER,
-    OPID_LOGOUT_REDIRECT_URL: env.OPID_LOGOUT_REDIRECT_URL,
+    OPID_WOKA_NAME_POLICY,
     CHAT_URL: env.CHAT_URL,
     ENABLE_CHAT_UPLOAD,
     FALLBACK_LOCALE,
-    OPID_WOKA_NAME_POLICY,
-    ENABLE_REPORT_ISSUES_MENU: toBool(env.ENABLE_REPORT_ISSUES_MENU, false),
+    ENABLE_REPORT_ISSUES_MENU: env.ENABLE_REPORT_ISSUES_MENU,
     REPORT_ISSUES_URL: env.REPORT_ISSUES_URL,
+    SENTRY_DSN_FRONT: env.SENTRY_DSN_FRONT,
+    SENTRY_DSN_PUSHER: env.SENTRY_DSN_PUSHER,
+    SENTRY_ENVIRONMENT: env.SENTRY_ENVIRONMENT,
+    SENTRY_RELEASE: env.SENTRY_RELEASE,
+    SENTRY_TRACES_SAMPLE_RATE: env.SENTRY_TRACES_SAMPLE_RATE,
+    WOKA_SPEED: env.WOKA_SPEED,
+    JITSI_DOMAIN: env.JITSI_DOMAIN,
+    JITSI_XMPP_DOMAIN: env.JITSI_XMPP_DOMAIN,
+    JITSI_MUC_DOMAIN: env.JITSI_MUC_DOMAIN,
+    FEATURE_FLAG_BROADCAST_AREAS: env.FEATURE_FLAG_BROADCAST_AREAS,
+    KLAXOON_ENABLED: env.KLAXOON_ENABLED,
+    KLAXOON_CLIENT_ID: env.KLAXOON_CLIENT_ID,
+    YOUTUBE_ENABLED: env.YOUTUBE_ENABLED,
+    GOOGLE_DOCS_ENABLED: env.GOOGLE_DOCS_ENABLED,
+    GOOGLE_SHEETS_ENABLED: env.GOOGLE_SHEETS_ENABLED,
+    GOOGLE_SLIDES_ENABLED: env.GOOGLE_SLIDES_ENABLED,
+    ERASER_ENABLED: env.ERASER_ENABLED,
+    PEER_VIDEO_LOW_BANDWIDTH: parseInt(env.PEER_VIDEO_LOW_BANDWIDTH || "150"),
+    PEER_VIDEO_RECOMMENDED_BANDWIDTH: parseInt(env.PEER_VIDEO_RECOMMENDED_BANDWIDTH || "600"),
+    PEER_SCREEN_SHARE_LOW_BANDWIDTH: parseInt(env.PEER_SCREEN_SHARE_LOW_BANDWIDTH || "250"),
+    PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: parseInt(env.PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH || "1000"),
 };

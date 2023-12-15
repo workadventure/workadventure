@@ -19,23 +19,26 @@ const camera: DeepPartial<Translation["camera"]> = {
             chrome: "/resources/help-setting-camera-permission/de-DE-chrome.png",
         },
     },
-    /*webrtc: {
-        title: "TODO: Video relay server connection error",
-        titlePending: "TODO: Video relay server connection pending",
-        error: "TODO: TURN server isn't reachable",
-        content: "TODO: The video relay server cannot be reached. You may be unable to communicate with other users.",
-        solutionVpn: "TODO: If you are <strong>connecting via a VPN</strong>, please disconnect from you VPN and refresh the web page.",
-        solutionHotspot: "TODO: If you are on a restricted network (company network...), try switching network. For instance, create a <strong>Wifi hotspot</strong> with your phone and connect via your phone.",
-        solutionNetworkAdmin: "TODO: If you are a <strong>network administrator</strong>, review the ",
-        preparingYouNetworkGuide: 'TODO: "Preparing your network" guide',
-        refresh: "TODO: Refresh",
-        continue: "TODO: Continue",
-    },*/
+    webrtc: {
+        title: "Der Video-Relay-Server antwortet nicht - Fehler",
+        titlePending: "Verbinde mit dem Video-Relay-Server",
+        error: '"TURN"-Server nicht erreichbar',
+        content:
+            "Eine Verbindung zum Video-Relay-Server konnte nicht hergetellt werden. Sie sind möglicherweise nicht in der Lage, mit anderen Benutzern zu kommunizieren.",
+        solutionVpn:
+            "Wenn Sie eine Verbindung über ein VPN herstellen, trennen Sie bitte die Verbindung zu Ihrem VPN und aktualisieren Sie die Webseite.",
+        solutionHotspot:
+            "Wenn Sie sich in einem eingeschränkten Netzwerk befinden (Firmennetzwerk...), versuchen Sie, das Netzwerk zu wechseln. Erstellen Sie zum Beispiel mit Ihrem Telefon einen WLAN-Hotspot und verbinden Sie sich über Ihr Telefon.",
+        solutionNetworkAdmin: "Wenn Sie ein Netzwerkadministrator sind, überprüfen Sie die",
+        preparingYouNetworkGuide: 'Anleitung "Preparing your network"',
+        refresh: "Aktualisieren",
+        continue: "Weiter",
+    },
     my: {
         silentZone: "Stiller Bereich",
         nameTag: "Sie",
     },
-    disable: "Schalten Sie Ihre Kamera aus",
+    disable: "Kamera deaktivieren",
 };
 
 export default camera;

@@ -1,17 +1,19 @@
-import { HtmlUtils } from "./HtmlUtils";
 import { Subject } from "rxjs";
+import type { Readable, Unsubscriber, Writable } from "svelte/store";
+import { get, writable } from "svelte/store";
+import type CancelablePromise from "cancelable-promise";
+import { randomDelay } from "@workadventure/shared-utils/src/RandomDelay/RandomDelay";
 import { waScaleManager } from "../Phaser/Services/WaScaleManager";
 import { coWebsites, coWebsitesNotAsleep, mainCoWebsite } from "../Stores/CoWebsiteStore";
-import type { Readable, Writable } from "svelte/store";
-import { get, writable } from "svelte/store";
-import { embedScreenLayoutStore, highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
+import { embedScreenLayoutStore } from "../Stores/EmbedScreensStore";
+import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { isMediaBreakpointDown } from "../Utils/BreakpointsUtils";
-import { LayoutMode } from "./LayoutManager";
-import type { CoWebsite } from "./CoWebsite/CoWesbite";
-import type CancelablePromise from "cancelable-promise";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { inCowebsiteZone } from "../Stores/MediaStore";
+import { LayoutMode } from "./LayoutManager";
+import type { CoWebsite } from "./CoWebsite/CoWebsite";
+import { HtmlUtils } from "./HtmlUtils";
 
 export enum iframeStates {
     closed = 1,
@@ -68,6 +70,9 @@ class CoWebsiteManager {
             this.fire();
         }
     });
+
+    private mainCoWebsiteUnsubscriber: Unsubscriber;
+    private highlightedEmbedScreenUnsubscriber: Unsubscriber;
 
     public getMainState() {
         return get(this.openedMain);
@@ -133,7 +138,7 @@ class CoWebsiteManager {
             trails: undefined,
         };
 
-        mainCoWebsite.subscribe((coWebsite) => {
+        this.mainCoWebsiteUnsubscriber = mainCoWebsite.subscribe((coWebsite) => {
             this.buttonCloseCoWebsite.hidden = !coWebsite?.isClosable() ?? false;
         });
 
@@ -170,7 +175,7 @@ class CoWebsiteManager {
 
         const buttonSwipe = HtmlUtils.getElementByIdOrFail(cowebsiteSwipeButtonId);
 
-        highlightedEmbedScreen.subscribe((value) => {
+        this.highlightedEmbedScreenUnsubscriber = highlightedEmbedScreen.subscribe((value) => {
             if (!value || value.type !== "cowebsite") {
                 buttonSwipe.style.display = "none";
                 return;
@@ -198,6 +203,8 @@ class CoWebsiteManager {
 
     public cleanup(): void {
         this.closeCoWebsites();
+        this.mainCoWebsiteUnsubscriber();
+        this.highlightedEmbedScreenUnsubscriber();
     }
 
     public getCoWebsiteBuffer(): HTMLDivElement {
@@ -687,7 +694,8 @@ class CoWebsiteManager {
 
         const coWebsiteLoading = coWebsite
             .load()
-            .then(() => {
+            .then(async () => {
+                await randomDelay();
                 const mainCoWebsite = this.getMainCoWebsite();
                 const highlightedEmbed = get(highlightedEmbedScreen);
                 if (mainCoWebsite) {
@@ -724,7 +732,9 @@ class CoWebsiteManager {
 
         return coWebsite
             .unload()
-            .then(() => {
+            .then(async () => {
+                await randomDelay();
+
                 coWebsites.remove(coWebsite);
                 const mainCoWebsite = this.getMainCoWebsite();
 

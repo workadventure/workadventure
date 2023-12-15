@@ -7,6 +7,6 @@ export const isSetSharedPlayerVariableEvent = z.object({
 });
 
 /**
- * A message sent from the iFrame to the game to change the value of the property of the layer
+ * A message sent from the game to the iframe to change the value of a player variable
  */
 export type SetSharedPlayerVariableEvent = z.infer<typeof isSetSharedPlayerVariableEvent>;

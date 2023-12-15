@@ -1,19 +1,19 @@
 <script lang="ts">
+    import type { Unsubscriber } from "svelte/store";
+    import type { Subscription } from "rxjs";
+    import { onDestroy, onMount } from "svelte";
+    import { derived } from "svelte/store";
+    import { SpaceFilterMessage } from "@workadventure/messages";
+    import { SidebarIcon } from "svelte-feather-icons";
     import { chatIsReadyStore, chatVisibilityStore, iframeLoadedStore, wokaDefinedStore } from "../../Stores/ChatStore";
     import { enableUserInputsStore } from "../../Stores/UserInputStore";
-    import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
-    import { localUserStore } from "../../Connexion/LocalUserStore";
-    import type { Unsubscriber } from "svelte/store";
-    import { derived } from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { CHAT_URL } from "../../Enum/EnvironmentVariable";
     import { locale } from "../../../i18n/i18n-svelte";
-    import type { Subscription } from "rxjs";
     import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
     import { Locales } from "../../../i18n/i18n-types";
-    import { SpaceFilterMessage } from "@workadventure/messages";
-    import { SidebarIcon } from "svelte-feather-icons";
+    import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 
     let chatIframe: HTMLIFrameElement;
     let searchElement: HTMLInputElement;
@@ -30,10 +30,10 @@
     );
 
     // Phantom woka
-    let wokaSrc =
+    /*let wokaSrc =
         " data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
     const playUri = window.location.protocol + "//" + window.location.hostname + window.location.pathname;
-    let name = localUserStore.getName() ?? "unknown";
+    let name = gameManager.getPlayerName() ?? "unknown";
     name = name.replace(
         /[\u{1f300}-\u{1f5ff}\u{1f900}-\u{1f9ff}\u{1f600}-\u{1f64f}\u{1f680}-\u{1f6ff}\u{2600}-\u{26ff}\u{2700}-\u{27bf}\u{1f1e6}-\u{1f1ff}\u{1f191}-\u{1f251}\u{1f004}\u{1f0cf}\u{1f170}-\u{1f171}\u{1f17e}-\u{1f17f}\u{1f18e}\u{3030}\u{2b50}\u{2b55}\u{2934}-\u{2935}\u{2b05}-\u{2b07}\u{2b1b}-\u{2b1c}\u{3297}\u{3299}\u{303d}\u{00a9}\u{00ae}\u{2122}\u{23f3}\u{24c2}\u{23e9}-\u{23ef}\u{25b6}\u{23f8}-\u{23fa}]/gu,
         (match) => {
@@ -43,7 +43,7 @@
             }
             return `[e-${codePoint.toString(16)}]`;
         }
-    );
+    );*/
 
     onMount(() => {
         iframeListener.registerChatIframe(chatIframe);
@@ -124,6 +124,15 @@
                                                     roomName: connectionManager.currentRoom?.roomName ?? "default",
                                                     visitCardUrl: gameManager.myVisitCardUrl,
                                                     userRoomToken: gameManager.getCurrentGameScene().connection?.userRoomToken,
+                                        klaxoonToolActivated: connectionManager.currentRoom?.klaxoonToolActivated,
+                                        youtubeToolActivated: connectionManager.currentRoom?.youtubeToolActivated,
+                                        googleDocsToolActivated: connectionManager.currentRoom?.googleDocsToolActivated,
+                                        googleSheetsToolActivated:
+                                            connectionManager.currentRoom?.googleSheetsToolActivated,
+                                        googleSlidesToolActivated:
+                                            connectionManager.currentRoom?.googleSlidesToolActivated,
+                                        klaxoonToolClientId: connectionManager.currentRoom?.klaxoonToolClientId,
+                                        eraserToolActivated: connectionManager.currentRoom?.eraserToolActivated,
                                                 },
                                             },
                                             "*"
@@ -194,7 +203,7 @@
         if (e.key === "Escape" && $chatVisibilityStore) {
             closeChat();
             chatIframe.blur();
-        } else if (e.key === "c" && !$chatVisibilityStore && $enableUserInputsStore) {
+        } else if (e.key === "c" && !$chatVisibilityStore && !$mapEditorModeStore && $enableUserInputsStore) {
             chatVisibilityStore.set(true);
         }
     }

@@ -1,22 +1,21 @@
 <script lang="ts">
     import { fade, fly } from "svelte/transition";
-    import { MucRoom } from "../Xmpp/MucRoom";
-    import { User } from "../Xmpp/AbstractRoom";
-    import { defaultColor, defaultWoka } from "../Xmpp/AbstractRoom";
-    import LL, { locale } from "../i18n/i18n-svelte";
-    import { userStore } from "../Stores/LocalUserStore";
-    import { mucRoomsStore } from "../Stores/MucRoomsStore";
     import { UserData } from "@workadventure/messages";
     import { onDestroy, onMount } from "svelte";
     import { ArrowDownIcon, ArrowUpIcon } from "svelte-feather-icons";
     import { get, Unsubscriber } from "svelte/store";
-    import { chatVisibilityStore, selectedMessageToReact } from "../Stores/ChatStore";
     import { EmojiButton } from "@joeattardi/emoji-button";
+    import { ChatState } from "stanza/Constants";
+    import { JID } from "stanza";
+    import { MucRoom } from "../Xmpp/MucRoom";
+    import { User, defaultColor, defaultWoka } from "../Xmpp/AbstractRoom";
+    import { LL, locale } from "../i18n/i18n-svelte";
+    import { userStore } from "../Stores/LocalUserStore";
+    import { mucRoomsStore } from "../Stores/MucRoomsStore";
+    import { chatVisibilityStore, selectedMessageToReact } from "../Stores/ChatStore";
     import crown from "../../public/static/svg/icone-premium-crown.svg";
     import { iframeListener } from "../IframeListener";
     import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
-    import { ChatState } from "stanza/Constants";
-    import { JID } from "stanza";
     import Message from "./Content/Message.svelte";
 
     export let mucRoom: MucRoom;
@@ -220,7 +219,7 @@
     </div>
 
     <div
-        class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen"
+        class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-x-hidden tw-overflow-y-scroll tw-justify-end tw-h-auto tw-min-h-screen"
     >
         <div class="tw-mb-auto load-history">
             {#if $canLoadOlderMessagesStore}
@@ -241,7 +240,7 @@
             {:else if $showDisabledLoadOlderMessagesStore && $me && $me.isAdmin}
                 {#if ADMIN_API_URL}
                     <button
-                        class="tw-text-orange tw-font-bold tw-underline tw-m-auto tw-text-xs tw-cursor-pointer"
+                        class="tw-text-warning tw-font-bold tw-underline tw-m-auto tw-text-xs tw-cursor-pointer"
                         on:click={() => iframeListener.sendRedirectPricing()}
                     >
                         <img alt="Crown icon" src={crown} class="tw-mr-1" />
@@ -310,12 +309,13 @@
             </div>
         {/each}
         {#if $unreads > 0}
-            <div class="tw-w-full tw-fixed tw-left-0 tw-bottom-14 tw-animate-bounce tw-cursor-pointer">
+            <div class="tw-w-full tw-fixed tw-left-0 tw-bottom-28 tw-animate-bounce tw-cursor-pointer">
                 <div
                     in:fly={{ y: 10, duration: 200 }}
                     style="margin: auto"
                     class="tw-bg-lighter-purple tw-rounded-xl tw-h-5 tw-px-2 tw-w-fit tw-text-xs tw-flex tw-justify-center tw-items-center tw-shadow-grey"
                     role="button"
+                    tabindex="0"
                     on:click={scrollDownAndRead}
                 >
                     <ArrowDownIcon size="14" />

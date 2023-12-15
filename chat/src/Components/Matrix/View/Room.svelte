@@ -1,13 +1,13 @@
 <script lang="ts">
     import { MatrixEvent, Room } from "matrix-js-sdk";
     import { Writable } from "svelte/store";
+    import { onMount } from "svelte";
+    import { ArrowLeftIcon, SettingsIcon, SearchIcon, UsersIcon } from "svelte-feather-icons";
     import { selectedRoom } from "../../../Stores/MatrixStore";
     import Header from "../Ui/Header.svelte";
     import { chatConnectionManager } from "../../../Connection/ChatConnectionManager";
-    import { onMount } from "svelte";
     import { RoomWrapper } from "../../../Matrix/MatrixClient";
     import Button from "../Ui/Button.svelte";
-    import { ArrowLeftIcon, SettingsIcon, SearchIcon, UsersIcon } from "svelte-feather-icons";
 	import MessageForm from "../Wrapper/MessageForm.svelte";
 	import Messages from "../Wrapper/Messages.svelte";
 

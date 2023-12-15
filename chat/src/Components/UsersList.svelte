@@ -1,14 +1,14 @@
 <script lang="ts">
-    import { MucRoom } from "../Xmpp/MucRoom";
-    import { User } from "../Xmpp/AbstractRoom";
-    import ChatUser from "./ChatUser.svelte";
     import { ChevronUpIcon } from "svelte-feather-icons";
     import { fly } from "svelte/transition";
-    import LL from "../i18n/i18n-svelte";
-    import Loader from "./Loader.svelte";
     import { get, Unsubscriber, Writable } from "svelte/store";
-    import { enableChatDisconnectedListStore, shownRoomListStore } from "../Stores/ChatStore";
     import { onDestroy, onMount } from "svelte";
+    import { MucRoom } from "../Xmpp/MucRoom";
+    import { User } from "../Xmpp/AbstractRoom";
+    import { LL } from "../i18n/i18n-svelte";
+    import { enableChatDisconnectedListStore, shownRoomListStore } from "../Stores/ChatStore";
+    import ChatUser from "./ChatUser.svelte";
+    import Loader from "./Loader.svelte";
 
     export let mucRoom: MucRoom;
     export let searchValue: string;
@@ -81,7 +81,7 @@
 {#if $loadingSubscribersStore}
     <Loader text={$LL.loadingUsers()} height="tw-h-40" />
 {:else}
-    {#each roomSorted as room}
+    {#each roomSorted as room (room)}
         <div class="users tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
             <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
                 {#if !$loadingSubscribersStore}

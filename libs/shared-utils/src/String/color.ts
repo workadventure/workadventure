@@ -39,4 +39,34 @@ function getTextColorByBackgroundColor(color: string | null): string {
     return brightness > 125 ? "black" : "white";
 }
 
-export { getColorByString, getTextColorByBackgroundColor };
+function colorChannelMixer(colorChannelA: number, colorChannelB: number, amountToMix: number): number {
+    const channelA = colorChannelA * amountToMix;
+    const channelB = colorChannelB * (1 - amountToMix);
+    return channelA + channelB;
+}
+
+function colorMixer(hexA: string, hexB: string, amountToMix: number): string {
+    const rgbA = hexToRgb(hexA);
+    const rgbB = hexToRgb(hexB);
+    if (!rgbA || !rgbB) throw new Error("Invalid hex color");
+    const r = colorChannelMixer(rgbA[0], rgbB[0], amountToMix);
+    const g = colorChannelMixer(rgbA[1], rgbB[1], amountToMix);
+    const b = colorChannelMixer(rgbA[2], rgbB[2], amountToMix);
+    return rgbToHex(r, g, b);
+}
+
+function componentToHex(c: number) {
+    const hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+    return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+}
+
+function hexToRgb(hex: string): number[] | null {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)] : null;
+}
+
+export { colorMixer, getColorByString, getTextColorByBackgroundColor };

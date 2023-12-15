@@ -1,5 +1,5 @@
-import LL from "../i18n/i18n-svelte";
 import { get } from "svelte/store";
+import { LL } from "../i18n/i18n-svelte";
 import { chatNotificationsStore, chatSoundsStore } from "../Stores/ChatStore";
 import { iframeListener } from "../IframeListener";
 
@@ -28,9 +28,9 @@ class MediaManager {
 
         if (this.hasNotification()) {
             const options = {
-                icon: "/static/images/logo-WA-min.png",
-                image: "/static/images/logo-WA-min.png",
-                badge: "/static/images/logo-WA-min.png",
+                icon: "./static/images/logo-WA-min.png",
+                image: "./static/images/logo-WA-min.png",
+                badge: "./static/images/logo-WA-min.png",
             };
             switch (notificationType) {
                 case NotificationType.discussion:

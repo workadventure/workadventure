@@ -1,6 +1,25 @@
-import { PointInterface } from "./Websocket/PointInterface";
-import { Group } from "./Group";
-import { User, UserSocket } from "./User";
+import path from "path";
+import {
+    EmoteEventMessage,
+    JoinRoomMessage,
+    SetPlayerDetailsMessage,
+    SubToPusherRoomMessage,
+    VariableWithTagMessage,
+    ServerToClientMessage,
+    isMapDetailsData,
+    MapDetailsData,
+    MapThirdPartyData,
+    MapBbbData,
+    MapJitsiData,
+    RefreshRoomMessage,
+    EditMapCommandMessage,
+} from "@workadventure/messages";
+import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
+import { Jitsi } from "@workadventure/shared-utils";
+import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
+import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
+import * as Sentry from "@sentry/node";
+import { GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
 import { PositionInterface } from "../Model/PositionInterface";
 import {
     EmoteCallback,
@@ -10,26 +29,11 @@ import {
     MovesCallback,
     PlayerDetailsUpdatedCallback,
 } from "../Model/Zone";
-import { PositionNotifier } from "./PositionNotifier";
 import { Movable } from "../Model/Movable";
-import {
-    EmoteEventMessage,
-    JoinRoomMessage,
-    SetPlayerDetailsMessage,
-    SubToPusherRoomMessage,
-    VariableWithTagMessage,
-    ServerToClientMessage,
-    RefreshRoomMessage,
-    MapStorageUrlMessage,
-    MapStorageToBackMessage,
-} from "@workadventure/messages";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { RoomSocket, ZoneSocket } from "../RoomManager";
+import { EventSocket, RoomSocket, VariableSocket, ZoneSocket } from "../RoomManager";
 import { Admin } from "../Model/Admin";
 import { adminApi } from "../Services/AdminApi";
-import { isMapDetailsData, MapDetailsData, MapThirdPartyData, MapBbbData, MapJitsiData } from "@workadventure/messages";
-import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
-import { mapFetcher } from "../Services/MapFetcher";
 import { VariablesManager } from "../Services/VariablesManager";
 import {
     ADMIN_API_URL,
@@ -37,21 +41,25 @@ import {
     BBB_URL,
     ENABLE_CHAT,
     ENABLE_CHAT_UPLOAD,
+    INTERNAL_MAP_STORAGE_URL,
     JITSI_ISS,
     JITSI_URL,
+    PUBLIC_MAP_STORAGE_PREFIX,
     PUBLIC_MAP_STORAGE_URL,
     SECRET_JITSI_KEY,
+    STORE_VARIABLES_FOR_LOCAL_MAPS,
 } from "../Enum/EnvironmentVariable";
-import { LocalUrlError } from "../Services/LocalUrlError";
-import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
+import { emitError, emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { MucManager } from "../Services/MucManager";
-import { BrothersFinder } from "./BrothersFinder";
-import { Jitsi } from "@workadventure/shared-utils";
 import { getMapStorageClient } from "../Services/MapStorageClient";
-import { ClientReadableStream } from "@grpc/grpc-js";
+import { BrothersFinder } from "./BrothersFinder";
+import { PositionNotifier } from "./PositionNotifier";
+import { User, UserSocket } from "./User";
+import { Group } from "./Group";
+import { PointInterface } from "./Websocket/PointInterface";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -70,14 +78,13 @@ export class GameRoom implements BrothersFinder {
     private nextUserId = 1;
 
     private roomListeners: Set<RoomSocket> = new Set<RoomSocket>();
-    private mapStorageClientMessagesStream: ClientReadableStream<MapStorageToBackMessage> | undefined;
-    private reconnectMapStorageTimeout: NodeJS.Timeout | undefined;
-    private closing = false;
+    private variableListeners: Map<string, Set<VariableSocket>> = new Map<string, Set<VariableSocket>>();
+    // The key is the event name
+    private eventListeners: Map<string, Set<EventSocket>> = new Map<string, Set<EventSocket>>();
 
     private constructor(
-        public readonly roomUrl: string,
-        private _mapUrl: string,
-        private roomGroup: string | null,
+        public readonly _roomUrl: string,
+        private _roomGroup: string | null,
         private readonly connectCallback: ConnectCallback,
         private readonly disconnectCallback: DisconnectCallback,
         private readonly minDistance: number,
@@ -89,7 +96,10 @@ export class GameRoom implements BrothersFinder {
         onLockGroup: LockGroupCallback,
         onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
         private thirdParty: MapThirdPartyData | undefined,
-        private editable: boolean
+        private editable: boolean,
+        private _mapUrl: string,
+        private _wamUrl?: string,
+        private _wamSettings: WAMFileFormat["settings"] = {}
     ) {
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionNotifier(
@@ -118,10 +128,28 @@ export class GameRoom implements BrothersFinder {
         onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
     ): Promise<GameRoom> {
         const mapDetails = await GameRoom.getMapDetails(roomUrl);
+        const wamUrl = mapDetails.wamUrl;
+
+        let mapUrl: string;
+        let wamFile: WAMFileFormat | undefined = undefined;
+
+        if (!wamUrl && mapDetails.mapUrl) {
+            mapUrl = mapDetails.mapUrl;
+        } else if (wamUrl) {
+            wamFile = await mapFetcher.fetchWamFile(wamUrl, INTERNAL_MAP_STORAGE_URL, PUBLIC_MAP_STORAGE_PREFIX);
+            try {
+                new URL(wamFile.mapUrl);
+                mapUrl = wamFile.mapUrl;
+            } catch (e) {
+                console.info("Map URL is not a valid URL, trying to normalize it", e);
+                mapUrl = mapFetcher.normalizeMapUrl(wamUrl, wamFile.mapUrl);
+            }
+        } else {
+            throw new Error("No mapUrl or wamUrl");
+        }
 
         const gameRoom = new GameRoom(
             roomUrl,
-            mapDetails.mapUrl,
             mapDetails.group,
             connectCallback,
             disconnectCallback,
@@ -134,17 +162,24 @@ export class GameRoom implements BrothersFinder {
             onLockGroup,
             onPlayerDetailsUpdated,
             mapDetails.thirdParty ?? undefined,
-            mapDetails.editable ?? false
+            mapDetails.editable ?? false,
+            mapUrl,
+            wamUrl,
+            wamFile ? wamFile.settings : undefined
         );
-
-        gameRoom.connectToMapStorage();
 
         gameRoom
             .getMucManager()
             .then((mucManager) => {
-                mucManager.init(mapDetails).catch((err) => console.error(err));
+                mucManager.init(mapDetails).catch((err) => {
+                    console.error(err);
+                    Sentry.captureException(err);
+                });
             })
-            .catch((err) => console.error("Error get Muc Manager: ", err));
+            .catch((err) => {
+                console.error("Error get Muc Manager: ", err);
+                Sentry.captureException(`Error get Muc Manager: ${JSON.stringify(err)}`);
+            });
         return gameRoom;
     }
 
@@ -159,6 +194,20 @@ export class GameRoom implements BrothersFinder {
                 payload: [message],
             });
         }
+    }
+
+    public sendRefreshRoomMessageToUsers(): void {
+        this.users.forEach((user) =>
+            user.socket.write({
+                message: {
+                    $case: "refreshRoomMessage",
+                    refreshRoomMessage: RefreshRoomMessage.fromPartial({
+                        roomId: this._roomUrl,
+                        timeToRefresh: 30,
+                    }),
+                },
+            })
+        );
     }
 
     public getUserByUuid(uuid: string): User | undefined {
@@ -195,11 +244,11 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.tag,
             joinRoomMessage.visitCardUrl ?? null,
             joinRoomMessage.name,
-            ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.characterLayer),
-            this.roomUrl,
-            this.roomGroup ?? undefined,
+            joinRoomMessage.characterTextures,
+            this._roomUrl,
+            this._roomGroup ?? undefined,
             this,
-            joinRoomMessage.companion,
+            joinRoomMessage.companionTexture,
             undefined,
             undefined,
             joinRoomMessage.activatedInviteUser,
@@ -266,7 +315,13 @@ export class GameRoom implements BrothersFinder {
     }
 
     public isEmpty(): boolean {
-        return this.users.size === 0 && this.admins.size === 0 && this.roomListeners.size === 0;
+        return (
+            this.users.size === 0 &&
+            this.admins.size === 0 &&
+            this.roomListeners.size === 0 &&
+            this.variableListeners.size === 0 &&
+            this.eventListeners.size === 0
+        );
     }
 
     public updatePosition(user: User, userPosition: PointInterface): void {
@@ -307,7 +362,7 @@ export class GameRoom implements BrothersFinder {
                 } else {
                     const closestUser: User = closestItem;
                     const group: Group = new Group(
-                        this.roomUrl,
+                        this._roomUrl,
                         [user, closestUser],
                         this.groupRadius,
                         this.connectCallback,
@@ -391,7 +446,7 @@ export class GameRoom implements BrothersFinder {
 
                     // Re-create a group with the followers
                     const newGroup: Group = new Group(
-                        this.roomUrl,
+                        this._roomUrl,
                         [user, ...followingMembers],
                         this.groupRadius,
                         this.connectCallback,
@@ -507,7 +562,7 @@ export class GameRoom implements BrothersFinder {
         return this.itemsState;
     }
 
-    public async setVariable(name: string, value: string, user: User): Promise<void> {
+    public async setVariable(name: string, value: string, user: User | "RoomApi"): Promise<void> {
         // First, let's check if "user" is allowed to modify the variable.
         const variableManager = await this.getVariableManager();
 
@@ -535,10 +590,16 @@ export class GameRoom implements BrothersFinder {
                     variableMessage: VariableWithTagMessage.fromPartial(variableMessage),
                 },
             });
+
+            // Dispatch the variable update to variable listeners
+            const listeners = this.variableListeners.get(name);
+            for (const listener of listeners ?? []) {
+                listener.write(JSON.parse(value));
+            }
         } catch (e) {
             if (e instanceof VariableError) {
                 // Ok, we have an error setting a variable. Either the user is trying to hack the map... or the map
-                // is not up to date. So let's try to reload the map from scratch.
+                // is not up-to-date. So let's try to reload the map from scratch.
                 if (this.variableManagerLastLoad === undefined) {
                     throw e;
                 }
@@ -591,9 +652,15 @@ export class GameRoom implements BrothersFinder {
 
     public async incrementVersion(): Promise<number> {
         // Let's check if the mapUrl has changed
-        const mapDetails = await GameRoom.getMapDetails(this.roomUrl);
-        if (this._mapUrl !== mapDetails.mapUrl) {
-            this._mapUrl = mapDetails.mapUrl;
+        const mapDetails = await GameRoom.getMapDetails(this._roomUrl);
+        const mapUrl = await mapFetcher.getMapUrl(
+            mapDetails.mapUrl,
+            mapDetails.wamUrl,
+            INTERNAL_MAP_STORAGE_URL,
+            PUBLIC_MAP_STORAGE_PREFIX
+        );
+        if (this._mapUrl !== mapUrl) {
+            this._mapUrl = mapUrl;
             this.mapPromise = undefined;
             // Reset the variable manager
             this.variableManagerPromise = undefined;
@@ -619,6 +686,43 @@ export class GameRoom implements BrothersFinder {
         this.roomListeners.delete(socket);
     }
 
+    public addVariableListener(socket: VariableSocket) {
+        let listenersSet = this.variableListeners.get(socket.request.name);
+        if (!listenersSet) {
+            listenersSet = new Set<VariableSocket>();
+            this.variableListeners.set(socket.request.name, listenersSet);
+        }
+        listenersSet.add(socket);
+    }
+
+    public removeVariableListener(socket: VariableSocket) {
+        let listenersSet = this.variableListeners.get(socket.request.name);
+        if (!listenersSet) {
+            listenersSet = new Set<VariableSocket>();
+            this.variableListeners.set(socket.request.name, listenersSet);
+        }
+        listenersSet.add(socket);
+    }
+
+    public addEventListener(socket: EventSocket) {
+        let listenersSet = this.eventListeners.get(socket.request.name);
+        if (!listenersSet) {
+            listenersSet = new Set<EventSocket>();
+            this.eventListeners.set(socket.request.name, listenersSet);
+        }
+        listenersSet.add(socket);
+    }
+
+    public removeEventListener(socket: EventSocket) {
+        const listenersSet = this.eventListeners.get(socket.request.name);
+        if (listenersSet) {
+            listenersSet.delete(socket);
+            if (listenersSet.size === 0) {
+                this.eventListeners.delete(socket.request.name);
+            }
+        }
+    }
+
     /**
      * Connects to the admin server to fetch map details.
      * If there is no admin server, the map details are generated by analysing the map URL (that must be in the form: /_/instance/map_url)
@@ -627,18 +731,22 @@ export class GameRoom implements BrothersFinder {
         if (!ADMIN_API_URL) {
             const roomUrlObj = new URL(roomUrl);
 
-            let mapUrl = "";
+            let mapUrl = undefined;
+            let wamUrl = undefined;
             let canEdit = false;
-            const entityCollectionsUrls = [];
             const match = /\/~\/(.+)/.exec(roomUrlObj.pathname);
             if (match && PUBLIC_MAP_STORAGE_URL) {
-                mapUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
+                if (path.extname(roomUrlObj.pathname) === ".tmj") {
+                    mapUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
+                } else {
+                    wamUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
+                }
                 canEdit = true;
-                entityCollectionsUrls.push(`${PUBLIC_MAP_STORAGE_URL}/entityCollections`);
             } else {
                 const match = /\/_\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
                 if (!match) {
                     console.error("Unexpected room URL", roomUrl);
+                    Sentry.captureException(`Unexpected room URL ${roomUrl}`);
                     throw new Error('Unexpected room URL "' + roomUrl + '"');
                 }
 
@@ -646,8 +754,8 @@ export class GameRoom implements BrothersFinder {
             }
             return {
                 mapUrl,
+                wamUrl,
                 editable: canEdit,
-                entityCollectionsUrls,
                 authenticationMandatory: null,
                 group: null,
                 mucRooms: null,
@@ -664,8 +772,12 @@ export class GameRoom implements BrothersFinder {
         }
 
         console.error(result.error.issues);
-        console.error("Unexpected room redirect received while querying map details", result);
-        throw new Error("Unexpected room redirect received while querying map details");
+        console.error("Unexpected room redirect or error received while querying map details", result);
+        Sentry.captureException(result.error.issues);
+        Sentry.captureException(
+            `Unexpected room redirect or error received while querying map details ${JSON.stringify(result)}`
+        );
+        throw new Error("Unexpected room redirect received or error while querying map details");
     }
 
     private mapPromise: Promise<ITiledMap> | undefined;
@@ -677,7 +789,14 @@ export class GameRoom implements BrothersFinder {
      */
     private getMap(canLoadLocalUrl = false): Promise<ITiledMap> {
         if (!this.mapPromise) {
-            this.mapPromise = mapFetcher.fetchMap(this._mapUrl, canLoadLocalUrl);
+            this.mapPromise = mapFetcher.fetchMap(
+                this._mapUrl,
+                this._wamUrl,
+                canLoadLocalUrl,
+                STORE_VARIABLES_FOR_LOCAL_MAPS,
+                INTERNAL_MAP_STORAGE_URL,
+                PUBLIC_MAP_STORAGE_PREFIX
+            );
         }
 
         return this.mapPromise;
@@ -691,7 +810,7 @@ export class GameRoom implements BrothersFinder {
             this.variableManagerLastLoad = new Date();
             this.variableManagerPromise = this.getMap()
                 .then(async (map) => {
-                    const variablesManager = await VariablesManager.create(this.roomUrl, map);
+                    const variablesManager = await VariablesManager.create(this._roomUrl, map);
                     return variablesManager.init();
                 })
                 .catch(async (e) => {
@@ -709,7 +828,7 @@ export class GameRoom implements BrothersFinder {
                             }
                         }, 1000);
 
-                        const variablesManager = await VariablesManager.create(this.roomUrl, null);
+                        const variablesManager = await VariablesManager.create(this._roomUrl, null);
                         return variablesManager.init();
                     } else {
                         // An error occurred while loading the map
@@ -726,7 +845,7 @@ export class GameRoom implements BrothersFinder {
                             }
                         }, 1000);
 
-                        const variablesManager = await VariablesManager.create(this.roomUrl, null);
+                        const variablesManager = await VariablesManager.create(this._roomUrl, null);
                         return variablesManager.init();
                     }
                 });
@@ -734,7 +853,7 @@ export class GameRoom implements BrothersFinder {
         return this.variableManagerPromise;
     }
 
-    public async getVariablesForTags(tags: string[]): Promise<Map<string, string>> {
+    public async getVariablesForTags(tags: string[] | undefined): Promise<Map<string, string>> {
         const variablesManager = await this.getVariableManager();
         return variablesManager.getVariablesForTags(tags);
     }
@@ -778,7 +897,11 @@ export class GameRoom implements BrothersFinder {
                                     }
                                 }
                                 return {
-                                    mainValue: Jitsi.slugifyJitsiRoomName(mainValue, this.roomUrl, allProps),
+                                    mainValue: Jitsi.slugifyJitsiRoomName(
+                                        mainValue,
+                                        this._roomUrl,
+                                        allProps.has(GameMapProperties.JITSI_NO_PREFIX)
+                                    ),
                                     tagValue,
                                 };
                             }
@@ -954,7 +1077,7 @@ export class GameRoom implements BrothersFinder {
             this.mucManagerLastLoad = new Date();
             this.mucManagerPromise = this.getMap(true)
                 .then((map) => {
-                    return new MucManager(this.roomUrl, map);
+                    return new MucManager(this._roomUrl, map);
                 })
                 .catch((e) => {
                     if (e instanceof LocalUrlError) {
@@ -985,7 +1108,7 @@ export class GameRoom implements BrothersFinder {
                             }
                         }, 1000);
                     }
-                    return new MucManager(this.roomUrl, null);
+                    return new MucManager(this._roomUrl, null);
                 });
         }
         this._mapUrl = lastMapUrl;
@@ -1001,85 +1124,127 @@ export class GameRoom implements BrothersFinder {
         }
     }
 
+    forwardEditMapCommandMessage(user: User, message: EditMapCommandMessage) {
+        if (!this._wamUrl) {
+            emitError(user.socket, "WAM file url is undefined. Cannot edit map without WAM file.");
+            return;
+        }
+        getMapStorageClient().handleEditMapCommandWithKeyMessage(
+            {
+                mapKey: this._wamUrl,
+                editMapCommandMessage: message,
+            },
+            (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
+                if (err) {
+                    let message = "Unknown error";
+                    if (err instanceof Error) {
+                        message = err.message;
+                    } else if (typeof err === "string") {
+                        message = err;
+                    }
+                    emitError(user.socket, message);
+                    return;
+                }
+                if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
+                    // Return the error message to the sender and don't dispatch it to the room
+                    user.socket.write({
+                        message: {
+                            $case: "batchMessage",
+                            batchMessage: {
+                                event: "",
+                                payload: [
+                                    {
+                                        message: {
+                                            $case: "editMapCommandMessage",
+                                            editMapCommandMessage,
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    });
+                    return;
+                }
+                if (editMapCommandMessage.editMapMessage?.message?.$case === "updateWAMSettingsMessage") {
+                    if (!this._wamSettings) {
+                        this._wamSettings = {};
+                    }
+                    if (
+                        editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message?.$case ===
+                        "updateMegaphoneSettingMessage"
+                    ) {
+                        this._wamSettings.megaphone =
+                            editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message.updateMegaphoneSettingMessage;
+                    }
+                }
+                this.dispatchRoomMessage({
+                    message: {
+                        $case: "editMapCommandMessage",
+                        editMapCommandMessage,
+                    },
+                });
+            }
+        );
+    }
+
+    public dispatchEvent(name: string, data: unknown, senderId: number | "RoomApi", targetUserIds: number[]): void {
+        if (targetUserIds.length === 0) {
+            // Dispatch to all users
+            this.sendSubMessageToRoom({
+                message: {
+                    $case: "receivedEventMessage",
+                    receivedEventMessage: {
+                        name,
+                        data,
+                        senderId: senderId === "RoomApi" ? undefined : senderId,
+                    },
+                },
+            });
+
+            // Dispatch to RoomApi listeners
+            const listeners = this.eventListeners.get(name);
+            for (const eventListener of listeners ?? []) {
+                eventListener.write({
+                    senderId: senderId === "RoomApi" ? undefined : senderId,
+                    data,
+                });
+            }
+        } else {
+            for (const targetUserId of targetUserIds) {
+                const targetUser = this.getUserById(targetUserId);
+                if (targetUser) {
+                    targetUser.emitInBatch({
+                        message: {
+                            $case: "receivedEventMessage",
+                            receivedEventMessage: {
+                                name,
+                                data,
+                                senderId: senderId === "RoomApi" ? undefined : senderId,
+                            },
+                        },
+                    });
+                }
+            }
+        }
+    }
+
     get mapUrl(): string {
         return this._mapUrl;
     }
 
-    public destroy(): void {
-        this.closing = true;
-        if (this.mapStorageClientMessagesStream) {
-            this.mapStorageClientMessagesStream.cancel();
-            this.mapStorageClientMessagesStream = undefined;
-        }
+    get wamUrl(): string | undefined {
+        return this._wamUrl;
     }
 
-    private killAndRetryMapStorageConnection(): void {
-        if (this.mapStorageClientMessagesStream) {
-            this.mapStorageClientMessagesStream.cancel();
-            this.mapStorageClientMessagesStream = undefined;
-            this.reconnectMapStorageTimeout = setTimeout(() => {
-                this.reconnectMapStorageTimeout = undefined;
-                this.connectToMapStorage();
-            }, 5_000);
-        }
+    get roomUrl(): string {
+        return this._roomUrl;
     }
 
-    private connectToMapStorage(): void {
-        if (this.editable && this.mapStorageClientMessagesStream === undefined) {
-            const mapStorageUrlMessage: MapStorageUrlMessage = {
-                mapUrl: this.mapUrl,
-            };
-            this.mapStorageClientMessagesStream = getMapStorageClient().listenToMessages(mapStorageUrlMessage);
-            this.mapStorageClientMessagesStream.on("data", (data: MapStorageToBackMessage) => {
-                const message = data.message;
-                if (!message) {
-                    console.error("Received empty message from mapStorageClientMessagesStream");
-                    return;
-                }
-                switch (message.$case) {
-                    case "mapStorageRefreshMessage": {
-                        const msg: Partial<RefreshRoomMessage> = {
-                            roomId: this.roomUrl,
-                            comment: message.mapStorageRefreshMessage.comment,
-                            timeToRefresh: 30,
-                        };
-                        this.users.forEach((user: User) => {
-                            user.socket.write({
-                                message: {
-                                    $case: "refreshRoomMessage",
-                                    refreshRoomMessage: RefreshRoomMessage.fromPartial(msg),
-                                },
-                            });
-                        });
-                        break;
-                    }
-                    default: {
-                        const _exhaustiveCheck: never = message.$case;
-                    }
-                }
-            });
-            this.mapStorageClientMessagesStream.on("close", () => {
-                if (this.closing) {
-                    return;
-                }
-                console.log(
-                    "Connection to map-storage closed for GameRoom ",
-                    this.roomUrl,
-                    ". Retrying connection in 5 seconds"
-                );
-                this.killAndRetryMapStorageConnection();
-            });
-            this.mapStorageClientMessagesStream.on("error", () => {
-                if (this.closing) {
-                    return;
-                }
-                console.log(
-                    "An error occurred in the connection to map-storage for GameRoom ",
-                    this.roomUrl,
-                    ". Canceling and recreating connection in 5 seconds"
-                );
-                this.killAndRetryMapStorageConnection();
-            });
-        }
+    get roomGroup(): string | null {
+        return this._roomGroup;
+    }
+
+    get wamSettings(): WAMFileFormat["settings"] {
+        return this._wamSettings;
     }
 }

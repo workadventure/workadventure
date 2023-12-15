@@ -1,10 +1,18 @@
 export class TexturesHelper {
-    public static readonly ENTITIES_TEXTURES_DIRECTORY = "/resources/entities/";
-
     public static async getSnapshot(
         scene: Phaser.Scene,
         ...sprites: { sprite: Phaser.GameObjects.Sprite; frame?: string | number }[]
     ): Promise<string> {
+        if (!scene.game.renderer) {
+            // In headless mode, we cannot take snapshots.
+            // TODO: send a correct PNG????
+            // TODO: send a correct PNG????
+            // TODO: send a correct PNG????
+            // TODO: send a correct PNG????
+            // TODO: send a correct PNG????
+            // TODO: send a correct PNG????
+            return "";
+        }
         const rt = scene.make.renderTexture({}, false);
         try {
             for (const { sprite, frame } of sprites) {

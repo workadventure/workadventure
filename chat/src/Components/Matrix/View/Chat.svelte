@@ -1,13 +1,13 @@
 <script lang="ts">
-    import Header from "../Ui/Header.svelte";
     import { PlusIcon, UsersIcon, MessageSquareIcon } from "svelte-feather-icons";
     import { writable } from "svelte/store";
-    import CreateRoom from "./CreateRoom.svelte";
+    import Header from "../Ui/Header.svelte";
     import { chatConnectionManager } from "../../../Connection/ChatConnectionManager";
     import Rooms from "../Wrapper/Rooms.svelte";
     import { selectedRoom } from "../../../Stores/MatrixStore";
-    import Room from "./Room.svelte";
     import Button from "../Ui/Button.svelte";
+    import CreateRoom from "./CreateRoom.svelte";
+    import Room from "./Room.svelte";
 
     let createRoom = writable(false);
     let selectedTab = writable("chats");

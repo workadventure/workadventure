@@ -7,8 +7,8 @@ window.env = {
 };
 
 import { describe, expect, it } from "vitest";
-import { PlayerMovement } from "../../../../src/front/Phaser/Game/PlayerMovement";
 import { PositionMessage_Direction } from "@workadventure/messages";
+import { PlayerMovement } from "../../../../src/front/Phaser/Game/PlayerMovement";
 
 describe("Interpolation / Extrapolation", () => {
     it("should interpolate", () => {

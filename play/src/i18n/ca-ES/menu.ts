@@ -28,20 +28,17 @@ const menu: DeepPartial<Translation["menu"]> = {
         logout: "Tancar sessió",
     },
     settings: {
-        videoQuality: {
-            title: "Qualitat del vídeo",
-            short: {
-                high: "Alta (30 fps)",
-                medium: "Mitjana (20 fps)",
-                small: "Reduïda (10 fps)",
-                minimum: "Mínima (5 fps)",
-            },
-            long: {
-                high: "Vídeo de qualitat alta (30 fps)",
-                medium: "Vídeo de qualitat mitjana (20 fps, recomenat)",
-                small: "Vídeo de qualitat reduïda  (10 fps)",
-                minimum: "Vídeo de qualitat mínima (5 fps)",
-            },
+        videoBandwidth: {
+            title: "Calidad de video",
+            low: "Baja",
+            recommended: "Recomendada",
+            unlimited: "Ilimitada",
+        },
+        shareScreenBandwidth: {
+            title: "Calidad de compartir pantalla",
+            low: "Baja",
+            recommended: "Recomendada",
+            unlimited: "Ilimitada",
         },
         language: {
             title: "Idioma",
@@ -53,10 +50,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             cameraToggle: 'Mantenir la càmera activa en "mode no present"',
             microphoneToggle: 'Mantenir el micròfon actiu en "mode no present"',
         },
-        save: {
-            warning: "(Guardar aquesta configuració reiniciarà el joc)",
-            button: "Guardar",
-        },
+        save: "Guardar",
         fullscreen: "Pantalla completa",
         notifications: "Notificacions",
         cowebsiteTrigger: "Preguntar sempre abans d'obrir llocs web i habitacions Jitsi Meet",

@@ -1,7 +1,7 @@
-import { BaseHttpController } from "./BaseHttpController";
-import { apiClientRepository } from "../services/ApiClientRepository";
 import { PingMessage } from "@workadventure/messages";
 import { Metadata } from "@grpc/grpc-js";
+import { apiClientRepository } from "../services/ApiClientRepository";
+import { BaseHttpController } from "./BaseHttpController";
 
 export class PingController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map
@@ -82,12 +82,16 @@ export class PingController extends BaseHttpController {
 
             for (const pingResult of pingsResult) {
                 if (pingResult.status === "rejected") {
-                    res.status(503).send("ko");
+                    res.atomic(() => {
+                        res.status(503).send("ko");
+                    });
                     return;
                 }
             }
 
-            res.status(200).send("pong");
+            res.atomic(() => {
+                res.status(200).send("pong");
+            });
             return;
         });
     }

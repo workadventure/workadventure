@@ -1,12 +1,12 @@
-import type { RoomConnection } from "../Connexion/RoomConnection";
+import { Buffer } from "buffer";
+import { get, Readable, Writable, writable } from "svelte/store";
+import Peer from "simple-peer/simplepeer.min.js";
+import type { RoomConnection } from "../Connection/RoomConnection";
+import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
+import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
+import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
 import type { PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
-import type { Readable, Writable } from "svelte/store";
-import { writable } from "svelte/store";
-import { getIceServersConfig } from "../Components/Video/utils";
-import { highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
-import Peer from "simple-peer/simplepeer.min.js";
-import { Buffer } from "buffer";
 import { StreamEndedMessage } from "./P2PMessages/StreamEndedMessage";
 
 /**
@@ -31,11 +31,13 @@ export class ScreenSharingPeer extends Peer {
         private connection: RoomConnection,
         stream: MediaStream | null
     ) {
+        const bandwidth = get(screenShareBandwidthStore);
         super({
             initiator,
             config: {
                 iceServers: getIceServersConfig(user),
             },
+            sdpTransform: getSdpTransform(bandwidth === "unlimited" ? undefined : bandwidth),
         });
 
         this.userId = user.userId;
@@ -153,9 +155,7 @@ export class ScreenSharingPeer extends Peer {
             }
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
-            //console.log('Closing connection with '+userId);
             super.destroy(error);
-            //console.log('Nb users in peerConnectionArray '+this.PeerConnectionArray.size);
         } catch (err) {
             console.error("ScreenSharingPeer::destroy", err);
         }
