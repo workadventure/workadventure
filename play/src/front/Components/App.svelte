@@ -207,7 +207,6 @@ onMount(() => {
     >
     </div>
     <CoWebsitesContainer />
-
 </div>
 
 <style lang="scss">
