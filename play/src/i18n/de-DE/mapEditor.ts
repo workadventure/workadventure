@@ -154,6 +154,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         editInstructions: "Klicken Sie auf eine Fläche, um ihre Eigenschaften zu ändern.",
         nameLabel: "Name",
     },
+    areaEditorInstructions: {
+        title: "Wie funktioniert das?",
+        description: "Zeichnen Sie ein Gebiet auf der Karte, um ein neues zu erstellen.",
+    },
     entityEditor: {
         itemPicker: {
             searchPlaceholder: "Forschen",

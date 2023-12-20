@@ -160,6 +160,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         editInstructions: "Sélectionnez une zone pour modifier ses propriétés.",
         nameLabel: "Nom de la zone",
     },
+    areaEditorInstructions: {
+        title: "Comment ca marche ?",
+        description: "Dessinez une zone sur la carte afin d'en créer une nouvelle.",
+    },
     entityEditor: {
         itemPicker: {
             searchPlaceholder: "Rechercher",
