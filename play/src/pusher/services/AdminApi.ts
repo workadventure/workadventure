@@ -94,6 +94,9 @@ export const isFetchMemberDataByUuidSuccessResponse = z.object({
     canEdit: extendApi(z.boolean().nullable().optional(), {
         description: "True if the user can edit the map",
     }),
+    matrixServerUrl: extendApi(z.string().nullable().optional(), {
+        description: "The matrix server url for this user.",
+    }),
     /*matrixUserId: extendApi(z.string().nullable().optional(), {
         description:
             "The matrix user id of the user.", // Note: do we need this with OpenID Connect?

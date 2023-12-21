@@ -10,6 +10,7 @@
 # each option, go to docs/usage/configuration/config_documentation.md or
 # https://matrix-org.github.io/synapse/latest/usage/configuration/config_documentation.html
 server_name: "matrix.workadventure.localhost"
+public_baseurl: http://matrix.workadventure.localhost/
 pid_file: /data/homeserver.pid
 listeners:
   - port: 8008
@@ -39,6 +40,28 @@ jwt_config:
   secret: "${JWT_SECRET}"
   algorithm: "HS256"
   subject_claim: "matrixUserId"
+
+oidc_providers:
+  - idp_id: oidc-server-mock
+    idp_name: OIDC Server Mock
+    issuer: "http://oidc.workadventure.localhost"
+    skip_verification: true
+    client_id: "authorization-code-client-id"
+    client_secret: "authorization-code-client-secret"
+    scopes: ["openid", "email", "profile"]
+
+    user_profile_method: "userinfo_endpoint"
+    user_mapping_provider:
+      config:
+        localpart_template: "{{ user.email.split('@')[0] }}"
+        #localpart_template: "{{ user.preferred_username }}"
+        display_name_template: "{{ user.name }}"
+        email_template: "{{ user.email }}"
+
+sso:
+  client_whitelist:
+    - http://pusher.workadventure.localhost/
+    - http://play.workadventure.localhost/
 
 enable_registration: false
 enable_registration_without_verification: false

@@ -27,7 +27,7 @@ export class MatrixClient {
         (roomStore) => get(roomStore.room).roomId
     );
 
-    constructor(private authToken: string, public readonly homeServerUrl: string) {
+    constructor(public readonly homeServerUrl: string) {
         window.Olm = Olm;
         logger.setLevel(logger.levels.ERROR);
         this.indexedDBStore = new sdk.IndexedDBStore({
@@ -37,12 +37,34 @@ export class MatrixClient {
         });
     }
 
-    async login() {
+    async loginWithJwt(authToken: string) {
         const response = await axios.post(
             `${this.homeServerUrl}/_matrix/client/r0/login`,
             {
                 type: "org.matrix.login.jwt",
-                token: this.authToken,
+                token: authToken,
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        );
+        const data = await response.data;
+        if (data.errcode) {
+            throw new MatrixError(data.errcode, data.error);
+        }
+        this._userId = data.user_id;
+        this.accessToken = data.access_token;
+        this._deviceId = data.device_id;
+    }
+
+    async loginWithSso(loginToken: string) {
+        const response = await axios.post(
+            `${this.homeServerUrl}/_matrix/client/r0/login`,
+            {
+                type: "m.login.token",
+                token: loginToken,
             },
             {
                 headers: {

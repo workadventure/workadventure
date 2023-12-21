@@ -71,9 +71,14 @@ class IframeListener {
                                     iframeEvent.data.klaxoonToolClientId
                                 );
                                 if (iframeEvent.data.authToken) {
-                                console.log("IframeListener => init => authToken", iframeEvent.data.authToken);
-                                chatConnectionManager.authToken = iframeEvent.data.authToken;
-                                chatConnectionManager.start();
+                                    console.log("IframeListener => init => authToken", iframeEvent.data.authToken);
+                                    chatConnectionManager.authToken = iframeEvent.data.authToken;
+                                    chatConnectionManager.start();
+                                }
+                                if (iframeEvent.data.loginToken) {
+                                    console.log("IframeListener => init => loginToken", iframeEvent.data.loginToken);
+                                    chatConnectionManager.loginToken = iframeEvent.data.loginToken;
+                                    chatConnectionManager.start();
                                 }
                                 break;
                             }

@@ -20,6 +20,10 @@ const ignoreFollowRequests = "ignoreFollowRequests";
 const decreaseAudioPlayerVolumeWhileTalking = "decreaseAudioPlayerVolumeWhileTalking";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
+const matrixUserId = "matrixUserId";
+const matrixAccessToken = "matrixAccessToken";
+const matrixAccessTokenExpireDate = "matrixAccessTokenExpireDate";
+const matrixRefreshToken = "matrixRefreshToken";
 const notification = "notificationPermission";
 const chatSounds = "chatSounds";
 const preferredVideoInputDevice = "preferredVideoInputDevice";
@@ -224,6 +228,74 @@ class LocalUserStore {
 
     getAuthToken(): string | null {
         return localStorage.getItem(authToken);
+    }
+
+    getMatrixLoginToken(): string | null {
+        return localStorage.getItem(authToken);
+    }
+
+    setMatrixUserId(value: string | null) {
+        if (value !== null) {
+            localStorage.setItem(matrixUserId, value);
+        } else {
+            localStorage.removeItem(matrixUserId);
+        }
+    }
+
+    getMatrixUserId(): string | null {
+        return localStorage.getItem(matrixUserId);
+    }
+
+    setMatrixAccessToken(value: string | null) {
+        if (value !== null) {
+            localStorage.setItem(matrixAccessToken, value);
+        } else {
+            localStorage.removeItem(matrixAccessToken);
+        }
+    }
+
+    getMatrixAccessToken(): string | null {
+        return localStorage.getItem(matrixAccessToken);
+    }
+
+    setMatrixAccessTokenExpireDate(value: Date | null) {
+        if (value !== null) {
+            localStorage.setItem(matrixAccessTokenExpireDate, value.toString());
+        } else {
+            localStorage.removeItem(matrixAccessTokenExpireDate);
+        }
+    }
+
+    getMatrixAccessTokenExpireDate(): Date | null {
+        const value = localStorage.getItem(matrixAccessTokenExpireDate);
+        if (value === null) {
+            return null;
+        }
+        return new Date(value);
+    }
+
+    setMatrixRefreshToken(value: string | null) {
+        if (value !== null) {
+            localStorage.setItem(matrixRefreshToken, value);
+        } else {
+            localStorage.removeItem(matrixRefreshToken);
+        }
+    }
+
+    getMatrixRefreshToken(): string | null {
+        return localStorage.getItem(matrixRefreshToken);
+    }
+
+    setMatrixDeviceId(value: string | null) {
+        if (value !== null) {
+            localStorage.setItem("mx_device_id", value);
+        } else {
+            localStorage.removeItem("mx_device_id");
+        }
+    }
+
+    getMatrixDeviceId(): string | null {
+        return localStorage.getItem("mx_device_id");
     }
 
     isLogged(): boolean {

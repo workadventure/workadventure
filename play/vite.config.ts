@@ -47,6 +47,26 @@ export default defineConfig(({ mode }) => {
                 modernPolyfills: ["web.structured-clone"],
             }),
         ],
+        // Required for Matrix to work
+        optimizeDeps: {
+            include: ["olm"],
+            esbuildOptions: {
+                define: {
+                    global: "globalThis",
+                },
+                /*plugins: [
+                    // @ts-ignore-next-line
+                    NodeGlobalsPolyfillPlugin({process: false, buffer: true,})
+                ],*/
+            },
+        },
+        /*resolve: {
+            alias: [
+                { find: "events", replacement: "rollup-plugin-node-polyfills/polyfills/events" },
+                { find: "child_process", replacement: "rollup-plugin-node-polyfills" },
+                { find: "path", replacement: "rollup-plugin-node-polyfills/polyfills/path" },
+            ],
+        },*/
     };
 
     if (env.SENTRY_ORG && env.SENTRY_PROJECT && env.SENTRY_AUTH_TOKEN && env.SENTRY_RELEASE && env.SENTRY_ENVIRONMENT) {

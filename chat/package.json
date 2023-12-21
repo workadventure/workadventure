@@ -62,7 +62,7 @@
     "depcheck": "^1.4.3",
     "highlight-words": "^1.2.0",
     "marked": "^4.1.1",
-    "matrix-js-sdk": "git://github.com/matrix-org/matrix-js-sdk.git#develop",
+    "matrix-js-sdk": "^30.3.0",
     "olm": "https://packages.matrix.org/npm/olm/olm-3.2.1.tgz",
     "queue-typescript": "^1.0.1",
     "rxjs": "^6.6.3",

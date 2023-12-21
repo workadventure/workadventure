@@ -54,6 +54,10 @@ export const MeSuccessResponse = extendApi(
             description:
                 "The matrix user id of the user.", // Note: do we need this with OpenID Connect?
         }),
+        matrixServerUrl: extendApi(z.string().nullable().optional(), {
+            description:
+                "The matrix server url for this user.",
+        }),
         /*isMatrixRegistered: extendApi(z.boolean(), {
             description:
                 "???",

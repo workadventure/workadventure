@@ -280,7 +280,7 @@ export class FrontController extends BaseHttpController {
         }
 
         // get auth token from post /authToken
-        const { authToken } = await req.urlencoded();
+        const { authToken, matrixLoginToken } = await req.urlencoded();
 
         try {
             const metaTagsData = await builder.getMeta(req.header("User-Agent"));
@@ -300,6 +300,7 @@ export class FrontController extends BaseHttpController {
                 url,
                 script: await this.getScript(),
                 authToken: authToken,
+                matrixLoginToken: matrixLoginToken,
                 ...option,
             });
         } catch (e) {

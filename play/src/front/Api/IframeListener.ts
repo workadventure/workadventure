@@ -991,6 +991,7 @@ class IframeListener {
                     name,
                     playUri,
                     authToken: localUserStore.getAuthToken(),
+                    loginToken: localUserStore.getMatrixLoginToken(),
                     color: Color.getColorByString(name ?? ""),
                     woka: wokaSrc,
                     isLogged: localUserStore.isLogged(),

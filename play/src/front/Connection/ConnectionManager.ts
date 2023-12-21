@@ -20,6 +20,7 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../../i18n/i18n-util";
 import type { Locales } from "../../i18n/i18n-types";
 import { setCurrentLocale } from "../../i18n/locales";
+import { noMatrixServerUrl, setMatrixLoginToken, setMatrixServerUrl } from "../Matrix/MatrixConnectionManager";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -120,7 +121,9 @@ class ConnectionManager {
         // get token injected by post method from pusher
         if (token == undefined) {
             const input = HtmlUtils.getElementByIdOrFail<HTMLInputElement>("authToken");
-            if (input.value != undefined && input.value != "") token = input.value;
+            if (input.value != undefined && input.value != "") {
+                token = input.value;
+            }
         }
 
         if (token != undefined) {
@@ -129,6 +132,22 @@ class ConnectionManager {
 
             //clean token of url
             urlParams.delete("token");
+        }
+
+        let matrixLoginToken = urlParams.get("matrixLoginToken");
+        // get token injected by post method from pusher
+        if (matrixLoginToken == undefined) {
+            const input = HtmlUtils.getElementByIdOrFail<HTMLInputElement>("matrixLoginToken");
+            if (input.value != undefined && input.value != "") {
+                matrixLoginToken = input.value;
+            }
+        }
+
+        if (matrixLoginToken != undefined) {
+            setMatrixLoginToken(matrixLoginToken);
+
+            //clean token of url
+            urlParams.delete("matrixLoginToken");
         }
 
         if (this.connexionType === GameConnexionTypes.login) {
@@ -493,13 +512,27 @@ class ConnectionManager {
             return response;
         }
 
-        const { authToken, userUuid, email, username, locale, visitCardUrl, matrixUserId /*, isMatrixRegistered*/ } =
-            response;
+        const {
+            authToken,
+            userUuid,
+            email,
+            username,
+            locale,
+            visitCardUrl,
+            matrixUserId,
+            matrixServerUrl /*, isMatrixRegistered*/,
+        } = response;
 
         localUserStore.setAuthToken(authToken);
         this.localUser = new LocalUser(userUuid, email, matrixUserId /*, isMatrixRegistered*/);
         localUserStore.saveUser(this.localUser);
         this.authToken = authToken;
+
+        if (matrixServerUrl) {
+            setMatrixServerUrl(matrixServerUrl);
+        } else {
+            noMatrixServerUrl();
+        }
 
         if (visitCardUrl) {
             gameManager.setVisitCardUrl(visitCardUrl);

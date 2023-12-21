@@ -137,6 +137,7 @@ services:
             PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: "$PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH"
             # Matrix
             MATRIX_API_URI: http://synapse:8008/
+            MATRIX_PUBLIC_URI: http://$MATRIX_DOMAIN/
             MATRIX_DOMAIN: '$MATRIX_DOMAIN'
             MATRIX_ADMIN_USER: '$MATRIX_ADMIN_USER'
             MATRIX_ADMIN_PASSWORD: '$MATRIX_ADMIN_PASSWORD'
@@ -393,6 +394,10 @@ services:
                       {
                         "Type": "name",
                         "Value": "Sam Tailor"
+                      },
+                      {
+                        "Type": "preferred_username",
+                        "Value": "john.doe"
                       },
                       {
                         "Type": "email",

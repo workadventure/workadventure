@@ -81,6 +81,7 @@ export const LOGROCKET_ID: string | undefined = env.LOGROCKET_ID;
 
 // Matrix
 export const MATRIX_DOMAIN: string = env.MATRIX_DOMAIN || "";
+export const MATRIX_PUBLIC_URI: string | undefined = env.MATRIX_PUBLIC_URI;
 export const MATRIX_API_URI: string = env.MATRIX_API_URI || "";
 
 // Sentry integration

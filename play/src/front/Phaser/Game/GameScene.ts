@@ -171,6 +171,7 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+//import {getMatrixClient} from "../../Matrix/MatrixConnectionManager";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -597,6 +598,14 @@ export class GameScene extends DirtyScene {
 
     //hook create scene
     create(): void {
+        // RANDOM TEST FOR MATRIX:
+        /*const matrixClient = getMatrixClient().then(async (client) => {
+            const rooms = await client.getJoinedRooms();
+            console.warn("rooms", rooms);
+            console.warn("user id", client.getUserId());
+
+        }).catch((e) => console.error(e));*/
+
         this.input.topOnly = false;
         this.preloading = false;
         this.cleanupDone = false;

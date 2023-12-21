@@ -1,9 +1,7 @@
 import { KlaxoonService } from "@workadventure/shared-utils";
-import { Deferred } from "ts-deferred/index";
 import { get, writable, Writable } from "svelte/store";
 import Debug from "debug";
 import { MatrixClient as Matrix } from "matrix-js-sdk";
-import { XmppClient } from "../Xmpp/XmppClient";
 import { xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
 import { MatrixClient } from "../Matrix/MatrixClient";
 import { connectionEstablishedStore, enableChat } from "../Stores/ChatStore";
@@ -12,6 +10,8 @@ const debug = Debug("chat");
 
 class ChatConnectionManager {
     private _authToken?: string;
+    // A token that can be exchanged for a Matrix access token using the m.login.token endpoint.
+    private _loginToken?: string;
     private matrixClient?: MatrixClient;
     //private deferredXmppClient: Deferred<XmppClient>;
     public isConnected: Writable<boolean> = writable(false);
@@ -54,6 +54,10 @@ class ChatConnectionManager {
         this._authToken = value;
     }
 
+    set loginToken(value: string) {
+        this._loginToken = value;
+    }
+
     get connectionOrFail(): MatrixClient {
         if (!this.matrixClient) {
             throw new Error("No chat connection with Matrix server!");
@@ -78,12 +82,13 @@ class ChatConnectionManager {
 
     public start() {
         debug("chatConnectionManager => start");
+        // Old code
         if (this._authToken && !this.matrixClient) {
             debug("chatConnectionManager => start => all parameters are OK");
             if (get(enableChat)) {
-                this.matrixClient = new MatrixClient(this._authToken, "http://matrix.workadventure.localhost");
+                this.matrixClient = new MatrixClient("http://matrix.workadventure.localhost");
                 this.matrixClient
-                    .login()
+                    .loginWithJwt(this._authToken)
                     .then(async () => {
                         await this.matrixClient?.start();
                         this.isConnected.set(true);
@@ -99,6 +104,29 @@ class ChatConnectionManager {
             }
             connectionEstablishedStore.set(true);
         }
+        // New code
+        if (this._loginToken && !this.matrixClient) {
+            debug("chatConnectionManager => start => all parameters are OK");
+            if (get(enableChat)) {
+                this.matrixClient = new MatrixClient("http://matrix.workadventure.localhost");
+                this.matrixClient
+                    .loginWithSso(this._loginToken)
+                    .then(async () => {
+                        await this.matrixClient?.start();
+                        this.isConnected.set(true);
+                        //this.deferredXmppClient.resolve(this.xmppClient);
+                    })
+                    .catch((e) => {
+                        //this.deferredXmppClient.reject(e);
+                        console.error("ChatConnectionManager => start", e);
+                    });
+            } else {
+                //this.deferredXmppClient.reject("Chat is disabled");
+                xmppServerConnectionStatusStore.set(true);
+            }
+            connectionEstablishedStore.set(true);
+        }
+
     }
 
     get isClosed(): boolean {
