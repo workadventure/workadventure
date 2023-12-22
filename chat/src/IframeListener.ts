@@ -59,7 +59,7 @@ class IframeListener {
                             }
                             case "userData": {
                                 iframeEvent.data.name = iframeEvent.data.name.replace(emojiRegex, "");
-                                console.log(iframeEvent.data);
+                                //console.log(iframeEvent.data);
                                 userStore.set(iframeEvent.data);
                                 chatConnectionManager.initUser(
                                     iframeEvent.data.klaxoonToolActivated,

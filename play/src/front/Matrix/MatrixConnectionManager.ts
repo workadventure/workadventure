@@ -1,9 +1,24 @@
-import { IndexedDBStore, MatrixClient, createClient } from "matrix-js-sdk";
+import { ClientEvent, createClient, IndexedDBStore, MatrixClient } from "matrix-js-sdk";
 import { logger } from "matrix-js-sdk/src/logger";
 import { Deferred } from "ts-deferred";
+import { failure, Result, success } from "@workadventure/map-editor";
 import { localUserStore } from "../Connection/LocalUserStore";
 
-const matrixClient = new Deferred<MatrixClient>();
+type MatrixClientResult = Result<
+    MatrixClient,
+    | {
+          type: "no-matrix-server";
+      }
+    | {
+          type: "no-matrix-credentials";
+      }
+    | {
+          type: "error";
+          error: Error;
+      }
+>;
+
+const matrixClient = new Deferred<MatrixClientResult>();
 let matrixLoginToken: string | undefined;
 
 const indexedDBStore = new IndexedDBStore({
@@ -27,6 +42,7 @@ export function setMatrixServerUrl(url: string): void {
 
 async function instantiateMatrixClient(url: string): Promise<void> {
     logger.setLevel(logger.levels.ERROR);
+    //window.Olm = Olm;
     await indexedDBStore.startup();
 
     // First step, let's ensure we have a device ID. If not, let's create one and store it.
@@ -42,7 +58,11 @@ async function instantiateMatrixClient(url: string): Promise<void> {
 
     if (accessToken === null && refreshToken === null && matrixLoginToken === undefined) {
         // No access token, no refresh token, no login token. We can't connect.
-        matrixClient.reject(new Error("No Matrix credentials available"));
+        matrixClient.resolve(
+            failure({
+                type: "no-matrix-credentials",
+            })
+        );
         return;
     }
 
@@ -57,7 +77,12 @@ async function instantiateMatrixClient(url: string): Promise<void> {
     }
 
     if (!accessToken) {
-        matrixClient.reject(new Error("No access token"));
+        matrixClient.resolve(
+            failure({
+                type: "error",
+                error: new Error("No access token"),
+            })
+        );
         return;
     }
 
@@ -112,11 +137,39 @@ async function instantiateMatrixClient(url: string): Promise<void> {
         },
     });
 
-    matrixClient.resolve(client);
+    //await client.initCrypto();
+    await client.initRustCrypto();
+    await client.startClient();
+
+    let prepared = false;
+
+    client.on(ClientEvent.Sync, (state, prevState, res) => {
+        if (state === "PREPARED") {
+            prepared = true;
+            matrixClient.resolve(success(client));
+        } else if (state === "ERROR") {
+            if (!prepared) {
+                // The error occurs before the client is prepared. There is an initial sync issue, let's trigger an error.
+                console.error("Initial sync error with Matrix server", res);
+                matrixClient.resolve(
+                    failure({
+                        type: "error",
+                        error: new Error("Initial sync error"),
+                    })
+                );
+            } else {
+                console.error("Sync error with Matrix", res);
+            }
+        }
+    });
 }
 
 export function noMatrixServerUrl(): void {
-    matrixClient.reject(new Error("No Matrix server URL available"));
+    matrixClient.resolve(
+        failure({
+            type: "no-matrix-server",
+        })
+    );
 }
 
 /**
@@ -149,13 +202,18 @@ async function connectViaLoginToken(
         expireDate.setMilliseconds(expireDate.getMilliseconds() + response.expires_in_ms);
         localUserStore.setMatrixAccessTokenExpireDate(expireDate);
     }
+
+    // Note: we ignore the device ID returned by the server. We use the one we generated.
+    // This will be required in the future when we switch to a Native OpenID Matrix client.
+
     if (response.device_id !== deviceId) {
         // In case where the server would return a different device ID than the one we sent, we store it. (this happens!)
-        localUserStore.setMatrixDeviceId(response.device_id);
+        //localUserStore.setMatrixDeviceId(response.device_id);
     }
     return {
         userId: response.user_id,
-        deviceId: response.device_id,
+        //deviceId: response.device_id,
+        deviceId: deviceId,
         accessToken: response.access_token,
         refreshToken: response.refresh_token,
     };
@@ -179,9 +237,9 @@ function generateDeviceId(): string {
 }
 
 /**
- * Returns a promise that resolves to a MatrixClient instance.
+ * Returns a promise that resolves to a MatrixClientResult instance.
  * This promise will resolve only when a Matrix server URL is returned by the "me" endpoint.
  */
-export async function getMatrixClient(): Promise<MatrixClient> {
+export async function getMatrixClient(): Promise<MatrixClientResult> {
     return matrixClient.promise;
 }

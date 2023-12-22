@@ -17,7 +17,7 @@ import {
 } from "@workadventure/messages";
 import { z } from "zod";
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
-import { GameMap, GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
+import { GameMap, GameMapProperties, isSuccess, WAMFileFormat } from "@workadventure/map-editor";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
@@ -134,6 +134,7 @@ import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectC
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
+import { getMatrixClient } from "../../Matrix/MatrixConnectionManager";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -171,7 +172,6 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
-//import {getMatrixClient} from "../../Matrix/MatrixConnectionManager";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -599,12 +599,24 @@ export class GameScene extends DirtyScene {
     //hook create scene
     create(): void {
         // RANDOM TEST FOR MATRIX:
-        /*const matrixClient = getMatrixClient().then(async (client) => {
-            const rooms = await client.getJoinedRooms();
-            console.warn("rooms", rooms);
-            console.warn("user id", client.getUserId());
-
-        }).catch((e) => console.error(e));*/
+        /*const matrixClient =*/ getMatrixClient()
+            .then(async (clientResult) => {
+                if (isSuccess(clientResult)) {
+                    const client = clientResult.value;
+                    const rooms = await client.getJoinedRooms();
+                    console.warn("rooms", rooms);
+                    console.warn("user id", client.getUserId());
+                } else {
+                    if (clientResult.error.type === "no-matrix-credentials") {
+                        console.warn("no matrix credentials");
+                    } else if (clientResult.error.type === "no-matrix-server") {
+                        console.warn("NO MATRIX SERVER CONFIGURED");
+                    } else {
+                        console.error("matrix error", clientResult.error.error);
+                    }
+                }
+            })
+            .catch((e) => console.error(e));
 
         this.input.topOnly = false;
         this.preloading = false;

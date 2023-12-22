@@ -504,11 +504,16 @@ class ConnectionManager {
             })
             .then((res) => {
                 return res.data;
+            })
+            .catch((err) => {
+                noMatrixServerUrl();
+                throw err;
             });
 
         const response = MeResponse.parse(data);
 
         if (response.status === "error") {
+            noMatrixServerUrl();
             return response;
         }
 
