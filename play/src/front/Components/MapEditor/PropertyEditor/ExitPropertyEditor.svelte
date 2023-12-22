@@ -107,7 +107,7 @@
                     on:blur={onValueChange}
                 >
                     {#each startAreas as areaName (areaName)}
-                        <option value={areaName}>{areaName}</option>
+                        <option value={areaName} selected={areaName === property.areaName}>{areaName}</option>
                     {/each}
                     {#if startAreas.length === 0}
                         <option value={""} selected>No start area found</option>
