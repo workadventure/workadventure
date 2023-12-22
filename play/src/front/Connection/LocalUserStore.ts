@@ -24,6 +24,7 @@ const matrixUserId = "matrixUserId";
 const matrixAccessToken = "matrixAccessToken";
 const matrixAccessTokenExpireDate = "matrixAccessTokenExpireDate";
 const matrixRefreshToken = "matrixRefreshToken";
+const matrixDeviceId = "matrixDeviceId";
 const notification = "notificationPermission";
 const chatSounds = "chatSounds";
 const preferredVideoInputDevice = "preferredVideoInputDevice";
@@ -286,16 +287,16 @@ class LocalUserStore {
         return localStorage.getItem(matrixRefreshToken);
     }
 
-    setMatrixDeviceId(value: string | null) {
+    setMatrixDeviceId(value: string | null, userUuid: string) {
         if (value !== null) {
-            localStorage.setItem("mx_device_id", value);
+            localStorage.setItem(matrixDeviceId + "_" + userUuid, value);
         } else {
-            localStorage.removeItem("mx_device_id");
+            localStorage.removeItem(matrixDeviceId + "_" + userUuid);
         }
     }
 
-    getMatrixDeviceId(): string | null {
-        return localStorage.getItem("mx_device_id");
+    getMatrixDeviceId(userUuid: string): string | null {
+        return localStorage.getItem(matrixDeviceId + "_" + userUuid);
     }
 
     isLogged(): boolean {

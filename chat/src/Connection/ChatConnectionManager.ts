@@ -81,6 +81,8 @@ class ChatConnectionManager {
     }
 
     public start() {
+        // DISABLE EVERYTHING!
+        return;
         debug("chatConnectionManager => start");
         // Old code
         if (this._authToken && !this.matrixClient) {
@@ -126,7 +128,6 @@ class ChatConnectionManager {
             }
             connectionEstablishedStore.set(true);
         }
-
     }
 
     get isClosed(): boolean {

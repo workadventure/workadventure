@@ -72,6 +72,33 @@ services:
                 "Value": "Sam's Identity Resource Custom Claim"
               }
             ]
+          },
+          {
+            "SubjectId":"2",
+            "Username":"User2",
+            "Password":"pwd",
+            "Claims": [
+              {
+                "Type": "name",
+                "Value": "Jane Doe"
+              },
+              {
+                "Type": "email",
+                "Value": "jane.doe@example.com"
+              },
+              {
+                "Type": "some-api-resource-claim",
+                "Value": "Sam's Api Resource Custom Claim"
+              },
+              {
+                "Type": "some-api-scope-claim",
+                "Value": "Sam's Api Scope Custom Claim"
+              },
+              {
+                "Type": "some-identity-resource-claim",
+                "Value": "Sam's Identity Resource Custom Claim"
+              }
+            ]
           }
         ]
       CLIENTS_CONFIGURATION_PATH: /tmp/config/clients-config.json

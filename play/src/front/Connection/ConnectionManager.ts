@@ -20,7 +20,7 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../../i18n/i18n-util";
 import type { Locales } from "../../i18n/i18n-types";
 import { setCurrentLocale } from "../../i18n/locales";
-import { noMatrixServerUrl, setMatrixLoginToken, setMatrixServerUrl } from "../Matrix/MatrixConnectionManager";
+import { noMatrixServerUrl, setMatrixLoginToken, setMatrixServerDetails } from "../Matrix/MatrixConnectionManager";
 import { axiosToPusher, axiosWithRetry } from "./AxiosUtils";
 import { Room } from "./Room";
 import { LocalUser } from "./LocalUser";
@@ -534,7 +534,7 @@ class ConnectionManager {
         this.authToken = authToken;
 
         if (matrixServerUrl) {
-            setMatrixServerUrl(matrixServerUrl);
+            setMatrixServerDetails(matrixServerUrl);
         } else {
             noMatrixServerUrl();
         }

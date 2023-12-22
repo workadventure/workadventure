@@ -193,6 +193,10 @@ export class FrontController extends BaseHttpController {
             return;
         });
 
+        this.app.get("/olm.wasm", (req: Request, res: Response) => {
+            res.file("../node_modules/@matrix-org/olm/olm.wasm");
+        });
+
         this.app.get("/*", (req: Request, res: Response) => {
             if (req.path.startsWith("/src") || req.path.startsWith("/node_modules") || req.path.startsWith("/@fs/")) {
                 // TODO check how this is used and if it is still needed for MacOs (it is not used in the current version)

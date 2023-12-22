@@ -606,6 +606,14 @@ export class GameScene extends DirtyScene {
                     const rooms = await client.getJoinedRooms();
                     console.warn("rooms", rooms);
                     console.warn("user id", client.getUserId());
+
+                    client.on("Room.timeline", (event, room, toStartOfTimeline, removed, data) => {
+                        console.warn("Room.timeline", event, room, toStartOfTimeline, removed, data);
+                    });
+
+                    client.on("RoomState.events", (event, state) => {
+                        console.warn("RoomState.events", event, state);
+                    });
                 } else {
                     if (clientResult.error.type === "no-matrix-credentials") {
                         console.warn("no matrix credentials");

@@ -1,7 +1,8 @@
-import { ClientEvent, createClient, IndexedDBStore, MatrixClient } from "matrix-js-sdk";
+import { ClientEvent, createClient, IndexedDBCryptoStore, IndexedDBStore, MatrixClient } from "matrix-js-sdk";
 import { logger } from "matrix-js-sdk/src/logger";
 import { Deferred } from "ts-deferred";
 import { failure, Result, success } from "@workadventure/map-editor";
+import Olm from "olm";
 import { localUserStore } from "../Connection/LocalUserStore";
 
 type MatrixClientResult = Result<
@@ -21,12 +22,6 @@ type MatrixClientResult = Result<
 const matrixClient = new Deferred<MatrixClientResult>();
 let matrixLoginToken: string | undefined;
 
-const indexedDBStore = new IndexedDBStore({
-    indexedDB: globalThis.indexedDB,
-    localStorage: globalThis.localStorage,
-    dbName: "workadventure-matrix",
-});
-
 /**
  * Must be called BEFORE setMatrixServerUrl
  */
@@ -34,22 +29,25 @@ export function setMatrixLoginToken(_matrixLoginToken: string) {
     matrixLoginToken = _matrixLoginToken;
 }
 
-export function setMatrixServerUrl(url: string): void {
-    instantiateMatrixClient(url).catch((err) => {
+/**
+ * Sets the Matrix server URL. This initializes the Matrix client.
+ * We also pass the userUuid so that we can store the device ID in the local storage.
+ */
+export function setMatrixServerDetails(url: string, userUuid: string): void {
+    instantiateMatrixClient(url, userUuid).catch((err) => {
         matrixClient.reject(err);
     });
 }
 
-async function instantiateMatrixClient(url: string): Promise<void> {
+async function instantiateMatrixClient(url: string, userUuid: string): Promise<void> {
     logger.setLevel(logger.levels.ERROR);
-    //window.Olm = Olm;
-    await indexedDBStore.startup();
+    window.Olm = Olm;
 
     // First step, let's ensure we have a device ID. If not, let's create one and store it.
-    let deviceId = localUserStore.getMatrixDeviceId();
+    let deviceId = localUserStore.getMatrixDeviceId(userUuid);
     if (deviceId === null) {
         deviceId = generateDeviceId();
-        localUserStore.setMatrixDeviceId(deviceId);
+        localUserStore.setMatrixDeviceId(deviceId, userUuid);
     }
 
     let accessToken = localUserStore.getMatrixAccessToken();
@@ -73,7 +71,6 @@ async function instantiateMatrixClient(url: string): Promise<void> {
         accessToken = response.accessToken;
         refreshToken = response.refreshToken ?? null;
         userId = response.userId;
-        deviceId = response.deviceId;
     }
 
     if (!accessToken) {
@@ -112,6 +109,12 @@ async function instantiateMatrixClient(url: string): Promise<void> {
         localUserStore.setMatrixAccessTokenExpireDate(expireDate);
     }*/
 
+    const indexedDBStore = new IndexedDBStore({
+        indexedDB: globalThis.indexedDB,
+        localStorage: globalThis.localStorage,
+        dbName: "workadventure-matrix",
+    });
+
     // Now, let's instantiate the Matrix client.
     const client = createClient({
         baseUrl: url,
@@ -135,8 +138,14 @@ async function instantiateMatrixClient(url: string): Promise<void> {
                 refreshToken: refreshToken ?? undefined,
             };
         },
+        store: indexedDBStore,
+        cryptoStore: new IndexedDBCryptoStore(
+            globalThis.indexedDB,
+            "crypto-store-" + url + "-" + userId + "-" + deviceId
+        ),
     });
 
+    await indexedDBStore.startup();
     //await client.initCrypto();
     await client.initRustCrypto();
     await client.startClient();
@@ -183,15 +192,18 @@ async function connectViaLoginToken(
 ): Promise<{
     userId: string;
     accessToken: string;
-    deviceId: string;
     refreshToken: string | undefined;
 }> {
     const client = createClient({
         baseUrl: matrixServerUrl,
-        deviceId,
     });
 
-    const response = await client.loginWithToken(loginToken);
+    //const response = await client.loginWithToken(loginToken);
+    const response = await client.login("m.login.token", {
+        token: loginToken,
+        device_id: deviceId,
+        initial_device_display_name: "WorkAdventure",
+    });
 
     localUserStore.setMatrixUserId(response.user_id);
     localUserStore.setMatrixAccessToken(response.access_token);
@@ -206,14 +218,8 @@ async function connectViaLoginToken(
     // Note: we ignore the device ID returned by the server. We use the one we generated.
     // This will be required in the future when we switch to a Native OpenID Matrix client.
 
-    if (response.device_id !== deviceId) {
-        // In case where the server would return a different device ID than the one we sent, we store it. (this happens!)
-        //localUserStore.setMatrixDeviceId(response.device_id);
-    }
     return {
         userId: response.user_id,
-        //deviceId: response.device_id,
-        deviceId: deviceId,
         accessToken: response.access_token,
         refreshToken: response.refresh_token,
     };
