@@ -153,6 +153,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         editInstructions: "Klikńće na płoninu, zo byšće jeje kajkosće změnili.",
         nameLabel: "mjeno",
     },
+    areaEditorInstructions: {
+        title: "Kako deluje?",
+        description: "Če želite ustvariti novo območje, ga narišite na zemljevidu.",
+    },
     entityEditor: {
         itemPicker: {
             searchPlaceholder: "slědźić",

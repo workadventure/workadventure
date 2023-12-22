@@ -181,6 +181,7 @@ export class AreaEditorTool extends MapEditorTool {
                         this.scene.input.setDefaultCursor("crosshair");
                     })
                     .catch((e) => console.error(e));
+                this.changeAreaMode("ADD");
                 break;
             }
             default: {

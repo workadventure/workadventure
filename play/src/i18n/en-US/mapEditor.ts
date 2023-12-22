@@ -162,6 +162,10 @@ const mapEditor: BaseTranslation = {
         editInstructions: "Click an area to modify its properties.",
         nameLabel: "Name",
     },
+    areaEditorInstructions: {
+        title: "How it works ?",
+        description: "Draw a zone on the map to create a new one.",
+    },
     entityEditor: {
         itemPicker: {
             searchPlaceholder: "Search",
