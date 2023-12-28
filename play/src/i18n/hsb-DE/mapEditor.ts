@@ -82,13 +82,13 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "Rozšěrjene opcije",
         speakerMegaphoneProperties: {
-            label: "Rěčenska cona za megafon",
+            label: "Rěčenska cona",
             description: "",
             nameLabel: "Mjeno rěčenskeje cony",
             namePlaceholder: "MySpeakerZone",
         },
         listenerMegaphoneProperties: {
-            label: "Słucharska cona za megafon",
+            label: "Słucharska cona",
             description: "",
             nameLabel: "Mjeno słucharskeje cony",
             namePlaceholder: "MyListenerZone",
