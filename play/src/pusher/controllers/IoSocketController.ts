@@ -868,7 +868,6 @@ export class IoSocketController {
                             break;
                         }
                         case "kickOffUserMessage": {
-                            console.log("kickOffUserMessage", message.message.kickOffUserMessage);
                             socketManager.handleSpaceMessage(
                                 socket,
                                 message.message.kickOffUserMessage.spaceName,
