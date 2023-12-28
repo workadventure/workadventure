@@ -859,11 +859,22 @@ export class IoSocketController {
                         case "lockGroupPromptMessage":
                         case "pingMessage":
                         case "editMapCommandMessage":
-                        case "askPositionMessage": 
-                        case "kickOffUserMessage":
+                        case "askPositionMessage":
                         case "muteParticipantIdSpaceMessage":
-                        case "muteEveryBodySpaceMessage": {
+                        case "muteEveryBodySpaceMessage":
+                        case "muteVideoParticipantIdSpaceMessage":
+                        case "muteVideoEveryBodySpaceMessage": {
                             socketManager.forwardMessageToBack(socket, message.message);
+                            break;
+                        }
+                        case "kickOffUserMessage": {
+                            console.log("kickOffUserMessage", message.message.kickOffUserMessage);
+                            socketManager.handleSpaceMessage(
+                                socket,
+                                message.message.kickOffUserMessage.spaceName,
+                                message.message.kickOffUserMessage.userId,
+                                message.message
+                            );
                             break;
                         }
                         default: {

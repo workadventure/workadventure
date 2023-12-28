@@ -447,17 +447,26 @@ export class Space implements CustomJsonReplacerInterface {
         return undefined;
     }
 
-    public notifyUserToKick(user: SpaceUser) {
-        const kickUserMessage: PusherToBackSpaceMessage = {
+    public kickOffUser(userId: string) {
+        const subMessage: SubMessage = {
             message: {
-                $case: "kickUserMessage",
-                kickUserMessage: {
+                $case: "kickOffSpaceUserMessage",
+                kickOffSpaceUserMessage: {
                     spaceName: this.name,
-                    user,
+                    userId,
                     filterName: undefined,
                 },
             },
         };
-        this.spaceStreamToPusher.write(kickUserMessage);
+        this.notifyAllUsers(subMessage);
+    }
+
+    // Notify all users in this space
+    private notifyAllUsers(subMessage: SubMessage) {
+        this.clientWatchers.forEach((watcher) => {
+            const socketData = watcher.getUserData();
+            debug(`${this.name} : kickOff sent to ${socketData.name}`);
+            socketData.emitInBatch(subMessage);
+        });
     }
 }

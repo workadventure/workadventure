@@ -76,6 +76,10 @@ import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/
 import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
 import { currentLiveStreamingNameStore } from "../Stores/MegaphoneStore";
 import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
+import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
+import { notificationPlayingStore } from "../Stores/NotificationStore";
+import LL from "../../i18n/i18n-svelte";
+import { chatZoneLiveStore } from "../Stores/ChatStore";
 import { localUserStore } from "./LocalUserStore";
 import { connectionManager } from "./ConnectionManager";
 import { adminMessagesService } from "./AdminMessagesService";
@@ -89,9 +93,6 @@ import type {
     ViewportInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
-import { requestedMicrophoneState } from "../Stores/MediaStore";
-import { notificationPlayingStore } from "../Stores/NotificationStore";
-import LL from "../../i18n/i18n-svelte";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -412,6 +413,17 @@ export class RoomConnection implements RoomConnection {
                                 });
                                 break;
                             }
+                            case "kickOffSpaceUserMessage": {
+                                if (subMessage.kickOffSpaceUserMessage.userId !== this.userId?.toString()) break;
+
+                                isSpeakerStore.set(false);
+                                currentLiveStreamingNameStore.set(undefined);
+                                const scene = gameManager.getCurrentGameScene();
+                                scene.broadcastService.leaveSpace(subMessage.kickOffSpaceUserMessage.spaceName);
+                                iframeListener.sendLeaveMucEventToChatIframe(`${scene.roomUrl}/${slugify(name)}`);
+                                chatZoneLiveStore.set(false);
+                                break;
+                            }
                             default: {
                                 // Security check: if we forget a "case", the line below will catch the error at compile-time.
                                 //@ts-ignore
@@ -662,8 +674,16 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "mutedMessage": {
-                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteMicrophone(), 'audio-mute.svg');
+                    notificationPlayingStore.playNotification(
+                        get(LL).notification.askToMuteMicrophone(),
+                        "audio-mute.svg"
+                    );
                     requestedMicrophoneState.disableMicrophone();
+                    break;
+                }
+                case "mutedVideoMessage": {
+                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
+                    requestedCameraState.disableWebcam();
                     break;
                 }
                 default: {
@@ -954,6 +974,7 @@ export class RoomConnection implements RoomConnection {
         this._updateSpaceMetadataMessageStream.complete();
         this._megaphoneSettingsMessageStream.complete();
         this._receivedEventMessageStream.complete();
+        this._updateSpaceMetadataMessageStream.complete();
     }
 
     public getUserId(): number {
@@ -1613,7 +1634,6 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMuteEveryBodySpace(spaceName: string) {
-        console.log('RoomConnection => emitMuteEveryBodySpace');
         this.send({
             message: {
                 $case: "muteEveryBodySpaceMessage",
@@ -1624,12 +1644,36 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitKickOffUserMessage(userId: string): void {
+    public emitMuteVideoParticipantIdSpace(spaceName: string, participantId: string) {
+        this.send({
+            message: {
+                $case: "muteVideoParticipantIdSpaceMessage",
+                muteVideoParticipantIdSpaceMessage: {
+                    spaceName,
+                    value: participantId,
+                },
+            },
+        });
+    }
+
+    public emitMuteVideoEveryBodySpace(spaceName: string) {
+        this.send({
+            message: {
+                $case: "muteVideoEveryBodySpaceMessage",
+                muteVideoEveryBodySpaceMessage: {
+                    spaceName,
+                },
+            },
+        });
+    }
+
+    public emitKickOffUserMessage(userId: string, spaceName: string): void {
         this.send({
             message: {
                 $case: "kickOffUserMessage",
                 kickOffUserMessage: {
                     userId,
+                    spaceName,
                 },
             },
         });

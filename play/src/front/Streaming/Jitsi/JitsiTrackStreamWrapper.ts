@@ -2,7 +2,6 @@ import { get, Readable, writable, Writable } from "svelte/store";
 import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import { TackStreamWrapperInterface } from "../Contract/TackStreamWrapperInterface";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
-import { jitsiConferencesStore } from "./JitsiConferencesStore";
 /**
  * An object that wraps a JitsiTrackWrapper and points only to "video/audio" or "desktop" track
  */
@@ -54,30 +53,23 @@ export class JitsiTrackStreamWrapper implements TackStreamWrapperInterface {
         return this.jitsiTrackWrapper.isLocal;
     }
 
-    public muteAudio(): void {
-        this.jitsiTrackWrapper.muteAudio();
+    public muteAudioParticipant(): void {
+        console.info("Not implemented yet!");
     }
 
     public muteAudioEveryBody(): void {
         console.info("Not implemented yet!");
     }
 
-    public muteVideo(): void {
-        this.jitsiTrackWrapper.muteVideo();
+    public muteVideoParticipant(): void {
+        console.info("Not implemented yet!");
     }
 
     public muteVideoEverybody(): void {
         console.info("Not implemented yet!");
     }
 
-    public ban(): void {
-        console.info("Not implemented yet!");
-        jitsiConferencesStore
-            .get(this.jitsiTrackWrapper.jitsiRoomName)
-            ?.kickParticipant(this.jitsiTrackWrapper.participantId);
-    }
-
-    public kickoff(): void{
-        console.info("Not implemented yet!");
+    public kickoff(): void {
+        this.jitsiTrackWrapper.kickoff();
     }
 }

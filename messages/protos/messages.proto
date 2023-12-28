@@ -124,6 +124,7 @@ message LockGroupPromptMessage {
 
 message KickOffUserMessage {
   string userId = 1;
+  string spaceName = 2;
 }
 
 /*********** MAP EDITOR MESSAGES *************/
@@ -255,6 +256,8 @@ message ClientToServerMessage {
     KickOffUserMessage kickOffUserMessage = 36;
     MuteParticipantIdSpaceMessage muteParticipantIdSpaceMessage = 37;
     MuteEveryBodySpaceMessage muteEveryBodySpaceMessage = 38;
+    MuteVideoParticipantIdSpaceMessage muteVideoParticipantIdSpaceMessage = 39;
+    MuteVideoEveryBodySpaceMessage muteVideoEveryBodySpaceMessage = 40;
   }
 }
 
@@ -436,7 +439,7 @@ message SubMessage {
     MegaphoneSettings megaphoneSettingsMessage = 19;
     ReceivedEventMessage receivedEventMessage = 20;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 21;
-    KickUserMessage kickUserMessage = 22;
+    KickOffSpaceUserMessage kickOffSpaceUserMessage = 22;
   }
 }
 
@@ -644,6 +647,20 @@ message MutedMessage {
   string message = 2;
 }
 
+message MuteVideoParticipantIdSpaceMessage {
+  string spaceName = 1;
+  string value = 2;
+}
+
+message MuteVideoEveryBodySpaceMessage {
+  string spaceName = 1;
+}
+
+message MutedVideoMessage {
+  string userUuid = 1;
+  string message = 2;
+}
+
 /**
  * Messages going from back and pusher to the front
  */
@@ -677,6 +694,7 @@ message ServerToClientMessage {
     MoveToPositionMessage moveToPositionMessage = 31;
     InvalidCompanionTextureMessage invalidCompanionTextureMessage = 32;
     MutedMessage mutedMessage = 33;
+    MutedVideoMessage mutedVideoMessage = 34;
   }
 }
 
@@ -780,6 +798,8 @@ message PusherToBackMessage {
     KickOffUserMessage kickOffUserMessage = 25;
     MuteParticipantIdSpaceMessage muteParticipantIdSpaceMessage = 26;
     MuteEveryBodySpaceMessage muteEveryBodySpaceMessage = 27;
+    MuteVideoParticipantIdSpaceMessage muteVideoParticipantIdSpaceMessage = 28;
+    MuteVideoEveryBodySpaceMessage muteVideoEveryBodySpaceMessage = 29;
   }
 }
 
@@ -978,7 +998,7 @@ message PusherToBackSpaceMessage{
     RemoveSpaceUserMessage removeSpaceUserMessage = 5;
     PingMessage pongMessage = 6;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 7;
-    KickUserMessage kickUserMessage = 8;
+    KickOffSpaceUserMessage kickOffSpaceUserMessage = 8;
   }
 }
 
@@ -989,7 +1009,7 @@ message BackToPusherSpaceMessage{
     RemoveSpaceUserMessage removeSpaceUserMessage = 3;
     PingMessage pingMessage = 4;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 5;
-    KickUserMessage kickUserMessage = 6;
+    KickOffSpaceUserMessage kickOffSpaceUserMessage = 6;
   }
 }
 
@@ -1061,13 +1081,11 @@ message UpdateSpaceMetadataMessage{
   string metadata = 2;
   google.protobuf.StringValue filterName = 3;
 }
-message KickUserMessage{
+message KickOffSpaceUserMessage{
   string spaceName = 1;
-  SpaceUser user = 2;
+  string userId = 2;
   google.protobuf.StringValue filterName = 3;
 }
-
-
 
 /** Filter **/
 message AddSpaceFilterMessage{

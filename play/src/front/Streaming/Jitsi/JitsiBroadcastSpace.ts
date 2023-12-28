@@ -167,18 +167,6 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         this.roomConnection.emitJitsiParticipantIdSpace(spaceName, participantId);
     }
 
-    emtKickParticipantIdSpace(participantId: string): void {
-        this.roomConnection.emitKickOffUserMessage(participantId);
-    }
-
-    emitKickParticipantIdSpace(spaceName: string, participantId: string): void {
-        this.roomConnection.emitMuteParticipantIdSpace(spaceName, participantId);
-    }
-
-    emitMuteAudioEveryBody(spaceName: string): void {
-        this.roomConnection.emitMuteEveryBodySpace(spaceName);
-    }
-
     destroy() {
         limit(() => this.conference?.leave("I want to leave this space ..."))
             .then(() => {

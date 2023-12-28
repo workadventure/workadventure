@@ -1,11 +1,11 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { onMount } from "svelte";
     import { GameScene } from "../../Phaser/Game/GameScene";
 
-    let gameScene: GameScene|undefined;
+    let gameScene: GameScene | undefined;
 
     function name(userId: number): string {
         const user = gameScene?.MapPlayersByKey.get(userId);

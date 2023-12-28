@@ -45,8 +45,7 @@ import {
     RemoveSpaceUserMessage,
     SendEventQuery,
     UpdateSpaceMetadataMessage,
-    KickUserMessage,
-    MutedMessage,
+    KickOffSpaceUserMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -1463,15 +1462,15 @@ export class SocketManager {
         }
     }
 
-    handleKickUserMessage(pusher: SpacesWatcher, kickUserMessage: KickUserMessage) {
+    handleKickUserMessage(pusher: SpacesWatcher, kickUserMessage: KickOffSpaceUserMessage) {
         const space = this.spaces.get(kickUserMessage.spaceName);
-        if (!space && !kickUserMessage.user) return;
+        if (!space) return;
         pusher.write({
             message: {
-                $case: "kickUserMessage",
-                kickUserMessage: {
+                $case: "kickOffSpaceUserMessage",
+                kickOffSpaceUserMessage: {
                     spaceName: kickUserMessage.spaceName,
-                    user: kickUserMessage.user,
+                    userId: kickUserMessage.userId,
                     filterName: kickUserMessage.filterName,
                 },
             },
@@ -1524,50 +1523,95 @@ export class SocketManager {
             return;
         }
         const usersKiked = group.getUsers().filter((user) => user.uuid === userKickedUuid);
-        if(usersKiked.length === 0) return;
-        for(const userKiked of usersKiked){
+        if (usersKiked.length === 0) return;
+        for (const userKiked of usersKiked) {
             group.leave(userKiked);
         }
         // TODO fixme to notify only user kiked
         group.setOutOfBounds(true);
     }
 
-    handerMuteParticipantIdSpaceMessage(user: User, userMutedUuid: string){
+    handerMuteParticipantIdSpaceMessage(user: User, userMutedUuid: string) {
         const group = user.group;
         if (!group) {
             return;
         }
         const usersMuted = group.getUsers().filter((user) => user.uuid === userMutedUuid);
-        for(const userMuted of usersMuted){
+        for (const userMuted of usersMuted) {
             // send mute event
             const serverToClientMessage: ServerToClientMessage = {
                 message: {
                     $case: "mutedMessage",
                     mutedMessage: {
-                        userUuid: user.uuid, 
-                        message: "muted"
-                    }
-                }
+                        userUuid: user.uuid,
+                        message: "muted",
+                    },
+                },
             };
             userMuted.socket.write(serverToClientMessage);
         }
     }
 
-    handlerMuteEveryBodySpaceMessage(user: User){
+    handlerMuteEveryBodySpaceMessage(user: User) {
         const group = user.group;
         if (!group) {
             return;
         }
-        for(const userMuted of group.getUsers().values()){
+        for (const userMuted of group.getUsers().values()) {
+            // not mute the user who sent the message
+            if (userMuted.uuid === user.uuid) continue;
             // send mute event
             const serverToClientMessage: ServerToClientMessage = {
                 message: {
                     $case: "mutedMessage",
                     mutedMessage: {
-                        userUuid: user.uuid, 
-                        message: "muted"
-                    }
-                }
+                        userUuid: user.uuid,
+                        message: "muted",
+                    },
+                },
+            };
+            userMuted.socket.write(serverToClientMessage);
+        }
+    }
+
+    handerMuteVideoParticipantIdSpaceMessage(user: User, userMutedUuid: string) {
+        const group = user.group;
+        if (!group) {
+            return;
+        }
+        const usersMuted = group.getUsers().filter((user) => user.uuid === userMutedUuid);
+        for (const userMuted of usersMuted) {
+            // send mute event
+            const serverToClientMessage: ServerToClientMessage = {
+                message: {
+                    $case: "mutedVideoMessage",
+                    mutedVideoMessage: {
+                        userUuid: user.uuid,
+                        message: "mutedVideo",
+                    },
+                },
+            };
+            userMuted.socket.write(serverToClientMessage);
+        }
+    }
+
+    handlerMuteVideoEveryBodySpaceMessage(user: User) {
+        const group = user.group;
+        if (!group) {
+            return;
+        }
+        for (const userMuted of group.getUsers().values()) {
+            // not mute the user who sent the message
+            if (userMuted.uuid === user.uuid) continue;
+            // send mute event
+            const serverToClientMessage: ServerToClientMessage = {
+                message: {
+                    $case: "mutedVideoMessage",
+                    mutedVideoMessage: {
+                        userUuid: user.uuid,
+                        message: "mutedVideo",
+                    },
+                },
             };
             userMuted.socket.write(serverToClientMessage);
         }

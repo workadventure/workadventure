@@ -443,11 +443,18 @@ export class SocketManager implements ZoneEventListener {
                                     }
                                     break;
                                 }
-                                case "kickUserMessage": {
-                                    const kickUserMessage = message.message.kickUserMessage;
-                                    const space = this.spaces.get(kickUserMessage.spaceName);
-                                    if (!space || !kickUserMessage.user) break;
-                                    space.notifyUserToKick(kickUserMessage.user);
+                                case "kickOffSpaceUserMessage": {
+                                    debug("[space] kickOffSpaceUserMessage received");
+                                    spaceStreamToPusher.write({
+                                        message: {
+                                            $case: "kickOffSpaceUserMessage",
+                                            kickOffSpaceUserMessage: {
+                                                userId: message.message.kickOffSpaceUserMessage.userId,
+                                                spaceName: message.message.kickOffSpaceUserMessage.spaceName,
+                                                filterName: message.message.kickOffSpaceUserMessage.filterName,
+                                            },
+                                        },
+                                    });
                                     break;
                                 }
                                 default: {
@@ -1330,6 +1337,21 @@ export class SocketManager implements ZoneEventListener {
                     processError(error);
                 }
             });
+    }
+
+    handleSpaceMessage(
+        client: Socket,
+        spaceName: string,
+        jitsiParticipantId: string,
+        message: PusherToBackMessage["message"]
+    ) {
+        const socketData = client.getUserData();
+        const space = socketData.spaces.find((space) => space.name === spaceName);
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
+        space.kickOffUser(jitsiParticipantId);
     }
 }
 

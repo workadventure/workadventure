@@ -20,15 +20,13 @@ export interface TackStreamWrapperInterface {
 
     isLocal(): boolean;
 
-    muteAudio(): void;
+    muteAudioParticipant(): void;
 
     muteAudioEveryBody(): void;
 
-    muteVideo(): void;
+    muteVideoParticipant(): void;
 
     muteVideoEverybody(): void;
-
-    ban(): void;
 
     kickoff(): void;
 }

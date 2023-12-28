@@ -50,7 +50,11 @@
     bind:this={jitsiMediaBoxHtml}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
-    <ActionMediaBox {embedScreen} trackStreamWraper={peer} />
+    <ActionMediaBox
+        {embedScreen}
+        trackStreamWraper={peer}
+        videoEnabled={$videoTrackStore ? $videoTrackStore?.isActive() : false}
+    />
 
     {#if $videoTrackStore}
         <div class="tw-rounded-sm tw-overflow-hidden tw-flex tw-w-full tw-flex-col tw-h-full">

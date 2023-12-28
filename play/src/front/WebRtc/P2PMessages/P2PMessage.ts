@@ -7,7 +7,7 @@ import { UnblockMessage } from "./UnblockMessage";
 
 export const KickOffMessage = z.object({
     type: z.literal("kickoff"),
-    value: z.string()
+    value: z.string(),
 });
 export type KickOffMessage = z.infer<typeof KickOffMessage>;
 

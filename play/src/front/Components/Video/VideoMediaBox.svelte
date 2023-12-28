@@ -234,8 +234,8 @@
     bind:this={videoContainer}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
-    <ActionMediaBox {embedScreen} trackStreamWraper={peer} />
-    
+    <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
+
     <div
         style={videoEnabled
             ? ""

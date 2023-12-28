@@ -13,11 +13,12 @@
 
     export let embedScreen: EmbedScreen;
     export let trackStreamWraper: TackStreamWrapperInterface;
+    export let videoEnabled: boolean;
 
     let moreActionOpened = writable<boolean>(false);
 
     function muteAudio() {
-        trackStreamWraper.muteAudio();
+        trackStreamWraper.muteAudioParticipant();
     }
 
     function muteAudioEveryBody() {
@@ -25,18 +26,21 @@
     }
 
     function muteVideo() {
-        trackStreamWraper.muteVideo();
+        trackStreamWraper.muteVideoParticipant();
     }
 
     function muteVideoEveryBody() {
         trackStreamWraper.muteVideoEverybody();
     }
 
-    function ban() {
+    /**
+     * TODO: implement ban user
+     */
+    /*function ban() {
         trackStreamWraper.ban();
-    }
+    }*/
 
-    function kickoff(){
+    function kickoff() {
         trackStreamWraper.kickoff();
     }
 
@@ -54,9 +58,9 @@
 </script>
 
 <div
-    class={`tw-absolute tw-top-0 ${
-        $moreActionOpened ? "-tw-left-14" : "-tw-left-8"
-    } tw-flex tw-flex-col tw-flex-wrap tw-justify-between tw-items-center tw-p-1 tw-bg-black tw-bg-opacity-50 tw-rounded-lg tw-max-h-full`}
+    class={`tw-absolute tw-top-0 
+    ${$moreActionOpened ? (!videoEnabled ? "-tw-left-52" : "-tw-left-14") : "-tw-left-8"} 
+    tw-flex tw-flex-col tw-flex-wrap tw-justify-between tw-items-center tw-p-1 tw-bg-black tw-bg-opacity-50 tw-rounded-lg tw-max-h-full`}
 >
     {#if !$moreActionOpened}
         <!-- Moe action -->

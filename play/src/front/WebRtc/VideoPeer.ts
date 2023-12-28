@@ -15,16 +15,16 @@ import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils"
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
+import { TackStreamWrapperInterface } from "../Streaming/Contract/TackStreamWrapperInterface";
+import { TrackInterface } from "../Streaming/Contract/TrackInterface";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
 import { MessageMessage } from "./P2PMessages/MessageMessage";
 import { MessageStatusMessage } from "./P2PMessages/MessageStatusMessage";
-import { KickOffMessage, P2PMessage } from "./P2PMessages/P2PMessage";
+import { P2PMessage } from "./P2PMessages/P2PMessage";
 import { BlockMessage } from "./P2PMessages/BlockMessage";
 import { UnblockMessage } from "./P2PMessages/UnblockMessage";
-import { TackStreamWrapperInterface } from "../Streaming/Contract/TackStreamWrapperInterface";
-import { TrackInterface } from "../Streaming/Contract/TrackInterface";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
@@ -211,7 +211,7 @@ export class VideoPeer extends Peer implements TackStreamWrapperInterface {
                         break;
                     }
                     case "kickoff": {
-                        if(message.value !== this.userUuid) break;   
+                        if (message.value !== this.userUuid) break;
                         this._statusStore.set("closed");
                         this._connected = false;
                         this.toClose = true;
@@ -311,7 +311,7 @@ export class VideoPeer extends Peer implements TackStreamWrapperInterface {
     public destroy(): void {
         try {
             this._connected = false;
-            console.log('destroy => this.toClose', this.toClose, this.closing);
+            console.log("destroy => this.toClose", this.toClose, this.closing);
             if (!this.toClose || this.closing) {
                 return;
             }
@@ -374,22 +374,22 @@ export class VideoPeer extends Peer implements TackStreamWrapperInterface {
     isLocal(): boolean {
         throw new Error("Method not implemented.");
     }
-    muteAudio(): void {
-        this.connection.emitMuteParticipantIdSpace('peer', this.userUuid);
+    muteAudioParticipant(): void {
+        this.connection.emitMuteParticipantIdSpace("peer", this.userUuid);
     }
     muteAudioEveryBody(): void {
-        this.connection.emitMuteEveryBodySpace('peer');
+        this.connection.emitMuteEveryBodySpace("peer");
     }
-    muteVideo(): void {
-        throw new Error("Method not implemented.");
+    muteVideoParticipant(): void {
+        this.connection.emitMuteVideoParticipantIdSpace("peer", this.userUuid);
     }
     muteVideoEverybody(): void {
-        throw new Error("Method not implemented.");
+        this.connection.emitMuteVideoEveryBodySpace("peer");
     }
-    ban(){
+    ban() {
         throw new Error("Method not implemented.");
     }
     kickoff(): void {
-        this.connection.emitKickOffUserMessage(this.userUuid);
+        this.connection.emitKickOffUserMessage(this.userUuid, "peer");
     }
 }

@@ -234,4 +234,8 @@ export class JitsiTrackWrapper implements TrackWrapper {
     public isEmpty(): boolean {
         return this.cameraTrackWrapper.isEmpty() && this.screenSharingTrackWrapper.isEmpty();
     }
+
+    public kickoff() {
+        this.spaceUser?.roomConnection?.emitKickOffUserMessage(this.spaceUser.id.toString(), this.spaceUser?.spaceName);
+    }
 }
