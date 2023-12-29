@@ -440,6 +440,10 @@ message SubMessage {
     ReceivedEventMessage receivedEventMessage = 20;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 21;
     KickOffSpaceUserMessage kickOffSpaceUserMessage = 22;
+    MuteMicrophoneSpaceUserMessage muteMicrophoneSpaceUserMessage = 23;
+    MuteVideoSpaceUserMessage muteVideoSpaceUserMessage = 24;
+    MuteMicrophoneEverybodySpaceUserMessage muteMicrophoneEverybodySpaceUserMessage = 25;
+    MuteVideoEverybodySpaceUserMessage muteVideoEverybodySpaceUserMessage = 26;
   }
 }
 
@@ -640,6 +644,7 @@ message MuteParticipantIdSpaceMessage {
 
 message MuteEveryBodySpaceMessage {
   string spaceName = 1;
+  string userId = 2;
 }
 
 message MutedMessage {
@@ -654,6 +659,7 @@ message MuteVideoParticipantIdSpaceMessage {
 
 message MuteVideoEveryBodySpaceMessage {
   string spaceName = 1;
+  string userId = 2;
 }
 
 message MutedVideoMessage {
@@ -999,6 +1005,10 @@ message PusherToBackSpaceMessage{
     PingMessage pongMessage = 6;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 7;
     KickOffSpaceUserMessage kickOffSpaceUserMessage = 8;
+    MuteMicrophoneSpaceUserMessage muteMicrophoneSpaceUserMessage = 9;
+    MuteVideoSpaceUserMessage muteVideoSpaceUserMessage = 10;
+    MuteMicrophoneEverybodySpaceUserMessage muteMicrophoneEverybodySpaceUserMessage = 11;
+    MuteVideoEverybodySpaceUserMessage muteVideoEverybodySpaceUserMessage = 12;
   }
 }
 
@@ -1010,6 +1020,10 @@ message BackToPusherSpaceMessage{
     PingMessage pingMessage = 4;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 5;
     KickOffSpaceUserMessage kickOffSpaceUserMessage = 6;
+    MuteMicrophoneSpaceUserMessage muteMicrophoneSpaceUserMessage = 7;
+    MuteVideoSpaceUserMessage muteVideoSpaceUserMessage = 8;
+    MuteMicrophoneEverybodySpaceUserMessage muteMicrophoneEverybodySpaceUserMessage = 9;
+    MuteVideoEverybodySpaceUserMessage muteVideoEverybodySpaceUserMessage = 10;
   }
 }
 
@@ -1082,6 +1096,26 @@ message UpdateSpaceMetadataMessage{
   google.protobuf.StringValue filterName = 3;
 }
 message KickOffSpaceUserMessage{
+  string spaceName = 1;
+  string userId = 2;
+  google.protobuf.StringValue filterName = 3;
+}
+message MuteMicrophoneSpaceUserMessage{
+  string spaceName = 1;
+  string userId = 2;
+  google.protobuf.StringValue filterName = 3;
+}
+message MuteVideoSpaceUserMessage{
+  string spaceName = 1;
+  string userId = 2;
+  google.protobuf.StringValue filterName = 3;
+}
+message MuteMicrophoneEverybodySpaceUserMessage{
+  string spaceName = 1;
+  string userId = 2;
+  google.protobuf.StringValue filterName = 3;
+}
+message MuteVideoEverybodySpaceUserMessage{
   string spaceName = 1;
   string userId = 2;
   google.protobuf.StringValue filterName = 3;

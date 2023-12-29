@@ -46,6 +46,10 @@ import {
     SendEventQuery,
     UpdateSpaceMetadataMessage,
     KickOffSpaceUserMessage,
+    MuteMicrophoneSpaceUserMessage,
+    MuteVideoSpaceUserMessage,
+    MuteMicrophoneEverybodySpaceUserMessage,
+    MuteVideoEverybodySpaceUserMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -1462,7 +1466,7 @@ export class SocketManager {
         }
     }
 
-    handleKickUserMessage(pusher: SpacesWatcher, kickUserMessage: KickOffSpaceUserMessage) {
+    handleKickSpaceUserMessage(pusher: SpacesWatcher, kickUserMessage: KickOffSpaceUserMessage) {
         const space = this.spaces.get(kickUserMessage.spaceName);
         if (!space) return;
         pusher.write({
@@ -1472,6 +1476,75 @@ export class SocketManager {
                     spaceName: kickUserMessage.spaceName,
                     userId: kickUserMessage.userId,
                     filterName: kickUserMessage.filterName,
+                },
+            },
+        });
+    }
+
+    handleMuteMicrophoneSpaceUserMessage(
+        pusher: SpacesWatcher,
+        muteMicrophoneSpaceUserMessage: MuteMicrophoneSpaceUserMessage
+    ) {
+        const space = this.spaces.get(muteMicrophoneSpaceUserMessage.spaceName);
+        if (!space) return;
+        pusher.write({
+            message: {
+                $case: "muteMicrophoneSpaceUserMessage",
+                muteMicrophoneSpaceUserMessage: {
+                    spaceName: muteMicrophoneSpaceUserMessage.spaceName,
+                    userId: muteMicrophoneSpaceUserMessage.userId,
+                    filterName: muteMicrophoneSpaceUserMessage.filterName,
+                },
+            },
+        });
+    }
+
+    handleMuteVideoSpaceUserMessage(pusher: SpacesWatcher, muteVideoSpaceUserMessage: MuteVideoSpaceUserMessage) {
+        const space = this.spaces.get(muteVideoSpaceUserMessage.spaceName);
+        if (!space) return;
+        pusher.write({
+            message: {
+                $case: "muteVideoSpaceUserMessage",
+                muteVideoSpaceUserMessage: {
+                    spaceName: muteVideoSpaceUserMessage.spaceName,
+                    userId: muteVideoSpaceUserMessage.userId,
+                    filterName: muteVideoSpaceUserMessage.filterName,
+                },
+            },
+        });
+    }
+
+    handleMuteMicrophoneEverybodySpaceUserMessage(
+        pusher: SpacesWatcher,
+        muteMicrophoneEverybodySpaceUserMessage: MuteMicrophoneEverybodySpaceUserMessage
+    ) {
+        const space = this.spaces.get(muteMicrophoneEverybodySpaceUserMessage.spaceName);
+        if (!space) return;
+        pusher.write({
+            message: {
+                $case: "muteMicrophoneEverybodySpaceUserMessage",
+                muteMicrophoneEverybodySpaceUserMessage: {
+                    spaceName: muteMicrophoneEverybodySpaceUserMessage.spaceName,
+                    userId: muteMicrophoneEverybodySpaceUserMessage.userId,
+                    filterName: muteMicrophoneEverybodySpaceUserMessage.filterName,
+                },
+            },
+        });
+    }
+
+    handleMuteVideoEverybodySpaceUserMessage(
+        pusher: SpacesWatcher,
+        muteVideoEverybodySpaceUserMessage: MuteVideoEverybodySpaceUserMessage
+    ) {
+        const space = this.spaces.get(muteVideoEverybodySpaceUserMessage.spaceName);
+        if (!space) return;
+        pusher.write({
+            message: {
+                $case: "muteVideoEverybodySpaceUserMessage",
+                muteVideoEverybodySpaceUserMessage: {
+                    spaceName: muteVideoEverybodySpaceUserMessage.spaceName,
+                    userId: muteVideoEverybodySpaceUserMessage.userId,
+                    filterName: muteVideoEverybodySpaceUserMessage.filterName,
                 },
             },
         });

@@ -457,6 +457,65 @@ export class SocketManager implements ZoneEventListener {
                                     });
                                     break;
                                 }
+                                case "muteMicrophoneSpaceUserMessage": {
+                                    debug("[space] muteMicrophoneSpaceUserMessage received");
+                                    spaceStreamToPusher.write({
+                                        message: {
+                                            $case: "muteMicrophoneSpaceUserMessage",
+                                            muteMicrophoneSpaceUserMessage: {
+                                                userId: message.message.muteMicrophoneSpaceUserMessage.userId,
+                                                spaceName: message.message.muteMicrophoneSpaceUserMessage.spaceName,
+                                                filterName: message.message.muteMicrophoneSpaceUserMessage.filterName,
+                                            },
+                                        },
+                                    });
+                                    break;
+                                }
+                                case "muteVideoSpaceUserMessage": {
+                                    debug("[space] muteVideoSpaceUserMessage received");
+                                    spaceStreamToPusher.write({
+                                        message: {
+                                            $case: "muteVideoSpaceUserMessage",
+                                            muteVideoSpaceUserMessage: {
+                                                userId: message.message.muteVideoSpaceUserMessage.userId,
+                                                spaceName: message.message.muteVideoSpaceUserMessage.spaceName,
+                                                filterName: message.message.muteVideoSpaceUserMessage.filterName,
+                                            },
+                                        },
+                                    });
+                                    break;
+                                }
+                                case "muteMicrophoneEverybodySpaceUserMessage": {
+                                    debug("[space] muteMicrophoneEverybodySpaceUserMessage received");
+                                    spaceStreamToPusher.write({
+                                        message: {
+                                            $case: "muteMicrophoneEverybodySpaceUserMessage",
+                                            muteMicrophoneEverybodySpaceUserMessage: {
+                                                userId: message.message.muteMicrophoneEverybodySpaceUserMessage.userId,
+                                                spaceName:
+                                                    message.message.muteMicrophoneEverybodySpaceUserMessage.spaceName,
+                                                filterName:
+                                                    message.message.muteMicrophoneEverybodySpaceUserMessage.filterName,
+                                            },
+                                        },
+                                    });
+                                    break;
+                                }
+                                case "muteVideoEverybodySpaceUserMessage": {
+                                    debug("[space] muteVideoEverybodySpaceUserMessage received");
+                                    spaceStreamToPusher.write({
+                                        message: {
+                                            $case: "muteVideoEverybodySpaceUserMessage",
+                                            muteVideoEverybodySpaceUserMessage: {
+                                                userId: message.message.muteVideoEverybodySpaceUserMessage.userId,
+                                                spaceName: message.message.muteVideoEverybodySpaceUserMessage.spaceName,
+                                                filterName:
+                                                    message.message.muteVideoEverybodySpaceUserMessage.filterName,
+                                            },
+                                        },
+                                    });
+                                    break;
+                                }
                                 default: {
                                     const _exhaustiveCheck: never = message.message;
                                 }
@@ -1339,10 +1398,10 @@ export class SocketManager implements ZoneEventListener {
             });
     }
 
-    handleSpaceMessage(
+    handleKickOffSpaceUserMessage(
         client: Socket,
         spaceName: string,
-        jitsiParticipantId: string,
+        participantId: string,
         message: PusherToBackMessage["message"]
     ) {
         const socketData = client.getUserData();
@@ -1351,7 +1410,67 @@ export class SocketManager implements ZoneEventListener {
             this.forwardMessageToBack(client, message);
             return;
         }
-        space.kickOffUser(jitsiParticipantId);
+        space.kickOffUser(participantId);
+    }
+
+    handleMuteParticipantIdSpaceMessage(
+        client: Socket,
+        spaceName: string,
+        participantId: string,
+        message: PusherToBackMessage["message"]
+    ) {
+        const socketData = client.getUserData();
+        const space = socketData.spaces.find((space) => space.name === spaceName);
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
+        space.muteMicrophoneUser(participantId);
+    }
+
+    handleMuteVideoParticipantIdSpaceMessage(
+        client: Socket,
+        spaceName: string,
+        participantId: string,
+        message: PusherToBackMessage["message"]
+    ) {
+        const socketData = client.getUserData();
+        const space = socketData.spaces.find((space) => space.name === spaceName);
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
+        space.muteVideoUser(participantId);
+    }
+
+    handleMuteEveryBodySpaceMessage(
+        client: Socket,
+        spaceName: string,
+        participantId: string,
+        message: PusherToBackMessage["message"]
+    ) {
+        const socketData = client.getUserData();
+        const space = socketData.spaces.find((space) => space.name === spaceName);
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
+        space.muteMicrophoneEverybodyUser(participantId);
+    }
+
+    handleMuteVideoEveryBodySpaceMessage(
+        client: Socket,
+        spaceName: string,
+        participantId: string,
+        message: PusherToBackMessage["message"]
+    ) {
+        const socketData = client.getUserData();
+        const space = socketData.spaces.find((space) => space.name === spaceName);
+        if (!space) {
+            this.forwardMessageToBack(client, message);
+            return;
+        }
+        space.muteVideoEverybodyUser(participantId);
     }
 }
 

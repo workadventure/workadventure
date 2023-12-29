@@ -859,19 +859,51 @@ export class IoSocketController {
                         case "lockGroupPromptMessage":
                         case "pingMessage":
                         case "editMapCommandMessage":
-                        case "askPositionMessage":
-                        case "muteParticipantIdSpaceMessage":
-                        case "muteEveryBodySpaceMessage":
-                        case "muteVideoParticipantIdSpaceMessage":
-                        case "muteVideoEveryBodySpaceMessage": {
+                        case "askPositionMessage": {
                             socketManager.forwardMessageToBack(socket, message.message);
                             break;
                         }
+                        case "muteParticipantIdSpaceMessage": {
+                            socketManager.handleMuteParticipantIdSpaceMessage(
+                                socket,
+                                message.message.muteParticipantIdSpaceMessage.spaceName,
+                                message.message.muteParticipantIdSpaceMessage.value,
+                                message.message
+                            );
+                            break;
+                        }
+                        case "muteVideoParticipantIdSpaceMessage": {
+                            socketManager.handleMuteVideoParticipantIdSpaceMessage(
+                                socket,
+                                message.message.muteVideoParticipantIdSpaceMessage.spaceName,
+                                message.message.muteVideoParticipantIdSpaceMessage.value,
+                                message.message
+                            );
+                            break;
+                        }
                         case "kickOffUserMessage": {
-                            socketManager.handleSpaceMessage(
+                            socketManager.handleKickOffSpaceUserMessage(
                                 socket,
                                 message.message.kickOffUserMessage.spaceName,
                                 message.message.kickOffUserMessage.userId,
+                                message.message
+                            );
+                            break;
+                        }
+                        case "muteEveryBodySpaceMessage": {
+                            socketManager.handleMuteEveryBodySpaceMessage(
+                                socket,
+                                message.message.muteEveryBodySpaceMessage.spaceName,
+                                message.message.muteEveryBodySpaceMessage.userId,
+                                message.message
+                            );
+                            break;
+                        }
+                        case "muteVideoEveryBodySpaceMessage": {
+                            socketManager.handleMuteVideoEveryBodySpaceMessage(
+                                socket,
+                                message.message.muteVideoEveryBodySpaceMessage.spaceName,
+                                message.message.muteVideoEveryBodySpaceMessage.userId,
                                 message.message
                             );
                             break;

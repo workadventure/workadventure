@@ -57,7 +57,35 @@ const spaceManager = {
                         break;
                     }
                     case "kickOffSpaceUserMessage": {
-                        socketManager.handleKickUserMessage(pusher, message.message.kickOffSpaceUserMessage);
+                        socketManager.handleKickSpaceUserMessage(pusher, message.message.kickOffSpaceUserMessage);
+                        break;
+                    }
+                    case "muteMicrophoneSpaceUserMessage": {
+                        socketManager.handleMuteMicrophoneSpaceUserMessage(
+                            pusher,
+                            message.message.muteMicrophoneSpaceUserMessage
+                        );
+                        break;
+                    }
+                    case "muteVideoSpaceUserMessage": {
+                        socketManager.handleMuteVideoSpaceUserMessage(
+                            pusher,
+                            message.message.muteVideoSpaceUserMessage
+                        );
+                        break;
+                    }
+                    case "muteMicrophoneEverybodySpaceUserMessage": {
+                        socketManager.handleMuteMicrophoneEverybodySpaceUserMessage(
+                            pusher,
+                            message.message.muteMicrophoneEverybodySpaceUserMessage
+                        );
+                        break;
+                    }
+                    case "muteVideoEverybodySpaceUserMessage": {
+                        socketManager.handleMuteVideoEverybodySpaceUserMessage(
+                            pusher,
+                            message.message.muteVideoEverybodySpaceUserMessage
+                        );
                         break;
                     }
                     default: {

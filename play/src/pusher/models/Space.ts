@@ -461,6 +461,62 @@ export class Space implements CustomJsonReplacerInterface {
         this.notifyAllUsers(subMessage);
     }
 
+    public muteMicrophoneUser(userId: string) {
+        const subMessage: SubMessage = {
+            message: {
+                $case: "muteMicrophoneSpaceUserMessage",
+                muteMicrophoneSpaceUserMessage: {
+                    spaceName: this.name,
+                    userId,
+                    filterName: undefined,
+                },
+            },
+        };
+        this.notifyAllUsers(subMessage);
+    }
+
+    public muteVideoUser(userId: string) {
+        const subMessage: SubMessage = {
+            message: {
+                $case: "muteVideoSpaceUserMessage",
+                muteVideoSpaceUserMessage: {
+                    spaceName: this.name,
+                    userId,
+                    filterName: undefined,
+                },
+            },
+        };
+        this.notifyAllUsers(subMessage);
+    }
+
+    public muteMicrophoneEverybodyUser(userId: string) {
+        const subMessage: SubMessage = {
+            message: {
+                $case: "muteMicrophoneEverybodySpaceUserMessage",
+                muteMicrophoneEverybodySpaceUserMessage: {
+                    spaceName: this.name,
+                    userId,
+                    filterName: undefined,
+                },
+            },
+        };
+        this.notifyAllUsers(subMessage);
+    }
+
+    public muteVideoEverybodyUser(userId: string) {
+        const subMessage: SubMessage = {
+            message: {
+                $case: "muteVideoEverybodySpaceUserMessage",
+                muteVideoEverybodySpaceUserMessage: {
+                    spaceName: this.name,
+                    userId,
+                    filterName: undefined,
+                },
+            },
+        };
+        this.notifyAllUsers(subMessage);
+    }
+
     // Notify all users in this space
     private notifyAllUsers(subMessage: SubMessage) {
         this.clientWatchers.forEach((watcher) => {

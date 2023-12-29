@@ -424,6 +424,49 @@ export class RoomConnection implements RoomConnection {
                                 chatZoneLiveStore.set(false);
                                 break;
                             }
+                            case "muteMicrophoneSpaceUserMessage": {
+                                if (subMessage.muteMicrophoneSpaceUserMessage.userId !== this.userId?.toString()) break;
+                                notificationPlayingStore.playNotification(
+                                    get(LL).notification.askToMuteMicrophone(),
+                                    "audio-mute.svg"
+                                );
+                                requestedMicrophoneState.disableMicrophone();
+                                break;
+                            }
+                            case "muteVideoSpaceUserMessage": {
+                                if (subMessage.muteVideoSpaceUserMessage.userId !== this.userId?.toString()) break;
+                                notificationPlayingStore.playNotification(
+                                    get(LL).notification.askToMuteCamera(),
+                                    "camera-off.png"
+                                );
+                                requestedCameraState.disableWebcam();
+                                break;
+                            }
+                            case "muteMicrophoneEverybodySpaceUserMessage": {
+                                // If the sender receive this message, ignore it
+                                if (
+                                    subMessage.muteMicrophoneEverybodySpaceUserMessage.userId ===
+                                    this.userId?.toString()
+                                )
+                                    break;
+                                notificationPlayingStore.playNotification(
+                                    get(LL).notification.askToMuteMicrophone(),
+                                    "audio-mute.svg"
+                                );
+                                requestedMicrophoneState.disableMicrophone();
+                                break;
+                            }
+                            case "muteVideoEverybodySpaceUserMessage": {
+                                // If the sender receive this message, ignore it
+                                if (subMessage.muteVideoEverybodySpaceUserMessage.userId === this.userId?.toString())
+                                    break;
+                                notificationPlayingStore.playNotification(
+                                    get(LL).notification.askToMuteCamera(),
+                                    "camera-off.png"
+                                );
+                                requestedCameraState.disableWebcam();
+                                break;
+                            }
                             default: {
                                 // Security check: if we forget a "case", the line below will catch the error at compile-time.
                                 //@ts-ignore
@@ -1634,11 +1677,16 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMuteEveryBodySpace(spaceName: string) {
+        if (!this.userId) {
+            console.warn("No user id defined to send a message to mute every microphone!");
+            return;
+        }
         this.send({
             message: {
                 $case: "muteEveryBodySpaceMessage",
                 muteEveryBodySpaceMessage: {
                     spaceName,
+                    userId: this.userId.toString(),
                 },
             },
         });
@@ -1657,11 +1705,16 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitMuteVideoEveryBodySpace(spaceName: string) {
+        if (!this.userId) {
+            console.warn("No user id defined to send a message to mute every video!");
+            return;
+        }
         this.send({
             message: {
                 $case: "muteVideoEveryBodySpaceMessage",
                 muteVideoEveryBodySpaceMessage: {
                     spaceName,
+                    userId: this.userId.toString(),
                 },
             },
         });
