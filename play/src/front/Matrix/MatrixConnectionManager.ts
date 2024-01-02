@@ -64,8 +64,11 @@ async function instantiateMatrixClient(url: string, userUuid: string): Promise<v
         return;
     }
 
+    let oldUserId: string | null = null;
+
     // If we have a login token, we need to convert it into an access token.
     if (matrixLoginToken !== undefined) {
+        oldUserId = localUserStore.getMatrixUserId();
         const response = await connectViaLoginToken(url, matrixLoginToken, deviceId);
         // eslint-disable-next-line require-atomic-updates
         accessToken = response.accessToken;
@@ -144,6 +147,11 @@ async function instantiateMatrixClient(url: string, userUuid: string): Promise<v
             "crypto-store-" + url + "-" + userId + "-" + deviceId
         ),
     });
+
+    if (oldUserId !== null && oldUserId !== userId) {
+        // We have a new user ID. Let's delete the old stores.
+        await client.clearStores();
+    }
 
     await indexedDBStore.startup();
     //await client.initCrypto();
