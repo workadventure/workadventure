@@ -238,4 +238,26 @@ export class JitsiTrackWrapper implements TrackWrapper {
     public kickoff() {
         this.spaceUser?.roomConnection?.emitKickOffUserMessage(this.spaceUser.id.toString(), this.spaceUser?.spaceName);
     }
+
+    public muteMicrophoneEverybody() {
+        this.spaceUser?.roomConnection?.emitMuteEveryBodySpace(this.spaceUser?.spaceName);
+    }
+
+    public muteVideoEverybody() {
+        this.spaceUser?.roomConnection?.emitMuteVideoEveryBodySpace(this.spaceUser?.spaceName);
+    }
+
+    public muteMicrophonePartcipant() {
+        this.spaceUser?.roomConnection?.emitMuteParticipantIdSpace(
+            this.spaceUser?.spaceName,
+            this.spaceUser.id.toString()
+        );
+    }
+
+    public muteVideoParticipant() {
+        this.spaceUser?.roomConnection?.emitMuteVideoParticipantIdSpace(
+            this.spaceUser?.spaceName,
+            this.spaceUser.id.toString()
+        );
+    }
 }

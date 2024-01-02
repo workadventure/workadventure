@@ -54,19 +54,19 @@ export class JitsiTrackStreamWrapper implements TackStreamWrapperInterface {
     }
 
     public muteAudioParticipant(): void {
-        console.info("Not implemented yet!");
+        this.jitsiTrackWrapper.muteMicrophonePartcipant();
     }
 
     public muteAudioEveryBody(): void {
-        console.info("Not implemented yet!");
+        this.jitsiTrackWrapper.muteMicrophoneEverybody();
     }
 
     public muteVideoParticipant(): void {
-        console.info("Not implemented yet!");
+        this.jitsiTrackWrapper.muteVideoParticipant();
     }
 
     public muteVideoEverybody(): void {
-        console.info("Not implemented yet!");
+        this.jitsiTrackWrapper.muteVideoEverybody();
     }
 
     public kickoff(): void {
