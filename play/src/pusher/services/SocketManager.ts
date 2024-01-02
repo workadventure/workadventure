@@ -397,7 +397,7 @@ export class SocketManager implements ZoneEventListener {
                                 case "updateSpaceMetadataMessage": {
                                     const updateSpaceMetadataMessage = message.message.updateSpaceMetadataMessage;
                                     const space = this.spaces.get(updateSpaceMetadataMessage.spaceName);
-                                    console.log("updateSpaceMetadataMessage", updateSpaceMetadataMessage);
+
                                     const isMetadata = z
                                         .record(z.string(), z.unknown())
                                         .safeParse(JSON.parse(message.message.updateSpaceMetadataMessage.metadata));
