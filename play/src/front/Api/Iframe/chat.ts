@@ -39,19 +39,11 @@ export class WorkadventureChatCommands extends IframeApiContribution<Workadventu
     }
 
     /**
-     * Sends a message in the chat. The message is only visible in the browser of the current user.
-     * {@link https://docs.workadventu.re/developer/map-scripting/references/api-chat#sending-a-message-in-the-chat | Website documentation}
-     * @deprecated Use the overload with "options" instead
-     * @param {string} message Message to be displayed in the chat
-     * @param {string|undefined} author Name displayed for the author of the message. It does not have to be a real user
-     */
-    sendChatMessage(message: string, author?: string): void;
-    /**
      * Sends a message in the chat.
      * {@link https://docs.workadventu.re/developer/map-scripting/references/api-chat#sending-a-message-in-the-chat | Website documentation}
      *
      * @param {string} message Message to be displayed in the chat
-     * @param {SendChatMessageOptions|undefined} options Decides if the message is sent only to the local users or to all users in the bubble. In undefined, the message is sent to the local user only. If the message is sent locally, you can decide an "author" name to be displayed in the chat. It does not have to be a real user.
+     * @param {SendChatMessageOptions|string|undefined} options Decides if the message is sent only to the local users or to all users in the bubble. In undefined, the message is sent to the local user only. If the message is sent locally, you can decide an "author" name to be displayed in the chat. It does not have to be a real user. If a string is passed instead of an object, it will be used as the Name displayed for the author of the message (and the message type will automatically by "local"). Using a string instead of an object is deprecated.
      */
     sendChatMessage(message: string, options?: string | SendChatMessageOptions): void {
         if (typeof options === "string") {
