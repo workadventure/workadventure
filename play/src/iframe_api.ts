@@ -46,9 +46,11 @@ export type {
     ModifyEmbeddedWebsiteEvent,
     Rectangle,
 } from "./front/Api/Events/EmbeddedWebsiteEvent";
+export type { HasPlayerMovedEvent } from "./front/Api/Events/HasPlayerMovedEvent";
 export type { UIWebsite } from "./front/Api/Iframe/Ui/UIWebsite";
 export type { Menu } from "./front/Api/Iframe/Ui/Menu";
 export type { ActionMessage } from "./front/Api/Iframe/Ui/ActionMessage";
+export type { Position } from "./front/Api/Iframe/player";
 export type { EmbeddedWebsite } from "./front/Api/Iframe/Room/EmbeddedWebsite";
 export type { Area } from "./front/Api/Iframe/Area/Area";
 export type { ActionsMenuAction } from "./front/Api/Iframe/ui";
