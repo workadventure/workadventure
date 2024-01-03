@@ -16,7 +16,7 @@ test.describe('meeting multiple users', () => {
     }
 
     // Move user
-    await Map.walkTo(page, 'ArrowRight', 500);
+    await Map.walkTo(page, 'ArrowRight', 3000);
 
     const newBrowser = await browser.browserType().launch();
     const userBob = await newBrowser.newPage();
@@ -31,7 +31,7 @@ test.describe('meeting multiple users', () => {
         await hideNoCamera(userBob);
     }
     // Move user
-    await Map.walkTo(userBob, 'ArrowRight', 500);
+    await Map.walkTo(userBob, 'ArrowRight', 3000);
 
     // The user in the bubble meeting should be visible
     await expect(await page.locator('.cameras-container .other-cameras .video-container')).toBeVisible({timeout: 20_000});
@@ -69,7 +69,7 @@ test.describe('meeting multiple users', () => {
     }
 
     // Move user
-    await Map.walkTo(page, 'ArrowRight', 500);
+    await Map.walkTo(page, 'ArrowRight', 3000);
 
     const newBrowser = await browser.browserType().launch();
     const userBob = await newBrowser.newPage();
@@ -84,7 +84,7 @@ test.describe('meeting multiple users', () => {
         await hideNoCamera(userBob);
     }
     // Move user
-    await Map.walkTo(userBob, 'ArrowRight', 500);
+    await Map.walkTo(userBob, 'ArrowRight', 3000);
 
     const newBrowser2 = await browser.browserType().launch();
     const userTest = await newBrowser2.newPage();
@@ -99,7 +99,7 @@ test.describe('meeting multiple users', () => {
         await hideNoCamera(userTest);
     }
     // Move user
-    await Map.walkTo(userTest, 'ArrowRight', 500);
+    await Map.walkTo(userTest, 'ArrowRight', 3000);
 
     // The user in the bubble meeting should be visible
     await expect(await page.locator('.cameras-container .other-cameras .video-container').nth(0)).toBeVisible({timeout: 20_000});
