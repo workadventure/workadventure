@@ -1,19 +1,22 @@
-import { expect, test } from '@playwright/test';
-import {hideNoCamera, login} from './utils/roles';
+import { expect, test, webkit } from '@playwright/test';
+import { login } from './utils/roles';
 import Map from "./utils/map";
 
 test.describe('meeting multiple users', () => {
-  test('can mute video & microphone user', async ({page, browser, browserName}) => {
+  test('can mute video & microphone user', async ({page, browser}) => {
+    // Because webkit in playwright does not support Camera/Microphone Permission by settings
+    if(browser.browserType() === webkit) {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     // Go to the empty map
     await page.goto(
         `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json`
     );
     // Login user "Alice"
     await login(page, 'Alice');
-    // Because webkit in playwright does not support Camera/Microphone Permission by settings
-    if(browserName === "webkit"){
-      await hideNoCamera(page);
-    }
 
     // Move user
     await Map.walkTo(page, 'ArrowRight', 3000);
@@ -26,10 +29,6 @@ test.describe('meeting multiple users', () => {
     );
     // Login user "Bob"
     await login(userBob, 'Bob');
-    // Because webkit in playwright does not support Camera/Microphone Permission by settings
-    if(browserName === "webkit"){
-        await hideNoCamera(userBob);
-    }
     // Move user
     await Map.walkTo(userBob, 'ArrowRight', 3000);
 
@@ -56,17 +55,19 @@ test.describe('meeting multiple users', () => {
     userBob.close();
   });
 
-  test('can mute every video & microphone', async ({page, browser, browserName}) => {
+  test('can mute every video & microphone', async ({page, browser}) => {
+    // Because webkit in playwright does not support Camera/Microphone Permission by settings
+    if(browser.browserType() === webkit) {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
     // Go to the empty map
     await page.goto(
         `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json`
     );
     // Login user "Alice"
     await login(page, 'Alice');
-    // Because webkit in playwright does not support Camera/Microphone Permission by settings
-    if(browserName === "webkit"){
-      await hideNoCamera(page);
-    }
 
     // Move user
     await Map.walkTo(page, 'ArrowRight', 3000);
@@ -79,10 +80,6 @@ test.describe('meeting multiple users', () => {
     );
     // Login user "Bob"
     await login(userBob, 'Bob');
-    // Because webkit in playwright does not support Camera/Microphone Permission by settings
-    if(browserName === "webkit"){
-        await hideNoCamera(userBob);
-    }
     // Move user
     await Map.walkTo(userBob, 'ArrowRight', 3000);
 
@@ -94,10 +91,6 @@ test.describe('meeting multiple users', () => {
     );
     // Login user "Bob"
     await login(userTest, 'Bob');
-    // Because webkit in playwright does not support Camera/Microphone Permission by settings
-    if(browserName === "webkit"){
-        await hideNoCamera(userTest);
-    }
     // Move user
     await Map.walkTo(userTest, 'ArrowRight', 3000);
 
