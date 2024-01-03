@@ -2,7 +2,7 @@ import { ClientEvent, createClient, IndexedDBCryptoStore, IndexedDBStore, Matrix
 import { logger } from "matrix-js-sdk/src/logger";
 import { Deferred } from "ts-deferred";
 import { failure, Result, success } from "@workadventure/map-editor";
-import Olm from "olm";
+//import Olm from "olm";
 import { localUserStore } from "../Connection/LocalUserStore";
 
 type MatrixClientResult = Result<
@@ -41,7 +41,7 @@ export function setMatrixServerDetails(url: string, userUuid: string): void {
 
 async function instantiateMatrixClient(url: string, userUuid: string): Promise<void> {
     logger.setLevel(logger.levels.ERROR);
-    window.Olm = Olm;
+    //window.Olm = Olm;
 
     // First step, let's ensure we have a device ID. If not, let's create one and store it.
     let deviceId = localUserStore.getMatrixDeviceId(userUuid);
