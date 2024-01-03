@@ -88,6 +88,20 @@ const spaceManager = {
                         );
                         break;
                     }
+                    case "askMuteMicrophoneSpaceUserMessage": {
+                        socketManager.handleMuteMicrophoneSpaceUserMessage(
+                            pusher,
+                            message.message.askMuteMicrophoneSpaceUserMessage
+                        );
+                        break;
+                    }
+                    case "askMuteVideoSpaceUserMessage": {
+                        socketManager.handleMuteVideoSpaceUserMessage(
+                            pusher,
+                            message.message.askMuteVideoSpaceUserMessage
+                        );
+                        break;
+                    }
                     default: {
                         const _exhaustiveCheck: never = message.message;
                     }
