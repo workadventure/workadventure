@@ -6,7 +6,7 @@
         askDialogStore.acceptAskDialog(uuid);
     }
 
-    function refuse(uuid: string) {
+    function refuseRequest(uuid: string) {
         askDialogStore.refuseAskDialog(uuid);
     }
 </script>
@@ -21,11 +21,13 @@
                 {askDialog.message}
             </p>
             <div class="tw-flex tw-flex-row tw-justify-evenly">
-                <button type="button" class="btn light" on:click={() => acceptRequest(askDialog.uuid)}
+                <button type="button" class="btn light accept-request" on:click={() => acceptRequest(askDialog.uuid)}
                     >{$LL.follow.interactMenu.yes()}</button
                 >
-                <button type="button" class="btn outline" on:click|preventDefault={() => refuse(askDialog.uuid)}
-                    >{$LL.follow.interactMenu.no()}</button
+                <button
+                    type="button"
+                    class="btn outline refuse-request"
+                    on:click|preventDefault={() => refuseRequest(askDialog.uuid)}>{$LL.follow.interactMenu.no()}</button
                 >
             </div>
         </div>
