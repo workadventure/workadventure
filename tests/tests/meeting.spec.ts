@@ -33,9 +33,9 @@ test.describe('meeting multiple users', () => {
     await Map.walkTo(userBob, 'ArrowRight', 3000);
 
     // The user in the bubble meeting should be visible
-    await expect(await page.locator('.cameras-container .other-cameras .video-container')).toBeVisible({timeout: 20_000});
+    await expect(page.locator('.cameras-container .other-cameras .video-container')).toBeVisible({timeout: 20_000});
     // The user in the bubble meeting should have action button
-    await expect(await page.locator('.cameras-container .other-cameras .video-container .action-button')).toBeVisible({timeout: 20_000});
+    await expect(page.locator('.cameras-container .other-cameras .video-container .action-button')).toBeVisible({timeout: 20_000});
 
     // Click on the action button of "Alice"
     await page.click('.cameras-container .other-cameras .video-container .action-button#more-action');
@@ -43,13 +43,13 @@ test.describe('meeting multiple users', () => {
     await page.click('.cameras-container .other-cameras .video-container .action-button#mute-audio-user');
 
     // Check if the user has been muted
-    await expect(await page.locator('.cameras-container .other-cameras .video-container .media-box-camera-off-size')).toBeVisible({timeout: 20_000});
+    await expect(page.locator('.cameras-container .other-cameras .video-container .media-box-camera-off-size')).toBeVisible({timeout: 20_000});
 
     // Click on the mute video button
     await page.click('.cameras-container .other-cameras .video-container .action-button#mute-video-user');
 
     // Check if the user has been muted
-    await expect(await page.locator('.cameras-container .other-cameras .video-container.video-off')).toBeVisible({timeout: 20_000});
+    await expect(page.locator('.cameras-container .other-cameras .video-container.video-off')).toBeVisible({timeout: 20_000});
 
     page.close();
     userBob.close();
@@ -95,9 +95,9 @@ test.describe('meeting multiple users', () => {
     await Map.walkTo(userTest, 'ArrowRight', 3000);
 
     // The user in the bubble meeting should be visible
-    await expect(await page.locator('.cameras-container .other-cameras .video-container').nth(0)).toBeVisible({timeout: 20_000});
+    await expect(page.locator('.cameras-container .other-cameras .video-container').nth(0)).toBeVisible({timeout: 20_000});
     // The user in the bubble meeting should have action button
-    await expect(await page.locator('.cameras-container .other-cameras .video-container .action-button').nth(0)).toBeVisible({timeout: 20_000});
+    await expect(page.locator('.cameras-container .other-cameras .video-container .action-button').nth(0)).toBeVisible({timeout: 20_000});
 
     // Click on the action button of "Alice"
     await page.click('.cameras-container .other-cameras .video-container .action-button#more-action');
@@ -105,24 +105,24 @@ test.describe('meeting multiple users', () => {
     await page.click('.cameras-container .other-cameras .video-container .action-button#mute-audio-everybody');
 
     // Check if the user "Bob" has been muted
-    await expect(await page.locator('.cameras-container .other-cameras .video-container .media-box-camera-off-size').nth(0)).toBeVisible({timeout: 20_000});
+    await expect(page.locator('.cameras-container .other-cameras .video-container .media-box-camera-off-size').nth(0)).toBeVisible({timeout: 20_000});
     // Check if the user "Test" has been muted
-    await expect(await page.locator('.cameras-container .other-cameras .video-container .media-box-camera-off-size').nth(1)).toBeVisible({timeout: 20_000});
+    await expect(page.locator('.cameras-container .other-cameras .video-container .media-box-camera-off-size').nth(1)).toBeVisible({timeout: 20_000});
 
     // Click on the mute video button
     await page.click('.cameras-container .other-cameras .video-container .action-button#mute-video-everybody');
 
     // Check if the user "Bob" has been muted
-    await expect(await page.locator('.cameras-container .other-cameras .video-container.video-off').nth(0)).toBeVisible({timeout: 20_000});
+    await expect(page.locator('.cameras-container .other-cameras .video-container.video-off').nth(0)).toBeVisible({timeout: 20_000});
     // Check if the user "Test" has been muted
-    await expect(await page.locator('.cameras-container .other-cameras .video-container.video-off').nth(1)).toBeVisible({timeout: 20_000});
+    await expect(page.locator('.cameras-container .other-cameras .video-container.video-off').nth(1)).toBeVisible({timeout: 20_000});
 
     // Click on the kickoff button
     await page.click('.cameras-container .other-cameras .video-container .action-button#kickoff-user');
     // Check if the user "Bob" has been kicked off
-    await expect(await page.locator('.cameras-container .other-cameras .video-container').nth(1)).toBeHidden({timeout: 20_000});
+    await expect(page.locator('.cameras-container .other-cameras .video-container').nth(1)).toBeHidden({timeout: 20_000});
     // Check if the user "Test" hasn't been kicked off
-    await expect(await page.locator('.cameras-container .other-cameras .video-container').nth(0)).toBeVisible({timeout: 20_000});
+    await expect(page.locator('.cameras-container .other-cameras .video-container').nth(0)).toBeVisible({timeout: 20_000});
 
     page.close();
     userBob.close();
