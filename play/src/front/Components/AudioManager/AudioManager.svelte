@@ -70,7 +70,7 @@
             audioManagerVisibilityStore.set(false);
         };
 
-        void HTMLAudioPlayer.play()
+        HTMLAudioPlayer.play()
             .then(() => {
                 state = "playing";
             })
