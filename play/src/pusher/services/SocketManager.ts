@@ -516,6 +516,35 @@ export class SocketManager implements ZoneEventListener {
                                     });
                                     break;
                                 }
+                                case "askMuteMicrophoneSpaceUserMessage": {
+                                    debug("[space] askMuteMicrophoneSpaceUserMessage received");
+                                    spaceStreamToPusher.write({
+                                        message: {
+                                            $case: "askMuteMicrophoneSpaceUserMessage",
+                                            askMuteMicrophoneSpaceUserMessage: {
+                                                userId: message.message.askMuteMicrophoneSpaceUserMessage.userId,
+                                                spaceName: message.message.askMuteMicrophoneSpaceUserMessage.spaceName,
+                                                filterName:
+                                                    message.message.askMuteMicrophoneSpaceUserMessage.filterName,
+                                            },
+                                        },
+                                    });
+                                    break;
+                                }
+                                case "askMuteVideoSpaceUserMessage": {
+                                    debug("[space] askMuteVideoSpaceUserMessage received");
+                                    spaceStreamToPusher.write({
+                                        message: {
+                                            $case: "askMuteVideoSpaceUserMessage",
+                                            askMuteVideoSpaceUserMessage: {
+                                                userId: message.message.askMuteVideoSpaceUserMessage.userId,
+                                                spaceName: message.message.askMuteVideoSpaceUserMessage.spaceName,
+                                                filterName: message.message.askMuteVideoSpaceUserMessage.filterName,
+                                            },
+                                        },
+                                    });
+                                    break;
+                                }
                                 default: {
                                     const _exhaustiveCheck: never = message.message;
                                 }
@@ -1410,7 +1439,7 @@ export class SocketManager implements ZoneEventListener {
             this.forwardMessageToBack(client, message);
             return;
         }
-        space.kickOffUser(participantId);
+        space.kickOffUser(socketData, participantId);
     }
 
     handleMuteParticipantIdSpaceMessage(
@@ -1425,7 +1454,7 @@ export class SocketManager implements ZoneEventListener {
             this.forwardMessageToBack(client, message);
             return;
         }
-        space.muteMicrophoneUser(participantId);
+        space.muteMicrophoneUser(socketData, participantId);
     }
 
     handleMuteVideoParticipantIdSpaceMessage(
@@ -1440,7 +1469,7 @@ export class SocketManager implements ZoneEventListener {
             this.forwardMessageToBack(client, message);
             return;
         }
-        space.muteVideoUser(participantId);
+        space.muteVideoUser(socketData, participantId);
     }
 
     handleMuteEveryBodySpaceMessage(
@@ -1455,7 +1484,7 @@ export class SocketManager implements ZoneEventListener {
             this.forwardMessageToBack(client, message);
             return;
         }
-        space.muteMicrophoneEverybodyUser(participantId);
+        space.muteMicrophoneEverybodyUser(socketData, participantId);
     }
 
     handleMuteVideoEveryBodySpaceMessage(
@@ -1470,7 +1499,7 @@ export class SocketManager implements ZoneEventListener {
             this.forwardMessageToBack(client, message);
             return;
         }
-        space.muteVideoEverybodyUser(participantId);
+        space.muteVideoEverybodyUser(socketData, participantId);
     }
 }
 

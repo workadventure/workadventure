@@ -11,6 +11,7 @@
     import Tooltip from "../Util/Tooltip.svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { VideoPeer } from "../../WebRtc/VideoPeer";
+    import { userIsAdminStore } from "../../Stores/GameStore";
     import reportImg from "./images/report.svg";
 
     export let embedScreen: EmbedScreen;
@@ -109,14 +110,16 @@
         </button>
 
         <!-- Mute audio every body -->
-        <button
-            id="mute-audio-everybody"
-            class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
-            on:click|preventDefault|stopPropagation={() => muteAudioEveryBody()}
-        >
-            <img src={MicrophoneCloseSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
-            <Tooltip text={$LL.camera.menu.muteAudioEveryBody()} leftPosition="true" />
-        </button>
+        {#if $userIsAdminStore}
+            <button
+                id="mute-audio-everybody"
+                class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+                on:click|preventDefault|stopPropagation={() => muteAudioEveryBody()}
+            >
+                <img src={MicrophoneCloseSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
+                <Tooltip text={$LL.camera.menu.muteAudioEveryBody()} leftPosition="true" />
+            </button>
+        {/if}
 
         <!-- Mute video -->
         <button
@@ -129,24 +132,28 @@
         </button>
 
         <!-- Mute video every body -->
-        <button
-            id="mute-video-everybody"
-            class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
-            on:click|preventDefault|stopPropagation={() => muteVideoEveryBody()}
-        >
-            <img src={NoVideoSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
-            <Tooltip text={$LL.camera.menu.muteVideoEveryBody()} leftPosition="true" />
-        </button>
+        {#if $userIsAdminStore}
+            <button
+                id="mute-video-everybody"
+                class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+                on:click|preventDefault|stopPropagation={() => muteVideoEveryBody()}
+            >
+                <img src={NoVideoSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
+                <Tooltip text={$LL.camera.menu.muteVideoEveryBody()} leftPosition="true" />
+            </button>
+        {/if}
 
         <!-- Kickoff user -->
-        <button
-            id="kickoff-user"
-            class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
-            on:click|preventDefault|stopPropagation={() => kickoff()}
-        >
-            <img src={banUserSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
-            <Tooltip text={$LL.camera.menu.kickoffUser()} leftPosition="true" />
-        </button>
+        {#if $userIsAdminStore}
+            <button
+                id="kickoff-user"
+                class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+                on:click|preventDefault|stopPropagation={() => kickoff()}
+            >
+                <img src={banUserSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
+                <Tooltip text={$LL.camera.menu.kickoffUser()} leftPosition="true" />
+            </button>
+        {/if}
 
         <!-- Send private message -->
         <button

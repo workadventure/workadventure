@@ -41,7 +41,7 @@
 {#if $followStateStore === "requesting" && $followRoleStore === "follower"}
     <div
         class="interact-menu blue-dialog-box outline-light
-    tw-text-center tw-w-72 tw-absolute tw-bottom-36 tw-left-0 tw-right-0 tw-pointer-events-auto tw-z-[150] tw-right-0 tw-left-0 tw-m-auto"
+    tw-text-center tw-w-72 tw-absolute tw-bottom-36 tw-left-0 tw-right-0 tw-pointer-events-auto tw-z-[150] tw-m-auto"
     >
         <p class="tw-mt-2">{$LL.follow.interactMenu.title.follow({ leader: name($followUsersStore[0]) })}</p>
         <div class="tw-flex tw-flex-row tw-justify-evenly">

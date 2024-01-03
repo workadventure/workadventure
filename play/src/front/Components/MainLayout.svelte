@@ -22,6 +22,7 @@
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
+    import { askDialogStore } from "../Stores/MeetingStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
@@ -44,6 +45,7 @@
     import Modal from "./Modal/Modal.svelte";
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
+    import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -141,6 +143,10 @@
 
         {#if $modalVisibilityStore}
             <Modal />
+        {/if}
+
+        {#if $askDialogStore}
+            <MuteDialogBox />
         {/if}
     </section>
 

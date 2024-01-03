@@ -80,6 +80,7 @@ import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "
 import { notificationPlayingStore } from "../Stores/NotificationStore";
 import LL from "../../i18n/i18n-svelte";
 import { chatZoneLiveStore } from "../Stores/ChatStore";
+import { askDialogStore } from "../Stores/MeetingStore";
 import { localUserStore } from "./LocalUserStore";
 import { connectionManager } from "./ConnectionManager";
 import { adminMessagesService } from "./AdminMessagesService";
@@ -467,6 +468,37 @@ export class RoomConnection implements RoomConnection {
                                 requestedCameraState.disableWebcam();
                                 break;
                             }
+                            case "askMuteMicrophoneSpaceUserMessage": {
+                                if (subMessage.askMuteMicrophoneSpaceUserMessage.userId !== this.userId?.toString())
+                                    break;
+                                notificationPlayingStore.playNotification(
+                                    get(LL).notification.askToMuteMicrophone(),
+                                    "audio-mute.svg"
+                                );
+                                askDialogStore.addAskDialog(
+                                    subMessage.askMuteMicrophoneSpaceUserMessage.userId,
+                                    get(LL).notification.askToMuteMicrophone(),
+                                    () => {
+                                        requestedMicrophoneState.disableMicrophone();
+                                    }
+                                );
+                                break;
+                            }
+                            case "askMuteVideoSpaceUserMessage": {
+                                if (subMessage.askMuteVideoSpaceUserMessage.userId !== this.userId?.toString()) break;
+                                notificationPlayingStore.playNotification(
+                                    get(LL).notification.askToMuteCamera(),
+                                    "camera-off.png"
+                                );
+                                askDialogStore.addAskDialog(
+                                    subMessage.askMuteVideoSpaceUserMessage.userId,
+                                    get(LL).notification.askToMuteCamera(),
+                                    () => {
+                                        requestedCameraState.disableWebcam();
+                                    }
+                                );
+                                break;
+                            }
                             default: {
                                 // Security check: if we forget a "case", the line below will catch the error at compile-time.
                                 //@ts-ignore
@@ -727,6 +759,31 @@ export class RoomConnection implements RoomConnection {
                 case "mutedVideoMessage": {
                     notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
                     requestedCameraState.disableWebcam();
+                    break;
+                }
+                case "askMutedMessage": {
+                    notificationPlayingStore.playNotification(
+                        get(LL).notification.askToMuteMicrophone(),
+                        "audio-mute.svg"
+                    );
+                    askDialogStore.addAskDialog(
+                        message.askMutedMessage.userUuid,
+                        get(LL).notification.askToMuteMicrophone(),
+                        () => {
+                            requestedMicrophoneState.disableMicrophone();
+                        }
+                    );
+                    break;
+                }
+                case "askMutedVideoMessage": {
+                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
+                    askDialogStore.addAskDialog(
+                        message.askMutedVideoMessage.userUuid,
+                        get(LL).notification.askToMuteCamera(),
+                        () => {
+                            requestedCameraState.disableWebcam();
+                        }
+                    );
                     break;
                 }
                 default: {

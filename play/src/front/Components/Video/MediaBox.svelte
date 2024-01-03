@@ -60,7 +60,7 @@
             class:mozaic-quarter={mozaicQuarter}
         >
             <div
-                class="tw-w-full tw-flex screen-blocker tw-flex tw-items-center"
+                class="tw-w-full tw-flex screen-blocker tw-items-center"
                 class:tw-mx-auto={!isHightlighted}
                 class:tw-h-full={isHightlighted && videoEnabled}
             >
