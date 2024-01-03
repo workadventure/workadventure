@@ -5,6 +5,7 @@ const audio: DeepPartial<Translation["audio"]> = {
     manager: {
         reduce: "Diminuer le volume du lecteur audio dans les conversations",
         allow: "Autoriser l'audio",
+        error: "Impossible de charger le son",
     },
     message: "Message audio",
     disable: "Couper le microphone",

@@ -4,6 +4,7 @@ const audio: BaseTranslation = {
     manager: {
         reduce: "Decrease audio player volume while speaking",
         allow: "Allow audio",
+        error: "Could not load sound",
     },
     message: "Audio message",
     disable: "Turn off your microphone",
