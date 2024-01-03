@@ -41,12 +41,13 @@ const camera: BaseTranslation = {
         moreAction: "More actions",
         closeMenu: "Close menu",
         senPrivateMessage: "Send a private message (coming soon)",
-        banUser: "Ban user",
+        kickoffUser: "Kick off user",
         muteAudioUser: "Mute audio",
         muteAudioEveryBody: "Mute audio for everybody",
         muteVideoUser: "Mute video",
         muteVideoEveryBody: "Mute video for everybody",
         pin: "Pin",
+        blockOrReportUser: "Block or report user",
     },
 };
 

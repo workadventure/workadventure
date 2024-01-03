@@ -40,12 +40,13 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "Mais ações",
         closeMenu: "Fechar menu",
         senPrivateMessage: "Enviar mensagem privada (em breve)",
-        banUser: "Banir usuário",
+        kickoffUser: "Expulsar usuário",
         muteAudioUser: "Mudo",
         muteAudioEveryBody: "Mudo para todos",
         muteVideoUser: "Desligar vídeo",
         muteVideoEveryBody: "Desligar vídeo para todos",
         pin: "Fixar",
+        blockOrReportUser: "Bloquear ou denunciar usuário",
     },
 };
 

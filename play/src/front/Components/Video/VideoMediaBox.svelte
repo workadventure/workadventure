@@ -21,7 +21,6 @@
     import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import BanReportBox from "./BanReportBox.svelte";
     import ActionMediaBox from "./ActionMediaBox.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
@@ -314,12 +313,6 @@
                     <img draggable="false" src={microphoneOffImg} class="tw-flex tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
                 </div>
             {/if}
-            <div
-                class="report-ban-container tw-flex tw-z-[600] media-box-camera-on-size media-box-camera-on-position
-            tw-translate-x-3 tw-transition-all tw-opacity-0 tw-w-full tw-h-full"
-            >
-                <BanReportBox {peer} />
-            </div>
         {:else}
             <span
                 style={$embedScreenLayoutStore === LayoutMode.VideoChat
@@ -344,9 +337,6 @@
                     class:tw-brightness-100={textColor === "white"}
                 />
             {/if}
-            <div class="tw-w-full tw-flex report-ban-container-cam-off tw-opacity-0 tw-h-10">
-                <BanReportBox {peer} />
-            </div>
         {/if}
     </div>
 </div>

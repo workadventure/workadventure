@@ -10,6 +10,8 @@
     import { TackStreamWrapperInterface } from "../../Streaming/Contract/TackStreamWrapperInterface";
     import Tooltip from "../Util/Tooltip.svelte";
     import { LL } from "../../../i18n/i18n-svelte";
+    import { VideoPeer } from "../../WebRtc/VideoPeer";
+    import reportImg from "./images/report.svg";
 
     export let embedScreen: EmbedScreen;
     export let trackStreamWraper: TackStreamWrapperInterface;
@@ -54,6 +56,10 @@
 
     function toggleActionMenu(value: boolean) {
         moreActionOpened.set(value);
+    }
+
+    function openBlockOrReportPopup() {
+        trackStreamWraper.blockOrReportUser();
     }
 </script>
 
@@ -131,7 +137,7 @@
             on:click|preventDefault|stopPropagation={() => kickoff()}
         >
             <img src={banUserSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
-            <Tooltip text={$LL.camera.menu.banUser()} leftPosition="true" />
+            <Tooltip text={$LL.camera.menu.kickoffUser()} leftPosition="true" />
         </button>
 
         <!-- Send private message -->
@@ -142,6 +148,17 @@
             <img src={BubbleTalkPng} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
             <Tooltip text={$LL.camera.menu.senPrivateMessage()} leftPosition="true" />
         </button>
+
+        <!-- Block or report user -->
+        {#if trackStreamWraper instanceof VideoPeer}
+            <button
+                class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+                on:click|preventDefault|stopPropagation={() => openBlockOrReportPopup()}
+            >
+                <img src={reportImg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
+                <Tooltip text={$LL.camera.menu.blockOrReportUser()} leftPosition="true" />
+            </button>
+        {/if}
     {/if}
 </div>
 

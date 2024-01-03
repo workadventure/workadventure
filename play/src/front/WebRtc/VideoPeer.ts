@@ -17,6 +17,7 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
 import { TackStreamWrapperInterface } from "../Streaming/Contract/TackStreamWrapperInterface";
 import { TrackInterface } from "../Streaming/Contract/TrackInterface";
+import { showReportScreenStore } from "../Stores/ShowReportScreenStore";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -391,5 +392,8 @@ export class VideoPeer extends Peer implements TackStreamWrapperInterface {
     }
     kickoff(): void {
         this.connection.emitKickOffUserMessage(this.userUuid, "peer");
+    }
+    blockOrReportUser(): void {
+        showReportScreenStore.set({ userId: this.userId, userName: this.userName });
     }
 }

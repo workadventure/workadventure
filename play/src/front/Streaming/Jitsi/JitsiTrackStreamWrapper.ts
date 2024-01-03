@@ -72,4 +72,8 @@ export class JitsiTrackStreamWrapper implements TackStreamWrapperInterface {
     public kickoff(): void {
         this.jitsiTrackWrapper.kickoff();
     }
+
+    public blockOrReportUser(): void {
+        console.info("Not implemented yet!");
+    }
 }

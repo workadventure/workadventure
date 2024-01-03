@@ -41,12 +41,13 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "dalše akcije",
         closeMenu: "meny začinić",
         senPrivateMessage: "pśewatne powěsće posłaś (pśichadźe)",
-        banUser: "wužiwarja wylušić",
+        kickoffUser: "wužiwarja wotmětować",
         muteAudioUser: "audio stummschalten",
         muteAudioEveryBody: "audio za wšěch stummschalten",
         muteVideoUser: "video stummschalten",
         muteVideoEveryBody: "video za wšěch stummschalten",
         pin: "pśipinaś",
+        blockOrReportUser: "wužiwarja blokować abo pśihłasować",
     },
 };
 

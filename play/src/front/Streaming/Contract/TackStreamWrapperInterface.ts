@@ -29,4 +29,6 @@ export interface TackStreamWrapperInterface {
     muteVideoEverybody(): void;
 
     kickoff(): void;
+
+    blockOrReportUser(): void;
 }

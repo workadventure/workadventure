@@ -39,12 +39,13 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "更多操作",
         closeMenu: "关闭菜单",
         senPrivateMessage: "发送私信 (即将推出)",
-        banUser: "封禁用户",
+        kickoffUser: "踢出用户",
         muteAudioUser: "静音",
         muteAudioEveryBody: "静音所有人",
         muteVideoUser: "关闭视频",
         muteVideoEveryBody: "关闭所有人的视频",
         pin: "固定",
+        blockOrReportUser: "屏蔽或举报用户",
     },
 };
 
