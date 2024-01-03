@@ -94,7 +94,7 @@ test.describe('Map editor', () => {
     // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
   });
 
-  test('Successfully set areas in the map editor', async ({ page, browser, request }) => {
+  test('Successfully set "SpeakerZone" in the map editor', async ({ page, browser, request }) => {
     if(browser.browserType() === webkit) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();

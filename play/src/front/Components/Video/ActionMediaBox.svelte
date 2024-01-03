@@ -65,20 +65,22 @@
 
 <div
     class={`tw-absolute tw-top-0 
-    ${$moreActionOpened ? (!videoEnabled ? "-tw-left-52" : "-tw-left-14") : "-tw-left-8"} 
+    ${$moreActionOpened ? (!videoEnabled ? "-tw-left-56" : "-tw-left-14") : "-tw-left-8"} 
     tw-flex tw-flex-col tw-flex-wrap tw-justify-between tw-items-center tw-p-1 tw-bg-black tw-bg-opacity-50 tw-rounded-lg tw-max-h-full`}
 >
     {#if !$moreActionOpened}
-        <!-- Moe action -->
+        <!-- More action -->
         <button
+            id="more-action"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
             on:click|preventDefault|stopPropagation={() => toggleActionMenu(true)}
         >
             <img src={MoreActionSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
         </button>
     {:else}
-        <!-- Moe action -->
+        <!-- Less action -->
         <button
+            id="less-action"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
             on:click|preventDefault|stopPropagation={() => toggleActionMenu(false)}
         >
@@ -88,6 +90,7 @@
 
         <!-- Pin -->
         <button
+            id="pin"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
             on:click|preventDefault|stopPropagation={() => pin()}
         >
@@ -97,6 +100,7 @@
 
         <!-- Mute audio user -->
         <button
+            id="mute-audio-user"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
             on:click|preventDefault|stopPropagation={() => muteAudio()}
         >
@@ -106,6 +110,7 @@
 
         <!-- Mute audio every body -->
         <button
+            id="mute-audio-everybody"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
             on:click|preventDefault|stopPropagation={() => muteAudioEveryBody()}
         >
@@ -115,6 +120,7 @@
 
         <!-- Mute video -->
         <button
+            id="mute-video-user"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
             on:click|preventDefault|stopPropagation={() => muteVideo()}
         >
@@ -124,6 +130,7 @@
 
         <!-- Mute video every body -->
         <button
+            id="mute-video-everybody"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
             on:click|preventDefault|stopPropagation={() => muteVideoEveryBody()}
         >
@@ -133,6 +140,7 @@
 
         <!-- Kickoff user -->
         <button
+            id="kickoff-user"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
             on:click|preventDefault|stopPropagation={() => kickoff()}
         >
@@ -142,6 +150,7 @@
 
         <!-- Send private message -->
         <button
+            id="send-private-message"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
             on:click|preventDefault|stopPropagation={() => sendPrivateMessage()}
         >
@@ -152,6 +161,7 @@
         <!-- Block or report user -->
         {#if trackStreamWraper instanceof VideoPeer}
             <button
+                id="block-or-report-user"
                 class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
                 on:click|preventDefault|stopPropagation={() => openBlockOrReportPopup()}
             >
