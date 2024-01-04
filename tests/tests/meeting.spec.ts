@@ -2,8 +2,8 @@ import { expect, test, webkit } from '@playwright/test';
 import { login } from './utils/roles';
 import Map from "./utils/map";
 
-test.describe('meeting multiple users', () => {
-  test('can mute video & microphone user', async ({page, browser}) => {
+test.describe('Meeting actions test', () => {
+  test('Meeting action to mute microphone & video', async ({page, browser}) => {
     // Because webkit in playwright does not support Camera/Microphone Permission by settings
     if(browser.browserType() === webkit) {
       //eslint-disable-next-line playwright/no-skipped-test
