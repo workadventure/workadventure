@@ -429,7 +429,7 @@ export class RoomConnection implements RoomConnection {
                                 if (subMessage.muteMicrophoneSpaceUserMessage.userId !== this.userId?.toString()) break;
                                 notificationPlayingStore.playNotification(
                                     get(LL).notification.askToMuteMicrophone(),
-                                    "audio-mute.svg"
+                                    "microphone-off.png"
                                 );
                                 requestedMicrophoneState.disableMicrophone();
                                 break;
@@ -452,7 +452,7 @@ export class RoomConnection implements RoomConnection {
                                     break;
                                 notificationPlayingStore.playNotification(
                                     get(LL).notification.askToMuteMicrophone(),
-                                    "audio-mute.svg"
+                                    "microphone-off.png"
                                 );
                                 requestedMicrophoneState.disableMicrophone();
                                 break;
@@ -473,7 +473,7 @@ export class RoomConnection implements RoomConnection {
                                     break;
                                 notificationPlayingStore.playNotification(
                                     get(LL).notification.askToMuteMicrophone(),
-                                    "audio-mute.svg"
+                                    "microphone-off.png"
                                 );
                                 askDialogStore.addAskDialog(
                                     subMessage.askMuteMicrophoneSpaceUserMessage.userId,
@@ -751,7 +751,7 @@ export class RoomConnection implements RoomConnection {
                 case "mutedMessage": {
                     notificationPlayingStore.playNotification(
                         get(LL).notification.askToMuteMicrophone(),
-                        "audio-mute.svg"
+                        "microphone-off.png"
                     );
                     requestedMicrophoneState.disableMicrophone();
                     break;
@@ -764,7 +764,7 @@ export class RoomConnection implements RoomConnection {
                 case "askMutedMessage": {
                     notificationPlayingStore.playNotification(
                         get(LL).notification.askToMuteMicrophone(),
-                        "audio-mute.svg"
+                        "microphone-off.png"
                     );
                     askDialogStore.addAskDialog(
                         message.askMutedMessage.userUuid,
