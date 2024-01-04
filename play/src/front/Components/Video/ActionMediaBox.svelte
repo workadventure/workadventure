@@ -12,6 +12,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { VideoPeer } from "../../WebRtc/VideoPeer";
     import { userIsAdminStore } from "../../Stores/GameStore";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import reportImg from "./images/report.svg";
 
     export let embedScreen: EmbedScreen;
@@ -74,6 +75,7 @@
         <button
             id="more-action"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+            on:click={() => analyticsClient.moreActionMetting()}
             on:click|preventDefault|stopPropagation={() => toggleActionMenu(true)}
         >
             <img src={MoreActionSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
@@ -93,6 +95,7 @@
         <button
             id="pin"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+            on:click={() => analyticsClient.pinMeetingAction()}
             on:click|preventDefault|stopPropagation={() => pin()}
         >
             <img src={PinSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
@@ -103,6 +106,7 @@
         <button
             id="mute-audio-user"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+            on:click={() => analyticsClient.muteMicrophoneMeetingAction()}
             on:click|preventDefault|stopPropagation={() => muteAudio()}
         >
             <img src={MicrophoneCloseSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
@@ -114,6 +118,7 @@
             <button
                 id="mute-audio-everybody"
                 class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+                on:click={() => analyticsClient.muteMicrophoneEverybodyMeetingAction()}
                 on:click|preventDefault|stopPropagation={() => muteAudioEveryBody()}
             >
                 <img src={MicrophoneCloseSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
@@ -125,6 +130,7 @@
         <button
             id="mute-video-user"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+            on:click={() => analyticsClient.muteVideoMeetingAction()}
             on:click|preventDefault|stopPropagation={() => muteVideo()}
         >
             <img src={NoVideoSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
@@ -136,6 +142,7 @@
             <button
                 id="mute-video-everybody"
                 class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+                on:click={() => analyticsClient.muteVideoEverybodyMeetingAction()}
                 on:click|preventDefault|stopPropagation={() => muteVideoEveryBody()}
             >
                 <img src={NoVideoSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
@@ -148,6 +155,7 @@
             <button
                 id="kickoff-user"
                 class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+                on:click={() => analyticsClient.kickoffMeetingAction()}
                 on:click|preventDefault|stopPropagation={() => kickoff()}
             >
                 <img src={banUserSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
@@ -159,6 +167,7 @@
         <button
             id="send-private-message"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+            on:click={() => analyticsClient.sendPrivateMessageMeetingAction()}
             on:click|preventDefault|stopPropagation={() => sendPrivateMessage()}
         >
             <img src={BubbleTalkPng} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
@@ -170,6 +179,7 @@
             <button
                 id="block-or-report-user"
                 class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+                on:click={() => analyticsClient.reportMeetingAction()}
                 on:click|preventDefault|stopPropagation={() => openBlockOrReportPopup()}
             >
                 <img src={reportImg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
