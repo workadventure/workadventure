@@ -1,11 +1,11 @@
 import { get, Readable, writable, Writable } from "svelte/store";
 import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-import { TackStreamWrapperInterface } from "../Contract/TackStreamWrapperInterface";
+import { TrackStreamWrapperInterface } from "../Contract/TrackStreamWrapperInterface";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 /**
  * An object that wraps a JitsiTrackWrapper and points only to "video/audio" or "desktop" track
  */
-export class JitsiTrackStreamWrapper implements TackStreamWrapperInterface {
+export class JitsiTrackStreamWrapper implements TrackStreamWrapperInterface {
     //public readonly uniqueId: string;
     private readonly _audioTrackStore: Writable<JitsiTrack | undefined> = writable<JitsiTrack | undefined>(undefined);
     private readonly _videoTrackStore: Writable<JitsiTrack | undefined> = writable<JitsiTrack | undefined>(undefined);

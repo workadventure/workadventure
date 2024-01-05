@@ -1607,7 +1607,7 @@ export class SocketManager {
         group.setOutOfBounds(true);
     }
 
-    handerMuteParticipantIdSpaceMessage(user: User, userMutedUuid: string) {
+    handeMuteParticipantIdSpaceMessage(user: User, userMutedUuid: string) {
         const group = user.group;
         if (!group) {
             return;
@@ -1634,13 +1634,13 @@ export class SocketManager {
                 },
             };
         }
-        for (const userMuted of usersMuted) {
+        for (const mutedUser of usersMuted) {
             // send mute event
-            userMuted.socket.write(serverToClientMessage);
+            mutedUser.socket.write(serverToClientMessage);
         }
     }
 
-    handlerMuteEveryBodySpaceMessage(user: User) {
+    handleMuteEveryBodySpaceMessage(user: User) {
         const group = user.group;
         if (!group) {
             return;
@@ -1648,9 +1648,9 @@ export class SocketManager {
         if (!user.tags.includes("admin")) {
             return;
         }
-        for (const userMuted of group.getUsers().values()) {
+        for (const mutedUser of group.getUsers().values()) {
             // not mute the user who sent the message
-            if (userMuted.uuid === user.uuid) continue;
+            if (mutedUser.uuid === user.uuid) continue;
             // send mute event
             const serverToClientMessage: ServerToClientMessage = {
                 message: {
@@ -1661,11 +1661,11 @@ export class SocketManager {
                     },
                 },
             };
-            userMuted.socket.write(serverToClientMessage);
+            mutedUser.socket.write(serverToClientMessage);
         }
     }
 
-    handerMuteVideoParticipantIdSpaceMessage(user: User, userMutedUuid: string) {
+    handeMuteVideoParticipantIdSpaceMessage(user: User, userMutedUuid: string) {
         const group = user.group;
         if (!group) {
             return;
@@ -1692,13 +1692,13 @@ export class SocketManager {
                 },
             };
         }
-        for (const userMuted of usersMuted) {
+        for (const mutedUser of usersMuted) {
             // send mute event
-            userMuted.socket.write(serverToClientMessage);
+            mutedUser.socket.write(serverToClientMessage);
         }
     }
 
-    handlerMuteVideoEveryBodySpaceMessage(user: User) {
+    handleMuteVideoEveryBodySpaceMessage(user: User) {
         const group = user.group;
         if (!group) {
             return;
@@ -1706,9 +1706,9 @@ export class SocketManager {
         if (!user.tags.includes("admin")) {
             return;
         }
-        for (const userMuted of group.getUsers().values()) {
+        for (const mutedUser of group.getUsers().values()) {
             // not mute the user who sent the message
-            if (userMuted.uuid === user.uuid) continue;
+            if (mutedUser.uuid === user.uuid) continue;
             // send mute event
             const serverToClientMessage: ServerToClientMessage = {
                 message: {
@@ -1719,7 +1719,7 @@ export class SocketManager {
                     },
                 },
             };
-            userMuted.socket.write(serverToClientMessage);
+            mutedUser.socket.write(serverToClientMessage);
         }
     }
 }

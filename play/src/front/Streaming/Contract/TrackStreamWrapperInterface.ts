@@ -1,7 +1,7 @@
 import { Readable } from "svelte/store";
 import { TrackInterface } from "./TrackInterface";
 
-export interface TackStreamWrapperInterface {
+export interface TrackStreamWrapperInterface {
     get uniqueId(): string;
 
     get videoTrackStore(): Readable<TrackInterface | undefined>;

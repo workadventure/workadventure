@@ -204,25 +204,25 @@ const roomManager = {
                                 break;
                             }
                             case "muteParticipantIdSpaceMessage": {
-                                socketManager.handerMuteParticipantIdSpaceMessage(
+                                socketManager.handeMuteParticipantIdSpaceMessage(
                                     user,
-                                    message.message.muteParticipantIdSpaceMessage.value
+                                    message.message.muteParticipantIdSpaceMessage.mutedUserUuid
                                 );
                                 break;
                             }
                             case "muteEveryBodySpaceMessage": {
-                                socketManager.handlerMuteEveryBodySpaceMessage(user);
+                                socketManager.handleMuteEveryBodySpaceMessage(user);
                                 break;
                             }
                             case "muteVideoParticipantIdSpaceMessage": {
-                                socketManager.handerMuteVideoParticipantIdSpaceMessage(
+                                socketManager.handeMuteVideoParticipantIdSpaceMessage(
                                     user,
-                                    message.message.muteVideoParticipantIdSpaceMessage.value
+                                    message.message.muteVideoParticipantIdSpaceMessage.mutedUserUuid
                                 );
                                 break;
                             }
                             case "muteVideoEveryBodySpaceMessage": {
-                                socketManager.handlerMuteVideoEveryBodySpaceMessage(user);
+                                socketManager.handleMuteVideoEveryBodySpaceMessage(user);
                                 break;
                             }
                             default: {

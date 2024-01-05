@@ -15,7 +15,7 @@ import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils"
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
-import { TackStreamWrapperInterface } from "../Streaming/Contract/TackStreamWrapperInterface";
+import { TrackStreamWrapperInterface } from "../Streaming/Contract/TrackStreamWrapperInterface";
 import { TrackInterface } from "../Streaming/Contract/TrackInterface";
 import { showReportScreenStore } from "../Stores/ShowReportScreenStore";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
@@ -32,7 +32,7 @@ export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
-export class VideoPeer extends Peer implements TackStreamWrapperInterface {
+export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
     public toClose = false;
     public _connected = false;
     public remoteStream!: MediaStream;

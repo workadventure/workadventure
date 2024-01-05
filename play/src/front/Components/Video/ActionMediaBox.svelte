@@ -7,7 +7,7 @@
     import NoVideoSvg from "../images/no-video.svg";
     import PinSvg from "../images/pin.svg";
     import BubbleTalkPng from "../images/bubble-talk.png";
-    import { TackStreamWrapperInterface } from "../../Streaming/Contract/TackStreamWrapperInterface";
+    import { TrackStreamWrapperInterface } from "../../Streaming/Contract/TrackStreamWrapperInterface";
     import Tooltip from "../Util/Tooltip.svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { VideoPeer } from "../../WebRtc/VideoPeer";
@@ -16,7 +16,7 @@
     import reportImg from "./images/report.svg";
 
     export let embedScreen: EmbedScreen;
-    export let trackStreamWraper: TackStreamWrapperInterface;
+    export let trackStreamWraper: TrackStreamWrapperInterface;
     export let videoEnabled: boolean;
 
     let moreActionOpened = writable<boolean>(false);

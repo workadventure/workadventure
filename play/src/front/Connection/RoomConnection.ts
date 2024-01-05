@@ -49,6 +49,16 @@ import {
     EmbeddableWebsiteAnswer,
     CompanionTextureMessage,
     RoomShortDescription,
+    MuteMicrophoneSpaceUserMessage,
+    MuteVideoSpaceUserMessage,
+    MuteMicrophoneEverybodySpaceUserMessage,
+    MuteVideoEverybodySpaceUserMessage,
+    MutedMessage,
+    MutedVideoMessage,
+    AskMuteVideoSpaceUserMessage,
+    AskMuteMicrophoneSpaceUserMessage,
+    AskMutedMessage,
+    AskMutedVideoMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
@@ -76,11 +86,8 @@ import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/
 import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
 import { currentLiveStreamingNameStore } from "../Stores/MegaphoneStore";
 import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
-import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
-import { notificationPlayingStore } from "../Stores/NotificationStore";
-import LL from "../../i18n/i18n-svelte";
+import { isSpeakerStore } from "../Stores/MediaStore";
 import { chatZoneLiveStore } from "../Stores/ChatStore";
-import { askDialogStore } from "../Stores/MeetingStore";
 import { localUserStore } from "./LocalUserStore";
 import { connectionManager } from "./ConnectionManager";
 import { adminMessagesService } from "./AdminMessagesService";
@@ -210,9 +217,30 @@ export class RoomConnection implements RoomConnection {
     public readonly updateSpaceMetadataMessageStream = this._updateSpaceMetadataMessageStream.asObservable();
     private readonly _megaphoneSettingsMessageStream = new BehaviorSubject<MegaphoneSettings | undefined>(undefined);
     public readonly megaphoneSettingsMessageStream = this._megaphoneSettingsMessageStream.asObservable();
-
     private readonly _receivedEventMessageStream = new Subject<ReceiveEventEvent>();
     public readonly receivedEventMessageStream = this._receivedEventMessageStream.asObservable();
+
+    private readonly _muteMicrophoneSpaceUserMessage = new Subject<MuteMicrophoneSpaceUserMessage>();
+    public readonly muteMicrophoneSpaceUserMessage = this._muteMicrophoneSpaceUserMessage.asObservable();
+    private readonly _muteVideoSpaceUserMessage = new Subject<MuteVideoSpaceUserMessage>();
+    public readonly muteVideoSpaceUserMessage = this._muteVideoSpaceUserMessage.asObservable();
+    private readonly _muteMicrophoneEverybodySpaceUserMessage = new Subject<MuteMicrophoneEverybodySpaceUserMessage>();
+    public readonly muteMicrophoneEverybodySpaceUserMessage =
+        this._muteMicrophoneEverybodySpaceUserMessage.asObservable();
+    private readonly _muteVideoEverybodySpaceUserMessage = new Subject<MuteVideoEverybodySpaceUserMessage>();
+    public readonly muteVideoEverybodySpaceUserMessage = this._muteVideoEverybodySpaceUserMessage.asObservable();
+    private readonly _askMuteVideoSpaceUserMessage = new Subject<AskMuteVideoSpaceUserMessage>();
+    public readonly askMuteVideoSpaceUserMessage = this._askMuteVideoSpaceUserMessage.asObservable();
+    private readonly _askMuteMicrophoneSpaceUserMessage = new Subject<AskMuteMicrophoneSpaceUserMessage>();
+    public readonly askMuteMicrophoneSpaceUserMessage = this._askMuteMicrophoneSpaceUserMessage.asObservable();
+    private readonly _mutedMessage = new Subject<MutedMessage>();
+    public readonly mutedMessage = this._mutedMessage.asObservable();
+    private readonly _mutedVideoMessage = new Subject<MutedVideoMessage>();
+    public readonly mutedVideoMessage = this._mutedVideoMessage.asObservable();
+    private readonly _askMutedMessage = new Subject<AskMutedMessage>();
+    public readonly askMutedMessage = this._askMutedMessage.asObservable();
+    private readonly _askMutedVideoMessage = new Subject<AskMutedVideoMessage>();
+    public readonly askMutedVideoMessage = this._askMutedVideoMessage.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -426,21 +454,19 @@ export class RoomConnection implements RoomConnection {
                                 break;
                             }
                             case "muteMicrophoneSpaceUserMessage": {
-                                if (subMessage.muteMicrophoneSpaceUserMessage.userId !== this.userId?.toString()) break;
-                                notificationPlayingStore.playNotification(
-                                    get(LL).notification.askToMuteMicrophone(),
-                                    "microphone-off.png"
+                                console.log(
+                                    "muteMicrophoneSpaceUserMessage",
+                                    subMessage.muteMicrophoneSpaceUserMessage
                                 );
-                                requestedMicrophoneState.disableMicrophone();
+                                if (subMessage.muteMicrophoneSpaceUserMessage.userId !== this.userId?.toString()) break;
+
+                                this._muteMicrophoneSpaceUserMessage.next(subMessage.muteMicrophoneSpaceUserMessage);
                                 break;
                             }
                             case "muteVideoSpaceUserMessage": {
                                 if (subMessage.muteVideoSpaceUserMessage.userId !== this.userId?.toString()) break;
-                                notificationPlayingStore.playNotification(
-                                    get(LL).notification.askToMuteCamera(),
-                                    "camera-off.png"
-                                );
-                                requestedCameraState.disableWebcam();
+
+                                this._muteVideoSpaceUserMessage.next(subMessage.muteVideoSpaceUserMessage);
                                 break;
                             }
                             case "muteMicrophoneEverybodySpaceUserMessage": {
@@ -450,53 +476,34 @@ export class RoomConnection implements RoomConnection {
                                     this.userId?.toString()
                                 )
                                     break;
-                                notificationPlayingStore.playNotification(
-                                    get(LL).notification.askToMuteMicrophone(),
-                                    "microphone-off.png"
+                                this._muteMicrophoneEverybodySpaceUserMessage.next(
+                                    subMessage.muteMicrophoneEverybodySpaceUserMessage
                                 );
-                                requestedMicrophoneState.disableMicrophone();
                                 break;
                             }
                             case "muteVideoEverybodySpaceUserMessage": {
                                 // If the sender receive this message, ignore it
                                 if (subMessage.muteVideoEverybodySpaceUserMessage.userId === this.userId?.toString())
                                     break;
-                                notificationPlayingStore.playNotification(
-                                    get(LL).notification.askToMuteCamera(),
-                                    "camera-off.png"
+
+                                this._muteVideoEverybodySpaceUserMessage.next(
+                                    subMessage.muteVideoEverybodySpaceUserMessage
                                 );
-                                requestedCameraState.disableWebcam();
                                 break;
                             }
                             case "askMuteMicrophoneSpaceUserMessage": {
                                 if (subMessage.askMuteMicrophoneSpaceUserMessage.userId !== this.userId?.toString())
                                     break;
-                                notificationPlayingStore.playNotification(
-                                    get(LL).notification.askToMuteMicrophone(),
-                                    "microphone-off.png"
-                                );
-                                askDialogStore.addAskDialog(
-                                    subMessage.askMuteMicrophoneSpaceUserMessage.userId,
-                                    get(LL).notification.askToMuteMicrophone(),
-                                    () => {
-                                        requestedMicrophoneState.disableMicrophone();
-                                    }
+
+                                this._askMuteMicrophoneSpaceUserMessage.next(
+                                    subMessage.askMuteMicrophoneSpaceUserMessage
                                 );
                                 break;
                             }
                             case "askMuteVideoSpaceUserMessage": {
                                 if (subMessage.askMuteVideoSpaceUserMessage.userId !== this.userId?.toString()) break;
-                                notificationPlayingStore.playNotification(
-                                    get(LL).notification.askToMuteCamera(),
-                                    "camera-off.png"
-                                );
-                                askDialogStore.addAskDialog(
-                                    subMessage.askMuteVideoSpaceUserMessage.userId,
-                                    get(LL).notification.askToMuteCamera(),
-                                    () => {
-                                        requestedCameraState.disableWebcam();
-                                    }
-                                );
+
+                                this._askMuteVideoSpaceUserMessage.next(subMessage.askMuteVideoSpaceUserMessage);
                                 break;
                             }
                             default: {
@@ -749,41 +756,21 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "mutedMessage": {
-                    notificationPlayingStore.playNotification(
-                        get(LL).notification.askToMuteMicrophone(),
-                        "microphone-off.png"
-                    );
-                    requestedMicrophoneState.disableMicrophone();
+                    console.log("mutedMessage", message.mutedMessage);
+                    this._mutedMessage.next(message.mutedMessage);
                     break;
                 }
                 case "mutedVideoMessage": {
-                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
-                    requestedCameraState.disableWebcam();
+                    this._mutedVideoMessage.next(message.mutedVideoMessage);
                     break;
                 }
                 case "askMutedMessage": {
-                    notificationPlayingStore.playNotification(
-                        get(LL).notification.askToMuteMicrophone(),
-                        "microphone-off.png"
-                    );
-                    askDialogStore.addAskDialog(
-                        message.askMutedMessage.userUuid,
-                        get(LL).notification.askToMuteMicrophone(),
-                        () => {
-                            requestedMicrophoneState.disableMicrophone();
-                        }
-                    );
+                    console.log("askMutedMessage", message.askMutedMessage);
+                    this._askMutedMessage.next(message.askMutedMessage);
                     break;
                 }
                 case "askMutedVideoMessage": {
-                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
-                    askDialogStore.addAskDialog(
-                        message.askMutedVideoMessage.userUuid,
-                        get(LL).notification.askToMuteCamera(),
-                        () => {
-                            requestedCameraState.disableWebcam();
-                        }
-                    );
+                    this._askMutedVideoMessage.next(message.askMutedVideoMessage);
                     break;
                 }
                 default: {
@@ -1075,6 +1062,16 @@ export class RoomConnection implements RoomConnection {
         this._megaphoneSettingsMessageStream.complete();
         this._receivedEventMessageStream.complete();
         this._updateSpaceMetadataMessageStream.complete();
+        this._muteMicrophoneSpaceUserMessage.complete();
+        this._muteVideoSpaceUserMessage.complete();
+        this._muteMicrophoneEverybodySpaceUserMessage.complete();
+        this._muteVideoEverybodySpaceUserMessage.complete();
+        this._askMuteVideoSpaceUserMessage.complete();
+        this._askMuteMicrophoneSpaceUserMessage.complete();
+        this._mutedMessage.complete();
+        this._mutedVideoMessage.complete();
+        this._askMutedMessage.complete();
+        this._askMutedVideoMessage.complete();
     }
 
     public getUserId(): number {
@@ -1727,7 +1724,7 @@ export class RoomConnection implements RoomConnection {
                 $case: "muteParticipantIdSpaceMessage",
                 muteParticipantIdSpaceMessage: {
                     spaceName,
-                    value: participantId,
+                    mutedUserUuid: participantId,
                 },
             },
         });
@@ -1743,7 +1740,7 @@ export class RoomConnection implements RoomConnection {
                 $case: "muteEveryBodySpaceMessage",
                 muteEveryBodySpaceMessage: {
                     spaceName,
-                    userId: this.userId.toString(),
+                    senderUserId: this.userId.toString(),
                 },
             },
         });
@@ -1755,7 +1752,7 @@ export class RoomConnection implements RoomConnection {
                 $case: "muteVideoParticipantIdSpaceMessage",
                 muteVideoParticipantIdSpaceMessage: {
                     spaceName,
-                    value: participantId,
+                    mutedUserUuid: participantId,
                 },
             },
         });

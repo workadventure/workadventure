@@ -641,12 +641,12 @@ message MegaphoneEnabledMessage {
 
 message MuteParticipantIdSpaceMessage {
   string spaceName = 1;
-  string value = 2;
+  string mutedUserUuid = 2;
 }
 
 message MuteEveryBodySpaceMessage {
   string spaceName = 1;
-  string userId = 2;
+  string senderUserId = 2;
 }
 
 message MutedMessage {
@@ -656,7 +656,7 @@ message MutedMessage {
 
 message MuteVideoParticipantIdSpaceMessage {
   string spaceName = 1;
-  string value = 2;
+  string mutedUserUuid = 2;
 }
 
 message MuteVideoEveryBodySpaceMessage {
