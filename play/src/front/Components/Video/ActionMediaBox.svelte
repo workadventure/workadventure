@@ -49,6 +49,7 @@
     }
 
     function pin() {
+        if (!videoEnabled) return;
         highlightedEmbedScreen.toggleHighlight(embedScreen);
     }
 
@@ -92,15 +93,17 @@
         </button>
 
         <!-- Pin -->
-        <button
-            id="pin"
-            class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
-            on:click={() => analyticsClient.pinMeetingAction()}
-            on:click|preventDefault|stopPropagation={() => pin()}
-        >
-            <img src={PinSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
-            <Tooltip text={$LL.camera.menu.pin()} leftPosition="true" />
-        </button>
+        {#if videoEnabled}
+            <button
+                id="pin"
+                class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+                on:click={() => analyticsClient.pinMeetingAction()}
+                on:click|preventDefault|stopPropagation={() => pin()}
+            >
+                <img src={PinSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
+                <Tooltip text={$LL.camera.menu.pin()} leftPosition="true" />
+            </button>
+        {/if}
 
         <!-- Mute audio user -->
         <button
