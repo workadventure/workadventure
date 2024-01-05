@@ -25,6 +25,8 @@ graph LR
 
 ## Synapse configuration
 
+### OpenID Connect provider
+
 Follow the documentation at https://matrix-org.github.io/synapse/latest/openid.html to configure Synapse with your OpenID Connect provider.
 
 Some important parts of the configuration are:
@@ -68,7 +70,23 @@ sso:
     - http://play.workadventure.localhost/
 ```
 
+### Administrator
 
+In addition to providing the OpenID Connect configuration, you will need to provide an administrator user to the WorkAdventure
+integration. This user will be used by WorkAdventure to create rooms and invite users to those rooms.
+
+You can create a new user in Synapse using the `register_new_matrix_user` script:
+
+```
+register_new_matrix_user -u @admin-wa:myserver.com -p mypassword -c /etc/matrix-synapse/homeserver.yaml -a http://localhost:8008
+```
+
+See https://manpages.debian.org/testing/matrix-synapse/register_new_matrix_user.1.en.html
+
+The admin user login and password will be stored in the WorkAdventure environment variables:
+
+- `MATRIX_ADMIN_USER`
+- `MATRIX_ADMIN_PASSWORD`
 
 ## Developer notes
 
@@ -188,10 +206,76 @@ front component, you can add someone to your list of contacts by clicking on the
 sending a Matrix invite.
 
 
+### Space rooms
+
+Matrix has a notion of "space rooms". These special rooms are used to group other rooms together.
+
+If you are using an admin server, the admin server can group WorkAdventure rooms into "worlds". If you are using
+a self-hosted version of WorkAdventure without an admin, all rooms are considered to be part of the same world.
+
+WorkAdventure will maintain one "space room" per world. The space room is used to group all the Matrix rooms of the world
+together.
+
+The space room SHOULD BE created by the admin server (if you are using one). The admin server will invite all the members
+to the space room.
+If you are not using an admin server, it is your responsibility to create the invites to the space room for all your users.
+
+### Types of rooms
+
+Rooms attached to the space room are of 2 types:
+
+- "map" rooms: these are valid at the map level (i.e. they are declared in the map editor in the map settings tab)
+- "area" rooms: these are valid at the zone level (i.e. they are declared in the map editor in an area)
+
+When created in Matrix, the room name is prefixed with:
+
+- "wa-" for self-hosted servers
+- "wa-[org]-[world]-" for the SAAS version
+
+Custom state events are added to the room:
+
+- `re.workadventu.room_type`: the room type ("map" or "area").
+- `re.workadventu.tags`: the tags to enter this room (pipe separated list).
+
+
+### List of rooms displayed in WorkAdventure
+
+In the Matrix rooms list, WorkAdventure will make a distinction between the rooms it owns and the regular Matrix rooms.
+WorkAdventure "owns" a room if the room has been created by WorkAdventure (because it was declared in the map editor).
+All these rooms are children of the "space room" (see above).
+
+In the rooms list:
+
+- The list of "map" rooms is displayed first, sorted by name.
+- The list of "area" rooms is hidden. Those are only displayed when you step on the relevant area.
+- The list of regular Matrix rooms is displayed after the list of "map" rooms, in an "other rooms" section. Those are
+  displayed in a tree, respecting the hierarchy of the space rooms.
+
+> [!NOTE]
+> The "map" rooms are filtered by the "tags" of the user.
+> If the user does not have the required tags, the room will not be displayed.
+> The user tags are compared to the `re.workadventu.tags` custom state event of the room.
+
+### Creating a room
+
+When a room is created in WorkAdventure, the front component sends a request to the pusher component to create the room.
+The Pusher is in charge of creating the room in Matrix. It will connect to Matrix using admin credentials (user + password)
+stored in the configuration.
+
+Because of this, all rooms created by WorkAdventure will be owned by the same admin user.
+
+The same admin credentials are used by the Admin component to invite users to the room.
+
+```mermaid
+graph TD
+    A[Pusher] --1. Creates a room--> C[Matrix server]
+    B[Admin] --2. Invites users--> C 
+```
+
 
 ### Adding attachments to a message
 
-As I am writing this, there is not yet a way to remove attachments from a room (see https://github.com/matrix-org/matrix-spec/issues/226)
+As I am writing this (Jan. 2024), there is not yet a way to remove attachments from a room (see https://github.com/matrix-org/matrix-spec/issues/226)
 
 Since a lot of attachments will be video / audio messages (potentially big), it is important to have a way to remove
 those or have an expiry date on those. Therefore, WorkAdventure stores attachments in a separate service, using the 
