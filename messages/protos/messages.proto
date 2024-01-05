@@ -444,6 +444,8 @@ message SubMessage {
     MuteVideoSpaceUserMessage muteVideoSpaceUserMessage = 24;
     MuteMicrophoneEverybodySpaceUserMessage muteMicrophoneEverybodySpaceUserMessage = 25;
     MuteVideoEverybodySpaceUserMessage muteVideoEverybodySpaceUserMessage = 26;
+    AskMuteMicrophoneSpaceUserMessage askMuteMicrophoneSpaceUserMessage = 27;
+    AskMuteVideoSpaceUserMessage askMuteVideoSpaceUserMessage = 28;
   }
 }
 
@@ -639,12 +641,12 @@ message MegaphoneEnabledMessage {
 
 message MuteParticipantIdSpaceMessage {
   string spaceName = 1;
-  string value = 2;
+  string mutedUserUuid = 2;
 }
 
 message MuteEveryBodySpaceMessage {
   string spaceName = 1;
-  string userId = 2;
+  string senderUserId = 2;
 }
 
 message MutedMessage {
@@ -654,7 +656,7 @@ message MutedMessage {
 
 message MuteVideoParticipantIdSpaceMessage {
   string spaceName = 1;
-  string value = 2;
+  string mutedUserUuid = 2;
 }
 
 message MuteVideoEveryBodySpaceMessage {
@@ -663,6 +665,16 @@ message MuteVideoEveryBodySpaceMessage {
 }
 
 message MutedVideoMessage {
+  string userUuid = 1;
+  string message = 2;
+}
+
+message AskMutedMessage {
+  string userUuid = 1;
+  string message = 2;
+}
+
+message AskMutedVideoMessage {
   string userUuid = 1;
   string message = 2;
 }
@@ -701,6 +713,8 @@ message ServerToClientMessage {
     InvalidCompanionTextureMessage invalidCompanionTextureMessage = 32;
     MutedMessage mutedMessage = 33;
     MutedVideoMessage mutedVideoMessage = 34;
+    AskMutedMessage askMutedMessage = 35;
+    AskMutedVideoMessage askMutedVideoMessage = 36;
   }
 }
 
@@ -1009,6 +1023,8 @@ message PusherToBackSpaceMessage{
     MuteVideoSpaceUserMessage muteVideoSpaceUserMessage = 10;
     MuteMicrophoneEverybodySpaceUserMessage muteMicrophoneEverybodySpaceUserMessage = 11;
     MuteVideoEverybodySpaceUserMessage muteVideoEverybodySpaceUserMessage = 12;
+    AskMuteMicrophoneSpaceUserMessage askMuteMicrophoneSpaceUserMessage = 13;
+    AskMuteVideoSpaceUserMessage askMuteVideoSpaceUserMessage = 14;
   }
 }
 
@@ -1024,6 +1040,8 @@ message BackToPusherSpaceMessage{
     MuteVideoSpaceUserMessage muteVideoSpaceUserMessage = 8;
     MuteMicrophoneEverybodySpaceUserMessage muteMicrophoneEverybodySpaceUserMessage = 9;
     MuteVideoEverybodySpaceUserMessage muteVideoEverybodySpaceUserMessage = 10;
+    AskMuteMicrophoneSpaceUserMessage askMuteMicrophoneSpaceUserMessage = 11;
+    AskMuteVideoSpaceUserMessage askMuteVideoSpaceUserMessage = 12;
   }
 }
 
@@ -1116,6 +1134,16 @@ message MuteMicrophoneEverybodySpaceUserMessage{
   google.protobuf.StringValue filterName = 3;
 }
 message MuteVideoEverybodySpaceUserMessage{
+  string spaceName = 1;
+  string userId = 2;
+  google.protobuf.StringValue filterName = 3;
+}
+message AskMuteMicrophoneSpaceUserMessage{
+  string spaceName = 1;
+  string userId = 2;
+  google.protobuf.StringValue filterName = 3;
+}
+message AskMuteVideoSpaceUserMessage{
   string spaceName = 1;
   string userId = 2;
   google.protobuf.StringValue filterName = 3;

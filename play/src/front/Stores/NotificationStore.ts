@@ -7,7 +7,7 @@ export type Notification = {
 };
 
 /**
- * A store that contains the URL of the sound currently playing
+ * Store for playing notifications
  */
 function createNotificationStore() {
     const { subscribe, update } = writable<Set<Notification>>(new Set());

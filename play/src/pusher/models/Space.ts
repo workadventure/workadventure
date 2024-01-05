@@ -11,7 +11,7 @@ import Debug from "debug";
 import * as Sentry from "@sentry/node";
 import { Socket } from "../services/SocketManager";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
-import { BackSpaceConnection } from "./Websocket/SocketData";
+import { BackSpaceConnection, SocketData } from "./Websocket/SocketData";
 
 type SpaceUserExtended = { lowercaseName: string } & SpaceUser;
 
@@ -447,7 +447,8 @@ export class Space implements CustomJsonReplacerInterface {
         return undefined;
     }
 
-    public kickOffUser(userId: string) {
+    public kickOffUser(senderDara: SocketData, userId: string) {
+        if (!senderDara.tags.includes("admin")) return;
         const subMessage: SubMessage = {
             message: {
                 $case: "kickOffSpaceUserMessage",
@@ -461,8 +462,8 @@ export class Space implements CustomJsonReplacerInterface {
         this.notifyAllUsers(subMessage);
     }
 
-    public muteMicrophoneUser(userId: string) {
-        const subMessage: SubMessage = {
+    public muteMicrophoneUser(senderDara: SocketData, userId: string) {
+        let subMessage: SubMessage = {
             message: {
                 $case: "muteMicrophoneSpaceUserMessage",
                 muteMicrophoneSpaceUserMessage: {
@@ -472,11 +473,23 @@ export class Space implements CustomJsonReplacerInterface {
                 },
             },
         };
+        if (!senderDara.tags.includes("admin")) {
+            subMessage = {
+                message: {
+                    $case: "askMuteMicrophoneSpaceUserMessage",
+                    askMuteMicrophoneSpaceUserMessage: {
+                        spaceName: this.name,
+                        userId,
+                        filterName: undefined,
+                    },
+                },
+            };
+        }
         this.notifyAllUsers(subMessage);
     }
 
-    public muteVideoUser(userId: string) {
-        const subMessage: SubMessage = {
+    public muteVideoUser(senderDara: SocketData, userId: string) {
+        let subMessage: SubMessage = {
             message: {
                 $case: "muteVideoSpaceUserMessage",
                 muteVideoSpaceUserMessage: {
@@ -486,10 +499,23 @@ export class Space implements CustomJsonReplacerInterface {
                 },
             },
         };
+        if (!senderDara.tags.includes("admin")) {
+            subMessage = {
+                message: {
+                    $case: "askMuteVideoSpaceUserMessage",
+                    askMuteVideoSpaceUserMessage: {
+                        spaceName: this.name,
+                        userId,
+                        filterName: undefined,
+                    },
+                },
+            };
+        }
         this.notifyAllUsers(subMessage);
     }
 
-    public muteMicrophoneEverybodyUser(userId: string) {
+    public muteMicrophoneEverybodyUser(senderDara: SocketData, userId: string) {
+        if (!senderDara.tags.includes("admin")) return;
         const subMessage: SubMessage = {
             message: {
                 $case: "muteMicrophoneEverybodySpaceUserMessage",
@@ -503,7 +529,8 @@ export class Space implements CustomJsonReplacerInterface {
         this.notifyAllUsers(subMessage);
     }
 
-    public muteVideoEverybodyUser(userId: string) {
+    public muteVideoEverybodyUser(senderDara: SocketData, userId: string) {
+        if (!senderDara.tags.includes("admin")) return;
         const subMessage: SubMessage = {
             message: {
                 $case: "muteVideoEverybodySpaceUserMessage",

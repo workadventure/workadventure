@@ -602,5 +602,76 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+
+    moreActionMetting(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_more_meeting_action");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    pinMeetingAction(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_pin_meeting_action");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    muteMicrophoneMeetingAction(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_mute_microphone_meeting_action");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    muteMicrophoneEverybodyMeetingAction(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_mute_microphone_everybody_meeting_action");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    muteVideoMeetingAction(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_mute_video_meeting_action");
+            })
+            .catch((e) => console.error(e));
+    }
+    muteVideoEverybodyMeetingAction(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_mute_video_everybody_meeting_action");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    kickoffMeetingAction(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_kickoff_meeting_action");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    sendPrivateMessageMeetingAction(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_send_private_message_meeting_action");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    reportMeetingAction(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_report_meeting_action");
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();

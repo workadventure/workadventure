@@ -207,7 +207,8 @@ export class FrontController extends BaseHttpController {
                 req.path.startsWith("/resources") ||
                 req.path.startsWith("/src") ||
                 req.path.startsWith("/node_modules") ||
-                req.path.startsWith("/@fs/")
+                req.path.startsWith("/@fs/") ||
+                req.path.startsWith("/iframe_api.js")
             ) {*/
                 res.atomic(() => {
                     res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);

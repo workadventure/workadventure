@@ -867,7 +867,7 @@ export class IoSocketController {
                             socketManager.handleMuteParticipantIdSpaceMessage(
                                 socket,
                                 message.message.muteParticipantIdSpaceMessage.spaceName,
-                                message.message.muteParticipantIdSpaceMessage.value,
+                                message.message.muteParticipantIdSpaceMessage.mutedUserUuid,
                                 message.message
                             );
                             break;
@@ -876,7 +876,7 @@ export class IoSocketController {
                             socketManager.handleMuteVideoParticipantIdSpaceMessage(
                                 socket,
                                 message.message.muteVideoParticipantIdSpaceMessage.spaceName,
-                                message.message.muteVideoParticipantIdSpaceMessage.value,
+                                message.message.muteVideoParticipantIdSpaceMessage.mutedUserUuid,
                                 message.message
                             );
                             break;
@@ -894,7 +894,7 @@ export class IoSocketController {
                             socketManager.handleMuteEveryBodySpaceMessage(
                                 socket,
                                 message.message.muteEveryBodySpaceMessage.spaceName,
-                                message.message.muteEveryBodySpaceMessage.userId,
+                                message.message.muteEveryBodySpaceMessage.senderUserId,
                                 message.message
                             );
                             break;

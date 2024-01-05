@@ -335,5 +335,4 @@ export enum GameMapProperties {
     WRITABLE_BY = "writableBy",
     ZONE = "zone",
     ZOOM_MARGIN = "zoomMargin",
-    TEAMS_ROOM = "teamsRoom",
 }

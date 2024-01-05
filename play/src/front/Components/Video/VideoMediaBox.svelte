@@ -147,6 +147,7 @@
             }
 
             wasVideoEnabled = constraints?.video ?? false;
+            if (!wasVideoEnabled && isHightlighted) highlightedEmbedScreen.toggleHighlight(embedScreen);
             updateRatio();
         });
     });
@@ -223,6 +224,11 @@
             aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
         }, 1000);
     }
+
+    function hightlight() {
+        if (!clickable || !videoEnabled) return;
+        highlightedEmbedScreen.toggleHighlight(embedScreen);
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -231,7 +237,8 @@
     class:video-off={!videoEnabled}
     class:tw-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
     bind:this={videoContainer}
-    on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
+    on:click={() => analyticsClient.pinMeetingAction()}
+    on:click={() => hightlight()}
 >
     <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
 
