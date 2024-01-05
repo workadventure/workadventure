@@ -86,7 +86,7 @@
             {#if $audioTrackStore}
                 <JitsiAudioElement jitsiTrack={$audioTrackStore} />
                 <SoundMeterWidgetWrapper
-                    classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                    classcss="tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
                     barColor={$videoTrackStore ? "blue" : "black"}
                     volume={peer.jitsiTrackWrapper.volumeStore}
                 />
