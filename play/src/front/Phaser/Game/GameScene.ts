@@ -1196,7 +1196,7 @@ export class GameScene extends DirtyScene {
 
                 // The muteMicrophoneSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.muteMicrophoneSpaceUserMessage.subscribe(() => {
+                this.connection.muteMicrophoneMessage.subscribe(() => {
                     notificationPlayingStore.playNotification(
                         get(LL).notification.askToMuteMicrophone(),
                         "microphone-off.png"
@@ -1206,14 +1206,14 @@ export class GameScene extends DirtyScene {
 
                 // The muteVideoSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.muteVideoSpaceUserMessage.subscribe(() => {
+                this.connection.muteVideoMessage.subscribe(() => {
                     notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
                     requestedCameraState.disableWebcam();
                 });
 
                 // The muteMicrophoneEverybodySpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.muteMicrophoneEverybodySpaceUserMessage.subscribe(() => {
+                this.connection.muteMicrophoneEverybodyMessage.subscribe(() => {
                     notificationPlayingStore.playNotification(
                         get(LL).notification.askToMuteMicrophone(),
                         "microphone-off.png"
@@ -1223,17 +1223,17 @@ export class GameScene extends DirtyScene {
 
                 // The muteVideoEverybodySpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.muteVideoEverybodySpaceUserMessage.subscribe(() => {
+                this.connection.muteVideoEverybodyMessage.subscribe(() => {
                     notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
                     requestedCameraState.disableWebcam();
                 });
 
                 // The askMuteVideoSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.askMuteVideoSpaceUserMessage.subscribe((askMuteVideoSpaceUserMessage) => {
+                this.connection.askMuteVideoMessage.subscribe((askMuteVideoMessage) => {
                     notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
                     askDialogStore.addAskDialog(
-                        askMuteVideoSpaceUserMessage.userId,
+                        askMuteVideoMessage.userId,
                         get(LL).notification.askToMuteCamera(),
                         () => {
                             requestedCameraState.disableWebcam();
@@ -1243,13 +1243,13 @@ export class GameScene extends DirtyScene {
 
                 // The askMuteMicrophoneSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
-                this.connection.askMuteMicrophoneSpaceUserMessage.subscribe((askMuteMicrophoneSpaceUserMessage) => {
+                this.connection.askMuteMicrophoneMessage.subscribe((askMuteMicrophoneMessage) => {
                     notificationPlayingStore.playNotification(
                         get(LL).notification.askToMuteMicrophone(),
                         "microphone-off.png"
                     );
                     askDialogStore.addAskDialog(
-                        askMuteMicrophoneSpaceUserMessage.userId,
+                        askMuteMicrophoneMessage.userId,
                         get(LL).notification.askToMuteMicrophone(),
                         () => {
                             requestedMicrophoneState.disableMicrophone();

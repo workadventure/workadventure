@@ -443,103 +443,99 @@ export class SocketManager implements ZoneEventListener {
                                     }
                                     break;
                                 }
-                                case "kickOffSpaceUserMessage": {
-                                    debug("[space] kickOffSpaceUserMessage received");
+                                case "kickOffMessage": {
+                                    debug("[space] kickOffSMessage received");
                                     spaceStreamToPusher.write({
                                         message: {
-                                            $case: "kickOffSpaceUserMessage",
-                                            kickOffSpaceUserMessage: {
-                                                userId: message.message.kickOffSpaceUserMessage.userId,
-                                                spaceName: message.message.kickOffSpaceUserMessage.spaceName,
-                                                filterName: message.message.kickOffSpaceUserMessage.filterName,
+                                            $case: "kickOffMessage",
+                                            kickOffMessage: {
+                                                userId: message.message.kickOffMessage.userId,
+                                                spaceName: message.message.kickOffMessage.spaceName,
+                                                filterName: message.message.kickOffMessage.filterName,
                                             },
                                         },
                                     });
                                     break;
                                 }
-                                case "muteMicrophoneSpaceUserMessage": {
-                                    debug("[space] muteMicrophoneSpaceUserMessage received");
+                                case "muteMicrophoneMessage": {
+                                    debug("[space] muteMicrophoneMessage received");
                                     spaceStreamToPusher.write({
                                         message: {
-                                            $case: "muteMicrophoneSpaceUserMessage",
-                                            muteMicrophoneSpaceUserMessage: {
-                                                userId: message.message.muteMicrophoneSpaceUserMessage.userId,
-                                                spaceName: message.message.muteMicrophoneSpaceUserMessage.spaceName,
-                                                filterName: message.message.muteMicrophoneSpaceUserMessage.filterName,
+                                            $case: "muteMicrophoneMessage",
+                                            muteMicrophoneMessage: {
+                                                userId: message.message.muteMicrophoneMessage.userId,
+                                                spaceName: message.message.muteMicrophoneMessage.spaceName,
+                                                filterName: message.message.muteMicrophoneMessage.filterName,
                                             },
                                         },
                                     });
                                     break;
                                 }
-                                case "muteVideoSpaceUserMessage": {
-                                    debug("[space] muteVideoSpaceUserMessage received");
+                                case "muteVideoMessage": {
+                                    debug("[space] muteVideoMessage received");
                                     spaceStreamToPusher.write({
                                         message: {
-                                            $case: "muteVideoSpaceUserMessage",
-                                            muteVideoSpaceUserMessage: {
-                                                userId: message.message.muteVideoSpaceUserMessage.userId,
-                                                spaceName: message.message.muteVideoSpaceUserMessage.spaceName,
-                                                filterName: message.message.muteVideoSpaceUserMessage.filterName,
+                                            $case: "muteVideoMessage",
+                                            muteVideoMessage: {
+                                                userId: message.message.muteVideoMessage.userId,
+                                                spaceName: message.message.muteVideoMessage.spaceName,
+                                                filterName: message.message.muteVideoMessage.filterName,
                                             },
                                         },
                                     });
                                     break;
                                 }
-                                case "muteMicrophoneEverybodySpaceUserMessage": {
-                                    debug("[space] muteMicrophoneEverybodySpaceUserMessage received");
+                                case "muteMicrophoneEverybodyMessage": {
+                                    debug("[space] muteMicrophoneEverybodyMessage received");
                                     spaceStreamToPusher.write({
                                         message: {
-                                            $case: "muteMicrophoneEverybodySpaceUserMessage",
-                                            muteMicrophoneEverybodySpaceUserMessage: {
-                                                userId: message.message.muteMicrophoneEverybodySpaceUserMessage.userId,
-                                                spaceName:
-                                                    message.message.muteMicrophoneEverybodySpaceUserMessage.spaceName,
-                                                filterName:
-                                                    message.message.muteMicrophoneEverybodySpaceUserMessage.filterName,
+                                            $case: "muteMicrophoneEverybodyMessage",
+                                            muteMicrophoneEverybodyMessage: {
+                                                userId: message.message.muteMicrophoneEverybodyMessage.userId,
+                                                spaceName: message.message.muteMicrophoneEverybodyMessage.spaceName,
+                                                filterName: message.message.muteMicrophoneEverybodyMessage.filterName,
                                             },
                                         },
                                     });
                                     break;
                                 }
-                                case "muteVideoEverybodySpaceUserMessage": {
-                                    debug("[space] muteVideoEverybodySpaceUserMessage received");
+                                case "muteVideoEverybodyMessage": {
+                                    debug("[space] muteVideoEverybodyMessage received");
                                     spaceStreamToPusher.write({
                                         message: {
-                                            $case: "muteVideoEverybodySpaceUserMessage",
-                                            muteVideoEverybodySpaceUserMessage: {
-                                                userId: message.message.muteVideoEverybodySpaceUserMessage.userId,
-                                                spaceName: message.message.muteVideoEverybodySpaceUserMessage.spaceName,
-                                                filterName:
-                                                    message.message.muteVideoEverybodySpaceUserMessage.filterName,
+                                            $case: "muteVideoEverybodyMessage",
+                                            muteVideoEverybodyMessage: {
+                                                userId: message.message.muteVideoEverybodyMessage.userId,
+                                                spaceName: message.message.muteVideoEverybodyMessage.spaceName,
+                                                filterName: message.message.muteVideoEverybodyMessage.filterName,
                                             },
                                         },
                                     });
                                     break;
                                 }
-                                case "askMuteMicrophoneSpaceUserMessage": {
-                                    debug("[space] askMuteMicrophoneSpaceUserMessage received");
+                                case "askMuteMicrophoneMessage": {
+                                    debug("[space] askMuteMicrophoneMessage received");
                                     spaceStreamToPusher.write({
                                         message: {
-                                            $case: "askMuteMicrophoneSpaceUserMessage",
-                                            askMuteMicrophoneSpaceUserMessage: {
-                                                userId: message.message.askMuteMicrophoneSpaceUserMessage.userId,
-                                                spaceName: message.message.askMuteMicrophoneSpaceUserMessage.spaceName,
-                                                filterName:
-                                                    message.message.askMuteMicrophoneSpaceUserMessage.filterName,
+                                            $case: "askMuteMicrophoneMessage",
+                                            askMuteMicrophoneMessage: {
+                                                userId: message.message.askMuteMicrophoneMessage.userId,
+                                                spaceName: message.message.askMuteMicrophoneMessage.spaceName,
+                                                filterName: message.message.askMuteMicrophoneMessage.filterName,
                                             },
                                         },
                                     });
                                     break;
                                 }
-                                case "askMuteVideoSpaceUserMessage": {
-                                    debug("[space] askMuteVideoSpaceUserMessage received");
+                                case "askMuteVideoMessage": {
+                                    debug("[space] askMuteVideoMessage received");
                                     spaceStreamToPusher.write({
                                         message: {
-                                            $case: "askMuteVideoSpaceUserMessage",
-                                            askMuteVideoSpaceUserMessage: {
-                                                userId: message.message.askMuteVideoSpaceUserMessage.userId,
-                                                spaceName: message.message.askMuteVideoSpaceUserMessage.spaceName,
-                                                filterName: message.message.askMuteVideoSpaceUserMessage.filterName,
+                                            $case: "askMuteVideoMessage",
+                                            askMuteVideoMessage: {
+                                                userId: message.message.askMuteVideoMessage.userId,
+                                                spaceName: message.message.askMuteVideoMessage.spaceName,
+                                                filterName: message.message.askMuteVideoMessage.filterName,
                                             },
                                         },
                                     });
@@ -1442,7 +1438,7 @@ export class SocketManager implements ZoneEventListener {
         space.kickOffUser(socketData, participantId);
     }
 
-    handleMuteParticipantIdSpaceMessage(
+    handleMuteParticipantIdMessage(
         client: Socket,
         spaceName: string,
         participantId: string,
@@ -1457,7 +1453,7 @@ export class SocketManager implements ZoneEventListener {
         space.muteMicrophoneUser(socketData, participantId);
     }
 
-    handleMuteVideoParticipantIdSpaceMessage(
+    handleMuteVideoParticipantIdMessage(
         client: Socket,
         spaceName: string,
         participantId: string,
@@ -1472,7 +1468,7 @@ export class SocketManager implements ZoneEventListener {
         space.muteVideoUser(socketData, participantId);
     }
 
-    handleMuteEveryBodySpaceMessage(
+    handleMuteEveryBodyParticipantMessage(
         client: Socket,
         spaceName: string,
         participantId: string,
@@ -1487,7 +1483,7 @@ export class SocketManager implements ZoneEventListener {
         space.muteMicrophoneEverybodyUser(socketData, participantId);
     }
 
-    handleMuteVideoEveryBodySpaceMessage(
+    handleMuteVideoEveryBodyParticipantMessage(
         client: Socket,
         spaceName: string,
         participantId: string,

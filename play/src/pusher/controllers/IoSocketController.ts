@@ -863,20 +863,20 @@ export class IoSocketController {
                             socketManager.forwardMessageToBack(socket, message.message);
                             break;
                         }
-                        case "muteParticipantIdSpaceMessage": {
-                            socketManager.handleMuteParticipantIdSpaceMessage(
+                        case "muteParticipantIdMessage": {
+                            socketManager.handleMuteParticipantIdMessage(
                                 socket,
-                                message.message.muteParticipantIdSpaceMessage.spaceName,
-                                message.message.muteParticipantIdSpaceMessage.mutedUserUuid,
+                                message.message.muteParticipantIdMessage.spaceName,
+                                message.message.muteParticipantIdMessage.mutedUserUuid,
                                 message.message
                             );
                             break;
                         }
-                        case "muteVideoParticipantIdSpaceMessage": {
-                            socketManager.handleMuteVideoParticipantIdSpaceMessage(
+                        case "muteVideoParticipantIdMessage": {
+                            socketManager.handleMuteVideoParticipantIdMessage(
                                 socket,
-                                message.message.muteVideoParticipantIdSpaceMessage.spaceName,
-                                message.message.muteVideoParticipantIdSpaceMessage.mutedUserUuid,
+                                message.message.muteVideoParticipantIdMessage.spaceName,
+                                message.message.muteVideoParticipantIdMessage.mutedUserUuid,
                                 message.message
                             );
                             break;
@@ -890,20 +890,20 @@ export class IoSocketController {
                             );
                             break;
                         }
-                        case "muteEveryBodySpaceMessage": {
-                            socketManager.handleMuteEveryBodySpaceMessage(
+                        case "muteEveryBodyParticipantMessage": {
+                            socketManager.handleMuteEveryBodyParticipantMessage(
                                 socket,
-                                message.message.muteEveryBodySpaceMessage.spaceName,
-                                message.message.muteEveryBodySpaceMessage.senderUserId,
+                                message.message.muteEveryBodyParticipantMessage.spaceName,
+                                message.message.muteEveryBodyParticipantMessage.senderUserId,
                                 message.message
                             );
                             break;
                         }
-                        case "muteVideoEveryBodySpaceMessage": {
-                            socketManager.handleMuteVideoEveryBodySpaceMessage(
+                        case "muteVideoEveryBodyParticipantMessage": {
+                            socketManager.handleMuteVideoEveryBodyParticipantMessage(
                                 socket,
-                                message.message.muteVideoEveryBodySpaceMessage.spaceName,
-                                message.message.muteVideoEveryBodySpaceMessage.userId,
+                                message.message.muteVideoEveryBodyParticipantMessage.spaceName,
+                                message.message.muteVideoEveryBodyParticipantMessage.userId,
                                 message.message
                             );
                             break;

@@ -203,26 +203,26 @@ const roomManager = {
                                 socketManager.handleKickOffUserMessage(user, message.message.kickOffUserMessage.userId);
                                 break;
                             }
-                            case "muteParticipantIdSpaceMessage": {
-                                socketManager.handeMuteParticipantIdSpaceMessage(
+                            case "muteParticipantIdMessage": {
+                                socketManager.handeMuteParticipantIdMessage(
                                     user,
-                                    message.message.muteParticipantIdSpaceMessage.mutedUserUuid
+                                    message.message.muteParticipantIdMessage.mutedUserUuid
                                 );
                                 break;
                             }
-                            case "muteEveryBodySpaceMessage": {
-                                socketManager.handleMuteEveryBodySpaceMessage(user);
+                            case "muteEveryBodyParticipantMessage": {
+                                socketManager.handleMuteEveryBodyParticipantMessage(user);
                                 break;
                             }
-                            case "muteVideoParticipantIdSpaceMessage": {
-                                socketManager.handeMuteVideoParticipantIdSpaceMessage(
+                            case "muteVideoParticipantIdMessage": {
+                                socketManager.handeMuteVideoParticipantIdMessage(
                                     user,
-                                    message.message.muteVideoParticipantIdSpaceMessage.mutedUserUuid
+                                    message.message.muteVideoParticipantIdMessage.mutedUserUuid
                                 );
                                 break;
                             }
-                            case "muteVideoEveryBodySpaceMessage": {
-                                socketManager.handleMuteVideoEveryBodySpaceMessage(user);
+                            case "muteVideoEveryBodyParticipantMessage": {
+                                socketManager.handleMuteVideoEveryBodyParticipantMessage(user);
                                 break;
                             }
                             default: {

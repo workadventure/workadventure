@@ -254,10 +254,10 @@ message ClientToServerMessage {
     JitsiParticipantIdSpaceMessage  jitsiParticipantIdSpaceMessage = 34;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 35;
     KickOffUserMessage kickOffUserMessage = 36;
-    MuteParticipantIdSpaceMessage muteParticipantIdSpaceMessage = 37;
-    MuteEveryBodySpaceMessage muteEveryBodySpaceMessage = 38;
-    MuteVideoParticipantIdSpaceMessage muteVideoParticipantIdSpaceMessage = 39;
-    MuteVideoEveryBodySpaceMessage muteVideoEveryBodySpaceMessage = 40;
+    MuteParticipantIdMessage muteParticipantIdMessage = 37;
+    MuteEveryBodyParticipantMessage muteEveryBodyParticipantMessage = 38;
+    MuteVideoParticipantIdMessage muteVideoParticipantIdMessage = 39;
+    MuteVideoEveryBodyParticipantMessage muteVideoEveryBodyParticipantMessage = 40;
   }
 }
 
@@ -439,13 +439,13 @@ message SubMessage {
     MegaphoneSettings megaphoneSettingsMessage = 19;
     ReceivedEventMessage receivedEventMessage = 20;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 21;
-    KickOffSpaceUserMessage kickOffSpaceUserMessage = 22;
-    MuteMicrophoneSpaceUserMessage muteMicrophoneSpaceUserMessage = 23;
-    MuteVideoSpaceUserMessage muteVideoSpaceUserMessage = 24;
-    MuteMicrophoneEverybodySpaceUserMessage muteMicrophoneEverybodySpaceUserMessage = 25;
-    MuteVideoEverybodySpaceUserMessage muteVideoEverybodySpaceUserMessage = 26;
-    AskMuteMicrophoneSpaceUserMessage askMuteMicrophoneSpaceUserMessage = 27;
-    AskMuteVideoSpaceUserMessage askMuteVideoSpaceUserMessage = 28;
+    KickOffMessage kickOffMessage = 22;
+    MuteMicrophoneMessage muteMicrophoneMessage = 23;
+    MuteVideoMessage muteVideoMessage = 24;
+    MuteMicrophoneEverybodyMessage muteMicrophoneEverybodyMessage = 25;
+    MuteVideoEverybodyMessage muteVideoEverybodyMessage = 26;
+    AskMuteMicrophoneMessage askMuteMicrophoneMessage = 27;
+    AskMuteVideoMessage askMuteVideoMessage = 28;
   }
 }
 
@@ -639,12 +639,12 @@ message MegaphoneEnabledMessage {
   bool value = 1;
 }
 
-message MuteParticipantIdSpaceMessage {
+message MuteParticipantIdMessage {
   string spaceName = 1;
   string mutedUserUuid = 2;
 }
 
-message MuteEveryBodySpaceMessage {
+message MuteEveryBodyParticipantMessage {
   string spaceName = 1;
   string senderUserId = 2;
 }
@@ -654,12 +654,12 @@ message MutedMessage {
   string message = 2;
 }
 
-message MuteVideoParticipantIdSpaceMessage {
+message MuteVideoParticipantIdMessage {
   string spaceName = 1;
   string mutedUserUuid = 2;
 }
 
-message MuteVideoEveryBodySpaceMessage {
+message MuteVideoEveryBodyParticipantMessage {
   string spaceName = 1;
   string userId = 2;
 }
@@ -816,10 +816,10 @@ message PusherToBackMessage {
     EditMapCommandMessage editMapCommandMessage = 23;
     PingMessage pingMessage = 24;
     KickOffUserMessage kickOffUserMessage = 25;
-    MuteParticipantIdSpaceMessage muteParticipantIdSpaceMessage = 26;
-    MuteEveryBodySpaceMessage muteEveryBodySpaceMessage = 27;
-    MuteVideoParticipantIdSpaceMessage muteVideoParticipantIdSpaceMessage = 28;
-    MuteVideoEveryBodySpaceMessage muteVideoEveryBodySpaceMessage = 29;
+    MuteParticipantIdMessage muteParticipantIdMessage = 26;
+    MuteEveryBodyParticipantMessage muteEveryBodyParticipantMessage = 27;
+    MuteVideoParticipantIdMessage muteVideoParticipantIdMessage = 28;
+    MuteVideoEveryBodyParticipantMessage muteVideoEveryBodyParticipantMessage = 29;
   }
 }
 
@@ -1018,13 +1018,13 @@ message PusherToBackSpaceMessage{
     RemoveSpaceUserMessage removeSpaceUserMessage = 5;
     PingMessage pongMessage = 6;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 7;
-    KickOffSpaceUserMessage kickOffSpaceUserMessage = 8;
-    MuteMicrophoneSpaceUserMessage muteMicrophoneSpaceUserMessage = 9;
-    MuteVideoSpaceUserMessage muteVideoSpaceUserMessage = 10;
-    MuteMicrophoneEverybodySpaceUserMessage muteMicrophoneEverybodySpaceUserMessage = 11;
-    MuteVideoEverybodySpaceUserMessage muteVideoEverybodySpaceUserMessage = 12;
-    AskMuteMicrophoneSpaceUserMessage askMuteMicrophoneSpaceUserMessage = 13;
-    AskMuteVideoSpaceUserMessage askMuteVideoSpaceUserMessage = 14;
+    KickOffMessage kickOffMessage = 8;
+    MuteMicrophoneMessage muteMicrophoneMessage = 9;
+    MuteVideoMessage muteVideoMessage = 10;
+    MuteMicrophoneEverybodyMessage muteMicrophoneEverybodyMessage = 11;
+    MuteVideoEverybodyMessage muteVideoEverybodyMessage = 12;
+    AskMuteMicrophoneMessage askMuteMicrophoneMessage = 13;
+    AskMuteVideoMessage askMuteVideoMessage = 14;
   }
 }
 
@@ -1035,13 +1035,13 @@ message BackToPusherSpaceMessage{
     RemoveSpaceUserMessage removeSpaceUserMessage = 3;
     PingMessage pingMessage = 4;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 5;
-    KickOffSpaceUserMessage kickOffSpaceUserMessage = 6;
-    MuteMicrophoneSpaceUserMessage muteMicrophoneSpaceUserMessage = 7;
-    MuteVideoSpaceUserMessage muteVideoSpaceUserMessage = 8;
-    MuteMicrophoneEverybodySpaceUserMessage muteMicrophoneEverybodySpaceUserMessage = 9;
-    MuteVideoEverybodySpaceUserMessage muteVideoEverybodySpaceUserMessage = 10;
-    AskMuteMicrophoneSpaceUserMessage askMuteMicrophoneSpaceUserMessage = 11;
-    AskMuteVideoSpaceUserMessage askMuteVideoSpaceUserMessage = 12;
+    KickOffMessage kickOffMessage = 6;
+    MuteMicrophoneMessage muteMicrophoneMessage = 7;
+    MuteVideoMessage muteVideoMessage = 8;
+    MuteMicrophoneEverybodyMessage muteMicrophoneEverybodyMessage = 9;
+    MuteVideoEverybodyMessage muteVideoEverybodyMessage = 10;
+    AskMuteMicrophoneMessage askMuteMicrophoneMessage = 11;
+    AskMuteVideoMessage askMuteVideoMessage = 12;
   }
 }
 
@@ -1113,37 +1113,37 @@ message UpdateSpaceMetadataMessage{
   string metadata = 2;
   google.protobuf.StringValue filterName = 3;
 }
-message KickOffSpaceUserMessage{
+message KickOffMessage{
   string spaceName = 1;
   string userId = 2;
   google.protobuf.StringValue filterName = 3;
 }
-message MuteMicrophoneSpaceUserMessage{
+message MuteMicrophoneMessage{
   string spaceName = 1;
   string userId = 2;
   google.protobuf.StringValue filterName = 3;
 }
-message MuteVideoSpaceUserMessage{
+message MuteVideoMessage{
   string spaceName = 1;
   string userId = 2;
   google.protobuf.StringValue filterName = 3;
 }
-message MuteMicrophoneEverybodySpaceUserMessage{
+message MuteMicrophoneEverybodyMessage{
   string spaceName = 1;
   string userId = 2;
   google.protobuf.StringValue filterName = 3;
 }
-message MuteVideoEverybodySpaceUserMessage{
+message MuteVideoEverybodyMessage{
   string spaceName = 1;
   string userId = 2;
   google.protobuf.StringValue filterName = 3;
 }
-message AskMuteMicrophoneSpaceUserMessage{
+message AskMuteMicrophoneMessage{
   string spaceName = 1;
   string userId = 2;
   google.protobuf.StringValue filterName = 3;
 }
-message AskMuteVideoSpaceUserMessage{
+message AskMuteVideoMessage{
   string spaceName = 1;
   string userId = 2;
   google.protobuf.StringValue filterName = 3;

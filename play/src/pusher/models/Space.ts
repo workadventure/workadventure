@@ -451,8 +451,8 @@ export class Space implements CustomJsonReplacerInterface {
         if (!senderDara.tags.includes("admin")) return;
         const subMessage: SubMessage = {
             message: {
-                $case: "kickOffSpaceUserMessage",
-                kickOffSpaceUserMessage: {
+                $case: "kickOffMessage",
+                kickOffMessage: {
                     spaceName: this.name,
                     userId,
                     filterName: undefined,
@@ -465,8 +465,8 @@ export class Space implements CustomJsonReplacerInterface {
     public muteMicrophoneUser(senderDara: SocketData, userId: string) {
         let subMessage: SubMessage = {
             message: {
-                $case: "muteMicrophoneSpaceUserMessage",
-                muteMicrophoneSpaceUserMessage: {
+                $case: "muteMicrophoneMessage",
+                muteMicrophoneMessage: {
                     spaceName: this.name,
                     userId,
                     filterName: undefined,
@@ -476,8 +476,8 @@ export class Space implements CustomJsonReplacerInterface {
         if (!senderDara.tags.includes("admin")) {
             subMessage = {
                 message: {
-                    $case: "askMuteMicrophoneSpaceUserMessage",
-                    askMuteMicrophoneSpaceUserMessage: {
+                    $case: "askMuteMicrophoneMessage",
+                    askMuteMicrophoneMessage: {
                         spaceName: this.name,
                         userId,
                         filterName: undefined,
@@ -491,8 +491,8 @@ export class Space implements CustomJsonReplacerInterface {
     public muteVideoUser(senderDara: SocketData, userId: string) {
         let subMessage: SubMessage = {
             message: {
-                $case: "muteVideoSpaceUserMessage",
-                muteVideoSpaceUserMessage: {
+                $case: "muteVideoMessage",
+                muteVideoMessage: {
                     spaceName: this.name,
                     userId,
                     filterName: undefined,
@@ -502,8 +502,8 @@ export class Space implements CustomJsonReplacerInterface {
         if (!senderDara.tags.includes("admin")) {
             subMessage = {
                 message: {
-                    $case: "askMuteVideoSpaceUserMessage",
-                    askMuteVideoSpaceUserMessage: {
+                    $case: "askMuteVideoMessage",
+                    askMuteVideoMessage: {
                         spaceName: this.name,
                         userId,
                         filterName: undefined,
@@ -518,8 +518,8 @@ export class Space implements CustomJsonReplacerInterface {
         if (!senderDara.tags.includes("admin")) return;
         const subMessage: SubMessage = {
             message: {
-                $case: "muteMicrophoneEverybodySpaceUserMessage",
-                muteMicrophoneEverybodySpaceUserMessage: {
+                $case: "muteMicrophoneEverybodyMessage",
+                muteMicrophoneEverybodyMessage: {
                     spaceName: this.name,
                     userId,
                     filterName: undefined,
@@ -533,8 +533,8 @@ export class Space implements CustomJsonReplacerInterface {
         if (!senderDara.tags.includes("admin")) return;
         const subMessage: SubMessage = {
             message: {
-                $case: "muteVideoEverybodySpaceUserMessage",
-                muteVideoEverybodySpaceUserMessage: {
+                $case: "muteVideoEverybodyMessage",
+                muteVideoEverybodyMessage: {
                     spaceName: this.name,
                     userId,
                     filterName: undefined,

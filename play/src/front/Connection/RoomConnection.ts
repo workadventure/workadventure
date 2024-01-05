@@ -49,14 +49,14 @@ import {
     EmbeddableWebsiteAnswer,
     CompanionTextureMessage,
     RoomShortDescription,
-    MuteMicrophoneSpaceUserMessage,
-    MuteVideoSpaceUserMessage,
-    MuteMicrophoneEverybodySpaceUserMessage,
-    MuteVideoEverybodySpaceUserMessage,
+    MuteMicrophoneMessage,
+    MuteVideoMessage,
+    MuteMicrophoneEverybodyMessage,
+    MuteVideoEverybodyMessage,
     MutedMessage,
     MutedVideoMessage,
-    AskMuteVideoSpaceUserMessage,
-    AskMuteMicrophoneSpaceUserMessage,
+    AskMuteVideoMessage,
+    AskMuteMicrophoneMessage,
     AskMutedMessage,
     AskMutedVideoMessage,
 } from "@workadventure/messages";
@@ -220,19 +220,18 @@ export class RoomConnection implements RoomConnection {
     private readonly _receivedEventMessageStream = new Subject<ReceiveEventEvent>();
     public readonly receivedEventMessageStream = this._receivedEventMessageStream.asObservable();
 
-    private readonly _muteMicrophoneSpaceUserMessage = new Subject<MuteMicrophoneSpaceUserMessage>();
-    public readonly muteMicrophoneSpaceUserMessage = this._muteMicrophoneSpaceUserMessage.asObservable();
-    private readonly _muteVideoSpaceUserMessage = new Subject<MuteVideoSpaceUserMessage>();
-    public readonly muteVideoSpaceUserMessage = this._muteVideoSpaceUserMessage.asObservable();
-    private readonly _muteMicrophoneEverybodySpaceUserMessage = new Subject<MuteMicrophoneEverybodySpaceUserMessage>();
-    public readonly muteMicrophoneEverybodySpaceUserMessage =
-        this._muteMicrophoneEverybodySpaceUserMessage.asObservable();
-    private readonly _muteVideoEverybodySpaceUserMessage = new Subject<MuteVideoEverybodySpaceUserMessage>();
-    public readonly muteVideoEverybodySpaceUserMessage = this._muteVideoEverybodySpaceUserMessage.asObservable();
-    private readonly _askMuteVideoSpaceUserMessage = new Subject<AskMuteVideoSpaceUserMessage>();
-    public readonly askMuteVideoSpaceUserMessage = this._askMuteVideoSpaceUserMessage.asObservable();
-    private readonly _askMuteMicrophoneSpaceUserMessage = new Subject<AskMuteMicrophoneSpaceUserMessage>();
-    public readonly askMuteMicrophoneSpaceUserMessage = this._askMuteMicrophoneSpaceUserMessage.asObservable();
+    private readonly _muteMicrophoneMessage = new Subject<MuteMicrophoneMessage>();
+    public readonly muteMicrophoneMessage = this._muteMicrophoneMessage.asObservable();
+    private readonly _muteVideoMessage = new Subject<MuteVideoMessage>();
+    public readonly muteVideoMessage = this._muteVideoMessage.asObservable();
+    private readonly _muteMicrophoneEverybodyMessage = new Subject<MuteMicrophoneEverybodyMessage>();
+    public readonly muteMicrophoneEverybodyMessage = this._muteMicrophoneEverybodyMessage.asObservable();
+    private readonly _muteVideoEverybodyMessage = new Subject<MuteVideoEverybodyMessage>();
+    public readonly muteVideoEverybodyMessage = this._muteVideoEverybodyMessage.asObservable();
+    private readonly _askMuteVideoMessage = new Subject<AskMuteVideoMessage>();
+    public readonly askMuteVideoMessage = this._askMuteVideoMessage.asObservable();
+    private readonly _askMuteMicrophoneMessage = new Subject<AskMuteMicrophoneMessage>();
+    public readonly askMuteMicrophoneMessage = this._askMuteMicrophoneMessage.asObservable();
     private readonly _mutedMessage = new Subject<MutedMessage>();
     public readonly mutedMessage = this._mutedMessage.asObservable();
     private readonly _mutedVideoMessage = new Subject<MutedVideoMessage>();
@@ -442,68 +441,53 @@ export class RoomConnection implements RoomConnection {
                                 });
                                 break;
                             }
-                            case "kickOffSpaceUserMessage": {
-                                if (subMessage.kickOffSpaceUserMessage.userId !== this.userId?.toString()) break;
+                            case "kickOffMessage": {
+                                if (subMessage.kickOffMessage.userId !== this.userId?.toString()) break;
 
                                 isSpeakerStore.set(false);
                                 currentLiveStreamingNameStore.set(undefined);
                                 const scene = gameManager.getCurrentGameScene();
-                                scene.broadcastService.leaveSpace(subMessage.kickOffSpaceUserMessage.spaceName);
+                                scene.broadcastService.leaveSpace(subMessage.kickOffMessage.spaceName);
                                 iframeListener.sendLeaveMucEventToChatIframe(`${scene.roomUrl}/${slugify(name)}`);
                                 chatZoneLiveStore.set(false);
                                 break;
                             }
-                            case "muteMicrophoneSpaceUserMessage": {
-                                console.log(
-                                    "muteMicrophoneSpaceUserMessage",
-                                    subMessage.muteMicrophoneSpaceUserMessage
-                                );
-                                if (subMessage.muteMicrophoneSpaceUserMessage.userId !== this.userId?.toString()) break;
+                            case "muteMicrophoneMessage": {
+                                console.log("muteMicrophoneSpaceUserMessage", subMessage.muteMicrophoneMessage);
+                                if (subMessage.muteMicrophoneMessage.userId !== this.userId?.toString()) break;
 
-                                this._muteMicrophoneSpaceUserMessage.next(subMessage.muteMicrophoneSpaceUserMessage);
+                                this._muteMicrophoneMessage.next(subMessage.muteMicrophoneMessage);
                                 break;
                             }
-                            case "muteVideoSpaceUserMessage": {
-                                if (subMessage.muteVideoSpaceUserMessage.userId !== this.userId?.toString()) break;
+                            case "muteVideoMessage": {
+                                if (subMessage.muteVideoMessage.userId !== this.userId?.toString()) break;
 
-                                this._muteVideoSpaceUserMessage.next(subMessage.muteVideoSpaceUserMessage);
+                                this._muteVideoMessage.next(subMessage.muteVideoMessage);
                                 break;
                             }
-                            case "muteMicrophoneEverybodySpaceUserMessage": {
+                            case "muteMicrophoneEverybodyMessage": {
                                 // If the sender receive this message, ignore it
-                                if (
-                                    subMessage.muteMicrophoneEverybodySpaceUserMessage.userId ===
-                                    this.userId?.toString()
-                                )
-                                    break;
-                                this._muteMicrophoneEverybodySpaceUserMessage.next(
-                                    subMessage.muteMicrophoneEverybodySpaceUserMessage
-                                );
+                                if (subMessage.muteMicrophoneEverybodyMessage.userId === this.userId?.toString()) break;
+                                this._muteMicrophoneEverybodyMessage.next(subMessage.muteMicrophoneEverybodyMessage);
                                 break;
                             }
-                            case "muteVideoEverybodySpaceUserMessage": {
+                            case "muteVideoEverybodyMessage": {
                                 // If the sender receive this message, ignore it
-                                if (subMessage.muteVideoEverybodySpaceUserMessage.userId === this.userId?.toString())
-                                    break;
+                                if (subMessage.muteVideoEverybodyMessage.userId === this.userId?.toString()) break;
 
-                                this._muteVideoEverybodySpaceUserMessage.next(
-                                    subMessage.muteVideoEverybodySpaceUserMessage
-                                );
+                                this._muteVideoEverybodyMessage.next(subMessage.muteVideoEverybodyMessage);
                                 break;
                             }
-                            case "askMuteMicrophoneSpaceUserMessage": {
-                                if (subMessage.askMuteMicrophoneSpaceUserMessage.userId !== this.userId?.toString())
-                                    break;
+                            case "askMuteMicrophoneMessage": {
+                                if (subMessage.askMuteMicrophoneMessage.userId !== this.userId?.toString()) break;
 
-                                this._askMuteMicrophoneSpaceUserMessage.next(
-                                    subMessage.askMuteMicrophoneSpaceUserMessage
-                                );
+                                this._askMuteMicrophoneMessage.next(subMessage.askMuteMicrophoneMessage);
                                 break;
                             }
-                            case "askMuteVideoSpaceUserMessage": {
-                                if (subMessage.askMuteVideoSpaceUserMessage.userId !== this.userId?.toString()) break;
+                            case "askMuteVideoMessage": {
+                                if (subMessage.askMuteVideoMessage.userId !== this.userId?.toString()) break;
 
-                                this._askMuteVideoSpaceUserMessage.next(subMessage.askMuteVideoSpaceUserMessage);
+                                this._askMuteVideoMessage.next(subMessage.askMuteVideoMessage);
                                 break;
                             }
                             default: {
@@ -1062,12 +1046,12 @@ export class RoomConnection implements RoomConnection {
         this._megaphoneSettingsMessageStream.complete();
         this._receivedEventMessageStream.complete();
         this._updateSpaceMetadataMessageStream.complete();
-        this._muteMicrophoneSpaceUserMessage.complete();
-        this._muteVideoSpaceUserMessage.complete();
-        this._muteMicrophoneEverybodySpaceUserMessage.complete();
-        this._muteVideoEverybodySpaceUserMessage.complete();
-        this._askMuteVideoSpaceUserMessage.complete();
-        this._askMuteMicrophoneSpaceUserMessage.complete();
+        this._muteMicrophoneMessage.complete();
+        this._muteVideoMessage.complete();
+        this._muteMicrophoneEverybodyMessage.complete();
+        this._muteVideoEverybodyMessage.complete();
+        this._askMuteVideoMessage.complete();
+        this._askMuteMicrophoneMessage.complete();
         this._mutedMessage.complete();
         this._mutedVideoMessage.complete();
         this._askMutedMessage.complete();
@@ -1721,8 +1705,8 @@ export class RoomConnection implements RoomConnection {
     public emitMuteParticipantIdSpace(spaceName: string, participantId: string) {
         this.send({
             message: {
-                $case: "muteParticipantIdSpaceMessage",
-                muteParticipantIdSpaceMessage: {
+                $case: "muteParticipantIdMessage",
+                muteParticipantIdMessage: {
                     spaceName,
                     mutedUserUuid: participantId,
                 },
@@ -1737,8 +1721,8 @@ export class RoomConnection implements RoomConnection {
         }
         this.send({
             message: {
-                $case: "muteEveryBodySpaceMessage",
-                muteEveryBodySpaceMessage: {
+                $case: "muteEveryBodyParticipantMessage",
+                muteEveryBodyParticipantMessage: {
                     spaceName,
                     senderUserId: this.userId.toString(),
                 },
@@ -1749,8 +1733,8 @@ export class RoomConnection implements RoomConnection {
     public emitMuteVideoParticipantIdSpace(spaceName: string, participantId: string) {
         this.send({
             message: {
-                $case: "muteVideoParticipantIdSpaceMessage",
-                muteVideoParticipantIdSpaceMessage: {
+                $case: "muteVideoParticipantIdMessage",
+                muteVideoParticipantIdMessage: {
                     spaceName,
                     mutedUserUuid: participantId,
                 },
@@ -1765,8 +1749,8 @@ export class RoomConnection implements RoomConnection {
         }
         this.send({
             message: {
-                $case: "muteVideoEveryBodySpaceMessage",
-                muteVideoEveryBodySpaceMessage: {
+                $case: "muteVideoEveryBodyParticipantMessage",
+                muteVideoEveryBodyParticipantMessage: {
                     spaceName,
                     userId: this.userId.toString(),
                 },

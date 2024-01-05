@@ -45,11 +45,11 @@ import {
     RemoveSpaceUserMessage,
     SendEventQuery,
     UpdateSpaceMetadataMessage,
-    KickOffSpaceUserMessage,
-    MuteMicrophoneSpaceUserMessage,
-    MuteVideoSpaceUserMessage,
-    MuteMicrophoneEverybodySpaceUserMessage,
-    MuteVideoEverybodySpaceUserMessage,
+    KickOffMessage,
+    MuteMicrophoneMessage,
+    MuteVideoMessage,
+    MuteMicrophoneEverybodyMessage,
+    MuteVideoEverybodyMessage,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -1466,13 +1466,13 @@ export class SocketManager {
         }
     }
 
-    handleKickSpaceUserMessage(pusher: SpacesWatcher, kickUserMessage: KickOffSpaceUserMessage) {
+    handleKickSpaceUserMessage(pusher: SpacesWatcher, kickUserMessage: KickOffMessage) {
         const space = this.spaces.get(kickUserMessage.spaceName);
         if (!space) return;
         pusher.write({
             message: {
-                $case: "kickOffSpaceUserMessage",
-                kickOffSpaceUserMessage: {
+                $case: "kickOffMessage",
+                kickOffMessage: {
                     spaceName: kickUserMessage.spaceName,
                     userId: kickUserMessage.userId,
                     filterName: kickUserMessage.filterName,
@@ -1481,16 +1481,13 @@ export class SocketManager {
         });
     }
 
-    handleMuteMicrophoneSpaceUserMessage(
-        pusher: SpacesWatcher,
-        muteMicrophoneSpaceUserMessage: MuteMicrophoneSpaceUserMessage
-    ) {
+    handleMuteMicrophoneSpaceUserMessage(pusher: SpacesWatcher, muteMicrophoneSpaceUserMessage: MuteMicrophoneMessage) {
         const space = this.spaces.get(muteMicrophoneSpaceUserMessage.spaceName);
         if (!space) return;
         pusher.write({
             message: {
-                $case: "muteMicrophoneSpaceUserMessage",
-                muteMicrophoneSpaceUserMessage: {
+                $case: "muteMicrophoneMessage",
+                muteMicrophoneMessage: {
                     spaceName: muteMicrophoneSpaceUserMessage.spaceName,
                     userId: muteMicrophoneSpaceUserMessage.userId,
                     filterName: muteMicrophoneSpaceUserMessage.filterName,
@@ -1499,13 +1496,13 @@ export class SocketManager {
         });
     }
 
-    handleMuteVideoSpaceUserMessage(pusher: SpacesWatcher, muteVideoSpaceUserMessage: MuteVideoSpaceUserMessage) {
+    handleMuteVideoSpaceUserMessage(pusher: SpacesWatcher, muteVideoSpaceUserMessage: MuteVideoMessage) {
         const space = this.spaces.get(muteVideoSpaceUserMessage.spaceName);
         if (!space) return;
         pusher.write({
             message: {
-                $case: "muteVideoSpaceUserMessage",
-                muteVideoSpaceUserMessage: {
+                $case: "muteVideoMessage",
+                muteVideoMessage: {
                     spaceName: muteVideoSpaceUserMessage.spaceName,
                     userId: muteVideoSpaceUserMessage.userId,
                     filterName: muteVideoSpaceUserMessage.filterName,
@@ -1516,14 +1513,14 @@ export class SocketManager {
 
     handleMuteMicrophoneEverybodySpaceUserMessage(
         pusher: SpacesWatcher,
-        muteMicrophoneEverybodySpaceUserMessage: MuteMicrophoneEverybodySpaceUserMessage
+        muteMicrophoneEverybodySpaceUserMessage: MuteMicrophoneEverybodyMessage
     ) {
         const space = this.spaces.get(muteMicrophoneEverybodySpaceUserMessage.spaceName);
         if (!space) return;
         pusher.write({
             message: {
-                $case: "muteMicrophoneEverybodySpaceUserMessage",
-                muteMicrophoneEverybodySpaceUserMessage: {
+                $case: "muteMicrophoneEverybodyMessage",
+                muteMicrophoneEverybodyMessage: {
                     spaceName: muteMicrophoneEverybodySpaceUserMessage.spaceName,
                     userId: muteMicrophoneEverybodySpaceUserMessage.userId,
                     filterName: muteMicrophoneEverybodySpaceUserMessage.filterName,
@@ -1534,14 +1531,14 @@ export class SocketManager {
 
     handleMuteVideoEverybodySpaceUserMessage(
         pusher: SpacesWatcher,
-        muteVideoEverybodySpaceUserMessage: MuteVideoEverybodySpaceUserMessage
+        muteVideoEverybodySpaceUserMessage: MuteVideoEverybodyMessage
     ) {
         const space = this.spaces.get(muteVideoEverybodySpaceUserMessage.spaceName);
         if (!space) return;
         pusher.write({
             message: {
-                $case: "muteVideoEverybodySpaceUserMessage",
-                muteVideoEverybodySpaceUserMessage: {
+                $case: "muteVideoEverybodyMessage",
+                muteVideoEverybodyMessage: {
                     spaceName: muteVideoEverybodySpaceUserMessage.spaceName,
                     userId: muteVideoEverybodySpaceUserMessage.userId,
                     filterName: muteVideoEverybodySpaceUserMessage.filterName,
@@ -1607,7 +1604,7 @@ export class SocketManager {
         group.setOutOfBounds(true);
     }
 
-    handeMuteParticipantIdSpaceMessage(user: User, userMutedUuid: string) {
+    handeMuteParticipantIdMessage(user: User, userMutedUuid: string) {
         const group = user.group;
         if (!group) {
             return;
@@ -1640,7 +1637,7 @@ export class SocketManager {
         }
     }
 
-    handleMuteEveryBodySpaceMessage(user: User) {
+    handleMuteEveryBodyParticipantMessage(user: User) {
         const group = user.group;
         if (!group) {
             return;
@@ -1665,7 +1662,7 @@ export class SocketManager {
         }
     }
 
-    handeMuteVideoParticipantIdSpaceMessage(user: User, userMutedUuid: string) {
+    handeMuteVideoParticipantIdMessage(user: User, userMutedUuid: string) {
         const group = user.group;
         if (!group) {
             return;
@@ -1698,7 +1695,7 @@ export class SocketManager {
         }
     }
 
-    handleMuteVideoEveryBodySpaceMessage(user: User) {
+    handleMuteVideoEveryBodyParticipantMessage(user: User) {
         const group = user.group;
         if (!group) {
             return;
