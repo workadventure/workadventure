@@ -393,7 +393,7 @@ export class GameScene extends DirtyScene {
             //if SpriteSheetFile (WOKA file) don't display error and give an access for user
             if (this.preloading && !(file instanceof SpriteSheetFile)) {
                 //remove loader in progress
-                this.loader.removeLoader();
+                this.loader.hideLoader();
 
                 errorScreenStore.setError(
                     ErrorScreenMessage.fromPartial({
@@ -424,7 +424,7 @@ export class GameScene extends DirtyScene {
                     (key: string, type: string, wamFile: unknown) => {
                         const wamFileResult = WAMFileFormat.safeParse(wamFile);
                         if (!wamFileResult.success) {
-                            this.loader.removeLoader();
+                            this.loader.hideLoader();
                             errorScreenStore.setError(
                                 ErrorScreenMessage.fromPartial({
                                     type: "error",
@@ -879,6 +879,7 @@ export class GameScene extends DirtyScene {
         ])
             .then(() => {
                 this.hide(false);
+                this.loader.hideLoader();
                 this.sceneReadyToStartDeferred.resolve();
             })
             .catch((e) =>
