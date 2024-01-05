@@ -207,6 +207,8 @@ export class GameScene extends DirtyScene {
     private connectionAnswerPromiseDeferred: Deferred<RoomJoinedMessageInterface>;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromiseDeferred: Deferred<void>;
+    // A promise that will resolve when the scene is ready to start (all assets have been loaded and the connection to the room is established)
+    private sceneReadyToStartDeferred: Deferred<void> = new Deferred<void>();
     private iframeSubscriptionList!: Array<Subscription>;
     private gameMapChangedSubscription!: Subscription;
     private messageSubscription: Subscription | null = null;
@@ -877,6 +879,7 @@ export class GameScene extends DirtyScene {
         ])
             .then(() => {
                 this.hide(false);
+                this.sceneReadyToStartDeferred.resolve();
             })
             .catch((e) =>
                 console.error(
@@ -3291,5 +3294,9 @@ ${escapedMessage}
 
     get room(): Room {
         return this._room;
+    }
+
+    get sceneReadyToStartPromise(): Promise<void> {
+        return this.sceneReadyToStartDeferred.promise;
     }
 }
