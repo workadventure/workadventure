@@ -5,12 +5,19 @@ import { MessageStatusMessage } from "./MessageStatusMessage";
 import { BlockMessage } from "./BlockMessage";
 import { UnblockMessage } from "./UnblockMessage";
 
+export const KickOffMessage = z.object({
+    type: z.literal("kickoff"),
+    value: z.string(),
+});
+export type KickOffMessage = z.infer<typeof KickOffMessage>;
+
 export const P2PMessage = z.union([
     ConstraintMessage,
     MessageMessage,
     MessageStatusMessage,
     BlockMessage,
     UnblockMessage,
+    KickOffMessage,
 ]);
 
 /**

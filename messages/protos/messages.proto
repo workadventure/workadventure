@@ -122,6 +122,11 @@ message LockGroupPromptMessage {
   bool lock = 1;
 }
 
+message KickOffUserMessage {
+  string userId = 1;
+  string spaceName = 2;
+}
+
 /*********** MAP EDITOR MESSAGES *************/
 
 message EditMapMessage {
@@ -248,6 +253,11 @@ message ClientToServerMessage {
     ScreenSharingStateMessage screenSharingStateMessage = 33;
     JitsiParticipantIdSpaceMessage  jitsiParticipantIdSpaceMessage = 34;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 35;
+    KickOffUserMessage kickOffUserMessage = 36;
+    MuteParticipantIdMessage muteParticipantIdMessage = 37;
+    MuteEveryBodyParticipantMessage muteEveryBodyParticipantMessage = 38;
+    MuteVideoParticipantIdMessage muteVideoParticipantIdMessage = 39;
+    MuteVideoEveryBodyParticipantMessage muteVideoEveryBodyParticipantMessage = 40;
   }
 }
 
@@ -429,6 +439,13 @@ message SubMessage {
     MegaphoneSettings megaphoneSettingsMessage = 19;
     ReceivedEventMessage receivedEventMessage = 20;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 21;
+    KickOffMessage kickOffMessage = 22;
+    MuteMicrophoneMessage muteMicrophoneMessage = 23;
+    MuteVideoMessage muteVideoMessage = 24;
+    MuteMicrophoneEverybodyMessage muteMicrophoneEverybodyMessage = 25;
+    MuteVideoEverybodyMessage muteVideoEverybodyMessage = 26;
+    AskMuteMicrophoneMessage askMuteMicrophoneMessage = 27;
+    AskMuteVideoMessage askMuteVideoMessage = 28;
   }
 }
 
@@ -622,6 +639,45 @@ message MegaphoneEnabledMessage {
   bool value = 1;
 }
 
+message MuteParticipantIdMessage {
+  string spaceName = 1;
+  string mutedUserUuid = 2;
+}
+
+message MuteEveryBodyParticipantMessage {
+  string spaceName = 1;
+  string senderUserId = 2;
+}
+
+message MutedMessage {
+  string userUuid = 1;
+  string message = 2;
+}
+
+message MuteVideoParticipantIdMessage {
+  string spaceName = 1;
+  string mutedUserUuid = 2;
+}
+
+message MuteVideoEveryBodyParticipantMessage {
+  string spaceName = 1;
+  string userId = 2;
+}
+
+message MutedVideoMessage {
+  string userUuid = 1;
+  string message = 2;
+}
+
+message AskMutedMessage {
+  string userUuid = 1;
+  string message = 2;
+}
+
+message AskMutedVideoMessage {
+  string userUuid = 1;
+  string message = 2;
+}
 
 /**
  * Messages going from back and pusher to the front
@@ -655,6 +711,10 @@ message ServerToClientMessage {
     XmppSettingsMessage xmppSettingsMessage = 29;
     MoveToPositionMessage moveToPositionMessage = 31;
     InvalidCompanionTextureMessage invalidCompanionTextureMessage = 32;
+    MutedMessage mutedMessage = 33;
+    MutedVideoMessage mutedVideoMessage = 34;
+    AskMutedMessage askMutedMessage = 35;
+    AskMutedVideoMessage askMutedVideoMessage = 36;
   }
 }
 
@@ -755,6 +815,11 @@ message PusherToBackMessage {
     AskPositionMessage askPositionMessage = 22;
     EditMapCommandMessage editMapCommandMessage = 23;
     PingMessage pingMessage = 24;
+    KickOffUserMessage kickOffUserMessage = 25;
+    MuteParticipantIdMessage muteParticipantIdMessage = 26;
+    MuteEveryBodyParticipantMessage muteEveryBodyParticipantMessage = 27;
+    MuteVideoParticipantIdMessage muteVideoParticipantIdMessage = 28;
+    MuteVideoEveryBodyParticipantMessage muteVideoEveryBodyParticipantMessage = 29;
   }
 }
 
@@ -953,6 +1018,13 @@ message PusherToBackSpaceMessage{
     RemoveSpaceUserMessage removeSpaceUserMessage = 5;
     PingMessage pongMessage = 6;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 7;
+    KickOffMessage kickOffMessage = 8;
+    MuteMicrophoneMessage muteMicrophoneMessage = 9;
+    MuteVideoMessage muteVideoMessage = 10;
+    MuteMicrophoneEverybodyMessage muteMicrophoneEverybodyMessage = 11;
+    MuteVideoEverybodyMessage muteVideoEverybodyMessage = 12;
+    AskMuteMicrophoneMessage askMuteMicrophoneMessage = 13;
+    AskMuteVideoMessage askMuteVideoMessage = 14;
   }
 }
 
@@ -963,6 +1035,13 @@ message BackToPusherSpaceMessage{
     RemoveSpaceUserMessage removeSpaceUserMessage = 3;
     PingMessage pingMessage = 4;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 5;
+    KickOffMessage kickOffMessage = 6;
+    MuteMicrophoneMessage muteMicrophoneMessage = 7;
+    MuteVideoMessage muteVideoMessage = 8;
+    MuteMicrophoneEverybodyMessage muteMicrophoneEverybodyMessage = 9;
+    MuteVideoEverybodyMessage muteVideoEverybodyMessage = 10;
+    AskMuteMicrophoneMessage askMuteMicrophoneMessage = 11;
+    AskMuteVideoMessage askMuteVideoMessage = 12;
   }
 }
 
@@ -1034,8 +1113,41 @@ message UpdateSpaceMetadataMessage{
   string metadata = 2;
   google.protobuf.StringValue filterName = 3;
 }
-
-
+message KickOffMessage{
+  string spaceName = 1;
+  string userId = 2;
+  google.protobuf.StringValue filterName = 3;
+}
+message MuteMicrophoneMessage{
+  string spaceName = 1;
+  string userId = 2;
+  google.protobuf.StringValue filterName = 3;
+}
+message MuteVideoMessage{
+  string spaceName = 1;
+  string userId = 2;
+  google.protobuf.StringValue filterName = 3;
+}
+message MuteMicrophoneEverybodyMessage{
+  string spaceName = 1;
+  string userId = 2;
+  google.protobuf.StringValue filterName = 3;
+}
+message MuteVideoEverybodyMessage{
+  string spaceName = 1;
+  string userId = 2;
+  google.protobuf.StringValue filterName = 3;
+}
+message AskMuteMicrophoneMessage{
+  string spaceName = 1;
+  string userId = 2;
+  google.protobuf.StringValue filterName = 3;
+}
+message AskMuteVideoMessage{
+  string spaceName = 1;
+  string userId = 2;
+  google.protobuf.StringValue filterName = 3;
+}
 
 /** Filter **/
 message AddSpaceFilterMessage{

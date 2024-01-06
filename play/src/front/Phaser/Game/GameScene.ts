@@ -134,6 +134,8 @@ import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectC
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
+import { notificationPlayingStore } from "../../Stores/NotificationStore";
+import { askDialogStore } from "../../Stores/MeetingStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -1190,6 +1192,115 @@ export class GameScene extends DirtyScene {
                             broadcastService.joinSpace(megaphoneSettingsMessage.url);
                         }
                     }
+                });
+
+                // The muteMicrophoneSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.muteMicrophoneMessage.subscribe(() => {
+                    notificationPlayingStore.playNotification(
+                        get(LL).notification.askToMuteMicrophone(),
+                        "microphone-off.png"
+                    );
+                    requestedMicrophoneState.disableMicrophone();
+                });
+
+                // The muteVideoSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.muteVideoMessage.subscribe(() => {
+                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
+                    requestedCameraState.disableWebcam();
+                });
+
+                // The muteMicrophoneEverybodySpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.muteMicrophoneEverybodyMessage.subscribe(() => {
+                    notificationPlayingStore.playNotification(
+                        get(LL).notification.askToMuteMicrophone(),
+                        "microphone-off.png"
+                    );
+                    requestedMicrophoneState.disableMicrophone();
+                });
+
+                // The muteVideoEverybodySpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.muteVideoEverybodyMessage.subscribe(() => {
+                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
+                    requestedCameraState.disableWebcam();
+                });
+
+                // The askMuteVideoSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.askMuteVideoMessage.subscribe((askMuteVideoMessage) => {
+                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
+                    askDialogStore.addAskDialog(
+                        askMuteVideoMessage.userId,
+                        get(LL).notification.askToMuteCamera(),
+                        () => {
+                            requestedCameraState.disableWebcam();
+                        }
+                    );
+                });
+
+                // The askMuteMicrophoneSpaceUserMessage is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.askMuteMicrophoneMessage.subscribe((askMuteMicrophoneMessage) => {
+                    notificationPlayingStore.playNotification(
+                        get(LL).notification.askToMuteMicrophone(),
+                        "microphone-off.png"
+                    );
+                    askDialogStore.addAskDialog(
+                        askMuteMicrophoneMessage.userId,
+                        get(LL).notification.askToMuteMicrophone(),
+                        () => {
+                            requestedMicrophoneState.disableMicrophone();
+                        }
+                    );
+                });
+
+                // The mutedMessage is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.mutedMessage.subscribe(() => {
+                    notificationPlayingStore.playNotification(
+                        get(LL).notification.askToMuteMicrophone(),
+                        "microphone-off.png"
+                    );
+                    requestedMicrophoneState.disableMicrophone();
+                });
+
+                // The mutedVideoMessage is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.mutedVideoMessage.subscribe(() => {
+                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
+                    requestedCameraState.disableWebcam();
+                });
+
+                // The askMutedMessage is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.askMutedMessage.subscribe((askMutedMessage) => {
+                    notificationPlayingStore.playNotification(
+                        get(LL).notification.askToMuteMicrophone(),
+                        "microphone-off.png"
+                    );
+                    askDialogStore.addAskDialog(
+                        askMutedMessage.userUuid,
+                        get(LL).notification.askToMuteMicrophone(),
+                        () => {
+                            requestedMicrophoneState.disableMicrophone();
+                        }
+                    );
+                });
+
+                // The askMutedVideoMessage is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.askMutedVideoMessage.subscribe((askMutedVideoMessage) => {
+                    notificationPlayingStore.playNotification(get(LL).notification.askToMuteCamera(), "camera-off.png");
+                    askDialogStore.addAskDialog(
+                        askMutedVideoMessage.userUuid,
+                        get(LL).notification.askToMuteCamera(),
+                        () => {
+                            requestedCameraState.disableWebcam();
+                        }
+                    );
                 });
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);

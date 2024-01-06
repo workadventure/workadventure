@@ -29,6 +29,7 @@
     }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     class="video-container screen-sharing tw-flex tw-w-full tw-flex-col tw-h-full"
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
@@ -60,7 +61,7 @@
     {/if}
     <div
         class="report-ban-screenshare-container tw-flex video-on-responsive-height media-box-camera-on-position media-box-screensharing-size
-        tw-z-[600] tw-flex tw-opacity-0 tw-translate-x-0 tw-transition-all"
+        tw-z-[600] tw-opacity-0 tw-translate-x-0 tw-transition-all"
     >
         <BanReportBox {peer} />
     </div>

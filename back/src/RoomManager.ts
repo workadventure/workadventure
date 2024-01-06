@@ -199,6 +199,32 @@ const roomManager = {
                                 socketManager.handleAskPositionMessage(room, user, message.message.askPositionMessage);
                                 break;
                             }
+                            case "kickOffUserMessage": {
+                                socketManager.handleKickOffUserMessage(user, message.message.kickOffUserMessage.userId);
+                                break;
+                            }
+                            case "muteParticipantIdMessage": {
+                                socketManager.handeMuteParticipantIdMessage(
+                                    user,
+                                    message.message.muteParticipantIdMessage.mutedUserUuid
+                                );
+                                break;
+                            }
+                            case "muteEveryBodyParticipantMessage": {
+                                socketManager.handleMuteEveryBodyParticipantMessage(user);
+                                break;
+                            }
+                            case "muteVideoParticipantIdMessage": {
+                                socketManager.handeMuteVideoParticipantIdMessage(
+                                    user,
+                                    message.message.muteVideoParticipantIdMessage.mutedUserUuid
+                                );
+                                break;
+                            }
+                            case "muteVideoEveryBodyParticipantMessage": {
+                                socketManager.handleMuteVideoEveryBodyParticipantMessage(user);
+                                break;
+                            }
                             default: {
                                 const _exhaustiveCheck: never = message.message;
                             }

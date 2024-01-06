@@ -11,7 +11,7 @@ import Debug from "debug";
 import * as Sentry from "@sentry/node";
 import { Socket } from "../services/SocketManager";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
-import { BackSpaceConnection } from "./Websocket/SocketData";
+import { BackSpaceConnection, SocketData } from "./Websocket/SocketData";
 
 type SpaceUserExtended = { lowercaseName: string } & SpaceUser;
 
@@ -19,6 +19,7 @@ const debug = Debug("space");
 
 export class Space implements CustomJsonReplacerInterface {
     private readonly users: Map<number, SpaceUserExtended>;
+    private readonly metadata: Map<string, unknown>;
 
     private clientWatchers: Map<number, Socket>;
 
@@ -29,6 +30,7 @@ export class Space implements CustomJsonReplacerInterface {
         watcher: Socket
     ) {
         this.users = new Map<number, SpaceUserExtended>();
+        this.metadata = new Map<string, unknown>();
         this.clientWatchers = new Map<number, Socket>();
         this.addClientWatcher(watcher);
         debug(`created : ${name}`);
@@ -443,5 +445,111 @@ export class Space implements CustomJsonReplacerInterface {
             return `Users : ${this.users.size}`;
         }
         return undefined;
+    }
+
+    public kickOffUser(senderDara: SocketData, userId: string) {
+        if (!senderDara.tags.includes("admin")) return;
+        const subMessage: SubMessage = {
+            message: {
+                $case: "kickOffMessage",
+                kickOffMessage: {
+                    spaceName: this.name,
+                    userId,
+                    filterName: undefined,
+                },
+            },
+        };
+        this.notifyAllUsers(subMessage);
+    }
+
+    public muteMicrophoneUser(senderDara: SocketData, userId: string) {
+        let subMessage: SubMessage = {
+            message: {
+                $case: "muteMicrophoneMessage",
+                muteMicrophoneMessage: {
+                    spaceName: this.name,
+                    userId,
+                    filterName: undefined,
+                },
+            },
+        };
+        if (!senderDara.tags.includes("admin")) {
+            subMessage = {
+                message: {
+                    $case: "askMuteMicrophoneMessage",
+                    askMuteMicrophoneMessage: {
+                        spaceName: this.name,
+                        userId,
+                        filterName: undefined,
+                    },
+                },
+            };
+        }
+        this.notifyAllUsers(subMessage);
+    }
+
+    public muteVideoUser(senderDara: SocketData, userId: string) {
+        let subMessage: SubMessage = {
+            message: {
+                $case: "muteVideoMessage",
+                muteVideoMessage: {
+                    spaceName: this.name,
+                    userId,
+                    filterName: undefined,
+                },
+            },
+        };
+        if (!senderDara.tags.includes("admin")) {
+            subMessage = {
+                message: {
+                    $case: "askMuteVideoMessage",
+                    askMuteVideoMessage: {
+                        spaceName: this.name,
+                        userId,
+                        filterName: undefined,
+                    },
+                },
+            };
+        }
+        this.notifyAllUsers(subMessage);
+    }
+
+    public muteMicrophoneEverybodyUser(senderDara: SocketData, userId: string) {
+        if (!senderDara.tags.includes("admin")) return;
+        const subMessage: SubMessage = {
+            message: {
+                $case: "muteMicrophoneEverybodyMessage",
+                muteMicrophoneEverybodyMessage: {
+                    spaceName: this.name,
+                    userId,
+                    filterName: undefined,
+                },
+            },
+        };
+        this.notifyAllUsers(subMessage);
+    }
+
+    public muteVideoEverybodyUser(senderDara: SocketData, userId: string) {
+        if (!senderDara.tags.includes("admin")) return;
+        const subMessage: SubMessage = {
+            message: {
+                $case: "muteVideoEverybodyMessage",
+                muteVideoEverybodyMessage: {
+                    spaceName: this.name,
+                    userId,
+                    filterName: undefined,
+                },
+            },
+        };
+        this.notifyAllUsers(subMessage);
+    }
+
+    // Notify all users in this space
+    private notifyAllUsers(subMessage: SubMessage) {
+        this.clientWatchers.forEach((watcher) => {
+            const socketData = watcher.getUserData();
+            debug(`${this.name} : kickOff sent to ${socketData.name}`);
+            socketData.emitInBatch(subMessage);
+        });
     }
 }

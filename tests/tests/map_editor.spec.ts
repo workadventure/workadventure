@@ -9,12 +9,6 @@ import Map from "./utils/map";
 import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import {resetWamMaps} from "./utils/map-editor/uploader";
 import {evaluateScript} from "./utils/scripting";
-import {RENDERER_MODE} from "./utils/environment";
-
-
-const protocol = process.env.MAP_STORAGE_PROTOCOL ?? 'http';
-
-const url = (end) => `${protocol}://play.workadventure.localhost/~/maps/${end}.wam?phaserMode=${RENDERER_MODE}`;
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -23,7 +17,7 @@ test.use({
 test.describe('Map editor', () => {
   test('Successfully set the megaphone feature', async ({ page, browser, request, browserName }) => {
     await resetWamMaps(request);
-    await page.goto(url("empty"));
+    await page.goto(Map.url("empty"));
     //await page.evaluate(() => localStorage.setItem('debug', '*'));
     await login(page, "test", 3);
     // Because webkit in playwright does not support Camera/Microphone Permission by settings
@@ -35,7 +29,7 @@ test.describe('Map editor', () => {
     // Second browser
     const newBrowser = await browser.browserType().launch();
     const page2 = await newBrowser.newPage();
-    await page2.goto(url("empty"));
+    await page2.goto(Map.url("empty"));
     await page2.evaluate(() => localStorage.setItem('debug', '*'));
     await login(page2, "test2", 5);
 
@@ -94,7 +88,7 @@ test.describe('Map editor', () => {
     // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
   });
 
-  test('Successfully set areas in the map editor', async ({ page, browser, request }) => {
+  test('Successfully set "SpeakerZone" in the map editor', async ({ page, browser, request }) => {
     if(browser.browserType() === webkit) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
@@ -103,7 +97,7 @@ test.describe('Map editor', () => {
 
     await resetWamMaps(request);
 
-    await page.goto(url("empty"));
+    await page.goto(Map.url("empty"));
     //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
     //await page.reload();
     await login(page, "test", 3);
@@ -124,7 +118,7 @@ test.describe('Map editor', () => {
     // Second browser
     const newBrowser = await browser.browserType().launch();
     const page2 = await newBrowser.newPage();
-    await page2.goto(url("empty"));
+    await page2.goto(Map.url("empty"));
     //await page2.evaluate(() => { localStorage.setItem('debug', '*'); });
     //await page2.reload();
     await login(page2, "test2", 5);
@@ -149,7 +143,7 @@ test.describe('Map editor', () => {
 
   test('Successfully set start area in the map editor', async ({ page, browser, request, browserName }) => {
     await resetWamMaps(request);
-    await page.goto(url("start"));
+    await page.goto(Map.url("start"));
     await login(page, "test", 3);
     if(browserName === "webkit"){
       // Because webkit in playwright does not support Camera/Microphone Permission by settings
@@ -167,7 +161,7 @@ test.describe('Map editor', () => {
   test('Successfully set and working exit area in the map editor', async ({ page, browser, request, browserName }) => {
     await resetWamMaps(request);
 
-    await page.goto(url("exit"));
+    await page.goto(Map.url("exit"));
     await login(page, "test", 3);
     if(browserName === "webkit"){
       // Because webkit in playwright does not support Camera/Microphone Permission by settings
@@ -203,7 +197,7 @@ test.describe('Map editor', () => {
   test('Successfully set Klaxoon\'s application in the area in the map editor', async ({ page, browser, request, browserName }) => {
     await resetWamMaps(request);
 
-    await page.goto(url("empty"));
+    await page.goto(Map.url("empty"));
     await login(page, "test", 3);
     if(browserName === "webkit"){
       // Because webkit in playwright does not support Camera/Microphone Permission by settings
@@ -248,7 +242,7 @@ test.describe('Map editor', () => {
 
     await resetWamMaps(request);
 
-    await page.goto(url("empty"));
+    await page.goto(Map.url("empty"));
     await login(page, "test", 3);
     if(browserName === "webkit"){
       // Because webkit in playwright does not support Camera/Microphone Permission by settings
@@ -304,7 +298,7 @@ test.describe('Map editor', () => {
 
     await resetWamMaps(request);
 
-    await page.goto(url("empty"));
+    await page.goto(Map.url("empty"));
     await login(page, "test", 3);
     if(browserName === "webkit"){
       // Because webkit in playwright does not support Camera/Microphone Permission by settings
@@ -366,7 +360,7 @@ test.describe('Map editor', () => {
 
     await resetWamMaps(request);
 
-    await page.goto(url("empty"));
+    await page.goto(Map.url("empty"));
     await login(page, "test", 3);
     if(browserName === "webkit"){
       // Because webkit in playwright does not support Camera/Microphone Permission by settings
