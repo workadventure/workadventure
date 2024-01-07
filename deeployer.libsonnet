@@ -383,7 +383,8 @@
                   "nginx.ingress.kubernetes.io/proxy-body-size": "512m",
                   "nginx.ingress.kubernetes.io/enable-cors": "true",
                   "nginx.ingress.kubernetes.io/cors-allow-methods": "PUT, GET, POST, OPTIONS, DELETE, PATCH",
-                  "nginx.ingress.kubernetes.io/cors-allow-origin": "*"
+                  "nginx.ingress.kubernetes.io/cors-allow-origin": ["https://play-"+url, "https://pusher-"+url, "https://front-"+url, "https://room-api-"+url],
+                  "nginx.ingress.kubernetes.io/cors-allow-credentials": "true"
                 }
               },
               spec+: {
