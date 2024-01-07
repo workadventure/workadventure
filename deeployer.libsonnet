@@ -381,10 +381,8 @@
               metadata+: {
                 annotations+: {
                   "nginx.ingress.kubernetes.io/proxy-body-size": "512m",
-                  "nginx.ingress.kubernetes.io/enable-cors": "true",
-                  "nginx.ingress.kubernetes.io/cors-allow-methods": "PUT, GET, POST, OPTIONS, DELETE, PATCH",
-                  "nginx.ingress.kubernetes.io/cors-allow-origin": "*",
-                  "nginx.ingress.kubernetes.io/cors-allow-credentials": "true"
+                  "nginx.ingress.kubernetes.io/configuration-snippet": "|
+                    more_set_headers \"Access-Control-Allow-Origin\": \"*\";"
                 }
               },
               spec+: {
