@@ -336,6 +336,14 @@
                 }
             },
             ingress+: {
+              metadata+: {
+                annotations+: {
+                  "nginx.ingress.kubernetes.io/proxy-body-size": "512m",
+                  "nginx.ingress.kubernetes.io/enable-cors": "true",
+                  "nginx.ingress.kubernetes.io/cors-allow-methods": "PUT, GET, POST, OPTIONS, DELETE, PATCH",
+                  "nginx.ingress.kubernetes.io/cors-allow-origin": "*"
+                }
+              },
               spec+: {
                 rules+:[
                   {
@@ -373,10 +381,28 @@
                         }
                       ]
                     }
+                  },
+                  {
+                    host: "front-"+url,
+                    http: {
+                      paths: [
+                        {
+                          backend: {
+                            service: {
+                              name: "front",
+                              port: {
+                                number: 3000
+                              }
+                            }
+                          },
+                          pathType: "ImplementationSpecific"
+                        }
+                      ]
+                    }
                   }
                 ],
                 tls+: [{
-                  hosts: ["play-"+url, "pusher-"+url, "room-api-"+url],
+                  hosts: ["play-"+url, "pusher-"+url, "front-"+url, "room-api-"+url],
                   secretName: "certificate-tls"
                 }]
               }
