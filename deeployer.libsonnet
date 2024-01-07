@@ -358,7 +358,7 @@
                   }
                 ],
                 tls+: [{
-                  hosts: ["pusher-"+url, "play-"+url, "room-api-"+url],
+                  hosts: ["play-"+url, "pusher-"+url, "room-api-"+url],
                   secretName: "certificate-tls"
                 }]
               }
