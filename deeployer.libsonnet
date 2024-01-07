@@ -382,7 +382,6 @@
                 annotations+: {
                   "nginx.ingress.kubernetes.io/proxy-body-size": "512m",
                   "nginx.ingress.kubernetes.io/configuration-snippet": |||
-                    |
                     more_set_headers "Access-Control-Allow-Origin": "*";
                   |||
                 }
