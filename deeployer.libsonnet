@@ -355,6 +355,24 @@
                         }
                       ]
                     }
+                  },
+                  {
+                    host: "pusher-"+url,
+                    http: {
+                      paths: [
+                        {
+                          backend: {
+                            service: {
+                              name: "pusher",
+                              port: {
+                                number: 3000
+                              }
+                            }
+                          },
+                          pathType: "ImplementationSpecific"
+                        }
+                      ]
+                    }
                   }
                 ],
                 tls+: [{
