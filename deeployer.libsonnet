@@ -335,6 +335,48 @@
                     "type": "ClusterIP"
                 }
             },
+            servicepusher: {
+                "apiVersion": "v1",
+                "kind": "Service",
+                "metadata": {
+                    "name": "pusher"
+                },
+                "spec": {
+                    "ports": [
+                        {
+                            "name": "pusher-p3000",
+                            "port": 3000,
+                            "protocol": "TCP",
+                            "targetPort": 3000
+                        }
+                    ],
+                    "selector": {
+                        "name": "play"
+                    },
+                    "type": "ClusterIP"
+                }
+            },
+            servicefront: {
+                "apiVersion": "v1",
+                "kind": "Service",
+                "metadata": {
+                    "name": "front"
+                },
+                "spec": {
+                    "ports": [
+                        {
+                            "name": "front-p3000",
+                            "port": 3000,
+                            "protocol": "TCP",
+                            "targetPort": 3000
+                        }
+                    ],
+                    "selector": {
+                        "name": "play"
+                    },
+                    "type": "ClusterIP"
+                }
+            },
             ingress+: {
               metadata+: {
                 annotations+: {
