@@ -95,6 +95,11 @@ message ReportPlayerMessage {
   string reportComment = 2;
 }
 
+message BanPlayerMessage {
+  string banUserUuid = 1;
+  string banUserName = 2;
+}
+
 message EmotePromptMessage {
   string emote = 2;
 }
@@ -248,6 +253,7 @@ message ClientToServerMessage {
     ScreenSharingStateMessage screenSharingStateMessage = 33;
     JitsiParticipantIdSpaceMessage  jitsiParticipantIdSpaceMessage = 34;
     UpdateSpaceMetadataMessage updateSpaceMetadataMessage = 35;
+    BanPlayerMessage banPlayerMessage = 36;
   }
 }
 
@@ -924,14 +930,6 @@ message XmppSettingsMessage{
   repeated MucRoomDefinitionMessage rooms = 3;
   string jabberId = 4;
   string jabberPassword = 5;
-}
-
-message BanUserByUuidMessage{
-  string playUri = 1;
-  string uuidToBan = 2;
-  string name = 3;
-  string message = 4;
-  string byUserEmail = 5;
 }
 /*********************************************************************************
  * End Chat Messages

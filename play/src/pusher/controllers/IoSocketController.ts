@@ -863,6 +863,10 @@ export class IoSocketController {
                             socketManager.forwardMessageToBack(socket, message.message);
                             break;
                         }
+                        case "banPlayerMessage": {
+                            await socketManager.handleBanPlayerMessage(socket, message.message.banPlayerMessage);
+                            break;
+                        }
                         default: {
                             const _exhaustiveCheck: never = message.message;
                         }

@@ -12,3 +12,4 @@ export * as EraserService from "./Application/EraserService";
 export * as EraserException from "./Application/Exception/EraserException";
 export * from "./Events/XmppSettingsMessageEvent";
 export * from "./Events/ChatEvent";
+export * from "./Events/BanEvent";

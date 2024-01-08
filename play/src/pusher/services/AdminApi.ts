@@ -728,12 +728,13 @@ class AdminApi implements AdminInterface {
         playUri: string,
         name: string,
         message: string,
-        byUserEmail: string
+        byUserUuid: string,
+        byUserEmail?: string
     ): Promise<boolean> {
         try {
             return axios.post(
                 ADMIN_API_URL + "/api/ban",
-                { uuidToBan, playUri, name, message, byUserEmail },
+                { uuidToBan, playUri, name, message, byUserEmail, byUserUuid },
                 {
                     headers: { Authorization: `${ADMIN_API_TOKEN}` },
                 }

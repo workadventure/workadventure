@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { KLAXOON_ACTIVITY_PICKER_EVENT, isKlaxoonEvent, isXmppSettingsMessageEvent } from "@workadventure/shared-utils";
+import {
+    KLAXOON_ACTIVITY_PICKER_EVENT,
+    isBanEvent,
+    isKlaxoonEvent,
+    isXmppSettingsMessageEvent,
+} from "@workadventure/shared-utils";
 import { isStartWritingEvent, isStopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
 import { isUpdateWritingStatusChatListEvent } from "@workadventure/shared-utils/src/Events/UpdateWritingStatusChatListEvent";
 import { isChatEvent, isChatMessage } from "../../../../../libs/shared-utils/src/Events/ChatEvent";
@@ -312,6 +317,10 @@ export const isIframeEventWrapper = z.union([
         type: z.literal(KLAXOON_ACTIVITY_PICKER_EVENT),
         payload: isKlaxoonEvent,
     }),
+    z.object({
+        type: z.literal("banUser"),
+        data: isBanEvent,
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;
@@ -466,6 +475,10 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("modalCloseTrigger"),
         data: isModalEvent,
+    }),
+    z.object({
+        type: z.literal("banUser"),
+        data: isBanEvent,
     }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
