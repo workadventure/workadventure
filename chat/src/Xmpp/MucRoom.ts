@@ -168,7 +168,7 @@ export class MucRoom extends AbstractRoom {
         // Send ban message to parent iframe
         if (uuid != undefined && name != undefined) iframeListener.sendBanUser(uuid, name);
 
-        //void this.sendAffiliate("outcast", userJID);
+        void this.sendAffiliate("outcast", userJID);
         debug(`[XMPP][${this.name}] >> Ban user message sent`);
     }
     public sendChatState(state: ChatState) {

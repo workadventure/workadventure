@@ -633,13 +633,6 @@ export class SocketManager implements ZoneEventListener {
         // Ban player only if the user is admin
         if (!socketData.tags.includes("admin")) return;
         try {
-            console.info(
-                "Ban player",
-                banPlayerMessage.banUserUuid,
-                banPlayerMessage.banUserName,
-                socketData.userUuid,
-                socketData.roomId
-            );
             await adminService.banUserByUuid(
                 banPlayerMessage.banUserUuid,
                 socketData.roomId,
