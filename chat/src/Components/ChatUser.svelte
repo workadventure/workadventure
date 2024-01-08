@@ -105,11 +105,13 @@
 </script>
 
 <!-- TODO All 'tw-cursor-default' will be deleted when Chat 1to1 will be released -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     class={`wa-chat-item ${user.isAdmin ? "admin" : "user"}  tw-cursor-default`}
     on:click|stopPropagation={() => openChat(user)}
     on:mouseleave={closeChatUserMenu}
 >
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
         class={`tw-relative wa-avatar ${!user.active && "tw-opacity-50"}  tw-cursor-default`}
         style={`background-color: ${getColor(user.jid)}`}
@@ -132,6 +134,7 @@
             />
         {/if}
     </div>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
         class={`tw-flex-auto tw-ml-3 ${!user.active && "tw-opacity-50"}  tw-cursor-default`}
         on:click|stopPropagation={() => openChat(user)}
@@ -196,6 +199,7 @@
             <!-- on:mouseleave={closeChatUserMenu} -->
             <div class={`wa-dropdown-menu ${chatMenuActive ? "" : "tw-invisible"}`} on:mouseleave={closeChatUserMenu}>
                 {#if user.isInSameMap}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <span
                         class="walk-to wa-dropdown-item"
                         on:click|stopPropagation={() => goTo("user", user.playUri ?? "", user.uuid ?? "")}
@@ -203,6 +207,7 @@
                         {$LL.userList.walkTo()}</span
                     >
                 {:else}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <span
                         class="teleport wa-dropdown-item"
                         on:click|stopPropagation={() => goTo("room", user.playUri ?? "", user.uuid ?? "")}
@@ -210,6 +215,7 @@
                         {$LL.userList.teleport()}</span
                     >
                 {/if}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 {#if user.visitCardUrl}
                     <span
                         class="businessCard wa-dropdown-item"
@@ -218,12 +224,15 @@
                         {$LL.userList.businessCard()}</span
                     >
                 {/if}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 {#if $me && $me.isAdmin}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <span
                         class="ban wa-dropdown-item tw-text-pop-red"
-                        on:click|stopPropagation={() => mucRoom.sendBan(user.jid, user.name, user.playUri ?? "")}
-                        ><SlashIcon size="13" /> {$LL.ban.title()} (coming soon)</span
+                        on:click|stopPropagation={() => mucRoom.sendBan(user.jid, user.uuid, user.name)}
+                        ><SlashIcon size="13" /> {$LL.ban.title()}</span
                     >
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     {#if user.isAdmin}
                         <span
                             class="rank-down wa-dropdown-item tw-text-warning"

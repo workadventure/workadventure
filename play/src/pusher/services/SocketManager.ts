@@ -5,7 +5,6 @@ import {
     AdminPusherToBackMessage,
     AdminRoomMessage,
     BanMessage,
-    BanUserByUuidMessage,
     EmoteEventMessage,
     ErrorApiData,
     ErrorMessage,
@@ -33,6 +32,7 @@ import {
     QueryMessage,
     MegaphoneStateMessage,
     UpdateSpaceMetadataMessage,
+    BanPlayerMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { isAxiosError } from "axios";
@@ -397,7 +397,7 @@ export class SocketManager implements ZoneEventListener {
                                 case "updateSpaceMetadataMessage": {
                                     const updateSpaceMetadataMessage = message.message.updateSpaceMetadataMessage;
                                     const space = this.spaces.get(updateSpaceMetadataMessage.spaceName);
-                                    console.log("updateSpaceMetadataMessage", updateSpaceMetadataMessage);
+
                                     const isMetadata = z
                                         .record(z.string(), z.unknown())
                                         .safeParse(JSON.parse(message.message.updateSpaceMetadataMessage.metadata));
@@ -723,6 +723,30 @@ export class SocketManager implements ZoneEventListener {
         } catch (e) {
             Sentry.captureException(`An error occurred on "handleReportMessage" ${e}`);
             console.error(`An error occurred on "handleReportMessage" ${e}`);
+        }
+    }
+
+    async handleBanPlayerMessage(client: Socket, banPlayerMessage: BanPlayerMessage): Promise<void> {
+        const socketData = client.getUserData();
+        // Ban player only if the user is admin
+        if (!socketData.tags.includes("admin")) return;
+        try {
+            await adminService.banUserByUuid(
+                banPlayerMessage.banUserUuid,
+                socketData.roomId,
+                banPlayerMessage.banUserName,
+                `User banned by admin ${socketData.userUuid}`,
+                socketData.userUuid
+            );
+            await this.emitBan(
+                banPlayerMessage.banUserUuid,
+                "You have been banned by an admin",
+                "ban",
+                socketData.roomId
+            );
+        } catch (e) {
+            Sentry.captureException(`An error occurred on "handleBanPlayerMessage" ${e}`);
+            console.error(`An error occurred on "handleBanPlayerMessage" ${e}`);
         }
     }
 
@@ -1079,35 +1103,6 @@ export class SocketManager implements ZoneEventListener {
         }
 
         socketData.backConnection.write(pusherToBackMessage);
-    }
-
-    handleBanUserByUuidMessage(client: Socket, banUserByUuidMessage: BanUserByUuidMessage): void {
-        try {
-            adminService
-                .banUserByUuid(
-                    banUserByUuidMessage.uuidToBan,
-                    banUserByUuidMessage.playUri,
-                    banUserByUuidMessage.name,
-                    banUserByUuidMessage.message,
-                    banUserByUuidMessage.byUserEmail
-                )
-                .then(() => {
-                    this.emitBan(
-                        banUserByUuidMessage.uuidToBan,
-                        banUserByUuidMessage.message,
-                        "banned",
-                        banUserByUuidMessage.playUri
-                    ).catch((err) => {
-                        throw err;
-                    });
-                })
-                .catch((err) => {
-                    console.info("handleBanUserByUuidMessage => err", err);
-                });
-        } catch (e) {
-            Sentry.captureException(`An error occurred on "handleBanUserByUuidMessage" ${e}`);
-            console.error(`An error occurred on "handleBanUserByUuidMessage" ${e}`);
-        }
     }
 
     emitXMPPSettings(client: Socket): void {

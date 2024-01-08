@@ -205,9 +205,13 @@ height,*/
         }
         domElement.setVisible(visible);
 
-        this.gameScene.load.once("complete", () => {
-            iframe.style.visibility = "visible";
-        });
+        this.gameScene.sceneReadyToStartPromise
+            .then(() => {
+                iframe.style.visibility = "visible";
+            })
+            .catch((e) => {
+                console.error(e);
+            });
 
         switch (embeddedWebsiteEvent.origin) {
             case "player":
