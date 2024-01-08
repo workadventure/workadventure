@@ -230,7 +230,7 @@
                     <span
                         class="ban wa-dropdown-item tw-text-pop-red"
                         on:click|stopPropagation={() => mucRoom.sendBan(user.jid, user.uuid, user.name)}
-                        ><SlashIcon size="13" /> {$LL.ban.title()} (coming soon)</span
+                        ><SlashIcon size="13" /> {$LL.ban.title()}</span
                     >
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     {#if user.isAdmin}
