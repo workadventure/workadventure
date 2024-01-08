@@ -5,7 +5,6 @@ import {
     AdminPusherToBackMessage,
     AdminRoomMessage,
     BanMessage,
-    BanUserByUuidMessage,
     EmoteEventMessage,
     ErrorApiData,
     ErrorMessage,
@@ -1013,35 +1012,6 @@ export class SocketManager implements ZoneEventListener {
         }
 
         socketData.backConnection.write(pusherToBackMessage);
-    }
-
-    handleBanUserByUuidMessage(client: Socket, banUserByUuidMessage: BanUserByUuidMessage): void {
-        try {
-            adminService
-                .banUserByUuid(
-                    banUserByUuidMessage.uuidToBan,
-                    banUserByUuidMessage.playUri,
-                    banUserByUuidMessage.name,
-                    banUserByUuidMessage.message,
-                    banUserByUuidMessage.byUserEmail
-                )
-                .then(() => {
-                    this.emitBan(
-                        banUserByUuidMessage.uuidToBan,
-                        banUserByUuidMessage.message,
-                        "banned",
-                        banUserByUuidMessage.playUri
-                    ).catch((err) => {
-                        throw err;
-                    });
-                })
-                .catch((err) => {
-                    console.info("handleBanUserByUuidMessage => err", err);
-                });
-        } catch (e) {
-            Sentry.captureException(`An error occurred on "handleBanUserByUuidMessage" ${e}`);
-            console.error(`An error occurred on "handleBanUserByUuidMessage" ${e}`);
-        }
     }
 
     emitXMPPSettings(client: Socket): void {

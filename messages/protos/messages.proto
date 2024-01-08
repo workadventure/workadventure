@@ -931,14 +931,6 @@ message XmppSettingsMessage{
   string jabberId = 4;
   string jabberPassword = 5;
 }
-
-message BanUserByUuidMessage{
-  string playUri = 1;
-  string uuidToBan = 2;
-  string name = 3;
-  string message = 4;
-  string byUserEmail = 5;
-}
 /*********************************************************************************
  * End Chat Messages
  *********************************************************************************/
