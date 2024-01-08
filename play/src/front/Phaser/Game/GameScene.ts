@@ -1920,6 +1920,12 @@ ${escapedMessage}
             })
         );
 
+        this.iframeSubscriptionList.push(
+            iframeListener.banPlayerIframeEvent.subscribe((banPlayerEvent) => {
+                this.connection?.emitBanPlayerMessage(banPlayerEvent.uuid, banPlayerEvent.name);
+            })
+        );
+
         iframeListener.registerAnswerer("openCoWebsite", async (openCoWebsite, source) => {
             if (!source) {
                 throw new Error("Unknown query source");

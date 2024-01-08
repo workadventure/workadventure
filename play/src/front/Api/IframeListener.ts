@@ -1,6 +1,6 @@
 import { Subject } from "rxjs";
 import { availabilityStatusToJSON, XmppSettingsMessage } from "@workadventure/messages";
-import { KLAXOON_ACTIVITY_PICKER_EVENT, ChatMessage } from "@workadventure/shared-utils";
+import { KLAXOON_ACTIVITY_PICKER_EVENT, ChatMessage, BanEvent } from "@workadventure/shared-utils";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import {
     additionnalButtonsMenu,
@@ -188,6 +188,9 @@ class IframeListener {
 
     private readonly _addButtonActionBarStream: Subject<AddActionsMenuKeyToRemotePlayerEvent> = new Subject();
     public readonly addButtonActionBarStream = this._addButtonActionBarStream.asObservable();
+
+    private readonly _banPlayerIframeEvent: Subject<BanEvent> = new Subject();
+    public readonly banPlayerIframeEvent = this._banPlayerIframeEvent.asObservable();
 
     private readonly iframes = new Map<HTMLIFrameElement, string | undefined>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
@@ -486,6 +489,8 @@ class IframeListener {
                         // @ts-ignore
                         const event = new MessageEvent("AcitivityPickerFromWorkAdventure", message);
                         window.dispatchEvent(event);
+                    } else if (iframeEvent.type == "banUser") {
+                        this._banPlayerIframeEvent.next(iframeEvent.data);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;

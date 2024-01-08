@@ -33,6 +33,7 @@ import {
     QueryMessage,
     MegaphoneStateMessage,
     UpdateSpaceMetadataMessage,
+    BanPlayerMessage,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { isAxiosError } from "axios";
@@ -625,6 +626,37 @@ export class SocketManager implements ZoneEventListener {
         } catch (e) {
             Sentry.captureException(`An error occurred on "handleReportMessage" ${e}`);
             console.error(`An error occurred on "handleReportMessage" ${e}`);
+        }
+    }
+
+    async handleBanPlayerMessage(client: Socket, banPlayerMessage: BanPlayerMessage): Promise<void> {
+        const socketData = client.getUserData();
+        // Ban player only if the user is admin
+        if (!socketData.tags.includes("admin")) return;
+        try {
+            console.info(
+                "Ban player",
+                banPlayerMessage.banUserUuid,
+                banPlayerMessage.banUserName,
+                socketData.userUuid,
+                socketData.roomId
+            );
+            await adminService.banUserByUuid(
+                banPlayerMessage.banUserUuid,
+                socketData.roomId,
+                banPlayerMessage.banUserName,
+                `User banned by admin ${socketData.userUuid}`,
+                socketData.userUuid
+            );
+            await this.emitBan(
+                banPlayerMessage.banUserUuid,
+                "You have been banned by an admin",
+                "ban",
+                socketData.roomId
+            );
+        } catch (e) {
+            Sentry.captureException(`An error occurred on "handleBanPlayerMessage" ${e}`);
+            console.error(`An error occurred on "handleBanPlayerMessage" ${e}`);
         }
     }
 
