@@ -88,6 +88,53 @@ The admin user login and password will be stored in the WorkAdventure environmen
 - `MATRIX_ADMIN_USER`
 - `MATRIX_ADMIN_PASSWORD`
 
+
+## Mapping between Matrix rooms and WorkAdventure
+
+A WorkAdventure world maps to a Matrix space.
+
+> [!NOTE]
+> In self-hosted versions without an admin, all rooms are considered to be part of the same world.
+
+Inside this Matrix space, there are 2 kinds of Matrix rooms:
+
+- Matrix rooms that are always visible in the rooms list
+- Matrix rooms that are only visible when the user is in a specific area of the map: these Matris rooms are automatically
+  joined when the user enters the area, and automatically left when the user leaves the area. If the user does not
+  properly leave the area (e.g. because of a network issue or because he closes his browser), the user is kicked out 
+  of the room after a timeout.
+
+```mermaid
+classDiagram
+  class MatrixSpace["Matrix Space"]
+  class MatrixRoom["Matrix Room"]
+  class WorkAdventureWorld["WorkAdventure World"]
+  class WorkAdventureRoom["WorkAdventure Room"]
+  class WorkAdventureArea["WorkAdventure Area"]
+  MatrixSpace "1" *-- "*" MatrixSpace
+  MatrixSpace "1" *-- "*" MatrixRoom
+  MatrixSpace "1" -- "1" WorkAdventureWorld
+  WorkAdventureWorld "1" *-- "*" WorkAdventureRoom
+  WorkAdventureRoom "1" *-- "*" WorkAdventureArea
+  WorkAdventureArea "0..1" -- "1" MatrixRoom
+```
+
+```mermaid
+classDiagram
+  class MatrixSpace["Matrix Space"]
+  class WorkAdventureWorld["WorkAdventure World"]
+  class OIDCProvider["OIDC Provider"]
+  class OIDCUser["OpenID Connect User"]
+  class WAMember["WorkAdventure Member"]
+  class SynapseUser["Synapse User"]
+  OIDCProvider "1" -- "*" OIDCUser
+  OIDCUser "1" -- "0..1" WAMember
+  OIDCUser "1" -- "0..1" SynapseUser
+  SynapseUser "*" --> "*" MatrixRoom
+  SynapseUser "*" --> "*" MatrixSpace
+  WAMember "*" --> "*" WorkAdventureWorld
+```
+
 ## Developer notes
 
 In this section, we will deep-dive into the Matrix / WorkAdventure integration implementation.
