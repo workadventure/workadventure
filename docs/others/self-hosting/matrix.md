@@ -284,3 +284,51 @@ or https://matrix.org/docs/spec/client_server/r0.6.1#m-faudio ...).
 
 
 
+## Architecture decision records
+
+### Mapping between Matrix rooms and WorkAdventure areas
+
+#### Problem
+
+Most of the time, for meeting rooms, we want the chat to disappear when we leave the room.
+How do we achieve that?
+
+2 solutions have been studied:
+
+#### Solution 1: Create a new Matrix room each time a new "meeting" happens
+
+Create a new Matrix room each time a new "meeting" happens. When the last user of a WorkAdventure area leaves,
+the Matrix room is "deleted" (i.e. everyone is kicked out of the room). When someone enters the area again, a new
+Matrix room is created (with a new ID).
+This is not ideal because in other Matrix clients (like Element), the user will see the list of rooms
+he was kicked of in the "History" section of the chat.
+
+![Element history](./images/element-history.png)
+
+Now, try to imagine a user entering and leaving a WorkAdventure area 10 times in a row. The user will have 10 rooms
+in his history, and it will be tedious to remove them one by one.
+
+#### Solution 2: Create a single Matrix room for each WorkAdventure area
+
+Create a single Matrix room for each WorkAdventure area. When someone enters the area, the user is invited to the
+room and joins automatically. When the user leaves the area, the user is kicked out of the room.
+The history settings of the area are configured to *"only members" since they joined*.
+
+As a result, the user will only see what happens in the room since he joined the room.
+If the user leaves the area and comes back, he will see the history of the room at the time he was in the room.
+
+Let's take an example:
+
+Alice and Bob are in the room from 2:00 PM to 3:00 PM.
+Charlie and Eve are in the room from 3:00 PM to 4:00 PM.
+Alice and Bob come back for a meeting in the room at 4:00 PM.
+
+When Alice enters the room, she will see the history of the room from 2:00 PM to 3:00 PM, but she will not see
+what happens between 3:00 PM and 4:00 PM. She will only see what happens after 4:00 PM.
+
+When looking at what happens in Element, Alice will see the following:
+
+At 2:00 PM: The room is visible in Element as a normal room
+At 3:00 PM: The room disappears from the main room list and is moved to the "History" section. A click on the "History" section
+does not show the content of the room and the room cannot be joined from Element (because it is private)
+At 4:00 PM: The room is visible in Element as a normal room again.
