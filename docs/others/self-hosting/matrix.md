@@ -72,6 +72,8 @@ sso:
 
 ### Administrator
 
+TODO: only the admin user might be needed (not the password) if we manage to identify it via OpenID.
+
 In addition to providing the OpenID Connect configuration, you will need to provide an administrator user to the WorkAdventure
 integration. This user will be used by WorkAdventure to create rooms and invite users to those rooms.
 
