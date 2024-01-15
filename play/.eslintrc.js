@@ -57,6 +57,7 @@ module.exports = {
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/ban-ts-comment": "off",
         "@typescript-eslint/ban-ts-ignore": "off",
+        "@typescript-eslint/no-unnecessary-condition": "error",
         "import/order": "error",
 
         "no-async-promise-executor": "error",
