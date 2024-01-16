@@ -79,7 +79,7 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
-    "tsx": "^3.12.10",
+    "tsx": "^4.7.0",
     "zod": "^3.20.2",
     "zod-error": "^1.5.0",
     "zod-to-json-schema": "^3.20.4"
