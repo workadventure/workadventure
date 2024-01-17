@@ -39,6 +39,7 @@ services:
         working_dir: /usr/src/app/play
         volumes:
             - .:/usr/src/app
+        tmpfs: /tmp
         ports:
             - "9231:9229"
             - "9235:9235"

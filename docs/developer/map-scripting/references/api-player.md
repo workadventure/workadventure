@@ -20,6 +20,8 @@ You need to wait for the end of the initialization before accessing `WA.player.n
 WA.onInit().then(() => {
     console.log('Player name: ', WA.player.name);
 })
+// Will display:
+// Player name: Alice
 ```
 
 ### Get the player ID
@@ -39,6 +41,8 @@ You need to wait for the end of the initialization before accessing `WA.player.i
 WA.onInit().then(() => {
     console.log('Player ID: ', WA.player.id);
 })
+// Will display:
+// Player ID: a293c901-4455-4b1e-cf39-f4c0420de6f5
 ```
 
 ### Get the player language
@@ -57,6 +61,8 @@ You need to wait for the end of the initialization before accessing `WA.player.l
 WA.onInit().then(() => {
     console.log('Player language: ', WA.player.language);
 })
+// Will display:
+// Player language: fr-FR
 ```
 
 ### Get the tags of the player
