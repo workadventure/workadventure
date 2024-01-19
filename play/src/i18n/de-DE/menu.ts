@@ -22,7 +22,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             name: "Namen ändern",
             woka: "WOKA ändern",
             companion: "Begleiter ändern",
-            camera: "Kameraeinstellungen ändern",
+            camera: "Geräteeinstellungen",
         },
         login: "Einloggen",
         logout: "Ausloggen",
