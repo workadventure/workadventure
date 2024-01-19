@@ -146,6 +146,9 @@ class OpenIDClient {
 
     public logoutUser(token: string): Promise<void> {
         return this.initClient().then((client) => {
+            if (!client.metadata.revocation_endpoint) {
+                return;
+            }
             return client.revoke(token);
         });
     }
