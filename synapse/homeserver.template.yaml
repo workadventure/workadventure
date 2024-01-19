@@ -57,6 +57,21 @@ oidc_providers:
         #localpart_template: "{{ user.preferred_username }}"
         display_name_template: "{{ user.name }}"
         email_template: "{{ user.email }}"
+#  - idp_id: workadventure-admin
+#    idp_name: WorkAdventure Admin
+#    issuer: "http://member.workadventure.localhost"
+#    skip_verification: true
+#    client_id: "4"
+#    client_secret: "SZL6NhyAyB60kHoB4iwoG0zH6cuItlqFVgHqEIJE"
+#    scopes: ["openid", "email"]
+#
+#    user_profile_method: "userinfo_endpoint"
+#    user_mapping_provider:
+#      config:
+#        localpart_template: "{{ user.email.split('@')[0] }}"
+#        #localpart_template: "{{ user.preferred_username }}"
+#        display_name_template: "{{ user.name }}"
+#        email_template: "{{ user.email }}"
 
 sso:
   client_whitelist:
