@@ -80,7 +80,7 @@
     import { peerStore } from "../../Stores/PeerStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import Tooltip from "../Util/Tooltip.svelte";
-    import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
+    import { modalIframeStore, modalVisibilityStore, showModalGlobalComminucationVisibilityStore } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
@@ -173,8 +173,9 @@
     }
 
     function toggleMegaphone() {
-        if ($streamingMegaphoneStore) {
+        if ($streamingMegaphoneStore || $showModalGlobalComminucationVisibilityStore) {
             streamingMegaphoneStore.set(false);
+            showModalGlobalComminucationVisibilityStore.set(false);
             return;
         }
         if ($requestedMegaphoneStore || $liveStreamingEnabledStore) {
@@ -185,6 +186,7 @@
 
         analyticsClient.startMegaphone();
         streamingMegaphoneStore.set(true);
+        showModalGlobalComminucationVisibilityStore.set(true);
     }
 
     function toggleMapEditorMode() {
