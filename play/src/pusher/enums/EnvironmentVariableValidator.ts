@@ -17,6 +17,9 @@ export const EnvironmentVariables = z.object({
     ADMIN_API_URL: AbsoluteOrRelativeUrl.optional(),
     ADMIN_URL: AbsoluteOrRelativeUrl.optional(),
     ADMIN_API_TOKEN: z.string().optional(),
+    AUTOLOGIN_URL: AbsoluteOrRelativeUrl.optional().describe(
+        "The URL to be used to automatically log someone given a token."
+    ),
     ADMIN_SOCKETS_TOKEN: z.string().optional(),
     CPU_OVERHEAT_THRESHOLD: PositiveIntAsString.optional().transform((val) => toNumber(val, 80)),
     PUSHER_HTTP_PORT: PositiveIntAsString.optional().transform((val) => toNumber(val, 3000)),
