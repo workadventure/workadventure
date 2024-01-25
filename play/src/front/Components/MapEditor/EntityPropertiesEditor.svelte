@@ -33,6 +33,7 @@
 
     let properties: EntityDataProperties = [];
     let entityName = "";
+    let entityDescription = "";
     let hasJitsiRoomProperty: boolean;
 
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
@@ -40,6 +41,7 @@
             currentEntity.setEditColor(0x00ffff);
             properties = currentEntity.getProperties() ?? [];
             entityName = currentEntity.getEntityData().name ?? "";
+            entityDescription = currentEntity.getEntityData().description ?? "";
         }
     });
 
@@ -58,6 +60,13 @@
     function onUpdateName() {
         if ($mapEditorSelectedEntityStore) {
             $mapEditorSelectedEntityStore.setEntityName(entityName);
+        }
+    }
+
+    function onUpdateDescription() {
+        console.log("update description", entityDescription);
+        if ($mapEditorSelectedEntityStore) {
+            $mapEditorSelectedEntityStore.setEntityDescription(entityDescription);
         }
     }
 
@@ -309,8 +318,12 @@
         />
     </div>
     <div class="entity-name-container">
-        <label for="objectName">Object name</label>
+        <label for="objectName">{$LL.mapEditor.entityEditor.objectName()}</label>
         <input id="objectName" type="text" placeholder="Value" bind:value={entityName} on:change={onUpdateName} />
+    </div>
+    <div class="entity-name-container">
+        <label for="objectDescription">{$LL.mapEditor.entityEditor.objectDescription()}</label>
+        <textarea id="objectDescription" placeholder="Value" bind:value={entityDescription} on:change={onUpdateDescription} ></textarea>
     </div>
     <div class="properties-container">
         {#each properties as property (property.id)}

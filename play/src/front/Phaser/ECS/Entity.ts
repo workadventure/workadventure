@@ -51,6 +51,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.entityData = {
             ...data,
             name: data.name ?? "",
+            description: data.description ?? "",
             properties: data.properties ?? [],
         };
         this.prefab = prefab;
@@ -344,6 +345,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     public setEntityName(name: string): void {
         this.entityData.name = name;
         this.emit(EntityEvent.Updated, this.appendId({ name }));
+    }
+
+    public setEntityDescription(description: string): void {
+        this.entityData.description = description;
+        this.emit(EntityEvent.Updated, this.appendId({ description }));
     }
 
     public updateProperty(changes: AtLeast<EntityDataProperty, "id">): void {

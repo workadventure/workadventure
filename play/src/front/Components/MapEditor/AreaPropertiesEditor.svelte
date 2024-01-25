@@ -34,6 +34,7 @@
 
     let properties: AreaDataProperties = [];
     let areaName = "";
+    let areaDescription = "";
     let hasJitsiRoomProperty: boolean;
     let hasFocusableProperty: boolean;
     let hasSilentProperty: boolean;
@@ -47,6 +48,7 @@
         if (currentAreaPreview) {
             properties = structuredClone(currentAreaPreview.getProperties());
             areaName = currentAreaPreview.getAreaData().name;
+            areaDescription = currentAreaPreview.getAreaData().description ?? "";
             refreshFlags();
         }
     });
@@ -159,6 +161,7 @@
                     type,
                     url: "",
                     areaName: "",
+                    areaDescription: ""
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);
@@ -202,6 +205,12 @@
     function onUpdateName() {
         if ($mapEditorSelectedAreaPreviewStore) {
             $mapEditorSelectedAreaPreviewStore.setAreaName(areaName);
+        }
+    }
+
+    function onUpdateAreaDescription() {
+        if ($mapEditorSelectedAreaPreviewStore) {
+            $mapEditorSelectedAreaPreviewStore.setAreaDescription(areaDescription);
         }
     }
 
@@ -446,8 +455,12 @@
         />
     </div>
     <div class="area-name-container">
-        <label for="objectName">Area name</label>
+        <label for="objectName">{$LL.mapEditor.areaEditor.nameLabel()}</label>
         <input id="objectName" type="text" placeholder="Value" bind:value={areaName} on:change={onUpdateName} />
+    </div>
+    <div class="area-name-container">
+        <label for="objectName">{$LL.mapEditor.areaEditor.areaDescription()}</label>
+        <textarea id="objectName" placeholder="Value" bind:value={areaDescription} on:change={onUpdateAreaDescription}></textarea>
     </div>
     <div class="properties-container">
         {#each properties as property (property.id)}

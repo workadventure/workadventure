@@ -161,6 +161,7 @@ const mapEditor: BaseTranslation = {
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",
         nameLabel: "Name",
+        areaDescription: "Description",
     },
     areaEditorInstructions: {
         title: "How it works ?",
@@ -179,6 +180,8 @@ const mapEditor: BaseTranslation = {
         buttonLabel: "Button Label",
         editInstructions: "Click an entity to modify its properties.",
         selectObject: "Click on an object to select it",
+        objectName: "Object Name",
+        objectDescription: "Object Description",
     },
     settings: {
         loading: "Loading",

@@ -135,6 +135,7 @@ export const AreaData = AreaCoordinates.extend({
     height: z.number(),
     visible: z.boolean(),
     name: z.string(),
+    description: z.string().optional(),
     properties: AreaDataProperties,
 });
 
@@ -178,6 +179,7 @@ export const EntityData = z.object({
     x: z.number(),
     y: z.number(),
     name: z.string().optional(),
+    description: z.string().optional(),
     properties: EntityDataProperties.optional(),
     prefab: EntityRawPrefab,
     prefabRef: EntityPrefabRef,

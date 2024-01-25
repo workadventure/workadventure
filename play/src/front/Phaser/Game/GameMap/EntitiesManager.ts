@@ -34,6 +34,7 @@ export const CopyAreaEventData = z.object({
     width: z.number(),
     height: z.number(),
     name: z.string(),
+    description: z.string(),
     properties: EntityDataProperties.optional(),
 });
 
