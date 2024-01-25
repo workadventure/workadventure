@@ -1,4 +1,5 @@
 import { get, readable, writable } from "svelte/store";
+import * as Sentry from "@sentry/svelte";
 import type { VideoPeer } from "../WebRtc/VideoPeer";
 import type { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 
@@ -23,7 +24,7 @@ function createPeerStore<T>() {
             update((users) => {
                 const peerConnectionDeleted = users.delete(userId);
                 if (!peerConnectionDeleted) {
-                    throw new Error("Error deleting peer connection");
+                    Sentry.captureException(new Error("Error deleting peer connection"));
                 }
                 return users;
             });
