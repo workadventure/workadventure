@@ -1,13 +1,31 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { showModalGlobalComminucationVisibilityStore } from "../../Stores/ModalStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
-    import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+    import {
+        cameraListStore,
+        localStreamStore,
+        localVolumeStore,
+        microphoneListStore,
+        requestedCameraDeviceIdStore,
+        requestedCameraState,
+        requestedMicrophoneDeviceIdStore,
+        requestedMicrophoneState,
+        streamingMegaphoneStore,
+    } from "../../Stores/MediaStore";
     import LL from "../../../i18n/i18n-svelte";
+    import microphoneImg from "../images/microphone.png";
+    import cameraImg from "../images/camera.png";
     import TextGlobalMessage from "../Menu/TextGlobalMessage.svelte";
     import AudioGlobalMessage from "../Menu/AudioGlobalMessage.svelte";
+    import { srcObject } from "../Video/utils";
+    import SoundMeterWidget from "../SoundMeterWidget.svelte";
+    import { localUserStore } from "../../Connection/LocalUserStore";
+    import { StringUtils } from "../../Utils/StringUtils";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
 
     let mainModal: HTMLDivElement;
 
@@ -18,13 +36,33 @@
     let handleSendText: { sendTextMessage(broadcast: boolean): void };
     let handleSendAudio: { sendAudioMessage(broadcast: boolean): Promise<void> };
 
+    let videoElement: HTMLVideoElement;
+    let stream: MediaStream | null;
+    let aspectRatio = 1;
+
     let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
         isMobile = isMediaBreakpointUp("md");
     });
 
+    const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
+        if (value.type === "success") {
+            stream = value.stream;
+            // TODO: remove this hack
+            setTimeout(() => {
+                aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
+            }, 100);
+        } else {
+            stream = null;
+        }
+    });
+
     onMount(() => {
         resizeObserver.observe(mainModal);
+    });
+
+    onDestroy(() => {
+        unsubscribeLocalStreamStore();
     });
 
     function close() {
@@ -38,6 +76,7 @@
     }
 
     function activateLiveMessage() {
+        streamingMegaphoneStore.set(true);
         activeLiveMessage = true;
         inputSendTextActive = false;
         uploadAudioActive = false;
@@ -90,6 +129,24 @@
         if (!(event.target instanceof HTMLVideoElement)) return;
         // full screen video
         event.target.requestFullscreen().catch(() => console.error("error playing video"));
+    }
+
+    let cameraDiveId: string;
+    function selectCamera() {
+        requestedCameraDeviceIdStore.set(cameraDiveId);
+        localUserStore.setPreferredVideoInputDevice(cameraDiveId);
+    }
+
+    let microphoneDeviceId: string;
+    function selectMicrophone() {
+        requestedMicrophoneDeviceIdStore.set(microphoneDeviceId);
+        localUserStore.setPreferredAudioInputDevice(microphoneDeviceId);
+    }
+
+    function startLive() {
+        analyticsClient.openMegaphone();
+        requestedMegaphoneStore.set(true);
+        close();
     }
 </script>
 
@@ -245,6 +302,78 @@
                             >
                         </section>
                     </div>
+                </div>
+            {/if}
+            {#if activeLiveMessage}
+                <div class="tw-flex tw-flew-row tw-justify-center">
+                    <div class="tw-flex tw-flex-col">
+                        <video
+                            bind:this={videoElement}
+                            class="tw-h-full tw-w-full md:tw-object-cover tw-rounded-xl"
+                            class:object-contain={stream && (isMobile || aspectRatio < 1)}
+                            class:tw-max-h-[230px]={stream}
+                            style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
+                            use:srcObject={stream}
+                            autoplay
+                            muted
+                            playsinline
+                        />
+                        <div class="tw-z-[251] tw-w-full tw-p-4 tw-flex tw-items-center tw-justify-center tw-scale-150">
+                            <SoundMeterWidget
+                                volume={$localVolumeStore}
+                                classcss="!tw-bg-none !tw-bg-transparent tw-scale-150"
+                                barColor="blue"
+                            />
+                        </div>
+                    </div>
+                    <div class="tw-flex tw-flex-col tw-pl-6">
+                        <h3>Settings</h3>
+                        {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
+                            <div class="tw-flex tw-flex-row">
+                                <img
+                                    draggable="false"
+                                    src={cameraImg}
+                                    style="padding: 2px; height: 32px; width: 32px;"
+                                    alt="Turn off microphone"
+                                />
+                                <select
+                                    class="tw-w-full tw-ml-4"
+                                    bind:value={cameraDiveId}
+                                    on:change={() => selectCamera()}
+                                >
+                                    {#each $cameraListStore as camera (camera.deviceId)}
+                                        <option value={camera.deviceId}>
+                                            {StringUtils.normalizeDeviceName(camera.label)}
+                                        </option>
+                                    {/each}
+                                </select>
+                            </div>
+                        {/if}
+                        {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 0}
+                            <div class="tw-flex tw-flex-row">
+                                <img
+                                    draggable="false"
+                                    src={microphoneImg}
+                                    style="padding: 2px; height: 32px; width: 32px;"
+                                    alt="Turn off microphone"
+                                />
+                                <select
+                                    class="tw-w-full tw-ml-4"
+                                    bind:value={microphoneDeviceId}
+                                    on:change={() => selectMicrophone()}
+                                >
+                                    {#each $microphoneListStore as microphone (microphone.deviceId)}
+                                        <option value={microphone.deviceId}>
+                                            {StringUtils.normalizeDeviceName(microphone.label)}
+                                        </option>
+                                    {/each}
+                                </select>
+                            </div>
+                        {/if}
+                    </div>
+                </div>
+                <div class="tw-flex tw-flew-row tw-justify-center">
+                    <button class="light" on:click={startLive}>Start live message</button>
                 </div>
             {/if}
         </div>
