@@ -11,21 +11,29 @@ const megaphone: BaseTranslation = {
             yourCamera: "your camera",
             yourScreen: "your screen",
             title: "Live message",
-            button: "Send a live message",
+            button: "Start a live message",
             and: "and",
             toAll: "to all participants",
             confirm: "Confirm",
             cancel: "Cancel",
+            notice: `
+            The live message or "Megaphone" allows you to send a live message with your camera and microphone to all the people connected in the room or the world.
+
+            This message will be displayer at the bottom corner of the screen, like a video call or bubble discussion.
+
+            An exemple of a live message use case: "Hello everyone, shall we start the conference? 🎉 Follow my avatar to the conference area and open the video app 🚀"
+            `,
+            settings: "Settings",
         },
         textMessage: {
             title: "Text message",
             notice: `
             The text message allows you to send a message to all the people connected in the room or the world.
 
-            This message will be displayed as a popup at the top of the page and will be accompanied by a sound to identify that information is to be read.
+            This message will be displayed as a popup at the top of the page and will be accompanied by a sound to identify that the information is readable.
 
             An example of a message: "The conference in room 3 starts in 2 minutes 🎉. You can go to conference area 3 and open the video app 🚀"
-        `,
+            `,
             button: "Send a text message",
         },
         audioMessage: {
@@ -35,8 +43,8 @@ const megaphone: BaseTranslation = {
 
             This audio message will be downloaded and launched to all people receiving this notification.
 
-            An example of an audio message can be an audio recording to indicate that a conference will start in a few minutes.
-        `,
+            An audio message can consist of an audio recording that indicates a conference will begin in a few minutes.
+            `,
             button: "Send an audio message",
         },
     },

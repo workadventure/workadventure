@@ -18,6 +18,9 @@
     import LL from "../../../i18n/i18n-svelte";
     import microphoneImg from "../images/microphone.png";
     import cameraImg from "../images/camera.png";
+    import liveMessageImg from "../images/live-message.svg";
+    import textMessageImg from "../images/text-message.svg";
+    import audioMessageImg from "../images/audio-message.svg";
     import TextGlobalMessage from "../Menu/TextGlobalMessage.svelte";
     import AudioGlobalMessage from "../Menu/AudioGlobalMessage.svelte";
     import { srcObject } from "../Video/utils";
@@ -186,33 +189,30 @@
             {#if !activeLiveMessage && !inputSendTextActive && !uploadAudioActive}
                 <div class="tw-flex tw-flex-row tw-justify-center">
                     <div class="tw-flex tw-flex-col tw-px-5 tw-w-1/3">
-                        <h3>{$LL.megaphone.modal.liveMessage.title()}</h3>
+                        <h3>
+                            <img
+                                src={liveMessageImg}
+                                class="tw-h-8 tw-w-8 tw-mr-1"
+                                alt={$LL.megaphone.modal.liveMessage.title()}
+                            />
+                            {$LL.megaphone.modal.liveMessage.title()}
+                        </h3>
                         <button class="light tw-max-w-fit" on:click={activateLiveMessage}
                             >{$LL.megaphone.modal.liveMessage.button()}</button
                         >
-                        <p class="tw-text-white tw-text-sm">
-                            {#if !$requestedCameraState && !$requestedMicrophoneState && !$requestedScreenSharingState}
-                                {$LL.warning.megaphoneNeeds()}
-                            {:else}
-                                {$LL.megaphone.modal.liveMessage.goingToStream()}
-                                {$requestedCameraState ? $LL.megaphone.modal.liveMessage.yourCamera() : ""}
-                                {$requestedCameraState && $requestedMicrophoneState && !$requestedScreenSharingState
-                                    ? $LL.megaphone.modal.liveMessage.and()
-                                    : ""}
-                                {$requestedCameraState && $requestedMicrophoneState && $requestedScreenSharingState
-                                    ? ","
-                                    : ""}
-                                {$requestedMicrophoneState ? $LL.megaphone.modal.liveMessage.yourMicrophone() : ""}
-                                {($requestedCameraState || $requestedMicrophoneState) && $requestedScreenSharingState
-                                    ? $LL.megaphone.modal.liveMessage.and()
-                                    : ""}
-                                {$requestedScreenSharingState ? $LL.megaphone.modal.liveMessage.yourScreen() : ""}
-                                {$LL.megaphone.modal.liveMessage.toAll()}.
-                            {/if}
+                        <p class="tw-text-white tw-text-sm tw-whitespace-pre-line">
+                            {$LL.megaphone.modal.liveMessage.notice()}
                         </p>
                     </div>
                     <div class="tw-flex tw-flex-col tw-px-5 tw-w-1/3">
-                        <h3>{$LL.megaphone.modal.textMessage.title()}</h3>
+                        <h3>
+                            <img
+                                src={textMessageImg}
+                                class="tw-h-8 tw-w-8 tw-mr-1"
+                                alt={$LL.megaphone.modal.textMessage.title()}
+                            />
+                            {$LL.megaphone.modal.textMessage.title()}
+                        </h3>
                         <button class="light tw-max-w-fit" on:click={activateInputText}
                             >{$LL.megaphone.modal.textMessage.button()}</button
                         >
@@ -221,7 +221,14 @@
                         </p>
                     </div>
                     <div class="tw-flex tw-flex-col tw-px-5 tw-w-1/3">
-                        <h3>{$LL.megaphone.modal.audioMessage.title()}</h3>
+                        <h3>
+                            <img
+                                src={audioMessageImg}
+                                class="tw-h-8 tw-w-8 tw-mr-1"
+                                alt={$LL.megaphone.modal.audioMessage.title()}
+                            />
+                            {$LL.megaphone.modal.audioMessage.title()}
+                        </h3>
                         <button class="light tw-max-w-fit" on:click={activateUploadAudio}
                             >{$LL.megaphone.modal.audioMessage.button()}</button
                         >
@@ -276,16 +283,34 @@
             {#if inputSendTextActive || uploadAudioActive}
                 <div class="tw-flex tw-flex-col tw-p-5">
                     {#if inputSendTextActive}
+                        <h3>
+                            <img
+                                src={textMessageImg}
+                                class="tw-h-8 tw-w-8 tw-mr-1"
+                                alt={$LL.megaphone.modal.textMessage.title()}
+                            />
+                            {$LL.megaphone.modal.textMessage.title()}
+                        </h3>
                         <TextGlobalMessage bind:handleSending={handleSendText} />
                     {/if}
                     {#if uploadAudioActive}
+                        <h3>
+                            <img
+                                src={audioMessageImg}
+                                class="tw-h-8 tw-w-8 tw-mr-1"
+                                alt={$LL.megaphone.modal.audioMessage.title()}
+                            />
+                            {$LL.megaphone.modal.audioMessage.title()}
+                        </h3>
                         <AudioGlobalMessage bind:handleSending={handleSendAudio} />
                     {/if}
-                    <div>
+                    <div class="tw-flex tw-justify-center">
                         <label>
                             <input type="checkbox" bind:checked={broadcastToWorld} />
                             <span>{$LL.menu.globalMessage.warning()}</span>
                         </label>
+                    </div>
+                    <div class="tw-flex tw-justify-center">
                         <section class="centered-column">
                             <button class="light" on:click|preventDefault={send}>{$LL.menu.globalMessage.send()}</button
                             >
@@ -294,79 +319,112 @@
                 </div>
             {/if}
             {#if activeLiveMessage}
-                <div class="tw-flex tw-flew-row tw-justify-center">
-                    <div class="tw-flex tw-flex-col">
-                        <video
-                            bind:this={videoElement}
-                            class="tw-h-full tw-w-full md:tw-object-cover tw-rounded-xl"
-                            class:object-contain={stream && (isMobile || aspectRatio < 1)}
-                            class:tw-max-h-[230px]={stream}
-                            style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
-                            use:srcObject={stream}
-                            autoplay
-                            muted
-                            playsinline
+                <div class="tw-flex tw-flex-col tw-p-5">
+                    <h3>
+                        <img
+                            src={liveMessageImg}
+                            class="tw-h-8 tw-w-8 tw-mr-1"
+                            alt={$LL.megaphone.modal.liveMessage.title()}
                         />
-                        <div class="tw-z-[251] tw-w-full tw-p-4 tw-flex tw-items-center tw-justify-center tw-scale-150">
-                            <SoundMeterWidget
-                                volume={$localVolumeStore}
-                                classcss="!tw-bg-none !tw-bg-transparent tw-scale-150"
-                                barColor="blue"
+                        {$LL.megaphone.modal.liveMessage.title()}
+                    </h3>
+                    <div class="tw-flex tw-flew-row tw-justify-center">
+                        <div class="tw-flex tw-flex-col">
+                            <video
+                                bind:this={videoElement}
+                                class="tw-h-full tw-w-full md:tw-object-cover tw-rounded-xl"
+                                class:object-contain={stream && (isMobile || aspectRatio < 1)}
+                                class:tw-max-h-[230px]={stream}
+                                style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
+                                use:srcObject={stream}
+                                autoplay
+                                muted
+                                playsinline
                             />
+                            <div
+                                class="tw-z-[251] tw-w-full tw-p-4 tw-flex tw-items-center tw-justify-center tw-scale-150"
+                            >
+                                <SoundMeterWidget
+                                    volume={$localVolumeStore}
+                                    classcss="!tw-bg-none !tw-bg-transparent tw-scale-150"
+                                    barColor="blue"
+                                />
+                            </div>
+                        </div>
+                        <div class="tw-flex tw-flex-col tw-pl-6">
+                            <h3>{$LL.megaphone.modal.liveMessage.settings()}</h3>
+                            <p class="tw-text-white tw-text-sm">
+                                {#if !$requestedCameraState && !$requestedMicrophoneState && !$requestedScreenSharingState}
+                                    {$LL.warning.megaphoneNeeds()}
+                                {:else}
+                                    {$LL.megaphone.modal.liveMessage.goingToStream()}
+                                    {$requestedCameraState ? $LL.megaphone.modal.liveMessage.yourCamera() : ""}
+                                    {$requestedCameraState && $requestedMicrophoneState && !$requestedScreenSharingState
+                                        ? $LL.megaphone.modal.liveMessage.and()
+                                        : ""}
+                                    {$requestedCameraState && $requestedMicrophoneState && $requestedScreenSharingState
+                                        ? ","
+                                        : ""}
+                                    {$requestedMicrophoneState ? $LL.megaphone.modal.liveMessage.yourMicrophone() : ""}
+                                    {($requestedCameraState || $requestedMicrophoneState) &&
+                                    $requestedScreenSharingState
+                                        ? $LL.megaphone.modal.liveMessage.and()
+                                        : ""}
+                                    {$requestedScreenSharingState ? $LL.megaphone.modal.liveMessage.yourScreen() : ""}
+                                    {$LL.megaphone.modal.liveMessage.toAll()}.
+                                {/if}
+                            </p>
+                            <div class="tw-flex tw-flex-row">
+                                <img
+                                    draggable="false"
+                                    src={cameraImg}
+                                    style="padding: 2px; height: 32px; width: 32px;"
+                                    alt="Turn off microphone"
+                                />
+                                <select
+                                    class="tw-w-full tw-ml-4"
+                                    bind:value={cameraDiveId}
+                                    on:change={() => selectCamera()}
+                                >
+                                    {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
+                                        {#each $cameraListStore as camera (camera.deviceId)}
+                                            <option value={camera.deviceId}>
+                                                {StringUtils.normalizeDeviceName(camera.label)}
+                                            </option>
+                                        {/each}
+                                    {/if}
+                                </select>
+                            </div>
+                            <div class="tw-flex tw-flex-row">
+                                <img
+                                    draggable="false"
+                                    src={microphoneImg}
+                                    style="padding: 2px; height: 32px; width: 32px;"
+                                    alt="Turn off microphone"
+                                />
+                                <select
+                                    class="tw-w-full tw-ml-4"
+                                    bind:value={microphoneDeviceId}
+                                    on:change={() => selectMicrophone()}
+                                >
+                                    {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 0}
+                                        {#each $microphoneListStore as microphone (microphone.deviceId)}
+                                            <option value={microphone.deviceId}>
+                                                {StringUtils.normalizeDeviceName(microphone.label)}
+                                            </option>
+                                        {/each}
+                                    {/if}
+                                </select>
+                            </div>
                         </div>
                     </div>
-                    <div class="tw-flex tw-flex-col tw-pl-6">
-                        <h3>Settings</h3>
-                        <div class="tw-flex tw-flex-row">
-                            <img
-                                draggable="false"
-                                src={cameraImg}
-                                style="padding: 2px; height: 32px; width: 32px;"
-                                alt="Turn off microphone"
-                            />
-                            <select
-                                class="tw-w-full tw-ml-4"
-                                bind:value={cameraDiveId}
-                                on:change={() => selectCamera()}
-                            >
-                                {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
-                                    {#each $cameraListStore as camera (camera.deviceId)}
-                                        <option value={camera.deviceId}>
-                                            {StringUtils.normalizeDeviceName(camera.label)}
-                                        </option>
-                                    {/each}
-                                {/if}
-                            </select>
-                        </div>
-                        <div class="tw-flex tw-flex-row">
-                            <img
-                                draggable="false"
-                                src={microphoneImg}
-                                style="padding: 2px; height: 32px; width: 32px;"
-                                alt="Turn off microphone"
-                            />
-                            <select
-                                class="tw-w-full tw-ml-4"
-                                bind:value={microphoneDeviceId}
-                                on:change={() => selectMicrophone()}
-                            >
-                                {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 0}
-                                    {#each $microphoneListStore as microphone (microphone.deviceId)}
-                                        <option value={microphone.deviceId}>
-                                            {StringUtils.normalizeDeviceName(microphone.label)}
-                                        </option>
-                                    {/each}
-                                {/if}
-                            </select>
-                        </div>
+                    <div class="tw-flex tw-flew-row tw-justify-center">
+                        <button
+                            class="light"
+                            on:click={startLive}
+                            disabled={!$requestedCameraState && !$requestedMicrophoneState}>Start live message</button
+                        >
                     </div>
-                </div>
-                <div class="tw-flex tw-flew-row tw-justify-center">
-                    <button
-                        class="light"
-                        on:click={startLive}
-                        disabled={!$requestedCameraState && !$requestedMicrophoneState}>Start live message</button
-                    >
                 </div>
             {/if}
         </div>

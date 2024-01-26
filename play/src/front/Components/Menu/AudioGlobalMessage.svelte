@@ -117,6 +117,9 @@
         fileInput.click();
     }}
 >
+    <p class="tw-pointer-events-none">
+        {$LL.menu.globalAudio.dragAndDrop()}
+    </p>
     <img
         class="clickable tw-w-1/6 tw-pointer-events-none"
         class:tw-hidden={!dropHover}
