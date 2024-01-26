@@ -161,7 +161,6 @@
                     type,
                     url: "",
                     areaName: "",
-                    areaDescription: ""
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);
@@ -460,7 +459,12 @@
     </div>
     <div class="area-name-container">
         <label for="objectName">{$LL.mapEditor.areaEditor.areaDescription()}</label>
-        <textarea id="objectName" placeholder="Value" bind:value={areaDescription} on:change={onUpdateAreaDescription}></textarea>
+        <textarea
+            id="objectName"
+            placeholder="Value"
+            bind:value={areaDescription}
+            on:change={onUpdateAreaDescription}
+        />
     </div>
     <div class="properties-container">
         {#each properties as property (property.id)}
