@@ -4,6 +4,7 @@
         EntityDataProperties,
         EntityDataPropertiesKeys,
         EntityDataProperty,
+        EntityDescriptionPropertyData,
         OpenWebsiteTypePropertiesKeys,
     } from "@workadventure/map-editor";
     import { ArrowLeftIcon } from "svelte-feather-icons";
@@ -41,7 +42,17 @@
             currentEntity.setEditColor(0x00ffff);
             properties = currentEntity.getProperties() ?? [];
             entityName = currentEntity.getEntityData().name ?? "";
-            entityDescription = currentEntity.getEntityData().description ?? "";
+            const descriptionProperty = properties.find((p) => p.type === "entityDescriptionProperties");
+            if (!descriptionProperty) {
+                $mapEditorSelectedEntityStore?.addProperty({
+                    id: crypto.randomUUID(),
+                    type: "entityDescriptionProperties",
+                    description: "",
+                    searchable: false,
+                });
+            } else {
+                entityDescription = (descriptionProperty as EntityDescriptionPropertyData).description ?? "";
+            }
         }
     });
 
@@ -64,9 +75,22 @@
     }
 
     function onUpdateDescription() {
-        console.log("update description", entityDescription);
+        let properties = $mapEditorSelectedEntityStore
+            ?.getProperties()
+            .find((p) => p.type === "entityDescriptionProperties");
+        if (properties && properties.type !== "entityDescriptionProperties") throw new Error("Wrong property type");
+        if (properties == undefined) {
+            properties = {
+                id: crypto.randomUUID(),
+                type: "entityDescriptionProperties",
+                description: "",
+                searchable: false,
+            };
+        }
+
+        properties.description = entityDescription;
         if ($mapEditorSelectedEntityStore) {
-            $mapEditorSelectedEntityStore.setEntityDescription(entityDescription);
+            $mapEditorSelectedEntityStore.updateProperty(properties);
         }
     }
 
@@ -323,7 +347,12 @@
     </div>
     <div class="entity-name-container">
         <label for="objectDescription">{$LL.mapEditor.entityEditor.objectDescription()}</label>
-        <textarea id="objectDescription" placeholder="Value" bind:value={entityDescription} on:change={onUpdateDescription} ></textarea>
+        <textarea
+            id="objectDescription"
+            placeholder="Value"
+            bind:value={entityDescription}
+            on:change={onUpdateDescription}
+        />
     </div>
     <div class="properties-container">
         {#each properties as property (property.id)}

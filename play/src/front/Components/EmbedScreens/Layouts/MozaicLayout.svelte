@@ -38,7 +38,7 @@
             <MyCamera />
         {/if}
     </div>
-    <div class="tw-absolute tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-right-5 ">
+    <div class="tw-absolute tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-right-5">
         {#if $myCameraStore && !displayFullMedias}
             <MyCamera />
         {/if}

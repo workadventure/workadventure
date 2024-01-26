@@ -51,7 +51,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.entityData = {
             ...data,
             name: data.name ?? "",
-            description: data.description ?? "",
             properties: data.properties ?? [],
         };
         this.prefab = prefab;
@@ -347,16 +346,18 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.emit(EntityEvent.Updated, this.appendId({ name }));
     }
 
-    public setEntityDescription(description: string): void {
-        this.entityData.description = description;
-        this.emit(EntityEvent.Updated, this.appendId({ description }));
-    }
-
     public updateProperty(changes: AtLeast<EntityDataProperty, "id">): void {
         const property = this.entityData.properties.find((property) => property.id === changes.id);
         if (property) {
             _.merge(property, changes);
         }
+        console.log("Entity => updateProperty => property", changes);
+        console.log("Entity => updateProperty => property", property);
+        console.log("Entity => updateProperty => this.entityData.properties", this.entityData.properties);
+        console.log(
+            "Entity => updateProperty => this.appendId({ properties: this.entityData.properties })",
+            this.appendId({ properties: this.entityData.properties })
+        );
         this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
     }
 

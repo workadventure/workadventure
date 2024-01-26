@@ -106,6 +106,18 @@ export const ListenerMegaphonePropertyData = PropertyBase.extend({
     chatEnabled: z.boolean().default(false),
 });
 
+export const EntityDescriptionPropertyData = PropertyBase.extend({
+    type: z.literal("entityDescriptionProperties"),
+    description: z.string().optional(),
+    searchable: z.boolean().default(false),
+});
+
+export const AreaDescriptionPropertyData = PropertyBase.extend({
+    type: z.literal("areaDescriptionProperties"),
+    description: z.string().optional(),
+    searchable: z.boolean().default(false),
+});
+
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,
@@ -116,6 +128,7 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     OpenWebsitePropertyData,
     SpeakerMegaphonePropertyData,
     ListenerMegaphonePropertyData,
+    AreaDescriptionPropertyData,
 ]);
 
 export const AreaDataProperties = z.array(AreaDataProperty);
@@ -135,7 +148,6 @@ export const AreaData = AreaCoordinates.extend({
     height: z.number(),
     visible: z.boolean(),
     name: z.string(),
-    description: z.string().optional(),
     properties: AreaDataProperties,
 });
 
@@ -143,6 +155,7 @@ export const EntityDataProperty = z.discriminatedUnion("type", [
     JitsiRoomPropertyData,
     PlayAudioPropertyData,
     OpenWebsitePropertyData,
+    EntityDescriptionPropertyData,
 ]);
 
 export const EntityDataProperties = z.array(EntityDataProperty);
@@ -179,7 +192,6 @@ export const EntityData = z.object({
     x: z.number(),
     y: z.number(),
     name: z.string().optional(),
-    description: z.string().optional(),
     properties: EntityDataProperties.optional(),
     prefab: EntityRawPrefab,
     prefabRef: EntityPrefabRef,
@@ -290,6 +302,8 @@ export type MapsCacheSingleMapFormat = z.infer<typeof MapsCacheSingleMapFormat>;
 export type MapsCacheFileFormat = z.infer<typeof MapsCacheFileFormat>;
 export type SpeakerMegaphonePropertyData = z.infer<typeof SpeakerMegaphonePropertyData>;
 export type ListenerMegaphonePropertyData = z.infer<typeof ListenerMegaphonePropertyData>;
+export type EntityDescriptionPropertyData = z.infer<typeof EntityDescriptionPropertyData>;
+export type AreaDescriptionPropertyData = z.infer<typeof AreaDescriptionPropertyData>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",

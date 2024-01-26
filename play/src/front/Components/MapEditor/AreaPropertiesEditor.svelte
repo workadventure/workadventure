@@ -48,7 +48,19 @@
         if (currentAreaPreview) {
             properties = structuredClone(currentAreaPreview.getProperties());
             areaName = currentAreaPreview.getAreaData().name;
-            areaDescription = currentAreaPreview.getAreaData().description ?? "";
+            const property = $mapEditorSelectedAreaPreviewStore
+                ?.getProperties()
+                .find((property) => property.type === "areaDescriptionProperties");
+            if (property == undefined) {
+                $mapEditorSelectedAreaPreviewStore?.addProperty({
+                    id: crypto.randomUUID(),
+                    type: "areaDescriptionProperties",
+                    description: areaDescription,
+                    searchable: false,
+                });
+            } else if (property.type === "areaDescriptionProperties") {
+                areaDescription = property.description ?? "";
+            }
             refreshFlags();
         }
     });
@@ -208,8 +220,22 @@
     }
 
     function onUpdateAreaDescription() {
+        let properties = $mapEditorSelectedAreaPreviewStore
+            ?.getProperties()
+            .find((p) => p.type === "areaDescriptionProperties");
+        if (properties && properties.type !== "areaDescriptionProperties") throw new Error("Wrong property type");
+        if (properties == undefined) {
+            properties = {
+                id: crypto.randomUUID(),
+                type: "areaDescriptionProperties",
+                description: "",
+                searchable: false,
+            };
+        }
+
+        properties.description = areaDescription;
         if ($mapEditorSelectedAreaPreviewStore) {
-            $mapEditorSelectedAreaPreviewStore.setAreaDescription(areaDescription);
+            $mapEditorSelectedAreaPreviewStore.updateProperty(properties);
         }
     }
 
