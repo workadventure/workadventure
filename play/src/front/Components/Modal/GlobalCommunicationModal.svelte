@@ -242,8 +242,8 @@
                     <div class="tw-flex tw-flex-col tw-p-5 tw-w-1/3">
                         <div class="tw-flex tw-align-middle tw-justify-center tw-p-5">
                             <video
-                                src="/resources/videos/global_text_message.mov"
-                                class="tw-w-full tw-cursor-pointer"
+                                src="/resources/videos/global_text_message.mp4"
+                                class="tw-w-full tw-cursor-pointer tw-rounded-xl"
                                 controls
                                 muted
                                 on:mouseover={playVideo}
@@ -256,8 +256,8 @@
                     <div class="tw-flex tw-flex-col tw-p-5 tw-w-1/3">
                         <div class="tw-flex tw-align-middle tw-justify-center tw-p-5">
                             <video
-                                src="/resources/videos/global_text_message.mov"
-                                class="tw-w-full tw-cursor-pointer"
+                                src="/resources/videos/global_text_message.mp4"
+                                class="tw-w-full tw-cursor-pointer tw-rounded-xl"
                                 controls
                                 muted
                                 on:mouseover={playVideo}
@@ -270,8 +270,8 @@
                     <div class="tw-flex tw-flex-col tw-p-5 tw-w-1/3">
                         <div class="tw-flex tw-align-middle tw-justify-center tw-p-5">
                             <video
-                                src="/resources/videos/global_text_message.mov"
-                                class="tw-w-full tw-cursor-pointer"
+                                src="/resources/videos/global_audio_message.mp4"
+                                class="tw-w-full tw-cursor-pointer tw-rounded-xl"
                                 controls
                                 muted
                                 on:mouseover={playVideo}
@@ -389,6 +389,13 @@
             left: 0 !important;
             right: 0 !important;
             bottom: 0 !important;
+        }
+    }
+
+    video {
+        transition: all 0.2s ease-in-out;
+        &:hover {
+            scale: 1.1;
         }
     }
 </style>
