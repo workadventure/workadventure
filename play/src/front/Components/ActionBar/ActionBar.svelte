@@ -187,6 +187,10 @@
             showModalGlobalComminucationVisibilityStore.set(false);
             return;
         }
+
+        resetChatVisibility();
+        resetModalVisibility();
+        mapEditorModeStore.switchMode(false);
         showModalGlobalComminucationVisibilityStore.set(true);
     }
 
@@ -328,6 +332,7 @@
     function resetModalVisibility() {
         modalVisibilityStore.set(false);
         modalIframeStore.set(null);
+        showModalGlobalComminucationVisibilityStore.set(false);
     }
 
     /*function resetMenuVisibility() {
