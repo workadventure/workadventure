@@ -162,6 +162,7 @@ const mapEditor: BaseTranslation = {
         editInstructions: "Click an area to modify its properties.",
         nameLabel: "Name",
         areaDescription: "Description",
+        areaSerchable: "Searchable into the exploration mode",
     },
     areaEditorInstructions: {
         title: "How it works ?",
@@ -182,6 +183,7 @@ const mapEditor: BaseTranslation = {
         selectObject: "Click on an object to select it",
         objectName: "Object Name",
         objectDescription: "Object Description",
+        objectSearchable: "Searchable into the exploration mode",
     },
     settings: {
         loading: "Loading",

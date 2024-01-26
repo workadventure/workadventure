@@ -160,6 +160,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         editInstructions: "Sélectionnez une zone pour modifier ses propriétés.",
         nameLabel: "Nom de la zone",
         areaDescription: "Description de la zone",
+        areaSerchable: "Recherchable dans le mode exploration",
     },
     areaEditorInstructions: {
         title: "Comment ca marche ?",
@@ -180,6 +181,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         selectObject: "Cliquer sur un objet pour le selectionner",
         objectName: "Nom de l'objet",
         objectDescription: "Description de l'objet",
+        objectSearchable: "Recherchable dans le mode exploration",
     },
     settings: {
         loading: "Chargement en cours",
