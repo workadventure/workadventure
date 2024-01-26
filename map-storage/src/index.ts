@@ -12,7 +12,7 @@ import { mapsManager } from "./MapsManager";
 import { proxyFiles } from "./FileFetcher/FileFetcher";
 import { UploadController } from "./Upload/UploadController";
 import { fileSystem } from "./fileSystem";
-import { passportStrategy } from "./Services/Authentication";
+import { passportStrategies } from "./Services/Authentication";
 import { mapPathUsingDomain } from "./Services/PathMapper";
 import { ValidatorController } from "./Upload/ValidatorController";
 import {
@@ -70,7 +70,9 @@ app.use(
     })
 );
 
-passport.use(passportStrategy);
+for (const passportStrategy of passportStrategies) {
+    passport.use(passportStrategy);
+}
 app.use(passport.initialize());
 
 app.get("*.wam", (req, res, next) => {
