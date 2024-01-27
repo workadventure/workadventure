@@ -1,4 +1,9 @@
-import { MapsCacheFileFormat, WAMFileFormat } from "@workadventure/map-editor";
+import {
+    AreaDescriptionPropertyData,
+    EntityDescriptionPropertyData,
+    MapsCacheFileFormat,
+    WAMFileFormat,
+} from "@workadventure/map-editor";
 import { WAMVersionHash } from "@workadventure/map-editor/src/WAMVersionHash";
 import pLimit from "p-limit";
 import * as Sentry from "@sentry/node";
@@ -111,9 +116,30 @@ export class MapListService {
             if (wamFilePath.startsWith("/")) {
                 wamFilePath = wamFilePath.substring(1);
             }
+
             cacheFile.maps[wamFilePath] = {
                 mapUrl: wamFile.mapUrl,
-                metadata: wamFile.metadata,
+                metadata: {
+                    ...wamFile.metadata,
+                    areasSearchable: wamFile.areas.reduce((nb, area) => {
+                        if (
+                            area.properties &&
+                            area.properties.find((property) => (property as AreaDescriptionPropertyData).searchable)
+                        ) {
+                            return nb + 1;
+                        }
+                        return nb;
+                    }, 0),
+                    entitiesSearchable: Object.values(wamFile.entities).reduce((nb, entity) => {
+                        if (
+                            entity.properties &&
+                            entity.properties.find((property) => (property as EntityDescriptionPropertyData).searchable)
+                        ) {
+                            return nb + 1;
+                        }
+                        return nb;
+                    }, 0),
+                },
                 vendor: wamFile.vendor,
             };
             await this.writeCacheFileNoLimit(domain, cacheFile);

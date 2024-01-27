@@ -14,7 +14,7 @@
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
-    import { showLimitRoomModalStore, modalVisibilityStore } from "../Stores/ModalStore";
+    import { showLimitRoomModalStore, modalVisibilityStore, roomListVisibilityStore } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
@@ -46,6 +46,7 @@
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
+    import MapList from "./Exploration/MapList.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -147,6 +148,10 @@
 
         {#if $askDialogStore}
             <MuteDialogBox />
+        {/if}
+
+        {#if $roomListVisibilityStore}
+            <MapList />
         {/if}
     </section>
 

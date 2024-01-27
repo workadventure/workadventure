@@ -218,6 +218,14 @@ export const WAMMetadata = z.object({
         .describe(
             "URL to a thumbnail image. This image will be used in social networks when sharing a link to the map."
         ),
+    areasSearchable: z
+        .number()
+        .optional()
+        .describe("Number of areas define as searchable by the map editor for the exploration mode."),
+    entitiesSearchable: z
+        .number()
+        .optional()
+        .describe("Number of entities define as searchable by the map editor for the exploration mode."),
 });
 
 export const WAMVendor = z

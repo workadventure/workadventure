@@ -1,4 +1,10 @@
-import { EntityData, EntityDataProperties, EntityPrefabRef, WAMEntityData } from "@workadventure/map-editor";
+import {
+    AreaDataProperties,
+    EntityData,
+    EntityDataProperties,
+    EntityPrefabRef,
+    WAMEntityData,
+} from "@workadventure/map-editor";
 import { Observable, Subject } from "rxjs";
 import { get, Unsubscriber } from "svelte/store";
 import { z } from "zod";
@@ -35,7 +41,7 @@ export const CopyAreaEventData = z.object({
     height: z.number(),
     name: z.string(),
     description: z.string(),
-    properties: EntityDataProperties.optional(),
+    properties: AreaDataProperties.optional(),
 });
 
 export type CopyEntityEventData = z.infer<typeof CopyEntityEventData>;

@@ -1,13 +1,21 @@
 import { isMapDetailsData } from "@workadventure/messages";
 import { z } from "zod";
-import type { Request, Response } from "hyper-express";
+import type { Request, Response, Server } from "hyper-express";
 import { JsonWebTokenError } from "jsonwebtoken";
 import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
 import { adminService } from "../services/AdminService";
 import { validateQuery } from "../services/QueryValidator";
+import { MapStorageService } from "../services/MapStorageService";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class MapController extends BaseHttpController {
+    private mapStorageService: MapStorageService;
+
+    constructor(protected app: Server) {
+        super(app);
+        this.mapStorageService = new MapStorageService();
+    }
+
     // Returns a map mapping map name to file name of the map
     routes(): void {
         /**
@@ -104,6 +112,23 @@ export class MapController extends BaseHttpController {
                     throw error;
                 }
             }
+        });
+
+        this.app.get("/maps", async (req: Request, res: Response) => {
+            const query = validateQuery(
+                req,
+                res,
+                z.object({
+                    domain: z.string(),
+                    tags: z.string().optional(),
+                })
+            );
+            if (query === undefined) {
+                return;
+            }
+
+            const maps = await this.mapStorageService.getMapByTags(query.domain, query.tags?.split(","));
+            return res.json(maps);
         });
     }
 }
