@@ -272,7 +272,7 @@ services:
             STARTUP_COMMAND_2: ../npm-install.sh
             NODE_ENV: development
             PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
-            AUTHENTICATION_STRATEGY: "Basic"
+            ENABLE_BASIC_AUTHENTICATION: "true"
             AUTHENTICATION_USER: "john.doe"
             AUTHENTICATION_PASSWORD: "password"
             API_URL: back:50051
