@@ -16,17 +16,21 @@ if (ENV_VARS.AUTHENTICATION_STRATEGY) {
         "The AUTHENTICATION_STRATEGY environment variable is deprecated. Use ENABLE_BEARER_AUTHENTICATION, ENABLE_BASIC_AUTHENTICATION or ENABLE_DIGEST_AUTHENTICATION instead"
     );
     switch (ENV_VARS.AUTHENTICATION_STRATEGY) {
-        case "bearer":
+        case "Bearer":
             ENV_VARS.ENABLE_BEARER_AUTHENTICATION = true;
             break;
-        case "basic":
+        case "Basic":
             ENV_VARS.ENABLE_BASIC_AUTHENTICATION = true;
             break;
-        case "digest":
+        case "Digest":
             ENV_VARS.ENABLE_DIGEST_AUTHENTICATION = true;
             break;
+        case "":
+            break;
         default: {
-            const _exhaustiveCheck: never = ENV_VARS.AUTHENTICATION_STRATEGY;
+            throw new Error(
+                "Invalid AUTHENTICATION_STRATEGY environment variable, must be Bearer, Basic, Digest or empty"
+            );
         }
     }
 }

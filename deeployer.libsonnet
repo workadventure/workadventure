@@ -174,9 +174,10 @@
            "env": {
              "API_URL": "back1:50051,back2:50051",
              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
-             "AUTHENTICATION_STRATEGY": if (adminUrl == null) then "Basic" else "Bearer",
+             "ENABLE_BASIC_AUTHENTICATION": "true",
              "AUTHENTICATION_USER": "john.doe",
              "AUTHENTICATION_PASSWORD": "password",
+             "ENABLE_BEARER_AUTHENTICATION": if (adminUrl == null) then "false" else "true",
              "AUTHENTICATION_TOKEN": "SomeSecretToken",
              "USE_DOMAIN_NAME_IN_PATH": if (adminUrl == null) then "false" else "true",
              "DEBUG": "*",

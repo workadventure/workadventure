@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
     BoolAsString,
+    emptyStringToUndefined,
     PositiveIntAsString,
     toBool,
     toNumber,
@@ -72,11 +73,12 @@ export const EnvironmentVariables = z.object({
         .transform((val) => toNumber(val, 0.1))
         .describe("The sampling rate for Sentry traces. Only used if SENTRY_DSN is configured. Defaults to 0.1"),
     AUTHENTICATION_STRATEGY: z
-        .union([z.literal("bearer"), z.literal("basic"), z.literal("digest")])
+        .union([z.literal("Bearer"), z.literal("Basic"), z.literal("Digest"), z.literal("")])
         .optional()
         .describe(
             "Deprecated. Use ENABLE_BEARER_AUTHENTICATION, ENABLE_BASIC_AUTHENTICATION or ENABLE_DIGEST_AUTHENTICATION instead"
-        ),
+        )
+        .transform(emptyStringToUndefined),
     ENABLE_BEARER_AUTHENTICATION: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe(
@@ -84,15 +86,16 @@ export const EnvironmentVariables = z.object({
         ),
     AUTHENTICATION_TOKEN: z
         .string()
-        .min(1)
         .optional()
-        .describe("The hard-coded bearer token to use for authentication"),
+        .describe("The hard-coded bearer token to use for authentication")
+        .transform(emptyStringToUndefined),
     AUTHENTICATION_VALIDATOR_URL: z
         .string()
         .url()
-        .min(1)
+        .or(z.literal(""))
         .optional()
-        .describe("The URL that will be used to remotely validate a bearer token"),
+        .describe("The URL that will be used to remotely validate a bearer token")
+        .transform(emptyStringToUndefined),
     ENABLE_BASIC_AUTHENTICATION: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe(
