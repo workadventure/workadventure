@@ -246,7 +246,7 @@ export class AuthenticateController extends BaseHttpController {
             if (!playUri) {
                 throw new Error("Missing playUri in cookies");
             }
-            //user have not token created, check data on hydra and create token
+
             let userInfo = null;
             try {
                 userInfo = await openIDClient.getUserInfo(req, res);
