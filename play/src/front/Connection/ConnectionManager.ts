@@ -8,6 +8,7 @@ import {
     MeResponse,
 } from "@workadventure/messages";
 import { isAxiosError } from "axios";
+import { MapsCacheSingleMapFormat } from "@workadventure/map-editor";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { subMenusStore, userIsConnected, warningContainerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
@@ -593,6 +594,21 @@ class ConnectionManager {
 
     get currentRoom() {
         return this._currentRoom;
+    }
+
+    async getRoomList(): Promise<Map<string, MapsCacheSingleMapFormat>> {
+        if (!this._currentRoom?.wamUrl) return Promise.reject(new Error("No room href"));
+        const response = await axiosToPusher.get("maps", {
+            params: {
+                domain: new URL(this._currentRoom.wamUrl).host,
+                tags: gameManager.getCurrentGameScene()?.connection?.getAllTags(),
+            },
+        });
+        return response.data.maps.reduce((roomList: Map<string, MapsCacheSingleMapFormat>, map: Array<unknown>) => {
+            const roomName = map[0] as string;
+            const room = map[1] as MapsCacheSingleMapFormat;
+            return roomList.set(roomName, room);
+        }, new Map());
     }
 }
 

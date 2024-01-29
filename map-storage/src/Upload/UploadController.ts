@@ -745,5 +745,76 @@ export class UploadController {
                 next(e);
             });
         });
+
+        /**
+         * @openapi
+         * /maps/tags/{tags}:
+         *   get:
+         *     description: Returns the list of maps by tags
+         *     produces:
+         *      - "application/json"
+         *     responses:
+         *      200:
+         *         description: The details of the logged user
+         *         content:
+         *           application/json:
+         *             schema:
+         *               type: object
+         *               properties:
+         *                 version:
+         *                   type: string
+         *                 maps:
+         *                   type: object
+         *                   properties:
+         *                     mapUrl: string
+         *                     metadata:
+         *                       type: object
+         *                       properties:
+         *                         name: string
+         *                         description: string
+         *                         copyright: string
+         *                         thumbnail: string
+         *                     vendor:
+         *                       type: object
+         */
+        this.app.get("/maps/tags/:tags?", (req, res, next) => {
+            (async () => {
+                try {
+                    const tagsStr = req.params.tags;
+                    const tags = tagsStr ? tagsStr.split(",") : [];
+
+                    const parsedCacheFile = await this.mapListService.readCacheFile(req.hostname);
+                    // Filter map by tag
+                    const filteredMaps = Object.entries(parsedCacheFile.maps).filter(([, map]) => {
+                        const vendor = map.vendor as { tags: Array<string> | undefined };
+                        return (
+                            !vendor ||
+                            !vendor.tags ||
+                            vendor.tags.length === 0 ||
+                            vendor.tags.some((tag) => tags.includes(tag))
+                        );
+                    });
+                    res.json({
+                        ...parsedCacheFile,
+                        maps: filteredMaps,
+                    });
+                    return;
+                } catch (e) {
+                    if (e instanceof FileNotFoundError || e instanceof ZodError) {
+                        // No cache file or invalid cache file? What the hell? Let's try to regenerate the cache file
+                        await this.mapListService.generateCacheFile(req.hostname);
+                        // Now that the cache file is generated, let's retry serving the file.
+                        const parsedCacheFile = this.mapListService.readCacheFile(req.hostname);
+                        res.json(parsedCacheFile);
+                        return;
+                    }
+                    throw e;
+                }
+            })().catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+                next(e);
+            });
+        });
     }
 }

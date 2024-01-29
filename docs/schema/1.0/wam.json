@@ -594,6 +594,14 @@
             "thumbnail": {
               "type": "string",
               "description": "URL to a thumbnail image. This image will be used in social networks when sharing a link to the map."
+            },
+            "areasSearchable": {
+              "type": "number",
+              "description": "Number of areas define as searchable by the map editor for the exploration mode."
+            },
+            "entitiesSearchable": {
+              "type": "number",
+              "description": "Number of entities define as searchable by the map editor for the exploration mode."
             }
           },
           "additionalProperties": false,
