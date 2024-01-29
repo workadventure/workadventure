@@ -893,6 +893,8 @@ export class GameScene extends DirtyScene {
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
             this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
         }
+
+        this.cameraManager.setExplorationMode();
     }
 
     private hide(hide = true): void {
