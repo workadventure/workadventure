@@ -49,7 +49,7 @@
 
     function clickRoom(roomName: string) {
         // Use the room url to join the room
-        console.info("not implemented yet");
+        console.info("not implemented yet", roomName);
     }
 </script>
 
@@ -94,10 +94,10 @@
 <style lang="scss">
     .room-card {
         &.active {
-            @apply tw-bg-light-blue/30;
+            background-color: rgb(86 234 255 / 0.3);
         }
         &:hover:not(.active) {
-            @apply tw-bg-dark-purple/60;
+            background-color: rgb(27 27 41 / 0.6);
             transform: scale(1.1);
         }
     }
