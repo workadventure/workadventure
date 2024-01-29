@@ -1,4 +1,4 @@
-import type { WAMEntityData } from "../../types";
+import type { WAMEntityData, WAMFileFormat } from "../../types";
 import type { GameMap } from "../../GameMap/GameMap";
 import { Command } from "../Command";
 
@@ -29,10 +29,10 @@ export class UpdateEntityCommand extends Command {
         this.newConfig = structuredClone(dataToModify);
     }
 
-    public execute(): Promise<void> {
+    public execute(): Promise<undefined | WAMFileFormat> {
         if (!this.gameMap.getGameMapEntities()?.updateEntity(this.entityId, this.newConfig)) {
             throw new Error(`MapEditorError: Could not execute UpdateEntity Command. Entity ID: ${this.entityId}`);
         }
-        return Promise.resolve();
+        return Promise.resolve(this.gameMap.getGameMapEntities()?.wamFile);
     }
 }

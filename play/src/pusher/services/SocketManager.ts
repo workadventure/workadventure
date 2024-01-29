@@ -1296,7 +1296,11 @@ export class SocketManager implements ZoneEventListener {
     async handleRoomsFromSameWorldQuery(client: Socket, queryMessage: QueryMessage) {
         let roomDescriptions: ShortMapDescription[];
         try {
-            roomDescriptions = await adminService.getUrlRoomsFromSameWorld(client.getUserData().roomId);
+            roomDescriptions = await adminService.getUrlRoomsFromSameWorld(
+                client.getUserData().roomId,
+                undefined,
+                client.getUserData().tags
+            );
         } catch (e) {
             console.warn("SocketManager => handleRoomsFromSameWorldQuery => error while getting other rooms list", e);
             // Nothing to do with the error
@@ -1329,7 +1333,17 @@ export class SocketManager implements ZoneEventListener {
                         answer: {
                             $case: "roomsFromSameWorldAnswer",
                             roomsFromSameWorldAnswer: {
-                                roomDescriptions,
+                                roomDescriptions: roomDescriptions.map((room) => ({
+                                    ...room,
+                                    name: room.name ?? "",
+                                    roomUrl: room.roomUrl ?? "",
+                                    description: room.description ?? undefined, // Add this line to ensure description is not null
+                                    wamUrl: room.wamUrl ?? undefined, // Add this line to ensure wamUrl is not null
+                                    copyright: room.copyright ?? undefined, // Add this line to ensure copyright is not null
+                                    thumbnail: room.thumbnail ?? undefined, // Add this line to ensure thumbnail is not null
+                                    areasSearchable: room.areasSearchable ?? undefined, // Add this line to ensure areasSearchable is not null
+                                    entitiesSearchable: room.entitiesSearchable ?? undefined, // Add this line to ensure entitiesSearchable is not null
+                                })),
                             },
                         },
                     },

@@ -467,8 +467,6 @@ export class AreaEditorTool extends MapEditorTool {
             return;
         }
 
-        console.log("handleAreaUpdate", oldConfig, newConfig);
-
         const area = this.areaPreviews.find((area) => area.getAreaData().id === newConfig.id);
 
         if (area) {
