@@ -136,6 +136,7 @@
                     type,
                     buttonLabel: $LL.mapEditor.properties.audioProperties.label(),
                     audioLink: "",
+                    volume: 1,
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);
@@ -180,6 +181,7 @@
     <div class="header-container">
         <h2>Editing: {$mapEditorSelectedEntityStore.getPrefab().name}</h2>
     </div>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <p on:click|preventDefault={backToSelectObject} class="flex flex-row items-center text-xs m-0">
         <ArrowLeftIcon size="12" class="cursor-pointer" />
         <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>

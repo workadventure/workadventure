@@ -12,6 +12,8 @@
 
     function onValueChange() {
         dispatch("change");
+        // Fixme: this is a hack to force the map editor to update the property
+        dispatch("audioLink", property);
     }
 </script>
 

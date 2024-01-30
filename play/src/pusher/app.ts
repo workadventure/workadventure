@@ -21,6 +21,7 @@ import { adminApi } from "./services/AdminApi";
 import { jwtTokenManager } from "./services/JWTTokenManager";
 import { CompanionService } from "./services/CompanionService";
 import { WokaService } from "./services/WokaService";
+import { UserController } from "./controllers/UserController";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LiveDirectory = require("live-directory");
 
@@ -93,6 +94,7 @@ class App {
             new SwaggerController(this.webserver);
         }
         new FrontController(this.webserver, liveAssets);
+        new UserController(this.webserver);
     }
 
     public async init() {

@@ -12,7 +12,8 @@
     } from "../Stores/MediaStore";
     import { LL } from "../../i18n/i18n-svelte";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
-    import { localUserStore } from "../Connection/LocalUserStore";
+    import { gameManager } from "../Phaser/Game/GameManager";
+    import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";
@@ -22,13 +23,20 @@
     import MicOffIcon from "./Icons/MicOffIcon.svelte";
 
     let stream: MediaStream | null;
-    let userName = localUserStore.getName();
+    let videoElement: HTMLVideoElement;
+    let userName = gameManager.getPlayerName();
     let backgroundColor = Color.getColorByString(userName ?? "default");
     let textColor = Color.getTextColorByBackgroundColor(backgroundColor);
+
+    let aspectRatio = 1;
 
     const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
             stream = value.stream;
+            // TODO: remove this hack
+            setTimeout(() => {
+                aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
+            }, 100);
         } else {
             stream = null;
         }

@@ -13,6 +13,7 @@ import {
     AvailabilityStatus,
     ErrorScreenMessage,
     PositionMessage_Direction,
+    SpaceFilterMessage,
 } from "@workadventure/messages";
 import { z } from "zod";
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
@@ -27,10 +28,7 @@ import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
-import {
-    CompanionTexturesLoadingManager,
-    lazyLoadPlayerCompanionTexture,
-} from "../Companion/CompanionTexturesLoadingManager";
+import { lazyLoadPlayerCompanionTexture } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
 import {
     DEBUG_MODE,
@@ -130,11 +128,12 @@ import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
-import { megaphoneCanBeUsedStore, megaphoneEnabledStore } from "../../Stores/MegaphoneStore";
+import { megaphoneCanBeUsedStore, liveStreamingEnabledStore } from "../../Stores/MegaphoneStore";
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -250,8 +249,6 @@ export class GameScene extends DirtyScene {
     public userInputManager!: UserInputManager;
     private isReconnecting: boolean | undefined = undefined;
     private playerName!: string;
-    private characterTextureIds!: string[];
-    private companionTextureId!: string | null;
     private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
@@ -283,10 +280,10 @@ export class GameScene extends DirtyScene {
     private playersEventDispatcher = new IframeEventDispatcher();
     private playersMovementEventDispatcher = new IframeEventDispatcher();
     private remotePlayersRepository = new RemotePlayersRepository();
-    private companionLoadingManager: CompanionTexturesLoadingManager | undefined;
     private throttledSendViewportToServer!: () => void;
     private playersDebugLogAlreadyDisplayed = false;
     private _broadcastService: BroadcastService | undefined;
+    private hideTimeout: ReturnType<typeof setTimeout> | undefined;
 
     constructor(private _room: Room, customKey?: string | undefined) {
         super({
@@ -314,7 +311,6 @@ export class GameScene extends DirtyScene {
 
     //hook preload scene
     preload(): void {
-        this.companionLoadingManager = new CompanionTexturesLoadingManager(this.superLoad, this.load);
         //initialize frame event of scripting API
         this.listenToIframeEvents();
 
@@ -623,8 +619,6 @@ export class GameScene extends DirtyScene {
             throw new Error("playerName is not set");
         }
         this.playerName = playerName;
-        this.characterTextureIds = gameManager.getCharacterTextureIds();
-        this.companionTextureId = gameManager.getCompanionTextureId();
 
         this.Map = this.add.tilemap(this.mapUrlFile);
         const mapDirUrl = this.mapUrlFile.substring(0, this.mapUrlFile.lastIndexOf("/"));
@@ -815,7 +809,8 @@ export class GameScene extends DirtyScene {
                 }, 0);
             } else if (this.connection === undefined) {
                 // Let's wait 1 second before printing the "connecting" screen to avoid blinking
-                setTimeout(() => {
+                this.hideTimeout = setTimeout(() => {
+                    this.hideTimeout = undefined;
                     if (this.connection === undefined) {
                         try {
                             this.hide();
@@ -910,7 +905,7 @@ export class GameScene extends DirtyScene {
             .connectToRoomSocket(
                 this.roomUrl,
                 this.playerName,
-                this.characterTextureIds,
+                gameManager.getCharacterTextureIds() ?? [],
                 {
                     ...this.startPositionCalculator.startPosition,
                 },
@@ -920,7 +915,7 @@ export class GameScene extends DirtyScene {
                     right: camera.scrollX + camera.width,
                     bottom: camera.scrollY + camera.height,
                 },
-                this.companionTextureId,
+                gameManager.getCompanionTextureId(),
                 get(availabilityStatusStore),
                 this.getGameMap().getLastCommandId()
             )
@@ -1097,14 +1092,14 @@ export class GameScene extends DirtyScene {
 
                 // When connection is performed, let's connect SimplePeer
                 //eslint-disable-next-line @typescript-eslint/no-this-alias
-                const me = this;
+                /*const me = this;
                 this.events.once("render", () => {
-                    if (me.connection) {
-                        this.simplePeer = new SimplePeer(me.connection);
-                    } else {
+                    if (me.connection) {*/
+                this.simplePeer = new SimplePeer(this.connection);
+                /*} else {
                         console.warn("Connection to peers not started!");
                     }
-                });
+                });*/
 
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
@@ -1172,7 +1167,18 @@ export class GameScene extends DirtyScene {
                     }
                 });
 
-                const broadcastService = new BroadcastService(this.connection);
+                const broadcastService = new BroadcastService(
+                    this.connection,
+                    (
+                        connection: RoomConnection,
+                        spaceName: string,
+                        spaceFilter: SpaceFilterMessage,
+                        broadcastService: BroadcastService,
+                        playSound: boolean
+                    ) => {
+                        return new JitsiBroadcastSpace(connection, spaceName, spaceFilter, broadcastService, playSound);
+                    }
+                );
                 this._broadcastService = broadcastService;
 
                 // The megaphoneSettingsMessageStream is completed in the RoomConnection. No need to unsubscribe.
@@ -1357,7 +1363,7 @@ export class GameScene extends DirtyScene {
         );
 
         this.unsubscribers.push(
-            megaphoneEnabledStore.subscribe((state) => {
+            liveStreamingEnabledStore.subscribe((state) => {
                 this.connection?.emitMegaphoneState(state);
             })
         );
@@ -1365,6 +1371,8 @@ export class GameScene extends DirtyScene {
         const talkIconVolumeTreshold = 10;
         let oldPeersNumber = 0;
         let oldUsers = new Map<number, MessageUserJoined>();
+        let screenWakeRelease: (() => Promise<void>) | undefined;
+
         let alreadyInBubble = false;
         const pendingConnects = new Set<number>();
         this.peerStoreUnsubscriber = peerStore.subscribe((peers) => {
@@ -1398,6 +1406,14 @@ export class GameScene extends DirtyScene {
             if (newPeerNumber === 0 && newPeerNumber < oldPeersNumber) {
                 // TODO: leave event can be triggered without a join if connect fails
                 iframeListener.sendLeaveProximityMeetingEvent();
+
+                if (screenWakeRelease) {
+                    screenWakeRelease()
+                        .then(() => {
+                            screenWakeRelease = undefined;
+                        })
+                        .catch((error) => console.error(error));
+                }
             }
 
             // Participant Join
@@ -1526,7 +1542,10 @@ export class GameScene extends DirtyScene {
         context.fillStyle = "#ffffff44";
         context.stroke();
         context.fill();
-        this.circleTexture.refresh();
+        // Phaser crashes in headless mode if we try to refresh the texture
+        if (this.game.renderer) {
+            this.circleTexture.refresh();
+        }
 
         //create red circle canvas use to create sprite
         texture = this.textures.createCanvas("circleSprite-red", 96, 96);
@@ -1543,7 +1562,10 @@ export class GameScene extends DirtyScene {
         contextRed.fillStyle = "#ff000044";
         contextRed.stroke();
         contextRed.fill();
-        this.circleRedTexture.refresh();
+        // Phaser crashes in headless mode if we try to refresh the texture
+        if (this.game.renderer) {
+            this.circleRedTexture.refresh();
+        }
     }
 
     private listenToIframeEvents(): void {
@@ -2435,6 +2457,10 @@ ${escapedMessage}
         gameSceneIsLoadedStore.set(false);
         gameSceneStore.set(undefined);
         this.cleanupDone = true;
+        if (this.hideTimeout) {
+            clearTimeout(this.hideTimeout);
+            this.hideTimeout = undefined;
+        }
     }
 
     private removeAllRemotePlayers(): void {
@@ -2677,7 +2703,7 @@ ${escapedMessage}
                 this.currentPlayerTexturesPromise,
                 PositionMessage_Direction.DOWN,
                 false,
-                this.companionTextureId ? this.currentCompanionTexturePromise : undefined
+                gameManager.getCompanionTextureId() ? this.currentCompanionTexturePromise : undefined
             );
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(0x365dff);

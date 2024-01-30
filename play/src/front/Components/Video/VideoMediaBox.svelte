@@ -15,6 +15,7 @@
 
     import Woka from "../Woka/WokaFromUserId.svelte";
     import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+    // @ts-ignore
     import microphoneOffImg from "../images/microphone-off-blue.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
@@ -30,6 +31,13 @@
     import VolumeIcon from "../Icons/VolumeIcon.svelte";
     import FlagIcon from "../Icons/FlagIcon.svelte";
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
+
+    // Extend the HTMLVideoElement interface to add the setSinkId method.
+    // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
+    interface HTMLVideoElementExt extends HTMLVideoElement {
+        setSinkId?(deviceId: string): Promise<void>;
+        requestVideoFrameCallback(callback: VideoFrameRequestCallback, options?: IdleRequestOptions): number;
+    }
 
     export let clickable = false;
     export let isHightlighted = false;
@@ -48,7 +56,7 @@
 
     let embedScreen: EmbedScreen;
     let videoContainer: HTMLDivElement;
-    let videoElement: HTMLVideoElement;
+    let videoElement: HTMLVideoElementExt;
     let minimized = isMediaBreakpointOnly("md");
     let isMobile = isMediaBreakpointUp("md");
     let noVideoTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -59,6 +67,8 @@
     let displayNoVideoWarning = false;
 
     let showUserSubMenu = false;
+
+    let aspectRatio = 1;
 
     const debug = Debug("VideoMediaBox");
 
@@ -116,6 +126,7 @@
                 }
                 return;
             });
+            updateRatio();
         });
 
         // Let's display a warning if the video stream never reaches the user.
@@ -150,6 +161,7 @@
             }
 
             wasVideoEnabled = constraints?.video ?? false;
+            updateRatio();
         });
     });
 
@@ -218,11 +230,20 @@
             }
         });
     }
+
+    function updateRatio() {
+        // TODO: remove this hack
+        setTimeout(() => {
+            aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
+        }, 1000);
+    }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     class="video-container transition-all relative h-full aspect-video"
     class:video-off={!videoEnabled}
+    class:tw-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
     bind:this={videoContainer}
     style="height:{$heightCamWrapper}px;"
 >
@@ -248,8 +269,9 @@
             bind:this={videoElement}
             class:tw-h-0={!videoEnabled}
             class:tw-w-0={!videoEnabled}
-            class:object-contain={minimized || isHightlighted}
+            class:object-contain={minimized || isHightlighted || aspectRatio < 1}
             class:tw-max-h-[230px]={videoEnabled && !isHightlighted}
+            class:tw-max-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
             class:tw-max-h-[80vh]={videoEnabled && isHightlighted}
             class:tw-h-full={videoEnabled}
             class:tw-rounded={videoEnabled}
@@ -262,7 +284,7 @@
         {#if videoEnabled}
             {#if displayNoVideoWarning}
                 <div
-                    class="tw-flex media-box-camera-on-size tw-absolute tw-justify-center tw-items-center tw-bg-danger/50 tw-text-white"
+                    class="tw-flex media-box-camera-on-size tw-absolute tw-w-full tw-h-full ntw-justify-center tw-items-center tw-bg-danger/50 tw-text-white"
                 >
                     <div class="tw-text-center">
                         <h1>{$LL.video.connection_issue()}</h1>

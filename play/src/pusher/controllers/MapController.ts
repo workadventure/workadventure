@@ -1,6 +1,5 @@
 import { isMapDetailsData } from "@workadventure/messages";
 import { z } from "zod";
-import { isAxiosError } from "axios";
 import type { Request, Response } from "hyper-express";
 import { JsonWebTokenError } from "jsonwebtoken";
 import { DISABLE_ANONYMOUS } from "../enums/EnvironmentVariable";
@@ -88,7 +87,7 @@ export class MapController extends BaseHttpController {
                         res.send("The Token is invalid");
                     });
                     return;
-                } else if (isAxiosError(error)) {
+                } /* else if (isAxiosError(error)) {
                     if (error.response?.status === 404) {
                         // An error 404 means the map was not found.
                         // Note: we should definitely change this.
@@ -101,7 +100,7 @@ export class MapController extends BaseHttpController {
                         res.send("Error while fetching map details");
                     });
                     return;
-                } else {
+                }*/ else {
                     throw error;
                 }
             }

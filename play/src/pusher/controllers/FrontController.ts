@@ -14,7 +14,7 @@ import { BaseHttpController } from "./BaseHttpController";
 export class FrontController extends BaseHttpController {
     private indexFile: string;
     private redirectToAdminFile: string;
-    private script: string;
+    private script: Promise<string> | undefined;
 
     constructor(protected app: Server, protected liveAssets: LiveDirectory) {
         super(app);
@@ -46,8 +46,21 @@ export class FrontController extends BaseHttpController {
 
         // Pre-parse the index file for speed (and validation)
         Mustache.parse(this.indexFile);
+    }
 
-        this.script = "window.env = " + JSON.stringify(FRONT_ENVIRONMENT_VARIABLES);
+    private async getScript() {
+        if (this.script) {
+            return this.script;
+        }
+        this.script = adminService.getCapabilities().then((capabilities) => {
+            return (
+                "window.env = " +
+                JSON.stringify(FRONT_ENVIRONMENT_VARIABLES) +
+                "\nwindow.capabilities = " +
+                JSON.stringify(capabilities)
+            );
+        });
+        return this.script;
     }
 
     routes(): void {
@@ -285,7 +298,7 @@ export class FrontController extends BaseHttpController {
                 // TODO change it to push data from admin
                 msApplicationTileImage: metaTagsData.favIcons[metaTagsData.favIcons.length - 1].src,
                 url,
-                script: this.script,
+                script: await this.getScript(),
                 authToken: authToken,
                 ...option,
             });

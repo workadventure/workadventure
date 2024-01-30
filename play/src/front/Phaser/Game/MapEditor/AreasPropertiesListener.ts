@@ -1,6 +1,8 @@
 import { get } from "svelte/store";
 import {
     AreaData,
+    AreaDataProperties,
+    AreaDataProperty,
     FocusablePropertyData,
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
@@ -26,7 +28,7 @@ import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
 import { scriptUtils } from "../../../Api/ScriptUtils";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
-import { currentMegaphoneNameStore, requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
+import { currentLiveStreamingNameStore } from "../../../Stores/MegaphoneStore";
 import { gameManager } from "../GameManager";
 import { iframeListener } from "../../../Api/IframeListener";
 import { chatZoneLiveStore } from "../../../Stores/ChatStore";
@@ -47,94 +49,202 @@ export class AreasPropertiesListener {
 
     public onEnterAreasHandler(areas: AreaData[]): void {
         for (const area of areas) {
+            // analytics event for area
+            analyticsClient.enterAreaMapEditor(area.id, area.name);
+
             if (!area.properties) {
                 continue;
             }
             for (const property of area.properties) {
-                switch (property.type) {
-                    case "openWebsite": {
-                        this.handleOpenWebsitePropertyOnEnter(property);
-                        break;
-                    }
-                    case "playAudio": {
-                        this.handlePlayAudioPropertyOnEnter(property);
-                        break;
-                    }
-                    case "focusable": {
-                        this.handleFocusablePropertiesOnEnter(area.x, area.y, area.width, area.height, property);
-                        break;
-                    }
-                    case "jitsiRoomProperty": {
-                        this.handleJitsiRoomPropertyOnEnter(property);
-                        break;
-                    }
-                    case "silent": {
-                        this.handleSilentPropertyOnEnter();
-                        break;
-                    }
-                    case "speakerMegaphone": {
-                        this.handleSpeakerMegaphonePropertyOnEnter(property);
-                        break;
-                    }
-                    case "listenerMegaphone": {
-                        this.handleListenerMegaphonePropertyOnEnter(property);
-                        break;
-                    }
-                    case "exit": {
-                        let url = `${property.url}`;
-                        if (property.areaName && property.areaName !== "") {
-                            url = `${property.url}#${property.areaName}`;
-                        }
-                        this.handleExitPropertyOnEnter(url);
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                }
+                this.addPropertyFilter(property, area);
             }
+        }
+    }
+
+    public onUpdateAreasHandler(
+        area: AreaData,
+        oldProperties: AreaDataProperties | undefined,
+        newProperties: AreaDataProperties | undefined
+    ): void {
+        const propertiesTreated = new Set<string>();
+
+        if (newProperties === undefined) {
+            return;
+        }
+
+        if (oldProperties !== undefined) {
+            for (const oldProperty of oldProperties) {
+                const newProperty = newProperties.find((searchedProperty) => searchedProperty.id === oldProperty.id);
+
+                if (JSON.stringify(oldProperty) === JSON.stringify(newProperty)) {
+                    propertiesTreated.add(oldProperty.id);
+                    continue;
+                }
+
+                if (newProperty === undefined) {
+                    this.removePropertyFilter(oldProperty);
+                } else {
+                    this.updatePropertyFilter(oldProperty, newProperty, area);
+                }
+
+                propertiesTreated.add(oldProperty.id);
+            }
+        }
+
+        for (const newProperty of newProperties) {
+            if (propertiesTreated.has(newProperty.id)) {
+                continue;
+            }
+            this.addPropertyFilter(newProperty, area);
         }
     }
 
     public onLeaveAreasHandler(areas: AreaData[]): void {
         for (const area of areas) {
+            // analytics event for area
+            analyticsClient.leaveAreaMapEditor(area.id, area.name);
+
             if (!area.properties) {
                 continue;
             }
             for (const property of area.properties) {
-                switch (property.type) {
-                    case "openWebsite": {
-                        this.handleOpenWebsitePropertiesOnLeave(property);
-                        break;
-                    }
-                    case "playAudio": {
-                        this.handlePlayAudioPropertyOnLeave();
-                        break;
-                    }
-                    case "focusable": {
-                        this.handleFocusablePropertiesOnLeave(property);
-                        break;
-                    }
-                    case "jitsiRoomProperty": {
-                        this.handleJitsiRoomPropertyOnLeave(property);
-                        break;
-                    }
-                    case "silent": {
-                        this.handleSilentPropertyOnLeave();
-                        break;
-                    }
-                    case "speakerMegaphone": {
-                        this.handleSpeakerMegaphonePropertyOnLeave(property);
-                        break;
-                    }
-                    case "listenerMegaphone": {
-                        this.handleListenerMegaphonePropertyOnLeave(property);
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
+                this.removePropertyFilter(property);
+            }
+        }
+    }
+
+    private addPropertyFilter(property: AreaDataProperty, area: AreaData) {
+        switch (property.type) {
+            case "openWebsite": {
+                this.handleOpenWebsitePropertyOnEnter(property);
+                break;
+            }
+            case "playAudio": {
+                this.handlePlayAudioPropertyOnEnter(property);
+                break;
+            }
+            case "focusable": {
+                this.handleFocusablePropertiesOnEnter(area.x, area.y, area.width, area.height, property);
+                break;
+            }
+            case "jitsiRoomProperty": {
+                this.handleJitsiRoomPropertyOnEnter(property);
+                break;
+            }
+            case "silent": {
+                this.handleSilentPropertyOnEnter();
+                break;
+            }
+            case "speakerMegaphone": {
+                this.handleSpeakerMegaphonePropertyOnEnter(property);
+                break;
+            }
+            case "listenerMegaphone": {
+                this.handleListenerMegaphonePropertyOnEnter(property);
+                break;
+            }
+            case "exit": {
+                let url = `${property.url}`;
+                if (property.areaName && property.areaName !== "") {
+                    url = `${property.url}#${property.areaName}`;
                 }
+                this.handleExitPropertyOnEnter(url);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+
+    private updatePropertyFilter(oldProperty: AreaDataProperty, newProperty: AreaDataProperty, area: AreaData) {
+        if (oldProperty.type !== newProperty.type) {
+            throw new Error("Cannot update a property with a different type");
+        }
+
+        switch (oldProperty.type) {
+            case "openWebsite": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handleOpenWebsitePropertiesOnLeave(oldProperty);
+                this.handleOpenWebsitePropertyOnEnter(newProperty);
+                break;
+            }
+            case "playAudio": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handlePlayAudioPropertyOnUpdate(newProperty);
+                break;
+            }
+            case "focusable": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handleFocusablePropertiesOnEnter(area.x, area.y, area.width, area.height, newProperty);
+                break;
+            }
+            case "jitsiRoomProperty": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handleJitsiRoomPropertyOnLeave(oldProperty);
+                this.handleJitsiRoomPropertyOnEnter(newProperty);
+                break;
+            }
+            case "speakerMegaphone": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handleSpeakerMegaphonePropertyOnLeave(oldProperty);
+                this.handleSpeakerMegaphonePropertyOnEnter(newProperty);
+                break;
+            }
+            case "listenerMegaphone": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handleListenerMegaphonePropertyOnLeave(oldProperty);
+                this.handleListenerMegaphonePropertyOnEnter(newProperty);
+                break;
+            }
+            case "exit": {
+                newProperty = newProperty as typeof oldProperty;
+                let url = `${newProperty.url}`;
+                if (newProperty.areaName && newProperty.areaName !== "") {
+                    url = `${newProperty.url}#${newProperty.areaName}`;
+                }
+                this.handleExitPropertyOnEnter(url);
+                break;
+            }
+            case "silent":
+            default: {
+                break;
+            }
+        }
+    }
+
+    private removePropertyFilter(property: AreaDataProperty) {
+        switch (property.type) {
+            case "openWebsite": {
+                this.handleOpenWebsitePropertiesOnLeave(property);
+                break;
+            }
+            case "playAudio": {
+                this.handlePlayAudioPropertyOnLeave();
+                break;
+            }
+            case "focusable": {
+                this.handleFocusablePropertiesOnLeave(property);
+                break;
+            }
+            case "jitsiRoomProperty": {
+                this.handleJitsiRoomPropertyOnLeave(property);
+                break;
+            }
+            case "silent": {
+                this.handleSilentPropertyOnLeave();
+                break;
+            }
+            case "speakerMegaphone": {
+                this.handleSpeakerMegaphonePropertyOnLeave(property);
+                break;
+            }
+            case "listenerMegaphone": {
+                this.handleListenerMegaphonePropertyOnLeave(property);
+                break;
+            }
+            default: {
+                break;
             }
         }
     }
@@ -223,9 +333,6 @@ export class AreasPropertiesListener {
         height: number,
         property: FocusablePropertyData
     ): void {
-        if (x === undefined || y === undefined || !height || !width) {
-            return;
-        }
         const zoomMargin = property.zoom_margin ? Math.max(0, property.zoom_margin) : undefined;
         this.scene.getCameraManager().enterFocusMode(
             {
@@ -382,6 +489,11 @@ export class AreasPropertiesListener {
         audioManagerVisibilityStore.set(false);
     }
 
+    private handlePlayAudioPropertyOnUpdate(newProperty: PlayAudioPropertyData): void {
+        audioManagerFileStore.unloadAudio();
+        audioManagerFileStore.playAudio(newProperty.audioLink, this.scene.getMapUrl(), newProperty.volume);
+    }
+
     private handleJitsiRoomPropertyOnLeave(property: JitsiRoomPropertyData): void {
         layoutManagerActionStore.removeAction("jitsi");
         coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
@@ -427,25 +539,31 @@ export class AreasPropertiesListener {
     }
 
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
-        if (property.name !== undefined) {
-            currentMegaphoneNameStore.set(property.name);
-            this.scene.broadcastService.joinSpace(property.name, false);
+        if (property.name !== undefined && property.id !== undefined) {
+            const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
+            // TODO remove this console.log after testing
+            console.info("handleSpeakerMegaphonePropertyOnEnter => uniqRoomName : ", uniqRoomName);
+            currentLiveStreamingNameStore.set(uniqRoomName);
+            this.scene.broadcastService.joinSpace(uniqRoomName, false);
             isSpeakerStore.set(true);
-            requestedMegaphoneStore.set(true);
+            //requestedMegaphoneStore.set(true);
             if (property.chatEnabled) {
-                this.handleJoinMucRoom(property.name, "live");
+                this.handleJoinMucRoom(uniqRoomName, "live");
             }
         }
     }
 
     private handleSpeakerMegaphonePropertyOnLeave(property: SpeakerMegaphonePropertyData): void {
-        if (property.name !== undefined) {
-            currentMegaphoneNameStore.set(undefined);
-            this.scene.broadcastService.leaveSpace(property.name);
-            requestedMegaphoneStore.set(false);
+        if (property.name !== undefined && property.id !== undefined) {
+            const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
+            // TODO remove this console.log after testing
+            console.info("handleSpeakerMegaphonePropertyOnEnter => uniqRoomName : ", uniqRoomName);
+            currentLiveStreamingNameStore.set(undefined);
+            this.scene.broadcastService.leaveSpace(uniqRoomName);
+            //requestedMegaphoneStore.set(false);
             isSpeakerStore.set(false);
             if (property.chatEnabled) {
-                this.handleLeaveMucRoom(property.name);
+                this.handleLeaveMucRoom(uniqRoomName);
             }
         }
     }
@@ -457,10 +575,13 @@ export class AreasPropertiesListener {
                 property.speakerZoneName
             );
             if (speakerZoneName) {
-                currentMegaphoneNameStore.set(speakerZoneName);
-                this.scene.broadcastService.joinSpace(speakerZoneName, false);
+                const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
+                // TODO remove this console.log after testing
+                console.info("handleListenerMegaphonePropertyOnEnter => uniqRoomName", uniqRoomName);
+                currentLiveStreamingNameStore.set(uniqRoomName);
+                this.scene.broadcastService.joinSpace(uniqRoomName, false);
                 if (property.chatEnabled) {
-                    this.handleJoinMucRoom(speakerZoneName, "live");
+                    this.handleJoinMucRoom(uniqRoomName, "live");
                 }
             }
         }
@@ -473,10 +594,13 @@ export class AreasPropertiesListener {
                 property.speakerZoneName
             );
             if (speakerZoneName) {
-                currentMegaphoneNameStore.set(undefined);
-                this.scene.broadcastService.leaveSpace(speakerZoneName);
+                const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
+                // TODO remove this console.log after testing
+                console.info("handleListenerMegaphonePropertyOnLeave => uniqRoomName", uniqRoomName);
+                currentLiveStreamingNameStore.set(undefined);
+                this.scene.broadcastService.leaveSpace(uniqRoomName);
                 if (property.chatEnabled) {
-                    this.handleLeaveMucRoom(speakerZoneName);
+                    this.handleLeaveMucRoom(uniqRoomName);
                 }
             }
         }

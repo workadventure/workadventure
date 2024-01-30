@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { onDestroy } from "svelte";
+    import { onDestroy, onMount } from "svelte";
+    import { Unsubscriber } from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import Woka from "./Woka.svelte";
 
@@ -8,21 +9,27 @@
     export let customWidth: string;
     export let customHeight: string;
 
-    const gameScene = gameManager.getCurrentGameScene();
-    let playerWokaPictureStore;
-    if (userId === -1) {
-        playerWokaPictureStore = gameScene.CurrentPlayer.pictureStore;
-    } else {
-        playerWokaPictureStore = gameScene.MapPlayersByKey.getNestedStore(userId, (item) => item.pictureStore);
-    }
+    let src: string;
+    let unsubscribe: Unsubscriber;
 
-    let src = placeholderSrc;
-
-    const unsubscribe = playerWokaPictureStore.subscribe((source) => {
-        src = source ?? placeholderSrc;
+    onMount(() => {
+        const gameScene = gameManager.getCurrentGameScene();
+        let playerWokaPictureStore;
+        if (userId === -1) {
+            playerWokaPictureStore = gameScene.CurrentPlayer.pictureStore;
+        } else {
+            playerWokaPictureStore = gameScene.MapPlayersByKey.getNestedStore(userId, (item) => item.pictureStore);
+        }
+        src = placeholderSrc;
+        unsubscribe = playerWokaPictureStore.subscribe((source) => {
+            src = source ?? placeholderSrc;
+        });
     });
-
-    onDestroy(unsubscribe);
+    onDestroy(() => {
+        if (unsubscribe) unsubscribe();
+    });
 </script>
 
-<Woka {src} {customWidth} {customHeight} />
+{#if src}
+    <Woka {src} {customWidth} {customHeight} />
+{/if}

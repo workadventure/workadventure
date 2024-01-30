@@ -15,8 +15,8 @@ export class UpdateAreaFrontCommand extends UpdateAreaCommand implements FrontCo
     }
 
     public async execute(): Promise<void> {
-        const returnVal = super.execute();
-        this.areaEditorTool.handleAreaPreviewUpdate(this.newConfig);
+        const returnVal = await super.execute();
+        this.areaEditorTool.handleAreaUpdate(this.oldConfig, this.newConfig);
 
         return returnVal;
     }

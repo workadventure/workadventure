@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { Unsubscriber } from "svelte/store";
-    //import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "svelte-feather-icons";
+    import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "svelte-feather-icons";
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { writable } from "svelte/store";
@@ -14,6 +14,7 @@
     import MyCamera from "../MyCamera.svelte";
     import {
         cameraListStore,
+        localStreamStore,
         microphoneListStore,
         speakerListStore,
         localVolumeStore,
@@ -79,7 +80,7 @@
     import { Emoji } from "../../Stores/Utils/emojiSchema";
     import {
         megaphoneCanBeUsedStore,
-        megaphoneEnabledStore,
+        liveStreamingEnabledStore,
         requestedMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
@@ -213,7 +214,7 @@
             streamingMegaphoneStore.set(false);
             return;
         }
-        if ($requestedMegaphoneStore || $megaphoneEnabledStore) {
+        if ($requestedMegaphoneStore || $liveStreamingEnabledStore) {
             analyticsClient.stopMegaphone();
             requestedMegaphoneStore.set(false);
             return;
@@ -223,6 +224,7 @@
     }
 
     function toggleMapEditorMode() {
+        if (isMobile) return;
         analyticsClient.toggleMapEditor(!$mapEditorModeStore);
         mapEditorModeStore.switchMode(!$mapEditorModeStore);
     }
@@ -400,6 +402,7 @@
     let totalMessagesToSee = writable<number>(0);
     onMount(() => {
         iframeListener.chatTotalMessagesToSeeStream.subscribe((total) => totalMessagesToSee.set(total));
+        resizeObserver.observe(mainHtmlDiv);
     });
 
     onDestroy(() => {
@@ -407,12 +410,38 @@
         //chatTotalMessagesSubscription?.unsubscribe();
     });
 
-    const isMobile = isMediaBreakpointUp("md");
+    let stream: MediaStream | null;
+    const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
+        if (value.type === "success") {
+            stream = value.stream;
+
+            if (stream !== null) {
+                const audioTracks = stream.getAudioTracks();
+                if (audioTracks.length > 0) {
+                    // set default speaker selected
+                    if ($speakerListStore && $speakerListStore.length > 0) {
+                        speakerSelectedStore.set($speakerListStore[0].deviceId);
+                    }
+                }
+            }
+        } else {
+            stream = null;
+        }
+    });
 
     function buttonActionBarTrigger(id: string) {
         const button = $additionnalButtonsMenu.get(id) as AddButtonActionBarEvent;
         return iframeListener.sendButtonActionBarTriggered(button);
     }
+
+    let mainHtmlDiv: HTMLDivElement;
+    let isMobile = isMediaBreakpointUp("md");
+    const resizeObserver = new ResizeObserver(() => {
+        isMobile = isMediaBreakpointUp("md");
+        if (isMobile) {
+            mapEditorModeStore.set(false);
+        }
+    });
 </script>
 <svelte:window on:keydown={onKeyDown} />
 {#if !$chatVisibilityStore}

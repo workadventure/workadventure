@@ -89,7 +89,14 @@ solution on Kubernetes if you want.
 If you have specific needs for a custom deployment, the WorkAdventure company can offer paid support. Don't hesitate to
 contact us at hello@workadventu.re. We also provide support to integrate WorkAdventure in your existing application.
 
-Alternatively, for any question related to non-standard deployments, you can ask the community on the "self-hosting" Discord
+### Alternative installation methods
+
+Below is a list of alternative installation methods contributed by the community. Please note that the core team does not 
+provide support for those methods.
+
+- Helm chart by @klauserber: https://github.com/klauserber/workadventure-k8s.
+
+For any question related to non-standard deployments, you can ask the community on the "self-hosting" Discord
 channel: [![Discord](https://img.shields.io/discord/821338762134290432?label=Discord)](https://discord.gg/G6Xh9ZM9aR)
 
 ## Hardware requirements

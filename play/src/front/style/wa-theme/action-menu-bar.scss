@@ -107,6 +107,10 @@
                     }
                 }
             }
+
+            .disable-opacity {
+                @apply opacity-50;
+            }
         }
     }
 }

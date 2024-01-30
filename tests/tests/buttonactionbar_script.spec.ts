@@ -1,12 +1,13 @@
 import {expect, test} from '@playwright/test';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
+import {RENDERER_MODE} from "./utils/environment";
 
 test.describe('Button in action bar', () => {
     test('test', async ({ page }) => {
         // Go to WorkAdventure platform
         await page.goto(
-            'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+            `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
         );
 
         // Login Alice
@@ -35,7 +36,7 @@ test.describe('Action button in action bar', () => {
     test('test', async ({ page }) => {
         // Go to WorkAdventure platform
         await page.goto(
-            'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+            `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
         );
 
         // Login Alice

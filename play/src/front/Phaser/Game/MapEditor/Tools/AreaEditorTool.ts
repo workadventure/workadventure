@@ -59,8 +59,8 @@ export class AreaEditorTool extends MapEditorTool {
         this.mapEditorModeManager = mapEditorModeManager;
         this.scene = this.mapEditorModeManager.getScene();
 
-        this.shiftKey = this.scene.input.keyboard?.addKey("SHIFT");
-        this.ctrlKey = this.scene.input.keyboard?.addKey("CTRL");
+        this.shiftKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+        this.ctrlKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
 
         this.areaPreviews = this.createAreaPreviews();
         this.active = false;
@@ -432,7 +432,9 @@ export class AreaEditorTool extends MapEditorTool {
         mapEditorSelectedAreaPreviewStore.set(areaPreview);
     }
 
-    public handleAreaPreviewDeletion(id: string): void {
+    public handleAreaDeletion(id: string, areaData: AreaData | undefined): void {
+        this.scene.getGameMapFrontWrapper().listenAreaDeletion(areaData);
+
         if (!this.active) {
             return;
         }
@@ -442,7 +444,9 @@ export class AreaEditorTool extends MapEditorTool {
         mapEditorSelectedAreaPreviewStore.set(undefined);
     }
 
-    public handleAreaPreviewCreation(config: AreaData, localCommand: boolean): void {
+    public handleAreaCreation(config: AreaData, localCommand: boolean): void {
+        this.scene.getGameMapFrontWrapper().listenAreaCreation(config);
+
         if (!this.active) {
             return;
         }
@@ -455,12 +459,22 @@ export class AreaEditorTool extends MapEditorTool {
         }
     }
 
-    public handleAreaPreviewUpdate(config: AtLeast<AreaData, "id">): void {
+    public handleAreaUpdate(oldConfig: AtLeast<AreaData, "id">, newConfig: AtLeast<AreaData, "id">): void {
+        this.scene.getGameMapFrontWrapper().listenAreaChanges(oldConfig, newConfig);
+
         if (!this.active) {
             return;
         }
 
-        this.areaPreviews.find((area) => area.getAreaData().id === config.id)?.updatePreview(config);
+        console.log("handleAreaUpdate", oldConfig, newConfig);
+
+        const area = this.areaPreviews.find((area) => area.getAreaData().id === newConfig.id);
+
+        if (area) {
+            area.updatePreview(newConfig);
+            mapEditorSelectedAreaPreviewStore.set(area);
+        }
+
         this.scene.markDirty();
     }
 
@@ -563,12 +577,8 @@ export class AreaEditorTool extends MapEditorTool {
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
         areaPreview.on(AreaPreviewEvent.DragStart, () => {
             this.draggingdArea = true;
-            this.drawAreaOldPositionPreview(
-                areaPreview.x - areaPreview.width * 0.5,
-                areaPreview.y - areaPreview.height * 0.5,
-                areaPreview.width,
-                areaPreview.height
-            );
+            const areaData = areaPreview.getAreaData();
+            this.drawAreaOldPositionPreview(areaData.x, areaData.y, areaData.width, areaData.height);
         });
         areaPreview.on(AreaPreviewEvent.Released, () => {
             this.draggingdArea = false;
@@ -577,11 +587,16 @@ export class AreaEditorTool extends MapEditorTool {
         areaPreview.on(AreaPreviewEvent.Copied, (data: CopyAreaEventData) => {
             this.copyArea(data);
         });
-        areaPreview.on(AreaPreviewEvent.Updated, (data: AtLeast<AreaData, "id">) => {
-            this.mapEditorModeManager
-                .executeCommand(new UpdateAreaFrontCommand(this.scene.getGameMap(), data, undefined, undefined, this))
-                .catch((e) => console.error(e));
-        });
+        areaPreview.on(
+            AreaPreviewEvent.Updated,
+            (newData: AtLeast<AreaData, "id">, oldData: AtLeast<AreaData, "id"> | undefined) => {
+                this.mapEditorModeManager
+                    .executeCommand(
+                        new UpdateAreaFrontCommand(this.scene.getGameMap(), newData, undefined, oldData, this)
+                    )
+                    .catch((e) => console.error(e));
+            }
+        );
         areaPreview.on(AreaPreviewEvent.Delete, () => {
             this.mapEditorModeManager
                 .executeCommand(

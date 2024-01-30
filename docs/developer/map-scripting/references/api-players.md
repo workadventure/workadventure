@@ -124,8 +124,8 @@ if (player !== undefined) {
 Getting a list of remote players is fine but most of the time, you will want to dynamically track players around you.
 
 ```typescript
-WA.players.onPlayerEnters(): Observable<RemotePlayerInterface>;
-WA.players.onPlayerLeaves(): Observable<RemotePlayerInterface>;
+WA.players.onPlayerEnters: Observable<RemotePlayerInterface>;
+WA.players.onPlayerLeaves: Observable<RemotePlayerInterface>;
 ```
 
 :::caution
@@ -143,10 +143,10 @@ an object on which you can add subscriptions using the `subscribe` method.
 
 ```typescript
 await WA.players.configureTracking();
-WA.players.onPlayerEnters().subscribe((player: RemotePlayerInterface) => {
+WA.players.onPlayerEnters.subscribe((player: RemotePlayerInterface) => {
     console.log(`Player ${player.name} entered your nearby zone`);
 });
-WA.players.onPlayerLeaves().subscribe((player: RemotePlayerInterface) => {
+WA.players.onPlayerLeaves.subscribe((player: RemotePlayerInterface) => {
     console.log(`Player ${player.name} left your nearby zone`);
 });
 ```
@@ -154,7 +154,7 @@ WA.players.onPlayerLeaves().subscribe((player: RemotePlayerInterface) => {
 If you want to stop tracking rxJs subscriptions, the `subscribe()` function returns a `Subscription` object with an `unsubscribe()` method.
 
 ```javascript
-const subscription = WA.players.onPlayerEnters().subscribe((player: RemotePlayerInterface) => {
+const subscription = WA.players.onPlayerEnters.subscribe((player: RemotePlayerInterface) => {
     console.log(`Player ${player.name} entered your nearby zone`);
 });
 

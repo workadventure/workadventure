@@ -5,6 +5,7 @@ import Map from './utils/map';
 import {findContainer, startContainer, stopContainer} from "./utils/containers";
 import {createFileOfSize, deleteFile, fileExist} from "./utils/file";
 import Menu from "./utils/menu";
+import {RENDERER_MODE} from "./utils/environment";
 
 const TIMEOUT_TO_GET_LIST = 60_000;
 
@@ -21,7 +22,7 @@ test.describe('Chat', () => {
 
 
     await page.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json'
+        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
     );
     const nickname = getUniqueNickname('A');
     await login(page, nickname, 2);
@@ -35,6 +36,7 @@ test.describe('Chat', () => {
     const ejabberd = await findContainer('ejabberd');
 
     await test.step('all tests of chat', async () => {
+      await Map.goToRoom(page, '#Out_LiveZone_a');
       await Chat.slideToUsers(page);
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
 
@@ -42,7 +44,7 @@ test.describe('Chat', () => {
       const newBrowser = await browser.browserType().launch();
       const page2 = await newBrowser.newPage();
       await page2.goto(
-          'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json'
+          `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
       );
       const nickname2 = getUniqueNickname('B');
       await login(page2, nickname2, 3);
@@ -51,7 +53,9 @@ test.describe('Chat', () => {
         // Because webkit in playwright does not support Camera/Microphone Permission by settings
         await hideNoCamera(page2);
       }
-      
+
+      await Map.goToRoom(page2, '#Out_LiveZone_b');
+
       await Menu.openChat(page2);
       await Chat.slideToUsers(page2);
       await Chat.checkNameInChat(page2, nickname, TIMEOUT_TO_GET_LIST);
@@ -201,7 +205,7 @@ test.describe('Use application into TimeLine', () => {
   test('main', async ({ page, browser, browserName }) => {
 
     await page.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json'
+        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
     );
     const nickname = getUniqueNickname('A');
     await login(page, nickname, 2);

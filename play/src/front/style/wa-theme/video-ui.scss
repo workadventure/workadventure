@@ -1,8 +1,7 @@
-//* GENERAL */
+/* GENERAL */
 .media-box-camera-on-size {
     @apply h-32 w-56 sm:h-48 sm:w-80 md:h-28 md:w-48 lg:h-24 lg:w-44 xl:h-36 xl:w-64 2xl:h-48 2xl:w-96;
 }
-
 .media-box-camera-on-position {
     @apply absolute justify-end items-end;
 }
@@ -86,9 +85,9 @@
     }
 }
 
-//* VOICE METER */
+/* VOICE METER */
 
-//* NAMETAGS */
+/* NAMETAGS */
 .nametag-text {
     @apply font-semibold text-xs leading-[0.875rem] not-italic break-words;
 }
@@ -97,7 +96,7 @@
     @apply rounded-tr-lg rounded-bl overflow-auto max-w-full;
 }
 
-//* MY CAMERA */
+/* MY CAMERA */
 
 .my-webcam-container,
 .voice-meter-my-container {
@@ -105,10 +104,6 @@
 }
 
 /* MOZAIC MODE */
-
-#mozaic-layout {
-}
-
 .mozaic-full-width {
     @apply mozaic-full-size;
 
@@ -116,7 +111,7 @@
     .woka-webcam-container,
     .voice-meter-webcam-container,
     .report-ban-container {
-        @apply mozaic-full-size;
+        @apply mozaic-full-size bottom-0;
     }
 
     .video-container {
@@ -135,7 +130,7 @@
     .woka-webcam-container,
     .voice-meter-webcam-container,
     .report-ban-container {
-        @apply mozaic-duo-size;
+        @apply mozaic-duo-size bottom-0;
     }
 }
 
@@ -156,10 +151,11 @@
 
 
 
-
-////////////////////
+/*
+///////////////////
 // Loading.svelte //
 ////////////////////
+*/
 #loading {
     @apply h-fit flex bg-warning relative rounded py-2 my-2;
     transition: all 0.2s ease;
@@ -174,10 +170,11 @@
 
 
 
-
+/*
 ////////////////////
 // UserTag.svelte //
 ////////////////////
+*/
 #tag {
     @apply flex rounded-sm items-center w-full p-2 h-fit;
     &.minimal {
@@ -196,10 +193,11 @@
 
 
 
-
+/*
 //////////////////////////
 // JitsiMediaBox.svelte //
 //////////////////////////
+*/
 .jitsi-video{
     @apply flex w-full border-warning border-2 border-solid relative rounded;
     transition: all 0.2s ease;

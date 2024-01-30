@@ -13,7 +13,7 @@ const actionbar: BaseTranslation = {
     bo: "pozadkowy běrow wočinić",
     subtitle: {
         microphone: "mikrofon",
-        speaker: "hłóska",
+        speaker: "wótřerěčak",
     },
     app: "aplikacije wočinić/začinić",
 };

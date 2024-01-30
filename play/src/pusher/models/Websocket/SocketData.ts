@@ -1,26 +1,24 @@
 import type { ClientDuplexStream } from "@grpc/grpc-js";
-import type { compressors } from "hyper-express";
 import type {
-    MucRoomDefinition,
-    ApplicationDefinitionInterface,
-    CompanionTextureMessage,
-    SubMessage,
-    BatchMessage,
     PusherToBackMessage,
     ServerToClientMessage,
     BackToPusherSpaceMessage,
     PusherToBackSpaceMessage,
-    SpaceFilterMessage,
     SpaceUser,
+    ApplicationDefinitionInterface,
+    AvailabilityStatus,
     CharacterTextureMessage,
+    CompanionTextureMessage,
+    MucRoomDefinition,
+    BatchMessage,
+    SpaceFilterMessage,
+    SubMessage,
 } from "@workadventure/messages";
-import { AvailabilityStatus } from "@workadventure/messages";
-import type { Zone } from "../Zone";
-import type { PusherRoom } from "../PusherRoom";
-import { CustomJsonReplacerInterface } from "../CustomJsonReplacerInterface";
+import { PusherRoom } from "../PusherRoom";
 import { Space } from "../Space";
-import type { ViewportInterface } from "./ViewportMessage";
-import type { PointInterface } from "./PointInterface";
+import { Zone } from "../Zone";
+import { PointInterface } from "./PointInterface";
+import { ViewportInterface } from "./ViewportMessage";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 export type BackSpaceConnection_ = ClientDuplexStream<PusherToBackSpaceMessage, BackToPusherSpaceMessage>;
@@ -29,46 +27,44 @@ export interface BackSpaceConnection extends BackSpaceConnection_ {
     pingTimeout: NodeJS.Timeout | undefined;
 }
 
-export interface ExSocketInterface extends compressors.WebSocket, CustomJsonReplacerInterface {
+export type SocketData = {
+    rejected: false;
+    disconnecting: boolean;
     token: string;
     roomId: string;
-    userUuid: string; // A unique identifier for this user
-    userIdentifier: string;
+    userId?: number; // User Id served by the back
+    userUuid: string; // Admin UUID
     userJid: string;
     isLogged: boolean;
-    IPAddress: string; // IP address
+    ipAddress: string;
     name: string;
     characterTextures: CharacterTextureMessage[];
+    companionTexture?: CompanionTextureMessage;
     position: PointInterface;
     viewport: ViewportInterface;
-    companionTexture?: CompanionTextureMessage;
     availabilityStatus: AvailabilityStatus;
     lastCommandId?: string;
-    /**
-     * Pushes an event that will be sent in the next batch of events
-     */
-    emitInBatch: (payload: SubMessage) => void;
-    batchedMessages: BatchMessage;
-    batchTimeout: NodeJS.Timeout | null;
-    disconnecting: boolean;
-    messages: unknown;
+    messages: unknown[];
     tags: string[];
     visitCardUrl: string | null;
-    backConnection?: BackConnection;
-    listenedZones: Set<Zone>;
     userRoomToken: string | undefined;
-    pusherRoom: PusherRoom | undefined;
     jabberId: string;
     jabberPassword: string | undefined | null;
     activatedInviteUser: boolean | undefined;
     mucRooms: Array<MucRoomDefinition>;
-    applications: Array<ApplicationDefinitionInterface> | undefined;
+    applications?: Array<ApplicationDefinitionInterface> | null;
     canEdit: boolean;
     spaceUser: SpaceUser;
+    emitInBatch: (payload: SubMessage) => void;
+    batchedMessages: BatchMessage;
+    batchTimeout: NodeJS.Timeout | null;
+    backConnection?: BackConnection;
+    listenedZones: Set<Zone>;
+    pusherRoom: PusherRoom | undefined;
     spaces: Space[];
     spacesFilters: Map<string, SpaceFilterMessage[]>;
     cameraState?: boolean;
     microphoneState?: boolean;
     screenSharingState?: boolean;
     megaphoneState?: boolean;
-}
+};

@@ -1,5 +1,13 @@
 import { readable, writable } from "svelte/store";
-import { ErrorScreenMessage } from "@workadventure/messages";
+import {
+    ErrorApiErrorData,
+    ErrorApiRetryData,
+    ErrorApiUnauthorizedData,
+    ErrorScreenMessage,
+    isErrorApiErrorData,
+    isErrorApiRetryData,
+    isErrorApiUnauthorizedData,
+} from "@workadventure/messages";
 import { isAxiosError } from "axios";
 
 import logoImg from "../Components/images/logo-min-white.png";
@@ -24,6 +32,60 @@ function createErrorScreenStore() {
         subscribe,
         setError: (e: ErrorScreenMessage): void => {
             set(e);
+        },
+        setErrorFromApi: (e: ErrorApiErrorData | ErrorApiRetryData | ErrorApiUnauthorizedData): void => {
+            const errorApiErrorData = isErrorApiErrorData.safeParse(e);
+            if (errorApiErrorData.success) {
+                const error = errorApiErrorData.data;
+                set({
+                    type: "error",
+                    code: error.code,
+                    title: error.title,
+                    subtitle: error.subtitle,
+                    details: error.details,
+                    image: error.image,
+                    timeToRetry: undefined,
+                    buttonTitle: undefined,
+                    canRetryManual: undefined,
+                    urlToRedirect: undefined,
+                });
+                return;
+            }
+            const errorApiRetryData = isErrorApiRetryData.safeParse(e);
+            if (errorApiRetryData.success) {
+                const error = errorApiRetryData.data;
+                set({
+                    type: "retry",
+                    code: error.code,
+                    title: error.title,
+                    subtitle: error.subtitle,
+                    details: error.details,
+                    image: error.image,
+                    timeToRetry: error.timeToRetry,
+                    buttonTitle: error.buttonTitle ?? undefined,
+                    canRetryManual: error.canRetryManual,
+                    urlToRedirect: undefined,
+                });
+                return;
+            }
+            const errorApiUnauthorizedData = isErrorApiUnauthorizedData.safeParse(e);
+            if (errorApiUnauthorizedData.success) {
+                const error = errorApiUnauthorizedData.data;
+                set({
+                    type: "unauthorized",
+                    code: error.code,
+                    title: error.title,
+                    subtitle: error.subtitle,
+                    details: error.details,
+                    image: error.image,
+                    timeToRetry: undefined,
+                    buttonTitle: error.buttonTitle ?? undefined,
+                    canRetryManual: undefined,
+                    urlToRedirect: undefined,
+                });
+                return;
+            }
+            throw new Error("This should never happen.");
         },
         /**
          * Turns an exception into an error.
@@ -81,18 +143,30 @@ function createErrorScreenStore() {
             }
             if (error instanceof ApiError) {
                 const errorApi = error.errorApiData;
+                const { status: _exhaustiveCheck, ...errorApiWithoutStatus } = errorApi;
 
-                if (errorApi.type === "error" || errorApi.type === "redirect") {
-                    set(ErrorScreenMessage.fromPartial(errorApi));
-                } else if (errorApi.type === "retry" || errorApi.type === "unauthorized") {
-                    set(
-                        ErrorScreenMessage.fromPartial({
-                            ...errorApi,
-                            buttonTitle: errorApi.buttonTitle ?? undefined,
-                        })
-                    );
-                } else {
-                    const _exhaustiveCheck: never = errorApi;
+                switch (errorApiWithoutStatus.type) {
+                    case "error":
+                    case "redirect": {
+                        set(ErrorScreenMessage.fromPartial(errorApiWithoutStatus));
+                        return;
+                    }
+                    case "retry":
+                    case "unauthorized": {
+                        set(
+                            ErrorScreenMessage.fromPartial({
+                                ...errorApiWithoutStatus,
+                                buttonTitle: errorApiWithoutStatus.buttonTitle ?? undefined,
+                            })
+                        );
+                        return;
+                    }
+                    default: {
+                        // Typescript compiler is lost because of the removal of the status field.
+                        //@ts-ignore
+                        const _exhaustiveCheck: never = errorApi;
+                        throw new Error("This should never happen.");
+                    }
                 }
                 return;
             }

@@ -81,15 +81,15 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         advancedOptions: "Erweiterte Optionen",
         speakerMegaphoneProperties: {
-            label: "Sprecherzone für Megaphon",
+            label: "Sprecherzone",
             description: "",
             nameLabel: "Sprecherzonenname",
             namePlaceholder: "MySpeakerZone",
         },
         listenerMegaphoneProperties: {
-            label: "Hörerzone für Megaphon",
+            label: "Besucherzone",
             description: "",
-            nameLabel: "Hörerzonenname",
+            nameLabel: "Besucherzonenname",
             namePlaceholder: "MyListenerZone",
         },
         chatEnabled: "Chat aktiviert",

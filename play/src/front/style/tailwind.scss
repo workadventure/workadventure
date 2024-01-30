@@ -10,7 +10,7 @@
 }
 
 @layer components {
-    //Menus - Main one uses theses classes
+    /* Menus - Main one uses theses classes */
     .menu-container {
         &.right{
             @apply w-1/3 top-0 left-auto right-0 h-full
@@ -47,7 +47,7 @@
         @apply h-3 p-0.5 invisible md:visible;
     }
 
-    //Buttons - basic buttons appearance
+    /* Buttons - basic buttons appearance */
     button,
     .btn {
         @apply border-none rounded px-2 py-1 mx-0.5 my-1 items-center flex no-underline transition-colors duration-300 break-words outline-none;
@@ -71,7 +71,7 @@
         @apply text-sm md:text-base;
     }
 
-    //Dialog boxes used to notify user about something (follow feature, jitsi room, etc...)
+    /* Dialog boxes used to notify user about something (follow feature, jitsi room, etc...) */
     .blue-dialog-box {
         @apply bg-dark-purple/95 rounded text-light-blue self-center m-1 p-1 align-middle align-middle pointer-events-auto;
     }

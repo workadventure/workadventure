@@ -5,7 +5,6 @@ import { KlaxoonService } from "@workadventure/shared-utils";
 import {
     CONTACT_URL,
     DISABLE_ANONYMOUS,
-    OPID_LOGOUT_REDIRECT_URL,
     OPID_WOKA_NAME_POLICY,
     KLAXOON_ENABLED,
     KLAXOON_CLIENT_ID,
@@ -31,7 +30,7 @@ export class Room {
     public readonly id: string;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
     private _iframeAuthentication?: string = new URL("login-screen", ABSOLUTE_PUSHER_URL).toString();
-    private _opidLogoutRedirectUrl = "/";
+    private _opidLogoutRedirectUrl: string = new URL("logout", ABSOLUTE_PUSHER_URL).toString();
     private _opidWokaNamePolicy: OpidWokaNamePolicy | undefined;
     private _mapUrl: string | undefined;
     private _wamUrl: string | undefined;
@@ -167,7 +166,8 @@ export class Room {
                     data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
                 this._iframeAuthentication =
                     data.iframeAuthentication || new URL("login-screen", ABSOLUTE_PUSHER_URL).toString();
-                this._opidLogoutRedirectUrl = data.opidLogoutRedirectUrl || OPID_LOGOUT_REDIRECT_URL || "/";
+                this._opidLogoutRedirectUrl =
+                    data.opidLogoutRedirectUrl || new URL("logout", ABSOLUTE_PUSHER_URL).toString();
                 this._contactPage = data.contactPage || CONTACT_URL;
                 if (data.expireOn) {
                     this._expireOn = new Date(data.expireOn);

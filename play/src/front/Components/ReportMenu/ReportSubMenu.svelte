@@ -2,7 +2,6 @@
     import { showReportScreenStore, userReportEmpty } from "../../Stores/ShowReportScreenStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { localUserStore } from "../../Connection/LocalUserStore";
 
     export let userUUID: string | undefined;
     export let userName: string | undefined;
@@ -25,7 +24,7 @@
             }
             reportMessage = `
                 -- Date: ${new Date().getTime()} -- \r
-                -- Reporter: ${localUserStore.getName()} -- \r
+                -- Reporter: ${gameManager.getPlayerName()} -- \r
                 -- Reported: ${userName} -- \n\r
                 ${reportMessage}
             `;

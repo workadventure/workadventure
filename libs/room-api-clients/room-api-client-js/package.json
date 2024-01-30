@@ -49,7 +49,7 @@
     "grpc-tools": "^1.12.4",
     "lint-staged": "^13.2.0",
     "prettier": "^2.8.6",
-    "ts-proto": "^1.160.0",
+    "ts-proto": "^1.164.1",
     "tsx": "^3.12.10",
     "typescript": "^5.0.2"
   },

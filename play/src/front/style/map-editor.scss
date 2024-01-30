@@ -1,6 +1,9 @@
+
+/*
 //////////////////////
 // Megaphone.svelte //
 //////////////////////
+*/
 p.help-text{
   @apply text-sm text-lighter-purple m-0;
   &.success {
@@ -8,10 +11,11 @@ p.help-text{
   }
 }
 
-
+/*
 ////////////////////////////
 // WAMSettingsEditor.svelte //
 ////////////////////////////
+*/
 .configure-my-room {
   @apply rounded-xl bg-dark-blue/90 backdrop-blur flex flex-wrap;
   width: 100%;

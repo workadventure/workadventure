@@ -46,6 +46,7 @@ export class EntryScene extends Scene {
                         this.scene.start(nextSceneName);
                     })
                     .catch((err) => {
+                        // TODO: make this safer ?
                         const errorType = ErrorApiData.safeParse(err?.response?.data);
                         if (errorType.success) {
                             if (errorType.data.type === "redirect") {

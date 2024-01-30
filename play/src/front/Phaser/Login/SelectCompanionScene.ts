@@ -11,6 +11,7 @@ import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { companionListMetakey, CompanionTexturesLoadingManager } from "../Companion/CompanionTexturesLoadingManager";
 import { CompanionTextureDescriptionInterface, CompanionTextures } from "../Companion/CompanionTextures";
 import { collectionsSizeStore, selectedCollection } from "../../Stores/SelectCharacterSceneStore";
+import { connectionManager } from "../../Connection/ConnectionManager";
 import { EnableCameraSceneName } from "./EnableCameraScene";
 import { ResizableScene } from "./ResizableScene";
 
@@ -85,7 +86,9 @@ export class SelectCompanionScene extends ResizableScene {
             }
         }
         // input events
-        this.input.keyboard?.on("keyup-ENTER", this.selectCompanion.bind(this));
+        this.input.keyboard?.on("keyup-ENTER", () => {
+            this.selectCompanion.bind(this)().catch(console.error);
+        });
 
         this.input.keyboard?.on("keydown-RIGHT", this.moveToRight.bind(this));
         this.input.keyboard?.on("keydown-LEFT", this.moveToLeft.bind(this));
@@ -109,9 +112,10 @@ export class SelectCompanionScene extends ResizableScene {
         }
     }
 
-    public selectCompanion(): void {
+    public async selectCompanion(): Promise<void> {
         localUserStore.setCompanionTextureId(this.companionCurrentCollection[this.currentCompanion].id);
         gameManager.setCompanionTextureId(this.companionCurrentCollection[this.currentCompanion].id);
+        await connectionManager.saveCompanionTexture(this.companionCurrentCollection[this.currentCompanion].id);
 
         this.closeScene();
     }

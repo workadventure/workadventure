@@ -63,31 +63,36 @@ const hsb_DE: DeepPartial<Translation> = {
         application: {
             klaxoon: {
                 title: "Klaxoon",
-                description: "Wužiwarjo maja Klaxoon wobkedźbować",
-                error: "Prošu zapodaj Klaxoon URL",
+                description: "Pósćel Klaxoon-naprašowanje do chata!",
+                error: "Prošu zapodaj płaćiwu Klaxoon URL",
             },
             youtube: {
                 title: "Youtube",
-                description: "Wužiwarjo maja Youtube wobkedźbować",
-                error: "Prošu zapodaj Youtube URL",
+                description: "Pósćel Youtube video do chata!",
+                error: "Prošu zapodaj płaćiwu Youtube URL",
             },
             googleDocs: {
                 title: "Google Docs",
-                description: "Wužiwarjo maja Google Docs wobkedźbować",
-                error: "Prošu zapodaj Google Docs URL",
+                description: "Pósćel Google dokument do chata!",
+                error: "Prošu zapodaj płaćiwu Google Docs URL",
             },
             googleSlides: {
                 title: "Google Slides",
-                description: "Wužiwarjo maja Google Slides wobkedźbować",
-                error: "Prošu zapodaj Google Slides URL",
+                description: "Pósćel Google slide do chata!",
+                error: "Prošu zapodaj płaćiwu Google Slides URL",
             },
             googleSheets: {
                 title: "Google Sheets",
-                description: "Wužiwarjo maja Google Sheets wobkedźbować",
-                error: "Prošu zapodaj Google Sheets URL",
+                description: "Pósćel Google sheet do chata!",
+                error: "Prošu zapodaj płaćiwu Google Sheets URL",
+            },
+            eraser: {
+                title: "Eraser",
+                description: "Pósćel Eraser-taflu do chata!",
+                error: "Prošu zapodaj płaćiwu Eraser-URL",
             },
             weblink: {
-                error: "Prošu zapodaj URL",
+                error: "Prošu zapodaj płaćiwu URL",
             },
         },
     },
@@ -142,7 +147,7 @@ const hsb_DE: DeepPartial<Translation> = {
     disabledByAdmin: "Tuta funkcija je wot administratora deaktiwěrowana.",
     anAdmin: "jen administrator",
     messageDeletedByYou: "Wy sće tutu powěsć zhašał.",
-    waiting: "Čaka se",
+    waiting: "Čakajucy",
 };
 
 export default hsb_DE;

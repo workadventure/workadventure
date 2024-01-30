@@ -1,23 +1,30 @@
 // eslint-disable-next-line import/no-unresolved
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import { Readable, Unsubscriber, writable, Writable, readable } from "svelte/store";
+import { Subscription } from "rxjs";
 import { SoundMeter } from "../../Phaser/Components/SoundMeter";
 import { SpaceUserExtended } from "../../Space/Space";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+import { TrackWrapper } from "../Common/TrackWrapper";
 import { JitsiTrackStreamWrapper } from "./JitsiTrackStreamWrapper";
 
-export class JitsiTrackWrapper {
+export class JitsiTrackWrapper implements TrackWrapper {
     private _spaceUser: SpaceUserExtended | undefined;
     public readonly cameraTrackWrapper: JitsiTrackStreamWrapper = new JitsiTrackStreamWrapper(this, "video/audio");
     public readonly screenSharingTrackWrapper: JitsiTrackStreamWrapper = new JitsiTrackStreamWrapper(this, "desktop");
     private _audioStreamStore: Writable<MediaStream | null> = writable<MediaStream | null>(null);
     private readonly _volumeStore: Readable<number[] | undefined> | undefined;
     private volumeStoreSubscribe: Unsubscriber | undefined;
+    private spaceUserUpdateSubscribe: Subscription | undefined;
     public readonly isLocal: boolean;
 
-    constructor(readonly participantId: string, jitsiTrack: JitsiTrack) {
-        this.setJitsiTrack(jitsiTrack);
-        this.isLocal = jitsiTrack.isLocal();
+    constructor(readonly participantId: string, jitsiTrack: JitsiTrack | undefined) {
+        if (jitsiTrack) {
+            this.setJitsiTrack(jitsiTrack);
+            this.isLocal = jitsiTrack.isLocal();
+        } else {
+            this.isLocal = false;
+        }
         this._volumeStore = readable<number[] | undefined>(undefined, (set) => {
             if (this.volumeStoreSubscribe) {
                 this.volumeStoreSubscribe();
@@ -70,11 +77,16 @@ export class JitsiTrackWrapper {
     setJitsiTrack(jitsiTrack: JitsiTrack, allowOverride = false) {
         // Let's start by suppressing any "echo". setJitsiTrack can be called multiple times for the same track
         // For some reason, Jitsi can trigger the remoteTrack event several times.
+        console.log(
+            "this.cameraTrackWrapper.getVideoTrack()?.getTrack().getSettings() === jitsiTrack.getTrack().getSettings()",
+            this.cameraTrackWrapper.getVideoTrack()?.getTrack().getSettings() === jitsiTrack.getTrack().getSettings()
+        );
         if (
             this.cameraTrackWrapper.getAudioTrack() === jitsiTrack ||
             this.cameraTrackWrapper.getVideoTrack() === jitsiTrack ||
             this.screenSharingTrackWrapper.getVideoTrack() === jitsiTrack ||
-            this.screenSharingTrackWrapper.getAudioTrack() === jitsiTrack
+            this.screenSharingTrackWrapper.getAudioTrack() === jitsiTrack ||
+            this.cameraTrackWrapper.getVideoTrack()?.getTrack().getSettings() === jitsiTrack.getTrack().getSettings()
         ) {
             return;
         }
@@ -180,7 +192,7 @@ export class JitsiTrackWrapper {
 
     set spaceUser(value: SpaceUserExtended | undefined) {
         this._spaceUser = value;
-        this._spaceUser?.updateSubject.subscribe((event) => {
+        this.spaceUserUpdateSubscribe = this._spaceUser?.updateSubject.subscribe((event) => {
             if (event.changes.screenSharingState) {
                 // This is the only reliable way to know if the screen sharing is active or not
                 // Indeed, if the user stops the screen sharing using the "Stop sharing" button in the OS, the screen sharing track is not removed
@@ -215,6 +227,7 @@ export class JitsiTrackWrapper {
         this.screenSharingTrackWrapper.setVideoTrack(undefined);
         this.screenSharingTrackWrapper.setAudioTrack(undefined);
         this._audioStreamStore.set(null);
+        this.spaceUserUpdateSubscribe?.unsubscribe();
         this._spaceUser = undefined;
     }
 
