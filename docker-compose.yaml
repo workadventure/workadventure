@@ -92,7 +92,6 @@ services:
             #Map editor
             PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
             INTERNAL_MAP_STORAGE_URL: "http://map-storage:3000"
-            MAP_STORAGE_AUTHENTICATION_TOKEN: "SomeSecretToken"
             ENABLE_OPENAPI_ENDPOINT: "true"
             START_ROOM_URL: "$START_ROOM_URL"
             # Only used if you set up a JWT authentication mechanism in Ejabberd
