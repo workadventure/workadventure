@@ -18,6 +18,7 @@ import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraStore } from "../../Stores/MyMediaStore";
 import { SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
+import { hasCapability } from "../../Connection/Capabilities";
 import { GameScene } from "./GameScene";
 
 /**
@@ -94,7 +95,7 @@ export class GameManager {
         this.playerName = name;
         // Only save the name if the user is not logged in
         // If the user is logged in, the name will be fetched from the server. No need to save it locally.
-        if (!localUserStore.isLogged()) {
+        if (!localUserStore.isLogged() || !hasCapability("api/save-name")) {
             localUserStore.setName(name);
         }
     }
@@ -107,7 +108,7 @@ export class GameManager {
         this.characterTextureIds = textureIds;
         // Only save the textures if the user is not logged in
         // If the user is logged in, the textures will be fetched from the server. No need to save them locally.
-        if (!localUserStore.isLogged()) {
+        if (!localUserStore.isLogged() || !hasCapability("api/save-textures")) {
             localUserStore.setCharacterTextures(textureIds);
         }
     }
