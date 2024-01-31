@@ -121,7 +121,7 @@
     "ts-loader": "^9.2.3",
     "tsconfig-paths": "4.0.0",
     "typescript": "^4.9.4",
-    "vite": "^3.2.7"
+    "vite": "^3.2.8"
   },
   "nodemonConfig": {
     "ignore": [
