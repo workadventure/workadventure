@@ -39,7 +39,7 @@
     "tsconfig-paths": "^3.14.1",
     "tsx": "^4.7.0",
     "typescript": "^4.7.2",
-    "vite": "^3.2.7",
+    "vite": "^3.2.8",
     "vite-plugin-rewrite-all": "^1.0.1"
   },
   "dependencies": {
