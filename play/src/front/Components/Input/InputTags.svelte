@@ -30,7 +30,7 @@
     }
 </script>
 
-<div class="tw-flex tw-flex-col tw-pb-5 tw-text-dark-purple">
+<div class="input-tags tw-flex tw-flex-col tw-pb-5 tw-text-dark-purple">
     <label for="selector" class="tw-text-white">
         {label}
     </label>
