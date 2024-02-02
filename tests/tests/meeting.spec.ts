@@ -105,7 +105,9 @@ test.describe('Meeting actions test', () => {
     // Login user "Bob"
     await login(userBob, "Bob", 3);
     // Move user "Bob" to the new area
-    await Map.teleportToPosition(userBob, 4*32, 2*32);
+    // FIME: the teleportToPosition does not work ??
+    //await Map.teleportToPosition(userBob, 4*32, 2*32);
+    await Map.walkToPosition(userBob, 4*32, 2*32);
 
     // The user in the bubble meeting should be visible
     await expect(page.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 20_000});
