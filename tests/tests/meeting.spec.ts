@@ -87,7 +87,7 @@ test.describe('Meeting actions test', () => {
     // Create a new area
     await MapEditor.openAreaEditor(page);
     // Draw the area
-    await AreaEditor.drawArea(page, {x: 1*32*1.5, y: 5}, {x: 9*32*1.5, y: 4*32*1.5});
+    await AreaEditor.drawArea(page, {x: 0*32*1.5, y: 5}, {x: 9*32*1.5, y: 4*32*1.5});
     // Add a property Speaker zone to create new Jitsi meeting zone
     await AreaEditor.addProperty(page, 'Speaker zone');
     // Set the speaker zone property
@@ -96,7 +96,8 @@ test.describe('Meeting actions test', () => {
     await Menu.closeMapEditor(page);
 
     // Move user "Alice" to the new area
-    await Map.teleportToPosition(page, 4*32, 2*32);
+    //await Map.teleportToPosition(page, 4*32, 2*32);
+    await Map.walkTo(page, 'ArrowUp', 2000);
 
     // Add a second user "Bob"
     const newBrowser = await browser.browserType().launch();
@@ -107,7 +108,7 @@ test.describe('Meeting actions test', () => {
     // Move user "Bob" to the new area
     // FIME: the teleportToPosition does not work ??
     //await Map.teleportToPosition(userBob, 4*32, 2*32);
-    await Map.walkToPosition(userBob, 4*32, 2*32);
+    await Map.walkTo(userBob, 'ArrowUp', 2000);
 
     // The user in the bubble meeting should be visible
     await expect(page.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 20_000});
