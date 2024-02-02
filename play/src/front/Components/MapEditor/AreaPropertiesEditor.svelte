@@ -44,6 +44,7 @@
     let hasStartProperty: boolean;
     let hasExitProperty: boolean;
     let hasplayAudioProperty: boolean;
+    let showDescriptionField = false;
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
@@ -295,6 +296,10 @@
     function onUpdateAudioProperty(data: CustomEvent<PlayAudioPropertyData>) {
         onUpdateProperty(data.detail);
     }
+
+    function toggleDescriptionField() {
+        showDescriptionField = !showDescriptionField;
+    }
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
@@ -492,13 +497,19 @@
         <input id="objectName" type="text" placeholder="Value" bind:value={areaName} on:change={onUpdateName} />
     </div>
     <div class="area-name-container">
-        <label for="objectDescription">{$LL.mapEditor.areaEditor.areaDescription()}</label>
-        <textarea
-            id="objectDescription"
-            placeholder="Value"
-            bind:value={areaDescription}
-            on:change={onUpdateAreaDescription}
-        />
+        {#if !showDescriptionField}
+            <a href="addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
+                >+ {$LL.mapEditor.areaEditor.addDescriptionField()}</a
+            >
+        {:else}
+            <label for="objectDescription">{$LL.mapEditor.areaEditor.areaDescription()}</label>
+            <textarea
+                id="objectDescription"
+                placeholder="Value"
+                bind:value={areaDescription}
+                on:change={onUpdateAreaDescription}
+            />
+        {/if}
     </div>
     <div class="value-switch">
         <label for="searchable">{$LL.mapEditor.areaEditor.areaSerchable()}</label>

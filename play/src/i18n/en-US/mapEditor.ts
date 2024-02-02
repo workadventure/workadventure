@@ -163,6 +163,7 @@ const mapEditor: BaseTranslation = {
         nameLabel: "Name",
         areaDescription: "Description",
         areaSerchable: "Searchable into the exploration mode",
+        addDescriptionField: "Add description field",
     },
     areaEditorInstructions: {
         title: "How it works ?",

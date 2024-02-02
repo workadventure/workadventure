@@ -154,6 +154,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         editInstructions: "Klikniśo na wobceŕk, aby jogo kakosći pśeměnili.",
         nameLabel: "Mě",
         areaDescription: "Pśedpokładny opis",
+        addDescriptionField: "Opis pśidaś",
     },
     entityEditor: {
         itemPicker: {

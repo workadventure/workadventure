@@ -161,6 +161,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         nameLabel: "Nom de la zone",
         areaDescription: "Description de la zone",
         areaSerchable: "Recherchable dans le mode exploration",
+        addDescriptionField: "Ajouter une description",
     },
     areaEditorInstructions: {
         title: "Comment ca marche ?",
