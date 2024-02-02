@@ -10,6 +10,7 @@ const mapEditor: BaseTranslation = {
         tileEditor: "Tile editor tool",
         configureMyRoom: "Configure my room",
         trashEditor: "Trash",
+        exploreTheRoom: "Explore the room",
     },
     properties: {
         silentProperty: {

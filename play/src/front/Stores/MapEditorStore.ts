@@ -71,3 +71,5 @@ export enum WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM {
 export const mapEditorWamSettingsEditorToolCurrentMenuItemStore = writable<
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM | undefined
 >(undefined);
+
+export const mapExplorationModeStore = writable<boolean>(false);

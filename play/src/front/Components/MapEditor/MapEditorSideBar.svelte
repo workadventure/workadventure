@@ -2,7 +2,7 @@
     import { LocalizedString } from "typesafe-i18n";
     import { LL } from "../../../i18n/i18n-svelte";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import { mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
+    import { mapEditorModeStore, mapEditorSelectedToolStore, mapExplorationModeStore } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import AreaToolImg from "../images/icon-tool-area.png";
     // import FloorToolImg from "../images/icon-tool-floor.png";
@@ -10,11 +10,17 @@
     import Tooltip from "../Util/Tooltip.svelte";
     import ConfigureImg from "../images/configure.svg";
     import TrashImg from "../images/trash.svg";
+    import ExplorerImg from "../images/explorer.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     const gameScene = gameManager.getCurrentGameScene();
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
 
+    availableTools.push({
+        toolName: EditorToolName.ExploreTheRoom,
+        img: ExplorerImg,
+        tooltiptext: $LL.mapEditor.sideBar.exploreTheRoom(),
+    });
     availableTools.push({
         toolName: EditorToolName.AreaEditor,
         img: AreaToolImg,

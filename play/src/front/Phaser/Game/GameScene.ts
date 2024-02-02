@@ -123,6 +123,7 @@ import {
     mapEditorWamSettingsEditorToolCurrentMenuItemStore,
     mapEditorModeStore,
     mapEditorSelectedToolStore,
+    mapExplorationModeStore,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer } from "../../Utils/Debuggers";
@@ -229,6 +230,7 @@ export class GameScene extends DirtyScene {
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
     private mapEditorModeStoreUnsubscriber!: Unsubscriber;
     private refreshPromptStoreStoreUnsubscriber!: Unsubscriber;
+    private mapExplorationStoreUnsubscriber!: Unsubscriber;
 
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
     private unsubscribers: Unsubscriber[] = [];
@@ -893,8 +895,6 @@ export class GameScene extends DirtyScene {
         if (gameManager.currentStartedRoom.backgroundColor != undefined) {
             this.cameras.main.setBackgroundColor(gameManager.currentStartedRoom.backgroundColor);
         }
-
-        this.cameraManager.setExplorationMode();
     }
 
     private hide(hide = true): void {
@@ -1379,7 +1379,8 @@ export class GameScene extends DirtyScene {
             this.followUsersColorStoreUnsubscriber != undefined ||
             this.peerStoreUnsubscriber != undefined ||
             this.mapEditorModeStoreUnsubscriber != undefined ||
-            this.refreshPromptStoreStoreUnsubscriber != undefined
+            this.refreshPromptStoreStoreUnsubscriber != undefined ||
+            this.mapExplorationStoreUnsubscriber != undefined
         ) {
             console.error(
                 "subscribeToStores => Check all subscriber undefined ",
@@ -1391,7 +1392,8 @@ export class GameScene extends DirtyScene {
                 this.followUsersColorStoreUnsubscriber,
                 this.peerStoreUnsubscriber,
                 this.mapEditorModeStoreUnsubscriber,
-                this.refreshPromptStoreStoreUnsubscriber
+                this.refreshPromptStoreStoreUnsubscriber,
+                this.mapExplorationStoreUnsubscriber
             );
 
             throw new Error("One store is already subscribed.");
@@ -1624,6 +1626,14 @@ export class GameScene extends DirtyScene {
                 this.userInputManager.disableControls();
             } else {
                 this.userInputManager.restoreControls();
+            }
+        });
+
+        this.mapExplorationStoreUnsubscriber = mapExplorationModeStore.subscribe((exploration) => {
+            if(exploration){
+                this.cameraManager.setExplorationMode();
+            }else{
+                console.info("not implementted yet");
             }
         });
     }
@@ -2533,6 +2543,7 @@ ${escapedMessage}
         this.userIsJitsiDominantSpeakerStoreUnsubscriber?.();
         this.jitsiParticipantsCountStoreUnsubscriber?.();
         this.availabilityStatusStoreUnsubscriber?.();
+        this.mapExplorationStoreUnsubscriber?.();
         for (const unsubscriber of this.unsubscribers) {
             unsubscriber();
         }

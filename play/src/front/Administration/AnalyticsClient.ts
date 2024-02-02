@@ -673,5 +673,13 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+
+    openExplorationMode(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_map-exploration`);
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();

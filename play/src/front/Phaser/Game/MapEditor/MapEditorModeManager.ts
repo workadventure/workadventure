@@ -14,6 +14,7 @@ import { WAMSettingsEditorTool } from "./Tools/WAMSettingsEditorTool";
 import { FrontCommandInterface } from "./Commands/FrontCommandInterface";
 import { FrontCommand } from "./Commands/FrontCommand";
 import { TrashEditorTool } from "./Tools/TrashEditorTool";
+import { ExplorerTool } from "./Tools/ExplorerTool";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
@@ -21,6 +22,7 @@ export enum EditorToolName {
     EntityEditor = "EntityEditor",
     WAMSettingsEditor = "WAMSettingsEditor",
     TrashEditor = "TrashEditor",
+    ExploreTheRoom = "ExploreTheRoom",
 }
 
 const logger = debug("map-editor");
@@ -86,6 +88,7 @@ export class MapEditorModeManager {
             [EditorToolName.FloorEditor]: new FloorEditorTool(this),
             [EditorToolName.WAMSettingsEditor]: new WAMSettingsEditorTool(this),
             [EditorToolName.TrashEditor]: new TrashEditorTool(this),
+            [EditorToolName.ExploreTheRoom]: new ExplorerTool(),
         };
         this.activeTool = undefined;
         this.lastlyUsedTool = undefined;

@@ -9,8 +9,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaEditor: "Outil d'édition de zone",
         entityEditor: "Outil d'édition d'entités",
         tileEditor: "Outil d'édition de tuiles",
-        configureMyRoom: "Configurer la salle",
+        configureMyRoom: "Configurer le salon",
         trashEditor: "Corbeille",
+        exploreTheRoom: "Explorer le salon",
     },
     properties: {
         silentProperty: {
