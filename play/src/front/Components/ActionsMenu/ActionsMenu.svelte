@@ -5,6 +5,7 @@
 
     import type { ActionsMenuAction, ActionsMenuData } from "../../Stores/ActionsMenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import bgMap from "../images/map-exemple.png";
 
     let actionsMenuData: ActionsMenuData | undefined;
     let sortedActions: ActionsMenuAction[] | undefined;
@@ -23,6 +24,7 @@
 
     actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value) => {
         actionsMenuData = value;
+        console.log(actionsMenuData);
         if (actionsMenuData) {
             sortedActions = [...actionsMenuData.actions.values()].sort((a, b) => {
                 const ap = a.priority ?? 0;
@@ -50,28 +52,39 @@
 
 {#if actionsMenuData}
 
-    <div class="absolute left-0 right-0 bottom-4 m-auto ">
-        <button type="button" class="close-window" on:click={closeActionsMenu}>×</button>
+    <div class="absolute left-0 right-0 bottom-4 m-auto w-96 z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg overflow-hidden pointer-events-auto overflow-hidden">
+        <div class="h-32 w-full bg-cover opacity-50" style="background-image: url('{bgMap}');"></div>
         {#if actionsMenuData.menuName}
-            <h2 class="name mb-2 mx-2 margin-close">{actionsMenuData.menuName}</h2>
-        {/if}
-        {#if sortedActions}
-            <div class="actions flex tw flex-col items-center" class:margin-close={!actionsMenuData.menuName}>
-                {#each sortedActions ?? [] as action (action.actionName)}
-                    <button
-                        type="button"
-                        class="btn light justify-center font-bold text-xs sm:text-base text-center h-fit m-2 w-full {action.style ??
-                            ''}"
-                        on:click={analyticsClient.clicPropertykMapEditor(action.actionName, action.style)}
-                        on:click|preventDefault={() => {
-                            action.callback();
-                        }}
-                    >
-                        {action.actionName}
-                    </button>
-                {/each}
+            <div class="px-4 relative mb-10">
+                <div class="h-20 w-20 aspect-ratio bg-white rounded absolute -top-14 left-4"></div>
+                <div class="h5 text-white ml-20 pl-4">{actionsMenuData.menuName}</div>
+                <p class="text-sm opacit"></p>
             </div>
         {/if}
+        <div class="flex items-center" class:margin-close={!actionsMenuData.menuName}>
+            <button
+                    type="button"
+                    class="btn btn-ghost justify-center basis-1/2 m-2 w-full"
+                    on:click={closeActionsMenu}
+            >
+                Close <!-- Trad -->
+            </button>
+        {#if sortedActions}
+            {#each sortedActions ?? [] as action (action.actionName)}
+                <button
+                    type="button"
+                    class="btn btn-danger justify-center basis-1/2 m-2 w-full {action.style ??
+                        ''}"
+                    on:click={analyticsClient.clicPropertykMapEditor(action.actionName, action.style)}
+                    on:click|preventDefault={() => {
+                        action.callback();
+                    }}
+                >
+                    {action.actionName}
+                </button>
+            {/each}
+        {/if}
+        </div>
     </div>
 {/if}
 
