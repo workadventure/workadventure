@@ -8,7 +8,7 @@ import type { LiveDirectory } from "../models/LiveDirectory";
 import { adminService } from "../services/AdminService";
 import { notWaHost } from "../middlewares/NotWaHost";
 import { version } from "../../../package.json";
-import { FRONT_ENVIRONMENT_VARIABLES, VITE_URL, LOGROCKET_ID, ADMIN_URL } from "../enums/EnvironmentVariable";
+import { FRONT_ENVIRONMENT_VARIABLES, VITE_URL, LOGROCKET_ID, AUTOLOGIN_URL } from "../enums/EnvironmentVariable";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class FrontController extends BaseHttpController {
@@ -263,15 +263,15 @@ export class FrontController extends BaseHttpController {
         // Read the access_key from the query parameter. If it is set, redirect to the admin to attempt a login.
         const accessKey = req.query.access_key;
         if (accessKey && typeof accessKey === "string" && accessKey.length > 0) {
-            if (!ADMIN_URL) {
+            if (!AUTOLOGIN_URL) {
                 res.atomic(() => {
-                    res.status(400).send("ADMIN_URL is not configured.");
+                    res.status(400).send("AUTOLOGIN_URL is not configured.");
                 });
                 return;
             }
             const html = Mustache.render(this.redirectToAdminFile, {
                 accessKey,
-                ADMIN_URL,
+                AUTOLOGIN_URL,
             });
             res.atomic(() => {
                 res.type("html").send(html);

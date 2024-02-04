@@ -158,14 +158,16 @@ export class MapListService {
             }
             return cacheFile;
         } catch (e: unknown) {
-            console.error("Error while trying to read a cache file:", e);
-            Sentry.captureException(`Error while trying to read a cache file: ${JSON.stringify(e)}`);
             if (nbTry === 0) {
                 console.log("Trying to regenerate the cache file");
                 // The file does not exist. Let's generate it
                 await this.generateCacheFileNoLimit(domain);
                 return this.readCacheFileNoLimit(domain, nbTry + 1);
             }
+            console.error(`Error while trying to read a cache file for domain ${domain}:`, e);
+            Sentry.captureException(
+                `Error while trying to read a cache file for domain ${domain}: ${JSON.stringify(e)}`
+            );
             throw e;
         }
     }

@@ -247,7 +247,8 @@ class LocalAdmin implements AdminInterface {
         playUri: string,
         name: string,
         message: string,
-        byUserEmail: string
+        byUserUuid: string,
+        byUserEmail?: string
     ): Promise<boolean> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }

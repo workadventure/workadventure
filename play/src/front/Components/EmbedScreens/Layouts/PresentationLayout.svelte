@@ -80,7 +80,7 @@
                 {#if $streamableCollectionStore.size > 0}
                     <CamerasContainer highlightedEmbedScreen={$highlightedEmbedScreen} />
                 {/if}
-                {#if $myCameraStore && !$megaphoneEnabledStore}
+                {#if $myCameraStore} <!-- && !$megaphoneEnabledStore TODO HUGO -->
                     <MyCamera />
                 {/if}
                 {#if $myJitsiCameraStore}

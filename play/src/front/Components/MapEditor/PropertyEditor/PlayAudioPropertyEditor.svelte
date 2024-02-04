@@ -10,10 +10,59 @@
 
     const dispatch = createEventDispatcher();
 
+    let HTMLAudioPlayer: HTMLAudioElement;
+    let playing = false;
+    let errorMessage = "";
+
+    function playAudio() {
+        if (!property.audioLink) {
+            if (HTMLAudioPlayer) HTMLAudioPlayer.pause();
+            return;
+        }
+        HTMLAudioPlayer.pause();
+        HTMLAudioPlayer.src = property.audioLink;
+        if (property.volume !== undefined) {
+            HTMLAudioPlayer.volume = property.volume;
+        }
+
+        HTMLAudioPlayer.onended = () => {
+            playing = false;
+        };
+
+        errorMessage = "";
+
+        HTMLAudioPlayer.play()
+            .then(() => {
+                playing = true;
+            })
+            .catch((error) => {
+                playing = false;
+                if (error instanceof DOMException) {
+                    errorMessage = $LL.mapEditor.properties.audioProperties.error() + ": " + error.message;
+                } else {
+                    errorMessage = $LL.mapEditor.properties.audioProperties.error();
+                }
+                console.error(error);
+            });
+    }
+
+    function stopAudio() {
+        if (HTMLAudioPlayer) HTMLAudioPlayer.pause();
+        playing = false;
+    }
+
     function onValueChange() {
+        errorMessage = "";
         dispatch("change");
         // Fixme: this is a hack to force the map editor to update the property
         dispatch("audioLink", property);
+    }
+
+    function onRangeChange() {
+        if (property.volume !== undefined) {
+            HTMLAudioPlayer.volume = property.volume;
+        }
+        onValueChange();
     }
 </script>
 
@@ -29,13 +78,24 @@
     <span slot="content">
         <div class="value-input">
             <label for="audioLink">{$LL.mapEditor.properties.audioProperties.audioLinkLabel()}</label>
-            <input
-                id="audioLink"
-                type="text"
-                placeholder={$LL.mapEditor.properties.audioProperties.audioLinkPlaceholder()}
-                bind:value={property.audioLink}
-                on:change={onValueChange}
-            />
+            <div class="tw-flex">
+                <input
+                    id="audioLink"
+                    type="text"
+                    placeholder={$LL.mapEditor.properties.audioProperties.audioLinkPlaceholder()}
+                    bind:value={property.audioLink}
+                    on:change={onValueChange}
+                />
+                {#if !playing}
+                    <button on:click={playAudio} class="tw-m-0 tw-pl-1 tw-pr-0 tw-text-xl"> ▶️ </button>
+                {:else}
+                    <button on:click={stopAudio} class="tw-m-0 tw-pl-1 tw-pr-0 tw-text-xl"> ⏹️ </button>
+                {/if}
+            </div>
+            <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
+        </div>
+        <div class="value-input tw-text-danger-500" class:tw-invisible={!errorMessage}>
+            ⚠️ {errorMessage}
         </div>
         <div class="value-switch">
             <label for="advancedOption">{$LL.mapEditor.properties.advancedOptions()}</label>
@@ -46,12 +106,12 @@
                 <label for="volume">{$LL.mapEditor.properties.audioProperties.volumeLabel()}</label>
                 <input
                     id="volume"
-                    type="number"
+                    type="range"
                     min="0"
                     max="1"
                     step="0.05"
                     bind:value={property.volume}
-                    on:change={onValueChange}
+                    on:change={onRangeChange}
                 />
             </div>
             {#if !property.hideButtonLabel}

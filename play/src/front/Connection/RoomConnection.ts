@@ -1031,6 +1031,18 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitBanPlayerMessage(banUserUuid: string, banUserName: string): void {
+        this.send({
+            message: {
+                $case: "banPlayerMessage",
+                banPlayerMessage: {
+                    banUserUuid,
+                    banUserName,
+                },
+            },
+        });
+    }
+
     public hasTag(tag: string): boolean {
         return this.tags.includes(tag);
     }

@@ -1,12 +1,13 @@
 import { z } from "zod";
 import {
     BoolAsString,
+    emptyStringToUndefined,
     PositiveIntAsString,
     toBool,
     toNumber,
 } from "@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils";
 
-const BasicEnvironmentVariables = z.object({
+export const EnvironmentVariables = z.object({
     API_URL: z.string().min(1).describe("The URI(s) of the back server"),
     AWS_ACCESS_KEY_ID: z.string().optional(),
     AWS_SECRET_ACCESS_KEY: z.string().optional(),
@@ -42,10 +43,8 @@ const BasicEnvironmentVariables = z.object({
         .describe(
             'The cache-control HTTP header to be used for "normal" resources. Note: resources containing a hash in the name will be set to "immutable", whatever this setting is.'
         ),
-    ENABLE_WEB_HOOK: z
-        .boolean()
-        .optional()
-        .default(true)
+    ENABLE_WEB_HOOK: BoolAsString.optional()
+        .transform((val) => toBool(val, true))
         .describe("If true, the webhook will be called when a WAM file is created"),
     WEB_HOOK_URL: z
         .string()
@@ -73,27 +72,42 @@ const BasicEnvironmentVariables = z.object({
         .optional()
         .transform((val) => toNumber(val, 0.1))
         .describe("The sampling rate for Sentry traces. Only used if SENTRY_DSN is configured. Defaults to 0.1"),
+    AUTHENTICATION_STRATEGY: z
+        .union([z.literal("Bearer"), z.literal("Basic"), z.literal("Digest"), z.literal("")])
+        .optional()
+        .describe(
+            "Deprecated. Use ENABLE_BEARER_AUTHENTICATION, ENABLE_BASIC_AUTHENTICATION or ENABLE_DIGEST_AUTHENTICATION instead"
+        )
+        .transform(emptyStringToUndefined),
+    ENABLE_BEARER_AUTHENTICATION: BoolAsString.optional()
+        .transform((val) => toBool(val, false))
+        .describe(
+            "Enables bearer authentication. When true, you need to set either AUTHENTICATION_TOKEN or AUTHENTICATION_VALIDATOR_URL"
+        ),
+    AUTHENTICATION_TOKEN: z
+        .string()
+        .optional()
+        .describe("The hard-coded bearer token to use for authentication")
+        .transform(emptyStringToUndefined),
+    AUTHENTICATION_VALIDATOR_URL: z
+        .string()
+        .url()
+        .or(z.literal(""))
+        .optional()
+        .describe("The URL that will be used to remotely validate a bearer token")
+        .transform(emptyStringToUndefined),
+    ENABLE_BASIC_AUTHENTICATION: BoolAsString.optional()
+        .transform((val) => toBool(val, false))
+        .describe(
+            "Enables basic authentication. When true, you need to set both AUTHENTICATION_USER and AUTHENTICATION_PASSWORD"
+        ),
+    ENABLE_DIGEST_AUTHENTICATION: BoolAsString.optional()
+        .transform((val) => toBool(val, false))
+        .describe(
+            "Enables basic authentication. When true, you need to set both AUTHENTICATION_USER and AUTHENTICATION_PASSWORD"
+        ),
+    AUTHENTICATION_USER: z.string().min(1).optional(),
+    AUTHENTICATION_PASSWORD: z.string().min(1).optional(),
 });
-
-const BearerAuthEnvVariables = z.object({
-    AUTHENTICATION_STRATEGY: z.literal("Bearer"),
-    AUTHENTICATION_TOKEN: z.string().min(1),
-});
-
-const BasicAuthEnvVariables = z.object({
-    AUTHENTICATION_STRATEGY: z.literal("Basic"),
-    AUTHENTICATION_USER: z.string().min(1),
-    AUTHENTICATION_PASSWORD: z.string().min(1),
-});
-
-const DigestAuthEnvVariables = z.object({
-    AUTHENTICATION_STRATEGY: z.literal("Digest"),
-    AUTHENTICATION_USER: z.string().min(1),
-    AUTHENTICATION_PASSWORD: z.string().min(1),
-});
-
-const AuthEnvVariable = z.union([BearerAuthEnvVariables, BasicAuthEnvVariables, DigestAuthEnvVariables]);
-
-export const EnvironmentVariables = z.intersection(BasicEnvironmentVariables, AuthEnvVariable);
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

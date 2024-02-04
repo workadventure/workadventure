@@ -18,7 +18,7 @@
     let unsubscriberFileStore: Unsubscriber | null = null;
     let unsubscriberVolumeStore: Unsubscriber | null = null;
 
-    let isAudioAllowed = true;
+    let state: "loading" | "playing" | "not_allowed" | "error" = "loading";
 
     onMount(() => {
         let volume = Math.min(localUserStore.getAudioPlayerVolume(), get(audioManagerVolumeStore).volume);
@@ -69,13 +69,20 @@
             // Audiovisilibily is set to false when audio is ended
             audioManagerVisibilityStore.set(false);
         };
-        void HTMLAudioPlayer.play()
+
+        HTMLAudioPlayer.play()
             .then(() => {
-                isAudioAllowed = true;
+                state = "playing";
             })
             .catch((e) => {
-                console.error("The audio could not be played: ", e);
-                isAudioAllowed = false;
+                if (e instanceof DOMException && e.name === "NotAllowedError") {
+                    // The browser does not allow audio to be played, possibly because the user has not interacted with the page yet.
+                    // Let's ask the user to interact with the page first.
+                    state = "not_allowed";
+                } else {
+                    state = "error";
+                    console.error("The audio could not be played: ", e.name, e);
+                }
             });
     }
 
@@ -122,7 +129,7 @@
 </script>
 
 <div class="main-audio-manager">
-    <div class:hidden={!isAudioAllowed}>
+    <div class:hidden={state !== "playing"}>
         <div class="audio-manager-player-volume">
             <span id="audioplayer_volume_icon_playing" bind:this={audioPlayerVolumeIcon} on:click={onMute}>
                 <svg
@@ -173,10 +180,16 @@
             <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
         </section>
     </div>
-    <div class:hidden={isAudioAllowed} class="text-center flex justify-center">
+    <div class:hidden={state !== "not_allowed"} class="text-center flex justify-center">
         <button type="button" class="btn light justify-center font-bold text-xs sm:text-base w-fit" on:click={tryPlay}
             >{$LL.audio.manager.allow()}</button
         >
+    </div>
+    <div
+        class:hidden={state !== "error"}
+        class="text-center flex justify-center text-danger h-6 truncate"
+    >
+        ⚠️ {$LL.audio.manager.error()} ⚠️
     </div>
 </div>
 

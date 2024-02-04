@@ -49,30 +49,29 @@
 <svelte:window on:keydown={onKeyDown} />
 
 {#if actionsMenuData}
-    <div class="flex w-full h-full justify-center items-center">
-        <div class="actions-menu p-4 is-rounded max-w-xs">
-            <button type="button" class="close-window" on:click={closeActionsMenu}>×</button>
-            {#if actionsMenuData.menuName}
-                <h2 class="name mb-2 mx-2 margin-close">{actionsMenuData.menuName}</h2>
-            {/if}
-            {#if sortedActions}
-                <div class="actions flex tw flex-col items-center" class:margin-close={!actionsMenuData.menuName}>
-                    {#each sortedActions ?? [] as action (action.actionName)}
-                        <button
-                            type="button"
-                            class="btn light justify-center font-bold text-xs sm:text-base text-center h-fit m-2 w-full {action.style ??
-                                ''}"
-                            on:click={analyticsClient.clicPropertykMapEditor(action.actionName, action.style)}
-                            on:click|preventDefault={() => {
-                                action.callback();
-                            }}
-                        >
-                            {action.actionName}
-                        </button>
-                    {/each}
-                </div>
-            {/if}
-        </div>
+
+    <div class="absolute left-0 right-0 bottom-4 m-auto ">
+        <button type="button" class="close-window" on:click={closeActionsMenu}>×</button>
+        {#if actionsMenuData.menuName}
+            <h2 class="name mb-2 mx-2 margin-close">{actionsMenuData.menuName}</h2>
+        {/if}
+        {#if sortedActions}
+            <div class="actions flex tw flex-col items-center" class:margin-close={!actionsMenuData.menuName}>
+                {#each sortedActions ?? [] as action (action.actionName)}
+                    <button
+                        type="button"
+                        class="btn light justify-center font-bold text-xs sm:text-base text-center h-fit m-2 w-full {action.style ??
+                            ''}"
+                        on:click={analyticsClient.clicPropertykMapEditor(action.actionName, action.style)}
+                        on:click|preventDefault={() => {
+                            action.callback();
+                        }}
+                    >
+                        {action.actionName}
+                    </button>
+                {/each}
+            </div>
+        {/if}
     </div>
 {/if}
 

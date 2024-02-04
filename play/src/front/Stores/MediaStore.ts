@@ -795,7 +795,7 @@ speakerListStore.subscribe((devices) => {
     }
 });
 
-export const speakerSelectedStore = writable<string | undefined>();
+export const speakerSelectedStore = writable<string | undefined>(localUserStore.getSpeakerDeviceId() ?? undefined);
 
 function removeDuplicateDevices(devices: MediaDeviceInfo[]) {
     const uniqueDevices = new Map<string, MediaDeviceInfo>();

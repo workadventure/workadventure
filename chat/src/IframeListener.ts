@@ -304,6 +304,13 @@ class IframeListener {
         });
     }
 
+    sendBanUser(uuid: string, name: string) {
+        this.sendToParent({
+            type: "banUser",
+            data: { uuid, name },
+        });
+    }
+
     sendToParent(message: lookingLikeIframeEventWrapper) {
         debug(`iFrameListener => message sent to parent => ${JSON.stringify(message)}`);
         window.parent.postMessage(message, "*");

@@ -1,6 +1,5 @@
 <script lang="ts">
     import type { Unsubscriber } from "svelte/store";
-    import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "svelte-feather-icons";
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { writable } from "svelte/store";
@@ -14,7 +13,6 @@
     import MyCamera from "../MyCamera.svelte";
     import {
         cameraListStore,
-        localStreamStore,
         microphoneListStore,
         speakerListStore,
         localVolumeStore,
@@ -402,31 +400,12 @@
     let totalMessagesToSee = writable<number>(0);
     onMount(() => {
         iframeListener.chatTotalMessagesToSeeStream.subscribe((total) => totalMessagesToSee.set(total));
-        resizeObserver.observe(mainHtmlDiv);
+        //resizeObserver.observe(mainHtmlDiv);
     });
 
     onDestroy(() => {
         subscribers.map((subscriber) => subscriber());
         //chatTotalMessagesSubscription?.unsubscribe();
-    });
-
-    let stream: MediaStream | null;
-    const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
-        if (value.type === "success") {
-            stream = value.stream;
-
-            if (stream !== null) {
-                const audioTracks = stream.getAudioTracks();
-                if (audioTracks.length > 0) {
-                    // set default speaker selected
-                    if ($speakerListStore && $speakerListStore.length > 0) {
-                        speakerSelectedStore.set($speakerListStore[0].deviceId);
-                    }
-                }
-            }
-        } else {
-            stream = null;
-        }
     });
 
     function buttonActionBarTrigger(id: string) {
@@ -482,7 +461,10 @@
                 {/if}
             </div>
 
-            <div class="group/btn-users relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square">
+            <div
+                class="group/btn-users relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square"
+                 on:click={toggleChat}
+                >
                 <div class="h-12 w-12 rounded group-hover/btn-users:bg-white/10 aspect-square flex items-center justify-center transition-all"
                      on:mouseenter={() => { !navigating ? helpActive = "users" : '' }}
                      on:mouseleave={() => { !navigating ? helpActive = false : '' }}
@@ -951,15 +933,18 @@
                     {/if}
                 </div>
             {/if}
-            <div class="flex items-center relative hidden xl:block" transition:fly={{delay: 1750, y: -200, duration: 750 }}>
+            <div class="flex items-center relative hidden xl:block w-40" transition:fly={{delay: 1750, y: -200, duration: 750 }}>
                 <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => profileMenuIsDropped = !profileMenuIsDropped} on:click|preventDefault={close} tabindex="0">
-                    <div class="flex items center h-full group-hover:bg-white/10 transition-all group-hover:rounded">
-                        <div class="px-2 m-auto">
+                    <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded">
+                        <div class="p-0 m-auto w-8">
                             <Woka userId={-1} placeholderSrc="" customWidth="42px" customHeight="42px" />
                         </div>
                         <div class="m-auto pt-1">
-                            <div class="font-bold text-white leading-3 whitespace-nowrap select-none">Hugo</div>
-                            <div class="text-xxs text-white/50 whitespace-nowrap select-none">Edit preferences<!-- trad --></div>
+                            <div class="font-bold text-white leading-5 whitespace-nowrap select-none">Hugo</div>
+                            <div class="text-xxs text-success whitespace-nowrap select-none flex items-center">
+                                <div class="aspect-ratio h-2 w-2 bg-success rounded-full mr-1"></div>
+                                Online<!-- trad -->
+                            </div>
                         </div>
                         <div class="m-auto pl-3 pr-6 h-4 w-4">
                             <ChevronDownIcon strokeWidth="2" classList="h-4 w-4 aspect-ratio transition-all {profileMenuIsDropped ? 'rotate-180' : '' }" height="16px" width="16px"  />
@@ -978,6 +963,26 @@
                                     </div>
                                 </div>
                             </div>
+                        </li>
+                        <li class="h-[1px] w-full bg-white/20 my-2"></li>
+                        <li class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditNameScene()}>
+                            <div class="aspect-ratio h-2 w-2 bg-success rounded-full ml-2 mr-3"></div>
+                            <div class="mr-3 grow">Online<!-- trad --></div>
+                            <div class="">
+                                <CheckIcon height="h-4" width="h-4" />
+                            </div>
+                        </li>
+                        <li class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditNameScene()}>
+                            <div class="aspect-ratio h-2 w-2 bg-warning rounded-full ml-2 mr-3"></div>
+                            <div class="mr-3 opacity-50">Busy<!-- trad --></div>
+                        </li>
+                        <li class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditNameScene()}>
+                            <div class="aspect-ratio h-2 w-2 bg-danger rounded-full ml-2 mr-3"></div>
+                            <div class="mr-3 opacity-50">Do not disturb<!-- trad --></div>
+                        </li>
+                        <li class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditNameScene()}>
+                            <div class="aspect-ratio h-2 w-2 bg-neutral rounded-full ml-2 mr-3"></div>
+                            <div class="mr-3 opacity-50">Offline<!-- trad --></div>
                         </li>
                         <li class="h-[1px] w-full bg-white/20 my-2"></li>
                         <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditNameScene()}>

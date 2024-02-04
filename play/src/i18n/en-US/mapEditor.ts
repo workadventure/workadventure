@@ -59,6 +59,7 @@ const mapEditor: BaseTranslation = {
             audioLinkLabel: "Audio Link",
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "Play music",
+            error: "Could not load sound",
         },
         linkProperties: {
             label: "Open Link",
