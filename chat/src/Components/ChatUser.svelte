@@ -202,66 +202,61 @@
                         </div>
                     </div>
                 </div>
-                <div>
-                    <div class="btn btn-sm btn-ghost btn-light">
+                <div class="relative">
+                    <div class="btn btn-sm btn-ghost btn-light" on:click|stopPropagation={openChatUserMenu}>
                         <svg xmlns="http://www.w3.org/2000/svg" class="btn-icon" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="#FFF" fill="none" stroke-linecap="round" stroke-linejoin="round">
                             <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                             <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
                     </div>
-                </div>
-            </div>
-            <div class="wa-dropdown hidden">
-                <button class="text-light-purple focus:outline-none m-0" on:click|stopPropagation={openChatUserMenu}>
-                    <MoreHorizontalIcon />
-                </button>
-                <!-- on:mouseleave={closeChatUserMenu} -->
-                <div class={`wa-dropdown-menu ${chatMenuActive ? "" : "invisible"}`} on:mouseleave={closeChatUserMenu}>
-                    {#if user.isInSameMap}
-                    <span
-                            class="walk-to wa-dropdown-item"
+                    <div class={`absolute mt-2 top-9 bg-contrast/80 backdrop-blur rounded py-2 w-56 -right-3 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all ${chatMenuActive ? "" : "invisible"}`} on:mouseleave={closeChatUserMenu}>
+                        {#if user.isInSameMap}
+                    <div
+                            class="walk-to wa-dropdown-item hover:bg-white/10 py-2 px-4"
                             on:click|stopPropagation={() => goTo("user", user.playUri ?? "", user.uuid ?? "")}
-                    ><img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" />
-                        {$LL.userList.walkTo()}</span
                     >
-                    {:else}
-                    <span
-                            class="teleport wa-dropdown-item"
+                        <img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" />
+                        {$LL.userList.walkTo()}
+                    </div>
+                        {:else}
+                    <div
+                            class="teleport wa-dropdown-item hover:bg-white/10 py-2 px-4"
                             on:click|stopPropagation={() => goTo("room", user.playUri ?? "", user.uuid ?? "")}
                     ><img class="noselect" src={teleport} alt="Teleport to logo" height="13" width="13" />
-                        {$LL.userList.teleport()}</span
+                        {$LL.userList.teleport()}</div
                     >
-                    {/if}
-                    {#if user.visitCardUrl}
-                    <span
-                            class="businessCard wa-dropdown-item"
+                        {/if}
+                        {#if user.visitCardUrl}
+                    <div
+                            class="businessCard wa-dropdown-item hover:bg-white/10 py-2 px-4"
                             on:click|stopPropagation={() => showBusinessCard(user.visitCardUrl)}
                     ><img class="noselect" src={businessCard} alt="Business card" height="13" width="13" />
-                        {$LL.userList.businessCard()}</span
+                        {$LL.userList.businessCard()}</div
                     >
-                    {/if}
-                    {#if $me && $me.isAdmin}
-                    <span
-                            class="ban wa-dropdown-item text-pop-red"
+                        {/if}
+                        {#if $me && $me.isAdmin}
+                    <div
+                            class="ban wa-dropdown-item text-pop-red hover:bg-white/10 py-2 px-4"
                             on:click|stopPropagation={() => mucRoom.sendBan(user.jid, user.name, user.playUri ?? "")}
-                    ><SlashIcon size="13" /> {$LL.ban.title()} (coming soon)</span
+                    ><SlashIcon size="13" /> {$LL.ban.title()} (coming soon)</div
                     >
-                        {#if user.isAdmin}
+                            {#if user.isAdmin}
                         <span
                                 class="rank-down wa-dropdown-item text-warning"
                                 on:click|stopPropagation={() => mucRoom.sendRankDown(user.jid)}
                         ><ShieldOffIcon size="13" /> {$LL.rankDown()} (coming soon)</span
                         >
-                        {:else}
+                            {:else}
                         <span
                                 class="rank-up wa-dropdown-item text-warning"
                                 on:click|stopPropagation={() => mucRoom.sendRankUp(user.jid)}
                         ><ShieldIcon size="13" /> {$LL.rankUp()} (coming soon)</span
                         >
+                            {/if}
                         {/if}
-                    {/if}
-                    <!--<span class="wa-dropdown-item" on:click|stopPropagation={() => openChat(user)}> Open Chat </span>
-                    <div class="wa-dropdown-item">Delete chat</div>-->
+                        <!--<span class="wa-dropdown-item" on:click|stopPropagation={() => openChat(user)}> Open Chat </span>
+                        <div class="wa-dropdown-item">Delete chat</div>-->
+                    </div>
                 </div>
             </div>
         {/if}
