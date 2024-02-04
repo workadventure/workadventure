@@ -53,15 +53,26 @@
 {#if actionsMenuData}
 
     <div class="absolute left-0 right-0 bottom-4 m-auto w-96 z-50 bg-contrast/80 transition-all backdrop-blur rounded-lg overflow-hidden pointer-events-auto overflow-hidden">
-        <div class="h-32 w-full bg-cover opacity-50" style="background-image: url('{bgMap}');"></div>
         {#if actionsMenuData.menuName}
-            <div class="px-4 relative mb-10">
-                <div class="h-20 w-20 aspect-ratio bg-white rounded absolute -top-14 left-4"></div>
-                <div class="h5 text-white ml-20 pl-4">{actionsMenuData.menuName}</div>
-                <p class="text-sm opacit"></p>
+            <div class="mb-4">
+                <div class="h-32 w-full bg-cover relative mb-8" style="background-image: url('{bgMap}');">
+                    <div class="w-full h-full absolute z-10 bg-contrast/50 left-0 right-0"></div>
+                    <div class="h-20 w-20 aspect-ratio bg-white rounded absolute -bottom-4 left-4 z-20"></div>
+                    <div class="px-4 flex items-center bottom-2 absolute z-20">
+                        <div class="h5 text-white ml-20 pl-4">
+                            {actionsMenuData.menuName}
+                        </div>
+                        <div>
+                            <div class="chip chip-sm chip-danger ml-2">Administrateur</div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-sm opacity-50 text-white px-4">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                </p>
             </div>
         {/if}
-        <div class="flex items-center" class:margin-close={!actionsMenuData.menuName}>
+        <div class="flex items-center bg-contrast" class:margin-close={!actionsMenuData.menuName}>
             <button
                     type="button"
                     class="btn btn-ghost justify-center basis-1/2 m-2 w-full"
