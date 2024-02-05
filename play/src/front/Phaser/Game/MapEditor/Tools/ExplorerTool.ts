@@ -1,11 +1,11 @@
 import { EditMapCommandMessage } from "@workadventure/messages";
+import debug from "debug";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { analyticsClient } from "../../../../Administration/AnalyticsClient";
 import { mapEditorVisibilityStore, mapExplorationModeStore } from "../../../../Stores/MapEditorStore";
 import { gameManager } from "../../GameManager";
 import { GameScene } from "../../GameScene";
 import { MapEditorTool } from "./MapEditorTool";
-import debug from "debug";
 
 const logger = debug("explorer-tool");
 
@@ -15,6 +15,7 @@ export class ExplorerTool implements MapEditorTool {
     private upIsPressed = false;
     private leftIsPressed = false;
     private rightIsPressed = false;
+    private explorationMouseIsActive = false;
 
     private keyDownHandler = (event: KeyboardEvent) => {
         if (event.key === "ArrowDown" || event.key === "s") {
@@ -44,8 +45,27 @@ export class ExplorerTool implements MapEditorTool {
             this.rightIsPressed = false;
         }
     };
-    private wheelHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[], deltaX: number, deltaY: number, deltaZ: number) => {
+    private wheelHandler = (
+        pointer: Phaser.Input.Pointer,
+        gameObjects: Phaser.GameObjects.GameObject[],
+        deltaX: number,
+        deltaY: number,
+        deltaZ: number
+    ) => {
         this.scene.zoomByFactor(1 - (deltaY / 53) * 0.1);
+    };
+    private pointerDownHandler = (pointer: Phaser.Input.Pointer) => {
+        this.explorationMouseIsActive = true;
+    };
+    private pointerMoveHandler = (pointer: Phaser.Input.Pointer) => {
+        if (!this.explorationMouseIsActive) return;
+        this.scene.cameras.main.scrollX -= pointer.velocity.x / 10;
+        this.scene.cameras.main.scrollY -= pointer.velocity.y / 10;
+        this.scene.markDirty();
+    };
+    private pointerUpHandler = (pointer: Phaser.Input.Pointer) => {
+        this.explorationMouseIsActive = false;
+        this.scene.markDirty();
     };
 
     constructor() {
@@ -67,34 +87,55 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.markDirty();
     }
     public clear(): void {
+        analyticsClient.closeExplorationMode();
+
         this.scene.userInputManager.restoreControls();
+
         this.scene.input.keyboard?.removeListener("keydown", this.keyDownHandler);
         this.scene.input.keyboard?.removeListener("keyup", this.keyUpHandler);
+
         this.scene.input.removeListener("wheel", this.wheelHandler);
+        this.scene.input.removeListener("pointerdown", this.pointerDownHandler);
+        this.scene.input.removeListener("pointermove", this.pointerMoveHandler);
+        this.scene.input.removeListener("pointerup", this.pointerUpHandler);
+
+        this.scene.getCameraManager().startFollowPlayer(this.scene.CurrentPlayer, 1000);
 
         mapExplorationModeStore.set(false);
+        // Reset to true for the next tool used
+        mapEditorVisibilityStore.set(true);
     }
     public activate(): void {
         analyticsClient.openExplorationMode();
+
         mapExplorationModeStore.set(true);
         mapEditorVisibilityStore.set(true);
 
         this.scene.userInputManager.disableControls();
+
         this.scene.input.keyboard?.on("keydown", this.keyDownHandler);
         this.scene.input.keyboard?.on("keyup", this.keyUpHandler);
+
         this.scene.input.on("wheel", this.wheelHandler);
+        this.scene.input.on("pointerdown", this.pointerDownHandler);
+        this.scene.input.on("pointermove", this.pointerMoveHandler);
+        this.scene.input.on("pointerup", this.pointerUpHandler);
+
+        this.scene.getCameraManager().setExplorationMode();
+
+        this.scene.markDirty();
     }
     public destroy(): void {
         this.clear();
     }
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
-        debug("subscribeToGameMapFrontWrapperEvents => Method not implemented.");
+        logger("subscribeToGameMapFrontWrapperEvents => Method not implemented.");
     }
     public handleKeyDownEvent(event: KeyboardEvent): void {
-        debug("handleKeyDownEvent => Method not implemented.");
+        logger("handleKeyDownEvent => Method not implemented.");
     }
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
-        debug("handleIncomingCommandMessage => Method not implemented.");
+        logger("handleIncomingCommandMessage => Method not implemented.");
         return Promise.resolve();
     }
 }

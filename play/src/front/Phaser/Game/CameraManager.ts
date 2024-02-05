@@ -381,36 +381,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             this.cameraBounds.y * 3,
             true
         );
-
-        this.scene.input.on(
-            "pointerdown",
-            () => {
-                this.explorationMouseIsActive = true;
-            },
-            this.scene
-        );
-
-        this.scene.input.on(
-            "pointermove",
-            (pointer: Phaser.Input.Pointer) => {
-                if (!this.explorationMouseIsActive) return;
-                this.scene.cameras.main.scrollX -= pointer.velocity.x / 10;
-                this.scene.cameras.main.scrollY -= pointer.velocity.y / 10;
-                this.scene.markDirty();
-            },
-            this.scene
-        );
-
-        this.scene.input.on(
-            "pointerup",
-            () => {
-                this.explorationMouseIsActive = false;
-                this.scene.markDirty();
-            },
-            this.scene
-        );
-
-        this.scene.markDirty();
     }
 
     public goToEntity(entity: Entity): void {

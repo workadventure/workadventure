@@ -6,6 +6,8 @@
         mapEditorSelectedToolStore,
         mapEditorVisibilityStore,
     } from "../../Stores/MapEditorStore";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import EntityEditor from "./EntityEditor.svelte";
     import AreaEditor from "./AreaEditor.svelte";
@@ -14,6 +16,8 @@
     import Explorer from "./Explorer.svelte";
 
     function closeMapEditor() {
+        analyticsClient.toggleMapEditor(false);
+        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
         mapEditorModeStore.switchMode(false);
     }
 </script>

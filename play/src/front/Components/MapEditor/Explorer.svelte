@@ -1,7 +1,7 @@
 <script lang="ts">
     import { writable } from "svelte/store";
     import { ChevronDownIcon } from "svelte-feather-icons";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import visioSvg from "../images/loupe.svg";
     import ExplorerImg from "../images/explorer.svg";
@@ -44,6 +44,15 @@
         if ($entities != undefined && $entities.size > 0) {
             for (const entity of $entities.values()) {
                 entity.setPointedToEditColor(0x000000);
+            }
+            gameManager.getCurrentGameScene().markDirty();
+        }
+    });
+
+    onDestroy(() => {
+        if ($entities != undefined && $entities.size > 0) {
+            for (const entity of $entities.values()) {
+                entity.removePointedToEditColor();
             }
             gameManager.getCurrentGameScene().markDirty();
         }
