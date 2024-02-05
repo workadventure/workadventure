@@ -697,13 +697,13 @@
                                         <div class="flex text-xxs uppercase text-white/50 px-3 py-2 relative">
                                             {$LL.actionbar.subtitle.camera()}
                                         </div>
-                                        <div class="group flex items-center relative z-10 py-1 px-4 font-sm">
-                                            <div class="text-sm italic opacity-50">
+                                        <div class="group flex items-center relative z-10 px-4 font-sm justify-center">
+                                            <div class="text-sm italic">
                                                 Your camera is currently disabled. <!-- Trad -->
                                             </div>
                                         </div>
                                         <div class="group flex items-center relative z-10 py-1 px-4 overflow-hidden">
-                                            <button  class="btn btn-danger btn-xs w-full justify-center"
+                                            <button  class="btn btn-danger btn-sm w-full justify-center"
                                                      on:click={() => analyticsClient.camera()}
                                                      on:click={cameraClick}
                                             >
@@ -740,13 +740,13 @@
                                         <div class="flex text-xxs uppercase text-white/50 px-3 py-2 relative">
                                             {$LL.actionbar.subtitle.microphone()}
                                         </div>
-                                        <div class="group flex items-center relative z-10 py-1 px-4 font-sm">
-                                            <div class="text-sm italic opacity-50">
+                                        <div class="group flex items-center relative z-10 py-1 px-4 font-sm justify-center">
+                                            <div class="text-sm italic">
                                                 Your microphone is currently disabled. <!-- Trad -->
                                             </div>
                                         </div>
-                                        <div class="group flex items-center relative z-10 py-1 px-4 overflow-hidden">
-                                            <button  class="btn btn-danger btn-xs w-full justify-center"
+                                        <div class="group flex items-center relative z-10 px-4 overflow-hidden">
+                                            <button  class="btn btn-danger btn-sm w-full justify-center"
                                                      on:click={() =>analyticsClient.microphone()}
                                                      on:click={microphoneClick}
                                             >
@@ -857,10 +857,14 @@
                                     on:click={() => {
                                         buttonActionBarTrigger(button.id);
                                     }}
+                                    on:mouseenter={() => { !navigating ? helpActive = button.id : '' }}
+                                    on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                                     class="h-12 min-w-[48px] p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
                             >
                                 {#if button.toolTip}
-                                    <Tooltip text={button.toolTip} />
+                                    {#if helpActive === button.id}
+                                        <HelpTooltip delayBeforeAppear="0" hasDesc="{false}" hasImage="{false}" title={button.toolTip} />
+                                    {/if}
                                 {/if}
                                 <div id={button.id} class="h-6">
                                     <img
