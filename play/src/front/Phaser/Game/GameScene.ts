@@ -1630,9 +1630,9 @@ export class GameScene extends DirtyScene {
         });
 
         this.mapExplorationStoreUnsubscriber = mapExplorationModeStore.subscribe((exploration) => {
-            if(exploration){
+            if (exploration) {
                 this.cameraManager.setExplorationMode();
-            }else{
+            } else {
                 console.info("not implementted yet");
             }
         });

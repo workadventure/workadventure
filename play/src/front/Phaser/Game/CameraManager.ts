@@ -2,6 +2,7 @@ import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { Easing } from "../../types";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Box } from "../../WebRtc/LayoutManager";
+import { Entity } from "../ECS/Entity";
 import type { Player } from "../Player/Player";
 import { hasMovedEventName } from "../Player/Player";
 import type { WaScaleManagerFocusTarget, WaScaleManager } from "../Services/WaScaleManager";
@@ -370,121 +371,50 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private explorationMouseIsActive = false;
     // Create function to define the camera on exploration mode. The camera can be moved anywhere on the map. The camera is not locked on the player. The camera can be zoomed in and out. The camera can be moved with the mouse. The camera can be moved with the keyboard. The camera can be moved with the touchpad.
     public setExplorationMode(): void {
-        setTimeout(() => {
-            console.info("CameraManager => setExplorationMode => start setExplorationMode");
-            this.stopFollow();
-            this.cameraLocked = false;
-            this.setCameraMode(CameraMode.Exploration);
+        this.stopFollow();
+        this.cameraLocked = false;
+        this.setCameraMode(CameraMode.Exploration);
+        this.scene.cameras.main.setBounds(
+            -this.cameraBounds.x,
+            -this.cameraBounds.y,
+            this.cameraBounds.x * 3,
+            this.cameraBounds.y * 3,
+            true
+        );
 
-            this.scene.cameras.main.setBounds(
-                -this.cameraBounds.x,
-                -this.cameraBounds.y,
-                this.cameraBounds.x * 3,
-                this.cameraBounds.y * 3,
-                true
-            );
-            //this.camera.centerOn(this.cameraBounds.x, this.cameraBounds.y);
-            this.scene.input.keyboard?.on(
-                "keydown",
-                (event: KeyboardEvent) => {
-                    console.info(
-                        "CameraManager => setExplorationMode => start setExplorationMode",
-                        this.scene.cameras.main.scrollX,
-                        this.scene.cameras.main.scrollY
-                    );
-                    switch (event.key) {
-                        case "ArrowUp":
-                            this.scene.add.tween({
-                                targets: this.scene.cameras.main,
-                                scrollY: this.scene.cameras.main.scrollY - 32,
-                                duration: 100,
-                                ease: "Linear",
-                            });
-                            break;
-                        case "ArrowDown":
-                            this.scene.add.tween({
-                                targets: this.scene.cameras.main,
-                                scrollY: this.scene.cameras.main.scrollY + 32,
-                                duration: 100,
-                                ease: "Linear",
-                            });
-                            break;
-                        case "ArrowLeft":
-                            this.scene.add.tween({
-                                targets: this.scene.cameras.main,
-                                scrollX: this.scene.cameras.main.scrollX - 32,
-                                duration: 100,
-                                ease: "Linear",
-                            });
-                            break;
-                        case "ArrowRight":
-                            this.scene.add.tween({
-                                targets: this.scene.cameras.main,
-                                scrollX: this.scene.cameras.main.scrollX + 32,
-                                duration: 100,
-                                ease: "Linear",
-                            });
-                            break;
-                    }
-                },
-                this.scene
-            );
+        this.scene.input.on(
+            "pointerdown",
+            () => {
+                this.explorationMouseIsActive = true;
+            },
+            this.scene
+        );
 
-            this.scene.input.on(
-                "pointerdown",
-                (pointer: Phaser.Input.Pointer) => {
-                    console.log("setExplorationMode => pointerdown");
-                    this.explorationMouseIsActive = true;
-                    const xCenter = this.scene.cameras.main.scrollX + pointer.x;
-                    const yCenter = this.scene.cameras.main.scrollY + pointer.y;
-                    const followOffsetX = (xCenter - this.cameraBounds.x / 2) / this.scene.scale.zoom;
-                    const followOffsetY = (yCenter - this.cameraBounds.y / 2) / this.scene.scale.zoom;
-                    this.scene.add.tween({
-                        targets: this.scene.cameras.main,
-                        scrollX: followOffsetX,
-                        scrollY: followOffsetY,
-                        flipX: true,
-                        flipY: true,
-                        duration: 100,
-                        ease: "Linear",
-                    });
-                },
-                this.scene
-            );
+        this.scene.input.on(
+            "pointermove",
+            (pointer: Phaser.Input.Pointer) => {
+                if (!this.explorationMouseIsActive) return;
+                this.scene.cameras.main.scrollX -= pointer.velocity.x / 10;
+                this.scene.cameras.main.scrollY -= pointer.velocity.y / 10;
+                this.scene.markDirty();
+            },
+            this.scene
+        );
 
-            this.scene.input.on(
-                "pointermove",
-                (pointer: Phaser.Input.Pointer) => {
-                    console.log("setExplorationMode => pointermove => pointe", pointer.distance / 100);
-                    if (!this.explorationMouseIsActive) return;
+        this.scene.input.on(
+            "pointerup",
+            () => {
+                this.explorationMouseIsActive = false;
+                this.scene.markDirty();
+            },
+            this.scene
+        );
 
-                    const xCenter = this.scene.cameras.main.scrollX + pointer.x;
-                    const yCenter = this.scene.cameras.main.scrollY + pointer.y;
-                    const followOffsetX = (xCenter - this.cameraBounds.x / 2) / this.scene.scale.zoom;
-                    const followOffsetY = (yCenter - this.cameraBounds.y / 2) / this.scene.scale.zoom;
-                    this.scene.add.tween({
-                        targets: this.scene.cameras.main,
-                        scrollX: followOffsetX,
-                        scrollY: followOffsetY,
-                        flipX: true,
-                        flipY: true,
-                        duration: 100,
-                        ease: "Linear",
-                    });
-                },
-                this.scene
-            );
+        this.scene.markDirty();
+    }
 
-            this.scene.input.on(
-                "pointerup",
-                () => {
-                    console.log("setExplorationMode => pointerup");
-                    this.explorationMouseIsActive = false;
-                },
-                this.scene
-            );
-
-            this.scene.markDirty();
-        }, 3000);
+    public goToEntity(entity: Entity): void {
+        this.scene.cameras.main.centerOn(entity.x, entity.y);
+        this.scene.markDirty();
     }
 }

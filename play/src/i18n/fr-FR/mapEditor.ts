@@ -12,6 +12,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         configureMyRoom: "Configurer le salon",
         trashEditor: "Corbeille",
         exploreTheRoom: "Explorer le salon",
+        closeMapEditor: "Fermer l'éditeur de carte",
     },
     properties: {
         silentProperty: {

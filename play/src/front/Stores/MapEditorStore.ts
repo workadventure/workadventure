@@ -10,6 +10,10 @@ type ObjectValues<T> = T[keyof T];
 function createMapEditorModeStore() {
     const { set, subscribe } = writable(false);
 
+    subscribe((value) => {
+        mapEditorVisibilityStore.set(value === true);
+    });
+
     return {
         subscribe,
         set,
@@ -72,4 +76,5 @@ export const mapEditorWamSettingsEditorToolCurrentMenuItemStore = writable<
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM | undefined
 >(undefined);
 
+export const mapEditorVisibilityStore = writable<boolean>(true);
 export const mapExplorationModeStore = writable<boolean>(false);

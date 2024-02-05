@@ -3,7 +3,7 @@ import { EditMapCommandMessage } from "@workadventure/messages";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import { DeleteAreaFrontCommand } from "../Commands/Area/DeleteAreaFrontCommand";
-import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
+import { mapEditorSelectedAreaPreviewStore, mapEditorVisibilityStore } from "../../../../Stores/MapEditorStore";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
 import { Entity } from "../../../ECS/Entity";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
@@ -214,6 +214,7 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
         this.setAreaPreviewsVisibility(true);
         this.updateAreaPreviews();
         this.scene.markDirty();
+        mapEditorVisibilityStore.set(false);
     }
 
     public clear() {

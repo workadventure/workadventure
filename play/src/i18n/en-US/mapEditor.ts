@@ -11,6 +11,7 @@ const mapEditor: BaseTranslation = {
         configureMyRoom: "Configure my room",
         trashEditor: "Trash",
         exploreTheRoom: "Explore the room",
+        closeMapEditor: "Close map editor",
     },
     properties: {
         silentProperty: {

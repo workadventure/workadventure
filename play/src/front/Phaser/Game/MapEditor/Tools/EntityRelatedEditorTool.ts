@@ -10,6 +10,7 @@ import {
     mapEditorSelectedEntityDraggedStore,
     mapEditorSelectedEntityPrefabStore,
     mapEditorSelectedEntityStore,
+    mapEditorVisibilityStore,
 } from "../../../../Stores/MapEditorStore";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { TexturesHelper } from "../../../Helpers/TexturesHelper";
@@ -57,6 +58,7 @@ export abstract class EntityRelatedEditorTool extends MapEditorTool {
     public activate(): void {
         this.scene.input.topOnly = true;
         this.entitiesManager.makeAllEntitiesInteractive();
+        mapEditorVisibilityStore.set(true);
     }
 
     public destroy(): void {

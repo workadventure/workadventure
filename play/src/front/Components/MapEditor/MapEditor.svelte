@@ -1,14 +1,19 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
+    import {
+        mapEditorModeStore,
+        mapEditorSelectedToolStore,
+        mapEditorVisibilityStore,
+    } from "../../Stores/MapEditorStore";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import EntityEditor from "./EntityEditor.svelte";
     import AreaEditor from "./AreaEditor.svelte";
     import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
     import TrashEditor from "./TrashEditor.svelte";
+    import Explorer from "./Explorer.svelte";
 
-    function closeChat() {
+    function closeMapEditor() {
         mapEditorModeStore.switchMode(false);
     }
 </script>
@@ -17,19 +22,26 @@
 <div class={`map-editor tw-bg-dark-blue/95 ${$mapEditorSelectedToolStore}`}>
     {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
         <ConfigureMyRoom />
-    {:else}
-        <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
-            <button class="close-window" on:click={closeChat}>&#215;</button>
-            {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
-                <TrashEditor />
-            {/if}
-            {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
-                <EntityEditor />
-            {/if}
-            {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
-                <AreaEditor />
-            {/if}
-        </div>
+    {:else if $mapEditorVisibilityStore}
+        {#if $mapEditorSelectedToolStore !== EditorToolName.ExploreTheRoom}
+            <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
+                <button class="close-window" on:click={closeMapEditor}>&#215;</button>
+                {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
+                    <TrashEditor />
+                {/if}
+                {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
+                    <EntityEditor />
+                {/if}
+                {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
+                    <AreaEditor />
+                {/if}
+            </div>
+        {:else if $mapEditorSelectedToolStore === EditorToolName.ExploreTheRoom}
+            <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
+                <button class="close-window" on:click={closeMapEditor}>&#215;</button>
+                <Explorer />
+            </div>
+        {/if}
     {/if}
 </div>
 
