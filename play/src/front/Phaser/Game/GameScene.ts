@@ -1633,7 +1633,7 @@ export class GameScene extends DirtyScene {
             if (exploration) {
                 this.cameraManager.setExplorationMode();
             } else {
-                console.info("not implementted yet");
+                this.input.keyboard?.enableGlobalCapture();
             }
         });
     }

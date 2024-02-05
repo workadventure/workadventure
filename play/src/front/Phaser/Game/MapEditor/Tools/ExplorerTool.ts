@@ -5,6 +5,9 @@ import { mapEditorVisibilityStore, mapExplorationModeStore } from "../../../../S
 import { gameManager } from "../../GameManager";
 import { GameScene } from "../../GameScene";
 import { MapEditorTool } from "./MapEditorTool";
+import debug from "debug";
+
+const logger = debug("explorer-tool");
 
 export class ExplorerTool implements MapEditorTool {
     private scene: GameScene;
@@ -12,6 +15,38 @@ export class ExplorerTool implements MapEditorTool {
     private upIsPressed = false;
     private leftIsPressed = false;
     private rightIsPressed = false;
+
+    private keyDownHandler = (event: KeyboardEvent) => {
+        if (event.key === "ArrowDown" || event.key === "s") {
+            this.downIsPressed = true;
+        }
+        if (event.key === "ArrowUp" || event.key === "w" || event.key === "z") {
+            this.upIsPressed = true;
+        }
+        if (event.key === "ArrowLeft" || event.key === "q" || event.key === "a") {
+            this.leftIsPressed = true;
+        }
+        if (event.key === "ArrowRight" || event.key === "d") {
+            this.rightIsPressed = true;
+        }
+    };
+    private keyUpHandler = (event: KeyboardEvent) => {
+        if (event.key === "ArrowDown" || event.key === "s") {
+            this.downIsPressed = false;
+        }
+        if (event.key === "ArrowUp" || event.key === "w" || event.key === "z") {
+            this.upIsPressed = false;
+        }
+        if (event.key === "ArrowLeft" || event.key === "q" || event.key === "a") {
+            this.leftIsPressed = false;
+        }
+        if (event.key === "ArrowRight" || event.key === "d") {
+            this.rightIsPressed = false;
+        }
+    };
+    private wheelHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[], deltaX: number, deltaY: number, deltaZ: number) => {
+        this.scene.zoomByFactor(1 - (deltaY / 53) * 0.1);
+    };
 
     constructor() {
         this.scene = gameManager.getCurrentGameScene();
@@ -32,6 +67,11 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.markDirty();
     }
     public clear(): void {
+        this.scene.userInputManager.restoreControls();
+        this.scene.input.keyboard?.removeListener("keydown", this.keyDownHandler);
+        this.scene.input.keyboard?.removeListener("keyup", this.keyUpHandler);
+        this.scene.input.removeListener("wheel", this.wheelHandler);
+
         mapExplorationModeStore.set(false);
     }
     public activate(): void {
@@ -40,47 +80,21 @@ export class ExplorerTool implements MapEditorTool {
         mapEditorVisibilityStore.set(true);
 
         this.scene.userInputManager.disableControls();
-        this.scene.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-            if (event.key === "ArrowDown") {
-                this.downIsPressed = true;
-            }
-            if (event.key === "ArrowUp") {
-                this.upIsPressed = true;
-            }
-            if (event.key === "ArrowLeft") {
-                this.leftIsPressed = true;
-            }
-            if (event.key === "ArrowRight") {
-                this.rightIsPressed = true;
-            }
-        });
-        this.scene.input.keyboard?.on("keyup", (event: KeyboardEvent) => {
-            if (event.key === "ArrowDown") {
-                this.downIsPressed = false;
-            }
-            if (event.key === "ArrowUp") {
-                this.upIsPressed = false;
-            }
-            if (event.key === "ArrowLeft") {
-                this.leftIsPressed = false;
-            }
-            if (event.key === "ArrowRight") {
-                this.rightIsPressed = false;
-            }
-        });
+        this.scene.input.keyboard?.on("keydown", this.keyDownHandler);
+        this.scene.input.keyboard?.on("keyup", this.keyUpHandler);
+        this.scene.input.on("wheel", this.wheelHandler);
     }
     public destroy(): void {
-        mapExplorationModeStore.set(false);
-        this.scene.userInputManager.restoreControls();
+        this.clear();
     }
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
-        console.info("Method not implemented.");
+        debug("subscribeToGameMapFrontWrapperEvents => Method not implemented.");
     }
     public handleKeyDownEvent(event: KeyboardEvent): void {
-        console.info("Method not implemented.");
+        debug("handleKeyDownEvent => Method not implemented.");
     }
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
-        console.info("Method not implemented.");
+        debug("handleIncomingCommandMessage => Method not implemented.");
         return Promise.resolve();
     }
 }
