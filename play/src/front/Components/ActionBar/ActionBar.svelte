@@ -73,7 +73,7 @@
     //import { StringUtils } from "../../Utils/StringUtils";
     import Tooltip from "../Util/Tooltip.svelte";
     import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
-    import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
+    import {bannerStore, userHasAccessToBackOfficeStore} from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
     import {
@@ -426,7 +426,7 @@
 {#if !$chatVisibilityStore}
     <ChatOverlay />
 {/if}
-<div class="grid grid-cols-3 justify-items-stretch absolute top-0 w-full p-2 xl:p-4 pointer-events-none bp-menu z-[301] @container">
+<div class="grid grid-cols-3 justify-items-stretch absolute w-full p-2 xl:p-4 pointer-events-none bp-menu z-[301] @container {$bannerStore != undefined ? 'top-10' : ' top-0'}">
     <div class="justify-self-start pointer-events-auto" transition:fly={{delay: 500, y: -200, duration: 750 }}>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
@@ -480,7 +480,7 @@
     <div class="justify-self-center pointer-events-auto">
         <div class="flex relative space-x-2 xl:space-x-4">
             {#if !$silentStore}
-            <div transition:fly={{delay: 750, y: -200, duration: 750 }}>
+            <div in:fly={{delay: 750, y: -200, duration: 750 }}>
                 <div class="flex items-center">
                     <div
                         class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
@@ -622,7 +622,7 @@
                 </div>
             </div>
             {/if}
-            <div transition:fly={{delay: 1000, y: -200, duration: 750 }}>
+            <div in:fly={{delay: 1000, y: -200, duration: 750 }}>
                 <!-- ACTION WRAPPER : CAM & MIC -->
                 <div class="group/hardware flex items-center relative">
                     {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
@@ -686,9 +686,30 @@
                                                 <div class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$usedCameraDeviceIdStore === camera.deviceId ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}">
                                                     {StringUtils.normalizeDeviceName(camera.label)}
                                                 </div>
+                                                {#if $usedCameraDeviceIdStore === camera.deviceId}
                                                 <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" color="stroke-white fill-transparent {$usedCameraDeviceIdStore === camera.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
+                                                {/if}
                                             </div>
                                         {/each}
+                                    </div>
+                                {:else}
+                                    <div class="my-2">
+                                        <div class="flex text-xxs uppercase text-white/50 px-3 py-2 relative">
+                                            {$LL.actionbar.subtitle.camera()}
+                                        </div>
+                                        <div class="group flex items-center relative z-10 py-1 px-4 font-sm">
+                                            <div class="text-sm italic opacity-50">
+                                                Your camera is currently disabled. <!-- Trad -->
+                                            </div>
+                                        </div>
+                                        <div class="group flex items-center relative z-10 py-1 px-4 overflow-hidden">
+                                            <button  class="btn btn-danger btn-xs w-full justify-center"
+                                                     on:click={() => analyticsClient.camera()}
+                                                     on:click={cameraClick}
+                                            >
+                                                Enable camera <!-- Trad -->
+                                            </button>
+                                        </div>
                                     </div>
                                 {/if}
                                 {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 1}
@@ -708,9 +729,30 @@
                                                 <div class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$usedMicrophoneDeviceIdStore === microphone.deviceId ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}">
                                                     {StringUtils.normalizeDeviceName(microphone.label)}
                                                 </div>
+                                                {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
                                                 <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" color="stroke-white fill-transparent {$usedMicrophoneDeviceIdStore === microphone.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
+                                                {/if}
                                             </div>
                                         {/each}
+                                    </div>
+                                {:else}
+                                    <div class="my-2">
+                                        <div class="flex text-xxs uppercase text-white/50 px-3 py-2 relative">
+                                            {$LL.actionbar.subtitle.microphone()}
+                                        </div>
+                                        <div class="group flex items-center relative z-10 py-1 px-4 font-sm">
+                                            <div class="text-sm italic opacity-50">
+                                                Your microphone is currently disabled. <!-- Trad -->
+                                            </div>
+                                        </div>
+                                        <div class="group flex items-center relative z-10 py-1 px-4 overflow-hidden">
+                                            <button  class="btn btn-danger btn-xs w-full justify-center"
+                                                     on:click={() =>analyticsClient.microphone()}
+                                                     on:click={microphoneClick}
+                                            >
+                                                Enable microphone <!-- Trad -->
+                                            </button>
+                                        </div>
                                     </div>
                                 {/if}
                                 {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
@@ -730,7 +772,9 @@
                                                 <div class="grow text-sm text-ellipsis overflow-hidden whitespace-nowrap {$speakerSelectedStore === speaker.deviceId ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}">
                                                     {StringUtils.normalizeDeviceName(speaker.label)}
                                                 </div>
+                                                {#if $speakerSelectedStore === speaker.deviceId}
                                                 <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" color="stroke-white fill-transparent {$speakerSelectedStore === speaker.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
+                                                {/if}
                                             </div>
                                         {/each}
                                     </div>
@@ -796,7 +840,7 @@
     <div class="justify-self-end pointer-events-auto menu-right @6xl:text-danger">
         <div class="flex space-x-2 xl:space-x-4">
             {#if $addActionButtonActionBarEvent.length > 0}
-                <div class="flex items-center relative hidden xl:block">
+                <div class="flex items-center relative">
                     {#each $addActionButtonActionBarEvent as button}
                         <div class="group/btn-custom{button.id} peer/custom{button.id} relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg">
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -885,8 +929,8 @@
                             <div class="">
                                 <div class="font-bold text-white leading-3 whitespace-nowrap select-none">Admin menu<!-- trad --></div>
                             </div>
-                            <div class="pl-3 pr-6 h-4 w-4">
-                                <ChevronDownIcon classList="h-4 w-4 aspect-ratio transition-all {adminMenuIsDropped ? 'rotate-180' : '' }" strokeWidth="2" />
+                            <div class="m-auto pl-3 pr-6 h-4 w-4">
+                                <ChevronDownIcon strokeWidth="2" classList="h-4 w-4 aspect-ratio transition-all {adminMenuIsDropped ? 'rotate-180' : '' }" height="16px" width="16px"  />
                             </div>
                         </div>
                     </div>

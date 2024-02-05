@@ -1590,7 +1590,7 @@ export class GameScene extends DirtyScene {
                 const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
                 let html = '<div id="container" hidden>';
                 if (escapedMessage) {
-                    html += `<div class="with-title is-centered">
+                    html += `<div class="relative bg-contrast/80 backdrop-blur p-2 rounded-lg last:rounded-r-lg">
 ${escapedMessage}
  </div> `;
                 }

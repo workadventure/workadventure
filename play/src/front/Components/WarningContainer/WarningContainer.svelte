@@ -4,6 +4,7 @@
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import { LL } from "../../../i18n/i18n-svelte";
     import { warningContainerStore } from "../../Stores/MenuStore";
+    import XIcon from "../Icons/XIcon.svelte";
 
     /* eslint-disable svelte/no-at-html-tags */
 
@@ -15,32 +16,38 @@
     }
 </script>
 
-<main class="warningMain" transition:fly={{ y: -200, duration: 500 }}>
+<main class="warningMain backdrop-blur" transition:fly={{ y: -200, duration: 500 }}>
     {#if $bannerStore != undefined}
-        <p
+        <div
             id={$bannerStore.id}
-            class="m-0 p-0 h-10 flex justify-center items-center"
-            style={`background-color:${$bannerStore.bgColor}; color: ${$bannerStore.textColor};`}
+            class="m-0 p-0 h-10 flex justify-center items-center relative"
         >
-            {$bannerStore.text}
-            {#if $bannerStore.link}
-                <a
-                    class="ml-2 underline"
-                    style={`color: ${$bannerStore.textColor};`}
-                    href={$bannerStore.link.url}
-                    target="_blank"
-                    rel="noreferrer"
-                >
-                    {$bannerStore.link.label}
-                </a>
-            {/if}
-        </p>
-        {#if $bannerStore.closable}
-            <span
-                class="absolute right-4 top-0 flex items-center h-10 text-xl cursor-pointer"
-                style={`color: ${$bannerStore.textColor ?? "red"};`}
-                on:click|preventDefault={closeBanner}>x</span
+            <div class="relative z-10 text-lg bold"
+                 style={`color: ${$bannerStore.textColor};`}
             >
+                {$bannerStore.text}&nbsp;
+                {#if $bannerStore.link}
+                    <a
+                            class=" underline"
+                            style={`color: ${$bannerStore.textColor};`}
+                            href={$bannerStore.link.url}
+                            target="_blank"
+                            rel="noreferrer"
+                    >
+                        {$bannerStore.link.label}
+                    </a>
+                {/if}
+            </div>
+            <div class="absolute w-full h-full bg-contrast opacity-80 z-0 "
+                 style={`background-color:${$bannerStore.bgColor};`}
+                 ></div>
+        </div>
+        {#if $bannerStore.closable}
+            <button class="btn btn-danger btn-sm absolute z-20 right-1 top-1"
+                 on:click|preventDefault={closeBanner}
+            >
+                <XIcon height="h-4" width="w-4"/>
+            </button>
         {/if}
     {:else if $userIsAdminStore}
         <h2>{$LL.warning.title()}</h2>
@@ -61,8 +68,6 @@
     main.warningMain {
         pointer-events: auto;
         width: 100%;
-        background-color: #f9e81e;
-        color: #14304c;
         text-align: center;
         position: absolute;
 
@@ -77,10 +82,6 @@
         z-index: 700;
         h2 {
             padding: 5px;
-        }
-
-        a {
-            color: #ff475a;
         }
     }
 </style>

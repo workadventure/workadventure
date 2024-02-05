@@ -209,18 +209,24 @@
                             <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
                     </div>
-                    <div class={`absolute mt-2 top-9 bg-contrast/80 backdrop-blur rounded py-2 w-56 -right-3 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all ${chatMenuActive ? "" : "invisible"}`} on:mouseleave={closeChatUserMenu}>
+                    <div class={`absolute mt-2 top-9 bg-contrast/80 backdrop-blur rounded py-2 w-56 -right-3 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all ${chatMenuActive ? "" : "invisible"}`} on:blur={() => closeChatUserMenu}>
                         {#if user.isInSameMap}
                     <div
-                            class="walk-to wa-dropdown-item hover:bg-white/10 py-2 px-4"
+                            class="walk-to wa-dropdown-item hover:bg-white/10 py-2 px-4 flex items-center"
                             on:click|stopPropagation={() => goTo("user", user.playUri ?? "", user.uuid ?? "")}
                     >
-                        <img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" />
-                        {$LL.userList.walkTo()}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-walk mr-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M13 4m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                            <path d="M7 21l3 -4" />
+                            <path d="M16 21l-2 -4l-3 -3l1 -6" />
+                            <path d="M6 12l2 -3l4 -1l3 3l3 1" />
+                        </svg>
+                        <div>{$LL.userList.walkTo()}</div>
                     </div>
                         {:else}
                     <div
-                            class="teleport wa-dropdown-item hover:bg-white/10 py-2 px-4"
+                            class="teleport wa-dropdown-item hover:bg-white/10 py-2 px-4 flex items-center"
                             on:click|stopPropagation={() => goTo("room", user.playUri ?? "", user.uuid ?? "")}
                     ><img class="noselect" src={teleport} alt="Teleport to logo" height="13" width="13" />
                         {$LL.userList.teleport()}</div
@@ -228,31 +234,50 @@
                         {/if}
                         {#if user.visitCardUrl}
                     <div
-                            class="businessCard wa-dropdown-item hover:bg-white/10 py-2 px-4"
+                            class="businessCard wa-dropdown-item hover:bg-white/10 py-2 px-4 flex items-center"
                             on:click|stopPropagation={() => showBusinessCard(user.visitCardUrl)}
                     ><img class="noselect" src={businessCard} alt="Business card" height="13" width="13" />
-                        {$LL.userList.businessCard()}</div
-                    >
+                        {$LL.userList.businessCard()}</div>
                         {/if}
                         {#if $me && $me.isAdmin}
-                    <div
-                            class="ban wa-dropdown-item text-pop-red hover:bg-white/10 py-2 px-4"
-                            on:click|stopPropagation={() => mucRoom.sendBan(user.jid, user.name, user.playUri ?? "")}
-                    ><SlashIcon size="13" /> {$LL.ban.title()} (coming soon)</div
-                    >
                             {#if user.isAdmin}
-                        <span
-                                class="rank-down wa-dropdown-item text-warning"
+                        <div
+                                class="rank-down wa-dropdown-item text-warning hover:bg-white/10 py-2 px-4 flex items-center"
                                 on:click|stopPropagation={() => mucRoom.sendRankDown(user.jid)}
-                        ><ShieldOffIcon size="13" /> {$LL.rankDown()} (coming soon)</span
                         >
+                            <ShieldOffIcon size="13" />
+                            <div>{$LL.rankDown()}</div>
+                            <div class="text-xs text-white opacity-50 ml-1">coming soon</div>
+                        </div>
                             {:else}
-                        <span
-                                class="rank-up wa-dropdown-item text-warning"
+                        <div
+                                class="rank-up wa-dropdown-item text-warning hover:bg-white/10 py-2 px-4 flex items-center"
                                 on:click|stopPropagation={() => mucRoom.sendRankUp(user.jid)}
-                        ><ShieldIcon size="13" /> {$LL.rankUp()} (coming soon)</span
                         >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user-shield stroke-warning mr-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M6 21v-2a4 4 0 0 1 4 -4h2" />
+                                <path d="M22 16c0 4 -2.5 6 -3.5 6s-3.5 -2 -3.5 -6c1 0 2.5 -.5 3.5 -1.5c1 1 2.5 1.5 3.5 1.5z" />
+                                <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+                            </svg>
+                            <div>{$LL.rankUp()}</div>
+                            <div class="text-xs text-white opacity-50 ml-1">coming soon</div>
+                        </div>
                             {/if}
+                            <div
+                                    class="ban wa-dropdown-item text-pop-red hover:bg-white/10 py-2 px-4 flex items-center"
+                                    on:click|stopPropagation={() => mucRoom.sendBan(user.jid, user.name, user.playUri ?? "")}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user-x stroke-danger mr-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+                                    <path d="M6 21v-2a4 4 0 0 1 4 -4h3.5" />
+                                    <path d="M22 22l-5 -5" />
+                                    <path d="M17 22l5 -5" />
+                                </svg>
+                                <div>{$LL.ban.title()}</div>
+                                <div class="text-xs text-white opacity-50 ml-1">coming soon</div>
+                            </div>
                         {/if}
                         <!--<span class="wa-dropdown-item" on:click|stopPropagation={() => openChat(user)}> Open Chat </span>
                         <div class="wa-dropdown-item">Delete chat</div>-->

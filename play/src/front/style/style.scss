@@ -517,25 +517,6 @@ div.action.danger p.action-body {
     color: #000;
 }
 
-.popUpElement {
-    @apply text-left text-white text-sm;
-}
-
-.popUpElement div {
-    @apply bg-dark-purple/95 text-sm;;
-    white-space: pre-line;
-}
-
-.popUpElement button {
-    @apply relative text-xs text-black ml-1 px-1;
-    border-image-repeat: revert;
-}
-
-.popUpElement .buttonContainer {
-    float: right;
-    background-color: inherit;
-}
-
 @keyframes mymove {
     0% {
         bottom: 40px;
