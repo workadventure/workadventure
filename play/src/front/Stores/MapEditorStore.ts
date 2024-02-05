@@ -7,6 +7,8 @@ import { mapEditorActivated } from "./MenuStore";
 
 type ObjectValues<T> = T[keyof T];
 
+export const mapEditorVisibilityStore = writable<boolean>(true);
+
 function createMapEditorModeStore() {
     const { set, subscribe } = writable(false);
 
@@ -76,5 +78,4 @@ export const mapEditorWamSettingsEditorToolCurrentMenuItemStore = writable<
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM | undefined
 >(undefined);
 
-export const mapEditorVisibilityStore = writable<boolean>(true);
 export const mapExplorationModeStore = writable<boolean>(false);

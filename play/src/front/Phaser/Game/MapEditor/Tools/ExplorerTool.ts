@@ -15,6 +15,31 @@ export class ExplorerTool implements MapEditorTool {
 
     constructor() {
         this.scene = gameManager.getCurrentGameScene();
+    }
+    public update(time: number, dt: number): void {
+        if (this.downIsPressed) {
+            this.scene.cameras.main.scrollY += 10;
+        }
+        if (this.upIsPressed) {
+            this.scene.cameras.main.scrollY -= 10;
+        }
+        if (this.leftIsPressed) {
+            this.scene.cameras.main.scrollX -= 10;
+        }
+        if (this.rightIsPressed) {
+            this.scene.cameras.main.scrollX += 10;
+        }
+        this.scene.markDirty();
+    }
+    public clear(): void {
+        mapExplorationModeStore.set(false);
+    }
+    public activate(): void {
+        analyticsClient.openExplorationMode();
+        mapExplorationModeStore.set(true);
+        mapEditorVisibilityStore.set(true);
+
+        this.scene.userInputManager.disableControls();
         this.scene.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
             if (event.key === "ArrowDown") {
                 this.downIsPressed = true;
@@ -44,32 +69,9 @@ export class ExplorerTool implements MapEditorTool {
             }
         });
     }
-    public update(time: number, dt: number): void {
-        if (this.downIsPressed) {
-            this.scene.cameras.main.scrollY += 10;
-        }
-        if (this.upIsPressed) {
-            this.scene.cameras.main.scrollY -= 10;
-        }
-        if (this.leftIsPressed) {
-            this.scene.cameras.main.scrollX -= 10;
-        }
-        if (this.rightIsPressed) {
-            this.scene.cameras.main.scrollX += 10;
-        }
-        this.scene.markDirty();
-    }
-    public clear(): void {
-        mapExplorationModeStore.set(false);
-    }
-    public activate(): void {
-        console.log("ExplorerTool => activate");
-        analyticsClient.openExplorationMode();
-        mapExplorationModeStore.set(true);
-        mapEditorVisibilityStore.set(true);
-    }
     public destroy(): void {
         mapExplorationModeStore.set(false);
+        this.scene.userInputManager.restoreControls();
     }
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
         console.info("Method not implemented.");
