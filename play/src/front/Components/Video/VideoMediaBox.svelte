@@ -243,7 +243,7 @@
 <div
     class="video-container transition-all relative h-full aspect-video"
     class:video-off={!videoEnabled}
-    class:tw-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
+    class:h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
     bind:this={videoContainer}
     style="height:{$heightCamWrapper}px;"
 >
@@ -267,14 +267,14 @@
         <!-- svelte-ignore a11y-media-has-caption -->
         <video
             bind:this={videoElement}
-            class:tw-h-0={!videoEnabled}
-            class:tw-w-0={!videoEnabled}
+            class:h-0={!videoEnabled}
+            class:w-0={!videoEnabled}
             class:object-contain={minimized || isHightlighted || aspectRatio < 1}
-            class:tw-max-h-[230px]={videoEnabled && !isHightlighted}
-            class:tw-max-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
-            class:tw-max-h-[80vh]={videoEnabled && isHightlighted}
-            class:tw-h-full={videoEnabled}
-            class:tw-rounded={videoEnabled}
+            class:max-h-[230px]={videoEnabled && !isHightlighted}
+            class:max-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
+            class:max-h-[80vh]={videoEnabled && isHightlighted}
+            class:h-full={videoEnabled}
+            class:rounded={videoEnabled}
             style={$embedScreenLayoutStore === LayoutMode.Presentation ? `border: solid 2px ${backGroundColor}` : ""}
             autoplay
             playsinline
@@ -284,11 +284,11 @@
         {#if videoEnabled}
             {#if displayNoVideoWarning}
                 <div
-                    class="tw-flex media-box-camera-on-size tw-absolute tw-w-full tw-h-full ntw-justify-center tw-items-center tw-bg-danger/50 tw-text-white"
+                    class="absolute w-full h-full top-0 left-0 flex justify-center items-center bg-danger/50 text-white"
                 >
-                    <div class="tw-text-center">
-                        <h1>{$LL.video.connection_issue()}</h1>
-                        <p>{$LL.video.no_video_stream_received()}</p>
+                    <div class="text-center">
+                        <h5>{$LL.video.connection_issue()}</h5>
+                        <div class="italic">{$LL.video.no_video_stream_received()}</div>
                     </div>
                 </div>
             {/if}
