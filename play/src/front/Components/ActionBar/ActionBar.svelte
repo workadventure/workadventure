@@ -426,7 +426,7 @@
 {#if !$chatVisibilityStore}
     <ChatOverlay />
 {/if}
-<div class="grid grid-cols-3 justify-items-stretch absolute w-full p-2 xl:p-4 pointer-events-none bp-menu z-[301] @container {$bannerStore != undefined ? 'top-10' : ' top-0'}">
+<div class="grid grid-cols-3 justify-items-stretch absolute w-full p-2 xl:p-4 pointer-events-none bp-menu z-[301] @container top-0">
     <div class="justify-self-start pointer-events-auto" transition:fly={{delay: 500, y: -200, duration: 750 }}>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
@@ -1007,76 +1007,76 @@
                 </div>
                 {#if profileMenuIsDropped}
                 <div class="absolute mt-2 top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all" transition:fly={{y: 40, duration: 150 }}>
-                    <ul class="p-0 m-0 list-none">
-                        <li class="group flex px-2 transition-all cursor-pointer text-sm font-bold ">
+                    <div class="p-0 m-0 list-none">
+                        <button class="group flex px-2 transition-all cursor-pointer text-sm font-bold w-full">
                             <div class="flex items-center px-3 py-3 w-full bg-white/10 rounded">
-                                <div class="w-full">Basic account<!-- trad --></div>
+                                <div class="w-full text-left">Basic account<!-- trad --></div>
                                 <div class="">
                                     <div class="btn btn-light btn-sm">
                                         Upgrade<!-- trad -->
                                     </div>
                                 </div>
                             </div>
-                        </li>
-                        <li class="h-[1px] w-full bg-white/20 my-2"></li>
-                        <li class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditNameScene()}>
+                        </button>
+                        <div class="h-[1px] w-full bg-white/20 my-2"></div>
+                        <button class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditNameScene()}>
                             <div class="aspect-ratio h-2 w-2 bg-success rounded-full ml-2 mr-3"></div>
-                            <div class="mr-3 grow">Online<!-- trad --></div>
+                            <div class="mr-3 grow text-left">Online<!-- trad --></div>
                             <div class="">
                                 <CheckIcon height="h-4" width="h-4" />
                             </div>
-                        </li>
-                        <li class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditNameScene()}>
+                        </button>
+                        <button class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditNameScene()}>
                             <div class="aspect-ratio h-2 w-2 bg-warning rounded-full ml-2 mr-3"></div>
                             <div class="mr-3 opacity-50">Busy<!-- trad --></div>
-                        </li>
-                        <li class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditNameScene()}>
+                        </button>
+                        <button class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditNameScene()}>
                             <div class="aspect-ratio h-2 w-2 bg-danger rounded-full ml-2 mr-3"></div>
                             <div class="mr-3 opacity-50">Do not disturb<!-- trad --></div>
-                        </li>
-                        <li class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditNameScene()}>
+                        </button>
+                        <button class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditNameScene()}>
                             <div class="aspect-ratio h-2 w-2 bg-neutral rounded-full ml-2 mr-3"></div>
                             <div class="mr-3 opacity-50">Offline<!-- trad --></div>
-                        </li>
-                        <li class="h-[1px] w-full bg-white/20 my-2"></li>
-                        <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditNameScene()}>
+                        </button>
+                        <div class="h-[1px] w-full bg-white/20 my-2"></div>
+                        <button class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditNameScene()}>
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <ProfilIcon />
                             </div>
                             <div>Edit profil<!-- trad --></div>
-                        </li>
-                        <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditSkinScene}>
+                        </button>
+                        <button class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditSkinScene}>
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <Woka userId={-1} placeholderSrc="" customWidth="26px" customHeight="26px" />
                             </div>
                             <div>Change skin<!-- trad --></div>
-                        </li>
-                        <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openEditCompanionScene}>
+                        </button>
+                        <button class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditCompanionScene}>
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
-                                <Companion userId={-1} placeholderSrc="" width="26px" height="26px" />
+                                <Companion userId={-1} placeholderSrc="./static/images/default-companion.png" width="26px" height="26px" />
                             </div>
                             <div>Add a companion<!-- trad --></div>
-                        </li>
-                        <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
+                        </button>
+                        <button class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full">
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <AchievementIcon />
                             </div>
                             <div>Achievement<!-- trad --></div>
-                        </li>
-                        <li class="h-[1px] w-full bg-white/20 my-2"></li>
-                        <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={openEnableCameraScene}>
+                        </button>
+                        <div class="h-[1px] w-full bg-white/20 my-2"></div>
+                        <button class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={openEnableCameraScene}>
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <CamSettingsIcon />
                             </div>
                             <div>Change cam / mic<!-- trad --></div>
-                        </li>
-                        <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => showMenuItem(SubMenusInterface.settings)}>
+                        </button>
+                        <button class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => showMenuItem(SubMenusInterface.settings)}>
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <SettingsIcon />
                             </div>
                             <div>Other settings<!-- trad --></div>
-                        </li>
-                    </ul>
+                        </button>
+                    </div>
                 </div>
                 {/if}
             </div>

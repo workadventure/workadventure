@@ -16,14 +16,14 @@
     }
 </script>
 
-<main class="warningMain flex justify-center absolute bottom-4 left-4 right-4 " transition:fly={{ y: -200, duration: 500 }}>
+<main class="warningMain flex justify-center absolute bottom-4 left-4 right-4 " transition:fly={{ y: 200, duration: 500 }}>
     <div class="backdrop-blur rounded-lg overflow-hidden">
         {#if $bannerStore != undefined}
             <div
                     id={$bannerStore.id}
                     class="m-0 p-4 flex justify-center items-center relative"
             >
-                <div class="relative z-10 text-lg bold"
+                <div class="relative z-10 text-lg bold pl-2"
                      style={`color: ${$bannerStore.textColor};`}
                 >
                     {$bannerStore.text}&nbsp;

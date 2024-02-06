@@ -26,8 +26,11 @@
     export let game: Game;
     let selectedCamera: string | undefined = undefined;
     let selectedMicrophone: string | undefined = undefined;
+    import bgMap from "../images/map-exemple.png";
+    import {gameManager} from "../../Phaser/Game/GameManager";
 
     const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
+    const bgColor = gameManager.currentStartedRoom.backgroundColor ?? "#1B2A41";
 
     function submit() {
         selectCamera();
@@ -106,7 +109,7 @@
     }
 </script>
 
-<form class="enableCameraScene pointer-events-auto" on:submit|preventDefault={submit}>
+<form class="enableCameraScene pointer-events-auto relative z-30" on:submit|preventDefault={submit}>
     <section class="px-10 md:px-32">
         <div class="p-8">
             <section class="text-center mb-4">
@@ -121,11 +124,12 @@
                     playsinline
                 ></video>
             {:else}
-                <div class="webrtcsetup rounded-md h-28 gap-x-56 mb-6">
+                <div class="webrtcsetup flex items-center justify-center h-56 aspect-video">
                     <img class="background-img" src={cinemaCloseImg} alt="" />
                 </div>
             {/if}
             {#if selectedMicrophone != undefined}
+                {selectedMicrophone}
                 <div class="w-full flex flex-col flex-wrap content-center mt-6">
                     <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
                 </div>
@@ -170,7 +174,10 @@
         </div>
     </section>
 </form>
-
+<div in:fade={{ duration: 100 }}
+     class="absolute left-0 top-0 w-screen h-screen bg-cover z-10" style="background-image: url('{bgMap}');"></div>
+<div
+        class="absolute left-0 top-0 w-screen h-screen z-20" style="background-color: '{bgColor}';"></div>
 <style lang="scss">
     .enableCameraScene {
         pointer-events: auto;
@@ -219,17 +226,6 @@
         }
 
         .webrtcsetup {
-            margin-top: 2vh;
-            margin-left: auto;
-            margin-right: auto;
-            height: 28.125vw;
-            width: 50vw;
-            border: white 6px solid;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
             img.background-img {
                 width: 40%;
             }
