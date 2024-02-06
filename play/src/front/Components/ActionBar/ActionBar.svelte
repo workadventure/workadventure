@@ -503,30 +503,33 @@
                                     transition:fly={{y: 20, duration: 150 }}
                             >
                                 <img loading="eager" src="{tooltipArrow}" class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1" />
-                                <div class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg pl-4 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 sm:flex-row">
+                                <div class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg px-3 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 sm:flex-row">
                                     <div class="flex animate flex-row flex items-center">
-                                        {#each [...$emoteDataStore.keys()] as key}
-                                            <div class="transition-all bottom-action-button">
-                                                <button
-                                                        on:click={() => {
-				clickEmoji(key);
-				}}
-                                                        id={`button-${$emoteDataStore.get(key)?.name}`}
-                                                        class="emoji py-4 px-2 hover:bg-white/20 block m-0 rounded-none flex items-center"
-                                                        class:focus={$emoteMenuStore && $emoteMenuSubCurrentEmojiSelectedStore === key}
-                                                >
-                                                    <div class="emoji" style="margin:auto" id={`icon-${$emoteDataStore.get(key)?.name}`}>
-                                                    {$emoteDataStore.get(key)?.emoji}
-                                                    </div>
-                                                    {#if !isMobile}
-                                                        <div class="text-white/50 font-xxs pl-1">{key}</div>
-                                                    {/if}
-                                                </button>
-                                            </div>
-                                        {/each}
-                                        <div class="transition-all bottom-action-button flex items-center h-full">
-                                            <button on:click={() =>
-					analyticsClient.editEmote()} on:click|preventDefault={edit}>
+                                        <div class="py-1 flex">
+                                            {#each [...$emoteDataStore.keys()] as key}
+                                                <div class="transition-all bottom-action-button divide-x">
+                                                    <button
+                                                            on:click|stopPropagation|preventDefault={() => {
+                                                            clickEmoji(key);
+                                                        }}
+                                                            id={`button-${$emoteDataStore.get(key)?.name}`}
+                                                            class="emoji py-2 px-2 block m-0 rounded-none flex items-center transition-all rounded-sm {$emoteMenuStore && $emoteMenuSubCurrentEmojiSelectedStore === key ? 'bg-secondary' : 'hover:bg-white/20'}"
+                                                    >
+                                                        <div class="emoji" style="margin:auto" id={`icon-${$emoteDataStore.get(key)?.name}`}>
+                                                            {$emoteDataStore.get(key)?.emoji}
+                                                        </div>
+                                                        {#if !isMobile}
+                                                            <div class="text-white/50 font-xxs pl-1">{key}</div>
+                                                        {/if}
+                                                    </button>
+                                                </div>
+                                            {/each}
+                                        </div>
+                                        <div class="transition-all bottom-action-button flex items-center h-full pl-4 relative before:content-[''] before:absolute before:top-0 before:left-1 before:w-[1px] before:h-full before:bg-white/10">
+                                            <button class="btn btn-sm btn-border btn-light"
+                                                    on:click={() => analyticsClient.editEmote()}
+                                                    on:click|stopPropagation|preventDefault={edit}
+                                            >
                                                 {#if $emoteDataStoreLoading}
                                                     <div class="rounded-lg bg-dark text-xs">
                                                         <!-- loading animation -->
@@ -537,13 +540,16 @@
                                                         </div>
                                                     </div>
                                                 {:else}
-                                                    <PlusIcon />
+                                                    <PlusIcon width="w-4" height="h-4" />
                                                 {/if}
                                             </button>
                                         </div>
-                                        <div class="transition-all bottom-action-button flex items-center bg-contrast rounded-r-lg h-full">
-                                            <button on:click|preventDefault={close}>
-                                                <XIcon />
+                                        <div class="transition-all bottom-action-button flex items-center rounded-r-lg h-full ml-2">
+                                            <button
+                                                    class="btn btn-sm btn-danger"
+                                                    on:click|stopPropagation|preventDefault={close}
+                                            >
+                                                <XIcon width="w-4" height="h-4" />
                                             </button>
                                         </div>
                                     </div>

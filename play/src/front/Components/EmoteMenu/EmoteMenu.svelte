@@ -16,14 +16,14 @@
             rootElement: emojiContainer,
             styleProperties: {
                 "--font": "Roboto Condensed",
-                "--background-color": "rgb(42, 66, 101)",
                 "--text-color": "#ffffff",
                 "--secondary-text-color": "#ffffff",
                 "--category-button-color": "#ffffff",
-                "--category-button-active-color": "rgb(65, 86, 246)",
+                "--category-button-active-color": "rgb(103, 233, 123)",
+                "transform": "translateX(-68px)"
             },
             position: {
-                bottom: "8rem",
+                top: "8.5rem",
             },
             emojisPerRow: isMediaBreakpointUp("md") ? 6 : 8,
             autoFocusSearch: false,

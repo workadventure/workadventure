@@ -18,6 +18,8 @@
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";
     import loaderImg from "./images/loader.svg";
+    import silentImg from "./images/silent-zone.gif";
+
     import { fly } from "svelte/transition";
     import { heightCamWrapper } from "../Stores/EmbedScreensStore";
     import MicOffIcon from "./Icons/MicOffIcon.svelte";
@@ -78,14 +80,14 @@
     {#if $silentStore}
         <div
             class="z-[250] rounded-lg py-4 px-3 text-white border-[1px] border-solid border-danger flex flex-col items-center content-center justify-between media-box-camera-off-size bg-no-repeat bg-center bg-danger-1000/70 backdrop-blur rounded-xl text-center -translate-y-8">
-            <div class="flex flex-col text-[88px] -translate-y-7 leading-3">
-                🤐
+            <div class="flex flex-col -mt-20 leading-3">
+                <img src="{silentImg}" class="h-40 w-40" />
             </div>
-            <div class="m-0 text-center pt-4 text-lg bold">
+            <div class="m-0 text-center -mt-4 text-lg bold">
                 {$LL.camera.my.silentZone()}
             </div>
-            <div class="opacity-60 font-xs">
-                Ex quibusdam doloremque nihil. Sint odio tempora eveniet. trans
+            <div class="text-danger-400 text-xs">
+                Ex quibusdam doloremque nihil. Sint odio tempora eveniet. <!-- Trad -->
             </div>
         </div>
 
