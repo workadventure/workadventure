@@ -79,3 +79,4 @@ export const mapEditorWamSettingsEditorToolCurrentMenuItemStore = writable<
 >(undefined);
 
 export const mapExplorationModeStore = writable<boolean>(false);
+export const mapExplorationObjectSelectedStore = writable<Entity|undefined>(undefined);

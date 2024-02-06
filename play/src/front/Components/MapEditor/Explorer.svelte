@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { writable } from "svelte/store";
+    import { Unsubscriber, writable } from "svelte/store";
     import { ChevronDownIcon } from "svelte-feather-icons";
     import { onDestroy, onMount } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
@@ -8,7 +8,7 @@
     import audioSvg from "../images/audio-white.svg";
     import AreaToolImg from "../images/icon-tool-area.png";
     import EntityToolImg from "../images/icon-tool-entity.svg";
-    import { mapEditorVisibilityStore } from "../../Stores/MapEditorStore";
+    import { mapEditorVisibilityStore, mapExplorationObjectSelectedStore } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { Entity } from "../../Phaser/ECS/Entity";
     import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
@@ -16,6 +16,7 @@
     let filter = "";
     let selectFilters = writable<Array<string>>(new Array<string>());
     let entities = writable<Map<string, Entity> | undefined>(undefined);
+
     function onChangeFilter() {
         console.log("filter changed", filter);
     }
@@ -44,6 +45,10 @@
         if ($entities != undefined && $entities.size > 0) {
             for (const entity of $entities.values()) {
                 entity.setPointedToEditColor(0x000000);
+                entity.addListener(Phaser.Input.Events.POINTER_DOWN, (event: unknown) => {
+                    mapExplorationObjectSelectedStore.set(entity);
+                    console.log('entity clicked', entity, event);
+                });
             }
             gameManager.getCurrentGameScene().markDirty();
         }
@@ -53,7 +58,10 @@
         if ($entities != undefined && $entities.size > 0) {
             for (const entity of $entities.values()) {
                 entity.removePointedToEditColor();
+                // TODO fix this
+                entity.removeAllListeners(Phaser.Input.Events.POINTER_DOWN);
             }
+            mapExplorationObjectSelectedStore.set(undefined);
             gameManager.getCurrentGameScene().markDirty();
         }
     });
@@ -64,6 +72,9 @@
         gameManager.getCurrentGameScene().markDirty();
     }
     function unhighlightEntity(entity: Entity) {
+        // Don't unhighlight if the entity is selected
+        if($mapExplorationObjectSelectedStore == entity) return;
+
         entity.setPointedToEditColor(0x000000);
         gameManager.getCurrentGameScene().markDirty();
     }
@@ -209,10 +220,12 @@
         {#if entityListActive && $entities && $entities.size > 0}
             <div class="items tw-p-4 tw-flex tw-flex-col">
                 {#each [...$entities] as [key, entity] (key)}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         id={entity.entityId}
                         on:mouseenter={() => highlightEntity(entity)}
                         on:mouseleave={() => unhighlightEntity(entity)}
+                        on:click={() => mapExplorationObjectSelectedStore.set(entity)}
                         class="tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
                     >
                         <img

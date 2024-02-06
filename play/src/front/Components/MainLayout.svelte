@@ -46,6 +46,8 @@
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
+    import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
+    import ObjectDetails from "./Modal/ObjectDetails.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -147,6 +149,10 @@
 
         {#if $askDialogStore}
             <MuteDialogBox />
+        {/if}
+
+        {#if $mapExplorationObjectSelectedStore}
+            <ObjectDetails />
         {/if}
     </section>
 
