@@ -28,9 +28,17 @@
     let selectedMicrophone: string | undefined = undefined;
     import bgMap from "../images/map-exemple.png";
     import {gameManager} from "../../Phaser/Game/GameManager";
+    import CamOnIcon from "../Icons/CamOnIcon.svelte";
+    import CamOffIcon from "../Icons/CamOffIcon.svelte";
+    import MicOnIcon from "../Icons/MicOnIcon.svelte";
+    import CheckIcon from "../Icons/CheckIcon.svelte";
+    import MicOffIcon from "../Icons/MicOffIcon.svelte";
 
     const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
     const bgColor = gameManager.currentStartedRoom.backgroundColor ?? "#1B2A41";
+
+    let cameraEdit = false;
+    let microphoneEdit = false;
 
     function submit() {
         selectCamera();
@@ -86,7 +94,7 @@
         batchGetUserMediaStore.commitChanges();
     });
 
-    function selectCamera() {
+    function selectCamera(selectedCamera) {
         if (selectedCamera === undefined) {
             localUserStore.setPreferredVideoInputDevice("");
             requestedCameraState.disableWebcam();
@@ -97,7 +105,7 @@
         localUserStore.setPreferredVideoInputDevice(selectedCamera);
     }
 
-    function selectMicrophone() {
+    function selectMicrophone(selectedMicrophone) {
         if (selectedMicrophone === undefined) {
             localUserStore.setPreferredAudioInputDevice("");
             requestedMicrophoneState.disableMicrophone();
@@ -109,80 +117,201 @@
     }
 </script>
 
-<form class="enableCameraScene pointer-events-auto relative z-30" on:submit|preventDefault={submit}>
-    <section class="px-10 md:px-32">
-        <div class="p-8">
-            <section class="text-center mb-4">
-                <h2>{$LL.camera.enable.title()}</h2>
+<form class="enableCameraScene pointer-events-auto relative z-30 m-0" on:submit|preventDefault={submit}>
+    <section class="flex items-center justify-center min-h-screen ">
+        <div class="p-8 text-white container mx-auto flex flex-col items-center justify-center">
+            <section class="mb-4 text-center">
+                <h2 class="h4">{$LL.camera.enable.title()}</h2>
+                <p class="opacity-50">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.<!-- Trad -->
+                </p>
             </section>
-            {#if selectedCamera != undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
-                <video
-                    class="myCamVideoSetup mb-26"
-                    use:srcObject={$localStreamStore.stream}
-                    autoplay
-                    muted
-                    playsinline
-                ></video>
-            {:else}
-                <div class="webrtcsetup flex items-center justify-center h-56 aspect-video">
-                    <img class="background-img" src={cinemaCloseImg} alt="" />
-                </div>
-            {/if}
-            {#if selectedMicrophone != undefined}
-                {selectedMicrophone}
-                <div class="w-full flex flex-col flex-wrap content-center mt-6">
-                    <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
-                </div>
-            {/if}
 
-            <section class="selectWebcamForm flex flex-col justify-center items-center content-center m-2">
-                <div class="control-group">
-                    <img src={cinemaImg} alt="Camera" />
-                    <div class="is-dark">
-                        <select bind:value={selectedCamera} on:change={selectCamera} class="w-52 md:w-96 text-white bg-contrast rounded border border-solid border-white/20 mt-4 mb-0">
-                            <!-- start with camera off -->
-                            <option value={undefined}>{$LL.camera.disable()}</option>
+            <div class="p-6 rounded-lg bg-white/10 mt-8">
+                <div class="text-lg bold flex items-center justify-center space-x-3 w-[450px] mb-6">
+                    <MicOnIcon height="h-8" width="w-8" />
+                    <div class="grow">Your microphone <!-- Trad --></div>
+                    <button class="btn {!microphoneEdit ? 'btn-secondary' : 'btn-light btn-ghost'}"
+                            on:click|stopPropagation|preventDefault={() => (microphoneEdit = !microphoneEdit)}
+                    >
+                        {!microphoneEdit ? 'Edit mic' : 'Cancel'} <!-- Trad -->
+                    </button>
+                </div>
 
-                            {#each $cameraListStore ?? [] as camera (camera.deviceId)}
-                                <option value={camera.deviceId}>
-                                    {StringUtils.normalizeDeviceName(camera.label)}
-                                </option>
-                            {/each}
-                        </select>
+                <div class="flex ">
+                    <div class="flex flex-wrap items-center justify-center">
+                        <div class="border border-solid border-white rounded-lg pr-8 pl-6 pb-4 items-center justify-center space-x-4 transition-all cursor-pointer relative {selectedMicrophone === undefined ? 'bg-white text-secondary pt-12' : 'over:bg-white/10 pt-4'} {(microphoneEdit && selectedMicrophone !== undefined) || (!microphoneEdit && selectedMicrophone === undefined) ? 'flex' : 'hidden'}"
+                             on:click={() => {
+                        selectMicrophone(undefined);
+                        microphoneEdit = false;
+                    }}
+                        >
+                            <div class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center {selectedMicrophone === undefined ? 'bg-secondary border-secondary' : 'border-white'}">
+                                {#if selectedMicrophone === undefined}
+                                    <CheckIcon width="w-4" height="h-4" />
+                                {/if}
+                            </div>
+                            <div class="space-y-1">
+                                <div class="text-lg bold max-w-[200px] truncate text-ellipsis overflow-hidden leading-tight flex items-center">
+                                    <MicOffIcon height="h-4" width="w-4" />
+                                    {$LL.audio.disable()}
+                                </div>
+                                {#if selectedMicrophone === undefined}
+                                    <span class="chip chip-sm chip-secondary !inline-block">
+                                        <span class="chip-label">Active</span><!-- Trad -->
+                                    </span>
+                                {:else }
+                                    <span class="chip chip-sm chip-neutral !inline-block">
+                                        <span class="chip-label">Not recommended</span><!-- Trad -->
+                                    </span>
+                                {/if}
+                            </div>
+                        </div>
+                        {#each $microphoneListStore ?? [] as microphone (microphone.deviceId)}
+                            <div class="border border-solid border-white rounded-lg pr-8 pl-6 pb-4 items-center justify-center space-x-4 transition-all cursor-pointer relative {selectedMicrophone === microphone.deviceId ? 'bg-white text-secondary pt-12' : 'hover:bg-white/10 pt-4'} {(microphoneEdit && selectedMicrophone !== microphone.deviceId) || (!microphoneEdit && selectedMicrophone === microphone.deviceId) ? 'flex' : 'hidden'}"
+                                 on:click={() => {
+                                selectMicrophone(microphone.deviceId)
+                                microphoneEdit = false;
+                            }}
+                            >
+                                {#if microphone.deviceId === selectedMicrophone}
+                                    <div class="absolute top-4 left-0 flex justify-center w-full">
+                                        <HorizontalSoundMeterWidget spectrum={$localVolumeStore} />
+                                    </div>
+                                {/if}
+                                <div class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center {selectedMicrophone === microphone.deviceId ? 'bg-secondary border-secondary' : 'border-white'}">
+                                    {#if selectedMicrophone === microphone.deviceId}
+                                        <CheckIcon width="w-4" height="h-4" />
+                                    {/if}
+
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="text-lg bold max-w-[200px] truncate text-ellipsis overflow-hidden leading-tight">
+                                        {StringUtils.normalizeDeviceName(microphone.label)}
+                                    </div>
+                                    {#if microphone.deviceId === selectedMicrophone}
+                                    <span class="chip chip-sm chip-secondary !inline-block">
+                                        <span class="chip-label">Active</span><!-- Trad -->
+                                    </span>
+                                    {:else }
+                                    <span class="chip chip-sm chip-neutral !inline-block">
+                                        <span class="chip-label">Inactive</span><!-- Trad -->
+                                    </span>
+                                    {/if}
+                                </div>
+                            </div>
+                        {/each}
                     </div>
                 </div>
+            </div>
 
-                <div class="control-group">
-                    <img src={microphoneImg} alt="Microphone" />
-                    <div class="is-dark">
-                        <select bind:value={selectedMicrophone} on:change={selectMicrophone} class="w-52 md:w-96 text-white bg-contrast rounded border border-solid border-white/20 mt-4 mb-0">
-                            <!-- start with microphone off -->
-                            <option value={undefined}>{$LL.audio.disable()}</option>
+            <div class="p-6 rounded-lg bg-white/10 mt-8">
+                <div class="text-lg bold flex items-center justify-center space-x-3 w-[450px] mb-6">
+                    <CamOnIcon height="h-8" width="w-8" />
+                    <div class="grow">Configure your camera <!-- Trad --></div>
+                    <button class="btn {!cameraEdit ? 'btn-secondary' : 'btn-light btn-ghost'}"
+                            on:click|stopPropagation|preventDefault={() => (cameraEdit = !cameraEdit)}
+                    >
+                        {!microphoneEdit ? 'Edit camera' : 'Cancel'}
+                    </button>
+                </div>
 
-                            {#each $microphoneListStore ?? [] as microphone (microphone.deviceId)}
-                                <option value={microphone.deviceId}>
-                                    {StringUtils.normalizeDeviceName(microphone.label)}
-                                </option>
-                            {/each}
-                        </select>
+                <div class="flex justify-center">
+                    <div class="flex items-center justify-center">
+                        <div class="border border-solid border-white rounded-lg items-center justify-start space-x-4 transition-all cursor-pointer {selectedCamera === undefined ? 'bg-white/10' : 'hover:bg-white/10'} {(cameraEdit && selectedCamera !== undefined) || (!cameraEdit && selectedCamera === undefined) ? 'flex flex-col' : 'hidden'}"
+                             on:click={() => {
+                        selectCamera(undefined);
+                        cameraEdit = false;
+                    }}
+                        >
+                            {#if selectedCamera === undefined}
+                                <div class="webrtcsetup flex items-center justify-center h-[200px] aspect-video rounded-lg overflow-hidden bg-contrast">
+                                    <CamOffIcon />
+                                </div>
+                            {/if}
+                            <div class="flex py-4 pr-8 pl-4 items-center space-x-4">
+                                <div class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center">
+                                    {#if selectedCamera === undefined}
+                                        <CheckIcon width="w-4" height="h-4" />
+                                    {/if}
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="text-lg bold max-w-[200px] truncate text-ellipsis overflow-hidden leading-tight">
+                                        {$LL.camera.disable()}
+                                    </div>
+                                    {#if selectedCamera === undefined}
+                                    <span class="chip chip-sm chip-secondary !inline-block">
+                                        <span class="chip-label">Active</span><!-- Trad -->
+                                    </span>
+                                    {:else }
+                                    <span class="chip chip-sm chip-neutral !inline-block">
+                                        <span class="chip-label">Not recommended</span><!-- Trad -->
+                                    </span>
+                                    {/if}
+                                </div>
+                            </div>
+                        </div>
+                        {#each $cameraListStore ?? [] as camera (camera.deviceId)}
+                            <div class="border border-solid border-white rounded-lg relative justify-start space-x-4 transition-all overflow-hidden cursor-pointer {selectedCamera === camera.deviceId ? 'bg-white text-secondary' : 'hover:bg-white/10'} {(cameraEdit && selectedCamera !== camera.deviceId) || (!cameraEdit && selectedCamera === camera.deviceId) ? 'flex flex-col' : 'hidden'}"
+                                 on:click={() => {
+                                selectCamera(camera.deviceId);
+                                cameraEdit = false;
+                            }}
+                            >
+                                {#if camera.deviceId === selectedCamera}
+                                    {#if selectedCamera != undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
+                                        <video
+                                                class="myCamVideoSetup flex items-center justify-center h-[200px] aspect-video overflow-hidden"
+                                                use:srcObject={$localStreamStore.stream}
+                                                autoplay
+                                                muted
+                                                playsinline
+                                        ></video>
+                                    {:else}
+                                        <div class="webrtcsetup flex items-center justify-center w-full aspect-video rounded-lg overflow-hidden bg-contrast">
+                                            CAM PB <!-- TODO : catch pb with cam -->
+                                        </div>
+                                    {/if}
+                                {/if}
+                                <div class="flex py-4 pr-8 pl-4 items-center space-x-4">
+                                    <div class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center {selectedCamera === camera.deviceId ? 'bg-secondary border-secondary' : 'border-white'}">
+                                        {#if selectedCamera === camera.deviceId}
+                                            <CheckIcon width="w-4" height="h-4" />
+                                        {/if}
+
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="text-lg bold max-w-[200px] truncate text-ellipsis overflow-hidden leading-tight">
+                                            {StringUtils.normalizeDeviceName(camera.label)}
+                                        </div>
+                                        {#if camera.deviceId === selectedCamera}
+                                    <span class="chip chip-sm chip-secondary !inline-block">
+                                        <span class="chip-label">Active</span><!-- Trad -->
+                                    </span>
+                                        {:else }
+                                    <span class="chip chip-sm chip-neutral !inline-block">
+                                        <span class="chip-label">Inactive</span><!-- Trad -->
+                                    </span>
+                                        {/if}
+                                    </div>
+                                </div>
+                            </div>
+                        {/each}
                     </div>
                 </div>
-            </section>
-            <section class="action fixed bottom-2 h-auto w-full left-0">
-                <button type="submit" class="light">{$LL.camera.enable.start()}</button>
+            </div>
+
+            <section class="flex items-center space-x-4 justify-between border border-t border-white pt-8 min-w-[498px]">
+                <button type="submit" class="btn btn-light btn-lg btn-ghost min-w-[200px] block">Cancel</button> <!-- Trad & TODO ACTION -->
+                <button type="submit" class="btn btn-secondary btn-lg min-w-[200px] block">{$LL.camera.enable.start()}</button>
             </section>
         </div>
     </section>
 </form>
-<div in:fade={{ duration: 100 }}
-     class="absolute left-0 top-0 w-screen h-screen bg-cover z-10" style="background-image: url('{bgMap}');"></div>
-<div
-        class="absolute left-0 top-0 w-screen h-screen z-20" style="background-color: '{bgColor}';"></div>
+<div class="absolute left-0 top-0 w-screen h-screen bg-cover z-10" style="background-image: url('{bgMap}');"></div>
+<div class="absolute left-0 top-0 w-screen h-screen bg-contrast/80 z-20" style="background-color: '{bgColor}';"></div>
 <style lang="scss">
     .enableCameraScene {
-        pointer-events: auto;
-        margin: 20px auto 0;
-        color: #ebeeee;
 
         section.selectWebcamForm {
             min-height: 10vh;
@@ -229,18 +358,6 @@
             img.background-img {
                 width: 40%;
             }
-        }
-        .myCamVideoSetup {
-            margin-top: 2vh;
-            margin-left: auto;
-            margin-right: auto;
-            max-height: 28vh;
-            width: 100%;
-            transform: scaleX(-1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.5rem;
         }
     }
 </style>
