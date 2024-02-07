@@ -127,7 +127,7 @@
                 </p>
             </section>
 
-            <div class="p-6 rounded-lg bg-white/10 mt-8">
+            <div class="p-6 rounded-lg bg-white/10 mt-8 flex flex-col justify-center items-center">
                 <div class="text-lg bold flex items-center justify-center space-x-3 w-[450px] mb-6">
                     <MicOnIcon height="h-8" width="w-8" />
                     <div class="grow">Your microphone <!-- Trad --></div>
@@ -138,9 +138,9 @@
                     </button>
                 </div>
 
-                <div class="flex ">
+                <div class="flex items-center justify-center">
                     <div class="flex flex-wrap items-center justify-center">
-                        <div class="border border-solid border-white rounded-lg pr-8 pl-6 pb-4 items-center justify-center space-x-4 transition-all cursor-pointer relative {selectedMicrophone === undefined ? 'bg-white text-secondary pt-12' : 'over:bg-white/10 pt-4'} {(microphoneEdit && selectedMicrophone !== undefined) || (!microphoneEdit && selectedMicrophone === undefined) ? 'flex' : 'hidden'}"
+                        <div class="border border-solid border-white rounded-lg pr-8 pl-6 pb-4 m-2 items-center justify-center space-x-4 transition-all cursor-pointer relative {selectedMicrophone === undefined ? 'bg-white text-secondary pt-12' : 'over:bg-white/10 pt-4'} {(microphoneEdit && selectedMicrophone !== undefined) || (!microphoneEdit && selectedMicrophone === undefined) ? 'flex' : 'hidden'}"
                              on:click={() => {
                         selectMicrophone(undefined);
                         microphoneEdit = false;
@@ -168,7 +168,7 @@
                             </div>
                         </div>
                         {#each $microphoneListStore ?? [] as microphone (microphone.deviceId)}
-                            <div class="border border-solid border-white rounded-lg pr-8 pl-6 pb-4 items-center justify-center space-x-4 transition-all cursor-pointer relative {selectedMicrophone === microphone.deviceId ? 'bg-white text-secondary pt-12' : 'hover:bg-white/10 pt-4'} {(microphoneEdit && selectedMicrophone !== microphone.deviceId) || (!microphoneEdit && selectedMicrophone === microphone.deviceId) ? 'flex' : 'hidden'}"
+                            <div class="border border-solid border-white rounded-lg pr-8 pl-6 pb-4 m-2 items-center justify-center space-x-4 transition-all cursor-pointer relative {selectedMicrophone === microphone.deviceId ? 'bg-white text-secondary pt-12' : 'hover:bg-white/10 pt-4'} {(microphoneEdit && selectedMicrophone !== microphone.deviceId) || (!microphoneEdit && selectedMicrophone === microphone.deviceId) ? 'flex' : 'hidden'}"
                                  on:click={() => {
                                 selectMicrophone(microphone.deviceId)
                                 microphoneEdit = false;
@@ -205,11 +205,11 @@
                 </div>
             </div>
 
-            <div class="p-6 rounded-lg bg-white/10 mt-8">
+            <div class="p-6 rounded-lg bg-white/10 mt-8 flex flex-col justify-center items-center">
                 <div class="text-lg bold flex items-center justify-center space-x-3 w-[450px] mb-6">
                     <CamOnIcon height="h-8" width="w-8" />
                     <div class="grow">Configure your camera <!-- Trad --></div>
-                    <button class="btn {!cameraEdit ? 'btn-secondary' : 'btn-light btn-ghost'}"
+                    <button class="btn {!microphoneEdit ? 'btn-secondary' : 'btn-light btn-ghost'}"
                             on:click|stopPropagation|preventDefault={() => (cameraEdit = !cameraEdit)}
                     >
                         {!microphoneEdit ? 'Edit camera' : 'Cancel'}
@@ -218,7 +218,7 @@
 
                 <div class="flex justify-center">
                     <div class="flex items-center justify-center">
-                        <div class="border border-solid border-white rounded-lg items-center justify-start space-x-4 transition-all cursor-pointer {selectedCamera === undefined ? 'bg-white/10' : 'hover:bg-white/10'} {(cameraEdit && selectedCamera !== undefined) || (!cameraEdit && selectedCamera === undefined) ? 'flex flex-col' : 'hidden'}"
+                        <div class="border border-solid border-white rounded-lg items-center justify-start m-2 space-x-4 transition-all cursor-pointer {selectedCamera === undefined ? 'bg-white/10' : 'hover:bg-white/10'} {(cameraEdit && selectedCamera !== undefined) || (!cameraEdit && selectedCamera === undefined) ? 'flex flex-col' : 'hidden'}"
                              on:click={() => {
                         selectCamera(undefined);
                         cameraEdit = false;
@@ -252,7 +252,7 @@
                             </div>
                         </div>
                         {#each $cameraListStore ?? [] as camera (camera.deviceId)}
-                            <div class="border border-solid border-white rounded-lg relative justify-start space-x-4 transition-all overflow-hidden cursor-pointer {selectedCamera === camera.deviceId ? 'bg-white text-secondary' : 'hover:bg-white/10'} {(cameraEdit && selectedCamera !== camera.deviceId) || (!cameraEdit && selectedCamera === camera.deviceId) ? 'flex flex-col' : 'hidden'}"
+                            <div class="border border-solid border-white rounded-lg relative justify-start m-2 space-x-4 transition-all overflow-hidden cursor-pointer {selectedCamera === camera.deviceId ? 'bg-white text-secondary' : 'hover:bg-white/10'} {(cameraEdit && selectedCamera !== camera.deviceId) || (!cameraEdit && selectedCamera === camera.deviceId) ? 'flex flex-col' : 'hidden'}"
                                  on:click={() => {
                                 selectCamera(camera.deviceId);
                                 cameraEdit = false;
