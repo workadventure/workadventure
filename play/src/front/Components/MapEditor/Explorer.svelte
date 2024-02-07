@@ -1,21 +1,19 @@
 <script lang="ts">
-    import { Unsubscriber, writable } from "svelte/store";
+    import { writable } from "svelte/store";
     import { ChevronDownIcon } from "svelte-feather-icons";
-    import { onDestroy, onMount } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import visioSvg from "../images/loupe.svg";
     import ExplorerImg from "../images/explorer.svg";
     import audioSvg from "../images/audio-white.svg";
     import AreaToolImg from "../images/icon-tool-area.png";
     import EntityToolImg from "../images/icon-tool-entity.svg";
-    import { mapEditorVisibilityStore, mapExplorationObjectSelectedStore } from "../../Stores/MapEditorStore";
+    import { mapExplorationEntitiesStore, mapEditorVisibilityStore, mapExplorationObjectSelectedStore } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { Entity } from "../../Phaser/ECS/Entity";
     import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
 
     let filter = "";
     let selectFilters = writable<Array<string>>(new Array<string>());
-    let entities = writable<Map<string, Entity> | undefined>(undefined);
 
     function onChangeFilter() {
         console.log("filter changed", filter);
@@ -39,32 +37,6 @@
     function toggleAreaList() {
         areaListActive = !areaListActive;
     }
-
-    onMount(() => {
-        entities.set(gameManager.getCurrentGameScene().getGameMapFrontWrapper().getEntitiesManager().getEntities());
-        if ($entities != undefined && $entities.size > 0) {
-            for (const entity of $entities.values()) {
-                entity.setPointedToEditColor(0x000000);
-                entity.addListener(Phaser.Input.Events.POINTER_DOWN, (event: unknown) => {
-                    mapExplorationObjectSelectedStore.set(entity);
-                    console.log('entity clicked', entity, event);
-                });
-            }
-            gameManager.getCurrentGameScene().markDirty();
-        }
-    });
-
-    onDestroy(() => {
-        if ($entities != undefined && $entities.size > 0) {
-            for (const entity of $entities.values()) {
-                entity.removePointedToEditColor();
-                // TODO fix this
-                entity.removeAllListeners(Phaser.Input.Events.POINTER_DOWN);
-            }
-            mapExplorationObjectSelectedStore.set(undefined);
-            gameManager.getCurrentGameScene().markDirty();
-        }
-    });
 
     function highlightEntity(entity: Entity) {
         entity.setPointedToEditColor(0xf9e82d);
@@ -209,17 +181,17 @@
             on:click={toggleEntityList}
         >
             <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={EntityToolImg} alt="link icon" />
-            {#if $entities}
-                <span class="tw-pointer-events-none">{$entities.size} objects found</span>
+            {#if $mapExplorationEntitiesStore && $mapExplorationEntitiesStore.size > 0}
+                <span class="tw-pointer-events-none">{$mapExplorationEntitiesStore.size} objects found</span>
             {:else}
                 <p>No entities found 🙅‍♂️</p>
             {/if}
             <ChevronDownIcon class="tw-pointer-events-none" size="32" />
         </div>
 
-        {#if entityListActive && $entities && $entities.size > 0}
+        {#if entityListActive && $mapExplorationEntitiesStore && $mapExplorationEntitiesStore.size > 0}
             <div class="items tw-p-4 tw-flex tw-flex-col">
-                {#each [...$entities] as [key, entity] (key)}
+                {#each [...$mapExplorationEntitiesStore] as [key, entity] (key)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         id={entity.entityId}

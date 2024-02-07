@@ -2,10 +2,12 @@ import { EditMapCommandMessage } from "@workadventure/messages";
 import debug from "debug";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { analyticsClient } from "../../../../Administration/AnalyticsClient";
-import { mapEditorVisibilityStore, mapExplorationModeStore } from "../../../../Stores/MapEditorStore";
+import { mapEditorVisibilityStore, mapExplorationEntitiesStore, mapExplorationModeStore, mapExplorationObjectSelectedStore } from "../../../../Stores/MapEditorStore";
 import { gameManager } from "../../GameManager";
 import { GameScene } from "../../GameScene";
 import { MapEditorTool } from "./MapEditorTool";
+import { Entity } from "../../../ECS/Entity";
+import { Unsubscriber, get } from "svelte/store";
 
 const logger = debug("explorer-tool");
 
@@ -16,6 +18,7 @@ export class ExplorerTool implements MapEditorTool {
     private leftIsPressed = false;
     private rightIsPressed = false;
     private explorationMouseIsActive = false;
+    private mapExplorationEntitiesSubscribe: Unsubscriber | undefined;
 
     private keyDownHandler = (event: KeyboardEvent) => {
         if (event.key === "ArrowDown" || event.key === "s") {
@@ -63,14 +66,21 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.cameras.main.scrollY -= pointer.velocity.y / 10;
         this.scene.markDirty();
     };
-    private pointerUpHandler = (pointer: Phaser.Input.Pointer) => {
+    private pointerUpHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
         this.explorationMouseIsActive = false;
+
+        if(gameObjects.length > 0) {
+            const entity = gameObjects[0] as Entity;
+            mapExplorationObjectSelectedStore.set(entity);
+        }
+
         this.scene.markDirty();
     };
 
     constructor() {
         this.scene = gameManager.getCurrentGameScene();
     }
+    
     public update(time: number, dt: number): void {
         if (this.downIsPressed) {
             this.scene.cameras.main.scrollY += 10;
@@ -100,16 +110,25 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.input.removeListener("pointerup", this.pointerUpHandler);
 
         this.scene.getCameraManager().startFollowPlayer(this.scene.CurrentPlayer, 1000);
+        mapExplorationObjectSelectedStore.set(undefined);
+        gameManager.getCurrentGameScene().markDirty();
+
+        get(mapExplorationEntitiesStore)?.forEach((entity) => {
+            entity.removePointedToEditColor();
+        });
 
         mapExplorationModeStore.set(false);
         // Reset to true for the next tool used
         mapEditorVisibilityStore.set(true);
+
+        if(this.mapExplorationEntitiesSubscribe) this.mapExplorationEntitiesSubscribe();
     }
     public activate(): void {
         analyticsClient.openExplorationMode();
 
         mapExplorationModeStore.set(true);
         mapEditorVisibilityStore.set(true);
+        mapExplorationEntitiesStore.set(gameManager.getCurrentGameScene().getGameMapFrontWrapper().getEntitiesManager().getEntities());
 
         this.scene.userInputManager.disableControls();
 
@@ -122,8 +141,23 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.input.on("pointerup", this.pointerUpHandler);
 
         this.scene.getCameraManager().setExplorationMode();
+        get(mapExplorationEntitiesStore).forEach((entity) => {
+            entity.setPointedToEditColor(0x000000);
+        });
 
         this.scene.markDirty();
+
+        // Create subscribe to entities store
+        this.mapExplorationEntitiesSubscribe = mapExplorationEntitiesStore.subscribe((entities) => {
+            entities.forEach((entity) => {
+                // If the entity is selected, we not set the color
+                if (entity === get(mapExplorationObjectSelectedStore)) {
+                    return;
+                }
+                entity.setPointedToEditColor(0x000000);
+            });
+            this.scene.markDirty();
+        });
     }
     public destroy(): void {
         this.clear();
@@ -135,7 +169,8 @@ export class ExplorerTool implements MapEditorTool {
         logger("handleKeyDownEvent => Method not implemented.");
     }
     public handleIncomingCommandMessage(editMapCommandMessage: EditMapCommandMessage): Promise<void> {
-        logger("handleIncomingCommandMessage => Method not implemented.");
+        // Refresh the entities store
+        mapExplorationEntitiesStore.set(gameManager.getCurrentGameScene().getGameMapFrontWrapper().getEntitiesManager().getEntities());
         return Promise.resolve();
     }
 }

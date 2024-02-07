@@ -20,7 +20,7 @@ function createMapEditorModeStore() {
         subscribe,
         set,
         switchMode: (value: boolean) => {
-            set(get(mapEditorActivated) && value);
+            set(value);
         },
     };
 }
@@ -80,3 +80,4 @@ export const mapEditorWamSettingsEditorToolCurrentMenuItemStore = writable<
 
 export const mapExplorationModeStore = writable<boolean>(false);
 export const mapExplorationObjectSelectedStore = writable<Entity|undefined>(undefined);
+export const mapExplorationEntitiesStore = writable<Map<string, Entity>>(new Map());

@@ -13,6 +13,7 @@
     import ExplorerImg from "../images/explorer.svg";
     import CloseImg from "../images/close.png";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { mapEditorActivated } from "../../Stores/MenuStore";
 
     const gameScene = gameManager.getCurrentGameScene();
 
@@ -23,30 +24,32 @@
         img: ExplorerImg,
         tooltiptext: $LL.mapEditor.sideBar.exploreTheRoom(),
     });
-    availableTools.push({
-        toolName: EditorToolName.AreaEditor,
-        img: AreaToolImg,
-        tooltiptext: $LL.mapEditor.sideBar.areaEditor(),
-    });
-    availableTools.push(
-        {
-            toolName: EditorToolName.EntityEditor,
-            img: EntityToolImg,
-            tooltiptext: $LL.mapEditor.sideBar.entityEditor(),
-        }
-        // NOTE: Hide it untill FloorEditing is done
-        // { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() }
-    );
-    availableTools.push({
-        toolName: EditorToolName.WAMSettingsEditor,
-        img: ConfigureImg,
-        tooltiptext: $LL.mapEditor.sideBar.configureMyRoom(),
-    });
-    availableTools.push({
-        toolName: EditorToolName.TrashEditor,
-        img: TrashImg,
-        tooltiptext: $LL.mapEditor.sideBar.trashEditor(),
-    });
+    if ($mapEditorActivated){
+        availableTools.push({
+            toolName: EditorToolName.AreaEditor,
+            img: AreaToolImg,
+            tooltiptext: $LL.mapEditor.sideBar.areaEditor(),
+        });
+        availableTools.push(
+            {
+                toolName: EditorToolName.EntityEditor,
+                img: EntityToolImg,
+                tooltiptext: $LL.mapEditor.sideBar.entityEditor(),
+            }
+            // NOTE: Hide it untill FloorEditing is done
+            // { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() }
+        );
+        availableTools.push({
+            toolName: EditorToolName.WAMSettingsEditor,
+            img: ConfigureImg,
+            tooltiptext: $LL.mapEditor.sideBar.configureMyRoom(),
+        });
+        availableTools.push({
+            toolName: EditorToolName.TrashEditor,
+            img: TrashImg,
+            tooltiptext: $LL.mapEditor.sideBar.trashEditor(),
+        });
+    }
     availableTools.push({
         toolName: EditorToolName.CloseMapEditor,
         img: CloseImg,

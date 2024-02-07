@@ -240,16 +240,32 @@ export class MapEditorModeManager {
                 break;
             }
             case "1": {
-                this.equipTool(EditorToolName.AreaEditor);
+                this.equipTool(EditorToolName.ExploreTheRoom);
                 break;
             }
             case "2": {
-                this.equipTool(EditorToolName.EntityEditor);
+                if(get(mapEditorModeStore)) this.equipTool(EditorToolName.ExploreTheRoom);
+                else this.equipTool(EditorToolName.CloseMapEditor);
                 break;
             }
             case "3": {
-                // NOTE: Hide it untill FloorEditing is done
-                // this.equipTool(EditorToolName.FloorEditor);
+                if(get(mapEditorModeStore)) this.equipTool(EditorToolName.AreaEditor);
+                break;
+            }
+            case "4": {
+                if(get(mapEditorModeStore)) this.equipTool(EditorToolName.EntityEditor);
+                break;
+            }
+            case "4": {
+                if(get(mapEditorModeStore)) this.equipTool(EditorToolName.WAMSettingsEditor);
+                break;
+            }
+            case "5": {
+                if(get(mapEditorModeStore)) this.equipTool(EditorToolName.TrashEditor);
+                break;
+            }
+            case "6": {
+                this.equipTool(EditorToolName.CloseMapEditor);
                 break;
             }
             case "z": {
@@ -391,7 +407,7 @@ export class MapEditorModeManager {
                 this.equipTool(undefined);
                 return;
             }
-            this.equipTool(this.lastlyUsedTool ?? EditorToolName.EntityEditor);
+            this.equipTool(this.lastlyUsedTool ?? EditorToolName.ExploreTheRoom);
         });
     }
 
