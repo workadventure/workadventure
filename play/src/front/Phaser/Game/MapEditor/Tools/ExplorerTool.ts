@@ -1,5 +1,7 @@
 import { EditMapCommandMessage } from "@workadventure/messages";
 import debug from "debug";
+import { Unsubscriber, get } from "svelte/store";
+import { AreaData } from "@workadventure/map-editor";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { analyticsClient } from "../../../../Administration/AnalyticsClient";
 import {
@@ -11,13 +13,11 @@ import {
 } from "../../../../Stores/MapEditorStore";
 import { gameManager } from "../../GameManager";
 import { GameScene } from "../../GameScene";
-import { MapEditorTool } from "./MapEditorTool";
 import { Entity } from "../../../ECS/Entity";
-import { Unsubscriber, get } from "svelte/store";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { EntitiesManager } from "../../GameMap/EntitiesManager";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
-import { AreaData } from "@workadventure/map-editor";
+import { MapEditorTool } from "./MapEditorTool";
 
 const logger = debug("explorer-tool");
 
@@ -86,8 +86,8 @@ export class ExplorerTool implements MapEditorTool {
 
         if (gameObjects.length > 0) {
             const gameObject = gameObjects[0];
-            console.log('gameObject', gameObject);
-            if (gameObject instanceof Entity || gameObject instanceof AreaPreview) mapExplorationObjectSelectedStore.set(gameObject);
+            if (gameObject instanceof Entity || gameObject instanceof AreaPreview)
+                mapExplorationObjectSelectedStore.set(gameObject);
         }
 
         this.scene.markDirty();
@@ -162,9 +162,6 @@ export class ExplorerTool implements MapEditorTool {
         mapExplorationEntitiesStore.set(
             gameManager.getCurrentGameScene().getGameMapFrontWrapper().getEntitiesManager().getEntities()
         );
-        mapExplorationAreasStore.set(
-            gameManager.getCurrentGameScene().getGameMapFrontWrapper().getAreas()
-        );
 
         // Define new cursor
         this.scene.input.setDefaultCursor("grab");
@@ -220,25 +217,28 @@ export class ExplorerTool implements MapEditorTool {
 
     private setAllAreasPreviewPointedToEditColor() {
         const areaConfigs = this.scene.getGameMapFrontWrapper().getAreas();
-        if(!areaConfigs)return;
+        mapExplorationAreasStore.set(new Map());
+        const areas = new Map<string, AreaPreview>();
+        if (!areaConfigs) return;
         for (const [key, config] of areaConfigs.entries()) {
-            const areaPreview = this.areaPreviews.get(key);
+            let areaPreview = this.areaPreviews.get(key);
             if (areaPreview) {
                 areaPreview.updatePreview(config);
             } else {
-                this.createAndSaveAreaPreview(key, config);
+                areaPreview = this.createAndSaveAreaPreview(key, config);
             }
+            areas.set(key, areaPreview);
         }
+        mapExplorationAreasStore.set(areas);
     }
 
     private removeAllAreasPreviewPointedToEditColor() {
         const areas = get(mapExplorationAreasStore);
-        if(!areas)return;
-        for (const areaKey of areas.keys()) {
-            if(!this.areaPreviews.has(areaKey)) continue;
-            this.removePreviewEventHandlers(this.areaPreviews.get(areaKey) as AreaPreview);
+        if (!areas) return;
+        for (const area of areas.values()) {
+            this.removePreviewEventHandlers(area);
             this.areaPreviews.clear();
-        };
+        }
         areas.clear();
         mapExplorationAreasStore.set(undefined);
     }

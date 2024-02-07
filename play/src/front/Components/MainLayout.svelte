@@ -23,6 +23,7 @@
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { askDialogStore } from "../Stores/MeetingStore";
+    import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
@@ -46,7 +47,6 @@
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
-    import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import ObjectDetails from "./Modal/ObjectDetails.svelte";
 
     let mainLayout: HTMLDivElement;

@@ -2,6 +2,7 @@ import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { Easing } from "../../types";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Box } from "../../WebRtc/LayoutManager";
+import { AreaPreview } from "../Components/MapEditor/AreaPreview";
 import { Entity } from "../ECS/Entity";
 import type { Player } from "../Player/Player";
 import { hasMovedEventName } from "../Player/Player";
@@ -385,6 +386,10 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     public goToEntity(entity: Entity): void {
         this.scene.cameras.main.centerOn(entity.x, entity.y);
+        this.scene.markDirty();
+    }
+    public goToAreaPreviex(area: AreaPreview): void {
+        this.scene.cameras.main.centerOn(area.x, area.y);
         this.scene.markDirty();
     }
 }

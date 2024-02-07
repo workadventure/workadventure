@@ -62,7 +62,6 @@
         additionnalButtonsMenu,
         addClassicButtonActionBarEvent,
         addActionButtonActionBarEvent,
-        mapEditorActivated,
     } from "../../Stores/MenuStore";
     import {
         emoteDataStore,

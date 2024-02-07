@@ -1,4 +1,4 @@
-import type { EntityPrefab, EntityDataProperties, AreaData } from "@workadventure/map-editor";
+import type { EntityPrefab, EntityDataProperties } from "@workadventure/map-editor";
 import { writable } from "svelte/store";
 import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
 import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
@@ -80,4 +80,4 @@ export const mapEditorWamSettingsEditorToolCurrentMenuItemStore = writable<
 export const mapExplorationModeStore = writable<boolean>(false);
 export const mapExplorationObjectSelectedStore = writable<Entity | AreaPreview | undefined>(undefined);
 export const mapExplorationEntitiesStore = writable<Map<string, Entity>>(new Map());
-export const mapExplorationAreasStore = writable<Map<string, AreaData>|undefined>(new Map());
+export const mapExplorationAreasStore = writable<Map<string, AreaPreview> | undefined>(new Map());

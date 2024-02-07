@@ -11,9 +11,11 @@
         mapExplorationEntitiesStore,
         mapEditorVisibilityStore,
         mapExplorationObjectSelectedStore,
+        mapExplorationAreasStore,
     } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { Entity } from "../../Phaser/ECS/Entity";
+    import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
 
     let filter = "";
@@ -52,6 +54,18 @@
         if ($mapExplorationObjectSelectedStore == entity) return;
 
         entity.setPointedToEditColor(0x000000);
+        gameManager.getCurrentGameScene().markDirty();
+    }
+    function highlightArea(area: AreaPreview) {
+        area.setStrokeStyle(2, 0xf9e82d);
+        gameManager.getCurrentGameScene().getCameraManager().goToAreaPreviex(area);
+        gameManager.getCurrentGameScene().markDirty();
+    }
+    function unhighlightArea(area: AreaPreview) {
+        // Don't unhighlight if the area is selected
+        if ($mapExplorationObjectSelectedStore == area) return;
+
+        area.setStrokeStyle(2, 0x000000);
         gameManager.getCurrentGameScene().markDirty();
     }
 </script>
@@ -221,35 +235,32 @@
             on:click={toggleAreaList}
         >
             <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={AreaToolImg} alt="link icon" />
-            <span class="tw-pointer-events-none">30 areas</span>
+            <span class="tw-pointer-events-none tw-w-32"
+                >{$mapExplorationAreasStore ? $mapExplorationAreasStore.size : 0} areas</span
+            >
             <ChevronDownIcon class="tw-pointer-events-none" size="32" />
         </div>
         {#if areaListActive}
             <div class="items tw-p-4 tw-flex tw-flex-col">
-                <div
-                    class="tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
-                >
-                    <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={AreaToolImg} alt="link icon" />
-                    <span class="tw-pointer-events-none">Area</span>
-                </div>
-                <div
-                    class="tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
-                >
-                    <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={AreaToolImg} alt="link icon" />
-                    <span class="tw-pointer-events-none">Area</span>
-                </div>
-                <div
-                    class="tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
-                >
-                    <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={AreaToolImg} alt="link icon" />
-                    <span class="tw-pointer-events-none">Area</span>
-                </div>
-                <div
-                    class="tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
-                >
-                    <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={AreaToolImg} alt="link icon" />
-                    <span class="tw-pointer-events-none">Area</span>
-                </div>
+                {#if $mapExplorationAreasStore && $mapExplorationAreasStore.size > 0}
+                    {#each [...$mapExplorationAreasStore] as [key, area] (key)}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <div
+                            id={key}
+                            on:mouseenter={() => highlightArea(area)}
+                            on:mouseleave={() => unhighlightArea(area)}
+                            on:click={() => mapExplorationObjectSelectedStore.set(area)}
+                            class="tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
+                        >
+                            <img
+                                class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none"
+                                src={AreaToolImg}
+                                alt="link icon"
+                            />
+                            <span class="tw-pointer-events-none tw-w-32">{area.getAreaData().name || "No name"}</span>
+                        </div>
+                    {/each}
+                {/if}
             </div>
         {/if}
     </div>
