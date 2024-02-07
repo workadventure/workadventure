@@ -106,6 +106,9 @@
                     on:change={onValueChange}
                     on:blur={onValueChange}
                 >
+                    <option value="" selected={!property.areaName}
+                        >{$LL.mapEditor.properties.exitProperties.defaultStartArea()}</option
+                    >
                     {#each startAreas as areaName (areaName)}
                         <option value={areaName} selected={areaName === property.areaName}>{areaName}</option>
                     {/each}
