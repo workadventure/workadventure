@@ -111,6 +111,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Où les joueurs apparaissent lorsqu'ils quittent la carte.",
             exitMap: "Quitter la carte",
             exitMapStartAreaName: "Nom de la zone de départ",
+            defaultStartArea: "Zone de départ par défaut",
         },
     },
     areaEditor: {

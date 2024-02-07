@@ -112,6 +112,7 @@ const mapEditor: BaseTranslation = {
             description: "Where people can exit the map to another one.",
             exitMap: "Exit map",
             exitMapStartAreaName: "Start area name",
+            defaultStartArea: "Default start area",
         },
         youtubeProperties: {
             label: "Open Youtube Video",
