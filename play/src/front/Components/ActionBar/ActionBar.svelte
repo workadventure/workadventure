@@ -784,11 +784,7 @@
                     </button>
                 </div>
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={toggleMapEditorMode}
-                    class="bottom-action-button"
-                >
+                <div on:dragstart|preventDefault={noDrag} on:click={toggleMapEditorMode} class="bottom-action-button">
                     {#if isMobile}
                         <Tooltip text={$LL.actionbar.mapEditorMobileLocked()} />
                     {:else}

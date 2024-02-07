@@ -46,10 +46,8 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
             $peerStore.forEach(addPeer);
 
             $broadcastTracksStore.forEach((trackWrapper) => {
-                console.log("trackWrapper", trackWrapper);
                 if (trackWrapper instanceof JitsiTrackWrapper) {
                     const cameraTrackWrapper = trackWrapper.cameraTrackWrapper;
-                    console.log("cameraTrackWrapper", cameraTrackWrapper);
                     if (/*!cameraTrackWrapper.isEmpty() &&*/ !trackWrapper.isLocal) {
                         addPeer(cameraTrackWrapper);
                     }

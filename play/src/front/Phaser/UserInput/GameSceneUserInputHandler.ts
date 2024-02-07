@@ -72,9 +72,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
 
     public handleKeyDownEvent(event: KeyboardEvent): KeyboardEvent {
-        if (get(mapEditorModeStore)) {
-            this.gameScene.getMapEditorModeManager()?.handleKeyDownEvent(event);
-        }
+        this.gameScene.getMapEditorModeManager()?.handleKeyDownEvent(event);
         switch (event.code) {
             case "KeyE": {
                 mapEditorModeStore.switchMode(!get(mapEditorModeStore));

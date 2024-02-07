@@ -3356,6 +3356,14 @@ ${escapedMessage}
             return;
         }
         waScaleManager.handleZoomByFactor(zoomFactor);
+
+        // If the zoom modifier is under of 0.5 we propose to the user to switch to the explorer mode
+        if (waScaleManager.zoomModifier <= 0.5 && !get(mapEditorModeStore)) {
+            // TODO create rule management for mobile
+            //if (isMobile) return;
+            analyticsClient.toggleMapEditor(!get(mapEditorModeStore));
+            mapEditorModeStore.switchMode(!get(mapEditorModeStore));
+        }
         // biggestAvailableAreaStore.recompute();
     }
 

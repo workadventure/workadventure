@@ -7,7 +7,11 @@
     import audioSvg from "../images/audio-white.svg";
     import AreaToolImg from "../images/icon-tool-area.png";
     import EntityToolImg from "../images/icon-tool-entity.svg";
-    import { mapExplorationEntitiesStore, mapEditorVisibilityStore, mapExplorationObjectSelectedStore } from "../../Stores/MapEditorStore";
+    import {
+        mapExplorationEntitiesStore,
+        mapEditorVisibilityStore,
+        mapExplorationObjectSelectedStore,
+    } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { Entity } from "../../Phaser/ECS/Entity";
     import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
@@ -45,7 +49,7 @@
     }
     function unhighlightEntity(entity: Entity) {
         // Don't unhighlight if the entity is selected
-        if($mapExplorationObjectSelectedStore == entity) return;
+        if ($mapExplorationObjectSelectedStore == entity) return;
 
         entity.setPointedToEditColor(0x000000);
         gameManager.getCurrentGameScene().markDirty();

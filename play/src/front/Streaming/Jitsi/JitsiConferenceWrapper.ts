@@ -74,7 +74,6 @@ export class JitsiConferenceWrapper {
     }
 
     public static join(connection: JitsiConnection, jitsiRoomName: string): Promise<JitsiConferenceWrapper> {
-        console.log("JitsiConferenceWrapper => join", jitsiRoomName);
         return new Promise((resolve, reject) => {
             const JitsiMeetJS = window.JitsiMeetJS;
             const room = connection.initJitsiConference(jitsiRoomName, {});
@@ -526,7 +525,7 @@ export class JitsiConferenceWrapper {
     private addRemoteTrack(track: JitsiTrack, allowOverride: boolean) {
         const videoTracks = track.getOriginalStream().getVideoTracks();
         if (videoTracks.length > 0) {
-            console.log("JitsiConferenceWrapper => addRemoteTrack => videoTracks", videoTracks[0].getSettings());
+            console.info("JitsiConferenceWrapper => addRemoteTrack => videoTracks", videoTracks[0].getSettings());
         }
         debug("JitsiConferenceWrapper => addRemoteTrack", track.getType());
         this._streamStore.update((tracks) => {

@@ -24,7 +24,7 @@
         img: ExplorerImg,
         tooltiptext: $LL.mapEditor.sideBar.exploreTheRoom(),
     });
-    if ($mapEditorActivated){
+    if ($mapEditorActivated) {
         availableTools.push({
             toolName: EditorToolName.AreaEditor,
             img: AreaToolImg,

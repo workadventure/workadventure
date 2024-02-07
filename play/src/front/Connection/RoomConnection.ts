@@ -453,7 +453,6 @@ export class RoomConnection implements RoomConnection {
                                 break;
                             }
                             case "muteMicrophoneMessage": {
-                                console.log("muteMicrophoneSpaceUserMessage", subMessage.muteMicrophoneMessage);
                                 if (subMessage.muteMicrophoneMessage.userId !== this.userId?.toString()) break;
 
                                 this._muteMicrophoneMessage.next(subMessage.muteMicrophoneMessage);
@@ -740,7 +739,6 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "mutedMessage": {
-                    console.log("mutedMessage", message.mutedMessage);
                     this._mutedMessage.next(message.mutedMessage);
                     break;
                 }
@@ -749,7 +747,6 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "askMutedMessage": {
-                    console.log("askMutedMessage", message.askMutedMessage);
                     this._askMutedMessage.next(message.askMutedMessage);
                     break;
                 }
