@@ -938,16 +938,12 @@
             {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
                 <div class="items-center relative hidden xl:block" transition:fly={{delay: 1500, y: -200, duration: 750 }}>
                     <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false } tabindex="0">
-                        <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded">
-                            <div class="px-2 h-6">
-                                <AdminPanIcon />
+                        <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-4 pr-3">
+                            <AdminPanIcon />
+                            <div class="pr-2">
+                                <div class="font-bold text-white leading-3 whitespace-nowrap select-none">Administration<!-- trad --></div>
                             </div>
-                            <div class="">
-                                <div class="font-bold text-white leading-3 whitespace-nowrap select-none">Admin menu<!-- trad --></div>
-                            </div>
-                            <div class="m-auto pl-3 pr-6 h-4 w-4">
-                                <ChevronDownIcon strokeWidth="2" classList="h-4 w-4 aspect-ratio transition-all {adminMenuIsDropped ? 'rotate-180' : '' }" height="16px" width="16px"  />
-                            </div>
+                            <ChevronDownIcon strokeWidth="2" classList="h-4 w-4 aspect-ratio transition-all opacity-50 {adminMenuIsDropped ? 'rotate-180' : '' }" height="16px" width="16px"  />
                         </div>
                     </div>
                     {#if adminMenuIsDropped}
@@ -995,19 +991,17 @@
             {/if}
             <div class="flex items-center relative hidden xl:block w-40" transition:fly={{delay: 1750, y: -200, duration: 750 }}>
                 <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => profileMenuIsDropped = !profileMenuIsDropped} on:click={close} tabindex="0">
-                    <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded">
-                        <div class="p-0 m-auto w-8">
-                            <Woka userId={-1} placeholderSrc="" customWidth="42px" customHeight="42px" />
-                        </div>
-                        <div class="m-auto pt-1">
+                    <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-2 pr-3">
+                        <Woka userId={-1} placeholderSrc="" customWidth="32px" customHeight="32px" />
+                        <div class="grow flex flex-col justify-start text-left pr-2">
                             <div class="font-bold text-white leading-5 whitespace-nowrap select-none">Hugo</div>
                             <div class="text-xxs bold text-success whitespace-nowrap select-none flex items-center">
                                 <div class="aspect-ratio h-2 w-2 bg-success rounded-full mr-1"></div>
                                 ONLINE<!-- trad -->
                             </div>
                         </div>
-                        <div class="m-auto pl-3 pr-6 h-4 w-4">
-                            <ChevronDownIcon strokeWidth="2" classList="h-4 w-4 aspect-ratio transition-all {profileMenuIsDropped ? 'rotate-180' : '' }" height="16px" width="16px"  />
+                        <div>
+                            <ChevronDownIcon strokeWidth="2" classList="transition-all opacity-50 {adminMenuIsDropped ? 'rotate-180' : '' }" height="h-4" width="w-4"  />
                         </div>
                     </div>
                 </div>
