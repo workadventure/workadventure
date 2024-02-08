@@ -16,7 +16,8 @@ import { GameScene } from "../../GameScene";
 import { Entity } from "../../../ECS/Entity";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { EntitiesManager } from "../../GameMap/EntitiesManager";
-import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
+import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
+import { waScaleManager } from "../../../Services/WaScaleManager";
 import { MapEditorTool } from "./MapEditorTool";
 
 const logger = debug("explorer-tool");
@@ -30,6 +31,8 @@ export class ExplorerTool implements MapEditorTool {
     private explorationMouseIsActive = false;
     private entitiesManager: EntitiesManager;
     private areaPreviews = new Map<string, AreaPreview>(new Map());
+    private lastCameraCenterXToZoom = 0;
+    private lastCameraCenterYToZoom = 0;
     private mapExplorationEntitiesSubscribe: Unsubscriber | undefined;
 
     private keyDownHandler = (event: KeyboardEvent) => {
@@ -47,6 +50,9 @@ export class ExplorerTool implements MapEditorTool {
         }
     };
     private keyUpHandler = (event: KeyboardEvent) => {
+        // Define new zone to zoom
+        if (this.downIsPressed || this.upIsPressed || this.leftIsPressed || this.rightIsPressed)
+            this.defineZoomToCenterCameraPosition();
         if (event.key === "ArrowDown" || event.key === "s") {
             this.downIsPressed = false;
         }
@@ -68,6 +74,7 @@ export class ExplorerTool implements MapEditorTool {
         deltaY: number,
         deltaZ: number
     ) => {
+        // Restore camera mode
         this.scene.zoomByFactor(1 - (deltaY / 53) * 0.1);
     };
     private pointerDownHandler = (pointer: Phaser.Input.Pointer) => {
@@ -78,6 +85,10 @@ export class ExplorerTool implements MapEditorTool {
         if (!this.explorationMouseIsActive) return;
         this.scene.cameras.main.scrollX -= pointer.velocity.x / 10;
         this.scene.cameras.main.scrollY -= pointer.velocity.y / 10;
+
+        // Define new zone to zoom
+        this.defineZoomToCenterCameraPosition();
+
         this.scene.markDirty();
     };
     private pointerUpHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
@@ -111,8 +122,13 @@ export class ExplorerTool implements MapEditorTool {
         if (this.rightIsPressed) {
             this.scene.cameras.main.scrollX += 10;
         }
-        this.scene.markDirty();
+
+        get(mapExplorationAreasStore)?.forEach((preview) => preview.update(time, dt));
+
+        // Dirty the scene to update the camera position if it has changed
+        if (this.downIsPressed || this.upIsPressed || this.leftIsPressed || this.rightIsPressed) this.scene.markDirty();
     }
+
     public clear(): void {
         // Put analytics for exploration mode
         analyticsClient.closeExplorationMode();
@@ -121,13 +137,16 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.userInputManager.restoreControls();
 
         // Remove all controls for the exploration mode
-        this.scene.input.keyboard?.removeListener("keydown", this.keyDownHandler);
-        this.scene.input.keyboard?.removeListener("keyup", this.keyUpHandler);
-        this.scene.input.removeListener("wheel", this.wheelHandler);
-        this.scene.input.removeListener("pointerdown", this.pointerDownHandler);
-        this.scene.input.removeListener("pointermove", this.pointerMoveHandler);
-        this.scene.input.removeListener("pointerup", this.pointerUpHandler);
+        this.scene.input.keyboard?.off("keydown", this.keyDownHandler);
+        this.scene.input.keyboard?.off("keyup", this.keyUpHandler);
+        this.scene.input.off("wheel", this.wheelHandler);
+        this.scene.input.off("pointerdown", this.pointerDownHandler);
+        this.scene.input.off("pointermove", this.pointerMoveHandler);
+        this.scene.input.off("pointerup", this.pointerUpHandler);
+        this.scene.input.off(Phaser.Input.Events.GAME_OUT, this.pointerUpHandler);
 
+        // Restore focus target
+        waScaleManager.setFocusTarget(undefined);
         // Restore camera mode
         this.scene.getCameraManager().startFollowPlayer(this.scene.CurrentPlayer, 1000);
 
@@ -151,6 +170,7 @@ export class ExplorerTool implements MapEditorTool {
         mapExplorationObjectSelectedStore.set(undefined);
         mapExplorationModeStore.set(false);
         mapEditorVisibilityStore.set(true);
+        mapExplorationAreasStore.set(undefined);
     }
     public activate(): void {
         // Put analytics for exploration mode
@@ -180,6 +200,7 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.input.on("pointerdown", this.pointerDownHandler);
         this.scene.input.on("pointermove", this.pointerMoveHandler);
         this.scene.input.on("pointerup", this.pointerUpHandler);
+        this.scene.input.on(Phaser.Input.Events.GAME_OUT, this.pointerUpHandler);
 
         // Define new camera mode
         this.scene.getCameraManager().setExplorationMode();
@@ -217,45 +238,48 @@ export class ExplorerTool implements MapEditorTool {
 
     private setAllAreasPreviewPointedToEditColor() {
         const areaConfigs = this.scene.getGameMapFrontWrapper().getAreas();
-        mapExplorationAreasStore.set(new Map());
-        const areas = new Map<string, AreaPreview>();
+        const areaPreviews = get(mapExplorationAreasStore) ?? new Map<string, AreaPreview>();
         if (!areaConfigs) return;
         for (const [key, config] of areaConfigs.entries()) {
-            let areaPreview = this.areaPreviews.get(key);
+            let areaPreview = areaPreviews.get(key);
             if (areaPreview) {
                 areaPreview.updatePreview(config);
             } else {
-                areaPreview = this.createAndSaveAreaPreview(key, config);
+                areaPreview = this.createAndSaveAreaPreview(config);
             }
-            areas.set(key, areaPreview);
+            areaPreviews.set(key, areaPreview);
         }
-        mapExplorationAreasStore.set(areas);
+        mapExplorationAreasStore.set(areaPreviews);
     }
 
     private removeAllAreasPreviewPointedToEditColor() {
         const areas = get(mapExplorationAreasStore);
         if (!areas) return;
-        for (const area of areas.values()) {
-            this.removePreviewEventHandlers(area);
-            this.areaPreviews.clear();
+        for (const [key, area] of areas.entries()) {
+            area.setVisible(false);
+            area.destroy();
+            areas.delete(key);
         }
         areas.clear();
-        mapExplorationAreasStore.set(undefined);
     }
 
-    private createAndSaveAreaPreview(key: string, areaConfig: AreaData): AreaPreview {
-        const areaPreview = new AreaPreview(this.scene, structuredClone(areaConfig));
-        this.bindAreaPreviewEventHandlers(areaPreview);
-        this.areaPreviews.set(key, areaPreview);
-        return areaPreview;
+    private createAndSaveAreaPreview(areaConfig: AreaData): AreaPreview {
+        return new AreaPreview(this.scene, structuredClone(areaConfig));
     }
 
-    private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
-        //areaPreview.on(AreaPreviewEvent.Clicked, this.pointerUpHandler);
-        //areaPreview.on(AreaPreviewEvent.DoubleClicked, this.pointerUpHandler);
-    }
-    private removePreviewEventHandlers(areaPreview: AreaPreview): void {
-        areaPreview.off(AreaPreviewEvent.Clicked, this.pointerUpHandler);
-        areaPreview.on(AreaPreviewEvent.DoubleClicked, this.pointerUpHandler);
+    public defineZoomToCenterCameraPosition() {
+        // FIXME from the svelte component, the udate isn't dispatch in totaly at the same time after to move the camera
+        setTimeout(() => {
+            const cameraCenterXToZoom = this.scene.cameras.main.worldView.x + this.scene.cameras.main.width / 2;
+            const cameraCenterYToZoom = this.scene.cameras.main.worldView.y + this.scene.cameras.main.height / 2;
+            if (
+                cameraCenterXToZoom != this.lastCameraCenterXToZoom ||
+                cameraCenterYToZoom != this.lastCameraCenterYToZoom
+            ) {
+                waScaleManager.setFocusTarget({ x: cameraCenterXToZoom, y: cameraCenterYToZoom });
+                this.lastCameraCenterXToZoom = cameraCenterXToZoom;
+                this.lastCameraCenterYToZoom = cameraCenterYToZoom;
+            }
+        }, 100);
     }
 }

@@ -1,6 +1,7 @@
 <script lang="ts">
     import { writable } from "svelte/store";
     import { ChevronDownIcon } from "svelte-feather-icons";
+    import { onMount } from "svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import visioSvg from "../images/loupe.svg";
     import ExplorerImg from "../images/explorer.svg";
@@ -16,14 +17,63 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { Entity } from "../../Phaser/ECS/Entity";
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
+    import { ExplorerTool } from "../../Phaser/Game/MapEditor/Tools/ExplorerTool";
     import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
 
     let filter = "";
     let selectFilters = writable<Array<string>>(new Array<string>());
+    let entitessListFiltered = writable<Map<string, Entity>>(new Map());
+    let areasListFiltered = writable<Map<string, AreaPreview>>(new Map());
 
-    function onChangeFilter() {
-        console.log("filter changed", filter);
+    onMount(() => {
+        init();
+    });
+
+    function init() {
+        entitessListFiltered.set($mapExplorationEntitiesStore);
+        if ($mapExplorationAreasStore) areasListFiltered.set($mapExplorationAreasStore);
     }
+
+    function onChangeFilterHandle() {
+        entitessListFiltered.set(new Map());
+        for (let [key, entity] of $mapExplorationEntitiesStore) {
+            // Check filter by name
+            if (filter && filter != "" && entity.getPrefab().name.toLowerCase().indexOf(filter.toLowerCase()) == -1)
+                continue;
+
+            // Check filter by properties
+            if ($selectFilters.length == 0) {
+                $entitessListFiltered.set(key, entity);
+                continue;
+            } else {
+                // Check if the entity has the selected properties
+                for (let filter of $selectFilters) {
+                    if (entity.getProperties().find((p) => p.type === filter)) $entitessListFiltered.set(key, entity);
+                }
+            }
+        }
+
+        areasListFiltered.set(new Map());
+        if ($mapExplorationAreasStore) {
+            for (let [key, area] of $mapExplorationAreasStore) {
+                // Set area if the name match the filter and if the area has the selected properties
+                if (filter && filter != "" && area.getAreaData().name.toLowerCase().indexOf(filter.toLowerCase()) == -1)
+                    continue;
+
+                // Check filter by properties
+                if ($selectFilters.length == 0) {
+                    $areasListFiltered.set(key, area);
+                    continue;
+                } else {
+                    // Check if the area has the selected properties
+                    for (let filter of $selectFilters) {
+                        if (area.getProperties().find((p) => p.type === filter)) $areasListFiltered.set(key, area);
+                    }
+                }
+            }
+        }
+    }
+
     function hideSideBar() {
         mapEditorVisibilityStore.set(false);
     }
@@ -34,6 +84,7 @@
             }
             return [...filters, filterName];
         });
+        onChangeFilterHandle();
     }
     let entityListActive = false;
     let areaListActive = false;
@@ -47,7 +98,10 @@
     function highlightEntity(entity: Entity) {
         entity.setPointedToEditColor(0xf9e82d);
         gameManager.getCurrentGameScene().getCameraManager().goToEntity(entity);
-        gameManager.getCurrentGameScene().markDirty();
+        // Use explorer tool to define the zoom to center camera position
+        (
+            gameManager.getCurrentGameScene().getMapEditorModeManager().currentlyActiveTool as ExplorerTool
+        ).defineZoomToCenterCameraPosition();
     }
     function unhighlightEntity(entity: Entity) {
         // Don't unhighlight if the entity is selected
@@ -59,7 +113,10 @@
     function highlightArea(area: AreaPreview) {
         area.setStrokeStyle(2, 0xf9e82d);
         gameManager.getCurrentGameScene().getCameraManager().goToAreaPreviex(area);
-        gameManager.getCurrentGameScene().markDirty();
+        // Use explorer tool to define the zoom to center camera position
+        (
+            gameManager.getCurrentGameScene().getMapEditorModeManager().currentlyActiveTool as ExplorerTool
+        ).defineZoomToCenterCameraPosition();
     }
     function unhighlightArea(area: AreaPreview) {
         // Don't unhighlight if the area is selected
@@ -113,7 +170,7 @@
                 class="filter-input tw-h-8"
                 type="search"
                 bind:value={filter}
-                on:input={onChangeFilter}
+                on:input={onChangeFilterHandle}
                 placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
             />
         </div>
@@ -199,17 +256,19 @@
             on:click={toggleEntityList}
         >
             <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={EntityToolImg} alt="link icon" />
-            {#if $mapExplorationEntitiesStore && $mapExplorationEntitiesStore.size > 0}
-                <span class="tw-pointer-events-none">{$mapExplorationEntitiesStore.size} objects found</span>
+            {#if $entitessListFiltered.size > 0}
+                <span class="tw-pointer-events-none"
+                    >{$entitessListFiltered.size} entitie{$entitessListFiltered.size > 1 ? "s" : ""} found</span
+                >
             {:else}
-                <p>No entities found 🙅‍♂️</p>
+                <p>No entity found 🙅‍♂️</p>
             {/if}
             <ChevronDownIcon class="tw-pointer-events-none" size="32" />
         </div>
 
-        {#if entityListActive && $mapExplorationEntitiesStore && $mapExplorationEntitiesStore.size > 0}
+        {#if entityListActive && $entitessListFiltered.size > 0}
             <div class="items tw-p-4 tw-flex tw-flex-col">
-                {#each [...$mapExplorationEntitiesStore] as [key, entity] (key)}
+                {#each [...$entitessListFiltered] as [key, entity] (key)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         id={entity.entityId}
@@ -223,7 +282,7 @@
                             src={entity.getPrefab().imagePath}
                             alt="link icon"
                         />
-                        <span class="tw-pointer-events-none">{entity.getPrefab().name}</span>
+                        <span class="tw-pointer-events-none tw-font-bold">{entity.getPrefab().name}</span>
                     </div>
                 {/each}
             </div>
@@ -235,15 +294,19 @@
             on:click={toggleAreaList}
         >
             <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={AreaToolImg} alt="link icon" />
-            <span class="tw-pointer-events-none tw-w-32"
-                >{$mapExplorationAreasStore ? $mapExplorationAreasStore.size : 0} areas</span
-            >
+            {#if $areasListFiltered.size > 0}
+                <span class="tw-pointer-events-none"
+                    >{$areasListFiltered.size} area{$areasListFiltered.size > 1 ? "s" : ""} found</span
+                >
+            {:else}
+                <p>No area found 🙅‍♂️</p>
+            {/if}
             <ChevronDownIcon class="tw-pointer-events-none" size="32" />
         </div>
-        {#if areaListActive}
+        {#if areaListActive && $areasListFiltered.size > 0}
             <div class="items tw-p-4 tw-flex tw-flex-col">
-                {#if $mapExplorationAreasStore && $mapExplorationAreasStore.size > 0}
-                    {#each [...$mapExplorationAreasStore] as [key, area] (key)}
+                {#if $areasListFiltered.size > 0}
+                    {#each [...$areasListFiltered] as [key, area] (key)}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             id={key}
@@ -257,7 +320,13 @@
                                 src={AreaToolImg}
                                 alt="link icon"
                             />
-                            <span class="tw-pointer-events-none tw-w-32">{area.getAreaData().name || "No name"}</span>
+                            <span
+                                class="tw-pointer-events-none tw-w-32"
+                                class:tw-italic={!area.getAreaData().name || area.getAreaData().name == ""}
+                                class:tw-font-bold={area.getAreaData().name && area.getAreaData().name != ""}
+                            >
+                                {area.getAreaData().name || "No name"}
+                            </span>
                         </div>
                     {/each}
                 {/if}

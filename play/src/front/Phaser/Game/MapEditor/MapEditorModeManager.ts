@@ -423,7 +423,7 @@ export class MapEditorModeManager {
         this.mapEditorModeUnsubscriber();
     }
 
-    private get currentlyActiveTool(): MapEditorTool | undefined {
+    public get currentlyActiveTool(): MapEditorTool | undefined {
         return this.activeTool ? this.editorTools[this.activeTool] : undefined;
     }
 

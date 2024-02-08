@@ -25,7 +25,7 @@ export class AreaEditorTool extends MapEditorTool {
     /**
      * Visual representations of map Areas objects
      */
-    private areaPreviews: AreaPreview[];
+    private areaPreviews: AreaPreview[] = [];
     private currentlySelectedPreview: AreaPreview | undefined;
 
     private active: boolean;
@@ -62,7 +62,6 @@ export class AreaEditorTool extends MapEditorTool {
         this.shiftKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
         this.ctrlKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
 
-        this.areaPreviews = this.createAreaPreviews();
         this.active = false;
         this.drawingNewArea = false;
 
@@ -95,6 +94,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public activate(): void {
+        this.areaPreviews = this.createAreaPreviews();
         this.active = true;
         this.scene.input.setTopOnly(false);
         this.updateAreaPreviews();
@@ -105,6 +105,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public destroy(): void {
+        this.areaPreviews.forEach((preview) => preview.destroy());
         this.selectedAreaPreviewStoreSubscriber();
         this.unbindEventHandlers();
         this.scene.input.setDefaultCursor("auto");

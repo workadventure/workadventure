@@ -72,6 +72,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         this.setSize(bounds.width, bounds.height);
         this.setInteractive({ cursor: "grab" });
         this.scene.input.setDraggable(this);
+        this.drawAreaPreviewFromAreaData(areaData);
 
         this.showSizeAlteringSquares(false);
 
@@ -117,8 +118,12 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
     public updatePreview(dataToModify: AtLeast<AreaData, "id">): void {
         _.merge(this.areaData, dataToModify);
-        if (dataToModify.properties !== undefined) {
-            this.areaData.properties = dataToModify.properties;
+        this.drawAreaPreviewFromAreaData(dataToModify);
+    }
+
+    private drawAreaPreviewFromAreaData(areaData: AreaData | AtLeast<AreaData, "id">): void {
+        if (areaData.properties !== undefined) {
+            this.areaData.properties = areaData.properties;
 
             this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.destroy());
             let counter = 0;
@@ -187,13 +192,6 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     public destroy(): void {
         super.destroy();
         this.squares.forEach((square) => square.destroy());
-    }
-
-    public updateAreaData(dataToChange: Partial<AreaData>): void {
-        const oldAreaData = structuredClone(this.areaData);
-        const data = { id: this.areaData.id, ...dataToChange };
-        this.updatePreview(data);
-        this.emit(AreaPreviewEvent.Updated, data, oldAreaData);
     }
 
     private showSizeAlteringSquares(show = true): void {
