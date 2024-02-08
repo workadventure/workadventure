@@ -123,6 +123,7 @@
     import PlusIcon from "../Icons/PlusIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
+    import PenIcon from "../Icons/PenIcon.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -334,6 +335,7 @@
     }
 
     function openEditCompanionScene() {
+        console.log("Hey companion")
         selectCompanionSceneVisibleStore.set(true);
         gameManager.leaveGame(SelectCompanionSceneName, new SelectCompanionScene());
     }
@@ -435,13 +437,13 @@
         >
 
             <div
-                    class="group/btn-chat relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square"
+                    class="group/btn-message-circle relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square"
                     on:click={() =>analyticsClient.openedChat()}
                     on:click={toggleChat}
                     on:mouseenter={() => { !navigating ? helpActive = "chat" : '' }}
                     on:mouseleave={() => { !navigating ? helpActive = false : '' }}
             >
-                <div class="h-12 w-12 rounded group-hover/btn-chat:bg-white/10 aspect-square flex items-center justify-center transition-all"
+                <div class="h-12 w-12 rounded group-hover/btn-message-circle:bg-white/10 aspect-square flex items-center justify-center transition-all"
                 >
                     <MessageCircleIcon />
                 </div>
@@ -492,7 +494,7 @@
                         <div
                                 class="h-12 w-12 rounded aspect-square flex items-center justify-center transition-all {$emoteMenuSubStore ? 'bg-secondary group-hover/bg-secondary-600' : ' group-hover/btn-emoji:bg-white/10'}"
                         >
-                            <EmojiIcon color="{$emoteMenuSubStore ? 'stroke-white fill-white' : 'stroke-white fill-transparent'}" hover="{$emoteMenuSubStore ? 'group-hover/btn-emoji:fill-white' : 'group-hover/btn-emoji:fill-transparent'}" />
+                            <EmojiIcon color="{$emoteMenuSubStore ? 'stroke-white fill-white' : 'stroke-white fill-transparent'}" hover="group-hover/btn-emoji:fill-white" />
                         </div>
                         {#if helpActive === "emoji" && !$emoteMenuSubStore}
                             <HelpTooltip title="Display an emoji above your Woka" />
@@ -513,37 +515,40 @@
                                                             clickEmoji(key);
                                                         }}
                                                             id={`button-${$emoteDataStore.get(key)?.name}`}
-                                                            class="emoji py-2 px-2 block m-0 rounded-none flex items-center transition-all rounded-sm {$emoteMenuStore && $emoteMenuSubCurrentEmojiSelectedStore === key ? 'bg-secondary' : 'hover:bg-white/20'}"
+                                                            class="group emoji py-2 px-2 block m-0 rounded-none flex items-center transition-all rounded-sm {$emoteMenuStore && $emoteMenuSubCurrentEmojiSelectedStore === key ? 'bg-secondary' : 'hover:bg-white/20'}"
                                                     >
-                                                        <div class="emoji" style="margin:auto" id={`icon-${$emoteDataStore.get(key)?.name}`}>
+                                                        <div class="emoji transition-all group-hover:-rotate-6 group-hover:scale-[2.5]" style="margin:auto" id={`icon-${$emoteDataStore.get(key)?.name}`}>
                                                             {$emoteDataStore.get(key)?.emoji}
                                                         </div>
                                                         {#if !isMobile}
-                                                            <div class="text-white/50 font-xxs pl-1">{key}</div>
+                                                            <div class="text-white/50 group-hover:text-white group-hover:bold font-xxs pl-1">{key}</div>
                                                         {/if}
                                                     </button>
                                                 </div>
                                             {/each}
                                         </div>
                                         <div class="transition-all bottom-action-button flex items-center h-full pl-4 relative before:content-[''] before:absolute before:top-0 before:left-1 before:w-[1px] before:h-full before:bg-white/10">
-                                            <button class="btn btn-sm btn-border btn-light"
+                                            <button class="btn btn-sm btn-ghost btn-light flex"
                                                     on:click={() => analyticsClient.editEmote()}
                                                     on:click|stopPropagation|preventDefault={edit}
                                             >
                                                 {#if $emoteDataStoreLoading}
-                                                    <div class="rounded-lg bg-dark text-xs">
-                                                        <!-- loading animation -->
-                                                        <div class="loading-group">
-                                                            <span class="loading-dot"></span>
-                                                            <span class="loading-dot"></span>
-                                                            <span class="loading-dot"></span>
-                                                        </div>
-                                                    </div>
+                                                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
                                                 {:else}
-                                                    <PlusIcon width="w-4" height="h-4" />
+                                                    {#if !$emoteMenuStore}
+                                                        <PenIcon width="w-4" height="h-4" />
+                                                        <div>Edit <!-- Trad --></div>
+                                                    {:else }
+                                                        <XIcon width="w-4" height="h-4" />
+                                                        <div>Cancel <!-- Trad --></div>
+                                                    {/if}
                                                 {/if}
                                             </button>
                                         </div>
+                                        <!--
                                         <div class="transition-all bottom-action-button flex items-center rounded-r-lg h-full ml-2">
                                             <button
                                                     class="btn btn-sm btn-danger"
@@ -552,6 +557,7 @@
                                                 <XIcon width="w-4" height="h-4" />
                                             </button>
                                         </div>
+                                        -->
                                     </div>
                                 </div>
                             </div>
@@ -988,16 +994,16 @@
                 </div>
             {/if}
             <div class="flex items-center relative hidden xl:block w-40" transition:fly={{delay: 1750, y: -200, duration: 750 }}>
-                <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => profileMenuIsDropped = !profileMenuIsDropped} on:click|preventDefault={close} tabindex="0">
+                <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => profileMenuIsDropped = !profileMenuIsDropped} on:click={close} tabindex="0">
                     <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded">
                         <div class="p-0 m-auto w-8">
                             <Woka userId={-1} placeholderSrc="" customWidth="42px" customHeight="42px" />
                         </div>
                         <div class="m-auto pt-1">
                             <div class="font-bold text-white leading-5 whitespace-nowrap select-none">Hugo</div>
-                            <div class="text-xxs text-success whitespace-nowrap select-none flex items-center">
+                            <div class="text-xxs bold text-success whitespace-nowrap select-none flex items-center">
                                 <div class="aspect-ratio h-2 w-2 bg-success rounded-full mr-1"></div>
-                                Online<!-- trad -->
+                                ONLINE<!-- trad -->
                             </div>
                         </div>
                         <div class="m-auto pl-3 pr-6 h-4 w-4">
@@ -1045,19 +1051,19 @@
                             </div>
                             <div>Edit profil<!-- trad --></div>
                         </button>
-                        <button class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditSkinScene}>
+                        <button class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditSkinScene()}>
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <Woka userId={-1} placeholderSrc="" customWidth="26px" customHeight="26px" />
                             </div>
                             <div>Change skin<!-- trad --></div>
                         </button>
-                        <button class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditCompanionScene}>
+                        <button class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto" on:click={() => openEditCompanionScene()}>
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <Companion userId={-1} placeholderSrc="./static/images/default-companion.png" width="26px" height="26px" />
                             </div>
                             <div>Add a companion<!-- trad --></div>
                         </button>
-                        <button class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full">
+                        <button class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto">
                             <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                 <AchievementIcon />
                             </div>

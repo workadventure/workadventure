@@ -24,17 +24,17 @@
     let legalStrings: string[] = [];
     if (legals?.termsOfUseUrl) {
         legalStrings.push(
-            '<a href="' + encodeURI(legals.termsOfUseUrl) + '" target="_blank" class="text-white underline bold hover:text-secondary">' + $LL.login.termsOfUse() + "</a>"
+            '<a href="' + encodeURI(legals.termsOfUseUrl) + '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' + $LL.login.termsOfUse() + "</a>"
         );
     }
     if (legals?.privacyPolicyUrl) {
         legalStrings.push(
-            '<a href="' + encodeURI(legals.privacyPolicyUrl) + '" target="_blank" class="text-white underline bold hover:text-secondary">' + $LL.login.privacyPolicy() + "</a>"
+            '<a href="' + encodeURI(legals.privacyPolicyUrl) + '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' + $LL.login.privacyPolicy() + "</a>"
         );
     }
     if (legals?.cookiePolicyUrl) {
         legalStrings.push(
-            '<a href="' + encodeURI(legals.cookiePolicyUrl) + '" target="_blank" class="text-white underline bold hover:text-secondary">' + $LL.login.cookiePolicy() + "</a>"
+            '<a href="' + encodeURI(legals.cookiePolicyUrl) + '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' + $LL.login.cookiePolicy() + "</a>"
         );
     }
 

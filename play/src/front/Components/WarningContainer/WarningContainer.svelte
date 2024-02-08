@@ -39,11 +39,11 @@
                         </a>
                     {/if}
                 </div>
-                <div class="absolute w-full h-full z-0 {$bannerStore.bgColor ? 'opacity-50' : 'bg-contrast/50' }"
+                <div class="absolute w-full h-full z-0 {$bannerStore.bgColor ? '' : 'bg-contrast/50' }"
                      style={`background-color:${$bannerStore.bgColor};`}
                 ></div>
                 {#if $bannerStore.closable}
-                    <button class="btn btn-secondary relative z-10 ml-4 !py-1"
+                    <button class="btn btn-ghost relative z-10 ml-4 !py-1" style={`color: ${$bannerStore.bgColor};background:${$bannerStore.textColor};`}
                             on:click|preventDefault={closeBanner}
                     >
                         Got it ! <!-- Trad -->
