@@ -17,8 +17,10 @@ import { Entity } from "../../../ECS/Entity";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { EntitiesManager } from "../../GameMap/EntitiesManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
-import { waScaleManager } from "../../../Services/WaScaleManager";
+import { INITIAL_ZOOM_OUT_EXPLORER_MODE, MAX_ZOOM_OUT_EXPLORER_MODE, waScaleManager } from "../../../Services/WaScaleManager";
 import { MapEditorTool } from "./MapEditorTool";
+import { Easing } from "../../../../types";
+import { set } from "lodash";
 
 const logger = debug("explorer-tool");
 
@@ -30,7 +32,6 @@ export class ExplorerTool implements MapEditorTool {
     private rightIsPressed = false;
     private explorationMouseIsActive = false;
     private entitiesManager: EntitiesManager;
-    private areaPreviews = new Map<string, AreaPreview>(new Map());
     private lastCameraCenterXToZoom = 0;
     private lastCameraCenterYToZoom = 0;
     private mapExplorationEntitiesSubscribe: Unsubscriber | undefined;
@@ -74,8 +75,11 @@ export class ExplorerTool implements MapEditorTool {
         deltaY: number,
         deltaZ: number
     ) => {
+        // Calculate the velocity of the scroll
+        const velocity = deltaY / 53;
+        const zoomFactor = 1 - velocity * 0.1;
         // Restore camera mode
-        this.scene.zoomByFactor(1 - (deltaY / 53) * 0.1);
+        this.scene.zoomByFactor(zoomFactor, velocity);
     };
     private pointerDownHandler = (pointer: Phaser.Input.Pointer) => {
         this.explorationMouseIsActive = true;
@@ -132,6 +136,7 @@ export class ExplorerTool implements MapEditorTool {
     public clear(): void {
         // Put analytics for exploration mode
         analyticsClient.closeExplorationMode();
+        this.scene.getCameraManager().unlockCameraWithDelay(0);
 
         // Restore controls of the scene
         this.scene.userInputManager.restoreControls();
@@ -157,8 +162,11 @@ export class ExplorerTool implements MapEditorTool {
         // Restore cursor
         this.scene.input.setDefaultCursor("auto");
 
-        // Restore zoom
-        this.scene.zoomByFactor(2);
+        // Restore zoom factor
+        if(waScaleManager.zoomModifier < INITIAL_ZOOM_OUT_EXPLORER_MODE) this.scene.zoomByFactor(3);
+
+        // Define initial zoom max
+        waScaleManager.maxZoomOut = INITIAL_ZOOM_OUT_EXPLORER_MODE;
 
         // Mark the scene as dirty
         this.scene.markDirty();
@@ -186,9 +194,6 @@ export class ExplorerTool implements MapEditorTool {
         // Define new cursor
         this.scene.input.setDefaultCursor("grab");
 
-        // Define new zoom
-        this.scene.zoomByFactor(0.5);
-
         // Disable controls of the scene
         this.scene.userInputManager.disableControls();
 
@@ -205,6 +210,12 @@ export class ExplorerTool implements MapEditorTool {
         // Define new camera mode
         this.scene.getCameraManager().setExplorationMode();
 
+        // Rules: if the user click on the action bar to open the explorater mode, we define new zoom
+        if(waScaleManager.zoomModifier > MAX_ZOOM_OUT_EXPLORER_MODE) this.scene.zoomByFactor(0.5);
+
+        // Define new zoom max
+        waScaleManager.maxZoomOut = MAX_ZOOM_OUT_EXPLORER_MODE;
+
         // Make all entities interactive
         this.entitiesManager.makeAllEntitiesInteractive();
         this.entitiesManager.setAllEntitiesPointedToEditColor(0x000000);
@@ -212,6 +223,19 @@ export class ExplorerTool implements MapEditorTool {
 
         // Mark the scene as dirty
         this.scene.markDirty();
+
+        // Define new zone to zoom
+        this.defineZoomToCenterCameraPosition();
+
+        // Create flash animation
+        this.scene.cameras.main.flash(2000, 255, 255, 255, true);
+
+        // Create zoon animation
+        this.scene.cameras.main.zoomEffect.start(0.8, 500);
+        // FIWME: the zoom effect working, but the and of effect can be calledback. Override this effect and call method complete
+        setTimeout(() => {
+            this.scene.cameras.main.zoomEffect.start(1, 500);
+        }, 500);
 
         // Create subscribe to entities store
         this.mapExplorationEntitiesSubscribe = mapExplorationEntitiesStore.subscribe((entities) => {

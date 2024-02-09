@@ -5,6 +5,7 @@ interface Size {
 
 export class HdpiManager {
     private _zoomModifier = 1;
+    private _maxZoomOut = 1;
 
     /**
      *
@@ -36,19 +37,19 @@ export class HdpiManager {
         const optimalZoomLevel = this.getOptimalZoomLevel(realPixelNumber);
 
         // Has the canvas more pixels than the screen? This is forbidden
-        if (optimalZoomLevel * this._zoomModifier < 1) {
+        if (optimalZoomLevel * this._zoomModifier < this._maxZoomOut) {
             // Let's reset the zoom modifier (WARNING this is a SIDE EFFECT in a getter)
-            this._zoomModifier = 1 / optimalZoomLevel;
+            this._zoomModifier = this._maxZoomOut / optimalZoomLevel;
+
+            const maxGameWidth = Math.ceil(realPixelScreenSize.width / optimalZoomLevel / this._zoomModifier);
+            const maxGameHeight = Math.ceil(realPixelScreenSize.height / optimalZoomLevel / this._zoomModifier);
 
             return {
                 game: {
-                    width: realPixelScreenSize.width,
-                    height: realPixelScreenSize.height,
+                    width: maxGameWidth,
+                    height: maxGameHeight,
                 },
-                real: {
-                    width: realPixelScreenSize.width,
-                    height: realPixelScreenSize.height,
-                },
+                real: realPixelScreenSize,
             };
         }
 
@@ -72,10 +73,7 @@ export class HdpiManager {
                     width: minGameWidth,
                     height: minGameHeight,
                 },
-                real: {
-                    width: realPixelScreenSize.width,
-                    height: realPixelScreenSize.height,
-                },
+                real: realPixelScreenSize,
             };
         }
 
@@ -109,5 +107,13 @@ export class HdpiManager {
 
     public set zoomModifier(zoomModifier: number) {
         this._zoomModifier = zoomModifier;
+    }
+
+    public set maxZoomOut(maxZoomOut: number) {
+        this._maxZoomOut = maxZoomOut;
+    }
+
+    public get maxZoomOut(): number {
+        return this._maxZoomOut;
     }
 }

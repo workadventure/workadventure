@@ -209,12 +209,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         }
     }
 
-    public scrollBy(x: number, y: number): void {
-        this.camera.scrollX += x;
-        this.camera.scrollY += y;
-        this.scene.markDirty();
-    }
-
     public startFollowPlayer(player: Player, duration = 0): void {
         this.playerToFollow = player;
         this.setCameraMode(CameraMode.Follow);
@@ -306,7 +300,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         return targetZoomModifier - currentZoomModifier;
     }
 
-    private unlockCameraWithDelay(delay: number): void {
+    public unlockCameraWithDelay(delay: number): void {
         this.scene.time.delayedCall(delay, () => {
             this.cameraLocked = false;
         });
@@ -350,6 +344,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                     return;
                 }
                 this.camera.centerOn(focusOn.x, focusOn.y);
+
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             }
         );
@@ -372,6 +367,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private explorationMouseIsActive = false;
     // Create function to define the camera on exploration mode. The camera can be moved anywhere on the map. The camera is not locked on the player. The camera can be zoomed in and out. The camera can be moved with the mouse. The camera can be moved with the keyboard. The camera can be moved with the touchpad.
     public setExplorationMode(): void {
+        this.cameraLocked = false;
         this.stopFollow();
         this.cameraLocked = false;
         this.setCameraMode(CameraMode.Exploration);
@@ -382,6 +378,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             this.cameraBounds.y * 3,
             true
         );
+
+        // Center the camera on the player
+        this.scene.cameras.main.centerOn(this.scene.CurrentPlayer.x, this.scene.CurrentPlayer.y);
     }
 
     public goToEntity(entity: Entity): void {
@@ -391,5 +390,18 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     public goToAreaPreviex(area: AreaPreview): void {
         this.scene.cameras.main.centerOn(area.x, area.y);
         this.scene.markDirty();
+    }
+
+    public lockCameraDuring(delay: number = 3000): void {
+        this.cameraLocked = true;
+        this.scene.time.delayedCall(delay, () => {
+            this.cameraLocked = false;
+        });
+    }
+
+    emit(event: string | symbol, ...args: any[]): boolean {
+        // If the camera is defined on Exploration mode, the camaera manager events will be not emitted 
+        if(event === CameraManagerEvent.CameraUpdate && CameraMode.Exploration === this.cameraMode) false;
+        return super.emit(event, ...args);
     }
 }

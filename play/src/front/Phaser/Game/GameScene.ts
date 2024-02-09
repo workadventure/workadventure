@@ -3351,20 +3351,22 @@ ${escapedMessage}
         });
     }
 
-    zoomByFactor(zoomFactor: number) {
+    zoomByFactor(zoomFactor: number, velocity?: number) {
         if (this.cameraManager.isCameraLocked()) {
             return;
         }
-        waScaleManager.handleZoomByFactor(zoomFactor);
-
-        // If the zoom modifier is under of 0.5 we propose to the user to switch to the explorer mode
-        if (waScaleManager.zoomModifier <= 0.5 && !get(mapEditorModeStore)) {
-            // TODO create rule management for mobile
-            //if (isMobile) return;
+        // If the zoom modifier is over the max zoom out, we propose to the user to switch to the explorer mode
+        // Rule: if the velocity is over 1, we could imagine that the user force to switch on the explorer mode
+        if ((velocity && velocity > 1) && zoomFactor < 1 && waScaleManager.zoomModifier <= waScaleManager.maxZoomOut && !get(mapEditorModeStore)) {
             analyticsClient.toggleMapEditor(!get(mapEditorModeStore));
             mapEditorModeStore.switchMode(!get(mapEditorModeStore));
+
+            // Lock the camera to keep the same zoom after animation. The camera will be unlock when the Explorer tool is activated or after 3000ms.
+            this.cameraManager.lockCameraDuring(3000);
+            return;
         }
-        // biggestAvailableAreaStore.recompute();
+
+        waScaleManager.handleZoomByFactor(zoomFactor);
     }
 
     public createSuccessorGameScene(autostart: boolean, reconnecting: boolean) {
