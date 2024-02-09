@@ -133,6 +133,7 @@
 </script>
 
 <div class="item-picker">
+    <h3>{$LL.mapEditor.entityEditor.title()}</h3>
     <div class="item-filter">
         <input
             class="filter-input tw-h-8"

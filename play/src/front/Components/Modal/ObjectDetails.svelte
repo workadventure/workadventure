@@ -12,6 +12,7 @@
     import AreaToolImg from "../images/icon-tool-area.png";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import ListAddPropertyButton from "../MapEditor/PropertyEditor/ListAddPropertyButton.svelte";
+    import LL from "../../../i18n/i18n-svelte";
 
     // Create type for component AddPropertyButton
     type AddPropertyButtonType = {
@@ -145,7 +146,7 @@
     }
 </script>
 
-<div class="object-menu tw-rounded-3xl">
+<div class="object-menu tw-min-h-fit tw-rounded-3xl tw-overflow-visible">
     {#if $mapExplorationObjectSelectedStore instanceof Entity}
         <div class="tw-p-8 tw-flex tw-flex-col tw-justify-center tw-items-center">
             {#if $mapExplorationObjectSelectedStore?.getEntityData().name}
@@ -170,11 +171,15 @@
                 <ListAddPropertyButton {property} {subProperty} />
             {/each}
         </div>
-        <div class="tw-flex tw-flex-row tw-justify-evenly tw-items-center tw-bg-dark-purple tw-w-full tw-p-2">
+        <div
+            class="tw-flex tw-flex-row tw-justify-evenly tw-items-center tw-bg-dark-purple tw-w-full tw-p-2 tw-rounded-b-3xl"
+        >
             <button class="tw-bg-dark-purple tw-p-4" on:click={close}>Fermer</button>
-            <button class="light tw-p-4" on:click={goTo}
-                >Got the the entity {$mapExplorationObjectSelectedStore?.getPrefab().name.toUpperCase()}</button
-            >
+            <button class="light tw-p-4" on:click={goTo}>
+                {$LL.mapEditor.explorer.details.moveToEntity({
+                    name: $mapExplorationObjectSelectedStore?.getPrefab().name.toUpperCase(),
+                })}
+            </button>
         </div>
     {:else if $mapExplorationObjectSelectedStore instanceof AreaPreview}
         <div class="tw-p-8 tw-flex tw-flex-col tw-justify-center tw-items-center">
@@ -194,11 +199,17 @@
                 <ListAddPropertyButton {property} {subProperty} />
             {/each}
         </div>
-        <div class="tw-flex tw-flex-row tw-justify-evenly tw-items-center tw-bg-dark-purple tw-w-full tw-p-2">
-            <button class="tw-bg-dark-purple tw-p-4" on:click={close}>Fermer</button>
-            <button class="light tw-p-4" on:click={goTo}
-                >Got the the area {$mapExplorationObjectSelectedStore.getAreaData().name.toUpperCase()}</button
-            >
+        <div
+            class="tw-flex tw-flex-row tw-justify-evenly tw-items-center tw-bg-dark-purple tw-w-full tw-p-2 tw-rounded-b-3xl"
+        >
+            <button class="tw-bg-dark-purple tw-p-4" on:click={close}>
+                {$LL.mapEditor.explorer.details.close()}
+            </button>
+            <button class="light tw-p-4" on:click={goTo}>
+                {$LL.mapEditor.explorer.details.moveToArea({
+                    name: $mapExplorationObjectSelectedStore.getAreaData().name.toUpperCase(),
+                })}
+            </button>
         </div>
     {/if}
 </div>
@@ -208,8 +219,6 @@
         position: absolute;
         width: 668px;
         height: max-content !important;
-        max-height: 50vh;
-        overflow-y: auto;
         z-index: 425;
         word-break: break-all;
         pointer-events: auto;
@@ -217,6 +226,6 @@
         background-color: #1b2a41d9;
         backdrop-filter: blur(40px);
         top: 15rem;
-        left: 50rem;
+        left: calc(50% - 334px);
     }
 </style>

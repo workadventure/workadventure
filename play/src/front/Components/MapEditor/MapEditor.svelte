@@ -1,5 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
+    import { ArrowRightIcon } from "svelte-feather-icons";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import {
         mapEditorModeStore,
@@ -20,6 +21,9 @@
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
         mapEditorModeStore.switchMode(false);
     }
+    function hideMapEditor() {
+        mapEditorVisibilityStore.set(false);
+    }
 </script>
 
 <MapEditorSideBar />
@@ -27,25 +31,24 @@
     {#if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
         <ConfigureMyRoom />
     {:else if $mapEditorVisibilityStore}
-        {#if $mapEditorSelectedToolStore !== EditorToolName.ExploreTheRoom}
-            <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
-                <button class="close-window" on:click={closeMapEditor}>&#215;</button>
-                {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
-                    <TrashEditor />
-                {/if}
-                {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
-                    <EntityEditor />
-                {/if}
-                {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
-                    <AreaEditor />
-                {/if}
-            </div>
-        {:else if $mapEditorSelectedToolStore === EditorToolName.ExploreTheRoom}
-            <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
-                <button class="close-window" on:click={closeMapEditor}>&#215;</button>
+        <div class="sidebar" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
+            <button class="tw-absolute tw-right-10 tw-p-1 tw-cursor-pointer" on:click={hideMapEditor}
+                ><ArrowRightIcon size="20" /></button
+            >
+            <button class="close-window" on:click={closeMapEditor}>&#215;</button>
+            {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
+                <TrashEditor />
+            {/if}
+            {#if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
+                <EntityEditor />
+            {/if}
+            {#if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
+                <AreaEditor />
+            {/if}
+            {#if $mapEditorSelectedToolStore === EditorToolName.ExploreTheRoom}
                 <Explorer />
-            </div>
-        {/if}
+            {/if}
+        </div>
     {/if}
 </div>
 

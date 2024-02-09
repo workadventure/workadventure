@@ -167,6 +167,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         description: "Dessinez une zone sur la carte afin d'en créer une nouvelle.",
     },
     entityEditor: {
+        title: "Outil d'édition d'entités",
+        editing: "Edition : {name}",
         itemPicker: {
             searchPlaceholder: "Rechercher",
             backToSelectObject: "Retour à la sélection d'objet",
@@ -204,6 +206,22 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                     },
                 },
             },
+        },
+    },
+    explorer: {
+        title: "Explorateur de carte",
+        description:
+            "Permet d'explorer la salle. Vous pourrez vous déplacer dans la salle et interagir avec les objets. Deux modes sont disponibles : 'Exploration' et 'Recherche'. Le mode 'Recherche' vous proposera de rechercher ou de filtrer les entités et les zones de la salle. Le mode 'Exploration' vous permettra de vous déplacer librement dans la salle.",
+        explorationModeTitle: "Mode exploration",
+        explorationModeDescription: "Naviguer dans la carte et interagir avec les entités et les zones 🚶‍♂️",
+        searchModeTitle: "Mode recherche",
+        searchModeDescription: "Rechercher ou filtrer les entités et les zones dans la carte 🧐",
+        noEntitiesFound: "Aucune entité trouvée dans la carte 🙅‍♂️",
+        noAreasFound: "Aucune zone trouvée dans la carte 🙅‍♀️",
+        details: {
+            close: "Fermer",
+            moveToEntity: "Aller à l'entité {name}",
+            moveToArea: "Aller à la zone {name}",
         },
     },
 };

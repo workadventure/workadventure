@@ -173,7 +173,7 @@
     {$LL.mapEditor.entityEditor.editInstructions()}
 {:else}
     <div class="header-container">
-        <h2>Editing: {$mapEditorSelectedEntityStore.getPrefab().name}</h2>
+        <h3>{$LL.mapEditor.entityEditor.editing({ name: $mapEditorSelectedEntityStore.getPrefab().name })}</h3>
     </div>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <p on:click|preventDefault={backToSelectObject} class="tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0">

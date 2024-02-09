@@ -169,6 +169,8 @@ const mapEditor: BaseTranslation = {
         description: "Draw a zone on the map to create a new one.",
     },
     entityEditor: {
+        title: "Put your object",
+        editing: "Editing: {name}",
         itemPicker: {
             searchPlaceholder: "Search",
             backToSelectObject: "Back to select object",
@@ -206,6 +208,22 @@ const mapEditor: BaseTranslation = {
                     },
                 },
             },
+        },
+    },
+    explorer: {
+        title: "Explore the room",
+        description:
+            "Allow to explore the room. You be able to move around the room and interact with objects. 2 mode are available: 'Exploration' and 'Search'. The 'Search mode' mode will propose you to search or filter entities and areas in the room. The 'Exploration mode' mode will let you move freely in the room.",
+        explorationModeTitle: "Exploration mode",
+        explorationModeDescription: "Move freely in the room and explore the different areas and entities 🗺️",
+        searchModeTitle: "Search mode",
+        searchModeDescription: "Search or filter entities and areas in the room 🧐",
+        noEntitiesFound: "No entity found in the room 🙅‍♂️",
+        noAreasFound: "No area found in the room 🙅‍♀️",
+        details: {
+            close: "Close",
+            moveToEntity: "Move to entity {name}",
+            moveToArea: "Move to area {name}",
         },
     },
 };

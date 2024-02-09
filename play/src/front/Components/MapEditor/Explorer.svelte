@@ -2,6 +2,7 @@
     import { writable } from "svelte/store";
     import { ChevronDownIcon } from "svelte-feather-icons";
     import { onMount } from "svelte";
+    import { fly } from "svelte/transition";
     import { LL } from "../../../i18n/i18n-svelte";
     import visioSvg from "../images/loupe.svg";
     import ExplorerImg from "../images/explorer.svg";
@@ -23,6 +24,7 @@
     let selectFilters = writable<Array<string>>(new Array<string>());
     let entitessListFiltered = writable<Map<string, Entity>>(new Map());
     let areasListFiltered = writable<Map<string, AreaPreview>>(new Map());
+    let showSearchMode = false;
 
     onMount(() => {
         init();
@@ -73,8 +75,11 @@
         }
     }
 
-    function hideSideBar() {
+    function explorationMode() {
         mapEditorVisibilityStore.set(false);
+    }
+    function toggleSearchMode() {
+        showSearchMode = !showSearchMode;
     }
     function addFilter(filterName: string) {
         selectFilters.update((filters) => {
@@ -128,184 +133,204 @@
 
 <div class="tw-flex tw-flex-col">
     <div class="header-container">
-        <h2 class="tw-text-l tw-text-center">{$LL.mapEditor.sideBar.exploreTheRoom()}</h2>
+        <h3 class="tw-text-l tw-text-left">{$LL.mapEditor.explorer.title()}</h3>
+        {#if !showSearchMode}
+            <p in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
+                {$LL.mapEditor.explorer.description()}
+            </p>
+        {/if}
     </div>
     <div class="tw-flex tw-flex-col tw-justify-center">
         <div class="tw-flex tw-flex-wrap tw-justify-center tw-items-center">
-            <div class="properties-buttons tw-flex tw-flex-row tw-z-10">
+            {#if !showSearchMode}
+                <div
+                    class="properties-buttons tw-flex tw-flex-row tw-z-10"
+                    in:fly={{ x: 100, duration: 250, delay: 200 }}
+                    out:fly={{ x: 100, duration: 200 }}
+                >
+                    <button
+                        class="add-property-button tooltip tw-p-4 tw-flex tw-justify-center tw-items-center"
+                        on:click={explorationMode}
+                    >
+                        <div class="tw-w-10 tw-h-10 tw-flex tw-flex-wrap tw-items-center tw-justify-center">
+                            <img
+                                draggable="false"
+                                class="tw-max-w-[75%] tw-max-h-[75%]"
+                                src={ExplorerImg}
+                                alt="info icon"
+                            />
+                        </div>
+                        <span class="tooltiptext tw-text-xs">
+                            <p class="tw-text-sm tw-mb-2">{$LL.mapEditor.explorer.explorationModeTitle()}</p>
+                            {$LL.mapEditor.explorer.explorationModeDescription()}
+                        </span>
+                    </button>
+                </div>
+            {/if}
+            <div
+                class="properties-buttons tw-flex tw-flex-row tw-z-10"
+                in:fly={{ x: 100, duration: 250, delay: 200 }}
+                out:fly={{ x: 100, duration: 200 }}
+            >
                 <button
                     class="add-property-button tooltip tw-p-4 tw-flex tw-justify-center tw-items-center"
-                    on:click={hideSideBar}
+                    on:click={toggleSearchMode}
                 >
-                    <div class="tw-w-10 tw-h-10 tw-flex tw-flex-wrap tw-items-center tw-justify-center">
-                        <img
-                            draggable="false"
-                            class="tw-max-w-[75%] tw-max-h-[75%]"
-                            src={ExplorerImg}
-                            alt="info icon"
-                        />
-                    </div>
-                    <span class="tooltiptext tw-text-xs">
-                        <p class="tw-text-sm tw-mb-2">Exploration mode</p>
-                        Explor the room and find entities or area 🗺️
-                    </span>
-                </button>
-            </div>
-            <div class="properties-buttons tw-flex tw-flex-row tw-z-10">
-                <button class="add-property-button tooltip tw-p-4 tw-flex tw-justify-center tw-items-center">
                     <div class="tw-w-10 tw-h-10 tw-flex tw-flex-wrap tw-items-center tw-justify-center">
                         <img draggable="false" class="tw-max-w-[75%] tw-max-h-[75%]" src={visioSvg} alt="info icon" />
                     </div>
                     <span class="tooltiptext tw-text-xs">
-                        <p class="tw-text-sm tw-mb-2">Search entities and areas</p>
-                        Find an entity or an area in the room 🧐
+                        <p class="tw-text-sm tw-mb-2">{$LL.mapEditor.explorer.searchModeTitle()}</p>
+                        {$LL.mapEditor.explorer.searchModeDescription()}
                     </span>
                 </button>
             </div>
         </div>
 
-        <div class="tw-flex tw-flex-col tw-justify-center tw-items-center">
-            <input
-                class="filter-input tw-h-8"
-                type="search"
-                bind:value={filter}
-                on:input={onChangeFilterHandle}
-                placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
-            />
-        </div>
-
-        <div class="tw-flex tw-flex-row tw-overflow-y-hidden tw-overflow-x-scroll">
-            <ListAddPropertyButton
-                property="jitsiRoomProperty"
-                on:click={() => {
-                    addFilter("jitsiRoomProperty");
-                }}
-            />
-            <ListAddPropertyButton
-                property="playAudio"
-                on:click={() => {
-                    addFilter("playAudio");
-                }}
-            />
-            <ListAddPropertyButton
-                property="openWebsite"
-                on:click={() => {
-                    addFilter("openWebsite");
-                }}
-            />
-            <ListAddPropertyButton
-                property="speakerMegaphone"
-                on:click={() => {
-                    addFilter("speakerMegaphone");
-                }}
-            />
-            <ListAddPropertyButton
-                property="listenerMegaphone"
-                on:click={() => {
-                    addFilter("listenerMegaphone");
-                }}
-            />
-            <ListAddPropertyButton
-                property="exit"
-                on:click={() => {
-                    addFilter("exit");
-                }}
-            />
-            <ListAddPropertyButton
-                property="start"
-                on:click={() => {
-                    addFilter("silent");
-                }}
-            />
-            <ListAddPropertyButton
-                property="focusable"
-                on:click={() => {
-                    addFilter("focusable");
-                }}
-            />
-        </div>
-
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <div
-            class="entities tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
-            on:click={toggleEntityList}
-        >
-            <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={EntityToolImg} alt="link icon" />
-            {#if $entitessListFiltered.size > 0}
-                <span class="tw-pointer-events-none"
-                    >{$entitessListFiltered.size} entitie{$entitessListFiltered.size > 1 ? "s" : ""} found</span
-                >
-            {:else}
-                <p>No entity found 🙅‍♂️</p>
-            {/if}
-            <ChevronDownIcon class="tw-pointer-events-none" size="32" />
-        </div>
-
-        {#if entityListActive && $entitessListFiltered.size > 0}
-            <div class="items tw-p-4 tw-flex tw-flex-col">
-                {#each [...$entitessListFiltered] as [key, entity] (key)}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        id={entity.entityId}
-                        on:mouseenter={() => highlightEntity(entity)}
-                        on:mouseleave={() => unhighlightEntity(entity)}
-                        on:click={() => mapExplorationObjectSelectedStore.set(entity)}
-                        class="tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
-                    >
-                        <img
-                            class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none"
-                            src={entity.getPrefab().imagePath}
-                            alt="link icon"
-                        />
-                        <span class="tw-pointer-events-none tw-font-bold">{entity.getPrefab().name}</span>
-                    </div>
-                {/each}
+        {#if showSearchMode}
+            <div class="tw-flex tw-flex-col tw-justify-center tw-items-center">
+                <input
+                    class="filter-input tw-h-8 tw-m-5"
+                    type="search"
+                    bind:value={filter}
+                    on:input={onChangeFilterHandle}
+                    placeholder={$LL.mapEditor.entityEditor.itemPicker.searchPlaceholder()}
+                />
             </div>
-        {/if}
 
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <div
-            class="areas tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
-            on:click={toggleAreaList}
-        >
-            <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={AreaToolImg} alt="link icon" />
-            {#if $areasListFiltered.size > 0}
-                <span class="tw-pointer-events-none"
-                    >{$areasListFiltered.size} area{$areasListFiltered.size > 1 ? "s" : ""} found</span
-                >
-            {:else}
-                <p>No area found 🙅‍♂️</p>
-            {/if}
-            <ChevronDownIcon class="tw-pointer-events-none" size="32" />
-        </div>
-        {#if areaListActive && $areasListFiltered.size > 0}
-            <div class="items tw-p-4 tw-flex tw-flex-col">
-                {#if $areasListFiltered.size > 0}
-                    {#each [...$areasListFiltered] as [key, area] (key)}
+            <div class="tw-flex tw-flex-row tw-overflow-y-hidden tw-overflow-x-scroll">
+                <ListAddPropertyButton
+                    property="jitsiRoomProperty"
+                    on:click={() => {
+                        addFilter("jitsiRoomProperty");
+                    }}
+                />
+                <ListAddPropertyButton
+                    property="playAudio"
+                    on:click={() => {
+                        addFilter("playAudio");
+                    }}
+                />
+                <ListAddPropertyButton
+                    property="openWebsite"
+                    on:click={() => {
+                        addFilter("openWebsite");
+                    }}
+                />
+                <ListAddPropertyButton
+                    property="speakerMegaphone"
+                    on:click={() => {
+                        addFilter("speakerMegaphone");
+                    }}
+                />
+                <ListAddPropertyButton
+                    property="listenerMegaphone"
+                    on:click={() => {
+                        addFilter("listenerMegaphone");
+                    }}
+                />
+                <ListAddPropertyButton
+                    property="exit"
+                    on:click={() => {
+                        addFilter("exit");
+                    }}
+                />
+                <ListAddPropertyButton
+                    property="start"
+                    on:click={() => {
+                        addFilter("silent");
+                    }}
+                />
+                <ListAddPropertyButton
+                    property="focusable"
+                    on:click={() => {
+                        addFilter("focusable");
+                    }}
+                />
+            </div>
+
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div
+                class="entities tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
+                on:click={toggleEntityList}
+            >
+                <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={EntityToolImg} alt="link icon" />
+                {#if $entitessListFiltered.size > 0}
+                    <span class="tw-pointer-events-none"
+                        >{$entitessListFiltered.size} entitie{$entitessListFiltered.size > 1 ? "s" : ""} found</span
+                    >
+                {:else}
+                    <p>{$LL.mapEditor.explorer.noEntitiesFound()}</p>
+                {/if}
+                <ChevronDownIcon class="tw-pointer-events-none" size="32" />
+            </div>
+
+            {#if entityListActive && $entitessListFiltered.size > 0}
+                <div class="items tw-p-4 tw-flex tw-flex-col">
+                    {#each [...$entitessListFiltered] as [key, entity] (key)}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
-                            id={key}
-                            on:mouseenter={() => highlightArea(area)}
-                            on:mouseleave={() => unhighlightArea(area)}
-                            on:click={() => mapExplorationObjectSelectedStore.set(area)}
+                            id={entity.entityId}
+                            on:mouseenter={() => highlightEntity(entity)}
+                            on:mouseleave={() => unhighlightEntity(entity)}
+                            on:click={() => mapExplorationObjectSelectedStore.set(entity)}
                             class="tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
                         >
                             <img
                                 class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none"
-                                src={AreaToolImg}
+                                src={entity.getPrefab().imagePath}
                                 alt="link icon"
                             />
-                            <span
-                                class="tw-pointer-events-none tw-w-32"
-                                class:tw-italic={!area.getAreaData().name || area.getAreaData().name == ""}
-                                class:tw-font-bold={area.getAreaData().name && area.getAreaData().name != ""}
-                            >
-                                {area.getAreaData().name || "No name"}
-                            </span>
+                            <span class="tw-pointer-events-none tw-font-bold">{entity.getPrefab().name}</span>
                         </div>
                     {/each}
+                </div>
+            {/if}
+
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div
+                class="areas tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
+                on:click={toggleAreaList}
+            >
+                <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={AreaToolImg} alt="link icon" />
+                {#if $areasListFiltered.size > 0}
+                    <span class="tw-pointer-events-none"
+                        >{$areasListFiltered.size} area{$areasListFiltered.size > 1 ? "s" : ""} found</span
+                    >
+                {:else}
+                    <p>{$LL.mapEditor.explorer.noAreasFound()}</p>
                 {/if}
+                <ChevronDownIcon class="tw-pointer-events-none" size="32" />
             </div>
+            {#if areaListActive && $areasListFiltered.size > 0}
+                <div class="items tw-p-4 tw-flex tw-flex-col">
+                    {#if $areasListFiltered.size > 0}
+                        {#each [...$areasListFiltered] as [key, area] (key)}
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <div
+                                id={key}
+                                on:mouseenter={() => highlightArea(area)}
+                                on:mouseleave={() => unhighlightArea(area)}
+                                on:click={() => mapExplorationObjectSelectedStore.set(area)}
+                                class="tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
+                            >
+                                <img
+                                    class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none"
+                                    src={AreaToolImg}
+                                    alt="link icon"
+                                />
+                                <span
+                                    class="tw-pointer-events-none tw-w-32"
+                                    class:tw-italic={!area.getAreaData().name || area.getAreaData().name == ""}
+                                    class:tw-font-bold={area.getAreaData().name && area.getAreaData().name != ""}
+                                >
+                                    {area.getAreaData().name || "No name"}
+                                </span>
+                            </div>
+                        {/each}
+                    {/if}
+                </div>
+            {/if}
         {/if}
     </div>
 </div>
