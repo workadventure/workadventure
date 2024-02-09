@@ -24,4 +24,6 @@ export interface FileSystemInterface {
     writeStringAsFile(virtualPath: string, content: string): Promise<void>;
 
     archiveDirectory(archiver: Archiver, virtualPath: string): Promise<void>;
+
+    writeByteAsFile(virtualPath: string, content: Uint8Array): Promise<void>;
 }

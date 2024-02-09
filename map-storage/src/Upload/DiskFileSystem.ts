@@ -131,6 +131,13 @@ export class DiskFileSystem implements FileSystemInterface {
         });
     }
 
+    async writeByteAsFile(virtualPath: string, content: Uint8Array): Promise<void> {
+        const fullPath = this.getFullPath(virtualPath);
+        const dir = path.dirname(fullPath);
+        await fs.mkdirp(dir);
+        return fs.writeFile(fullPath, Buffer.from(content), { encoding: "utf-8" });
+    }
+
     archiveDirectory(archiver: Archiver, virtualPath: string): Promise<void> {
         const fullPath = this.getFullPath(virtualPath);
         archiver.glob("**/*", { cwd: fullPath, ignore: MapListService.CACHE_NAME });

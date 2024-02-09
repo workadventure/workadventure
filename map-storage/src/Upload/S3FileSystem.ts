@@ -321,6 +321,20 @@ export class S3FileSystem implements FileSystemInterface {
         return;
     }
 
+    async writeByteAsFile(virtualPath: string, content: Uint8Array): Promise<void> {
+        await s3UploadConcurrencyLimit(() =>
+            this.s3.send(
+                new PutObjectCommand({
+                    Bucket: this.bucketName,
+                    Key: virtualPath,
+                    Body: Buffer.from(content),
+                    ContentType: mime.getType(virtualPath) ?? undefined,
+                })
+            )
+        );
+        return;
+    }
+
     async archiveDirectory(archiver: Archiver, virtualPath: string): Promise<void> {
         if (!virtualPath.endsWith("/")) {
             virtualPath += "/";
