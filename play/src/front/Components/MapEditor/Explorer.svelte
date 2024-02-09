@@ -5,7 +5,6 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import visioSvg from "../images/loupe.svg";
     import ExplorerImg from "../images/explorer.svg";
-    import audioSvg from "../images/audio-white.svg";
     import AreaToolImg from "../images/icon-tool-area.png";
     import EntityToolImg from "../images/icon-tool-entity.svg";
     import {
@@ -18,7 +17,7 @@
     import { Entity } from "../../Phaser/ECS/Entity";
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import { ExplorerTool } from "../../Phaser/Game/MapEditor/Tools/ExplorerTool";
-    import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
+    import ListAddPropertyButton from "./PropertyEditor/ListAddPropertyButton.svelte";
 
     let filter = "";
     let selectFilters = writable<Array<string>>(new Array<string>());
@@ -176,74 +175,50 @@
         </div>
 
         <div class="tw-flex tw-flex-row tw-overflow-y-hidden tw-overflow-x-scroll">
-            <AddPropertyButton
-                headerText={$LL.mapEditor.properties.jitsiProperties.label()}
-                descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
-                img={"resources/icons/icon_meeting.png"}
-                style={`z-index: 8;${$selectFilters.includes("jitsiRoomProperty") ? "background-color: #4156F6;" : ""}`}
+            <ListAddPropertyButton
+                property="jitsiRoomProperty"
                 on:click={() => {
                     addFilter("jitsiRoomProperty");
                 }}
             />
-            <AddPropertyButton
-                headerText={$LL.mapEditor.properties.jitsiProperties.label()}
-                descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
-                img={audioSvg}
-                style={`z-index: 8;${$selectFilters.includes("playAudio") ? "background-color: #4156F6;" : ""}`}
+            <ListAddPropertyButton
+                property="playAudio"
                 on:click={() => {
                     addFilter("playAudio");
                 }}
             />
-            <AddPropertyButton
-                headerText={$LL.mapEditor.properties.jitsiProperties.label()}
-                descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
-                img={"resources/icons/icon_link.png"}
-                style={`z-index: 8;${$selectFilters.includes("openWebsite") ? "background-color: #4156F6;" : ""}`}
+            <ListAddPropertyButton
+                property="openWebsite"
                 on:click={() => {
                     addFilter("openWebsite");
                 }}
             />
-            <AddPropertyButton
-                headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
-                descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.description()}
-                img={"resources/icons/icon_speaker.png"}
-                style={`z-index: 8;${$selectFilters.includes("speakerMegaphone") ? "background-color: #4156F6;" : ""}`}
+            <ListAddPropertyButton
+                property="speakerMegaphone"
                 on:click={() => {
                     addFilter("speakerMegaphone");
                 }}
             />
-            <AddPropertyButton
-                headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
-                descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
-                img={"resources/icons/icon_listener.png"}
-                style={`z-index: 8;${$selectFilters.includes("listenerMegaphone") ? "background-color: #4156F6;" : ""}`}
+            <ListAddPropertyButton
+                property="listenerMegaphone"
                 on:click={() => {
                     addFilter("listenerMegaphone");
                 }}
             />
-            <AddPropertyButton
-                headerText={$LL.mapEditor.properties.exitProperties.label()}
-                descriptionText={$LL.mapEditor.properties.exitProperties.description()}
-                img={"resources/icons/icon_exit.png"}
-                style={`z-index: 8;${$selectFilters.includes("exit") ? "background-color: #4156F6;" : ""}`}
+            <ListAddPropertyButton
+                property="exit"
                 on:click={() => {
                     addFilter("exit");
                 }}
             />
-            <AddPropertyButton
-                headerText={$LL.mapEditor.properties.silentProperty.label()}
-                descriptionText={$LL.mapEditor.properties.silentProperty.description()}
-                img={"resources/icons/icon_silent.png"}
-                style={`z-index: 8;${$selectFilters.includes("silent") ? "background-color: #4156F6;" : ""}`}
+            <ListAddPropertyButton
+                property="start"
                 on:click={() => {
                     addFilter("silent");
                 }}
             />
-            <AddPropertyButton
-                headerText={$LL.mapEditor.properties.focusableProperties.label()}
-                descriptionText={$LL.mapEditor.properties.focusableProperties.description()}
-                img={"resources/icons/icon_focus.png"}
-                style={`z-index: 8;${$selectFilters.includes("focusable") ? "background-color: #4156F6;" : ""}`}
+            <ListAddPropertyButton
+                property="focusable"
                 on:click={() => {
                     addFilter("focusable");
                 }}
