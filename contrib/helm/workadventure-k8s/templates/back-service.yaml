@@ -1,0 +1,26 @@
+{{- range $replica, $f := until (int $.Values.back.replicaCount) }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "workadventure.fullname" $ }}-back-{{ $replica }}
+  labels:
+    {{- include "workadventure.labels" $ | nindent 4 }}
+    role: back
+    statefulset.kubernetes.io/pod-name: {{ include "workadventure.fullname" $ }}-back-{{ $replica }}
+spec:
+  type: {{ $.Values.back.service.type }}
+  ports:
+    - port: {{ $.Values.back.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: 50051
+      targetPort: grpc
+      protocol: TCP
+      name: grpc
+  selector:
+    {{- include "workadventure.selectorLabels" $ | nindent 4 }}
+    role: back
+    statefulset.kubernetes.io/pod-name: {{ include "workadventure.fullname" $ }}-back-{{ $replica }}
+{{ end -}}

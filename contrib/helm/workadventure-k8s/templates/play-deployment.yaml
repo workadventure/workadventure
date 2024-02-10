@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "workadventure.fullname" . }}-play
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+    role: play
+spec:
+  {{- if not .Values.play.autoscaling.enabled }}
+  replicas: {{ .Values.play.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "workadventure.selectorLabels" . | nindent 6 }}
+      role: play
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ (include (print $.Template.BasePath "/play-env.yaml") .) | sha256sum }}
+        checksum/secret: {{ (include (print $.Template.BasePath "/play-secret-env.yaml") .) | sha256sum }}
+        {{- with .Values.play.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "workadventure.selectorLabels" . | nindent 8 }}
+        role: play
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "workadventure.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.play.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-play
+          securityContext:
+            {{- toYaml .Values.play.securityContext | nindent 12 }}
+          image: "{{ .Values.play.image.repository }}:{{ .Values.play.image.tag | default .Values.appVersion }}"
+          imagePullPolicy: {{ .Values.play.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "workadventure.fullname" . }}-env-play
+            - secretRef:
+                name: {{ include "workadventure.fullname" . }}-secret-env-play
+          ports:
+            - name: http
+              containerPort: {{ .Values.play.service.port }}
+              protocol: TCP
+            - name: grpc
+              containerPort: 50051
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.play.resources | nindent 12 }}
+      {{- with .Values.play.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.play.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.play.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

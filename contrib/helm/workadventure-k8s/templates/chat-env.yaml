@@ -1,0 +1,20 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "workadventure.fullname" . }}-env-chat
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+data:
+  PUSHER_URL: /
+  UPLOADER_URL: /uploader
+  EJABBERD_WS_URI: wss://{{ .Values.domainName }}/xmpp/ws
+  EJABBERD_DOMAIN: {{ .Values.ejabberdDomain }}
+
+  {{- range $key, $val := .Values.commonEnv }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+
+  {{- range $key, $val := .Values.chat.env }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}

@@ -1,0 +1,34 @@
+{{- if .Values.ingress.enabled -}}
+{{- $fullName := include "workadventure.fullname" . -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}-root
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotationsRoot }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    - hosts:
+        - {{ .Values.domainName }}
+      secretName: {{ .Values.ingress.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.domainName }}
+      http:
+        paths:
+          - path: /
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-play
+                port:
+                  number: {{ .Values.play.service.port }}
+{{- end }}
