@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "workadventure.fullname" . }}-icon
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+    role: icon
+spec:
+  replicas: {{ .Values.icon.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "workadventure.selectorLabels" . | nindent 6 }}
+      role: icon
+  template:
+    metadata:
+      {{- with .Values.icon.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "workadventure.selectorLabels" . | nindent 8 }}
+        role: icon
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "workadventure.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.icon.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-icon
+          securityContext:
+            {{- toYaml .Values.icon.securityContext | nindent 12 }}
+          image: "{{ .Values.icon.image.repository }}:{{ .Values.icon.image.tag | default .Values.appVersion }}"
+          imagePullPolicy: {{ .Values.icon.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.icon.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.icon.resources | nindent 12 }}
+      {{- with .Values.icon.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.icon.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.icon.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

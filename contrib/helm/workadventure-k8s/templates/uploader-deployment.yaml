@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "workadventure.fullname" . }}-uploader
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+    role: uploader
+spec:
+  {{- if not .Values.uploader.autoscaling.enabled }}
+  replicas: {{ .Values.uploader.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "workadventure.selectorLabels" . | nindent 6 }}
+      role: uploader
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ (include (print $.Template.BasePath "/uploader-env.yaml") .) | sha256sum }}
+        checksum/secret: {{ (include (print $.Template.BasePath "/uploader-secret-env.yaml") .) | sha256sum }}
+        {{- with .Values.uploader.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "workadventure.selectorLabels" . | nindent 8 }}
+        role: uploader
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "workadventure.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.uploader.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-uploader
+          securityContext:
+            {{- toYaml .Values.uploader.securityContext | nindent 12 }}
+          image: "{{ .Values.uploader.image.repository }}:{{ .Values.uploader.image.tag | default .Values.appVersion }}"
+          imagePullPolicy: {{ .Values.uploader.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "workadventure.fullname" . }}-env-uploader
+            - secretRef:
+                name: {{ include "workadventure.fullname" . }}-secret-env-uploader
+          ports:
+            - name: http
+              containerPort: {{ .Values.uploader.service.port }}
+              protocol: TCP
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          resources:
+            {{- toYaml .Values.uploader.resources | nindent 12 }}
+      {{- with .Values.uploader.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.uploader.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.uploader.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

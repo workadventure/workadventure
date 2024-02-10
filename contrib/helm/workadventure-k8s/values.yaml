@@ -1,0 +1,488 @@
+# Default values for workadventure.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+appVersion: "v1.17.7"
+domainName: wa.example.com
+ejabberdDomain: ejabberd.example.com
+
+secretKey: mySecretKey
+ejabberdJwtSecret: myEjabberdJwtSecret
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+commonEnv:
+  ENABLE_MAP_EDITOR: "true"
+  JITSI_URL: https://meet.jit.si
+  MAX_PER_GROUP: 4
+  EJABBERD_USER: admin
+  ENABLE_CHAT: "true"
+  ENABLE_CHAT_UPLOAD: "true"
+  UPLOAD_MAX_FILESIZE: 10485760
+
+commonSecretEnv:
+  EJABBERD_PASSWORD: mySecretPassword
+
+# #########################################################
+# play service
+# #########################################################
+play:
+  replicaCount: 1
+
+  image:
+    repository: thecodingmachine/workadventure-play
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is appVersion.
+    tag: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 3000
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
+  env:
+    JITSI_PRIVATE_MODE: "false"
+    START_ROOM_URL: /_/global/raw.githubusercontent.com/workadventure/map-starter-kit/master/map.tmj
+    ENABLE_CHAT_ONLINE_LIST: "true"
+    ENABLE_CHAT_DISCONNECTED_LIST: "true"
+    MAX_HISTORY_CHAT: 0
+    ENABLE_REPORT_ISSUES_MENU: "false"
+    GRPC_VERBOSITY: DEBUG
+    GRPC_TRACE: all
+    MAX_USERNAME_LENGTH: 10
+    DISABLE_ANONYMOUS: "false"
+    DISABLE_NOTIFICATIONS: "false"
+
+  secretEnv:
+    ROOM_API_SECRET_KEY: myRoomApiSecretKey
+
+# #########################################################
+# chat service
+# #########################################################
+chat:
+  replicaCount: 1
+
+  image:
+    repository: thecodingmachine/workadventure-chat
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is appVersion.
+    tag: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
+  env: {}
+
+  secretEnv: {}
+
+# #########################################################
+# back service
+# #########################################################
+back:
+  replicaCount: 1
+
+  image:
+    repository: thecodingmachine/workadventure-back
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is appVersion.
+    tag: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
+  env:
+    STORE_VARIABLES_FOR_LOCAL_MAPS: "true"
+
+  secretEnv: {}
+
+# #########################################################
+# uploader service
+# #########################################################
+uploader:
+  replicaCount: 1
+
+  image:
+    repository: thecodingmachine/workadventure-uploader
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is appVersion.
+    tag: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
+  env: {}
+    # AWS_DEFAULT_REGION:
+    # AWS_BUCKET:
+    # AWS_URL:
+    # AWS_ENDPOINT:
+    # # or
+    # REDIS_HOST:
+    # REDIS_PORT:
+
+  secretEnv: {}
+    # AWS_ACCESS_KEY_ID:
+    # AWS_SECRET_ACCESS_KEY:
+
+# #########################################################
+# icon service
+# #########################################################
+icon:
+  replicaCount: 1
+
+  image:
+    repository: matthiasluedtke/iconserver
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is appVersion.
+    tag: "v3.16.0"
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+
+# #########################################################
+# ejabberd service
+# #########################################################
+ejabberd:
+  replicaCount: 1
+
+  image:
+    repository: thecodingmachine/workadventure-ejabberd
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is appVersion.
+    tag: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 5443
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
+  env: {}
+
+  secretEnv: {}
+
+# #########################################################
+# mapstorage service
+# #########################################################
+mapstorage:
+  replicaCount: 1
+
+  image:
+    repository: thecodingmachine/workadventure-map-storage
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is appVersion.
+    tag: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: "3000"
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  persistence:
+    enabled: false
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    storageSize: 1Gi
+
+  # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
+  env:
+    AUTHENTICATION_STRATEGY: Basic
+    AUTHENTICATION_USER: admin
+
+  secretEnv:
+    AUTHENTICATION_PASSWORD: myMapStoragePassword
+
+ingress:
+  enabled: false
+  className: ""
+  secretName: ""
+  pathType: ImplementationSpecific
+  annotationsPath:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+  annotationsMapstoragePath:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+
+  rewritePathSuffix: "(/|$)(.*)"
+
+redis:
+  architecture: standalone
+
+  auth:
+    enabled: false

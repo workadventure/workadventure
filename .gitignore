@@ -11,3 +11,7 @@ node_modules
 _
 *.code-workspace
 /install.lock
+
+# Helm
+# Chart dependencies
+**/charts/*.tgz

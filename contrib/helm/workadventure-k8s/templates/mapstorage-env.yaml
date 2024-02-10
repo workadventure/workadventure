@@ -1,0 +1,18 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "workadventure.fullname" . }}-env-mapstorage
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+data:
+  API_URL: {{ include "workadventure.fullname" . }}-back:50051
+  PATH_PREFIX: "/map-storage"
+
+  {{- range $key, $val := .Values.commonEnv }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+
+  {{- range $key, $val := .Values.mapstorage.env }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
