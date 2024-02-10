@@ -1,0 +1,69 @@
+{{- if .Values.ingress.enabled -}}
+{{- $fullName := include "workadventure.fullname" . -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}-path
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotationsPath }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    - hosts:
+        - {{ .Values.domainName }}
+      secretName: {{ .Values.ingress.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.domainName }}
+      http:
+        paths:
+          - path: /chat{{ .Values.ingress.rewritePathSuffix }}
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-chat
+                port:
+                  number: {{ .Values.chat.service.port }}
+          - path: /api{{ .Values.ingress.rewritePathSuffix }}
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-back
+                port:
+                  number: {{ .Values.back.service.port }}
+          - path: /uploader{{ .Values.ingress.rewritePathSuffix }}
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-uploader
+                port:
+                  number: {{ .Values.uploader.service.port }}
+          - path: /icon{{ .Values.ingress.rewritePathSuffix }}
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-icon
+                port:
+                  number: {{ .Values.icon.service.port }}
+          - path: /xmpp{{ .Values.ingress.rewritePathSuffix }}
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-ejabberd
+                port:
+                  number: {{ .Values.ejabberd.service.port }}
+          - path: /map-storage{{ .Values.ingress.rewritePathSuffix }}
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-mapstorage
+                port:
+                  number: {{ .Values.mapstorage.service.port }}
+{{- end }}

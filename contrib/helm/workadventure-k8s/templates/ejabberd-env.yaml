@@ -1,0 +1,18 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "workadventure.fullname" . }}-env-ejabberd
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+data:
+  CTL_ON_CREATE: "register {{ .Values.commonEnv.EJABBERD_USER }} {{ .Values.commonEnv.EJABBERD_DOMAIN }} {{ .Values.commonSecretEnv.EJABBERD_PASSWORD }}"
+  EJABBERD_DOMAIN: {{ .Values.ejabberdDomain }}
+
+  {{- range $key, $val := .Values.commonEnv }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+
+  {{- range $key, $val := .Values.ejabberd.env }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
