@@ -31,6 +31,7 @@
     import VolumeIcon from "../Icons/VolumeIcon.svelte";
     import FlagIcon from "../Icons/FlagIcon.svelte";
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
+    import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
     // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
@@ -275,10 +276,9 @@
             class:max-h-[80vh]={videoEnabled && isHightlighted}
             class:h-full={videoEnabled}
             class:rounded={videoEnabled}
-            style={$embedScreenLayoutStore === LayoutMode.Presentation ? `border: solid 2px ${backGroundColor}` : ""}
             autoplay
             playsinline
-            class="h-full w-full rounded md:object-cover relative z-20"
+            class="h-full w-full rounded-lg md:object-cover relative z-20"
         />
 
         {#if videoEnabled}
@@ -287,8 +287,15 @@
                     class="absolute w-full h-full top-0 left-0 flex justify-center items-center bg-danger/50 text-white"
                 >
                     <div class="text-center">
-                        <h5>{$LL.video.connection_issue()}</h5>
-                        <div class="italic">{$LL.video.no_video_stream_received()}</div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-camera-exclamation" width="32" height="32" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M15 20h-10a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2h1a2 2 0 0 0 2 -2a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v3.5" />
+                            <path d="M9 13a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+                            <path d="M19 16v3" />
+                            <path d="M19 22v.01" />
+                        </svg>
+                        <div class="text-lg bold">{$LL.video.no_video_stream_received()}</div>
+                        <div class="italic text-xs opacity-50">Consulter l'aide ou rafraichir la page <!-- Trad --></div>
                     </div>
                 </div>
             {/if}
@@ -320,6 +327,10 @@
                                     <div class="pl-2">Business card</div><!-- trans -->
                                 </div>
                                 <div class="flex items-center px-4 py-1 hover:bg-white/10">
+                                    <MessageCircleIcon height="h-4" width="w-4" />
+                                    <div class="pl-2">Send message</div><!-- trans -->
+                                </div>
+                                <div class="flex items-center px-4 py-1 hover:bg-white/10">
                                     <VolumeIcon height="h-4" width="w-4" />
                                     <div class="pl-2">Volume</div><!-- trans -->
                                 </div>
@@ -337,13 +348,11 @@
                 </div>
             </div>
             {#if videoEnabled}
-                <div class="z-[251] absolute aspect-ratio right-4 w-8 bottom-5 p-1 flex items-center justify-center">
+                <div class="z-[251] absolute aspect-ratio right-3 w-8 p-1 flex items-center justify-center {$constraintStore && $constraintStore.audio !== false ? 'bottom-4' : 'bottom-3' }">
                     {#if $constraintStore && $constraintStore.audio !== false}
                         <SoundMeterWidget volume={$volumeStore} classcss="absolute" barColor="blue" />
                     {:else}
-                        <div transition:fly={{delay: 100, y: 50, duration: 150 }}>
-                            <MicOffIcon />
-                        </div>
+                        <MicOffIcon />
                     {/if}
                 </div>
             {:else}
@@ -354,9 +363,7 @@
                         barColor={textColor}
                     />
                 {:else}
-                    <div transition:fly={{delay: 100, y: 50, duration: 150 }}>
-                        <MicOffIcon />
-                    </div>
+                    <MicOffIcon />
                 {/if}
                 <div class="w-full flex report-ban-container-cam-off opacity-0 h-10">
                     <BanReportBox {peer} />

@@ -116,7 +116,7 @@
                     {$LL.camera.my.loading()}
                 </div>
                 <video
-                    class="h-full w-full rounded md:object-cover relative z-20"
+                    class="h-full w-full rounded-lg md:object-cover relative z-20"
                     class:object-contain={stream}
                     class:tw-max-h-[230px]={stream}
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
@@ -125,13 +125,11 @@
                     muted
                     playsinline
                 ></video>
-                <div class="z-[251] absolute aspect-ratio right-4 w-8 bottom-5 p-1 flex items-center justify-center {small ? 'hidden' : ''}">
+                <div class="z-[251] absolute aspect-ratio right-4 w-8 p-1 flex items-center justify-center {small ? 'hidden' : ''} {$mediaStreamConstraintsStore.audio ? 'bottom-5' : 'bottom-3'}">
                     {#if $mediaStreamConstraintsStore.audio}
                         <SoundMeterWidget volume={$localVolumeStore} classcss="absolute" barColor="white" />
                     {:else}
-                        <div transition:fly={{delay: 100, y: 50, duration: 150 }}>
-                            <MicOffIcon />
-                        </div>
+                        <MicOffIcon />
                     {/if}
                 </div>
             </div>

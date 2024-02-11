@@ -44,17 +44,20 @@
     }
 </script>
 
-<div id="embedScreensContainer" class="group relative h-full pt-24 flex justify-center items-center pointer-events-auto transition-all pb-7 hover:bg-contrast/80" style="{$emoteMenuSubStore ? 'padding-top:96px;' : '' }" on:mouseleave={stopExpand} >
+<div id="embedScreensContainer" class="group relative h-full pt-24 flex justify-center items-center pointer-events-auto transition-all pb-7" style="{$emoteMenuSubStore ? 'padding-top:96px;' : '' }" on:mouseleave={stopExpand} >
     {#if $embedScreenLayoutStore === LayoutMode.Presentation}
         <PresentationLayout />
     {:else}
         <MozaicLayout />
     {/if}
-    <div class="group-hover:opacity-100 pointer-events-auto opacity-0 absolute bottom-0 w-full h-4 hover:bg-white/10 cursor-row-resize transition-all" on:mousedown={startExpand.bind(this, 'bottom')} on:mousemove={expand}>
+    <!--
+    <div class="group-hover:opacity-100 pointer-events-auto opacity-0 absolute bottom-0 h-4 hover:bg-white/10 w-56 m-auto bg-contrast/80 rounded-full cursor-row-resize transition-all" on:mousedown={startExpand.bind(this, 'bottom')} on:mousemove={expand}>
         <div class="group-hover:opacity-100 opacity-0 absolute bottom-1 left-0 right-0 m-auto h-2 w-48 pointer-events-none">
             <div class="bg-white rounded-lg h-1 w-48"></div>
         </div>
     </div>
+    -->
+    <!-- TODO HUGO -->
 </div>
 
 <style lang="scss">
