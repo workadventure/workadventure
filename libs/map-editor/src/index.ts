@@ -15,3 +15,4 @@ export * from "./Commands/Command";
 //export * from "./MapFetcher";
 export * from "./FunctionalTypes/Result";
 export * from "./WAMSettingsUtils";
+export * from "./Constants/CustomEntityCollectionConstants";
