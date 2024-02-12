@@ -1,17 +1,15 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
-    import { ArrowRightIcon } from "svelte-feather-icons";
-    import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import {
-        mapEditorModeStore,
-        mapEditorSelectedToolStore,
+    import {fly} from "svelte/transition";
+    import {ArrowRightIcon } from "svelte-feather-icons";
+    import {EditorToolName} from "../../Phaser/Game/MapEditor/MapEditorModeManager";
+    import {mapEditorModeStore, mapEditorSelectedToolStore,
         mapEditorVisibilityStore,
     } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import Explorer from "../Exploration/Explorer.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
-    import EntityEditor from "./EntityEditor.svelte";
+    import EntityEditor from "./EntityEditor/EntityEditor.svelte";
     import AreaEditor from "./AreaEditor.svelte";
     import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
     import TrashEditor from "./TrashEditor.svelte";
