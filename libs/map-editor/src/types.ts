@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { UploadEntityMessage_Direction } from "@workadventure/messages";
 
 export type AtLeast<T, K extends keyof T> = Partial<T> & Pick<T, K>;
 
@@ -170,9 +171,12 @@ export const EntityRawPrefab = z.object({
     depthOffset: z.number().optional(),
 });
 
+export const EntityPrefabType = z.union([z.literal("Default"), z.literal("Custom")]);
+
 export const EntityPrefab = EntityRawPrefab.extend({
     collectionName: z.string(),
     id: z.string(),
+    type: EntityPrefabType,
 });
 
 export const EntityPrefabRef = z.object({
@@ -184,6 +188,12 @@ export const EntityCollection = z.object({
     collectionName: z.string(),
     tags: z.array(z.string()),
     collection: z.array(EntityPrefab),
+});
+
+export const EntityCollectionRaw = z.object({
+    collectionName: z.string(),
+    tags: z.array(z.string()),
+    collection: z.array(EntityRawPrefab),
 });
 
 // TODO: get rid of this type and use only WAMEntityData
@@ -280,7 +290,9 @@ export const MapsCacheFileFormat = z.object({
 
 export type EntityRawPrefab = z.infer<typeof EntityRawPrefab>;
 export type EntityPrefab = z.infer<typeof EntityPrefab>;
+export type EntityPrefabType = z.infer<typeof EntityPrefabType>;
 export type EntityCollection = z.infer<typeof EntityCollection>;
+export type EntityCollectionRaw = z.infer<typeof EntityCollectionRaw>;
 export type CollectionUrl = z.infer<typeof CollectionUrl>;
 export type EntityData = z.infer<typeof EntityData>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
@@ -366,3 +378,20 @@ export enum GameMapProperties {
     ZONE = "zone",
     ZOOM_MARGIN = "zoomMargin",
 }
+
+export const mapUploadEntityMessageDirectionToDirection = (
+    uploadEntityMessageDirection: UploadEntityMessage_Direction
+) => {
+    switch (uploadEntityMessageDirection) {
+        case UploadEntityMessage_Direction.Up:
+            return Direction.Up;
+        case UploadEntityMessage_Direction.Right:
+            return Direction.Right;
+        case UploadEntityMessage_Direction.Down:
+            return Direction.Down;
+        case UploadEntityMessage_Direction.Left:
+            return Direction.Left;
+        default:
+            return Direction.Down;
+    }
+};
