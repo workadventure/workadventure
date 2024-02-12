@@ -1,25 +1,25 @@
 <script lang="ts">
     import type { Unsubscriber } from "svelte/store";
-    import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "svelte-feather-icons";
+    import { writable } from "svelte/store";
+    import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "svelte-feather-icons";
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
-    import { writable } from "svelte/store";
     import { Subscription } from "rxjs";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
         cameraListStore,
+        isSpeakerStore,
         microphoneListStore,
-        speakerListStore,
+        requestedCameraDeviceIdStore,
         requestedCameraState,
+        requestedMicrophoneDeviceIdStore,
         requestedMicrophoneState,
         silentStore,
+        speakerListStore,
         speakerSelectedStore,
-        requestedMicrophoneDeviceIdStore,
-        requestedCameraDeviceIdStore,
+        streamingMegaphoneStore,
         usedCameraDeviceIdStore,
         usedMicrophoneDeviceIdStore,
-        streamingMegaphoneStore,
-        isSpeakerStore,
     } from "../../Stores/MediaStore";
     import cameraImg from "../images/camera.png";
     import cameraOffImg from "../images/camera-off.png";
@@ -48,21 +48,21 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatVisibilityStore, chatZoneLiveStore } from "../../Stores/ChatStore";
     import {
-        proximityMeetingStore,
         inExternalServiceStore,
         myCameraStore,
         myMicrophoneStore,
+        proximityMeetingStore,
     } from "../../Stores/MyMediaStore";
     import {
         activeSubMenuStore,
-        menuVisiblilityStore,
+        addActionButtonActionBarEvent,
+        addClassicButtonActionBarEvent,
+        additionnalButtonsMenu,
         inviteUserActivated,
+        mapEditorActivated,
+        menuVisiblilityStore,
         SubMenusInterface,
         subMenusStore,
-        additionnalButtonsMenu,
-        addClassicButtonActionBarEvent,
-        addActionButtonActionBarEvent,
-        mapEditorActivated,
     } from "../../Stores/MenuStore";
     import {
         emoteDataStore,
@@ -85,14 +85,16 @@
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
     import {
-        megaphoneCanBeUsedStore,
         liveStreamingEnabledStore,
+        megaphoneCanBeUsedStore,
         requestedMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
+
+    import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -336,7 +338,7 @@
         chatVisibilityStore.set(false);
     }
 
-    function noDrag() {
+    function noDrag(): boolean {
         return false;
     }
 
@@ -360,6 +362,7 @@
     let subscribers = new Array<Unsubscriber>();
     let chatTotalMessagesSubscription: Subscription | undefined;
     let totalMessagesToSee = writable<number>(0);
+
     onMount(() => {
         chatTotalMessagesSubscription = iframeListener.chatTotalMessagesToSeeStream.subscribe((total) =>
             totalMessagesToSee.set(total)
@@ -826,6 +829,53 @@
                     </div>
                 {/if}
             </div>
+            <div class="bottom-action-section tw-flex tw-flex-initial">
+                <AvailabilityStatusComponent />
+            </div>
+            <div class="bottom-action-section tw-flex tw-flex-initial">
+                {#if $mapEditorActivated}
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={toggleMapEditorMode}
+                        class="bottom-action-button"
+                    >
+                        {#if isMobile}
+                            <Tooltip text={$LL.actionbar.mapEditorMobileLocked()} />
+                        {:else}
+                            <Tooltip text={$LL.actionbar.mapEditor()} />
+                        {/if}
+                        <button
+                            id="mapEditorIcon"
+                            class:border-top-light={$mapEditorModeStore && !isMobile}
+                            name="toggle-map-editor"
+                            disabled={isMobile}
+                        >
+                            <img
+                                draggable="false"
+                                src={mapBuilder}
+                                class:disable-opacity={isMobile}
+                                style="padding: 2px"
+                                alt="toggle-map-editor"
+                            />
+                        </button>
+                    </div>
+                {/if}
+                {#if $userHasAccessToBackOfficeStore}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.openBackOffice()}
+                        on:click={openBo}
+                        class="bottom-action-button"
+                    >
+                        <Tooltip text={$LL.actionbar.bo()} />
+
+                        <button id="backOfficeIcon">
+                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-bo" />
+                        </button>
+                    </div>
+                {/if}
+            </div>
 
             {#if $addActionButtonActionBarEvent.length > 0}
                 <div class="bottom-action-section tw-flex tw-flex-initial">
@@ -965,7 +1015,6 @@
 
 <style lang="scss">
     @import "../../style/breakpoints.scss";
-
     button {
         justify-content: center;
     }
