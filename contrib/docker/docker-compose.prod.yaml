@@ -98,6 +98,7 @@ services:
       - KLAXOON_ENABLED=${KLAXOON_ENABLED}
       - KLAXOON_CLIENT_ID=${KLAXOON_CLIENT_ID}
       - YOUTUBE_ENABLED=${YOUTUBE_ENABLED}
+      - GOOGLE_DRIVE_ENABLED=${GOOGLE_DRIVE_ENABLED}
       - GOOGLE_DOCS_ENABLED=${GOOGLE_DOCS_ENABLED}
       - GOOGLE_SHEETS_ENABLED=${GOOGLE_SHEETS_ENABLED}
       - GOOGLE_SLIDES_ENABLED=${GOOGLE_SLIDES_ENABLED}
@@ -106,7 +107,9 @@ services:
       - PEER_VIDEO_RECOMMENDED_BANDWIDTH=${PEER_VIDEO_RECOMMENDED_BANDWIDTH}
       - PEER_SCREEN_SHARE_LOW_BANDWIDTH=${PEER_SCREEN_SHARE_LOW_BANDWIDTH}
       - PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH=${PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH}
-
+      # Google drive picker
+      - GOOGLE_DRIVE_PICKER_CLIENT_ID=${GOOGLE_DRIVE_PICKER_CLIENT_ID}
+      - GOOGLE_DRIVE_PICKER_APP_ID=${GOOGLE_DRIVE_PICKER_APP_ID}
     labels:
       traefik.enable: "true"
       traefik.http.routers.play.rule: "Host(`${DOMAIN}`) && PathPrefix(`/`)"
@@ -117,7 +120,6 @@ services:
       traefik.http.routers.play-ssl.tls: "true"
       traefik.http.routers.play-ssl.tls.certresolver: "myresolver"
       traefik.http.routers.play-ssl.service: "play"
-
       traefik.http.routers.room-api.rule: "Host(`${DOMAIN}`)"
       traefik.http.routers.room-api.entryPoints: "grpc"
       traefik.http.routers.room-api.service: "room-api"

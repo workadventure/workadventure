@@ -85,6 +85,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             warningEmbeddableLink: "Ce lien ne peut pas être intégré.",
             errorInvalidUrl: 'Veuillez entrer une URL valide (commençant par "https://")',
             findOutMoreHere: "En savoir plus ici",
+            openPickerSelector: "Ouvrir le sélecteur",
         },
         advancedOptions: "Options avancées",
         speakerMegaphoneProperties: {
@@ -112,10 +113,56 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             exitMap: "Quitter la carte",
             exitMapStartAreaName: "Nom de la zone de départ",
         },
+        youtubeProperties: {
+            label: "Ouvrir Youtube",
+            description: "Ouvrir Youtube dans l'application ou dans un nouvel onglet.",
+            error: "Veuillez entrer une URL Youtube valide",
+            disabled: "L'intégration Youtube est désactivée.",
+        },
+        googleDocsProperties: {
+            label: "Ouvrir Google Docs",
+            description: "Ouvrir Google Docs dans l'application ou dans un nouvel onglet.",
+            error: "Veuillez entrer une URL Google Docs valide",
+            disabled: "L'intégration Google Docs est désactivée.",
+        },
+        klaxoonProperties: {
+            label: "Ouvrir Klaxoon",
+            description: "Ouvrir Klaxoon dans l'application ou dans un nouvel onglet.",
+            error: "Veuillez entrer une URL Klaxoon valide",
+            disabled: "L'intégration Klaxoon est désactivée.",
+        },
+        googleSheetsProperties: {
+            label: "Ouvrir Google Sheets",
+            description: "Ouvrir Google Sheets dans l'application ou dans un nouvel onglet.",
+            error: "Veuillez entrer une URL Google Sheets valide",
+            disabled: "L'intégration Google Sheets est désactivée.",
+        },
+        googleSlidesProperties: {
+            label: "Ouvrir Google Slides",
+            description: "Ouvrir Google Slides dans l'application ou dans un nouvel onglet.",
+            error: "Veuillez entrer une URL Google Slides valide",
+            disabled: "L'intégration Google Slides est désactivée.",
+        },
+        eraserProperties: {
+            label: "Ouvrir Eraser",
+            description: "Ouvrir Eraser dans l'application ou dans un nouvel onglet.",
+            error: "Veuillez entrer une URL Eraser valide",
+            disabled: "L'intégration Eraser est désactivée.",
+        },
+        googleDriveProperties: {
+            label: "Ouvrir Google Drive",
+            description: "Ouvrir un lien Google Drive dans l'application ou dans un nouvel onglet.",
+            error: "Veuillez entrer une URL Google Drive valide",
+            disabled: "L'intégration Google Drive est désactivée.",
+        },
     },
     areaEditor: {
         editInstructions: "Sélectionnez une zone pour modifier ses propriétés.",
         nameLabel: "Nom de la zone",
+    },
+    areaEditorInstructions: {
+        title: "Comment ca marche ?",
+        description: "Dessinez une zone sur la carte afin d'en créer une nouvelle.",
     },
     entityEditor: {
         itemPicker: {

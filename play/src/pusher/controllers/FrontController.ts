@@ -8,7 +8,13 @@ import type { LiveDirectory } from "../models/LiveDirectory";
 import { adminService } from "../services/AdminService";
 import { notWaHost } from "../middlewares/NotWaHost";
 import { version } from "../../../package.json";
-import { FRONT_ENVIRONMENT_VARIABLES, VITE_URL, LOGROCKET_ID, AUTOLOGIN_URL } from "../enums/EnvironmentVariable";
+import {
+    FRONT_ENVIRONMENT_VARIABLES,
+    VITE_URL,
+    LOGROCKET_ID,
+    AUTOLOGIN_URL,
+    GOOGLE_DRIVE_PICKER_CLIENT_ID,
+} from "../enums/EnvironmentVariable";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class FrontController extends BaseHttpController {
@@ -201,7 +207,8 @@ export class FrontController extends BaseHttpController {
                 req.path.startsWith("/resources") ||
                 req.path.startsWith("/src") ||
                 req.path.startsWith("/node_modules") ||
-                req.path.startsWith("/@fs/")
+                req.path.startsWith("/@fs/") ||
+                req.path.startsWith("/iframe_api.js")
             ) {*/
                 res.atomic(() => {
                     res.status(303).redirect(`${VITE_URL}${decodeURI(req.path)}`);
@@ -300,6 +307,7 @@ export class FrontController extends BaseHttpController {
                 url,
                 script: await this.getScript(),
                 authToken: authToken,
+                googleDrivePickerClientId: GOOGLE_DRIVE_PICKER_CLIENT_ID,
                 ...option,
             });
         } catch (e) {

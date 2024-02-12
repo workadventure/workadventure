@@ -95,7 +95,7 @@
           "API_URL": "back1:50051,back2:50051",
           "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
           "FRONT_URL": "https://play-"+url,
-          "PUSHER_URL": "https://pusher-"+url,
+          "PUSHER_URL": "https://play-"+url,
           "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
           "ENABLE_OPENAPI_ENDPOINT": "true",
           "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
@@ -123,10 +123,14 @@
           "KLAXOON_ENABLED": "true",
           "KLAXOON_CLIENT_ID": env.KLAXOON_CLIENT_ID,
           "YOUTUBE_ENABLED": "true",
+          "GOOGLE_DRIVE_ENABLED": "true",
           "GOOGLE_DOCS_ENABLED": "true",
           "GOOGLE_SHEETS_ENABLED": "true",
           "GOOGLE_SLIDES_ENABLED": "true",
           "ERASER_ENABLED": "true",
+          # Google drive picker
+          "GOOGLE_DRIVE_PICKER_CLIENT_ID": env.GOOGLE_DRIVE_PICKER_CLIENT_ID,
+          "GOOGLE_DRIVE_PICKER_APP_ID": env.GOOGLE_DRIVE_PICKER_APP_ID
         } + (if adminUrl != null then {
           # Admin
           "ADMIN_URL": adminUrl,

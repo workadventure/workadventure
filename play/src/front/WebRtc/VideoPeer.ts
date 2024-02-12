@@ -15,6 +15,9 @@ import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils"
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { apparentMediaContraintStore } from "../Stores/ApparentMediaContraintStore";
+import { TrackStreamWrapperInterface } from "../Streaming/Contract/TrackStreamWrapperInterface";
+import { TrackInterface } from "../Streaming/Contract/TrackInterface";
+import { showReportScreenStore } from "../Stores/ShowReportScreenStore";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -29,7 +32,7 @@ export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
-export class VideoPeer extends Peer {
+export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
     public toClose = false;
     public _connected = false;
     public remoteStream!: MediaStream;
@@ -208,6 +211,15 @@ export class VideoPeer extends Peer {
                         this.toggleRemoteStream(true);
                         break;
                     }
+                    case "kickoff": {
+                        if (message.value !== this.userUuid) break;
+                        this._statusStore.set("closed");
+                        this._connected = false;
+                        this.toClose = true;
+                        this._onFinish();
+                        this.destroy();
+                        break;
+                    }
                     default: {
                         const _exhaustiveCheck: never = message;
                     }
@@ -300,6 +312,7 @@ export class VideoPeer extends Peer {
     public destroy(): void {
         try {
             this._connected = false;
+            console.log("destroy => this.toClose", this.toClose, this.closing);
             if (!this.toClose || this.closing) {
                 return;
             }
@@ -336,5 +349,51 @@ export class VideoPeer extends Peer {
 
     get statusStore(): Readable<PeerStatus> {
         return this._statusStore;
+    }
+
+    get videoTrackStore(): Readable<TrackInterface | undefined> {
+        throw new Error("Method not implemented.");
+    }
+    get audioTrackStore(): Readable<TrackInterface | undefined> {
+        throw new Error("Method not implemented.");
+    }
+    getVideoTrack(): TrackInterface | undefined {
+        throw new Error("Method not implemented.");
+    }
+    getAudioTrack(): TrackInterface | undefined {
+        throw new Error("Method not implemented.");
+    }
+    setAudioTrack(jitsiTrack: TrackInterface | undefined): void {
+        throw new Error("Method not implemented.");
+    }
+    setVideoTrack(jitsiTrack: TrackInterface | undefined): void {
+        throw new Error("Method not implemented.");
+    }
+    isEmpty(): boolean {
+        throw new Error("Method not implemented.");
+    }
+    isLocal(): boolean {
+        throw new Error("Method not implemented.");
+    }
+    muteAudioParticipant(): void {
+        this.connection.emitMuteParticipantIdSpace("peer", this.userUuid);
+    }
+    muteAudioEveryBody(): void {
+        this.connection.emitMuteEveryBodySpace("peer");
+    }
+    muteVideoParticipant(): void {
+        this.connection.emitMuteVideoParticipantIdSpace("peer", this.userUuid);
+    }
+    muteVideoEverybody(): void {
+        this.connection.emitMuteVideoEveryBodySpace("peer");
+    }
+    ban() {
+        throw new Error("Method not implemented.");
+    }
+    kickoff(): void {
+        this.connection.emitKickOffUserMessage(this.userUuid, "peer");
+    }
+    blockOrReportUser(): void {
+        showReportScreenStore.set({ userId: this.userId, userName: this.userName });
     }
 }

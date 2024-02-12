@@ -1,17 +1,19 @@
 <script lang="ts">
     import { Color } from "@workadventure/shared-utils";
-    import { Readable } from "svelte/store";
+    import { Readable, Unsubscriber } from "svelte/store";
     import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import microphoneOffImg from "../images/microphone-off.png";
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import UserTag from "./UserTag.svelte";
     import JitsiVideoElement from "./JitsiVideoElement.svelte";
     import JitsiAudioElement from "./JitsiAudioElement.svelte";
+    import ActionMediaBox from "./ActionMediaBox.svelte";
 
     export let clickable = true;
     export let isHightlighted = false;
@@ -37,17 +39,38 @@
         isMobileFormat = isMediaBreakpointUp("md");
     });
 
+    let videoTrackUnSuscriber: Unsubscriber;
+
     onMount(() => {
         resizeObserver.observe(jitsiMediaBoxHtml);
+        videoTrackUnSuscriber = videoTrackStore.subscribe((videoTrack) => {
+            if (videoTrack == undefined && isHightlighted) highlightedEmbedScreen.toggleHighlight(embedScreen);
+        });
+    });
+
+    onDestroy(() => {
+        resizeObserver.unobserve(jitsiMediaBoxHtml);
+        if (videoTrackUnSuscriber) videoTrackUnSuscriber();
     });
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     id="container"
     class="jitsi-video"
     bind:this={jitsiMediaBoxHtml}
-    on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
+    on:click={() => analyticsClient.pinMeetingAction()}
+    on:click={() =>
+        clickable && $videoTrackStore && $videoTrackStore?.isActive()
+            ? highlightedEmbedScreen.toggleHighlight(embedScreen)
+            : null}
 >
+    <ActionMediaBox
+        {embedScreen}
+        trackStreamWraper={peer}
+        videoEnabled={$videoTrackStore ? $videoTrackStore?.isActive() : false}
+    />
+
     {#if $videoTrackStore}
         <div class="tw-rounded-sm tw-overflow-hidden tw-flex tw-w-full tw-flex-col tw-h-full">
             <JitsiVideoElement
@@ -63,7 +86,7 @@
             {#if $audioTrackStore}
                 <JitsiAudioElement jitsiTrack={$audioTrackStore} />
                 <SoundMeterWidgetWrapper
-                    classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                    classcss="tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
                     barColor={$videoTrackStore ? "blue" : "black"}
                     volume={peer.jitsiTrackWrapper.volumeStore}
                 />

@@ -555,13 +555,12 @@ export class AreasPropertiesListener {
 
     private handleSpeakerMegaphonePropertyOnLeave(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined && property.id !== undefined) {
+            isSpeakerStore.set(false);
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
             // TODO remove this console.log after testing
             console.info("handleSpeakerMegaphonePropertyOnEnter => uniqRoomName : ", uniqRoomName);
             currentLiveStreamingNameStore.set(undefined);
             this.scene.broadcastService.leaveSpace(uniqRoomName);
-            //requestedMegaphoneStore.set(false);
-            isSpeakerStore.set(false);
             if (property.chatEnabled) {
                 this.handleLeaveMucRoom(uniqRoomName);
             }

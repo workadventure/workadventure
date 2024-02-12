@@ -1,5 +1,5 @@
 # final production image
-FROM node:20.8.0-bullseye-slim@sha256:9027d0d778368a3091ee36b0bfdc98ebf3d7815ee4e2811b05cc40ec2a0adf4e
+FROM node:20.8-bullseye-slim
 EXPOSE 8080
 WORKDIR /usr/src
 RUN apt-get update && apt-get install -y git

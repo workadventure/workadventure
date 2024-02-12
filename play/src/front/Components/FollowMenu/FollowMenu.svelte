@@ -1,17 +1,19 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
     import { LL } from "../../../i18n/i18n-svelte";
+    import { GameScene } from "../../Phaser/Game/GameScene";
 
-    const gameScene = gameManager.getCurrentGameScene();
+    let gameScene: GameScene | undefined;
 
     function name(userId: number): string {
-        const user = gameScene.MapPlayersByKey.get(userId);
+        const user = gameScene?.MapPlayersByKey.get(userId);
         return user ? user.playerName : "";
     }
 
     function acceptFollowRequest() {
-        gameScene.CurrentPlayer.startFollowing();
+        gameScene?.CurrentPlayer.startFollowing();
     }
 
     function abortEnding() {
@@ -19,7 +21,7 @@
     }
 
     function reset() {
-        gameScene.connection?.emitFollowAbort();
+        gameScene?.connection?.emitFollowAbort();
         followUsersStore.stopFollowing();
     }
 
@@ -28,6 +30,10 @@
             reset();
         }
     }
+
+    onMount(() => {
+        gameScene = gameManager.getCurrentGameScene();
+    });
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -35,7 +41,7 @@
 {#if $followStateStore === "requesting" && $followRoleStore === "follower"}
     <div
         class="interact-menu blue-dialog-box outline-light
-    tw-text-center tw-w-72 tw-absolute tw-bottom-36 tw-left-0 tw-right-0 tw-pointer-events-auto tw-z-[150] tw-right-0 tw-left-0 tw-m-auto"
+    tw-text-center tw-w-72 tw-absolute tw-bottom-36 tw-left-0 tw-right-0 tw-pointer-events-auto tw-z-[150] tw-m-auto"
     >
         <p class="tw-mt-2">{$LL.follow.interactMenu.title.follow({ leader: name($followUsersStore[0]) })}</p>
         <div class="tw-flex tw-flex-row tw-justify-evenly">

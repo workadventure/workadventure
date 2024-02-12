@@ -78,6 +78,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             warningEmbeddableLink: "Ten link njedajo se zatwariś.",
             errorInvalidUrl: 'Njepłaśeca URL. Wóna musy se zachopiś z "http://" oder "https://".',
             findOutMoreHere: "How zgónijośo wěcej",
+            openPickerSelector: "Wuzwóleński wuběraŕ wótcyniś",
         },
         advancedOptions: "Rozšyrjone opcije",
         speakerMegaphoneProperties: {
@@ -104,6 +105,49 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Městnosć, źož luźe kórtu spušćiju.",
             exitMap: "Kórtu spušćiś",
             exitMapStartAreaName: "Startowy wobceŕk",
+        },
+        youtubeProperties: {
+            label: "Youtube-wideo wótcyniś",
+            description: "Youtube-wideo wótcyniś, gaž stupijośo nutś.",
+            error: "Prošu zapodaś płaćiwy Youtube-URL",
+            disabled: "Youtube-wótcynjenje je deaktiwěrowane.",
+        },
+        googleDocsProperties: {
+            label: "Google Docs wótcyniś",
+            description: "Google Docs wótcyniś, gaž stupijośo nutś.",
+            error: "Prošu zapodaś płaćiwy Google Docs-URL",
+            disabled: "Google Docs-wótcynjenje je deaktiwěrowane.",
+        },
+        klaxoonProperties: {
+            label: "Klaxoon wótcyniś",
+            description: "Klaxoon wótcyniś, gaž stupijośo nutś.",
+            error: "Prošu zapodaś płaćiwy Klaxoon-URL",
+            disabled: "Klaxoon-wótcynjenje je deaktiwěrowane.",
+        },
+        googleSheetsProperties: {
+            label: "Google Sheets wótcyniś",
+            description: "Google Sheets wótcyniś, gaž stupijośo nutś.",
+            error: "Prošu zapodaś płaćiwy Google Sheets-URL",
+            disabled: "Google Sheets-wótcynjenje je deaktiwěrowane.",
+        },
+        googleSlidesProperties: {
+            label: "Google Slides wótcyniś",
+            description: "Google Slides wótcyniś, gaž stupijośo nutś.",
+            error: "Prošu zapodaś płaćiwy Google Slides-URL",
+            disabled: "Google Slides-wótcynjenje je deaktiwěrowane.",
+        },
+        eraserProperties: {
+            label: "Eraser wótcyniś",
+            description: "Eraser wótcyniś, gaž stupijośo nutś.",
+            defaultButtonLabel: "Eraser",
+            error: "Prošu zapodaś płaćiwy Google Eraser-URL",
+            disabled: "Eraser-wótcynjenje je deaktiwěrowane.",
+        },
+        googleDriveProperties: {
+            label: "Google Drive wótcyniś",
+            description: "Google Drive wótcyniś, gaž stupijośo nutś.",
+            error: "Prošu zapodaś płaćiwy Google Drive-URL",
+            disabled: "Google Drive-wótcynjenje je deaktiwěrowane.",
         },
     },
     areaEditor: {

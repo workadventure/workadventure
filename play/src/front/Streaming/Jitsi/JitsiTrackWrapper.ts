@@ -18,7 +18,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
     private spaceUserUpdateSubscribe: Subscription | undefined;
     public readonly isLocal: boolean;
 
-    constructor(readonly participantId: string, jitsiTrack: JitsiTrack | undefined) {
+    constructor(readonly participantId: string, jitsiTrack: JitsiTrack | undefined, readonly jitsiRoomName: string) {
         if (jitsiTrack) {
             this.setJitsiTrack(jitsiTrack);
             this.isLocal = jitsiTrack.isLocal();
@@ -233,5 +233,31 @@ export class JitsiTrackWrapper implements TrackWrapper {
 
     public isEmpty(): boolean {
         return this.cameraTrackWrapper.isEmpty() && this.screenSharingTrackWrapper.isEmpty();
+    }
+
+    public kickoff() {
+        this.spaceUser?.roomConnection?.emitKickOffUserMessage(this.spaceUser.id.toString(), this.spaceUser?.spaceName);
+    }
+
+    public muteMicrophoneEverybody() {
+        this.spaceUser?.roomConnection?.emitMuteEveryBodySpace(this.spaceUser?.spaceName);
+    }
+
+    public muteVideoEverybody() {
+        this.spaceUser?.roomConnection?.emitMuteVideoEveryBodySpace(this.spaceUser?.spaceName);
+    }
+
+    public muteMicrophonePartcipant() {
+        this.spaceUser?.roomConnection?.emitMuteParticipantIdSpace(
+            this.spaceUser?.spaceName,
+            this.spaceUser.id.toString()
+        );
+    }
+
+    public muteVideoParticipant() {
+        this.spaceUser?.roomConnection?.emitMuteVideoParticipantIdSpace(
+            this.spaceUser?.spaceName,
+            this.spaceUser.id.toString()
+        );
     }
 }

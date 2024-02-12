@@ -9,6 +9,7 @@ import {
     KLAXOON_ENABLED,
     KLAXOON_CLIENT_ID,
     YOUTUBE_ENABLED,
+    GOOGLE_DRIVE_ENABLED,
     GOOGLE_DOCS_ENABLED,
     GOOGLE_SHEETS_ENABLED,
     GOOGLE_SLIDES_ENABLED,
@@ -71,6 +72,7 @@ export class Room {
     private _googleSheetsToolActivated: boolean | undefined;
     private _googleSlidesToolActivated: boolean | undefined;
     private _eraserToolActivated: boolean | undefined;
+    private _googleDriveActivated: boolean | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -216,6 +218,7 @@ export class Room {
                 this._googleSheetsToolActivated = data.thirdParty?.googleSheetsToolActivated ?? GOOGLE_SHEETS_ENABLED;
                 this._googleSlidesToolActivated = data.thirdParty?.googleSlidesToolActivated ?? GOOGLE_SLIDES_ENABLED;
                 this._eraserToolActivated = data.thirdParty?.eraserToolActivated ?? ERASER_ENABLED;
+                this._googleDriveActivated = data.thirdParty?.googleDriveToolActivated ?? GOOGLE_DRIVE_ENABLED;
 
                 return new MapDetail(data.mapUrl, data.wamUrl);
             } else if (errorApiDataChecking.success) {
@@ -447,5 +450,8 @@ export class Room {
     }
     get eraserToolActivated(): boolean {
         return this._eraserToolActivated ?? false;
+    }
+    get googleDriveToolActivated(): boolean {
+        return this._googleDriveActivated ?? false;
     }
 }

@@ -14,6 +14,8 @@ export interface SpaceUserExtended extends SpaceUser {
         newUser: SpaceUserExtended;
         changes: PartialSpaceUser;
     }>;
+    roomConnection: RoomConnection;
+    spaceName: string;
 }
 
 const spaceLogger = debug("Space");
@@ -162,6 +164,8 @@ export class Space {
                 newUser: SpaceUserExtended;
                 changes: PartialSpaceUser;
             }>(),
+            roomConnection: this.connection,
+            spaceName: this.name,
         };
     }
 }

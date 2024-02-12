@@ -12,11 +12,11 @@
   },
   "homepage": "https://github.com/thecodingmachine/workadventure#readme",
   "scripts": {
-    "start": "ESBK_TSCONFIG_PATH=tsconfig-pusher.json tsx ./src/server.ts",
+    "start": "TSX_TSCONFIG_PATH=tsconfig-pusher.json tsx ./src/server.ts",
     "old_start": "node -r source-map-support/register --max-old-space-size=4096 ./dist/server.js",
     "dev": "cross-env concurrently --kill-others-on-fail \"npm:dev-front\" \"npm:typesafe-i18n-watch\" \"npm:watch-iframe-api\" \"npm:svelte-check-watch\" \"npm:dev-pusher\"",
     "dev-front": "cross-env vite",
-    "dev-pusher": "ESBK_TSCONFIG_PATH=tsconfig-pusher.json tsx watch --inspect=0.0.0.0:9229 ./src/server.ts",
+    "dev-pusher": "TSX_TSCONFIG_PATH=tsconfig-pusher.json tsx watch --clear-screen=false --inspect=0.0.0.0:9229 ./src/server.ts",
     "build": "cross-env vite build",
     "typecheck": "cross-env tsc --noEmit",
     "profile": "tsc && node --prof ./dist/server.js",
@@ -91,7 +91,7 @@
     "tailwindcss": "^3.1.8",
     "tslib": "^2.4.1",
     "typescript": "^4.9.4",
-    "vite": "^3.2.7",
+    "vite": "^3.2.8",
     "vite-tsconfig-paths": "^3.5.1",
     "vitest": "^0.29.1",
     "vitest-mock-extended": "^1.0.9"
@@ -164,7 +164,7 @@
     "ts-deepmerge": "^2.0.4",
     "ts-deferred": "^1.0.4",
     "ts-proto-descriptors": "^1.15.0",
-    "tsx": "^3.12.10",
+    "tsx": "^4.7.0",
     "typesafe-i18n": "^5.14.0",
     "uuid": "^9.0.0",
     "zod": "^3.19.1"
