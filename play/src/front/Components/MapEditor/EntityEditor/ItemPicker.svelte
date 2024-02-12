@@ -1,90 +1,66 @@
 <script lang="ts">
-    import type { EntityPrefab } from "@workadventure/map-editor";
+    import type { EntityPrefab, EntityPrefabType } from "@workadventure/map-editor";
     import { onDestroy, onMount } from "svelte";
     import { ArrowLeftIcon } from "svelte-feather-icons";
     import { get } from "svelte/store";
-    import { LL } from "../../../i18n/i18n-svelte";
+    import { LL } from "../../../../i18n/i18n-svelte";
     import {
         mapEditorEntityModeStore,
         mapEditorSelectedEntityPrefabStore,
         mapEditorSelectedEntityStore,
-    } from "../../Stores/MapEditorStore";
-    import { gameManager } from "../../Phaser/Game/GameManager";
-    import closeImg from "../images/close.png";
+    } from "../../../Stores/MapEditorStore";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
+    import closeImg from "../../images/close.png";
+    import { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
+    import ItemUpload from "./ItemUpload.svelte";
+    import EntityItem from "./EntityItem.svelte";
 
     const entitiesCollectionsManager = gameManager.getCurrentGameScene().getEntitiesCollectionsManager();
+    const entitiesPrefabsVariants = entitiesCollectionsManager.getEntitiesPrefabsVariantStore();
 
-    let pickedItem: EntityPrefab | undefined = undefined;
-    let pickedVariant: EntityPrefab | undefined = undefined;
-    let currentColor: string;
-
-    let rootItem: EntityPrefab[] = []; //A sample of each object
-    let itemVariants: EntityPrefab[] = [];
-    let currentVariants: EntityPrefab[] = [];
-    let variantColors: string[] = [];
+    let pickedEntity: EntityPrefab | undefined = undefined;
+    let pickedEntityVariant: EntityVariant | undefined = undefined;
+    let selectedColor: string;
 
     let filter = "";
-
     let selectedTag = "";
-
     let tags = entitiesCollectionsManager.getTags();
+
+    let activeTab: EntityPrefabType = "Default";
 
     onMount(() => {
         entitiesCollectionsManager.setFilter(filter);
-        updateVisiblePrefabs();
     });
 
     onDestroy(() => {
         mapEditorSelectedEntityPrefabStoreUnsubscriber();
     });
 
+    function changeActiveTab(newTab: EntityPrefabType) {
+        activeTab = newTab;
+    }
+
     const mapEditorSelectedEntityPrefabStoreUnsubscriber = mapEditorSelectedEntityPrefabStore.subscribe(
         (prefab?: EntityPrefab) => {
-            pickedItem = prefab;
+            pickedEntity = prefab;
         }
     );
 
-    function onPickItemVariant(variant: EntityPrefab) {
-        pickedVariant = variant;
-        mapEditorSelectedEntityPrefabStore.set(pickedVariant);
+    function onPickItem(entityPrefab: EntityPrefab) {
+        pickedEntity = entityPrefab;
+        mapEditorSelectedEntityPrefabStore.set(entityPrefab);
     }
 
-    function onPickItem(item: EntityPrefab) {
-        pickedItem = item;
-        if (!pickedItem) {
-            return;
-        }
-        itemVariants = entitiesCollectionsManager
-            .getEntitiesPrefabs()
-            .filter(
-                (item: EntityPrefab) =>
-                    item.name === pickedItem?.name && item.collectionName === pickedItem?.collectionName
-            );
-        itemVariants = itemVariants.sort(
-            (a, b) =>
-                a.direction.localeCompare(b.direction) +
-                a.color.localeCompare(b.color) * 10 +
-                (a.color === pickedItem?.color ? -100 : 0) +
-                (b.color === pickedItem?.color ? 100 : 0)
-        );
-        let variantColorSet = new Set<string>();
-        itemVariants.forEach((item) => variantColorSet.add(item.color));
-        variantColors = [...variantColorSet].sort();
-        onColorChange(pickedItem.color);
+    function onPickEntityVariant(entityVariant: EntityVariant) {
+        pickedEntity = entityVariant.defaultPrefab;
+        pickedEntityVariant = entityVariant;
+        onColorChange(pickedEntity.color);
     }
 
     function onColorChange(color: string) {
-        currentColor = color;
-        currentVariants = itemVariants.filter((item) => item.color === color);
-        if (pickedVariant != undefined) {
-            pickedVariant = currentVariants.find((item) => item.direction === pickedVariant?.direction);
-        } else {
-            pickedVariant = currentVariants.find((item) => item.direction === pickedItem?.direction);
-        }
-        if (pickedVariant === undefined) {
-            pickedVariant = currentVariants[0];
-        }
-        mapEditorSelectedEntityPrefabStore.set(pickedVariant);
+        selectedColor = color;
+        pickedEntity = pickedEntityVariant?.getEntityPrefabsPositions(color)[0];
+        mapEditorSelectedEntityPrefabStore.set(pickedEntity);
     }
 
     function onTagPick() {
@@ -97,31 +73,10 @@
 
     function onNameChange() {
         entitiesCollectionsManager.setFilter(filter);
-        updateVisiblePrefabs();
     }
 
     function onTagChange() {
         entitiesCollectionsManager.setFilter(filter, true);
-        updateVisiblePrefabs();
-    }
-
-    function updateVisiblePrefabs() {
-        const prefabs = entitiesCollectionsManager.getEntitiesPrefabs();
-        let tags = new Set<string>();
-        let uniqId = new Set<string>();
-        rootItem = [];
-        for (let entityPrefab of prefabs) {
-            entityPrefab.tags.forEach((v: string) => tags.add(v));
-            if (!uniqId.has(`${entityPrefab.collectionName}:${entityPrefab.name}`)) {
-                uniqId.add(`${entityPrefab.collectionName}:${entityPrefab.name}`);
-                rootItem.push(entityPrefab);
-            }
-        }
-
-        if (pickedItem && !rootItem.includes(pickedItem) && rootItem.length != 0) {
-            //if the item is not available due to filtering, we change it
-            onPickItem(rootItem[0]);
-        }
     }
 
     function backToSelectObject() {
@@ -129,7 +84,16 @@
         mapEditorSelectedEntityStore.set(undefined);
         mapEditorSelectedEntityPrefabStore.set(undefined);
         mapEditorEntityModeStore.set("ADD");
+        pickedEntityVariant = undefined
     }
+
+    function getCssClassForActiveTab(isActive:boolean){
+        if(isActive){
+            return "tw-border-0 tw-border-b-2 tw-border-solid tw-border-cyan-300"
+        }
+        return ""
+    }
+
 </script>
 
 <div class="item-picker">
@@ -149,7 +113,7 @@
         </select>
     </div>
     <div class="item-variations">
-        {#if pickedItem}
+        {#if pickedEntityVariant}
             <p
                 on:click|preventDefault={backToSelectObject}
                 class="tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0"
@@ -160,7 +124,7 @@
                 >
             </p>
             <div class="item-name">
-                {pickedItem?.name ?? "this entity"}
+                {pickedEntityVariant.defaultPrefab.name ?? "this entity"}
                 <img
                     class="tw-absolute tw-h-2 tw-mx-2 tw-mt-2 tw-cursor-pointer"
                     src={closeImg}
@@ -170,18 +134,18 @@
                 />
             </div>
             <div class="item-variant-picker-container tw-h-28">
-                {#each currentVariants as item (item.id)}
+                {#each pickedEntityVariant.getEntityPrefabsPositions(selectedColor) as item (item.id)}
                     <div
-                        class="pickable-item {item.imagePath === pickedVariant?.imagePath ? 'active' : ''}"
-                        on:click={() => onPickItemVariant(item)}
+                        class="pickable-item {item.imagePath === pickedEntity?.imagePath ? 'active' : ''}"
+                        on:click={() => onPickItem(item)}
                     >
                         <img class="item-image" src={item.imagePath} alt={item.name} />
                     </div>
                 {/each}
             </div>
             <div class="color-container">
-                {#each variantColors as color (color)}
-                    <div class={currentColor === color ? "active" : ""}>
+                {#each pickedEntityVariant.colors as color (color)}
+                    <div class={selectedColor === color ? "active" : ""}>
                         <button
                             class="color-selector"
                             style="background-color: {color};"
@@ -195,12 +159,27 @@
             <div class="item-variant-picker-container tw-h-28" />
         {/if}
     </div>
-    <div class="item-picker-container">
-        {#each rootItem as item (item.id)}
-            <div class="pickable-item {item.id === pickedItem?.id ? 'active' : ''}" on:click={() => onPickItem(item)}>
-                <img class="item-image" src={item.imagePath} alt={item.name} />
+    <div class="tw-flex tw-flex-col tw-overflow-auto tw-gap-4">
+        <div class="tw-flex tw-min-w-full tw-justify-around">
+            <div class={getCssClassForActiveTab(activeTab === "Default")}>
+            <button
+                on:click={() => changeActiveTab("Default")}>Defaults</button
+            >
             </div>
-        {/each}
+            <div class={getCssClassForActiveTab(activeTab === "Custom")}>
+            <button
+                on:click={() => changeActiveTab("Custom")}>Customs</button
+            >
+            </div>
+        </div>
+        <div class="item-picker-container">
+            {#each $entitiesPrefabsVariants as entityPrefabVariant (entityPrefabVariant.id)}
+                {#if entityPrefabVariant.defaultPrefab.type === activeTab}
+                    <EntityItem entityVariant={entityPrefabVariant} isActive={entityPrefabVariant.defaultPrefab.name === pickedEntity?.name} onPickEntityVariant={onPickEntityVariant} />
+                {/if}
+            {/each}
+        </div>
+        <ItemUpload />
     </div>
 </div>
 
