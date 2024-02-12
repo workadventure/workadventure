@@ -19,8 +19,9 @@
     background: none!important;
 }
 .emoji-picker__wrapper{
-    bottom: 50px!important;
+    bottom: 0;
     top: auto!important;
+    z-index: 1000;
     .emoji-picker{
         border: none!important;
     }
@@ -177,4 +178,49 @@ aside.chatWindow nav .background.chat{
 }
 aside.chatWindow nav ul{
     @apply flex list-none justify-between w-full p-0 m-0;
+}
+
+div.emoji-picker {
+    @apply bg-contrast/80 backdrop-blur rounded-lg border-none pointer-events-auto;
+    input.emoji-picker__search {
+        border-radius: 1em;
+    }
+    .emoji-picker__content {
+        @apply pb-0 px-0;
+    }
+    button.emoji-picker__category-button {
+        @apply relative z-10;
+        &:not(.active) {
+            @apply opacity-50 transition-all;
+            &:hover {
+                @apply opacity-100;
+            }
+        }
+        &.active {
+
+        }
+    }
+    .emoji-picker__emoji {
+        @apply transition-all rounded;
+        &:focus, &:hover {
+            @apply bg-white/10;
+        }
+    }
+    .emoji-picker__emojis {
+        h2.emoji-picker__category-name {
+            @apply text-xs uppercase text-white/50 pl-3 font-normal first:mt-3;
+        }
+    }
+    .emoji-picker__search-container {
+        @apply flex items-center;
+        .emoji-picker__search {
+            @apply pl-4 bg-white/10 border-none placeholder:text-white/50;
+        }
+        .emoji-picker__search-icon {
+            @apply static px-3 opacity-20;
+        }
+    }
+    .emoji-picker__category-buttons {
+        @apply m-0 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-white/20;
+    }
 }

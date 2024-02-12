@@ -94,6 +94,8 @@
     import {selectCompanionSceneVisibleStore} from "../../Stores/SelectCompanionStore";
     import {SelectCompanionScene, SelectCompanionSceneName} from "../../Phaser/Login/SelectCompanionScene";
     import {EnableCameraScene, EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
+
+    import { availabilityStatusStore } from "../../Stores/MediaStore";
     import HorizontalSoundMeterWidget from "../EnableCamera/HorizontalSoundMeterWidget.svelte";
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
     import UsersIcon from "../Icons/UsersIcon.svelte";
@@ -185,6 +187,17 @@
                 gameManager.getCurrentGameScene().connection?.emitFollowAbort();
                 followUsersStore.stopFollowing();
                 break;
+        }
+    }
+
+    function getStatus() {
+        switch ($availabilityStatusStore) {
+            case 1:
+                return "Online";
+            case 2:
+                return "Away";
+            default:
+                return "Do not disturb";
         }
     }
 
@@ -989,15 +1002,25 @@
                     {/if}
                 </div>
             {/if}
-            <div class="flex items-center relative hidden xl:block w-40" transition:fly={{delay: 1750, y: -200, duration: 750 }}>
+            <div class="flex items-center relative hidden xl:block min-w-40" transition:fly={{delay: 1750, y: -200, duration: 750 }}>
                 <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => profileMenuIsDropped = !profileMenuIsDropped} on:click={close} tabindex="0">
                     <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-2 pr-3">
                         <Woka userId={-1} placeholderSrc="" customWidth="32px" customHeight="32px" />
                         <div class="grow flex flex-col justify-start text-left pr-2">
                             <div class="font-bold text-white leading-5 whitespace-nowrap select-none">Hugo</div>
-                            <div class="text-xxs bold text-success whitespace-nowrap select-none flex items-center">
-                                <div class="aspect-ratio h-2 w-2 bg-success rounded-full mr-1"></div>
-                                ONLINE<!-- trad -->
+                            <div class="text-xxs bold whitespace-nowrap select-none flex items-center">
+                                {#if $availabilityStatusStore === 1}
+                                    <div class="aspect-ratio h-2 w-2 bg-success rounded-full mr-2"></div>
+                                    <div class="text-success">Online</div>
+                                {/if}
+                                {#if $availabilityStatusStore === 2}
+                                    <div class="aspect-ratio h-2 w-2 bg-warning rounded-full mr-2"></div>
+                                    <div class="text-warning">Away</div>
+                                {/if}
+                                {#if $availabilityStatusStore === 3}
+                                    <div class="aspect-ratio h-2 w-2 bg-danger rounded-full mr-2"></div>
+                                    <div class="text-danger">Do not Disturb</div>
+                                {/if}
                             </div>
                         </div>
                         <div>
@@ -1021,22 +1044,39 @@
                         <div class="h-[1px] w-full bg-white/20 my-2"></div>
                         <button class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditNameScene()}>
                             <div class="aspect-ratio h-2 w-2 bg-success rounded-full ml-2 mr-3"></div>
-                            <div class="mr-3 grow text-left">Online<!-- trad --></div>
-                            <div class="">
-                                <CheckIcon height="h-4" width="h-4" />
-                            </div>
+                            <div class="mr-3 grow text-left {$availabilityStatusStore === 1 ? '' : 'opacity-50' }">Online<!-- trad --></div>
+                            {#if $availabilityStatusStore === 1}
+                                <div class="">
+                                    <CheckIcon height="h-4" width="h-4" />
+                                </div>
+                            {/if}
                         </button>
                         <button class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditNameScene()}>
                             <div class="aspect-ratio h-2 w-2 bg-warning rounded-full ml-2 mr-3"></div>
-                            <div class="mr-3 opacity-50">Busy<!-- trad --></div>
+                            <div class="mr-3 grow text-left {$availabilityStatusStore === 2 ? '' : 'opacity-50' }">Away<!-- trad --></div>
+                            {#if $availabilityStatusStore === 2}
+                                <div class="">
+                                    <CheckIcon height="h-4" width="h-4" />
+                                </div>
+                            {/if}
                         </button>
                         <button class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditNameScene()}>
                             <div class="aspect-ratio h-2 w-2 bg-danger rounded-full ml-2 mr-3"></div>
-                            <div class="mr-3 opacity-50">Do not disturb<!-- trad --></div>
+                            <div class="mr-3 grow text-left {$availabilityStatusStore === 3 ? '' : 'opacity-50' }">Do not disturb<!-- trad --></div>
+                            {#if $availabilityStatusStore === 3}
+                                <div class="">
+                                    <CheckIcon height="h-4" width="h-4" />
+                                </div>
+                            {/if}
                         </button>
                         <button class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditNameScene()}>
                             <div class="aspect-ratio h-2 w-2 bg-neutral rounded-full ml-2 mr-3"></div>
-                            <div class="mr-3 opacity-50">Offline<!-- trad --></div>
+                            <div class="mr-3 grow text-left {$availabilityStatusStore === 4 ? '' : 'opacity-50' }">Offline<!-- trad --></div>
+                            {#if $availabilityStatusStore === 4}
+                                <div class="">
+                                    <CheckIcon height="h-4" width="h-4" />
+                                </div>
+                            {/if}
                         </button>
                         <div class="h-[1px] w-full bg-white/20 my-2"></div>
                         <button class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditNameScene()}>

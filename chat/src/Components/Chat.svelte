@@ -161,7 +161,8 @@
 
 <svelte:window on:keydown={onKeyDown} on:click={onClick} />
 
-<aside class="chatWindow h-full text-white relative after:content-[''] after:absolute after:w-[1px] after:h-full after:right-0 after:top-0 after:bg-white/30 after:z-50" bind:this={chatWindowElement}>
+<aside class="chatWindow h-full text-white relative after:content-[''] after:absolute after:w-[1px] after:h-full after:right-0 after:top-0 after:bg-white/30 after:z-50" bind:this={chatWindowElement}
+>
     <section class="p-0 m-0 h-full">
         {#if $showPart === "activeTimeline"}
             <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => timelineActiveStore.set(false)} />

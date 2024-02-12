@@ -562,8 +562,14 @@ div.action.danger p.action-body {
     }
 }
 
+
+.active-discussion div.emoji-picker {
+    transform: translateX(-188px);
+}
+
 div.emoji-picker {
     @apply bg-contrast/80 backdrop-blur rounded-lg border-none;
+    transform: translateX(-68px);
     input.emoji-picker__search {
         border-radius: 1em;
     }

@@ -455,8 +455,6 @@
 <div
     id="activeTimeline"
     class="flex flex-col h-full min-h-full over w-full"
-    in:fly={{delay: 150, x: 500, duration: 250 }}
-    out:fly={{ x: -500, duration: 250 }}
     on:click={() => (applicationMenuIsOpenned = false)}
 >
 

@@ -33,13 +33,13 @@
     <div class={`mt-2`}>
         <div class={`flex justify-start`}>
             <div
-                class={`mt-4 relative wa-avatar-mini mr-2 z-10`}
+                class={`mt-6 relative wa-avatar aspect-ratio h-10 w-10 rounded overflow-hidden false cursor-default mr-2`}
                 style={`background-color: ${userData.color}`}
                 in:fade={{ duration: 100 }}
                 out:fade={{ delay: 200, duration: 100 }}
             >
-                <div class="wa-container">
-                    <img class="w-full" src={userData.woka} alt="Avatar" />
+                <div class="wa-container cursor-default">
+                    <img class="cursor-default w-full mt-2" src={userData.woka} alt="Avatar" />
                 </div>
             </div>
             <div class={`w-3/4`} in:fly={{ x: -10, delay: 100, duration: 200 }} out:fly={{ x: -10, duration: 200 }}>
@@ -66,9 +66,9 @@
                     <div class="rounded-lg bg-dark text-xs p-3">
                         <!-- loading animation -->
                         <div class="loading-group">
-                            <span class="loading-dot" />
-                            <span class="loading-dot" />
-                            <span class="loading-dot" />
+                            <span class="loading-dot"></span>
+                            <span class="loading-dot"></span>
+                            <span class="loading-dot"></span>
                         </div>
                     </div>
                 </div>
@@ -76,3 +76,41 @@
         </div>
     </div>
 {/if}
+
+<style lang="scss">
+  $dot-width: 10px;
+  $dot-color: #FFFFFF;
+  $speed: 1.5s;
+
+  .loading-group {
+    position: relative;
+    display: flex;
+    .loading-dot {
+      animation: blink $speed infinite;
+      animation-fill-mode: both;
+      @apply w-2 h-2 aspect-square bg-white block rounded-full;
+      &:nth-child(2) {
+        animation-delay: .2s;
+        @apply ml-1;
+      }
+
+      &:nth-child(3) {
+        animation-delay: .4s;
+        @apply ml-1;
+      }
+    }
+  }
+
+
+  @keyframes blink {
+    0% {
+      opacity: .1;
+    }
+    20% {
+      opacity: 1;
+    }
+    100% {
+      opacity: .1;
+    }
+  }
+</style>
