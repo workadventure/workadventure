@@ -1,6 +1,7 @@
 import { EntityData, WAMEntityData } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
-import { get } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
+import * as Sentry from "@sentry/svelte";
 import { Entity } from "../../../ECS/Entity";
 import { CopyEntityEventData, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
 import { MapEditorModeManager } from "../MapEditorModeManager";
@@ -11,8 +12,10 @@ import { TexturesHelper } from "../../../Helpers/TexturesHelper";
 import {
     mapEditorCopiedEntityDataPropertiesStore,
     mapEditorEntityModeStore,
+    mapEditorEntityUploadEventStore,
     mapEditorSelectedEntityStore,
 } from "../../../../Stores/MapEditorStore";
+import { UploadEntityFrontCommand } from "../Commands/Entity/UploadEntityFrontCommand";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
 export class EntityEditorTool extends EntityRelatedEditorTool {
@@ -23,12 +26,15 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         gameObjects: Phaser.GameObjects.GameObject[]
     ) => void;
 
+    protected mapEditorEntityUploadStoreUnsubscriber!: Unsubscriber;
+
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super(mapEditorModeManager);
         this.shiftKey = this.scene.input.keyboard?.addKey("SHIFT");
 
         this.bindEventHandlers();
         this.bindEntitiesManagerEventHandlers();
+        this.subscribeToEntityUpload();
     }
 
     /**
@@ -108,6 +114,10 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 );
                 break;
             }
+            case "uploadEntityMessage": {
+                console.log("Do something here on incoming event");
+                break;
+            }
         }
     }
 
@@ -179,6 +189,24 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         this.shiftKey?.on(Phaser.Input.Keyboard.Events.UP, () => {
             this.changePreviewTint();
         });
+    }
+
+    protected subscribeToEntityUpload() {
+        this.mapEditorEntityUploadStoreUnsubscriber = mapEditorEntityUploadEventStore.subscribe(
+            (uploadEntityMessage) => {
+                if (uploadEntityMessage) {
+                    (async () => {
+                        await this.mapEditorModeManager.executeCommand(
+                            new UploadEntityFrontCommand(uploadEntityMessage)
+                        );
+                        mapEditorEntityUploadEventStore.set(undefined);
+                    })().catch((e) => {
+                        console.error(e);
+                        Sentry.captureException(e);
+                    });
+                }
+            }
+        );
     }
 
     protected handlePointerMoveEvent(pointer: Phaser.Input.Pointer): void {
@@ -289,10 +317,20 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             .catch((e) => console.error(e));
     }
 
+    private unsubscribeStore() {
+        this.mapEntityEditorModeStoreUnsubscriber();
+    }
+
     protected unbindEventHandlers(): void {
         this.scene.input.off(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
         this.shiftKey?.off(Phaser.Input.Keyboard.Events.DOWN);
         this.shiftKey?.off(Phaser.Input.Keyboard.Events.UP);
         this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
+    }
+
+    public destroy() {
+        super.destroy();
+        this.unbindEventHandlers();
+        this.unsubscribeStore();
     }
 }

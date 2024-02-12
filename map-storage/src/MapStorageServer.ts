@@ -26,6 +26,8 @@ import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/pro
 import * as Sentry from "@sentry/node";
 import { mapsManager } from "./MapsManager";
 import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
+import { entitiesManager } from "./EntitiesManager";
+import { UploadEntityMapStorageCommand } from "./Commands/UploadEntityMapStorageCommand";
 
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
@@ -200,6 +202,14 @@ const mapStorageServer: MapStorageServer = {
                         mapKey,
                         mapUrl.host,
                         new DeleteEntityCommand(gameMap, message.id, commandId)
+                    );
+                    break;
+                }
+                case "uploadEntityMessage": {
+                    const uploadEntityMessage = editMapMessage.uploadEntityMessage;
+                    await entitiesManager.executeCommand(
+                        mapKey,
+                        new UploadEntityMapStorageCommand(uploadEntityMessage, mapUrl.hostname)
                     );
                     break;
                 }
