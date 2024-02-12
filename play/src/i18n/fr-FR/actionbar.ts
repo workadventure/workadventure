@@ -20,6 +20,11 @@ const actionbar: BaseTranslation = {
         speaker: "Speaker",
     },
     app: "Ouvrir / Fermer les applications",
+    listStatusTitle: "Changer de statut",
+    status: {
+        ONLINE: "En Ligne",
+        AWAY: "Occupé",
+    },
 };
 
 export default actionbar;
