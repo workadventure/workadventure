@@ -392,16 +392,16 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.scene.markDirty();
     }
 
-    public lockCameraDuring(delay: number = 3000): void {
+    public lockCameraDuring(delay = 3000): void {
         this.cameraLocked = true;
         this.scene.time.delayedCall(delay, () => {
             this.cameraLocked = false;
         });
     }
 
-    emit(event: string | symbol, ...args: any[]): boolean {
-        // If the camera is defined on Exploration mode, the camaera manager events will be not emitted 
-        if(event === CameraManagerEvent.CameraUpdate && CameraMode.Exploration === this.cameraMode) false;
+    emit(event: string | symbol, ...args: unknown[]): boolean {
+        // If the camera is defined on Exploration mode, the camaera manager events will be not emitted
+        if (event === CameraManagerEvent.CameraUpdate && CameraMode.Exploration === this.cameraMode) false;
         return super.emit(event, ...args);
     }
 }

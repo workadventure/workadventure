@@ -116,7 +116,7 @@ import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInt
 import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
-import { modalVisibilityStore } from "../../Stores/ModalStore";
+import { modalPopupVisibilityStore, modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
@@ -2726,9 +2726,14 @@ ${escapedMessage}
         }
     }
 
-    public moveTo(position: { x: number; y: number }) {
+    public moveTo(position: { x: number; y: number }, measuredInPixels = true, tryFindingNearestAvailable = false) {
         this.pathfindingManager
-            .findPath(this.gameMapFrontWrapper.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), position)
+            .findPath(
+                this.gameMapFrontWrapper.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y),
+                position,
+                measuredInPixels,
+                tryFindingNearestAvailable
+            )
             .then((path) => {
                 if (path && path.length > 0) {
                     this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
@@ -3357,9 +3362,21 @@ ${escapedMessage}
         }
         // If the zoom modifier is over the max zoom out, we propose to the user to switch to the explorer mode
         // Rule: if the velocity is over 1, we could imagine that the user force to switch on the explorer mode
-        if ((velocity && velocity > 1) && zoomFactor < 1 && waScaleManager.zoomModifier <= waScaleManager.maxZoomOut && !get(mapEditorModeStore)) {
-            analyticsClient.toggleMapEditor(!get(mapEditorModeStore));
-            mapEditorModeStore.switchMode(!get(mapEditorModeStore));
+        if (
+            velocity &&
+            velocity > 1 &&
+            zoomFactor < 1 &&
+            waScaleManager.zoomModifier <= waScaleManager.maxZoomOut &&
+            !get(mapEditorModeStore)
+        ) {
+            const askAgainPopup = localStorage.getItem("notAskAgainPopupExplorerMode");
+            if (askAgainPopup == undefined || localStorage.getItem("notAskAgainPopupExplorerMode") === "false") {
+                modalPopupVisibilityStore.set(true);
+            } else {
+                const matEditoreModeState = get(mapEditorModeStore);
+                analyticsClient.toggleMapEditor(!matEditoreModeState);
+                mapEditorModeStore.switchMode(!matEditoreModeState);
+            }
 
             // Lock the camera to keep the same zoom after animation. The camera will be unlock when the Explorer tool is activated or after 3000ms.
             this.cameraManager.lockCameraDuring(3000);

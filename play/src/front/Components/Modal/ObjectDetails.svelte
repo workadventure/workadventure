@@ -6,13 +6,15 @@
         EntityDataPropertiesKeys,
         OpenWebsiteTypePropertiesKeys,
     } from "@workadventure/map-editor";
-    import { mapExplorationObjectSelectedStore } from "../../Stores/MapEditorStore";
+    import { fly } from "svelte/transition";
+    import { mapEditorModeStore, mapExplorationObjectSelectedStore } from "../../Stores/MapEditorStore";
     import { Entity } from "../../Phaser/ECS/Entity";
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import AreaToolImg from "../images/icon-tool-area.png";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import ListAddPropertyButton from "../MapEditor/PropertyEditor/ListAddPropertyButton.svelte";
     import LL from "../../../i18n/i18n-svelte";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     // Create type for component AddPropertyButton
     type AddPropertyButtonType = {
@@ -136,17 +138,29 @@
         if (holdEntity instanceof AreaPreview) holdEntity.setStrokeStyle(2, 0x000000);
         mapExplorationObjectSelectedStore.set(undefined);
     }
-    async function goTo() {
-        if ($mapExplorationObjectSelectedStore)
-            await gameManager
+    function goTo() {
+        if ($mapExplorationObjectSelectedStore) {
+            // Move to the selected entity or area
+            const position = gameManager
                 .getCurrentGameScene()
-                .CurrentPlayer?.setPathToFollow([
-                    { x: $mapExplorationObjectSelectedStore.x, y: $mapExplorationObjectSelectedStore.y },
-                ]);
+                .getGameMapFrontWrapper()
+                .getTileIndexAt($mapExplorationObjectSelectedStore.x, $mapExplorationObjectSelectedStore.y);
+            gameManager
+                .getCurrentGameScene()
+                .moveTo(position, true, $mapExplorationObjectSelectedStore instanceof Entity);
+            gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
+
+            // Close map editor to walk on the entity or zone
+            analyticsClient.toggleMapEditor(!$mapEditorModeStore);
+            mapEditorModeStore.switchMode(!$mapEditorModeStore);
+
+            // Close the modal
+            mapExplorationObjectSelectedStore.set(undefined);
+        }
     }
 </script>
 
-<div class="object-menu tw-min-h-fit tw-rounded-3xl tw-overflow-visible">
+<div class="object-menu tw-min-h-fit tw-rounded-3xl tw-overflow-visible" transition:fly={{ x: 1000, duration: 500 }}>
     {#if $mapExplorationObjectSelectedStore instanceof Entity}
         <div class="tw-p-8 tw-flex tw-flex-col tw-justify-center tw-items-center">
             {#if $mapExplorationObjectSelectedStore?.getEntityData().name}

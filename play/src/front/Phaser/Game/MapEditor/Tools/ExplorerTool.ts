@@ -17,10 +17,12 @@ import { Entity } from "../../../ECS/Entity";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { EntitiesManager } from "../../GameMap/EntitiesManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
-import { INITIAL_ZOOM_OUT_EXPLORER_MODE, MAX_ZOOM_OUT_EXPLORER_MODE, waScaleManager } from "../../../Services/WaScaleManager";
+import {
+    INITIAL_ZOOM_OUT_EXPLORER_MODE,
+    MAX_ZOOM_OUT_EXPLORER_MODE,
+    waScaleManager,
+} from "../../../Services/WaScaleManager";
 import { MapEditorTool } from "./MapEditorTool";
-import { Easing } from "../../../../types";
-import { set } from "lodash";
 
 const logger = debug("explorer-tool");
 
@@ -163,7 +165,7 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.input.setDefaultCursor("auto");
 
         // Restore zoom factor
-        if(waScaleManager.zoomModifier < INITIAL_ZOOM_OUT_EXPLORER_MODE) this.scene.zoomByFactor(3);
+        if (waScaleManager.zoomModifier < INITIAL_ZOOM_OUT_EXPLORER_MODE) this.scene.zoomByFactor(3);
 
         // Define initial zoom max
         waScaleManager.maxZoomOut = INITIAL_ZOOM_OUT_EXPLORER_MODE;
@@ -211,7 +213,7 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.getCameraManager().setExplorationMode();
 
         // Rules: if the user click on the action bar to open the explorater mode, we define new zoom
-        if(waScaleManager.zoomModifier > MAX_ZOOM_OUT_EXPLORER_MODE) this.scene.zoomByFactor(0.5);
+        if (waScaleManager.zoomModifier > MAX_ZOOM_OUT_EXPLORER_MODE) this.scene.zoomByFactor(0.5);
 
         // Define new zoom max
         waScaleManager.maxZoomOut = MAX_ZOOM_OUT_EXPLORER_MODE;
@@ -224,11 +226,8 @@ export class ExplorerTool implements MapEditorTool {
         // Mark the scene as dirty
         this.scene.markDirty();
 
-        // Define new zone to zoom
-        this.defineZoomToCenterCameraPosition();
-
         // Create flash animation
-        this.scene.cameras.main.flash(2000, 255, 255, 255, true);
+        this.scene.cameras.main.flash();
 
         // Create zoon animation
         this.scene.cameras.main.zoomEffect.start(0.8, 500);
@@ -236,6 +235,9 @@ export class ExplorerTool implements MapEditorTool {
         setTimeout(() => {
             this.scene.cameras.main.zoomEffect.start(1, 500);
         }, 500);
+
+        // Define new zone to zoom
+        this.defineZoomToCenterCameraPosition();
 
         // Create subscribe to entities store
         this.mapExplorationEntitiesSubscribe = mapExplorationEntitiesStore.subscribe((entities) => {

@@ -4,8 +4,6 @@ import { ResizableScene } from "../Login/ResizableScene";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { HdpiManager } from "./HdpiManager";
 import ScaleManager = Phaser.Scale.ScaleManager;
-import { GameScene } from "../Game/GameScene";
-import { EditorToolName } from "../Game/MapEditor/MapEditorModeManager";
 
 export const MAX_ZOOM_OUT_EXPLORER_MODE = 0.4;
 export const INITIAL_ZOOM_OUT_EXPLORER_MODE = 1;
@@ -83,7 +81,7 @@ export class WaScaleManager {
         if (this.focusTarget.width && this.focusTarget.height) {
             this.zoomModifier = this.getTargetZoomModifierFor(this.focusTarget.width, this.focusTarget.height);
         }
-        
+
         this.game.events.emit(WaScaleManagerEvent.RefreshFocusOnTarget, this.focusTarget);
     }
 

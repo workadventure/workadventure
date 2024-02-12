@@ -223,6 +223,14 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             moveToEntity: "Aller à l'entité {name}",
             moveToArea: "Aller à la zone {name}",
         },
+        popup: {
+            title: "Est-ce que tu veux continuer avec le Map Explorer ? 🤔",
+            content:
+                "Le mode exploreur permet de visualiser la carte, trouver des objets et des zones. Il existe 2 systèmes dans le mode exploreur, le système d'exploration libre ou le système de recherche d'objets et de zone. La vidéo ci-dessus vous montre comment utiliser le mode exploreur 💪",
+            notAskAgain: "Ne plus demander",
+            close: "Fermer",
+            continue: "Continuer",
+        },
     },
 };
 

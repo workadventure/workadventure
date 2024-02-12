@@ -225,6 +225,16 @@ const mapEditor: BaseTranslation = {
             moveToEntity: "Move to entity {name}",
             moveToArea: "Move to area {name}",
         },
+        popup: {
+            title: "Do you intend to keep using Explorer mode? 🤔",
+            content:
+                "The explorer mode allows you to visualize the map, find objects and areas. There are 2 systems in the explorer mode, the free exploration system or the object and area search system. The video above shows you how to use the explorer mode 💪",
+            notAskAgain: "Do not ask again",
+            close: "Close",
+            continue: "Continue",
+            // Translate previous sentence to english
+            // "The explorer mode allows you to visualize the map, find objects and areas. There are 2 systems in the explorer mode, the free exploration system or the object and area search system. The video above shows you how to use the explorer mode 💪"
+        },
     },
 };
 

@@ -14,7 +14,7 @@
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
-    import { showLimitRoomModalStore, modalVisibilityStore } from "../Stores/ModalStore";
+    import { showLimitRoomModalStore, modalVisibilityStore, modalPopupVisibilityStore } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
@@ -48,6 +48,7 @@
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
     import ObjectDetails from "./Modal/ObjectDetails.svelte";
+    import Popup from "./Modal/Popup.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -63,7 +64,7 @@
 
 <!-- Components ordered by z-index -->
 <div id="main-layout" class={[...$coWebsites.values()].length === 0 ? "not-cowebsite" : ""} bind:this={mainLayout}>
-    {#if $modalVisibilityStore}
+    {#if $modalVisibilityStore || $modalPopupVisibilityStore}
         <div class="tw-bg-black/60 tw-w-full tw-h-full tw-fixed tw-left-0 tw-right-0" />
     {/if}
 
@@ -153,6 +154,10 @@
 
         {#if $mapExplorationObjectSelectedStore}
             <ObjectDetails />
+        {/if}
+
+        {#if $modalPopupVisibilityStore}
+            <Popup />
         {/if}
     </section>
 
