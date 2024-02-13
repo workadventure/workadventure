@@ -71,16 +71,24 @@
     bind:this={dropZoneRef}
     class="hover:tw-cursor-pointer tw-flex tw-flex-col tw-border tw-border-dotted tw-rounded-md tw-items-center tw-justify-center"
 >
-    <input id="upload" class="tw-hidden" type="file" accept="image/png" bind:files bind:this={fileInput} />
+    <input
+        id="upload"
+        class="tw-hidden"
+        type="file"
+        accept="image/png"
+        bind:files
+        bind:this={fileInput}
+        data-testid="uploadCustomAsset"
+    />
     {#if fileToUpload}
         <div class="tw-flex tw-flex-col tw-min-w-full tw-p-2 tw-m-0 tw-items-center tw-justify-center">
             <img src={URL.createObjectURL(fileToUpload)} width="48" height="auto" alt={fileToUpload.name} />
-            <button on:click={processFileToUpload}>Upload</button>
+            <button on:click={processFileToUpload} data-testid="confirmUploadButton">Upload</button>
             <button class="tw-text-red-500" on:click={initFileUpload}>Cancel</button>
         </div>
     {:else}
         <label class="tw-flex tw-flex-col tw-min-w-full tw-p-2 tw-m-0 tw-items-center tw-justify-center" for="upload">
-            <img class="hover:tw-cursor-pointer" src={iconUploadWhite} width="48" height="48" alt="iconUploadWhite" />
+            <img class="hover:tw-cursor-pointer" src={iconUploadWhite} width="32" height="32" alt="iconUploadWhite" />
             <p class="hover:tw-cursor-pointer tw-text-gray-400 tw-m-0">
                 Drop your image or <span class="hover:tw-cursor-pointer tw-text-white">click to add</span>
             </p></label

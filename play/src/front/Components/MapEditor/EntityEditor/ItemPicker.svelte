@@ -84,16 +84,15 @@
         mapEditorSelectedEntityStore.set(undefined);
         mapEditorSelectedEntityPrefabStore.set(undefined);
         mapEditorEntityModeStore.set("ADD");
-        pickedEntityVariant = undefined
+        pickedEntityVariant = undefined;
     }
 
-    function getCssClassForActiveTab(isActive:boolean){
-        if(isActive){
-            return "tw-border-0 tw-border-b-2 tw-border-solid tw-border-cyan-300"
+    function getCssClassForActiveTab(isActive: boolean) {
+        if (isActive) {
+            return "tw-border-0 tw-border-b-2 tw-border-solid tw-border-cyan-300";
         }
-        return ""
+        return "";
     }
-
 </script>
 
 <div class="item-picker">
@@ -162,20 +161,20 @@
     <div class="tw-flex tw-flex-col tw-overflow-auto tw-gap-4">
         <div class="tw-flex tw-min-w-full tw-justify-around">
             <div class={getCssClassForActiveTab(activeTab === "Default")}>
-            <button
-                on:click={() => changeActiveTab("Default")}>Defaults</button
-            >
+                <button data-testid="switchToDefaultTab" on:click={() => changeActiveTab("Default")}>Defaults</button>
             </div>
-            <div class={getCssClassForActiveTab(activeTab === "Custom")}>
-            <button
-                on:click={() => changeActiveTab("Custom")}>Customs</button
-            >
+            <div data-testid="switchToCustomTab" class={getCssClassForActiveTab(activeTab === "Custom")}>
+                <button on:click={() => changeActiveTab("Custom")}>Customs</button>
             </div>
         </div>
-        <div class="item-picker-container">
+        <div class="item-picker-container" data-testid="itemPickerList">
             {#each $entitiesPrefabsVariants as entityPrefabVariant (entityPrefabVariant.id)}
                 {#if entityPrefabVariant.defaultPrefab.type === activeTab}
-                    <EntityItem entityVariant={entityPrefabVariant} isActive={entityPrefabVariant.defaultPrefab.name === pickedEntity?.name} onPickEntityVariant={onPickEntityVariant} />
+                    <EntityItem
+                        entityVariant={entityPrefabVariant}
+                        isActive={entityPrefabVariant.defaultPrefab.name === pickedEntity?.name}
+                        {onPickEntityVariant}
+                    />
                 {/if}
             {/each}
         </div>
