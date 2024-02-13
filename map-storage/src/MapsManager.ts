@@ -3,6 +3,9 @@ import { EditMapCommandMessage } from "@workadventure/messages";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import * as Sentry from "@sentry/node";
 import { fileSystem } from "./fileSystem";
+import { MapListService } from "./Services/MapListService";
+import { WebHookService } from "./Services/WebHookService";
+import { WEB_HOOK_URL } from "./Enum/EnvironmentVariable";
 
 class MapsManager {
     private loadedMaps: Map<string, GameMap>;
@@ -10,6 +13,8 @@ class MapsManager {
 
     private saveMapIntervals: Map<string, NodeJS.Timer>;
     private mapLastChangeTimestamp: Map<string, number>;
+
+    private mapListService: MapListService;
 
     /**
      * Attempt to save the map from memory to file every time interval
@@ -29,9 +34,10 @@ class MapsManager {
         this.loadedMapsCommandsQueue = new Map<string, EditMapCommandMessage[]>();
         this.saveMapIntervals = new Map<string, NodeJS.Timer>();
         this.mapLastChangeTimestamp = new Map<string, number>();
+        this.mapListService = new MapListService(fileSystem, new WebHookService(WEB_HOOK_URL));
     }
 
-    public async executeCommand(mapKey: string, command: Command): Promise<void> {
+    public async executeCommand(mapKey: string, domain: string, command: Command): Promise<void> {
         const gameMap = this.getGameMap(mapKey);
         if (!gameMap) {
             throw new Error('Could not find GameMap with key "' + mapKey + '"');
@@ -40,7 +46,11 @@ class MapsManager {
         if (!this.saveMapIntervals.has(mapKey)) {
             this.startSavingMapInterval(mapKey, this.AUTO_SAVE_INTERVAL_MS);
         }
-        await command.execute();
+        const wamFile = await command.execute();
+        if (wamFile != undefined)
+            this.mapListService
+                .updateWAMFileInCache(domain, mapKey.replace(domain, ""), wamFile)
+                .catch((e) => console.error(e));
     }
 
     public getCommandsNewerThan(mapKey: string, commandId: string | undefined): EditMapCommandMessage[] {

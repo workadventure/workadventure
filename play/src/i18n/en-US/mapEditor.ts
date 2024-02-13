@@ -161,6 +161,9 @@ const mapEditor: BaseTranslation = {
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",
         nameLabel: "Name",
+        areaDescription: "Description",
+        areaSerchable: "Searchable into the exploration mode",
+        addDescriptionField: "Add description field",
     },
     areaEditorInstructions: {
         title: "How it works ?",
@@ -179,6 +182,9 @@ const mapEditor: BaseTranslation = {
         buttonLabel: "Button Label",
         editInstructions: "Click an entity to modify its properties.",
         selectObject: "Click on an object to select it",
+        objectName: "Object Name",
+        objectDescription: "Object Description",
+        objectSearchable: "Searchable into the exploration mode",
     },
     settings: {
         loading: "Loading",
@@ -204,6 +210,33 @@ const mapEditor: BaseTranslation = {
                     },
                 },
             },
+        },
+        room: {
+            title: "Room Settings",
+            description: "Configure your room",
+            inputs: {
+                name: "Room name",
+                description: "Room description",
+                tags: "Tags",
+                copyright: "Room license",
+                thumbnail: "Room thumbnail",
+            },
+            helps: {
+                description: "A description of the map. Can be used in social networks when sharing a link to the map.",
+                tags: "A list of tags. Can be used to grant access to the map.",
+                thumbnail:
+                    "URL to a thumbnail image. This image will be used in social networks when sharing a link to the map.",
+                copyright:
+                    "Copyright notice for this map. Can be a link to a license. Parts of this map like tilesets or images can have their own copyright.",
+            },
+            actions: {
+                save: "Save",
+                confirm: "Confirm",
+                success: "Room settings saved",
+                error: "Error while saving room settings",
+            },
+            confirmSave:
+                "Confirm that you want to save the changes to the map. This will create a new version of the map, disconnect all players and reload the map for all players.",
         },
     },
 };

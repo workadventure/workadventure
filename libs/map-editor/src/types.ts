@@ -106,6 +106,18 @@ export const ListenerMegaphonePropertyData = PropertyBase.extend({
     chatEnabled: z.boolean().default(false),
 });
 
+export const EntityDescriptionPropertyData = PropertyBase.extend({
+    type: z.literal("entityDescriptionProperties"),
+    description: z.string().optional(),
+    searchable: z.boolean().default(false),
+});
+
+export const AreaDescriptionPropertyData = PropertyBase.extend({
+    type: z.literal("areaDescriptionProperties"),
+    description: z.string().optional(),
+    searchable: z.boolean().default(false),
+});
+
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,
@@ -116,6 +128,7 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     OpenWebsitePropertyData,
     SpeakerMegaphonePropertyData,
     ListenerMegaphonePropertyData,
+    AreaDescriptionPropertyData,
 ]);
 
 export const AreaDataProperties = z.array(AreaDataProperty);
@@ -142,6 +155,7 @@ export const EntityDataProperty = z.discriminatedUnion("type", [
     JitsiRoomPropertyData,
     PlayAudioPropertyData,
     OpenWebsitePropertyData,
+    EntityDescriptionPropertyData,
 ]);
 
 export const EntityDataProperties = z.array(EntityDataProperty);
@@ -187,24 +201,38 @@ export const WAMEntityData = EntityData.omit({ prefab: true, id: true });
 export type WAMEntityData = z.infer<typeof WAMEntityData>;
 
 export const WAMMetadata = z.object({
-    name: z.string().optional().describe("The name of the map."),
+    name: z.string().optional().nullable().describe("The name of the map."),
     description: z
         .string()
         .optional()
+        .nullable()
         .describe("A description of the map. Can be used in social networks when sharing a link to the map."),
     copyright: z
         .string()
         .optional()
+        .nullable()
         .describe(
             "Copyright notice for this map. Can be a link to a license. Parts of this map like tilesets or images can have their own copyright."
         ),
     thumbnail: z
         .string()
         .optional()
+        .nullable()
         .describe(
             "URL to a thumbnail image. This image will be used in social networks when sharing a link to the map."
         ),
+    areasSearchable: z
+        .number()
+        .optional()
+        .nullable()
+        .describe("Number of areas define as searchable by the map editor for the exploration mode."),
+    entitiesSearchable: z
+        .number()
+        .optional()
+        .nullable()
+        .describe("Number of entities define as searchable by the map editor for the exploration mode."),
 });
+export type WAMMetadata = z.infer<typeof WAMMetadata>;
 
 export const WAMVendor = z
     .unknown()
@@ -288,6 +316,8 @@ export type MapsCacheSingleMapFormat = z.infer<typeof MapsCacheSingleMapFormat>;
 export type MapsCacheFileFormat = z.infer<typeof MapsCacheFileFormat>;
 export type SpeakerMegaphonePropertyData = z.infer<typeof SpeakerMegaphonePropertyData>;
 export type ListenerMegaphonePropertyData = z.infer<typeof ListenerMegaphonePropertyData>;
+export type EntityDescriptionPropertyData = z.infer<typeof EntityDescriptionPropertyData>;
+export type AreaDescriptionPropertyData = z.infer<typeof AreaDescriptionPropertyData>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",

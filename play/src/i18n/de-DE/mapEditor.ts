@@ -152,6 +152,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     areaEditor: {
         editInstructions: "Klicken Sie auf eine Fläche, um ihre Eigenschaften zu ändern.",
         nameLabel: "Name",
+        areaDescription: "Beschreibung",
+        addDescriptionField: "Beschreibung hinzufügen",
     },
     areaEditorInstructions: {
         title: "Wie funktioniert das?",
@@ -170,6 +172,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         buttonLabel: "Knopfbeschrifung",
         editInstructions: "Klicken Sie auf ein Objekt, um seine Eigenschaften zu ändern.",
         selectObject: "Klicken Sie auf ein Objekt, um es auszuwählen",
+        objectName: "Objektname",
+        objectDescription: "Objektbeschreibung",
     },
     settings: {
         loading: "Laden...",

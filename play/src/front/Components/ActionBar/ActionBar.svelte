@@ -40,6 +40,7 @@
     import hammerImg from "../images/hammer.png";
     import megaphoneImg from "../images/megaphone.svg";
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
+    import worldImg from "../images/world.svg";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
@@ -80,7 +81,7 @@
     import { peerStore } from "../../Stores/PeerStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import Tooltip from "../Util/Tooltip.svelte";
-    import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
+    import { modalIframeStore, modalVisibilityStore, roomListVisibilityStore } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
@@ -385,6 +386,13 @@
             mapEditorModeStore.set(false);
         }
     });
+
+    function showRoomList() {
+        resetChatVisibility();
+        resetModalVisibility();
+
+        roomListVisibilityStore.set(true);
+    }
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -854,6 +862,25 @@
                         </button>
                     </div>
                 {/if}
+            </div>
+
+            <div class="bottom-action-section tw-flex tw-flex-initial">
+                <!-- TODO button hep -->
+                <!-- Room list button -->
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div
+                    on:dragstart|preventDefault={noDrag}
+                    on:click={() => analyticsClient.openedRoomList()}
+                    on:click={showRoomList}
+                    class="bottom-action-button"
+                >
+                    <Tooltip text="Open the room list" />
+
+                    <button id="roomListIcon" class:border-top-light={$roomListVisibilityStore}>
+                        <!-- svelte-ignore a11y-img-redundant-alt -->
+                        <img draggable="false" src={worldImg} style="padding: 2px" alt="Image for room list modal" />
+                    </button>
+                </div>
             </div>
 
             {#if $addActionButtonActionBarEvent.length > 0}

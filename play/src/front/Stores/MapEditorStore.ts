@@ -66,6 +66,7 @@ export const mapEditorEntityModeStore = writable<MapEditorEntityToolMode>("ADD")
 
 export enum WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM {
     Megaphone = "Megaphone",
+    RoomSettings = "Room Settings",
 }
 
 export const mapEditorWamSettingsEditorToolCurrentMenuItemStore = writable<

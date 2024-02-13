@@ -6,12 +6,12 @@ import {
     CreateEntityCommand,
     DeleteAreaCommand,
     DeleteEntityCommand,
-    EntityData,
     EntityDataProperties,
     UpdateAreaCommand,
     UpdateEntityCommand,
     UpdateWAMSettingCommand,
     WAMEntityData,
+    UpdateWAMMetadataCommand,
 } from "@workadventure/map-editor";
 import {
     EditMapCommandMessage,
@@ -118,7 +118,7 @@ const mapStorageServer: MapStorageServer = {
                     // NOTE: protobuf does not distinguish between null and empty array, we cannot create optional repeated value.
                     //       Because of that, we send additional "modifyProperties" flag set properties value as "undefined" so they won't get erased
                     //       by [] value which was supposed to be null.
-                    const dataToModify: AtLeast<EntityData, "id"> = structuredClone(message);
+                    const dataToModify: AtLeast<AreaData, "id"> = structuredClone(message);
                     if (!message.modifyProperties) {
                         dataToModify.properties = undefined;
                     }
@@ -126,6 +126,7 @@ const mapStorageServer: MapStorageServer = {
                     if (area) {
                         await mapsManager.executeCommand(
                             mapKey,
+                            mapUrl.host,
                             new UpdateAreaCommand(gameMap, dataToModify, commandId)
                         );
                     } else {
@@ -141,13 +142,18 @@ const mapStorageServer: MapStorageServer = {
                     };
                     await mapsManager.executeCommand(
                         mapKey,
+                        mapUrl.host,
                         new CreateAreaCommand(gameMap, areaObjectConfig, commandId)
                     );
                     break;
                 }
                 case "deleteAreaMessage": {
                     const message = editMapMessage.deleteAreaMessage;
-                    await mapsManager.executeCommand(mapKey, new DeleteAreaCommand(gameMap, message.id, commandId));
+                    await mapsManager.executeCommand(
+                        mapKey,
+                        mapUrl.host,
+                        new DeleteAreaCommand(gameMap, message.id, commandId)
+                    );
                     break;
                 }
                 case "modifyEntityMessage": {
@@ -164,6 +170,7 @@ const mapStorageServer: MapStorageServer = {
                     if (entity) {
                         await mapsManager.executeCommand(
                             mapKey,
+                            mapUrl.host,
                             new UpdateEntityCommand(gameMap, message.id, dataToModify, commandId)
                         );
                     } else {
@@ -175,6 +182,7 @@ const mapStorageServer: MapStorageServer = {
                     const message = editMapMessage.createEntityMessage;
                     await mapsManager.executeCommand(
                         mapKey,
+                        mapUrl.host,
                         new CreateEntityCommand(
                             gameMap,
                             message.id,
@@ -194,7 +202,11 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "deleteEntityMessage": {
                     const message = editMapMessage.deleteEntityMessage;
-                    await mapsManager.executeCommand(mapKey, new DeleteEntityCommand(gameMap, message.id, commandId));
+                    await mapsManager.executeCommand(
+                        mapKey,
+                        mapUrl.host,
+                        new DeleteEntityCommand(gameMap, message.id, commandId)
+                    );
                     break;
                 }
                 case "updateWAMSettingsMessage": {
@@ -205,11 +217,28 @@ const mapStorageServer: MapStorageServer = {
                         throw new Error("WAM is not defined");
                     }
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-                    await mapsManager.executeCommand(mapKey, new UpdateWAMSettingCommand(wam, message, commandId));
+                    await mapsManager.executeCommand(
+                        mapKey,
+                        mapUrl.host,
+                        new UpdateWAMSettingCommand(wam, message, commandId)
+                    );
                     break;
                 }
                 case "errorCommandMessage": {
                     // Nothing to do, this message will never come from client
+                    break;
+                }
+                case "modifiyWAMMetadataMessage": {
+                    const message = editMapMessage.modifiyWAMMetadataMessage;
+                    const wam = gameMap.getWam();
+                    if (!wam) {
+                        throw new Error("WAM is not defined");
+                    }
+                    await mapsManager.executeCommand(
+                        mapKey,
+                        mapUrl.host,
+                        new UpdateWAMMetadataCommand(wam, message, commandId)
+                    );
                     break;
                 }
                 default: {

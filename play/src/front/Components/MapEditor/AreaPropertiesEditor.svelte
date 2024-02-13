@@ -34,6 +34,8 @@
 
     let properties: AreaDataProperties = [];
     let areaName = "";
+    let areaDescription = "";
+    let areaSearchable = false;
     let hasJitsiRoomProperty: boolean;
     let hasFocusableProperty: boolean;
     let hasSilentProperty: boolean;
@@ -42,11 +44,26 @@
     let hasStartProperty: boolean;
     let hasExitProperty: boolean;
     let hasplayAudioProperty: boolean;
+    let showDescriptionField = false;
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
             properties = structuredClone(currentAreaPreview.getProperties());
             areaName = currentAreaPreview.getAreaData().name;
+            const property = $mapEditorSelectedAreaPreviewStore
+                ?.getProperties()
+                .find((property) => property.type === "areaDescriptionProperties");
+            if (property == undefined) {
+                $mapEditorSelectedAreaPreviewStore?.addProperty({
+                    id: crypto.randomUUID(),
+                    type: "areaDescriptionProperties",
+                    description: areaDescription,
+                    searchable: areaSearchable,
+                });
+            } else if (property.type === "areaDescriptionProperties") {
+                areaDescription = property.description ?? "";
+                areaSearchable = property.searchable ?? false;
+            }
             refreshFlags();
         }
     });
@@ -205,6 +222,32 @@
         }
     }
 
+    function onUpdateAreaDescription() {
+        let properties = $mapEditorSelectedAreaPreviewStore
+            ?.getProperties()
+            .find((p) => p.type === "areaDescriptionProperties");
+        if (!properties || (properties && properties.type !== "areaDescriptionProperties"))
+            throw new Error("Wrong property type");
+
+        properties.description = areaDescription;
+        if ($mapEditorSelectedAreaPreviewStore) {
+            $mapEditorSelectedAreaPreviewStore.updateProperty(properties);
+        }
+    }
+
+    function onUpdateAreaSearchable() {
+        let properties = $mapEditorSelectedAreaPreviewStore
+            ?.getProperties()
+            .find((p) => p.type === "areaDescriptionProperties");
+        if (!properties || (properties && properties.type !== "areaDescriptionProperties"))
+            throw new Error("Wrong property type");
+
+        properties.searchable = areaSearchable;
+        if ($mapEditorSelectedAreaPreviewStore) {
+            $mapEditorSelectedAreaPreviewStore.updateProperty(properties);
+        }
+    }
+
     function onUpdateProperty(property: AreaDataProperty) {
         if ($mapEditorSelectedAreaPreviewStore) {
             $mapEditorSelectedAreaPreviewStore.updateProperty(property);
@@ -252,6 +295,10 @@
     // Fixme: this is a hack to force the map editor to update the property
     function onUpdateAudioProperty(data: CustomEvent<PlayAudioPropertyData>) {
         onUpdateProperty(data.detail);
+    }
+
+    function toggleDescriptionField() {
+        showDescriptionField = !showDescriptionField;
     }
 </script>
 
@@ -446,8 +493,33 @@
         />
     </div>
     <div class="area-name-container">
-        <label for="objectName">Area name</label>
+        <label for="objectName">{$LL.mapEditor.areaEditor.nameLabel()}</label>
         <input id="objectName" type="text" placeholder="Value" bind:value={areaName} on:change={onUpdateName} />
+    </div>
+    <div class="area-name-container">
+        {#if !showDescriptionField}
+            <a href="addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
+                >+ {$LL.mapEditor.areaEditor.addDescriptionField()}</a
+            >
+        {:else}
+            <label for="objectDescription">{$LL.mapEditor.areaEditor.areaDescription()}</label>
+            <textarea
+                id="objectDescription"
+                placeholder="Value"
+                bind:value={areaDescription}
+                on:change={onUpdateAreaDescription}
+            />
+        {/if}
+    </div>
+    <div class="value-switch">
+        <label for="searchable">{$LL.mapEditor.areaEditor.areaSerchable()}</label>
+        <input
+            id="searchable"
+            type="checkbox"
+            class="input-switch"
+            bind:checked={areaSearchable}
+            on:change={onUpdateAreaSearchable}
+        />
     </div>
     <div class="properties-container">
         {#each properties as property (property.id)}
@@ -561,5 +633,70 @@
         * {
             margin-bottom: 0;
         }
+    }
+
+    .input-switch {
+        position: relative;
+        top: 0px;
+        right: 0px;
+        bottom: 0px;
+        left: 0px;
+        display: inline-block;
+        height: 1rem;
+        width: 2rem;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border-radius: 9999px;
+        border-width: 1px;
+        border-style: solid;
+        --tw-border-opacity: 1;
+        border-color: rgb(77 75 103 / var(--tw-border-opacity));
+        --tw-bg-opacity: 1;
+        background-color: rgb(15 31 45 / var(--tw-bg-opacity));
+        background-image: none;
+        padding: 0px;
+        --tw-text-opacity: 1;
+        color: rgb(242 253 255 / var(--tw-text-opacity));
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+        cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
+    }
+
+    .input-switch::before {
+        position: absolute;
+        left: -3px;
+        top: -3px;
+        height: 1.25rem;
+        width: 1.25rem;
+        border-radius: 9999px;
+        --tw-bg-opacity: 1;
+        background-color: rgb(146 142 187 / var(--tw-bg-opacity));
+        transition-property: all;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 150ms;
+        --tw-content: "";
+        content: var(--tw-content);
+    }
+
+    .input-switch:checked {
+        --tw-border-opacity: 1;
+        border-color: rgb(146 142 187 / var(--tw-border-opacity));
+    }
+
+    .input-switch:checked::before {
+        left: 13px;
+        top: -3px;
+        --tw-bg-opacity: 1;
+        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
+        content: var(--tw-content);
+        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
+        --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
+        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
+    }
+
+    .input-switch:disabled {
+        cursor: not-allowed;
+        opacity: 0.4;
     }
 </style>
