@@ -2,12 +2,30 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-appVersion: "v1.17.7"
+appVersion: "v1.18.7"
 domainName: wa.example.com
 ejabberdDomain: ejabberd.example.com
 
-secretKey: mySecretKey
-ejabberdJwtSecret: myEjabberdJwtSecret
+# If singleDomain is true, WorkAdventure is hosted on the [domainName] domain.
+# If singleDomain is false, WorkAdventure is hosted in subdomains:
+# - play.[domainName]
+# - mapstorage.[domainName]
+# - ...
+singleDomain: false
+# When building default domain names (in multi domain mode), use this prefix
+# Defaults to "."
+# For instance, if you set this to "-", the default domain name for play will be "play-[domainName]" instead of "play.[domainName]"
+# This can be useful in some specific scenarios (Continuous Deployment) where you want to have a different domain name for each deployment
+# and creating "deep wildcard" DNS records is not an option.
+domainNamePrefix: "-"
+
+
+# Secret key used by the application to encode JWT tokens.
+# If empty, a secret key will be generated and stored in the "shared-env-secret" secret.
+secretKey: ""
+# Secret key used by the application to connect to ejabberd.
+# If empty, a secret key will be generated and stored in the "shared-env-secret" secret.
+ejabberdJwtSecret: ""
 
 imagePullSecrets: []
 nameOverride: ""
@@ -29,7 +47,7 @@ commonEnv:
   EJABBERD_USER: admin
   ENABLE_CHAT: "true"
   ENABLE_CHAT_UPLOAD: "true"
-  UPLOAD_MAX_FILESIZE: 10485760
+  UPLOAD_MAX_FILESIZE: "10485760"
 
 commonSecretEnv:
   EJABBERD_PASSWORD: mySecretPassword
@@ -96,14 +114,29 @@ play:
     ENABLE_CHAT_DISCONNECTED_LIST: "true"
     MAX_HISTORY_CHAT: 0
     ENABLE_REPORT_ISSUES_MENU: "false"
-    GRPC_VERBOSITY: DEBUG
-    GRPC_TRACE: all
+    #GRPC_VERBOSITY: DEBUG
+    #GRPC_TRACE: all
     MAX_USERNAME_LENGTH: 10
     DISABLE_ANONYMOUS: "false"
     DISABLE_NOTIFICATIONS: "false"
 
   secretEnv:
     ROOM_API_SECRET_KEY: myRoomApiSecretKey
+
+  ingress:
+    # This setting is used to enable the play (front and pusher) ingresses in multiDomain mode.
+    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
+    enabled: true
+    tls: false
+    secretName: ""
+    # Domain name to be used for the front assets.
+    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
+    frontDomainName: ""
+    # Domain name to be used for the pusher connection.
+    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
+    pusherDomainName: ""
+    # ClassName to use for the play container. If not set, will fallback to (root.ingress.className)
+    className: ""
 
 # #########################################################
 # chat service
@@ -164,11 +197,24 @@ chat:
 
   secretEnv: {}
 
+  ingress:
+    # This setting is used to enable the chat ingress in multiDomain mode.
+    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
+    enabled: true
+    tls: false
+    secretName: ""
+    # Domain name to be used for the container.
+    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
+    domainName: ""
+    # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
+    className: ""
+
+
 # #########################################################
 # back service
 # #########################################################
 back:
-  replicaCount: 1
+  replicaCount: 2
 
   image:
     repository: thecodingmachine/workadventure-back
@@ -221,6 +267,7 @@ back:
   # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
   env:
     STORE_VARIABLES_FOR_LOCAL_MAPS: "true"
+    PLAYER_VARIABLES_MAX_TTL: "-1"
 
   secretEnv: {}
 
@@ -292,6 +339,18 @@ uploader:
     # AWS_ACCESS_KEY_ID:
     # AWS_SECRET_ACCESS_KEY:
 
+  ingress:
+    # This setting is used to enable the uploader ingress in multiDomain mode.
+    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
+    enabled: true
+    tls: false
+    secretName: ""
+    # Domain name to be used for the container.
+    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
+    domainName: ""
+    # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
+    className: ""
+
 # #########################################################
 # icon service
 # #########################################################
@@ -338,6 +397,18 @@ icon:
   tolerations: []
 
   affinity: {}
+
+  ingress:
+    # This setting is used to enable the icon ingress in multiDomain mode.
+    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
+    enabled: true
+    tls: false
+    secretName: ""
+    # Domain name to be used for the container.
+    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
+    domainName: ""
+    # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
+    className: ""
 
 
 # #########################################################
@@ -398,6 +469,11 @@ ejabberd:
   env: {}
 
   secretEnv: {}
+
+  ingress:
+    # Domain name to be used for the ejabberd container.
+    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
+    domainName: ""
 
 # #########################################################
 # mapstorage service
@@ -461,15 +537,31 @@ mapstorage:
 
   # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
   env:
-    AUTHENTICATION_STRATEGY: Basic
+    ENABLE_BASIC_AUTHENTICATION: "true"
     AUTHENTICATION_USER: admin
 
   secretEnv:
     AUTHENTICATION_PASSWORD: myMapStoragePassword
 
+  ingress:
+    # This setting is used to enable the map-storage ingress in multiDomain mode.
+    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
+    enabled: true
+    tls: false
+    secretName: ""
+    # Domain name to be used for the container.
+    # If not set, the map-storage domain name is built from the root "domainName" value and the "singleDomain" value.
+    domainName: ""
+    # If you are using USE_DOMAIN_NAME_IN_PATH=true, and if you are not using a wildcard domain in "domainName",
+    # you can register many domains using the property below.
+    domainNames: []
+    # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
+    className: ""
+
 ingress:
   enabled: false
   className: ""
+  tls: false
   secretName: ""
   pathType: ImplementationSpecific
   annotationsPath:

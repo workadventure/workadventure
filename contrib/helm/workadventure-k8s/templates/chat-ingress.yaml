@@ -1,0 +1,36 @@
+{{- if and (or .Values.ingress.enabled .Values.chat.ingress.enabled) (not .Values.singleDomain) -}}
+{{- $fullName := include "workadventure.fullname" . -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}-chat
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotationsRoot }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- $ingressClassName := coalesce .Values.chat.ingress.className .Values.ingress.className -}}
+  {{- if $ingressClassName }}
+  ingressClassName: {{ $ingressClassName }}
+  {{- end }}
+  {{- $tls := coalesce .Values.chat.ingress.tls .Values.ingress.tls false -}}
+  {{- if $tls }}
+  tls:
+    - hosts:
+        - {{ .Values.chat.ingress.domainName }}
+      secretName: {{ .Values.chat.ingress.secretName | default printf ("%s-chat-cert" (include "workadventure.fullname" .)) }}
+  {{- end }}
+  rules:
+    - host: {{ (include "workadventure.chatDomainName" .) | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-chat
+                port:
+                  number: {{ .Values.chat.service.port }}
+{{- end }}

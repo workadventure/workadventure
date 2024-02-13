@@ -24,6 +24,7 @@ spec:
       annotations:
         checksum/config: {{ (include (print $.Template.BasePath "/back-env.yaml") .) | sha256sum }}
         checksum/secret: {{ (include (print $.Template.BasePath "/back-secret-env.yaml") .) | sha256sum }}
+        checksum/shared-secret: {{ (include (print $.Template.BasePath "/shared-secret-env.yaml") .) | sha256sum }}
         {{- with .Values.back.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -49,6 +50,12 @@ spec:
                 name: {{ include "workadventure.fullname" . }}-env-back
             - secretRef:
                 name: {{ include "workadventure.fullname" . }}-secret-env-back
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "workadventure.fullname" . }}-secret-env-shared
+                  key: SECRET_KEY
           ports:
             - name: http
               containerPort: {{ .Values.back.service.port }}
