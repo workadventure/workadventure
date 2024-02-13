@@ -59,6 +59,7 @@ import {
     AskMuteMicrophoneMessage,
     AskMutedMessage,
     AskMutedVideoMessage,
+    ModifiyWAMMetadataMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
@@ -1360,6 +1361,26 @@ export class RoomConnection implements RoomConnection {
                             deleteEntityMessage: {
                                 id,
                             },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitModifiyWAMMetadataMessage(
+        commandId: string,
+        modifiyWAMMetadataMessage: ModifiyWAMMetadataMessage
+    ): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "modifiyWAMMetadataMessage",
+                            modifiyWAMMetadataMessage,
                         },
                     },
                 },

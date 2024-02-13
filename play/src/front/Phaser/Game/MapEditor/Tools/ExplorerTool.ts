@@ -223,6 +223,8 @@ export class ExplorerTool implements MapEditorTool {
         this.entitiesManager.setAllEntitiesPointedToEditColor(0x000000);
         this.setAllAreasPreviewPointedToEditColor();
 
+        this.scene.playSound("audio-cloud");
+
         // Mark the scene as dirty
         this.scene.markDirty();
 

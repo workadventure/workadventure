@@ -5,7 +5,7 @@
     import { onDestroy, onMount } from "svelte";
     import microphoneOffImg from "../images/microphone-off.png";
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    import { Streamable } from "../../Stores/StreamableCollectionStore";
+    import { Streamable, myJitsiCameraStore } from "../../Stores/StreamableCollectionStore";
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
@@ -65,12 +65,13 @@
             ? highlightedEmbedScreen.toggleHighlight(embedScreen)
             : null}
 >
-    <ActionMediaBox
-        {embedScreen}
-        trackStreamWraper={peer}
-        videoEnabled={$videoTrackStore ? $videoTrackStore?.isActive() : false}
-    />
-
+    {#if $myJitsiCameraStore?.uniqueId != peer.uniqueId}
+        <ActionMediaBox
+            {embedScreen}
+            trackStreamWraper={peer}
+            videoEnabled={$videoTrackStore ? $videoTrackStore?.isActive() : false}
+        />
+    {/if}
     {#if $videoTrackStore}
         <div class="tw-rounded-sm tw-overflow-hidden tw-flex tw-w-full tw-flex-col tw-h-full">
             <JitsiVideoElement

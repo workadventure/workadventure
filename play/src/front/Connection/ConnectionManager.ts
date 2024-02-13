@@ -63,6 +63,7 @@ class ConnectionManager {
         // FIXME: remove this._currentRoom.iframeAuthentication
         // FIXME: remove this._currentRoom.iframeAuthentication
         if (!ENABLE_OPENID || !this._currentRoom || !this._currentRoom.iframeAuthentication) {
+            analyticsClient.loggedWithToken();
             loginSceneVisibleIframeStore.set(false);
             return null;
         }
@@ -246,26 +247,10 @@ class ConnectionManager {
                             return new URL(response.urlToRedirect);
                         }
 
-                        if (response.type === "unauthorized") {
-                            // if the user must be connected to the current room or if the pusher error is not openid provider access error
-                            if (this._currentRoom.authenticationMandatory) {
-                                const redirect = this.loadOpenIDScreen();
-                                if (redirect === null) {
-                                    return {
-                                        nextScene: "errorScene",
-                                        error: response,
-                                    };
-                                }
-                                return redirect;
-                            } else {
-                                await this.anonymousLogin();
-                            }
-                        } else {
-                            return {
-                                nextScene: "errorScene",
-                                error: response,
-                            };
-                        }
+                        return {
+                            nextScene: "errorScene",
+                            error: response,
+                        };
                     }
                     if (response.status === "ok") {
                         if (response.isCharacterTexturesValid === false) {

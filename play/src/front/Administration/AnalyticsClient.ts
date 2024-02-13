@@ -689,5 +689,13 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+
+    openedRoomList(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-opened-room-list");
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();
