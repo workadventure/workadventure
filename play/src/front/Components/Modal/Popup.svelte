@@ -4,6 +4,8 @@
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
     import { modalPopupVisibilityStore } from "../../Stores/ModalStore";
     import LL from "../../../i18n/i18n-svelte";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
 
     let notAskAgain = false;
 
@@ -18,6 +20,7 @@
     function activeExplorerMode() {
         analyticsClient.toggleMapEditor(!$mapEditorModeStore);
         mapEditorModeStore.switchMode(!$mapEditorModeStore);
+        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.ExploreTheRoom);
         modalPopupVisibilityStore.set(false);
     }
 </script>

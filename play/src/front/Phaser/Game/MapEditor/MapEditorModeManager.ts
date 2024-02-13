@@ -235,10 +235,11 @@ export class MapEditorModeManager {
 
     public handleKeyDownEvent(event: KeyboardEvent): void {
         this.currentlyActiveTool?.handleKeyDownEvent(event);
-        if (!get(mapEditorModeStore)) return;
+        const mapEditorModeActivated = get(mapEditorActivated);
+        if (!mapEditorModeActivated) return;
         switch (event.key.toLowerCase()) {
             case "`": {
-                this.equipTool();
+                this.equipTool(undefined);
                 break;
             }
             case "1": {
@@ -246,31 +247,35 @@ export class MapEditorModeManager {
                 break;
             }
             case "2": {
-                if (get(mapEditorActivated)) this.equipTool(EditorToolName.AreaEditor);
-                else this.equipTool(EditorToolName.CloseMapEditor);
+                if (!mapEditorModeActivated) {
+                    this.equipTool(EditorToolName.CloseMapEditor);
+                    break;
+                }
+                this.equipTool(EditorToolName.AreaEditor);
                 break;
             }
             case "3": {
-                if (!get(mapEditorActivated)) break;
+                if (!mapEditorModeActivated) break;
                 this.equipTool(EditorToolName.EntityEditor);
                 break;
             }
             case "4": {
-                if (!get(mapEditorActivated)) break;
+                if (!mapEditorModeActivated) break;
                 this.equipTool(EditorToolName.WAMSettingsEditor);
                 break;
             }
             case "5": {
-                if (!get(mapEditorActivated)) break;
+                if (!mapEditorModeActivated) break;
                 this.equipTool(EditorToolName.TrashEditor);
                 break;
             }
             case "6": {
+                if (!mapEditorModeActivated) break;
                 this.equipTool(EditorToolName.CloseMapEditor);
                 break;
             }
             case "z": {
-                if (!get(mapEditorActivated)) break;
+                if (!mapEditorModeActivated) break;
                 // Todo replace with key combo https://photonstorm.github.io/phaser3-docs/Phaser.Input.Keyboard.KeyCombo.html
                 if (this.ctrlKey?.isDown) {
                     if (this.shiftKey?.isDown) {
@@ -409,7 +414,7 @@ export class MapEditorModeManager {
                 this.equipTool(undefined);
                 return;
             }
-            this.equipTool(this.lastlyUsedTool ?? EditorToolName.ExploreTheRoom);
+            this.equipTool(this.lastlyUsedTool ?? EditorToolName.EntityEditor);
         });
     }
 
