@@ -214,7 +214,7 @@ chat:
 # back service
 # #########################################################
 back:
-  replicaCount: 2
+  replicaCount: 1
 
   image:
     repository: thecodingmachine/workadventure-back
@@ -250,13 +250,6 @@ back:
     # requests:
     #   cpu: 100m
     #   memory: 128Mi
-
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 10
-    targetCPUUtilizationPercentage: 70
-    targetMemoryUtilizationPercentage: 80
 
   nodeSelector: {}
 
@@ -541,7 +534,7 @@ mapstorage:
     AUTHENTICATION_USER: admin
 
   secretEnv:
-    AUTHENTICATION_PASSWORD: myMapStoragePassword
+    AUTHENTICATION_PASSWORD: ""
 
   ingress:
     # This setting is used to enable the map-storage ingress in multiDomain mode.
