@@ -1,7 +1,7 @@
 import { EditMapCommandMessage } from "@workadventure/messages";
 import debug from "debug";
 import { Unsubscriber, get } from "svelte/store";
-import { AreaData } from "@workadventure/map-editor";
+import { AreaData, AreaDescriptionPropertyData } from "@workadventure/map-editor";
 import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { analyticsClient } from "../../../../Administration/AnalyticsClient";
 import {
@@ -116,17 +116,18 @@ export class ExplorerTool implements MapEditorTool {
     }
 
     public update(time: number, dt: number): void {
+        const factorToMove = 10 * (1 / waScaleManager.zoomModifier);
         if (this.downIsPressed) {
-            this.scene.cameras.main.scrollY += 10;
+            this.scene.cameras.main.scrollY += factorToMove;
         }
         if (this.upIsPressed) {
-            this.scene.cameras.main.scrollY -= 10;
+            this.scene.cameras.main.scrollY -= factorToMove;
         }
         if (this.leftIsPressed) {
-            this.scene.cameras.main.scrollX -= 10;
+            this.scene.cameras.main.scrollX -= factorToMove;
         }
         if (this.rightIsPressed) {
-            this.scene.cameras.main.scrollX += 10;
+            this.scene.cameras.main.scrollX += factorToMove;
         }
 
         get(mapExplorationAreasStore)?.forEach((preview) => preview.update(time, dt));
@@ -189,9 +190,19 @@ export class ExplorerTool implements MapEditorTool {
         // Active store of map exploration mode
         mapExplorationModeStore.set(true);
         mapEditorVisibilityStore.set(true);
-        mapExplorationEntitiesStore.set(
-            gameManager.getCurrentGameScene().getGameMapFrontWrapper().getEntitiesManager().getEntities()
-        );
+
+        const entitySearchableMap = new Map<string, Entity>();
+        gameManager
+            .getCurrentGameScene()
+            .getGameMapFrontWrapper()
+            .getEntitiesManager()
+            .getEntities()
+            .forEach((entity, key) => {
+                if (entity.searchable) {
+                    entitySearchableMap.set(key, entity);
+                }
+            });
+        mapExplorationEntitiesStore.set(entitySearchableMap);
 
         // Define new cursor
         this.scene.input.setDefaultCursor("grab");
@@ -269,6 +280,11 @@ export class ExplorerTool implements MapEditorTool {
         const areaPreviews = get(mapExplorationAreasStore) ?? new Map<string, AreaPreview>();
         if (!areaConfigs) return;
         for (const [key, config] of areaConfigs.entries()) {
+            if (
+                !(config.properties.find((p) => p.type === "areaDescriptionProperties") as AreaDescriptionPropertyData)
+                    ?.searchable
+            )
+                continue;
             let areaPreview = areaPreviews.get(key);
             if (areaPreview) {
                 areaPreview.updatePreview(config);

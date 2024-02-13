@@ -25,12 +25,17 @@
     let iconProperties = writable<Map<string, AddPropertyButtonType>>(new Map());
     let holdEntity: Entity | AreaPreview | undefined;
     let mapExplorationObjectSelectedStoreSubscription: Unsubscriber;
+    let description: string | undefined;
 
     onMount(() => {
-        if ($mapExplorationObjectSelectedStore instanceof Entity)
+        if ($mapExplorationObjectSelectedStore instanceof Entity) {
+            description = $mapExplorationObjectSelectedStore.description;
             $mapExplorationObjectSelectedStore?.setPointedToEditColor(0xf9e82d);
-        if ($mapExplorationObjectSelectedStore instanceof AreaPreview)
+        }
+        if ($mapExplorationObjectSelectedStore instanceof AreaPreview) {
+            description = $mapExplorationObjectSelectedStore.description;
             $mapExplorationObjectSelectedStore?.setStrokeStyle(2, 0xf9e82d);
+        }
 
         initPropertyComponents();
 
@@ -68,65 +73,16 @@
         let newIconProperties = new Map<string, AddPropertyButtonType>();
         if ($mapExplorationObjectSelectedStore instanceof Entity) {
             for (const value of $mapExplorationObjectSelectedStore.getProperties()) {
-                let addPropertyButton = getAddPropertyButton(value.type);
-                if (addPropertyButton) newIconProperties.set(value.id, addPropertyButton);
+                newIconProperties.set(value.id, { property: value.type as EntityDataPropertiesKeys });
             }
         }
 
         if ($mapExplorationObjectSelectedStore instanceof AreaPreview) {
             for (const value of $mapExplorationObjectSelectedStore.getAreaData().properties.values()) {
-                let addPropertyButton = getAddPropertyButton(value.type);
-                if (addPropertyButton) newIconProperties.set(value.id, addPropertyButton);
+                newIconProperties.set(value.id, { property: value.type });
             }
         }
         iconProperties.set(newIconProperties);
-    }
-
-    function getAddPropertyButton(type: string) {
-        let addPropertyButton: AddPropertyButtonType | undefined;
-        switch (type) {
-            case "jitsiRoomProperty":
-                addPropertyButton = {
-                    property: "jitsiRoomProperty",
-                };
-                break;
-            case "openWebsite":
-                addPropertyButton = {
-                    property: "openWebsite",
-                };
-                break;
-            case "playAudio":
-                addPropertyButton = {
-                    property: "playAudio",
-                };
-                break;
-            case "speakerMegaphone":
-                addPropertyButton = {
-                    property: "speakerMegaphone",
-                };
-                break;
-            case "listenerMegaphone":
-                addPropertyButton = {
-                    property: "listenerMegaphone",
-                };
-                break;
-            case "exit":
-                addPropertyButton = {
-                    property: "exit",
-                };
-                break;
-            case "silent":
-                addPropertyButton = {
-                    property: "silent",
-                };
-                break;
-            case "focusable":
-                addPropertyButton = {
-                    property: "focusable",
-                };
-                break;
-        }
-        return addPropertyButton;
     }
 
     function close() {
@@ -176,8 +132,7 @@
                 class="tw-w-32 tw-h-32 tw-mb-4"
             />
             <p class="tw-p-0 tw-m-0">
-                Illo cupiditate et hic voluptatem et et nulla ea. Non ab aut temporibus. Possimus repellat atque. Aut
-                deleniti eveniet et qui molestiae est cumque.
+                {description ?? $LL.mapEditor.explorer.noDescriptionFound()}
             </p>
         </div>
         <div class="tw-flex tw-flew-wrap tw-justify-center">
@@ -204,8 +159,7 @@
             {/if}
             <img src={AreaToolImg} alt="Object" class="tw-w-32 tw-h-32 tw-mb-4" />
             <p class="tw-p-0 tw-m-0">
-                Illo cupiditate et hic voluptatem et et nulla ea. Non ab aut temporibus. Possimus repellat atque. Aut
-                deleniti eveniet et qui molestiae est cumque.
+                {description ?? $LL.mapEditor.explorer.noDescriptionFound()}
             </p>
         </div>
         <div class="tw-flex tw-flew-wrap tw-justify-center">

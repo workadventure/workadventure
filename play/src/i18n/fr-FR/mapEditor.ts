@@ -224,6 +224,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         searchModeDescription: "Rechercher ou filtrer les entités et les zones dans la carte 🧐",
         noEntitiesFound: "Aucune entité trouvée dans la carte 🙅‍♂️",
         noAreasFound: "Aucune zone trouvée dans la carte 🙅‍♀️",
+        noDescriptionFound: "No description found 🫥",
         details: {
             close: "Fermer",
             moveToEntity: "Aller à l'entité {name}",

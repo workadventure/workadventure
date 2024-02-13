@@ -18,7 +18,7 @@
     import { Entity } from "../../Phaser/ECS/Entity";
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import { ExplorerTool } from "../../Phaser/Game/MapEditor/Tools/ExplorerTool";
-    import ListAddPropertyButton from "./PropertyEditor/ListAddPropertyButton.svelte";
+    import ListAddPropertyButton from "../MapEditor/PropertyEditor/ListAddPropertyButton.svelte";
 
     let filter = "";
     let selectFilters = writable<Array<string>>(new Array<string>());
@@ -281,7 +281,9 @@
                                 src={entity.getPrefab().imagePath}
                                 alt="link icon"
                             />
-                            <span class="tw-pointer-events-none tw-font-bold">{entity.getPrefab().name}</span>
+                            <span class="tw-pointer-events-none tw-font-bold"
+                                >{entity.getEntityData().name ?? entity.getPrefab().name}</span
+                            >
                         </div>
                     {/each}
                 </div>

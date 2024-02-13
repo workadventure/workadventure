@@ -253,6 +253,7 @@ const mapEditor: BaseTranslation = {
         searchModeDescription: "Search or filter entities and areas in the room 🧐",
         noEntitiesFound: "No entity found in the room 🙅‍♂️",
         noAreasFound: "No area found in the room 🙅‍♀️",
+        noDescriptionFound: "No description found 🫥",
         details: {
             close: "Close",
             moveToEntity: "Move to entity {name}",

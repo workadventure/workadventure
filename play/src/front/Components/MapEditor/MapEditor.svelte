@@ -9,12 +9,12 @@
     } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import Explorer from "../Exploration/Explorer.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import EntityEditor from "./EntityEditor.svelte";
     import AreaEditor from "./AreaEditor.svelte";
     import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
     import TrashEditor from "./TrashEditor.svelte";
-    import Explorer from "./Explorer.svelte";
 
     function closeMapEditor() {
         analyticsClient.toggleMapEditor(false);

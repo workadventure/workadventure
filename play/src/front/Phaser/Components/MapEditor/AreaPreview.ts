@@ -1,4 +1,10 @@
-import type { AreaData, AreaDataProperties, AreaDataProperty, AtLeast } from "@workadventure/map-editor";
+import type {
+    AreaData,
+    AreaDataProperties,
+    AreaDataProperty,
+    AreaDescriptionPropertyData,
+    AtLeast,
+} from "@workadventure/map-editor";
 import _ from "lodash";
 import { GameObjects } from "phaser";
 import { GameScene } from "../../Game/GameScene";
@@ -492,5 +498,19 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
             }
         }
         this.updateSquaresPositions();
+    }
+
+    public get description(): string | undefined {
+        const descriptionProperty: AreaDescriptionPropertyData | undefined = this.areaData.properties.find(
+            (p) => p.type === "areaDescriptionProperties"
+        ) as AreaDescriptionPropertyData | undefined;
+        return descriptionProperty?.description;
+    }
+
+    public get searchable(): boolean | undefined {
+        const descriptionProperty: AreaDescriptionPropertyData | undefined = this.areaData.properties.find(
+            (p) => p.type === "areaDescriptionProperties"
+        ) as AreaDescriptionPropertyData | undefined;
+        return descriptionProperty?.searchable;
     }
 }
