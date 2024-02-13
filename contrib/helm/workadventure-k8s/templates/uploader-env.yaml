@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "workadventure.labels" . | nindent 4 }}
 data:
-  UPLOADER_URL: https://{{ .Values.domainName }}/uploader
+  UPLOADER_URL: {{ include "workadventure.uploaderUrl" . | quote }}
 
   {{- range $key, $val := .Values.commonEnv }}
   {{ $key }}: {{ $val | quote }}

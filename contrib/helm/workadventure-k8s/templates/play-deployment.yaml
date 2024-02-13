@@ -18,6 +18,7 @@ spec:
       annotations:
         checksum/config: {{ (include (print $.Template.BasePath "/play-env.yaml") .) | sha256sum }}
         checksum/secret: {{ (include (print $.Template.BasePath "/play-secret-env.yaml") .) | sha256sum }}
+        checksum/shared-secret: {{ (include (print $.Template.BasePath "/shared-secret-env.yaml") .) | sha256sum }}
         {{- with .Values.play.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -43,6 +44,17 @@ spec:
                 name: {{ include "workadventure.fullname" . }}-env-play
             - secretRef:
                 name: {{ include "workadventure.fullname" . }}-secret-env-play
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "workadventure.fullname" . }}-secret-env-shared
+                  key: SECRET_KEY
+            - name: EJABBERD_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "workadventure.fullname" . }}-secret-env-shared
+                  key: EJABBERD_JWT_SECRET
           ports:
             - name: http
               containerPort: {{ .Values.play.service.port }}

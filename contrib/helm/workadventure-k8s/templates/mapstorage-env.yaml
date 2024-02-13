@@ -7,7 +7,7 @@ metadata:
     {{- include "workadventure.labels" . | nindent 4 }}
 data:
   API_URL: {{ include "workadventure.fullname" . }}-back:50051
-  PATH_PREFIX: "/map-storage"
+  PATH_PREFIX: {{ if .Values.singleDomain }}/map-storage{{ else }}/{{ end }}
 
   {{- range $key, $val := .Values.commonEnv }}
   {{ $key }}: {{ $val | quote }}
