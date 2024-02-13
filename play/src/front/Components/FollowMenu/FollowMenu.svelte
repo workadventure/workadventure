@@ -30,9 +30,6 @@
         }
     }
 
-    onMount(() => {
-        gameScene = gameManager.getCurrentGameScene();
-    });
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
