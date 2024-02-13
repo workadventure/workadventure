@@ -67,28 +67,28 @@
 </script>
 
 <div
-    class={`tw-absolute tw-top-0 
-    ${$moreActionOpened ? (!videoEnabled ? "-tw-left-56" : "-tw-left-14") : "-tw-left-8"} 
-    tw-flex tw-flex-col tw-flex-wrap tw-justify-between tw-items-center tw-p-1 tw-bg-black tw-bg-opacity-50 tw-rounded-lg tw-max-h-full`}
+    class={`absolute top-0 
+    ${$moreActionOpened ? (!videoEnabled ? "-left-56" : "-left-14") : "-left-8"} 
+    flex flex-col flex-wrap justify-between items-center p-1 bg-black bg-opacity-50 rounded-lg max-h-full`}
 >
     {#if !$moreActionOpened}
         <!-- More action -->
         <button
             id="more-action"
-            class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+            class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
             on:click={() => analyticsClient.moreActionMetting()}
             on:click|preventDefault|stopPropagation={() => toggleActionMenu(true)}
         >
-            <img src={MoreActionSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
+            <img src={MoreActionSvg} class="w-4 h-4" alt="Ellipsis icon" />
         </button>
     {:else}
         <!-- Less action -->
         <button
             id="less-action"
-            class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+            class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
             on:click|preventDefault|stopPropagation={() => toggleActionMenu(false)}
         >
-            <img src={MoreActionSvg} class="tw-w-4 tw-h-4 tw-rotate-90" alt="Ellipsis icon" />
+            <img src={MoreActionSvg} class="w-4 h-4 rotate-90" alt="Ellipsis icon" />
             <Tooltip text={$LL.camera.menu.closeMenu()} leftPosition="true" />
         </button>
 
@@ -96,11 +96,11 @@
         {#if videoEnabled}
             <button
                 id="pin"
-                class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+                class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
                 on:click={() => analyticsClient.pinMeetingAction()}
                 on:click|preventDefault|stopPropagation={() => pin()}
             >
-                <img src={PinSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
+                <img src={PinSvg} class="w-4 h-4" alt="Ellipsis icon" />
                 <Tooltip text={$LL.camera.menu.pin()} leftPosition="true" />
             </button>
         {/if}
@@ -108,11 +108,11 @@
         <!-- Mute audio user -->
         <button
             id="mute-audio-user"
-            class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+            class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
             on:click={() => analyticsClient.muteMicrophoneMeetingAction()}
             on:click|preventDefault|stopPropagation={() => muteAudio()}
         >
-            <img src={MicrophoneCloseSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
+            <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="Ellipsis icon" />
             <Tooltip text={$LL.camera.menu.muteAudioUser()} leftPosition="true" />
         </button>
 
@@ -120,11 +120,11 @@
         {#if $userIsAdminStore}
             <button
                 id="mute-audio-everybody"
-                class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+                class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
                 on:click={() => analyticsClient.muteMicrophoneEverybodyMeetingAction()}
                 on:click|preventDefault|stopPropagation={() => muteAudioEveryBody()}
             >
-                <img src={MicrophoneCloseSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
+                <img src={MicrophoneCloseSvg} class="w-4 h-4" alt="Ellipsis icon" />
                 <Tooltip text={$LL.camera.menu.muteAudioEveryBody()} leftPosition="true" />
             </button>
         {/if}
@@ -132,11 +132,11 @@
         <!-- Mute video -->
         <button
             id="mute-video-user"
-            class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+            class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
             on:click={() => analyticsClient.muteVideoMeetingAction()}
             on:click|preventDefault|stopPropagation={() => muteVideo()}
         >
-            <img src={NoVideoSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
+            <img src={NoVideoSvg} class="w-4 h-4" alt="Ellipsis icon" />
             <Tooltip text={$LL.camera.menu.muteVideoUser()} leftPosition="true" />
         </button>
 
@@ -144,11 +144,11 @@
         {#if $userIsAdminStore}
             <button
                 id="mute-video-everybody"
-                class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+                class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
                 on:click={() => analyticsClient.muteVideoEverybodyMeetingAction()}
                 on:click|preventDefault|stopPropagation={() => muteVideoEveryBody()}
             >
-                <img src={NoVideoSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
+                <img src={NoVideoSvg} class="w-4 h-4" alt="Ellipsis icon" />
                 <Tooltip text={$LL.camera.menu.muteVideoEveryBody()} leftPosition="true" />
             </button>
         {/if}
@@ -157,11 +157,11 @@
         {#if $userIsAdminStore}
             <button
                 id="kickoff-user"
-                class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+                class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
                 on:click={() => analyticsClient.kickoffMeetingAction()}
                 on:click|preventDefault|stopPropagation={() => kickoff()}
             >
-                <img src={banUserSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
+                <img src={banUserSvg} class="w-4 h-4" alt="Ellipsis icon" />
                 <Tooltip text={$LL.camera.menu.kickoffUser()} leftPosition="true" />
             </button>
         {/if}
@@ -169,11 +169,11 @@
         <!-- Send private message -->
         <button
             id="send-private-message"
-            class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+            class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
             on:click={() => analyticsClient.sendPrivateMessageMeetingAction()}
             on:click|preventDefault|stopPropagation={() => sendPrivateMessage()}
         >
-            <img src={BubbleTalkPng} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
+            <img src={BubbleTalkPng} class="w-4 h-4" alt="Ellipsis icon" />
             <Tooltip text={$LL.camera.menu.senPrivateMessage()} leftPosition="true" />
         </button>
 
@@ -181,11 +181,11 @@
         {#if trackStreamWraper instanceof VideoPeer}
             <button
                 id="block-or-report-user"
-                class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
+                class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
                 on:click={() => analyticsClient.reportMeetingAction()}
                 on:click|preventDefault|stopPropagation={() => openBlockOrReportPopup()}
             >
-                <img src={reportImg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
+                <img src={reportImg} class="w-4 h-4" alt="Ellipsis icon" />
                 <Tooltip text={$LL.camera.menu.blockOrReportUser()} leftPosition="true" />
             </button>
         {/if}
@@ -196,7 +196,7 @@
     .action-button {
         transition: all 0.2s;
         &:hover {
-            --tw-bg-opacity: 1;
+            --bg-opacity: 1;
             opacity: 1;
             transform: scale(1.2);
         }
