@@ -6,9 +6,7 @@ metadata:
     {{- include "workadventure.labels" . | nindent 4 }}
     role: back
 spec:
-  {{- if not .Values.back.autoscaling.enabled }}
   replicas: {{ .Values.back.replicaCount }}
-  {{- end }}
   podManagementPolicy: Parallel
   updateStrategy:
     type: RollingUpdate
