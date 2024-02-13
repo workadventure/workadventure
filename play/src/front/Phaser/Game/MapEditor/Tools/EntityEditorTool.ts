@@ -44,38 +44,43 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         const commandId = editMapCommandMessage.id;
         switch (editMapCommandMessage.editMapMessage?.message?.$case) {
             case "createEntityMessage": {
-                const data = editMapCommandMessage.editMapMessage?.message.createEntityMessage;
+                const createEntityMessage = editMapCommandMessage.editMapMessage?.message.createEntityMessage;
                 const entityPrefab = await this.scene
                     .getEntitiesCollectionsManager()
-                    .getEntityPrefab(data.collectionName, data.prefabId);
+                    .getEntityPrefab(createEntityMessage.collectionName, createEntityMessage.prefabId);
 
                 if (!entityPrefab) {
-                    console.warn(`NO PREFAB WAS FOUND FOR: ${data.collectionName} ${data.prefabId}`);
+                    console.warn(
+                        `NO PREFAB WAS FOUND FOR: ${createEntityMessage.collectionName} ${createEntityMessage.prefabId}`
+                    );
                     return;
                 }
 
                 TexturesHelper.loadEntityImage(this.scene, entityPrefab.imagePath, entityPrefab.imagePath)
                     .then(() => {
-                        this.entitiesManager.getEntities().get(data.id)?.setTexture(entityPrefab.imagePath);
+                        this.entitiesManager
+                            .getEntities()
+                            .get(createEntityMessage.id)
+                            ?.setTexture(entityPrefab.imagePath);
                     })
                     .catch((reason) => {
                         console.warn(reason);
                     });
 
                 const entityData: WAMEntityData = {
-                    x: data.x,
-                    y: data.y,
+                    x: createEntityMessage.x,
+                    y: createEntityMessage.y,
                     prefabRef: {
                         id: entityPrefab.id,
                         collectionName: entityPrefab.collectionName,
                     },
-                    properties: data.properties,
+                    properties: createEntityMessage.properties,
                 };
                 // execute command locally
                 await this.mapEditorModeManager.executeCommand(
                     new CreateEntityFrontCommand(
                         this.scene.getGameMap(),
-                        data.id,
+                        createEntityMessage.id,
                         entityData,
                         commandId,
                         this.entitiesManager
@@ -95,14 +100,16 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 break;
             }
             case "modifyEntityMessage": {
-                const data = editMapCommandMessage.editMapMessage?.message.modifyEntityMessage;
+                const modifyEntityMessage = editMapCommandMessage.editMapMessage?.message.modifyEntityMessage;
                 await this.mapEditorModeManager.executeCommand(
                     new UpdateEntityFrontCommand(
                         this.scene.getGameMap(),
-                        data.id,
+                        modifyEntityMessage.id,
                         {
-                            ...data,
-                            properties: data.modifyProperties ? data.properties : undefined,
+                            ...modifyEntityMessage,
+                            properties: modifyEntityMessage.modifyProperties
+                                ? modifyEntityMessage.properties
+                                : undefined,
                         },
                         commandId,
                         undefined,
@@ -115,7 +122,12 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 break;
             }
             case "uploadEntityMessage": {
-                console.log("Do something here on incoming event");
+                const uploadEntityMessage = editMapCommandMessage.editMapMessage?.message.uploadEntityMessage;
+                await this.mapEditorModeManager.executeCommand(
+                    new UploadEntityFrontCommand(uploadEntityMessage),
+                    false,
+                    false
+                );
                 break;
             }
         }

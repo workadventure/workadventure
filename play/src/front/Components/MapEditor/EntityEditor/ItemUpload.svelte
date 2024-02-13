@@ -13,9 +13,11 @@
         }
     }
 
-    const mapEditorEntityUploadEventStoreUnsubscriber = mapEditorEntityUploadEventStore.subscribe((uploadEntityMessage) => {
-        completeAndResetUpload(uploadEntityMessage);
-    });
+    const mapEditorEntityUploadEventStoreUnsubscriber = mapEditorEntityUploadEventStore.subscribe(
+        (uploadEntityMessage) => {
+            completeAndResetUpload(uploadEntityMessage);
+        }
+    );
 
     function completeAndResetUpload(uploadEntityMessage: UploadEntityMessage | undefined) {
         if (uploadEntityMessage === undefined && files !== undefined) {
@@ -31,8 +33,8 @@
             direction: UploadEntityMessage_Direction.Down,
             name: fileToUpload!.name,
             tags: [],
-            imagePath:fileToUpload!.name,
-            color:""
+            imagePath: fileToUpload!.name,
+            color: "",
         });
     }
 
@@ -57,7 +59,6 @@
     onDestroy(() => {
         mapEditorEntityUploadEventStoreUnsubscriber();
     });
-
 </script>
 
 <div

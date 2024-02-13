@@ -134,7 +134,7 @@ export class EntitiesCollectionsManager {
     }
 
     public addUploadedEntity(uploadedEntity: EntityRawPrefab, customEntityCollectionUrl: string) {
-        const uploadedEntityPrefab = {
+        const uploadedEntityPrefab: EntityPrefab = {
             ...this.parseRawEntityPrefab("custom entities", uploadedEntity, "Custom"),
             imagePath: new URL(uploadedEntity.imagePath, customEntityCollectionUrl).toString(),
         };
