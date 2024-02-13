@@ -1,7 +1,7 @@
 <script lang="ts">
-    import {onDestroy} from "svelte";
-    import {UploadEntityMessage, UploadEntityMessage_Direction} from "@workadventure/messages";
-    import {mapEditorEntityUploadEventStore} from "../../../Stores/MapEditorStore";
+    import { onDestroy } from "svelte";
+    import { UploadEntityMessage, UploadEntityMessage_Direction } from "@workadventure/messages";
+    import { mapEditorEntityUploadEventStore } from "../../../Stores/MapEditorStore";
     import iconUploadWhite from "../../images/icon-upload-white.svg";
 
     let files: FileList | undefined = undefined;

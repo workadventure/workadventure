@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {EntityVariant} from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
+    import { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
 
     export let entityVariant: EntityVariant;
     export let isActive: boolean;
