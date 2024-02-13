@@ -585,7 +585,8 @@ div.emoji-picker {
             }
         }
         &.active {
-
+            @apply border-none pb-2;
+            @apply after:content-[''] after:absolute after:-bottom-[1px] after:left-0 after:w-full after:h-[3px] after:rounded after:bg-success;
         }
     }
     .emoji-picker__emoji {

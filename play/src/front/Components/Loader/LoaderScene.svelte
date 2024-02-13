@@ -30,8 +30,6 @@
             </div>
         </div>
     </div>
-    <div in:fade={{ duration: 100 }}
-         class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url('{bgMap}');"></div>
-    <div
-         class="absolute left-0 top-0 w-full h-full z-20" style="background-color: '{bgColor}';"></div>
+    <div  class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url('{bgMap}');"></div>
+    <div class="absolute left-0 top-0 w-full h-full z-20" style="background-color: '{bgColor}';"></div>
 </div>

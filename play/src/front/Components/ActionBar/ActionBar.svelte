@@ -839,13 +839,13 @@
                     <!-- NAV : SCREENSHARING START -->
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     {#if $bottomActionBarVisibilityStore}
-                    <div class="group/btn-share relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
+                    <div class="group/btn-screen-share relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
                          on:click={() =>analyticsClient.screenSharing()}
                          on:click={screenSharingClick}
                          on:mouseenter={() => { !navigating ? helpActive = "share" : '' }}
                          on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                     >
-                        <div class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-share:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all {$requestedScreenSharingState && !$silentStore ? 'bg-secondary hover:bg-danger' : ''}">
+                        <div class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-screen-share:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all {$requestedScreenSharingState && !$silentStore ? 'bg-secondary hover:bg-danger' : ''}">
                             {#if $requestedScreenSharingState && !$silentStore}
                                 <ScreenShareOffIcon />
                             {:else}
@@ -954,7 +954,7 @@
                         <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-4 pr-3">
                             <AdminPanIcon />
                             <div class="pr-2">
-                                <div class="font-bold text-white leading-3 whitespace-nowrap select-none">Administration<!-- trad --></div>
+                                <div class="font-bold text-white leading-3 whitespace-nowrap select-none">Admin<!-- trad --></div>
                             </div>
                             <ChevronDownIcon strokeWidth="2" classList="h-4 w-4 aspect-ratio transition-all opacity-50 {adminMenuIsDropped ? 'rotate-180' : '' }" height="16px" width="16px"  />
                         </div>

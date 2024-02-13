@@ -26,6 +26,9 @@
     import {loaderVisibleStore} from "../Stores/LoaderStore";
     import LoaderScene from "./Loader/LoaderScene.svelte";
 
+    import bgMap from "./images/map-exemple.png";
+    import defaultLoader from "./images/Workadventure.gif";
+
     export let game: Game;
 
     /**
@@ -34,6 +37,10 @@
      * https://github.com/sveltejs/svelte/issues/5268
      */
 </script>
+
+<!-- Preload image loader TODO HUGO : Better way ? -->
+<link rel="preload" as="image" href="{bgMap}" />
+<link rel="preload" as="image" href="{defaultLoader}" />
 
 {#if $loaderVisibleStore }
     <div class="bg-contrast">
