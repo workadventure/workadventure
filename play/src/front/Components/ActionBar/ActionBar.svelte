@@ -667,6 +667,7 @@
                 {/if}
 
                 {#if $isSpeakerStore || $streamingMegaphoneStore || $liveStreamingEnabledStore}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         class="tw-transition-all bottom-action-button"
                         on:click={() => analyticsClient.screenSharing()}
@@ -689,6 +690,34 @@
                                     src={screenshareOff}
                                     style="padding: 2px;"
                                     alt="Start screen sharing"
+                                />
+                            {/if}
+                        </button>
+                    </div>
+                {/if}
+
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                {#if $isSpeakerStore && !$streamingMegaphoneStore}
+                    <div
+                        class="tw-transition-all bottom-action-button"
+                        on:click={() => analyticsClient.layoutPresentChange()}
+                        on:click={switchLayoutMode}
+                    >
+                        <Tooltip text={$LL.actionbar.layout()} />
+                        <button>
+                            {#if $embedScreenLayoutStore === LayoutMode.Presentation}
+                                <img
+                                    draggable="false"
+                                    src={layoutPresentationImg}
+                                    style="padding: 2px"
+                                    alt="Switch to mosaic mode"
+                                />
+                            {:else}
+                                <img
+                                    draggable="false"
+                                    src={layoutChatImg}
+                                    style="padding: 2px"
+                                    alt="Switch to presentation mode"
                                 />
                             {/if}
                         </button>

@@ -63,6 +63,7 @@ class ConnectionManager {
         // FIXME: remove this._currentRoom.iframeAuthentication
         // FIXME: remove this._currentRoom.iframeAuthentication
         if (!ENABLE_OPENID || !this._currentRoom || !this._currentRoom.iframeAuthentication) {
+            analyticsClient.loggedWithToken();
             loginSceneVisibleIframeStore.set(false);
             return null;
         }
