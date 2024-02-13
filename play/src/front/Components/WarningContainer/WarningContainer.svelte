@@ -69,10 +69,27 @@
 <style lang="scss">
     main.warningMain {
         pointer-events: auto;
+        width: 100%;
+        background-color: #f9e81e;
+        color: #14304c;
+        text-align: center;
+        position: absolute;
+
+        top: 0;
+        left: 0;
+        right: 0;
+        margin-left: auto;
+        margin-right: auto;
+        font-family: Lato;
         min-width: 300px;
+        opacity: 0.9;
         z-index: 700;
         h2 {
             padding: 5px;
+        }
+
+        a {
+            color: #ff475a;
         }
     }
 </style>

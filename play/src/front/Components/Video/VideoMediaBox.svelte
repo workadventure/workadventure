@@ -32,6 +32,7 @@
     import FlagIcon from "../Icons/FlagIcon.svelte";
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
+    import ActionMediaBox from "./ActionMediaBox.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
     // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
@@ -162,6 +163,7 @@
             }
 
             wasVideoEnabled = constraints?.video ?? false;
+            if (!wasVideoEnabled && isHightlighted) highlightedEmbedScreen.toggleHighlight(embedScreen);
             updateRatio();
         });
     });
@@ -238,6 +240,11 @@
             aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
         }, 1000);
     }
+
+    function hightlight() {
+        if (!clickable || !videoEnabled) return;
+        highlightedEmbedScreen.toggleHighlight(embedScreen);
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -246,8 +253,12 @@
     class:video-off={!videoEnabled}
     class:h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
     bind:this={videoContainer}
+    on:click={() => analyticsClient.pinMeetingAction()}
+    on:click={() => hightlight()}
     style="height:{$heightCamWrapper}px;"
 >
+    <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
+
     <div
         class="aspect-video absolute top-0 left-0 z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur"
         style="background-image: url({loaderImg})"
@@ -278,7 +289,6 @@
             class:rounded={videoEnabled}
             autoplay
             playsinline
-            class="h-full w-full rounded-lg md:object-cover relative z-20"
         />
 
         {#if videoEnabled}

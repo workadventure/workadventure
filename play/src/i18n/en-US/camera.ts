@@ -38,6 +38,18 @@ const camera: BaseTranslation = {
         loading: "Loading your camera...",
     },
     disable: "Turn off your camera",
+    menu: {
+        moreAction: "More actions",
+        closeMenu: "Close menu",
+        senPrivateMessage: "Send a private message (coming soon)",
+        kickoffUser: "Kick off user",
+        muteAudioUser: "Mute audio",
+        muteAudioEveryBody: "Mute audio for everybody",
+        muteVideoUser: "Mute video",
+        muteVideoEveryBody: "Mute video for everybody",
+        pin: "Pin",
+        blockOrReportUser: "Block or report user",
+    },
 };
 
 export default camera;

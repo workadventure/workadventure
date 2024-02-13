@@ -29,6 +29,7 @@
     }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     class="video-container screen-sharing flex w-full flex-col h-full"
     style="height:192px;"

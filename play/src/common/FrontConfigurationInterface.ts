@@ -44,6 +44,7 @@ export interface FrontConfigurationInterface {
     KLAXOON_ENABLED: boolean;
     KLAXOON_CLIENT_ID: string | undefined;
     YOUTUBE_ENABLED: boolean;
+    GOOGLE_DRIVE_ENABLED: boolean;
     GOOGLE_DOCS_ENABLED: boolean;
     GOOGLE_SHEETS_ENABLED: boolean;
     GOOGLE_SLIDES_ENABLED: boolean;
@@ -52,4 +53,6 @@ export interface FrontConfigurationInterface {
     PEER_VIDEO_RECOMMENDED_BANDWIDTH: number;
     PEER_SCREEN_SHARE_LOW_BANDWIDTH: number;
     PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: number;
+    GOOGLE_DRIVE_PICKER_CLIENT_ID: string | undefined;
+    GOOGLE_DRIVE_PICKER_APP_ID: string | undefined;
 }

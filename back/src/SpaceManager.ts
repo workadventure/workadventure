@@ -56,6 +56,46 @@ const spaceManager = {
                         pusher.receivedPong();
                         break;
                     }
+                    case "kickOffMessage": {
+                        socketManager.handleKickSpaceUserMessage(pusher, message.message.kickOffMessage);
+                        break;
+                    }
+                    case "muteMicrophoneMessage": {
+                        socketManager.handleMuteMicrophoneSpaceUserMessage(
+                            pusher,
+                            message.message.muteMicrophoneMessage
+                        );
+                        break;
+                    }
+                    case "muteVideoMessage": {
+                        socketManager.handleMuteVideoSpaceUserMessage(pusher, message.message.muteVideoMessage);
+                        break;
+                    }
+                    case "muteMicrophoneEverybodyMessage": {
+                        socketManager.handleMuteMicrophoneEverybodySpaceUserMessage(
+                            pusher,
+                            message.message.muteMicrophoneEverybodyMessage
+                        );
+                        break;
+                    }
+                    case "muteVideoEverybodyMessage": {
+                        socketManager.handleMuteVideoEverybodySpaceUserMessage(
+                            pusher,
+                            message.message.muteVideoEverybodyMessage
+                        );
+                        break;
+                    }
+                    case "askMuteMicrophoneMessage": {
+                        socketManager.handleMuteMicrophoneSpaceUserMessage(
+                            pusher,
+                            message.message.askMuteMicrophoneMessage
+                        );
+                        break;
+                    }
+                    case "askMuteVideoMessage": {
+                        socketManager.handleMuteVideoSpaceUserMessage(pusher, message.message.askMuteVideoMessage);
+                        break;
+                    }
                     default: {
                         const _exhaustiveCheck: never = message.message;
                     }

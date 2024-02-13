@@ -607,7 +607,7 @@ export class IoSocketController {
                                 socketManager.emitInvalidCompanionTextureMessage(socket);
                             }
                         } else {
-                            socketManager.emitConnectionErrorMessage(socket, socketData.message);
+                            socketManager.emitConnectionErrorMessage(socket, socketData.message.toString());
                         }
                         ws.end(1000, "Error message sent");
                         return;
@@ -861,6 +861,51 @@ export class IoSocketController {
                         case "editMapCommandMessage":
                         case "askPositionMessage": {
                             socketManager.forwardMessageToBack(socket, message.message);
+                            break;
+                        }
+                        case "muteParticipantIdMessage": {
+                            socketManager.handleMuteParticipantIdMessage(
+                                socket,
+                                message.message.muteParticipantIdMessage.spaceName,
+                                message.message.muteParticipantIdMessage.mutedUserUuid,
+                                message.message
+                            );
+                            break;
+                        }
+                        case "muteVideoParticipantIdMessage": {
+                            socketManager.handleMuteVideoParticipantIdMessage(
+                                socket,
+                                message.message.muteVideoParticipantIdMessage.spaceName,
+                                message.message.muteVideoParticipantIdMessage.mutedUserUuid,
+                                message.message
+                            );
+                            break;
+                        }
+                        case "kickOffUserMessage": {
+                            socketManager.handleKickOffSpaceUserMessage(
+                                socket,
+                                message.message.kickOffUserMessage.spaceName,
+                                message.message.kickOffUserMessage.userId,
+                                message.message
+                            );
+                            break;
+                        }
+                        case "muteEveryBodyParticipantMessage": {
+                            socketManager.handleMuteEveryBodyParticipantMessage(
+                                socket,
+                                message.message.muteEveryBodyParticipantMessage.spaceName,
+                                message.message.muteEveryBodyParticipantMessage.senderUserId,
+                                message.message
+                            );
+                            break;
+                        }
+                        case "muteVideoEveryBodyParticipantMessage": {
+                            socketManager.handleMuteVideoEveryBodyParticipantMessage(
+                                socket,
+                                message.message.muteVideoEveryBodyParticipantMessage.spaceName,
+                                message.message.muteVideoEveryBodyParticipantMessage.userId,
+                                message.message
+                            );
                             break;
                         }
                         case "banPlayerMessage": {

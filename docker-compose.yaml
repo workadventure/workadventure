@@ -39,6 +39,7 @@ services:
         working_dir: /usr/src/app/play
         volumes:
             - .:/usr/src/app
+        tmpfs: /tmp
         ports:
             - "9231:9229"
             - "9235:9235"
@@ -127,6 +128,7 @@ services:
             KLAXOON_ENABLED: "$KLAXOON_ENABLED"
             KLAXOON_CLIENT_ID: "$KLAXOON_CLIENT_ID"
             YOUTUBE_ENABLED: "$YOUTUBE_ENABLED"
+            GOOGLE_DRIVE_ENABLED: "$GOOGLE_DRIVE_ENABLED"
             GOOGLE_DOCS_ENABLED: "$GOOGLE_DOCS_ENABLED"
             GOOGLE_SHEETS_ENABLED: "$GOOGLE_SHEETS_ENABLED"
             GOOGLE_SLIDES_ENABLED: "$GOOGLE_SLIDES_ENABLED"
@@ -138,6 +140,9 @@ services:
             PEER_VIDEO_RECOMMENDED_BANDWIDTH: "$PEER_VIDEO_RECOMMENDED_BANDWIDTH"
             PEER_SCREEN_SHARE_LOW_BANDWIDTH: "$PEER_SCREEN_SHARE_LOW_BANDWIDTH"
             PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: "$PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH"
+            # Google drive picker
+            GOOGLE_DRIVE_PICKER_CLIENT_ID: "$GOOGLE_DRIVE_PICKER_CLIENT_ID"
+            GOOGLE_DRIVE_PICKER_APP_ID: "$GOOGLE_DRIVE_PICKER_APP_ID"
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"

@@ -1,11 +1,11 @@
 import { get, Readable, writable, Writable } from "svelte/store";
 import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
+import { TrackStreamWrapperInterface } from "../Contract/TrackStreamWrapperInterface";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
-
 /**
  * An object that wraps a JitsiTrackWrapper and points only to "video/audio" or "desktop" track
  */
-export class JitsiTrackStreamWrapper {
+export class JitsiTrackStreamWrapper implements TrackStreamWrapperInterface {
     //public readonly uniqueId: string;
     private readonly _audioTrackStore: Writable<JitsiTrack | undefined> = writable<JitsiTrack | undefined>(undefined);
     private readonly _videoTrackStore: Writable<JitsiTrack | undefined> = writable<JitsiTrack | undefined>(undefined);
@@ -47,5 +47,33 @@ export class JitsiTrackStreamWrapper {
 
     public isEmpty(): boolean {
         return !this.getVideoTrack() && !this.getAudioTrack();
+    }
+
+    public isLocal(): boolean {
+        return this.jitsiTrackWrapper.isLocal;
+    }
+
+    public muteAudioParticipant(): void {
+        this.jitsiTrackWrapper.muteMicrophonePartcipant();
+    }
+
+    public muteAudioEveryBody(): void {
+        this.jitsiTrackWrapper.muteMicrophoneEverybody();
+    }
+
+    public muteVideoParticipant(): void {
+        this.jitsiTrackWrapper.muteVideoParticipant();
+    }
+
+    public muteVideoEverybody(): void {
+        this.jitsiTrackWrapper.muteVideoEverybody();
+    }
+
+    public kickoff(): void {
+        this.jitsiTrackWrapper.kickoff();
+    }
+
+    public blockOrReportUser(): void {
+        console.info("Not implemented yet!");
     }
 }

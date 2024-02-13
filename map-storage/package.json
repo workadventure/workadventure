@@ -80,7 +80,7 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
-    "tsx": "^3.12.10",
+    "tsx": "^4.7.0",
     "zod": "^3.20.2",
     "zod-error": "^1.5.0",
     "zod-to-json-schema": "^3.20.4"
@@ -121,7 +121,7 @@
     "ts-loader": "^9.2.3",
     "tsconfig-paths": "4.0.0",
     "typescript": "^4.9.4",
-    "vite": "^3.2.7"
+    "vite": "^3.2.8"
   },
   "nodemonConfig": {
     "ignore": [

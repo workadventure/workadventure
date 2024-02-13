@@ -105,10 +105,57 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             exitMap: "Karte verlassen",
             exitMapStartAreaName: "Startbereich",
         },
+        youtubeProperties: {
+            label: "Youtube-Video öffnen",
+            description: "Öffnen Sie Youtube in der App oder in einem neuen Tab.",
+            error: "Bitte geben Sie eine gültige Youtube-URL ein",
+            disabled: "Youtube-Integration ist deaktiviert.",
+        },
+        googleDocsProperties: {
+            label: "Google Docs öffnen",
+            description: "Öffnen Sie Google Docs in der App oder in einem neuen Tab.",
+            error: "Bitte geben Sie eine gültige Google Docs-URL ein",
+            disabled: "Google Docs-Integration ist deaktiviert.",
+        },
+        klaxoonProperties: {
+            label: "Klaxoon öffnen",
+            description: "Öffnen Sie Klaxoon in der App oder in einem neuen Tab.",
+            error: "Bitte geben Sie eine gültige Klaxoon-URL ein",
+            disabled: "Klaxoon-Integration ist deaktiviert.",
+        },
+        googleSheetsProperties: {
+            label: "Google Sheets öffnen",
+            description: "Öffnen Sie Google Sheets in der App oder in einem neuen Tab.",
+            error: "Bitte geben Sie eine gültige Google Sheets-URL ein",
+            disabled: "Google Sheets-Integration ist deaktiviert.",
+        },
+        googleSlidesProperties: {
+            label: "Google Slides öffnen",
+            description: "Öffnen Sie Google Slides in der App oder in einem neuen Tab.",
+            error: "Bitte geben Sie eine gültige Google Slides-URL ein",
+            disabled: "Google Slides-Integration ist deaktiviert.",
+        },
+        eraserProperties: {
+            label: "Eraser öffnen",
+            description: "Öffnen Sie Eraser in der App oder in einem neuen Tab.",
+            defaultButtonLabel: "Eraser",
+            error: "Bitte geben Sie eine gültige Eraser-URL ein",
+            disabled: "Eraser-Integration ist deaktiviert.",
+        },
+        googleDriveProperties: {
+            label: "Google Drive öffnen",
+            description: "Öffnen Sie Google Drive in der App oder in einem neuen Tab.",
+            error: "Bitte geben Sie eine gültige Google Drive-URL ein",
+            disabled: "Google Drive-Integration ist deaktiviert.",
+        },
     },
     areaEditor: {
         editInstructions: "Klicken Sie auf eine Fläche, um ihre Eigenschaften zu ändern.",
         nameLabel: "Name",
+    },
+    areaEditorInstructions: {
+        title: "Wie funktioniert das?",
+        description: "Zeichnen Sie ein Gebiet auf der Karte, um ein neues zu erstellen.",
     },
     entityEditor: {
         itemPicker: {

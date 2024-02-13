@@ -50,6 +50,10 @@ const isMapThirdPartyData = z.object({
         description: "Whether the youtube tool is activated or not on this room",
         example: true,
     }),
+    googleDriveToolActivated: extendApi(z.boolean().optional(), {
+        description: "Whether the google drive tool is activated or not on this room",
+        example: true,
+    }),
     googleDocsToolActivated: extendApi(z.boolean().optional(), {
         description: "Whether the google docs tool is activated or not on this room",
         example: true,
