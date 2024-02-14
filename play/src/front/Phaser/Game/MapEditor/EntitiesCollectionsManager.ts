@@ -5,7 +5,7 @@ import {
     EntityPrefabType,
     EntityRawPrefab,
 } from "@workadventure/map-editor";
-import { derived, Readable, writable, Writable } from "svelte/store";
+import { Readable, Writable, derived, writable } from "svelte/store";
 import { EntityVariant } from "./Entities/EntityVariant";
 
 export class EntitiesCollectionsManager {
@@ -138,6 +138,7 @@ export class EntitiesCollectionsManager {
             ...this.parseRawEntityPrefab("custom entities", uploadedEntity, "Custom"),
             imagePath: new URL(uploadedEntity.imagePath, customEntityCollectionUrl).toString(),
         };
+        this.currentCollection.collection.push(uploadedEntityPrefab);
 
         const entitiesPrefabsMapPromiseWithUploadedEntity = new Promise<Map<string, EntityPrefab>>(
             (resolve, reject) => {
