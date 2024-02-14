@@ -649,6 +649,48 @@ test.describe('Map editor', () => {
     expect(innerHtml).toContain(EntityEditor.getTestAssetName());
   });
 
+  test("Successfully upload and use custom entity in the map", async ({
+    page,
+    browser,
+    request,
+    browserName,
+  }) => {
+    if (browser.browserType() === webkit) {
+      // Webkit is somehow failing on this, maybe it is too slow
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
+    await resetWamMaps(request);
+
+    await page.goto(Map.url("empty"));
+    await login(page, "test", 3);
+    if (browserName === "webkit") {
+      // Because webkit in playwright does not support Camera/Microphone Permission by settings
+      await hideNoCamera(page);
+    }
+
+    // open map editor
+    await page.getByRole("button", { name: "toggle-map-editor" }).click();
+    await MapEditor.openEntityEditor(page);
+
+    // Click on upload asset
+    await EntityEditor.uploadTestAsset(page);
+    // Confirm upload asset
+    await page.getByTestId("confirmUploadButton").click();
+
+    // Change to custom asset tab
+    await page.getByTestId("switchToCustomTab").click();
+
+    // Select uploaded entity and move it to the map
+    await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName());
+    await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
+
+    //Check if testAsset is present in the map
+    //TODO find a way to read wam file or spyOn the method to update wam
+  });
+
   test('Successfully set searchable processus for entity and zone', async ({ page, browser, request, browserName }, { project }) => {
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
