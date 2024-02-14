@@ -2,7 +2,7 @@
 
 This Helm chart deploys Workadventure on Kubernetes.
 
-It is an adaption of the [Docker Compose deployment](../../docker).
+It is an adaption of the [Docker Compose deployment](../docker).
 
 ## Installation
 
@@ -32,7 +32,7 @@ There are the `commonEnv` and `commonSecretEnv` sections, which are used in all 
 
 If you don't provide a `secretKey` (used to encode JWT tokens), the image will generate one for you.
 
-Please use the original [docker-compose file](../../docker/docker-compose.prod.yaml) for reference. Look at the [original configuration template](../../docker/.env.prod.template) for more informations about the available variables.
+Please use the original [docker-compose file](../docker/docker-compose.prod.yaml) for reference. Look at the [original configuration template](../docker/.env.prod.template) for more informations about the available variables.
 
 ## Upload your map
 

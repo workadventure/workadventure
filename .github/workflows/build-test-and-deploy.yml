@@ -860,7 +860,113 @@ jobs:
           path: tests/playwright-report/
           retention-days: 30
 
-  deeploy:
+#  deeploy:
+#    needs:
+#      - build-play
+#      - build-chat
+#      - build-back
+#      - build-maps
+#      - build-uploader
+#      - build-map-storage
+#      - build-ejabberd
+#    runs-on: ubuntu-latest
+#    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
+#
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#
+#      # Create a slugified value of the branch
+#      - uses: rlespinasse/github-slug-action@4.2.3
+#
+#      - name: Set ADMIN_URL if "deploy-connect-to-admin" label is set
+#        run: echo "ADMIN_API_URL=https://admin-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re" >> $GITHUB_ENV
+#        if: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin')) || env.GITHUB_REF_SLUG == 'develop'  }}
+#
+#      - name: Write certificate
+#        run: echo "${CERTS_PRIVATE_KEY}" > secret.key && chmod 0600 secret.key
+#        env:
+#          CERTS_PRIVATE_KEY: ${{ secrets.CERTS_PRIVATE_KEY }}
+#
+#      - name: Download certificate
+#        run: mkdir secrets && scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i secret.key ubuntu@cert.workadventu.re:./config/live/workadventu.re/* secrets/
+#
+#      - name: Create namespace
+#        uses: steebchen/kubectl@v1.0.0
+#        env:
+#          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+#        with:
+#          args: create namespace workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+#        continue-on-error: true
+#
+#      - name: Delete old certificates in namespace
+#        uses: steebchen/kubectl@v1.0.0
+#        env:
+#          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+#        with:
+#          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} delete secret certificate-tls
+#        continue-on-error: true
+#
+#      - name: Install certificates in namespace
+#        uses: steebchen/kubectl@v1.0.0
+#        env:
+#          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+#        with:
+#          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} create secret tls certificate-tls --key="secrets/privkey.pem" --cert="secrets/fullchain.pem"
+#
+#      - name: Deploy with deeployer
+#        uses: thecodingmachine/deeployer-action@master
+#        env:
+#          KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
+#          ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
+#          ADMIN_SOCKETS_TOKEN: ${{ secrets.ADMIN_SOCKETS_TOKEN }}
+#          JITSI_ISS: ${{ secrets.JITSI_ISS }}
+#          JITSI_URL: ${{ secrets.JITSI_URL }}
+#          SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}
+#          TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
+#          DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+#          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+#          POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
+#          EJABBERD_JWT_SECRET: ${{ secrets.EJABBERD_JWT_SECRET }}
+#          ENABLE_REPORT_ISSUES_MENU: ${{ secrets.ENABLE_REPORT_ISSUES_MENU }}
+#          REPORT_ISSUES_URL: ${{ secrets.REPORT_ISSUES_URL }}
+#          LOGROCKET_ID: ${{ secrets.LOGROCKET_ID }}
+#          KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
+#          GOOGLE_DRIVE_PICKER_CLIENT_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_CLIENT_ID }}
+#          GOOGLE_DRIVE_PICKER_APP_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_APP_ID }}
+#        with:
+#          namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+#
+#      - name: Perform environment substitution in K8S files
+#        run: envsubst < cd/map-storage-traefik-ingress-route.tmpl.yaml > cd/map-storage-traefik-ingress-route.yaml
+#        if: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin')) || env.GITHUB_REF_SLUG == 'develop'  }}
+#        env:
+#          DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+#
+#      - name: Deploy custom K8S files
+#        uses: steebchen/kubectl@v1.0.0
+#        env:
+#          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+#        with:
+#          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} apply -f cd/map-storage-traefik-ingress-route.yaml
+#        if: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin')) || env.GITHUB_REF_SLUG == 'develop'  }}
+#
+#      - name: Upload demo maps in map-storage
+#        run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip * && curl -F 'file=@../assets.zip' https://map-storage-${DEPLOY_REF}.test.workadventu.re/upload --basic -u john.doe:password
+#        env:
+#          DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+#        working-directory: map-storage
+#
+#      - name: Add a comment in PR
+#        uses: unsplash/comment-on-pr@master
+#        if: ${{ github.event_name == 'pull_request' }}
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        with:
+#          msg: "Environment deployed at https://play-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re \nTests available at https://maps-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re/tests"
+#          check_for_duplicate_msg: true
+
+  helm-deploy:
     needs:
       - build-play
       - build-chat
@@ -883,13 +989,13 @@ jobs:
         run: echo "ADMIN_API_URL=https://admin-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re" >> $GITHUB_ENV
         if: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin')) || env.GITHUB_REF_SLUG == 'develop'  }}
 
-      - name: Write certificate
-        run: echo "${CERTS_PRIVATE_KEY}" > secret.key && chmod 0600 secret.key
-        env:
-          CERTS_PRIVATE_KEY: ${{ secrets.CERTS_PRIVATE_KEY }}
+#      - name: Write certificate
+#        run: echo "${CERTS_PRIVATE_KEY}" > secret.key && chmod 0600 secret.key
+#        env:
+#          CERTS_PRIVATE_KEY: ${{ secrets.CERTS_PRIVATE_KEY }}
 
-      - name: Download certificate
-        run: mkdir secrets && scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i secret.key ubuntu@cert.workadventu.re:./config/live/workadventu.re/* secrets/
+#      - name: Download certificate
+#        run: mkdir secrets && scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i secret.key ubuntu@cert.workadventu.re:./config/live/workadventu.re/* secrets/
 
       - name: Create namespace
         uses: steebchen/kubectl@v1.0.0
@@ -899,57 +1005,70 @@ jobs:
           args: create namespace workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         continue-on-error: true
 
-      - name: Delete old certificates in namespace
-        uses: steebchen/kubectl@v1.0.0
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
-        with:
-          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} delete secret certificate-tls
-        continue-on-error: true
+#      - name: Delete old certificates in namespace
+#        uses: steebchen/kubectl@v1.0.0
+#        env:
+#          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+#        with:
+#          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} delete secret certificate-tls
+#        continue-on-error: true
+#
+#      - name: Install certificates in namespace
+#        uses: steebchen/kubectl@v1.0.0
+#        env:
+#          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+#        with:
+#          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} create secret tls certificate-tls --key="secrets/privkey.pem" --cert="secrets/fullchain.pem"
 
-      - name: Install certificates in namespace
-        uses: steebchen/kubectl@v1.0.0
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+      - name: 'Deploy'
+        uses: 'deliverybot/helm@v1'
         with:
-          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} create secret tls certificate-tls --key="secrets/privkey.pem" --cert="secrets/fullchain.pem"
-
-      - name: Deploy with deeployer
-        uses: thecodingmachine/deeployer-action@master
-        env:
-          KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
-          ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
-          ADMIN_SOCKETS_TOKEN: ${{ secrets.ADMIN_SOCKETS_TOKEN }}
-          JITSI_ISS: ${{ secrets.JITSI_ISS }}
-          JITSI_URL: ${{ secrets.JITSI_URL }}
-          SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}
-          TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
-          DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-          POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
-          EJABBERD_JWT_SECRET: ${{ secrets.EJABBERD_JWT_SECRET }}
-          ENABLE_REPORT_ISSUES_MENU: ${{ secrets.ENABLE_REPORT_ISSUES_MENU }}
-          REPORT_ISSUES_URL: ${{ secrets.REPORT_ISSUES_URL }}
-          LOGROCKET_ID: ${{ secrets.LOGROCKET_ID }}
-          KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
-          GOOGLE_DRIVE_PICKER_CLIENT_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_CLIENT_ID }}
-          GOOGLE_DRIVE_PICKER_APP_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_APP_ID }}
-        with:
+          release: 'workadventure'
           namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-
-      - name: Perform environment substitution in K8S files
-        run: envsubst < cd/map-storage-traefik-ingress-route.tmpl.yaml > cd/map-storage-traefik-ingress-route.yaml
-        if: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin')) || env.GITHUB_REF_SLUG == 'develop'  }}
+          chart: 'contrib/helm'
+          token: '${{ github.token }}'
+          values: |
+            domainName: ${{ env.DEPLOY_REF }}.test.workadventu.re
+            ejabberdJwtSecret: "${{ secrets.EJABBERD_JWT_SECRET }}"
+            mapstorage:
+              secretEnv:
+                AUTHENTICATION_PASSWORD: "password"
+            commonSecretEnv:
+              ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
+              ADMIN_SOCKETS_TOKEN: ${{ secrets.ADMIN_SOCKETS_TOKEN }}
+              JITSI_ISS: ${{ secrets.JITSI_ISS }}
+              JITSI_URL: ${{ secrets.JITSI_URL }}
+              SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}
+              TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
+              DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+              POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+              POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
+              ENABLE_REPORT_ISSUES_MENU: ${{ secrets.ENABLE_REPORT_ISSUES_MENU }}
+              REPORT_ISSUES_URL: ${{ secrets.REPORT_ISSUES_URL }}
+              LOGROCKET_ID: ${{ secrets.LOGROCKET_ID }}
+              KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
+              GOOGLE_DRIVE_PICKER_CLIENT_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_CLIENT_ID }}
+              GOOGLE_DRIVE_PICKER_APP_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_APP_ID }}
+          value-files: >-
+            [
+              "values.yaml",
+            ]
         env:
-          DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          KUBECONFIG_FILE: '${{ secrets.KUBE_CONFIG_FILE }}'
 
-      - name: Deploy custom K8S files
-        uses: steebchen/kubectl@v1.0.0
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
-        with:
-          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} apply -f cd/map-storage-traefik-ingress-route.yaml
-        if: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin')) || env.GITHUB_REF_SLUG == 'develop'  }}
+#      - name: Perform environment substitution in K8S files
+#        run: envsubst < cd/map-storage-traefik-ingress-route.tmpl.yaml > cd/map-storage-traefik-ingress-route.yaml
+#        if: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin')) || env.GITHUB_REF_SLUG == 'develop'  }}
+#        env:
+#          DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+#
+#      - name: Deploy custom K8S files
+#        uses: steebchen/kubectl@v1.0.0
+#        env:
+#          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+#        with:
+#          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} apply -f cd/map-storage-traefik-ingress-route.yaml
+#        if: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin')) || env.GITHUB_REF_SLUG == 'develop'  }}
 
       - name: Upload demo maps in map-storage
         run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip * && curl -F 'file=@../assets.zip' https://map-storage-${DEPLOY_REF}.test.workadventu.re/upload --basic -u john.doe:password
