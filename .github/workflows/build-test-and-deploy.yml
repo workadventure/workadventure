@@ -1021,7 +1021,7 @@ jobs:
 #          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} create secret tls certificate-tls --key="secrets/privkey.pem" --cert="secrets/fullchain.pem"
 
       - name: 'Deploy'
-        uses: 'deliverybot/helm@v1'
+        uses: 'vimeda/helm@v1.7.0'
         with:
           release: 'workadventure'
           namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
@@ -1049,10 +1049,7 @@ jobs:
               KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
               GOOGLE_DRIVE_PICKER_CLIENT_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_CLIENT_ID }}
               GOOGLE_DRIVE_PICKER_APP_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_APP_ID }}
-          value-files: >-
-            [
-              "values.yaml",
-            ]
+          #value-files: "values.yaml"
         env:
           KUBECONFIG_FILE: '${{ secrets.KUBE_CONFIG_FILE }}'
 
