@@ -161,7 +161,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     areaEditor: {
         editInstructions: "Sélectionnez une zone pour modifier ses propriétés.",
         nameLabel: "Nom de la zone",
+        nameLabelPlaceholder: "MaZone",
         areaDescription: "Description de la zone",
+        areaDescriptionPlaceholder: "Description de la zone",
         areaSerchable: "Recherchable dans le mode exploration",
         addDescriptionField: "Ajouter une description",
     },
@@ -185,7 +187,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         editInstructions: "Sélectionnez un objet pour modifier ses propriétés.",
         selectObject: "Cliquer sur un objet pour le selectionner",
         objectName: "Nom de l'objet",
+        objectNamePlaceholder: "MonObjet",
         objectDescription: "Description de l'objet",
+        objectDescriptionPlaceholder: "Description de l'objet",
         objectSearchable: "Recherchable dans le mode exploration",
     },
     settings: {
@@ -223,7 +227,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         searchModeTitle: "Mode recherche",
         searchModeDescription: "Rechercher ou filtrer les entités et les zones dans la carte 🧐",
         noEntitiesFound: "Aucune entité trouvée dans la carte 🙅‍♂️",
+        entitiesFound: "Entités trouvées",
         noAreasFound: "Aucune zone trouvée dans la carte 🙅‍♀️",
+        areasFound: "Zones trouvées",
         noDescriptionFound: "No description found 🫥",
         details: {
             close: "Fermer",

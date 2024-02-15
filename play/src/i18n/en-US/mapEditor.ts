@@ -163,7 +163,9 @@ const mapEditor: BaseTranslation = {
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",
         nameLabel: "Name",
+        nameLabelPlaceholder: "MyArea",
         areaDescription: "Description",
+        areaDescriptionPlaceholder: "My area is a...",
         areaSerchable: "Searchable into the exploration mode",
         addDescriptionField: "Add description field",
     },
@@ -187,7 +189,9 @@ const mapEditor: BaseTranslation = {
         editInstructions: "Click an entity to modify its properties.",
         selectObject: "Click on an object to select it",
         objectName: "Object Name",
+        objectNamePlaceholder: "MyObject",
         objectDescription: "Object Description",
+        objectDescriptionPlaceholder: "My object is a...",
         objectSearchable: "Searchable into the exploration mode",
     },
     settings: {
@@ -252,7 +256,9 @@ const mapEditor: BaseTranslation = {
         searchModeTitle: "Search mode",
         searchModeDescription: "Search or filter entities and areas in the room 🧐",
         noEntitiesFound: "No entity found in the room 🙅‍♂️",
+        entitiesFound: "object{{s}} found",
         noAreasFound: "No area found in the room 🙅‍♀️",
+        areasFound: "area{{s}} found",
         noDescriptionFound: "No description found 🫥",
         details: {
             close: "Close",

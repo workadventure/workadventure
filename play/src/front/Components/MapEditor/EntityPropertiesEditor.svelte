@@ -296,13 +296,19 @@
     </div>
     <div class="entity-name-container">
         <label for="objectName">{$LL.mapEditor.entityEditor.objectName()}</label>
-        <input id="objectName" type="text" placeholder="Value" bind:value={entityName} on:change={onUpdateName} />
+        <input
+            id="objectName"
+            type="text"
+            placeholder={$LL.mapEditor.entityEditor.objectNamePlaceholder()}
+            bind:value={entityName}
+            on:change={onUpdateName}
+        />
     </div>
     <div class="entity-name-container">
         <label for="objectDescription">{$LL.mapEditor.entityEditor.objectDescription()}</label>
         <textarea
             id="objectDescription"
-            placeholder="Value"
+            placeholder={$LL.mapEditor.entityEditor.objectDescriptionPlaceholder()}
             bind:value={entityDescription}
             on:change={onUpdateDescription}
         />

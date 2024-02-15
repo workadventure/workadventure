@@ -424,18 +424,24 @@
     </div>
     <div class="area-name-container">
         <label for="objectName">{$LL.mapEditor.areaEditor.nameLabel()}</label>
-        <input id="objectName" type="text" placeholder="Value" bind:value={areaName} on:change={onUpdateName} />
+        <input
+            id="objectName"
+            type="text"
+            placeholder={$LL.mapEditor.areaEditor.nameLabelPlaceholder()}
+            bind:value={areaName}
+            on:change={onUpdateName}
+        />
     </div>
     <div class="area-name-container">
         {#if !showDescriptionField}
-            <a href="addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
+            <a href="#addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
                 >+ {$LL.mapEditor.areaEditor.addDescriptionField()}</a
             >
         {:else}
             <label for="objectDescription">{$LL.mapEditor.areaEditor.areaDescription()}</label>
             <textarea
                 id="objectDescription"
-                placeholder="Value"
+                placeholder={$LL.mapEditor.areaEditor.areaDescriptionPlaceholder()}
                 bind:value={areaDescription}
                 on:change={onUpdateAreaDescription}
             />

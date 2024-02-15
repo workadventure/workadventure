@@ -154,7 +154,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     areaEditor: {
         editInstructions: "Klikniśo na wobceŕk, aby jogo kakosći pśeměnili.",
         nameLabel: "Mě",
+        nameLabelPlaceholder: "Mě",
         areaDescription: "Pśedpokładny opis",
+        areaDescriptionPlaceholder: "Pśedpokładny opis",
         addDescriptionField: "Opis pśidaś",
     },
     entityEditor: {
@@ -171,7 +173,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         editInstructions: "Klikniśo na objekt, aby jogo kakosći pśeměnili.",
         selectObject: "Klikniśo na objekt, aby jen wuzwólili",
         objectName: "Mě",
+        objectNamePlaceholder: "Mě",
         objectDescription: "Pśedpokładny opis",
+        objectDescriptionPlaceholder: "Pśedpokładny opis",
     },
     settings: {
         loading: "Lodujo se...",

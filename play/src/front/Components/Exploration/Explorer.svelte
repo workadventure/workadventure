@@ -257,7 +257,8 @@
                 <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={EntityToolImg} alt="link icon" />
                 {#if $entitessListFiltered.size > 0}
                     <span class="tw-pointer-events-none"
-                        >{$entitessListFiltered.size} entitie{$entitessListFiltered.size > 1 ? "s" : ""} found</span
+                        >{$entitessListFiltered.size}
+                        {$LL.mapEditor.explorer.entitiesFound($entitessListFiltered.size > 1)}</span
                     >
                 {:else}
                     <p>{$LL.mapEditor.explorer.noEntitiesFound()}</p>
@@ -266,7 +267,7 @@
             </div>
 
             {#if entityListActive && $entitessListFiltered.size > 0}
-                <div class="items tw-p-4 tw-flex tw-flex-col">
+                <div class="entity-items tw-p-4 tw-flex tw-flex-col">
                     {#each [...$entitessListFiltered] as [key, entity] (key)}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
@@ -274,7 +275,7 @@
                             on:mouseenter={() => highlightEntity(entity)}
                             on:mouseleave={() => unhighlightEntity(entity)}
                             on:click={() => mapExplorationObjectSelectedStore.set(entity)}
-                            class="tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
+                            class="item tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
                         >
                             <img
                                 class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none"
@@ -297,7 +298,8 @@
                 <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={AreaToolImg} alt="link icon" />
                 {#if $areasListFiltered.size > 0}
                     <span class="tw-pointer-events-none"
-                        >{$areasListFiltered.size} area{$areasListFiltered.size > 1 ? "s" : ""} found</span
+                        >{$areasListFiltered.size}
+                        {$LL.mapEditor.explorer.areasFound($areasListFiltered.size > 1)}</span
                     >
                 {:else}
                     <p>{$LL.mapEditor.explorer.noAreasFound()}</p>
@@ -305,7 +307,7 @@
                 <ChevronDownIcon class="tw-pointer-events-none" size="32" />
             </div>
             {#if areaListActive && $areasListFiltered.size > 0}
-                <div class="items tw-p-4 tw-flex tw-flex-col">
+                <div class="area-items tw-p-4 tw-flex tw-flex-col">
                     {#if $areasListFiltered.size > 0}
                         {#each [...$areasListFiltered] as [key, area] (key)}
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -314,7 +316,7 @@
                                 on:mouseenter={() => highlightArea(area)}
                                 on:mouseleave={() => unhighlightArea(area)}
                                 on:click={() => mapExplorationObjectSelectedStore.set(area)}
-                                class="tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
+                                class="item tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
                             >
                                 <img
                                     class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none"
@@ -386,7 +388,8 @@
             background-color: #4156f6;
         }
     }
-    .items {
+    .entity-items,
+    .area-items {
         div:hover {
             background-color: #4156f6;
         }

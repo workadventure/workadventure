@@ -153,7 +153,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     areaEditor: {
         editInstructions: "Klikńće na płoninu, zo byšće jeje kajkosće změnili.",
         nameLabel: "mjeno",
+        nameLabelPlaceholder: "mjeno",
         areaDescription: "pśedstajenje",
+        areaDescriptionPlaceholder: "pśedstajenje",
         addDescriptionField: "Pśedstajenje přidać",
     },
     areaEditorInstructions: {
@@ -174,7 +176,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         editInstructions: "Klikńće na objekt, zo byšće jeho kajkosće změnili.",
         selectObject: "Klikńće na objekt, zo byšće jón wuzwolił.",
         objectName: "mjeno",
+        objectNamePlaceholder: "mjeno",
         objectDescription: "pśedstajenje",
+        objectDescriptionPlaceholder: "pśedstajenje",
     },
     settings: {
         loading: "Laden...",
