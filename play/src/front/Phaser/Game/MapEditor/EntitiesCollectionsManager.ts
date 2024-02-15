@@ -5,7 +5,7 @@ import {
     EntityPrefabType,
     EntityRawPrefab,
 } from "@workadventure/map-editor";
-import { Readable, Writable, derived, writable } from "svelte/store";
+import { derived, Readable, Writable, writable } from "svelte/store";
 import { EntityVariant } from "./Entities/EntityVariant";
 
 export class EntitiesCollectionsManager {
@@ -43,32 +43,6 @@ export class EntitiesCollectionsManager {
     public async getEntityPrefab(collectionName: string, entityPrefabId: string): Promise<EntityPrefab | undefined> {
         const prefabsMap = await this.entitiesPrefabsMapPromise;
         return prefabsMap.get(entityPrefabId);
-    }
-
-    public setFilter(filter: string, isTag = false) {
-        this.filter = filter;
-        this.applyFilters(isTag);
-    }
-
-    private applyFilters(isTag: boolean) {
-        const filters = this.filter
-            .toLowerCase()
-            .split(" ")
-            .filter((v) => v.trim() !== "");
-        let newCollection = this.currentCollection.collection;
-
-        if (isTag) {
-            newCollection = newCollection.filter((item) =>
-                filters.every((word) => item.tags.some((tag) => tag.toLowerCase() === word.toLowerCase()))
-            );
-        } else {
-            newCollection = newCollection.filter(
-                (item) =>
-                    filters.every((word) => item.name.toLowerCase().includes(word.toLowerCase())) ||
-                    filters.every((word) => item.tags.some((tag) => tag.toLowerCase() === word.toLowerCase()))
-            );
-        }
-        this.entitiesPrefabsStore.set(newCollection);
     }
 
     public loadCollections(collectionDescriptors: { url: string; type: EntityPrefabType }[]): void {
