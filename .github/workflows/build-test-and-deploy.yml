@@ -1020,38 +1020,70 @@ jobs:
 #        with:
 #          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} create secret tls certificate-tls --key="secrets/privkey.pem" --cert="secrets/fullchain.pem"
 
-      - name: 'Deploy'
-        uses: 'vimeda/helm@v1.7.0'
+      - uses: azure/setup-helm@v4.0.0
         with:
-          release: 'workadventure'
-          namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          chart: 'contrib/helm'
-          token: '${{ github.token }}'
-          values: |
-            domainName: ${{ env.DEPLOY_REF }}.test.workadventu.re
-            ejabberdJwtSecret: "${{ secrets.EJABBERD_JWT_SECRET }}"
-            mapstorage:
-              secretEnv:
-                AUTHENTICATION_PASSWORD: "password"
-            commonSecretEnv:
-              ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
-              ADMIN_SOCKETS_TOKEN: ${{ secrets.ADMIN_SOCKETS_TOKEN }}
-              JITSI_ISS: ${{ secrets.JITSI_ISS }}
-              JITSI_URL: ${{ secrets.JITSI_URL }}
-              SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}
-              TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
-              DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-              POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-              POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
-              ENABLE_REPORT_ISSUES_MENU: ${{ secrets.ENABLE_REPORT_ISSUES_MENU }}
-              REPORT_ISSUES_URL: ${{ secrets.REPORT_ISSUES_URL }}
-              LOGROCKET_ID: ${{ secrets.LOGROCKET_ID }}
-              KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
-              GOOGLE_DRIVE_PICKER_CLIENT_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_CLIENT_ID }}
-              GOOGLE_DRIVE_PICKER_APP_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_APP_ID }}
-          #value-files: "values.yaml"
+          #version: '<version>' # default is latest (stable)
+          token: ${{ secrets.GITHUB_TOKEN }} # only needed if version is 'latest'
+        id: install
+
+      - name: 'Dependencies install'
+        run: "helm dependencies update"
+        working-directory: contrib/helm
+
+      - name: 'Generate values file'
+        run: |
+          echo "
+          domainName: ${DEPLOY_REF}.test.workadventu.re
+          ejabberdJwtSecret: \"${EJABBERD_JWT_SECRET}\"
+          mapstorage:
+            secretEnv:
+              AUTHENTICATION_PASSWORD: \"password\"
+          commonSecretEnv:
+            ADMIN_API_TOKEN: ${ADMIN_API_TOKEN}
+            ADMIN_SOCKETS_TOKEN: ${ADMIN_SOCKETS_TOKEN}
+            JITSI_ISS: ${JITSI_ISS}
+            JITSI_URL: ${JITSI_URL}
+            SECRET_JITSI_KEY: ${SECRET_JITSI_KEY}
+            TURN_STATIC_AUTH_SECRET: ${TURN_STATIC_AUTH_SECRET}
+            DEPLOY_REF: ${DEPLOY_REF}
+            POSTHOG_API_KEY: ${POSTHOG_API_KEY}
+            POSTHOG_URL: ${POSTHOG_URL}
+            ENABLE_REPORT_ISSUES_MENU: ${ENABLE_REPORT_ISSUES_MENU}
+            REPORT_ISSUES_URL: ${REPORT_ISSUES_URL}
+            LOGROCKET_ID: ${LOGROCKET_ID}
+            KLAXOON_CLIENT_ID: ${KLAXOON_CLIENT_ID}
+            GOOGLE_DRIVE_PICKER_CLIENT_ID: ${GOOGLE_DRIVE_PICKER_CLIENT_ID}
+            GOOGLE_DRIVE_PICKER_APP_ID: ${GOOGLE_DRIVE_PICKER_APP_ID}
+            " > values-cd.yaml
+        working-directory: contrib/helm
         env:
-          KUBECONFIG_FILE: '${{ secrets.KUBE_CONFIG_FILE }}'
+          KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
+          ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
+          ADMIN_SOCKETS_TOKEN: ${{ secrets.ADMIN_SOCKETS_TOKEN }}
+          JITSI_ISS: ${{ secrets.JITSI_ISS }}
+          JITSI_URL: ${{ secrets.JITSI_URL }}
+          SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}
+          TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
+          DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
+          EJABBERD_JWT_SECRET: ${{ secrets.EJABBERD_JWT_SECRET }}
+          ENABLE_REPORT_ISSUES_MENU: ${{ secrets.ENABLE_REPORT_ISSUES_MENU }}
+          REPORT_ISSUES_URL: ${{ secrets.REPORT_ISSUES_URL }}
+          LOGROCKET_ID: ${{ secrets.LOGROCKET_ID }}
+          KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
+          GOOGLE_DRIVE_PICKER_CLIENT_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_CLIENT_ID }}
+          GOOGLE_DRIVE_PICKER_APP_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_APP_ID }}
+
+      - name: "Printing values file"
+        working-directory: contrib/helm
+        run: "cat values-cd.yaml"
+
+      - name: 'Deploy'
+        run: "helm upgrade --install -n ${NAMESPACE} test ."
+        working-directory: contrib/helm
+        env:
+          NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
 #      - name: Perform environment substitution in K8S files
 #        run: envsubst < cd/map-storage-traefik-ingress-route.tmpl.yaml > cd/map-storage-traefik-ingress-route.yaml
