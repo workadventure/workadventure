@@ -175,6 +175,10 @@ const mapEditor: BaseTranslation = {
         description: "Draw a zone on the map to create a new one.",
     },
     entityEditor: {
+        header: {
+            title: "Add object to your map",
+            description: "Search, upload or select existing object and add it in the map.",
+        },
         title: "Put your object",
         editing: "Editing: {name}",
         itemPicker: {
@@ -195,6 +199,20 @@ const mapEditor: BaseTranslation = {
         objectDescriptionPlaceholder: "My object is a...",
         objectSearchable: "Searchable in the exploration mode",
         addDescriptionField: "Add description field",
+        uploadEntity: {
+            title: "Add your image",
+            description: "Drag and drop or choose your image to add it in the map",
+            dragDrop: "Drag and Drop or",
+            chooseFile: "Choose file",
+        },
+        images: "Image{{s}}",
+        buttons: {
+            editEntity: "Edit",
+            back: "Back",
+            cancel: "Cancel",
+            delete: "Delete",
+            save: "Save",
+        },
     },
     settings: {
         loading: "Loading",
