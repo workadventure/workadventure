@@ -191,6 +191,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         objectDescription: "Description de l'objet",
         objectDescriptionPlaceholder: "Description de l'objet",
         objectSearchable: "Recherchable dans le mode exploration",
+        addDescriptionField: "Ajouter une description",
     },
     settings: {
         loading: "Chargement en cours",

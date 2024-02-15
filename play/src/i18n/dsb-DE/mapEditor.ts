@@ -176,6 +176,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         objectNamePlaceholder: "Mě",
         objectDescription: "Pśedpokładny opis",
         objectDescriptionPlaceholder: "Pśedpokładny opis",
+        addDescriptionField: "Opis pśidaś",
     },
     settings: {
         loading: "Lodujo se...",

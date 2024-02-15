@@ -26,6 +26,7 @@
     let entityDescription = "";
     let entitySearchable = false;
     let hasJitsiRoomProperty: boolean;
+    let showDescriptionField = false;
 
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
         if (currentEntity) {
@@ -208,6 +209,10 @@
     onDestroy(() => {
         selectedEntityUnsubscriber();
     });
+
+    function toggleDescriptionField() {
+        showDescriptionField = !showDescriptionField;
+    }
 </script>
 
 {#if $mapEditorSelectedEntityStore === undefined}
@@ -305,13 +310,19 @@
         />
     </div>
     <div class="entity-name-container">
-        <label for="objectDescription">{$LL.mapEditor.entityEditor.objectDescription()}</label>
-        <textarea
-            id="objectDescription"
-            placeholder={$LL.mapEditor.entityEditor.objectDescriptionPlaceholder()}
-            bind:value={entityDescription}
-            on:change={onUpdateDescription}
-        />
+        {#if !showDescriptionField}
+            <a href="#addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
+                >+ {$LL.mapEditor.entityEditor.addDescriptionField()}</a
+            >
+        {:else}
+            <label for="objectDescription">{$LL.mapEditor.entityEditor.objectDescription()}</label>
+            <textarea
+                id="objectDescription"
+                placeholder={$LL.mapEditor.entityEditor.objectDescriptionPlaceholder()}
+                bind:value={entityDescription}
+                on:change={onUpdateDescription}
+            />
+        {/if}
     </div>
     <div class="value-switch">
         <label for="searchable">{$LL.mapEditor.entityEditor.objectSearchable()}</label>

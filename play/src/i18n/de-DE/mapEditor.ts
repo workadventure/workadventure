@@ -179,6 +179,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         objectNamePlaceholder: "Geben Sie hier den Namen des Objekts ein.",
         objectDescription: "Objektbeschreibung",
         objectDescriptionPlaceholder: "Geben Sie hier die Beschreibung des Objekts ein.",
+        addDescriptionField: "Beschreibung hinzufügen",
     },
     settings: {
         loading: "Laden...",

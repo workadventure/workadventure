@@ -193,6 +193,7 @@ const mapEditor: BaseTranslation = {
         objectDescription: "Object Description",
         objectDescriptionPlaceholder: "My object is a...",
         objectSearchable: "Searchable into the exploration mode",
+        addDescriptionField: "Add description field",
     },
     settings: {
         loading: "Loading",

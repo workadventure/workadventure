@@ -179,6 +179,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         objectNamePlaceholder: "mjeno",
         objectDescription: "pśedstajenje",
         objectDescriptionPlaceholder: "pśedstajenje",
+        addDescriptionField: "Pśedstajenje přidać",
     },
     settings: {
         loading: "Laden...",
