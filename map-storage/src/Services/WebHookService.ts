@@ -47,7 +47,11 @@ export class WebHookService {
             })
             .catch((e: unknown) => {
                 console.error("Error while calling webhook:", e);
-                Sentry.captureException(`Error while calling webhook: ${JSON.stringify(e)}`);
+                Sentry.captureException(
+                    `Error while calling webhook: ${JSON.stringify(e)}. Domain: ${domain}, mapPath: ${
+                        mapPath ?? "no map path"
+                    }, action: ${action}`
+                );
             });
     }
 }
