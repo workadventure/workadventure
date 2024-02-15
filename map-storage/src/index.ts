@@ -40,6 +40,7 @@ if (SENTRY_DSN != undefined) {
 }
 import { MapListService } from "./Services/MapListService";
 import { WebHookService } from "./Services/WebHookService";
+import { PingController } from "./Upload/PingController";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -97,6 +98,7 @@ app.get("/ping", (req, res) => {
 const mapListService = new MapListService(fileSystem, new WebHookService(WEB_HOOK_URL));
 new UploadController(app, fileSystem, mapListService);
 new ValidatorController(app);
+new PingController(app);
 
 app.use(proxyFiles(fileSystem));
 

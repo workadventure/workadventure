@@ -997,13 +997,13 @@ jobs:
 #      - name: Download certificate
 #        run: mkdir secrets && scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i secret.key ubuntu@cert.workadventu.re:./config/live/workadventu.re/* secrets/
 
-      - name: Create namespace
-        uses: steebchen/kubectl@v1.0.0
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
-        with:
-          args: create namespace workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-        continue-on-error: true
+#      - name: Create namespace
+#        uses: steebchen/kubectl@v1.0.0
+#        env:
+#          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+#        with:
+#          args: create namespace workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+#        continue-on-error: true
 
 #      - name: Delete old certificates in namespace
 #        uses: steebchen/kubectl@v1.0.0
@@ -1027,7 +1027,9 @@ jobs:
         id: install
 
       - name: "Install kubeconfig file"
-        run: mkdir ~/.kube && echo "${KUBE_CONFIG_FILE}" > ~/.kube/config
+        run: mkdir ~/.kube && echo "${KUBE_CONFIG_FILE}" > ~/.kube/config && chmod 0600 ~/.kube/config
+        env:
+          KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
 
       - name: 'Dependencies install'
         run: "helm dependencies update"
@@ -1036,27 +1038,30 @@ jobs:
       - name: 'Generate values file'
         run: |
           echo "
+          appVersion: \"${DEPLOY_REF}\"
           domainName: ${DEPLOY_REF}.test.workadventu.re
           ejabberdJwtSecret: \"${EJABBERD_JWT_SECRET}\"
           mapstorage:
+            env:
+              AUTHENTICATION_USER: \"john.doe\"
             secretEnv:
               AUTHENTICATION_PASSWORD: \"password\"
           commonSecretEnv:
-            ADMIN_API_TOKEN: ${ADMIN_API_TOKEN}
-            ADMIN_SOCKETS_TOKEN: ${ADMIN_SOCKETS_TOKEN}
-            JITSI_ISS: ${JITSI_ISS}
-            JITSI_URL: ${JITSI_URL}
-            SECRET_JITSI_KEY: ${SECRET_JITSI_KEY}
-            TURN_STATIC_AUTH_SECRET: ${TURN_STATIC_AUTH_SECRET}
-            DEPLOY_REF: ${DEPLOY_REF}
-            POSTHOG_API_KEY: ${POSTHOG_API_KEY}
-            POSTHOG_URL: ${POSTHOG_URL}
-            ENABLE_REPORT_ISSUES_MENU: ${ENABLE_REPORT_ISSUES_MENU}
-            REPORT_ISSUES_URL: ${REPORT_ISSUES_URL}
-            LOGROCKET_ID: ${LOGROCKET_ID}
-            KLAXOON_CLIENT_ID: ${KLAXOON_CLIENT_ID}
-            GOOGLE_DRIVE_PICKER_CLIENT_ID: ${GOOGLE_DRIVE_PICKER_CLIENT_ID}
-            GOOGLE_DRIVE_PICKER_APP_ID: ${GOOGLE_DRIVE_PICKER_APP_ID}
+            ADMIN_API_TOKEN: \"${ADMIN_API_TOKEN}\"
+            ADMIN_SOCKETS_TOKEN: \"${ADMIN_SOCKETS_TOKEN}\"
+            JITSI_ISS: \"${JITSI_ISS}\"
+            JITSI_URL: \"${JITSI_URL}\"
+            SECRET_JITSI_KEY: \"${SECRET_JITSI_KEY}\"
+            TURN_STATIC_AUTH_SECRET: \"${TURN_STATIC_AUTH_SECRET}\"
+            DEPLOY_REF: \"${DEPLOY_REF}\"
+            POSTHOG_API_KEY: \"${POSTHOG_API_KEY}\"
+            POSTHOG_URL: \"${POSTHOG_URL}\"
+            ENABLE_REPORT_ISSUES_MENU: \"${ENABLE_REPORT_ISSUES_MENU}\"
+            REPORT_ISSUES_URL: \"${REPORT_ISSUES_URL}\"
+            LOGROCKET_ID: \"${LOGROCKET_ID}\"
+            KLAXOON_CLIENT_ID: \"${KLAXOON_CLIENT_ID}\"
+            GOOGLE_DRIVE_PICKER_CLIENT_ID: \"${GOOGLE_DRIVE_PICKER_CLIENT_ID}\"
+            GOOGLE_DRIVE_PICKER_APP_ID: \"${GOOGLE_DRIVE_PICKER_APP_ID}\"
             " > values-cd.yaml
         working-directory: contrib/helm
         env:
@@ -1083,7 +1088,7 @@ jobs:
         run: "cat values-cd.yaml"
 
       - name: 'Deploy'
-        run: "helm upgrade --install -n ${NAMESPACE} --wait test ."
+        run: "helm upgrade --install --create-namespace -n ${NAMESPACE} --wait -f values.yaml -f values-cd.yaml test ."
         working-directory: contrib/helm
         env:
           NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}

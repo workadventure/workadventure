@@ -72,10 +72,10 @@ spec:
           #   httpGet:
           #     path: /
           #     port: http
-          # readinessProbe:
-          #   httpGet:
-          #     path: /
-          #     port: http
+          readinessProbe:
+            httpGet:
+              path: /pong
+              port: http
           volumeMounts:
             - name: mapstorage
               mountPath: /maps

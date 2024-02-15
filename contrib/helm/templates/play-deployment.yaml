@@ -68,7 +68,7 @@ spec:
               port: http
           readinessProbe:
             httpGet:
-              path: /
+              path: /pong
               port: http
           resources:
             {{- toYaml .Values.play.resources | nindent 12 }}
