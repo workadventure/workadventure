@@ -1026,6 +1026,9 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }} # only needed if version is 'latest'
         id: install
 
+      - name: "Install kubeconfig file"
+        run: mkdir ~/.kube && echo "${KUBE_CONFIG_FILE}" > ~/.kube/config
+
       - name: 'Dependencies install'
         run: "helm dependencies update"
         working-directory: contrib/helm
@@ -1080,7 +1083,7 @@ jobs:
         run: "cat values-cd.yaml"
 
       - name: 'Deploy'
-        run: "helm upgrade --install -n ${NAMESPACE} test ."
+        run: "helm upgrade --install -n ${NAMESPACE} --wait test ."
         working-directory: contrib/helm
         env:
           NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
