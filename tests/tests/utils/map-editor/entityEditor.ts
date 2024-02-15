@@ -1,14 +1,22 @@
 import {expect, Page} from "@playwright/test";
+import * as path from "path";
 
 class EntityEditor {
-    async selectEntity(page: Page, nb: number, search?: string){
-        if(search != undefined){
-            await page.getByPlaceholder('Search').click();
-            await page.getByPlaceholder('Search').fill(search);
-        }
-        await page.locator('.map-editor .item-picker .item-picker-container .pickable-item').nth(nb).click();
+  async selectEntity(page: Page, nb: number, search?: string) {
+    if (search != undefined) {
+      await page.getByPlaceholder("Search").click();
+      await page.getByPlaceholder("Search").fill(search);
     }
 
+    await page.getByTestId("entity-item").nth(nb).click();
+  }
+
+  async searchEntity(page:Page,search:string){
+    await page.getByPlaceholder("Search").click();
+    await page.getByPlaceholder("Search").fill(search);
+
+    return await page.getByTestId("entity-item").nth(0);
+  }
     async moveAndClick(page: Page, x: number, y: number) {
         await page.mouse.move(x, y);
         await page.mouse.down();
