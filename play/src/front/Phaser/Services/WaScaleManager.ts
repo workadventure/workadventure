@@ -152,6 +152,10 @@ export class WaScaleManager {
     public get maxZoomOut(): number {
         return this.hdpiManager.maxZoomOut;
     }
+
+    public get isMaximumZoomReached(): boolean {
+        return this.hdpiManager.isMaximumZoomReached;
+    }
 }
 
 export const waScaleManager = new WaScaleManager(640 * 480, 196 * 196);

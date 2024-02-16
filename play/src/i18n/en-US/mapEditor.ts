@@ -277,6 +277,15 @@ const mapEditor: BaseTranslation = {
             // "The explorer mode allows you to visualize the map, find objects and areas. There are 2 systems in the explorer mode, the free exploration system or the object and area search system. The video above shows you how to use the explorer mode 💪"
         },
     },
+    listRoom: {
+        isFetching: "Room list is fetching... ⤵️",
+        noRoomFound: "No room found 🙅‍♂️",
+        items: "{countEntity} entities / {countArea} areas",
+        close: "Close",
+        movingToRoom: "Moving to the room: {roomNameSelected}... See you soon... 🫡",
+        searchLabel: "Search a room",
+        searchPlaceholder: "Write...",
+    },
 };
 
 export default mapEditor;
