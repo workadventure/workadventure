@@ -246,6 +246,15 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             continue: "Continuer",
         },
     },
+    listRoom: {
+        isFetching: "Récupération des salles en cours...⤵️",
+        noRoomFound: "Aucune salle trouvée 🙅‍♂️",
+        items: "{countEntity} objets / {countArea} zones",
+        close: "Fermer",
+        movingToRoom: "En partance pour la salle : {roomNameSelected}... À très vite... 🫡",
+        searchLabel: "Chercher une salle",
+        searchPlaceholder: "Par nom ou description...",
+    },
 };
 
 export default mapEditor;
