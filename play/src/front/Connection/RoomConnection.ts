@@ -5,11 +5,10 @@ import {
     AddSpaceFilterMessage,
     AddSpaceUserMessage,
     AnswerMessage,
-    apiVersionHash,
-    AskMutedMessage,
-    AskMutedVideoMessage,
     AskMuteMicrophoneMessage,
     AskMuteVideoMessage,
+    AskMutedMessage,
+    AskMutedVideoMessage,
     AvailabilityStatus,
     CharacterTextureMessage,
     ClientToServerMessage as ClientToServerMessageTsProto,
@@ -25,14 +24,15 @@ import {
     JoinBBBMeetingAnswer,
     LeaveMucRoomMessage,
     MegaphoneSettings,
+    ModifyCustomEntityMessage,
     MoveToPositionMessage as MoveToPositionMessageProto,
     MucRoomDefinitionMessage,
-    MutedMessage,
-    MutedVideoMessage,
     MuteMicrophoneEverybodyMessage,
     MuteMicrophoneMessage,
     MuteVideoEverybodyMessage,
     MuteVideoMessage,
+    MutedMessage,
+    MutedVideoMessage,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     PositionMessage_Direction,
@@ -1430,6 +1430,23 @@ export class RoomConnection implements RoomConnection {
                 },
             },
         });
+    }
+
+    public emitMapEditorModifyCustomEntity(commandId:string, modifyCustomEntityMessage: ModifyCustomEntityMessage) : void {
+        this.send({
+            message:{
+                $case: "editMapCommandMessage",
+                editMapCommandMessage : {
+                    id: commandId,
+                    editMapMessage : {
+                        message : {
+                            $case: "modifyCustomEntityMessage",
+                            modifyCustomEntityMessage
+                        }
+                    }
+                }
+            }
+        })
     }
 
     public getAllTags(): string[] {
