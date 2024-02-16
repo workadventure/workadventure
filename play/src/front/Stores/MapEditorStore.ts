@@ -1,20 +1,25 @@
 import type { EntityPrefab, EntityDataProperties } from "@workadventure/map-editor";
-import { writable, get } from "svelte/store";
+import { writable } from "svelte/store";
 import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
 import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
 import { Entity } from "../Phaser/ECS/Entity";
-import { mapEditorActivated } from "./MenuStore";
 
 type ObjectValues<T> = T[keyof T];
 
+export const mapEditorVisibilityStore = writable<boolean>(true);
+
 function createMapEditorModeStore() {
     const { set, subscribe } = writable(false);
+
+    subscribe((value) => {
+        mapEditorVisibilityStore.set(value === true);
+    });
 
     return {
         subscribe,
         set,
         switchMode: (value: boolean) => {
-            set(get(mapEditorActivated) && value);
+            set(value);
         },
     };
 }
@@ -72,3 +77,8 @@ export enum WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM {
 export const mapEditorWamSettingsEditorToolCurrentMenuItemStore = writable<
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM | undefined
 >(undefined);
+
+export const mapExplorationModeStore = writable<boolean>(false);
+export const mapExplorationObjectSelectedStore = writable<Entity | AreaPreview | undefined>(undefined);
+export const mapExplorationEntitiesStore = writable<Map<string, Entity>>(new Map());
+export const mapExplorationAreasStore = writable<Map<string, AreaPreview> | undefined>(new Map());

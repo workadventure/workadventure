@@ -10,6 +10,8 @@ const mapEditor: BaseTranslation = {
         tileEditor: "Tile editor tool",
         configureMyRoom: "Configure my room",
         trashEditor: "Trash",
+        exploreTheRoom: "Explore the room",
+        closeMapEditor: "Close map editor",
     },
     properties: {
         silentProperty: {
@@ -161,7 +163,9 @@ const mapEditor: BaseTranslation = {
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",
         nameLabel: "Name",
+        nameLabelPlaceholder: "MyArea",
         areaDescription: "Description",
+        areaDescriptionPlaceholder: "My area is a...",
         areaSerchable: "Searchable into the exploration mode",
         addDescriptionField: "Add description field",
     },
@@ -170,6 +174,8 @@ const mapEditor: BaseTranslation = {
         description: "Draw a zone on the map to create a new one.",
     },
     entityEditor: {
+        title: "Put your object",
+        editing: "Editing: {name}",
         itemPicker: {
             searchPlaceholder: "Search",
             backToSelectObject: "Back to select object",
@@ -183,8 +189,11 @@ const mapEditor: BaseTranslation = {
         editInstructions: "Click an entity to modify its properties.",
         selectObject: "Click on an object to select it",
         objectName: "Object Name",
+        objectNamePlaceholder: "MyObject",
         objectDescription: "Object Description",
+        objectDescriptionPlaceholder: "My object is a...",
         objectSearchable: "Searchable into the exploration mode",
+        addDescriptionField: "Add description field",
     },
     settings: {
         loading: "Loading",
@@ -237,6 +246,35 @@ const mapEditor: BaseTranslation = {
             },
             confirmSave:
                 "Confirm that you want to save the changes to the map. This will create a new version of the map, disconnect all players and reload the map for all players.",
+        },
+    },
+    explorer: {
+        title: "Explore the room",
+        description:
+            "Allow to explore the room. You be able to move around the room and interact with objects. 2 mode are available: 'Exploration' and 'Search'. The 'Search mode' mode will propose you to search or filter entities and areas in the room. The 'Exploration mode' mode will let you move freely in the room.",
+        explorationModeTitle: "Exploration mode",
+        explorationModeDescription: "Move freely in the room and explore the different areas and entities 🗺️",
+        searchModeTitle: "Search mode",
+        searchModeDescription: "Search or filter entities and areas in the room 🧐",
+        noEntitiesFound: "No entity found in the room 🙅‍♂️",
+        entitiesFound: "object{{s}} found",
+        noAreasFound: "No area found in the room 🙅‍♀️",
+        areasFound: "area{{s}} found",
+        noDescriptionFound: "No description found 🫥",
+        details: {
+            close: "Close",
+            moveToEntity: "Move to entity {name}",
+            moveToArea: "Move to area {name}",
+        },
+        popup: {
+            title: "Do you intend to keep using Explorer mode? 🤔",
+            content:
+                "The explorer mode allows you to visualize the map, find objects and areas. There are 2 systems in the explorer mode, the free exploration system or the object and area search system. The video above shows you how to use the explorer mode 💪",
+            notAskAgain: "Do not ask again",
+            close: "Close",
+            continue: "Continue",
+            // Translate previous sentence to english
+            // "The explorer mode allows you to visualize the map, find objects and areas. There are 2 systems in the explorer mode, the free exploration system or the object and area search system. The video above shows you how to use the explorer mode 💪"
         },
     },
 };

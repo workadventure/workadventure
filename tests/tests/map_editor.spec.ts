@@ -5,6 +5,7 @@ import MapEditor from "./utils/mapeditor";
 import Megaphone from "./utils/map-editor/megaphone";
 import AreaEditor from "./utils/map-editor/areaEditor";
 import EntityEditor from "./utils/map-editor/entityEditor";
+import Exploration from "./utils/map-editor/exploration";
 import Map from "./utils/map";
 import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import {resetWamMaps} from "./utils/map-editor/uploader";
@@ -400,4 +401,68 @@ test.describe('Map editor', () => {
   // Create test for Google picker spreadsheet
   // Create test fir Google picker presentation
   // Create test for Google picker drive
+
+  test('Successfully set searchable processus for entity and zone', async ({ page, browser, request, browserName }) => {
+    /*if (browser.browserType() === webkit) {
+      // Webkit is somehow failing on this, maybe it is too slow
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }*/
+
+    await resetWamMaps(request);
+    await page.goto(Map.url("empty"));
+    await login(page, "test", 3);
+    // Because webkit in playwright does not support Camera/Microphone Permission by settings
+    if(browserName === "webkit"){
+      await hideNoCamera(page);
+    }
+
+    // Open the map editor
+    await Menu.openMapEditor(page);
+
+    // Area
+    await MapEditor.openAreaEditor(page);
+    await AreaEditor.drawArea(page, {x: 1*32*1.5, y: 5}, {x: 9*32*1.5, y: 4*32*1.5});
+    await AreaEditor.setAreaName(page, 'My Focusable Zone');
+    await AreaEditor.setAreaDescription(page, 'This is a focus zone to test the search feature in the exploration mode. It should be searchable.');
+    await AreaEditor.setAreaSearcheable(page, true);
+    await AreaEditor.addProperty(page, 'Focusable');
+
+    // Entity
+    // Webkit is somehow failing on this, maybe it is too slow
+    if (browser.browserType() !== webkit) {
+      //eslint-disable-next-line playwright/no-skipped-test
+      await MapEditor.openEntityEditor(page);
+      await EntityEditor.selectEntity(page, 0, 'small table');
+      await EntityEditor.moveAndClick(page, 14*32, 13*32);
+      await EntityEditor.quitEntitySelector(page);
+      await EntityEditor.moveAndClick(page, 14*32, 13*32);
+      await EntityEditor.setEntityName(page, 'My Jitsi Entity');
+      await EntityEditor.setEntityDescription(page, 'This is a Jitsi entity to test the search feature in the exploration mode. It should be searchable.');
+      await EntityEditor.setEntitySearcheable(page, true);
+      await EntityEditor.addProperty(page, 'Jitsi Room');
+    }
+
+    // Open the map exploration mode
+    await MapEditor.openExploration(page);
+    await Exploration.openSreachMode(page);
+
+    // Excpected 1 entity and 1 zone in the search result
+    // With webkit, something wrong to put an object and clik on it, so in this case, we don't have an object
+    if (browser.browserType() !== webkit) {
+      // Test if the entity is searchable
+      await expect(page.locator('.map-editor .sidebar .entities')).toContainText('1 objects found');
+      await page.locator('.map-editor .sidebar .entities').click();
+      expect(await page.locator('.map-editor .sidebar .entity-items .item').count()).toBe(1);
+    }else{
+      // For webkit, we don't have an object
+      await expect(page.locator('.map-editor .sidebar .entities')).toContainText('No entity found in the room 🙅‍♂️');
+    }
+
+    // Test if the area is searchable
+    await expect(page.locator('.map-editor .sidebar .areas')).toContainText('1 areas found');
+    await page.locator('.map-editor .sidebar .areas').click();
+    expect(await page.locator('.map-editor .sidebar .area-items .item').count()).toBe(1);
+  });
 });

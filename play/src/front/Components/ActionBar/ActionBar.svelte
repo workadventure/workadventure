@@ -31,7 +31,7 @@
     import followImg from "../images/follow.png";
     import lockOpenImg from "../images/lock-opened.png";
     import lockCloseImg from "../images/lock-closed.png";
-    import mapBuilder from "../images/maps-builder.png";
+    import mapBuilder from "../images/maps-builder.svg";
     import screenshareOn from "../images/screenshare-on.png";
     import screenshareOff from "../images/screenshare-off.png";
     import emojiPickOn from "../images/emoji-on.png";
@@ -63,7 +63,6 @@
         additionnalButtonsMenu,
         addClassicButtonActionBarEvent,
         addActionButtonActionBarEvent,
-        mapEditorActivated,
     } from "../../Stores/MenuStore";
     import {
         emoteDataStore,
@@ -190,6 +189,7 @@
 
     function toggleMapEditorMode() {
         if (isMobile) return;
+        if ($mapEditorModeStore) gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
         analyticsClient.toggleMapEditor(!$mapEditorModeStore);
         mapEditorModeStore.switchMode(!$mapEditorModeStore);
     }
@@ -819,34 +819,28 @@
                         <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
                     </button>
                 </div>
-                {#if $mapEditorActivated}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        on:dragstart|preventDefault={noDrag}
-                        on:click={toggleMapEditorMode}
-                        class="bottom-action-button"
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div on:dragstart|preventDefault={noDrag} on:click={toggleMapEditorMode} class="bottom-action-button">
+                    {#if isMobile}
+                        <Tooltip text={$LL.actionbar.mapEditorMobileLocked()} />
+                    {:else}
+                        <Tooltip text={$LL.actionbar.mapEditor()} />
+                    {/if}
+                    <button
+                        id="mapEditorIcon"
+                        class:border-top-light={$mapEditorModeStore && !isMobile}
+                        name="toggle-map-editor"
+                        disabled={isMobile}
                     >
-                        {#if isMobile}
-                            <Tooltip text={$LL.actionbar.mapEditorMobileLocked()} />
-                        {:else}
-                            <Tooltip text={$LL.actionbar.mapEditor()} />
-                        {/if}
-                        <button
-                            id="mapEditorIcon"
-                            class:border-top-light={$mapEditorModeStore && !isMobile}
-                            name="toggle-map-editor"
-                            disabled={isMobile}
-                        >
-                            <img
-                                draggable="false"
-                                src={mapBuilder}
-                                class:disable-opacity={isMobile}
-                                style="padding: 2px"
-                                alt="toggle-map-editor"
-                            />
-                        </button>
-                    </div>
-                {/if}
+                        <img
+                            draggable="false"
+                            src={mapBuilder}
+                            class:disable-opacity={isMobile}
+                            style="padding: 2px"
+                            alt="toggle-map-editor"
+                        />
+                    </button>
+                </div>
                 {#if $userHasAccessToBackOfficeStore}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div

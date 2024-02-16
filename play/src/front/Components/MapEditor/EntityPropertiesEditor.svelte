@@ -15,28 +15,18 @@
         mapEditorSelectedEntityPrefabStore,
         mapEditorSelectedEntityStore,
     } from "../../Stores/MapEditorStore";
-    import visioSvg from "../images/visio-white.svg";
-    import audioSvg from "../images/audio-white.svg";
-    import webSvg from "../images/web-white.svg";
-    import youtubeSvg from "../images/applications/icon_youtube.svg";
-    import klaxoonSvg from "../images/applications/icon_klaxoon.svg";
-    import googleDriveSvg from "../images/applications/icon_google_drive.svg";
-    import googleDocsSvg from "../images/applications/icon_google_docs.svg";
-    import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
-    import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
-    import eraserSvg from "../images/applications/icon_eraser.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { connectionManager } from "../../Connection/ConnectionManager";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
-    import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
+    import ListAddPropertyButton from "./PropertyEditor/ListAddPropertyButton.svelte";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
     let entityDescription = "";
     let entitySearchable = false;
     let hasJitsiRoomProperty: boolean;
+    let showDescriptionField = false;
 
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
         if (currentEntity) {
@@ -219,13 +209,17 @@
     onDestroy(() => {
         selectedEntityUnsubscriber();
     });
+
+    function toggleDescriptionField() {
+        showDescriptionField = !showDescriptionField;
+    }
 </script>
 
 {#if $mapEditorSelectedEntityStore === undefined}
     {$LL.mapEditor.entityEditor.editInstructions()}
 {:else}
     <div class="header-container">
-        <h2>Editing: {$mapEditorSelectedEntityStore.getPrefab().name}</h2>
+        <h3>{$LL.mapEditor.entityEditor.editing({ name: $mapEditorSelectedEntityStore.getPrefab().name })}</h3>
     </div>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <p on:click|preventDefault={backToSelectObject} class="tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0">
@@ -234,116 +228,72 @@
     </p>
     <div class="properties-buttons tw-flex tw-flex-row">
         {#if !hasJitsiRoomProperty}
-            <AddPropertyButton
-                headerText={$LL.mapEditor.properties.jitsiProperties.label()}
-                descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
-                img={visioSvg}
-                style="z-index: 8;"
+            <ListAddPropertyButton
+                property="jitsiRoomProperty"
                 on:click={() => {
                     onAddProperty("jitsiRoomProperty");
                 }}
             />
         {/if}
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.audioProperties.label()}
-            descriptionText={$LL.mapEditor.properties.audioProperties.description()}
-            img={audioSvg}
-            style="z-index: 7;"
+        <ListAddPropertyButton
+            property="playAudio"
             on:click={() => {
                 onAddProperty("playAudio");
             }}
         />
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.linkProperties.label()}
-            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
-            img={webSvg}
-            style="z-index: 6;"
+        <ListAddPropertyButton
+            property="openWebsite"
             on:click={() => {
                 onAddProperty("openWebsite");
             }}
         />
     </div>
     <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.klaxoonProperties.label()}
-            descriptionText={connectionManager.currentRoom?.klaxoonToolActivated
-                ? $LL.mapEditor.properties.klaxoonProperties.description()
-                : $LL.mapEditor.properties.klaxoonProperties.disabled()}
-            img={klaxoonSvg}
-            style="z-index: 4;"
-            disabled={!connectionManager.currentRoom?.klaxoonToolActivated}
+        <ListAddPropertyButton
+            property="openWebsite"
+            subProperty="klaxoon"
             on:click={() => {
                 onAddProperty("openWebsite", "klaxoon");
             }}
         />
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.youtubeProperties.label()}
-            descriptionText={connectionManager.currentRoom?.youtubeToolActivated
-                ? $LL.mapEditor.properties.youtubeProperties.description()
-                : $LL.mapEditor.properties.youtubeProperties.disabled()}
-            img={youtubeSvg}
-            style="z-index: 5;"
-            disabled={!connectionManager.currentRoom?.youtubeToolActivated}
+        <ListAddPropertyButton
+            property="openWebsite"
+            subProperty="youtube"
             on:click={() => {
                 onAddProperty("openWebsite", "youtube");
             }}
         />
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.googleDriveProperties.label()}
-            descriptionText={connectionManager.currentRoom?.googleDriveToolActivated
-                ? $LL.mapEditor.properties.googleDriveProperties.description()
-                : $LL.mapEditor.properties.googleDriveProperties.disabled()}
-            img={googleDriveSvg}
-            style="z-index: 3;"
-            disabled={!connectionManager.currentRoom?.googleDriveToolActivated}
+        <ListAddPropertyButton
+            property="openWebsite"
+            subProperty="googleDrive"
             on:click={() => {
                 onAddProperty("openWebsite", "googleDrive");
             }}
         />
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.googleDocsProperties.label()}
-            descriptionText={connectionManager.currentRoom?.googleDocsToolActivated
-                ? $LL.mapEditor.properties.googleDocsProperties.description()
-                : $LL.mapEditor.properties.googleDocsProperties.disabled()}
-            img={googleDocsSvg}
-            style="z-index: 3;"
-            disabled={!connectionManager.currentRoom?.googleDocsToolActivated}
+        <ListAddPropertyButton
+            property="openWebsite"
+            subProperty="googleDocs"
             on:click={() => {
                 onAddProperty("openWebsite", "googleDocs");
             }}
         />
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.googleSheetsProperties.label()}
-            descriptionText={connectionManager.currentRoom?.googleSheetsToolActivated
-                ? $LL.mapEditor.properties.googleSheetsProperties.description()
-                : $LL.mapEditor.properties.googleSheetsProperties.disabled()}
-            img={googleSheetsSvg}
-            style="z-index: 2;"
-            disabled={!connectionManager.currentRoom?.googleSheetsToolActivated}
+        <ListAddPropertyButton
+            property="openWebsite"
+            subProperty="googleSheets"
             on:click={() => {
                 onAddProperty("openWebsite", "googleSheets");
             }}
         />
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.googleSlidesProperties.label()}
-            descriptionText={connectionManager.currentRoom?.googleSlidesToolActivated
-                ? $LL.mapEditor.properties.googleSlidesProperties.description()
-                : $LL.mapEditor.properties.googleSlidesProperties.disabled()}
-            img={googleSlidesSvg}
-            style="z-index: 1;"
-            disabled={!connectionManager.currentRoom?.googleSlidesToolActivated}
+        <ListAddPropertyButton
+            property="openWebsite"
+            subProperty="googleSlides"
             on:click={() => {
                 onAddProperty("openWebsite", "googleSlides");
             }}
         />
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.eraserProperties.label()}
-            descriptionText={connectionManager.currentRoom?.eraserToolActivated
-                ? $LL.mapEditor.properties.eraserProperties.description()
-                : $LL.mapEditor.properties.eraserProperties.disabled()}
-            img={eraserSvg}
-            style="z-index: 1;"
-            disabled={!connectionManager.currentRoom?.eraserToolActivated}
+        <ListAddPropertyButton
+            property="openWebsite"
+            subProperty="eraser"
             on:click={() => {
                 onAddProperty("openWebsite", "eraser");
             }}
@@ -351,16 +301,28 @@
     </div>
     <div class="entity-name-container">
         <label for="objectName">{$LL.mapEditor.entityEditor.objectName()}</label>
-        <input id="objectName" type="text" placeholder="Value" bind:value={entityName} on:change={onUpdateName} />
+        <input
+            id="objectName"
+            type="text"
+            placeholder={$LL.mapEditor.entityEditor.objectNamePlaceholder()}
+            bind:value={entityName}
+            on:change={onUpdateName}
+        />
     </div>
     <div class="entity-name-container">
-        <label for="objectDescription">{$LL.mapEditor.entityEditor.objectDescription()}</label>
-        <textarea
-            id="objectDescription"
-            placeholder="Value"
-            bind:value={entityDescription}
-            on:change={onUpdateDescription}
-        />
+        {#if !showDescriptionField}
+            <a href="#addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
+                >+ {$LL.mapEditor.entityEditor.addDescriptionField()}</a
+            >
+        {:else}
+            <label for="objectDescription">{$LL.mapEditor.entityEditor.objectDescription()}</label>
+            <textarea
+                id="objectDescription"
+                placeholder={$LL.mapEditor.entityEditor.objectDescriptionPlaceholder()}
+                bind:value={entityDescription}
+                on:change={onUpdateDescription}
+            />
+        {/if}
     </div>
     <div class="value-switch">
         <label for="searchable">{$LL.mapEditor.entityEditor.objectSearchable()}</label>

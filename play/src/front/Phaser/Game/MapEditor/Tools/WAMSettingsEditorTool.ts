@@ -3,6 +3,7 @@ import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { GameScene } from "../../GameScene";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { UpdateWAMSettingFrontCommand } from "../Commands/WAM/UpdateWAMSettingFrontCommand";
+import { mapEditorVisibilityStore } from "../../../../Stores/MapEditorStore";
 import { MapEditorTool } from "./MapEditorTool";
 
 export class WAMSettingsEditorTool extends MapEditorTool {
@@ -22,7 +23,7 @@ export class WAMSettingsEditorTool extends MapEditorTool {
         console.info("WAMSettingsEditorTool clear");
     }
     public activate(): void {
-        console.info("WAMSettingsEditorTool activate");
+        mapEditorVisibilityStore.set(false);
     }
     public destroy(): void {
         console.info("WAMSettingsEditorTool destroy");

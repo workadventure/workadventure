@@ -674,6 +674,22 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    openExplorationMode(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_map-exploration-open`);
+            })
+            .catch((e) => console.error(e));
+    }
+
+    closeExplorationMode(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture(`wa_map-exploration-close`);
+            })
+            .catch((e) => console.error(e));
+    }
+
     openedRoomList(): void {
         this.posthogPromise
             ?.then((posthog) => {

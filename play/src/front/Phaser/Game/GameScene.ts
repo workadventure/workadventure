@@ -116,13 +116,14 @@ import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInt
 import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
-import { modalVisibilityStore } from "../../Stores/ModalStore";
+import { modalPopupVisibilityStore, modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
     mapEditorWamSettingsEditorToolCurrentMenuItemStore,
     mapEditorModeStore,
     mapEditorSelectedToolStore,
+    mapExplorationModeStore,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer } from "../../Utils/Debuggers";
@@ -229,6 +230,7 @@ export class GameScene extends DirtyScene {
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
     private mapEditorModeStoreUnsubscriber!: Unsubscriber;
     private refreshPromptStoreStoreUnsubscriber!: Unsubscriber;
+    private mapExplorationStoreUnsubscriber!: Unsubscriber;
 
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
     private unsubscribers: Unsubscriber[] = [];
@@ -339,6 +341,7 @@ export class GameScene extends DirtyScene {
         this.load.audio("audio-webrtc-out", "/resources/objects/webrtc-out.mp3");
         this.load.audio("audio-report-message", "/resources/objects/report-message.mp3");
         this.load.audio("audio-megaphone", "/resources/objects/megaphone.mp3");
+        this.load.audio("audio-cloud", "/resources/objects/cloud.mp3");
         this.sound.pauseOnBlur = false;
 
         this.load.on(FILE_LOAD_ERROR, (file: { src: string }) => {
@@ -1377,7 +1380,8 @@ export class GameScene extends DirtyScene {
             this.followUsersColorStoreUnsubscriber != undefined ||
             this.peerStoreUnsubscriber != undefined ||
             this.mapEditorModeStoreUnsubscriber != undefined ||
-            this.refreshPromptStoreStoreUnsubscriber != undefined
+            this.refreshPromptStoreStoreUnsubscriber != undefined ||
+            this.mapExplorationStoreUnsubscriber != undefined
         ) {
             console.error(
                 "subscribeToStores => Check all subscriber undefined ",
@@ -1389,7 +1393,8 @@ export class GameScene extends DirtyScene {
                 this.followUsersColorStoreUnsubscriber,
                 this.peerStoreUnsubscriber,
                 this.mapEditorModeStoreUnsubscriber,
-                this.refreshPromptStoreStoreUnsubscriber
+                this.refreshPromptStoreStoreUnsubscriber,
+                this.mapExplorationStoreUnsubscriber
             );
 
             throw new Error("One store is already subscribed.");
@@ -1622,6 +1627,14 @@ export class GameScene extends DirtyScene {
                 this.userInputManager.disableControls();
             } else {
                 this.userInputManager.restoreControls();
+            }
+        });
+
+        this.mapExplorationStoreUnsubscriber = mapExplorationModeStore.subscribe((exploration) => {
+            if (exploration) {
+                this.cameraManager.setExplorationMode();
+            } else {
+                this.input.keyboard?.enableGlobalCapture();
             }
         });
     }
@@ -2531,6 +2544,7 @@ ${escapedMessage}
         this.userIsJitsiDominantSpeakerStoreUnsubscriber?.();
         this.jitsiParticipantsCountStoreUnsubscriber?.();
         this.availabilityStatusStoreUnsubscriber?.();
+        this.mapExplorationStoreUnsubscriber?.();
         for (const unsubscriber of this.unsubscribers) {
             unsubscriber();
         }
@@ -2713,9 +2727,14 @@ ${escapedMessage}
         }
     }
 
-    public moveTo(position: { x: number; y: number }) {
+    public moveTo(position: { x: number; y: number }, measuredInPixels = true, tryFindingNearestAvailable = false) {
         this.pathfindingManager
-            .findPath(this.gameMapFrontWrapper.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), position)
+            .findPath(
+                this.gameMapFrontWrapper.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y),
+                position,
+                measuredInPixels,
+                tryFindingNearestAvailable
+            )
             .then((path) => {
                 if (path && path.length > 0) {
                     this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
@@ -3338,12 +3357,34 @@ ${escapedMessage}
         });
     }
 
-    zoomByFactor(zoomFactor: number) {
+    zoomByFactor(zoomFactor: number, velocity?: number) {
         if (this.cameraManager.isCameraLocked()) {
             return;
         }
+        // If the zoom modifier is over the max zoom out, we propose to the user to switch to the explorer mode
+        // Rule: if the velocity is over 1, we could imagine that the user force to switch on the explorer mode
+        if (
+            velocity &&
+            velocity > 1 &&
+            zoomFactor < 1 &&
+            waScaleManager.zoomModifier <= waScaleManager.maxZoomOut &&
+            !get(mapEditorModeStore)
+        ) {
+            const askAgainPopup = localStorage.getItem("notAskAgainPopupExplorerMode");
+            if (askAgainPopup == undefined || localStorage.getItem("notAskAgainPopupExplorerMode") === "false") {
+                modalPopupVisibilityStore.set(true);
+            } else {
+                const matEditoreModeState = get(mapEditorModeStore);
+                analyticsClient.toggleMapEditor(!matEditoreModeState);
+                mapEditorModeStore.switchMode(!matEditoreModeState);
+            }
+
+            // Lock the camera to keep the same zoom after animation. The camera will be unlock when the Explorer tool is activated or after 3000ms.
+            this.cameraManager.lockCameraDuring(3000);
+            return;
+        }
+
         waScaleManager.handleZoomByFactor(zoomFactor);
-        // biggestAvailableAreaStore.recompute();
     }
 
     public createSuccessorGameScene(autostart: boolean, reconnecting: boolean) {

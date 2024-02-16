@@ -6,6 +6,7 @@ import debug from "debug";
 import type { RoomConnection } from "../../../Connection/RoomConnection";
 import type { GameScene } from "../GameScene";
 import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
+import { mapEditorActivated } from "../../../Stores/MenuStore";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
@@ -14,6 +15,8 @@ import { WAMSettingsEditorTool } from "./Tools/WAMSettingsEditorTool";
 import { FrontCommandInterface } from "./Commands/FrontCommandInterface";
 import { FrontCommand } from "./Commands/FrontCommand";
 import { TrashEditorTool } from "./Tools/TrashEditorTool";
+import { ExplorerTool } from "./Tools/ExplorerTool";
+import { CloseTool } from "./Tools/CloseTool";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
@@ -21,6 +24,8 @@ export enum EditorToolName {
     EntityEditor = "EntityEditor",
     WAMSettingsEditor = "WAMSettingsEditor",
     TrashEditor = "TrashEditor",
+    ExploreTheRoom = "ExploreTheRoom",
+    CloseMapEditor = "CloseMapEditor",
 }
 
 const logger = debug("map-editor");
@@ -86,6 +91,8 @@ export class MapEditorModeManager {
             [EditorToolName.FloorEditor]: new FloorEditorTool(this),
             [EditorToolName.WAMSettingsEditor]: new WAMSettingsEditorTool(this),
             [EditorToolName.TrashEditor]: new TrashEditorTool(this),
+            [EditorToolName.ExploreTheRoom]: new ExplorerTool(this),
+            [EditorToolName.CloseMapEditor]: new CloseTool(),
         };
         this.activeTool = undefined;
         this.lastlyUsedTool = undefined;
@@ -228,25 +235,47 @@ export class MapEditorModeManager {
 
     public handleKeyDownEvent(event: KeyboardEvent): void {
         this.currentlyActiveTool?.handleKeyDownEvent(event);
+        const mapEditorModeActivated = get(mapEditorActivated);
+        if (!mapEditorModeActivated) return;
         switch (event.key.toLowerCase()) {
             case "`": {
-                this.equipTool();
+                this.equipTool(undefined);
                 break;
             }
             case "1": {
-                this.equipTool(EditorToolName.AreaEditor);
+                this.equipTool(EditorToolName.ExploreTheRoom);
                 break;
             }
             case "2": {
-                this.equipTool(EditorToolName.EntityEditor);
+                if (!mapEditorModeActivated) {
+                    this.equipTool(EditorToolName.CloseMapEditor);
+                    break;
+                }
+                this.equipTool(EditorToolName.AreaEditor);
                 break;
             }
             case "3": {
-                // NOTE: Hide it untill FloorEditing is done
-                // this.equipTool(EditorToolName.FloorEditor);
+                if (!mapEditorModeActivated) break;
+                this.equipTool(EditorToolName.EntityEditor);
+                break;
+            }
+            case "4": {
+                if (!mapEditorModeActivated) break;
+                this.equipTool(EditorToolName.WAMSettingsEditor);
+                break;
+            }
+            case "5": {
+                if (!mapEditorModeActivated) break;
+                this.equipTool(EditorToolName.TrashEditor);
+                break;
+            }
+            case "6": {
+                if (!mapEditorModeActivated) break;
+                this.equipTool(EditorToolName.CloseMapEditor);
                 break;
             }
             case "z": {
+                if (!mapEditorModeActivated) break;
                 // Todo replace with key combo https://photonstorm.github.io/phaser3-docs/Phaser.Input.Keyboard.KeyCombo.html
                 if (this.ctrlKey?.isDown) {
                     if (this.shiftKey?.isDown) {
@@ -399,7 +428,7 @@ export class MapEditorModeManager {
         this.mapEditorModeUnsubscriber();
     }
 
-    private get currentlyActiveTool(): MapEditorTool | undefined {
+    public get currentlyActiveTool(): MapEditorTool | undefined {
         return this.activeTool ? this.editorTools[this.activeTool] : undefined;
     }
 

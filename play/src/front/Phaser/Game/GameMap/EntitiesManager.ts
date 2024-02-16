@@ -416,4 +416,15 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
     public close() {
         this.actionsMenuStoreUnsubscriber();
     }
+
+    public setAllEntitiesPointedToEditColor(color: number) {
+        for (const entity of this.entities.values()) {
+            entity.setPointedToEditColor(color);
+        }
+    }
+    public removeAllEntitiesPointedToEditColor() {
+        for (const entity of this.entities.values()) {
+            entity.removePointedToEditColor();
+        }
+    }
 }
