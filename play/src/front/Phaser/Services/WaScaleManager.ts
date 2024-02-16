@@ -5,6 +5,9 @@ import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { HdpiManager } from "./HdpiManager";
 import ScaleManager = Phaser.Scale.ScaleManager;
 
+export const MAX_ZOOM_OUT_EXPLORER_MODE = 0.4;
+export const INITIAL_ZOOM_OUT_EXPLORER_MODE = 1;
+
 export enum WaScaleManagerEvent {
     RefreshFocusOnTarget = "wa-scale-manager:refresh-focus-on-target",
 }
@@ -78,6 +81,7 @@ export class WaScaleManager {
         if (this.focusTarget.width && this.focusTarget.height) {
             this.zoomModifier = this.getTargetZoomModifierFor(this.focusTarget.width, this.focusTarget.height);
         }
+
         this.game.events.emit(WaScaleManagerEvent.RefreshFocusOnTarget, this.focusTarget);
     }
 
@@ -87,7 +91,7 @@ export class WaScaleManager {
 
     public getTargetZoomModifierFor(viewportWidth: number, viewportHeight: number) {
         const { width: gameWidth, height: gameHeight } = coWebsiteManager.getGameSize();
-        const devicePixelRatio = window.devicePixelRatio ?? 1;
+        const devicePixelRatio = window.devicePixelRatio ?? this.hdpiManager.maxZoomOut;
 
         const { real: realSize } = this.hdpiManager.getOptimalGameSize({
             width: gameWidth * devicePixelRatio,
@@ -140,6 +144,13 @@ export class WaScaleManager {
      */
     public get uiScalingFactor(): number {
         return this.actualZoom > 1 ? 1 : 1.2;
+    }
+
+    public set maxZoomOut(maxZoomOut: number) {
+        this.hdpiManager.maxZoomOut = maxZoomOut;
+    }
+    public get maxZoomOut(): number {
+        return this.hdpiManager.maxZoomOut;
     }
 }
 

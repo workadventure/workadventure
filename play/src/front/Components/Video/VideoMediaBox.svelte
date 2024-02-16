@@ -246,7 +246,7 @@
         style={videoEnabled
             ? ""
             : `border: solid 2px ${backGroundColor}; color: ${textColor}; background-color: ${backGroundColor}; color: ${textColor}`}
-        class="tw-flex tw-w-full "
+        class="tw-flex tw-w-full"
         class:tw-flex-col={videoEnabled}
         class:tw-h-full={videoEnabled}
         class:tw-items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
