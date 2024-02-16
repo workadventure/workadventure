@@ -1,6 +1,6 @@
 <script lang="ts">
     import { IconCloudUpload, IconLoader } from "@tabler/icons-svelte";
-    import { UploadEntityMessage, UploadEntityMessage_Direction } from "@workadventure/messages";
+    import { CustomEntityDirection, UploadEntityMessage } from "@workadventure/messages";
     import { onDestroy } from "svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { mapEditorEntityUploadEventStore } from "../../../Stores/MapEditorStore";
@@ -34,7 +34,7 @@
         const fileAsUint8Array = new Uint8Array(fileBuffer);
         mapEditorEntityUploadEventStore.set({
             file: fileAsUint8Array,
-            direction: UploadEntityMessage_Direction.Down,
+            direction: CustomEntityDirection.Down,
             name: fileToUpload.name,
             tags: [],
             imagePath: fileToUpload.name,
