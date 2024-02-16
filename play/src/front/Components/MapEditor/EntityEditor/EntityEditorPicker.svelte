@@ -137,7 +137,10 @@
                 <p class="tw-text-[22px] tw-m-0">{$LL.mapEditor.entityEditor.header.title()}</p>
                 <p class="tw-m-0 tw-opacity-50">{$LL.mapEditor.entityEditor.header.description()}</p>
             {:else}
-                <button class="tw-p-0" on:click={displayTagListAndClearCurrentSelection}
+                <button
+                    class="tw-p-0"
+                    data-testid="clearCurrentSelection"
+                    on:click={displayTagListAndClearCurrentSelection}
                     ><IconChevronLeft />{$LL.mapEditor.entityEditor.buttons.back()}</button
                 >
             {/if}

@@ -636,17 +636,11 @@ test.describe('Map editor', () => {
 
     // Click on upload asset
     await EntityEditor.uploadTestAsset(page);
-    // Confirm upload asset
-    await page.getByTestId("confirmUploadButton").click();
+    
+    const uploadedEntityLocator = await EntityEditor.searchEntity(page,EntityEditor.getTestAssetName())
+    const uploadedEntityElement = await uploadedEntityLocator.innerHTML();
+    await expect(uploadedEntityElement).toContain(EntityEditor.getTestAssetName());
 
-    // Change to custom asset tab
-    await page.getByTestId("switchToCustomTab").click();
-
-    // Get inner html from itemPickerList
-    const innerHtml = await page.getByTestId("itemPickerList").innerHTML();
-
-    //Check if testAsset is present
-    expect(innerHtml).toContain(EntityEditor.getTestAssetName());
   });
 
   test("Successfully upload and use custom entity in the map", async ({
@@ -677,11 +671,6 @@ test.describe('Map editor', () => {
 
     // Click on upload asset
     await EntityEditor.uploadTestAsset(page);
-    // Confirm upload asset
-    await page.getByTestId("confirmUploadButton").click();
-
-    // Change to custom asset tab
-    await page.getByTestId("switchToCustomTab").click();
 
     // Select uploaded entity and move it to the map
     await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName());
