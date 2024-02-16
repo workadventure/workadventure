@@ -2,16 +2,14 @@
     import { IconChevronLeft, IconPencil } from "@tabler/icons-svelte";
     import type { EntityPrefab } from "@workadventure/map-editor";
     import { onDestroy } from "svelte";
-    import { quintOut } from "svelte/easing";
     import { get } from "svelte/store";
-    import { slide } from "svelte/transition";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
     import {
         mapEditorEntityModeStore,
         mapEditorSelectedEntityPrefabStore,
-        mapEditorSelectedEntityStore,
+        mapEditorSelectedEntityStore
     } from "../../../Stores/MapEditorStore";
     import EntitiesGrid from "./EntitiesGrid.svelte";
     import EntityImage from "./EntityItem/EntityImage.svelte";
@@ -19,6 +17,7 @@
     import EntityVariantPositionPicker from "./EntityItem/EntityVariantPositionPicker.svelte";
     import EntityUpload from "./EntityUpload.svelte";
     import TagListItem from "./TagListItem.svelte";
+    import CustomEntityEditionForm from "./EntityItem/CustomEntityEditionForm.svelte";
 
     type customTag = "Custom";
 
@@ -73,11 +72,12 @@
         pickedEntityVariant = undefined;
         selectedTag = undefined;
         searchTerm = "";
+        setIsEditingCustomEntity(false);
     }
 
-    let customEntityEdition: boolean = false;
-    function editCustomEntity(edit: boolean) {
-        customEntityEdition = edit;
+    let isEditingCustomEntity = false;
+    function setIsEditingCustomEntity(isEditing: boolean) {
+        isEditingCustomEntity = isEditing;
     }
 
     function getEntitiesPrefabsVariantsGroupedByTagWithCustomFirst(entitiesPrefabsVariants: EntityVariant[]): {
@@ -170,45 +170,54 @@
         {:else}
             {#if pickedEntityVariant && pickedEntity}
                 <div
-                    class="tw-flex tw-flex-row tw-gap-2 tw-items-center tw-justify-center tw-border-b-blue-50 tw-mb-2 tw-h-40"
-                    transition:slide={{ duration: 100, easing: quintOut, axis: "y" }}
+                    class="tw-flex tw-flex-row tw-gap-2 tw-items-center tw-justify-center tw-border-b-blue-50 tw-mb-2 tw-min-h-[200px]"
                 >
                     <EntityImage
                         classNames="tw-h-16 tw-w-[64px] tw-object-contain"
                         imageSource={pickedEntity.imagePath}
                         imageAlt={pickedEntity.name}
                     />
-                    <div>
-                        <p class="tw-m-0"><b>{pickedEntityVariant.defaultPrefab.name}</b></p>
-                        <EntityVariantColorPicker colors={pickedEntityVariant.colors} {selectedColor} {onColorChange} />
-                        <EntityVariantPositionPicker
-                            entityPrefabsPositions={pickedEntityVariant.getEntityPrefabsPositions(selectedColor)}
-                            selectedEntity={pickedEntity}
-                            {onPickItem}
+                    {#if isEditingCustomEntity}
+                        <CustomEntityEditionForm
+                            on:closeForm={() => setIsEditingCustomEntity(false)}
+                            customEntity={pickedEntity}
                         />
-                    </div>
-                    {#if pickedEntity.type === "Custom"}
-                        <button class="tw-bg-blue-500 tw-rounded-xl" on:click={() => editCustomEntity(true)}
-                            ><IconPencil size={16} />{$LL.mapEditor.entityEditor.buttons.editEntity()}</button
-                        >
-                    {/if}
-                    {#if customEntityEdition}
+                    {:else}
                         <div>
-                            <p>Custom entity edition</p>
+                            <p class="tw-m-0"><b>{pickedEntityVariant.defaultPrefab.name}</b></p>
+                            <EntityVariantColorPicker
+                                colors={pickedEntityVariant.colors}
+                                {selectedColor}
+                                {onColorChange}
+                            />
+                            <EntityVariantPositionPicker
+                                entityPrefabsPositions={pickedEntityVariant.getEntityPrefabsPositions(selectedColor)}
+                                selectedEntity={pickedEntity}
+                                {onPickItem}
+                            />
                         </div>
+                        {#if pickedEntity.type === "Custom"}
+                            <button class="tw-bg-blue-500 tw-rounded-xl" on:click={() => setIsEditingCustomEntity(true)}
+                                ><IconPencil size={16} />{$LL.mapEditor.entityEditor.buttons.editEntity()}</button
+                            >
+                        {/if}
                     {/if}
                 </div>
             {/if}
-            <EntitiesGrid
-                entityPrefabVariants={getEntitiesPrefabsVariantsFilteredByTag(
-                    $entitiesPrefabsVariants,
-                    selectedTag,
-                    searchTerm
-                )}
-                onSelectEntity={onPickEntityVariant}
-                currentSelectedEntityName={pickedEntity?.name}
-            />
+            {#if !isEditingCustomEntity}
+                <EntitiesGrid
+                    entityPrefabVariants={getEntitiesPrefabsVariantsFilteredByTag(
+                        $entitiesPrefabsVariants,
+                        selectedTag,
+                        searchTerm
+                    )}
+                    onSelectEntity={onPickEntityVariant}
+                    currentSelectedEntityName={pickedEntity?.name}
+                />
+            {/if}
         {/if}
     </div>
-    <EntityUpload />
+    {#if pickedEntity === undefined}
+        <EntityUpload />
+    {/if}
 </div>

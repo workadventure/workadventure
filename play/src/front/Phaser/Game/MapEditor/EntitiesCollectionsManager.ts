@@ -103,10 +103,6 @@ export class EntitiesCollectionsManager {
         });
     }
 
-    public getTags(): string[] {
-        return this.tags;
-    }
-
     public addUploadedEntity(uploadedEntity: EntityRawPrefab, customEntityCollectionUrl: string) {
         const uploadedEntityPrefab: EntityPrefab = {
             ...this.parseRawEntityPrefab("custom entities", uploadedEntity, "Custom"),

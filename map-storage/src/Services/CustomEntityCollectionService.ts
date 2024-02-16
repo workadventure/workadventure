@@ -3,9 +3,9 @@ import {
     ENTITY_COLLECTION_FILE,
     EntityCollectionRaw,
     EntityRawPrefab,
-    mapUploadEntityMessageDirectionToDirection,
+    mapCustomEntityDirectionToDirection,
 } from "@workadventure/map-editor";
-import { UploadEntityMessage } from "@workadventure/messages";
+import { ModifyCustomEntityMessage, UploadEntityMessage } from "@workadventure/messages";
 import { fileSystem } from "../fileSystem";
 import { mapPathUsingDomainWithPrefix } from "./PathMapper";
 
@@ -33,6 +33,27 @@ export class CustomEntityCollectionService {
         return;
     }
 
+    public async modifyEntity(modifyCustomEntityMessage: ModifyCustomEntityMessage) {
+        const { id, name, tags, depthOffset, collisionGrid } = modifyCustomEntityMessage;
+        const customEntityCollectionFileContent = await this.readOrCreateEntitiesCollectionFile();
+        const customEntityCollection = EntityCollectionRaw.parse(JSON.parse(customEntityCollectionFileContent));
+        const indexOfEntityToModify = customEntityCollection.collection.findIndex((entity) => entity.name === id);
+        if (indexOfEntityToModify !== -1) {
+            const entityToModify = customEntityCollection.collection[indexOfEntityToModify];
+            customEntityCollection.collection[indexOfEntityToModify] = {
+                ...entityToModify,
+                name,
+                tags,
+                depthOffset,
+                collisionGrid,
+            };
+            await fileSystem.writeStringAsFile(
+                this.getEntityCollectionFileVirtualPath(),
+                JSON.stringify(customEntityCollection)
+            );
+        }
+    }
+
     private async readOrCreateEntitiesCollectionFile() {
         const entityCollectionFileVirtualPath = this.getEntityCollectionFileVirtualPath();
         const fileExist = await fileSystem.exist(entityCollectionFileVirtualPath);
@@ -52,7 +73,7 @@ export class CustomEntityCollectionService {
     ): EntityRawPrefab {
         return EntityRawPrefab.parse({
             ...uploadEntityMessage,
-            direction: mapUploadEntityMessageDirectionToDirection(uploadEntityMessage.direction),
+            direction: mapCustomEntityDirectionToDirection(uploadEntityMessage.direction),
         });
     }
 
