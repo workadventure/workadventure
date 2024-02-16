@@ -6,15 +6,13 @@
     import { mapEditorEntityUploadEventStore } from "../../../Stores/MapEditorStore";
 
     let files: FileList | undefined = undefined;
-    let fileToUpload: File | null = null;
     let loadingFileUpload: boolean = false;
     let fileInput: HTMLInputElement;
     let dropZoneRef: HTMLDivElement;
 
     $: {
         if (files) {
-            fileToUpload = files.item(0);
-            processFileToUpload(fileToUpload!);
+            processFileToUpload(files.item(0)!);
         }
     }
 
@@ -47,7 +45,6 @@
     function initFileUpload() {
         files = undefined;
         fileInput.value = "";
-        fileToUpload = null;
         mapEditorEntityUploadEventStore.set(undefined);
         setTimeout(() => (loadingFileUpload = false), 500);
     }
@@ -58,6 +55,7 @@
             if (filesFromDropEvent.length > 1) {
                 console.error("Only one file is permitted");
             } else {
+                files = filesFromDropEvent;
                 processFileToUpload(filesFromDropEvent.item(0)!);
             }
         }
