@@ -166,7 +166,7 @@ const mapEditor: BaseTranslation = {
         nameLabelPlaceholder: "MyArea",
         areaDescription: "Description",
         areaDescriptionPlaceholder: "My area is a...",
-        areaSerchable: "Searchable into the exploration mode",
+        areaSerchable: "Searchable in the exploration mode",
         addDescriptionField: "Add description field",
     },
     areaEditorInstructions: {
@@ -192,7 +192,7 @@ const mapEditor: BaseTranslation = {
         objectNamePlaceholder: "MyObject",
         objectDescription: "Object Description",
         objectDescriptionPlaceholder: "My object is a...",
-        objectSearchable: "Searchable into the exploration mode",
+        objectSearchable: "Searchable in the exploration mode",
         addDescriptionField: "Add description field",
     },
     settings: {
