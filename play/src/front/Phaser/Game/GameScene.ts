@@ -3379,9 +3379,6 @@ ${escapedMessage}
                 mapEditorModeStore.switchMode(!matEditoreModeState);
                 this.mapEditorModeManager.equipTool(EditorToolName.ExploreTheRoom);
             }
-
-            // Lock the camera to keep the same zoom after animation. The camera will be unlock when the Explorer tool is activated or after 3000ms.
-            this.cameraManager.lockCameraDuring(3000);
             return;
         }
 
