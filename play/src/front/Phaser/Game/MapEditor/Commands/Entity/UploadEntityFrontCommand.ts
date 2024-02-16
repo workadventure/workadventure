@@ -1,9 +1,8 @@
-import { UploadEntityCommand } from "@workadventure/map-editor/src/Commands/Entity/UploadEntityCommand";
+import { EntityRawPrefab, UploadEntityCommand, mapCustomEntityDirectionToDirection } from "@workadventure/map-editor";
 import { UploadEntityMessage } from "@workadventure/messages";
-import { EntityRawPrefab, mapUploadEntityMessageDirectionToDirection } from "@workadventure/map-editor";
-import { FrontCommand } from "../FrontCommand";
 import { RoomConnection } from "../../../../../Connection/RoomConnection";
 import { gameManager } from "../../../GameManager";
+import { FrontCommand } from "../FrontCommand";
 
 export class UploadEntityFrontCommand extends UploadEntityCommand implements FrontCommand {
     constructor(uploadEntityMessage: UploadEntityMessage) {
@@ -17,7 +16,7 @@ export class UploadEntityFrontCommand extends UploadEntityCommand implements Fro
         const customEntityCollectionUrl = gameManager.getCurrentGameScene().getCustomEntityCollectionUrl();
         const uploadedEntity = EntityRawPrefab.parse({
             ...this.uploadEntityMessage,
-            direction: mapUploadEntityMessageDirectionToDirection(this.uploadEntityMessage.direction),
+            direction: mapCustomEntityDirectionToDirection(this.uploadEntityMessage.direction),
         });
         gameManager
             .getCurrentGameScene()
