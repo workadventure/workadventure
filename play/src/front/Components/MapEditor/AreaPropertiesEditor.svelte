@@ -22,7 +22,7 @@
     import ListenerMegaphonePropertyEditor from "./PropertyEditor/ListenerMegaphonePropertyEditor.svelte";
     import StartPropertyEditor from "./PropertyEditor/StartPropertyEditor.svelte";
     import ExitPropertyEditor from "./PropertyEditor/ExitPropertyEditor.svelte";
-    import ListAddPropertyButton from "./PropertyEditor/ListAddPropertyButton.svelte";
+    import AddPropertyButtonWrapper from "./PropertyEditor/AddPropertyButtonWrapper.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -299,7 +299,7 @@
 {:else}
     <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
         {#if !hasFocusableProperty}
-            <ListAddPropertyButton
+            <AddPropertyButtonWrapper
                 property="focusable"
                 on:click={() => {
                     onAddProperty("focusable");
@@ -307,7 +307,7 @@
             />
         {/if}
         {#if !hasSilentProperty}
-            <ListAddPropertyButton
+            <AddPropertyButtonWrapper
                 property="silent"
                 on:click={() => {
                     onAddProperty("silent");
@@ -315,7 +315,7 @@
             />
         {/if}
         {#if !hasJitsiRoomProperty}
-            <ListAddPropertyButton
+            <AddPropertyButtonWrapper
                 property="jitsiRoomProperty"
                 on:click={() => {
                     onAddProperty("jitsiRoomProperty");
@@ -324,7 +324,7 @@
         {/if}
         {#if FEATURE_FLAG_BROADCAST_AREAS}
             {#if !hasSpeakerMegaphoneProperty}
-                <ListAddPropertyButton
+                <AddPropertyButtonWrapper
                     property="speakerMegaphone"
                     on:click={() => {
                         onAddProperty("speakerMegaphone");
@@ -332,7 +332,7 @@
                 />
             {/if}
             {#if !hasListenerMegaphoneProperty}
-                <ListAddPropertyButton
+                <AddPropertyButtonWrapper
                     property="listenerMegaphone"
                     on:click={() => {
                         onAddProperty("listenerMegaphone");
@@ -341,7 +341,7 @@
             {/if}
         {/if}
         {#if !hasStartProperty}
-            <ListAddPropertyButton
+            <AddPropertyButtonWrapper
                 property="start"
                 on:click={() => {
                     onAddProperty("start");
@@ -349,7 +349,7 @@
             />
         {/if}
         {#if !hasExitProperty}
-            <ListAddPropertyButton
+            <AddPropertyButtonWrapper
                 property="exit"
                 on:click={() => {
                     onAddProperty("exit");
@@ -357,14 +357,14 @@
             />
         {/if}
         {#if !hasplayAudioProperty}
-            <ListAddPropertyButton
+            <AddPropertyButtonWrapper
                 property="playAudio"
                 on:click={() => {
                     onAddProperty("playAudio");
                 }}
             />
         {/if}
-        <ListAddPropertyButton
+        <AddPropertyButtonWrapper
             property="openWebsite"
             on:click={() => {
                 onAddProperty("openWebsite");
@@ -372,49 +372,49 @@
         />
     </div>
     <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
-        <ListAddPropertyButton
+        <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="klaxoon"
             on:click={() => {
                 onAddProperty("openWebsite", "klaxoon");
             }}
         />
-        <ListAddPropertyButton
+        <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="youtube"
             on:click={() => {
                 onAddProperty("openWebsite", "youtube");
             }}
         />
-        <ListAddPropertyButton
+        <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="googleDrive"
             on:click={() => {
                 onAddProperty("openWebsite", "googleDrive");
             }}
         />
-        <ListAddPropertyButton
+        <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="googleDocs"
             on:click={() => {
                 onAddProperty("openWebsite", "googleDocs");
             }}
         />
-        <ListAddPropertyButton
+        <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="googleSheets"
             on:click={() => {
                 onAddProperty("openWebsite", "googleSheets");
             }}
         />
-        <ListAddPropertyButton
+        <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="googleSlides"
             on:click={() => {
                 onAddProperty("openWebsite", "googleSlides");
             }}
         />
-        <ListAddPropertyButton
+        <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="eraser"
             on:click={() => {
