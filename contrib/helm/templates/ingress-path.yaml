@@ -66,4 +66,11 @@ spec:
                 name: {{ include "workadventure.fullname" . }}-mapstorage
                 port:
                   number: {{ .Values.mapstorage.service.port }}
+          - path: /room-api
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-room-api
+                port:
+                  number: {{ .Values.play.roomApiService.port }}
 {{- end }}

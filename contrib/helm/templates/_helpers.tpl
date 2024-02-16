@@ -94,6 +94,21 @@ Create the domains
 {{- end -}}
 {{- end }}
 
+{{- define "workadventure.roomApiDomainName" -}}
+{{- coalesce .Values.play.ingress.roomApiDomainName (printf "room-api%s%s" .Values.domainNamePrefix .Values.domainName) }}
+{{- end -}}
+{{- define "workadventure.roomApiUrl" -}}
+{{- if .Values.singleDomain -}}
+/
+{{- else -}}
+{{- if .Values.play.ingress.roomApiDomainName -}}
+{{ printf "https://%s" .Values.play.ingress.roomApiDomainName }}
+{{- else -}}
+{{- printf "https://room-api%s%s" .Values.domainNamePrefix .Values.domainName }}
+{{- end }}
+{{- end -}}
+{{- end }}
+
 {{- define "workadventure.ejabberdDomainName" -}}
 {{- coalesce .Values.ejabberd.ingress.domainName (printf "xmpp%s%s" .Values.domainNamePrefix .Values.domainName) }}
 {{- end -}}
