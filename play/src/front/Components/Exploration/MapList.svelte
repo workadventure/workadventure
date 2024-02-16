@@ -113,7 +113,7 @@
                     <img
                         class="tw-pointer-events-none tw-rounded-full tw-h-56 tw-w-56 tw-mb-3"
                         src={roomData.thumbnail ?? defaultMapImg}
-                        alt={roomData.description}
+                        alt={roomData.name}
                     />
                     <span class="tw-pointer-events-none tw-text-2xl tw-font-bold tw-m-0">{roomData.name}</span>
                     {#if roomData.areasSearchable || roomData.entitiesSearchable}

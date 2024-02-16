@@ -369,7 +369,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     public setExplorationMode(): void {
         this.cameraLocked = false;
         this.stopFollow();
-        this.cameraLocked = false;
         this.setCameraMode(CameraMode.Exploration);
         this.scene.cameras.main.setBounds(
             -this.cameraBounds.x,
@@ -390,13 +389,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     public goToAreaPreviex(area: AreaPreview): void {
         this.scene.cameras.main.centerOn(area.x, area.y);
         this.scene.markDirty();
-    }
-
-    public lockCameraDuring(delay = 3000): void {
-        this.cameraLocked = true;
-        this.scene.time.delayedCall(delay, () => {
-            this.cameraLocked = false;
-        });
     }
 
     emit(event: string | symbol, ...args: unknown[]): boolean {
