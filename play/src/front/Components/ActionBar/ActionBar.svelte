@@ -438,16 +438,16 @@
                         {#if $embedScreenLayoutStore === LayoutMode.Presentation}
                             <img
                                 draggable="false"
-                                src={layoutPresentationImg}
+                                src={layoutChatImg}
                                 style="padding: 2px"
-                                alt="Switch to mosaic mode"
+                                alt="Switch to presentation mode"
                             />
                         {:else}
                             <img
                                 draggable="false"
-                                src={layoutChatImg}
+                                src={layoutPresentationImg}
                                 style="padding: 2px"
-                                alt="Switch to presentation mode"
+                                alt="Switch to mosaic mode"
                             />
                         {/if}
                     </button>
@@ -716,16 +716,16 @@
                             {#if $embedScreenLayoutStore === LayoutMode.Presentation}
                                 <img
                                     draggable="false"
-                                    src={layoutPresentationImg}
+                                    src={layoutChatImg}
                                     style="padding: 2px"
-                                    alt="Switch to mosaic mode"
+                                    alt="Switch to presentation mode"
                                 />
                             {:else}
                                 <img
                                     draggable="false"
-                                    src={layoutChatImg}
+                                    src={layoutPresentationImg}
                                     style="padding: 2px"
-                                    alt="Switch to presentation mode"
+                                    alt="Switch to mosaic mode"
                                 />
                             {/if}
                         </button>
