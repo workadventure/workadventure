@@ -11,12 +11,15 @@ import { UpdateEntityFrontCommand } from "../Commands/Entity/UpdateEntityFrontCo
 import { TexturesHelper } from "../../../Helpers/TexturesHelper";
 import {
     mapEditorCopiedEntityDataPropertiesStore,
+    mapEditorDeleteCustomEntityEventStore,
     mapEditorEntityModeStore,
     mapEditorEntityUploadEventStore,
+    mapEditorModifyCustomEntityEventStore,
     mapEditorSelectedEntityStore,
 } from "../../../../Stores/MapEditorStore";
 import { UploadEntityFrontCommand } from "../Commands/Entity/UploadEntityFrontCommand";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
+import { ModifyCustomEntityFrontCommand } from "../Commands/Entity/ModifyCustomEntityFrontCommand";
 
 export class EntityEditorTool extends EntityRelatedEditorTool {
     protected shiftKey?: Phaser.Input.Keyboard.Key;
@@ -27,6 +30,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
     ) => void;
 
     protected mapEditorEntityUploadStoreUnsubscriber!: Unsubscriber;
+    protected mapEditorModifyCustomEntityEventStoreUnsubscriber!: Unsubscriber;
+    protected mapEditorDeleteCustomEntityEventStoreUnsubscriber!: Unsubscriber;
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super(mapEditorModeManager);
@@ -35,6 +40,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         this.bindEventHandlers();
         this.bindEntitiesManagerEventHandlers();
         this.subscribeToEntityUpload();
+        this.subscribeToModifyCustomEntityEventStore();
+        this.subscribeToDeleteCustomEntityEventStore();
     }
 
     /**
@@ -130,6 +137,14 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 );
                 break;
             }
+            case "modifyCustomEntityMessage": {
+                console.log("Not yet implemented");
+                break;
+            }
+            case "deleteCustomEntityMessage": {
+                console.log("Not yet implemented");
+                break;
+            }
         }
     }
 
@@ -218,6 +233,30 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                     });
                 }
             }
+        );
+    }
+
+    protected subscribeToModifyCustomEntityEventStore() {
+        this.mapEditorModifyCustomEntityEventStoreUnsubscriber = mapEditorModifyCustomEntityEventStore.subscribe(
+            (modifyCustomEntityMessage) => {
+                if (modifyCustomEntityMessage) {
+                    (async () => {
+                        await this.mapEditorModeManager.executeCommand(
+                            new ModifyCustomEntityFrontCommand(modifyCustomEntityMessage)
+                        );
+                        mapEditorModifyCustomEntityEventStore.set(undefined);
+                    })().catch((e) => {
+                        console.error(e);
+                        Sentry.captureException(e);
+                    });
+                }
+            }
+        );
+    }
+
+    protected subscribeToDeleteCustomEntityEventStore() {
+        this.mapEditorDeleteCustomEntityEventStoreUnsubscriber = mapEditorDeleteCustomEntityEventStore.subscribe(
+            () => {}
         );
     }
 
@@ -331,6 +370,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
 
     private unsubscribeStore() {
         this.mapEntityEditorModeStoreUnsubscriber();
+        this.mapEditorModifyCustomEntityEventStoreUnsubscriber();
+        this.mapEditorDeleteCustomEntityEventStoreUnsubscriber();
     }
 
     protected unbindEventHandlers(): void {
