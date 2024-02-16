@@ -1083,9 +1083,21 @@ jobs:
           GOOGLE_DRIVE_PICKER_CLIENT_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_CLIENT_ID }}
           GOOGLE_DRIVE_PICKER_APP_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_APP_ID }}
 
-      - name: "Printing values file"
-        working-directory: contrib/helm
-        run: "cat values-cd.yaml"
+#      - name: "Printing values file"
+#        working-directory: contrib/helm
+#        run: "cat values-cd.yaml"
+      - name: "Delete stuck releases"
+        run: |
+          if [[ $(helm list -n ${NAMESPACE} --pending | grep pending-upgrade) ]]; then
+            echo "Found releases in 'pending-upgrade' state in namespace $NAMESPACE. Deleting namespace..."
+            # Delete the namespace
+            kubectl delete namespace "$NAMESPACE"
+            echo "Namespace $NAMESPACE deleted."
+          else
+                echo "No releases in 'pending-upgrade' state found in namespace $NAMESPACE."
+          fi
+        env:
+          NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
       - name: 'Deploy'
         run: "helm upgrade --install --create-namespace -n ${NAMESPACE} --wait -f values.yaml -f values-cd.yaml test ."
