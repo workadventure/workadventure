@@ -6,13 +6,13 @@
     import { mapEditorEntityUploadEventStore } from "../../../Stores/MapEditorStore";
 
     let files: FileList | undefined = undefined;
-    let loadingFileUpload: boolean = false;
+    let loadingFileUpload = false;
     let fileInput: HTMLInputElement;
     let dropZoneRef: HTMLDivElement;
 
     $: {
         if (files) {
-            processFileToUpload(files.item(0)!);
+            processFileToUpload(files.item(0)!).catch((error) => console.error(error));
         }
     }
 
@@ -30,14 +30,14 @@
 
     async function processFileToUpload(fileToUpload: File) {
         loadingFileUpload = true;
-        const fileBuffer = await fileToUpload!.arrayBuffer();
+        const fileBuffer = await fileToUpload.arrayBuffer();
         const fileAsUint8Array = new Uint8Array(fileBuffer);
         mapEditorEntityUploadEventStore.set({
             file: fileAsUint8Array,
             direction: UploadEntityMessage_Direction.Down,
-            name: fileToUpload!.name,
+            name: fileToUpload.name,
             tags: [],
-            imagePath: fileToUpload!.name,
+            imagePath: fileToUpload.name,
             color: "",
         });
     }
@@ -56,7 +56,7 @@
                 console.error("Only one file is permitted");
             } else {
                 files = filesFromDropEvent;
-                processFileToUpload(filesFromDropEvent.item(0)!);
+                processFileToUpload(filesFromDropEvent.item(0)!).catch((error) => console.error(error));
             }
         }
         dropZoneRef.classList.remove("tw-border-cyan-400");
