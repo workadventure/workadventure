@@ -28,6 +28,7 @@ import { mapsManager } from "./MapsManager";
 import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
 import { entitiesManager } from "./EntitiesManager";
 import { UploadEntityMapStorageCommand } from "./Commands/UploadEntityMapStorageCommand";
+import { ModifyCustomEntityMapStorageCommand } from "./Commands/ModifyCustomEntityMapStorageCommand";
 
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
@@ -211,6 +212,17 @@ const mapStorageServer: MapStorageServer = {
                         mapKey,
                         new UploadEntityMapStorageCommand(uploadEntityMessage, mapUrl.hostname)
                     );
+                    break;
+                }
+                case "modifyCustomEntityMessage": {
+                    const modifyCustomEntityMessage = editMapMessage.modifyCustomEntityMessage;
+                    await entitiesManager.executeCommand(
+                        mapKey,
+                        new ModifyCustomEntityMapStorageCommand(modifyCustomEntityMessage, mapUrl.hostname)
+                    );
+                    break;
+                }
+                case "deleteCustomEntityMessage": {
                     break;
                 }
                 case "updateWAMSettingsMessage": {
