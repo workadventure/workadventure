@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { Color } from "@workadventure/shared-utils";
+    import { fly } from "svelte/transition";
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import {
         cameraEnergySavingStore,
@@ -14,14 +15,13 @@
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
     import { gameManager } from "../Phaser/Game/GameManager";
     import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
+    import { heightCamWrapper } from "../Stores/EmbedScreensStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";
     import loaderImg from "./images/loader.svg";
     import silentImg from "./images/silent-zone.gif";
 
-    import { fly } from "svelte/transition";
-    import { heightCamWrapper } from "../Stores/EmbedScreensStore";
     import MicOffIcon from "./Icons/MicOffIcon.svelte";
 
     let stream: MediaStream | null;

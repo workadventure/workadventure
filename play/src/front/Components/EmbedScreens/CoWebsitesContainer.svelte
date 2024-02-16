@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { coWebsites } from "../../Stores/CoWebsiteStore";
     import { fly } from "svelte/transition";
+    import { coWebsites } from "../../Stores/CoWebsiteStore";
     import XIcon from "../Icons/XIcon.svelte";
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import CoWebsiteTab from "./CoWebsiteTab.svelte";

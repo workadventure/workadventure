@@ -16,14 +16,13 @@
         speakerSelectedStore
     } from "../../Stores/MediaStore";
     import type { Game } from "../../Phaser/Game/Game";
-    import cinemaCloseImg from "../images/no-video.svg";
-    import cinemaImg from "../images/cinema.svg";
-    import microphoneImg from "../images/microphone.svg";
+    // import cinemaCloseImg from "../images/no-video.svg";
+    // import cinemaImg from "../images/cinema.svg";
+    // import microphoneImg from "../images/microphone.svg";
     import {LL, locale} from "../../../i18n/i18n-svelte";
     import { StringUtils } from "../../Utils/StringUtils";
     import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
 
     export let game: Game;
     import bgMap from "../images/map-exemple.png";
@@ -34,6 +33,10 @@
     import CheckIcon from "../Icons/CheckIcon.svelte";
     import MicOffIcon from "../Icons/MicOffIcon.svelte";
     import VolumeIcon from "../Icons/VolumeIcon.svelte";
+    import speakerAudio from "../../../../../maps/tests/webrtc-in.mp3"
+    import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
+
+
 
     const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
     const bgColor = gameManager.currentStartedRoom.backgroundColor ?? "#1B2A41";
@@ -44,7 +47,7 @@
     let speakerEdit = false;
     let selectedCamera: string | undefined = undefined;
     let selectedMicrophone: string | undefined = undefined;
-    let selectedSpeaker: string | undefined = undefined;
+    // let selectedSpeaker: string | undefined = undefined;
 
     let legalStrings: string[] = [];
     if (legals?.termsOfUseUrl) {
@@ -154,6 +157,13 @@
         localUserStore.setSpeakerDeviceId(deviceId);
         speakerSelectedStore.set(deviceId);
     }
+
+    let sound = new Audio(speakerAudio)
+    function playSoundClick() {
+      sound.load()
+      sound.play();
+    }
+
 </script>
 
 <form class="enableCameraScene pointer-events-auto relative z-30 m-0" on:submit|preventDefault={submit}>
@@ -363,6 +373,7 @@
                                             selectSpeaker(speaker.deviceId)
                                             speakerEdit = false;
                                         }}
+                                            on:click={playSoundClick}
                                     >
                                         <div class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center {$speakerSelectedStore === speaker.deviceId ? 'bg-secondary border-secondary' : 'border-white'}">
                                             {#if $speakerSelectedStore === speaker.deviceId}

@@ -455,7 +455,7 @@ class CoWebsiteManager {
     private loadMain(openingWidth?: number): void {
         this.activateMainLoaderAnimation();
 
-        let newWidth = openingWidth ?? 50;
+        const newWidth = openingWidth ?? 50;
 
 /*        if (newWidth > 75 && !this.isFullScreen) {
             this.coWebsiteResizeSize = 75;

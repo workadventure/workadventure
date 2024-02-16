@@ -1,19 +1,17 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount , onDestroy, onMount } from "svelte";
     import { Color } from "@workadventure/shared-utils";
     import { Readable, Unsubscriber } from "svelte/store";
     import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-    import { onDestroy, onMount } from "svelte";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+        import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 
-    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+    import { isMediaBreakpointUp , isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { Streamable } from "../../Stores/StreamableCollectionStore";
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
-    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { analyticsClient } from "../../Administration/AnalyticsClient";
+        import { analyticsClient } from "../../Administration/AnalyticsClient";
     import UserTag from "./UserTag.svelte";
     import JitsiVideoElement from "./JitsiVideoElement.svelte";
     import JitsiAudioElement from "./JitsiAudioElement.svelte";

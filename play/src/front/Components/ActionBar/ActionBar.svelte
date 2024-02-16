@@ -4,18 +4,18 @@
     import { onDestroy, onMount } from "svelte";
     import { writable } from "svelte/store";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
-    import { myJitsiCameraStore, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
+    // import { myJitsiCameraStore, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     //import { jitsiLoadingStore } from "../../Streaming/BroadcastService";
     //import Loading from "../Video/Loading.svelte";
     //import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     //import CamerasContainer from "../EmbedScreens/CamerasContainer.svelte";
     //import MediaBox from "../Video/MediaBox.svelte";
-    import MyCamera from "../MyCamera.svelte";
+    // import MyCamera from "../MyCamera.svelte";
     import {
         cameraListStore,
         microphoneListStore,
         speakerListStore,
-        localVolumeStore,
+        // localVolumeStore,
         requestedCameraState,
         requestedMicrophoneState,
         requestedCameraDeviceIdStore,
@@ -25,6 +25,7 @@
         silentStore,
         speakerSelectedStore,
         streamingMegaphoneStore, enableCameraSceneVisibilityStore,
+        availabilityStatusStore
     } from "../../Stores/MediaStore";
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
     import tooltipArrow from "../images/arrow-top.svg";
@@ -54,7 +55,9 @@
         additionnalButtonsMenu,
         addClassicButtonActionBarEvent,
         addActionButtonActionBarEvent,
-        mapEditorActivated, menuIconVisiblilityStore, userIsConnected,
+        mapEditorActivated,
+        // menuIconVisiblilityStore,
+         userIsConnected,
     } from "../../Stores/MenuStore";
     import {
         emoteDataStore,
@@ -71,9 +74,10 @@
     import { iframeListener } from "../../Api/IframeListener";
     import { peerStore } from "../../Stores/PeerStore";
     //import { StringUtils } from "../../Utils/StringUtils";
-    import Tooltip from "../Util/Tooltip.svelte";
+    // import Tooltip from "../Util/Tooltip.svelte";
     import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
-    import {bannerStore, userHasAccessToBackOfficeStore} from "../../Stores/GameStore";
+    import {//bannerStore,
+             userHasAccessToBackOfficeStore} from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
     import {
@@ -84,7 +88,6 @@
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {ADMIN_URL, ENABLE_OPENID} from "../../Enum/EnvironmentVariable";
-    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
     import Woka from "../Woka/WokaFromUserId.svelte";
     import Companion from "../Companion/Companion.svelte";
     import {loginSceneVisibleStore} from "../../Stores/LoginSceneStore";
@@ -95,8 +98,8 @@
     import {SelectCompanionScene, SelectCompanionSceneName} from "../../Phaser/Login/SelectCompanionScene";
     import {EnableCameraScene, EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
 
-    import { availabilityStatusStore } from "../../Stores/MediaStore";
-    import HorizontalSoundMeterWidget from "../EnableCamera/HorizontalSoundMeterWidget.svelte";
+    // import { availabilityStatusStore } from "../../Stores/MediaStore";
+    // import HorizontalSoundMeterWidget from "../EnableCamera/HorizontalSoundMeterWidget.svelte";
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
     import UsersIcon from "../Icons/UsersIcon.svelte";
     import EmojiIcon from "../Icons/EmojiIcon.svelte";
@@ -122,16 +125,18 @@
     import ChevronUpIcon from "../Icons/ChevronUpIcon.svelte";
     import {StringUtils} from "../../Utils/StringUtils";
     import CheckIcon from "../Icons/CheckIcon.svelte";
-    import PlusIcon from "../Icons/PlusIcon.svelte";
+    // import PlusIcon from "../Icons/PlusIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
+    import speakerAudio from "../../../../../maps/tests/webrtc-out.mp3"
+    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
-    const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
-    let selectedMicrophone: string | undefined = undefined;
+    gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
+
+    // let selectedMicrophone: string | undefined = undefined;
     let cameraActive = false;
-    let microphoneActive = false;
     let profileMenuIsDropped = false;
     let adminMenuIsDropped = false;
     let burgerOpen = false;
@@ -190,16 +195,16 @@
         }
     }
 
-    function getStatus() {
-        switch ($availabilityStatusStore) {
-            case 1:
-                return "Online";
-            case 2:
-                return "Away";
-            default:
-                return "Do not disturb";
-        }
-    }
+    // function getStatus() {
+    //     switch ($availabilityStatusStore) {
+    //         case 1:
+    //             return "Online";
+    //         case 2:
+    //             return "Away";
+    //         default:
+    //             return "Do not disturb";
+    //     }
+    // }
 
     function lockClick() {
         gameManager.getCurrentGameScene().connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
@@ -394,32 +399,35 @@
         return false;
     }
 
-        function selectCamera(deviceId: string) {
-            requestedCameraDeviceIdStore.set(deviceId);
-            localUserStore.setPreferredVideoInputDevice(deviceId);
-            cameraActive = false;
-        }
+    function selectCamera(deviceId: string) {
+        requestedCameraDeviceIdStore.set(deviceId);
+        localUserStore.setPreferredVideoInputDevice(deviceId);
+        cameraActive = false;
+    }
 
-        function selectMicrophone(deviceId: string) {
-            requestedMicrophoneDeviceIdStore.set(deviceId);
-            localUserStore.setPreferredAudioInputDevice(deviceId);
-            microphoneActive = false;
-        }
+    function selectMicrophone(deviceId: string) {
+        requestedMicrophoneDeviceIdStore.set(deviceId);
+        localUserStore.setPreferredAudioInputDevice(deviceId);
+    }
 
-        function selectSpeaker(deviceId: string) {
-            localUserStore.setSpeakerDeviceId(deviceId);
-            speakerSelectedStore.set(deviceId);
-        }
+    function selectSpeaker(deviceId: string) {
+        localUserStore.setSpeakerDeviceId(deviceId);
+        speakerSelectedStore.set(deviceId);
+    }
 
     let subscribers = new Array<Unsubscriber>();
     let totalMessagesToSee = writable<number>(0);
     onMount(() => {
-        iframeListener.chatTotalMessagesToSeeStream.subscribe((total) => totalMessagesToSee.set(total));
+        const subscription = iframeListener.chatTotalMessagesToSeeStream.subscribe((total) => totalMessagesToSee.set(total));
+        const unsubscriber = () => subscription.unsubscribe();
+        subscribers.push(unsubscriber);
         //resizeObserver.observe(mainHtmlDiv);
     });
 
     onDestroy(() => {
-        subscribers.map((subscriber) => subscriber());
+        // subscribers.map((subscriber) => subscriber());
+        subscribers.forEach((subscriber) => subscriber());
+       // unsubscribechatTotalMessagesToSeeStream?.unsubscribe();
         //chatTotalMessagesSubscription?.unsubscribe();
     });
 
@@ -428,14 +436,22 @@
         return iframeListener.sendButtonActionBarTriggered(button);
     }
 
-    let mainHtmlDiv: HTMLDivElement;
+    // let mainHtmlDiv: HTMLDivElement;
     let isMobile = isMediaBreakpointUp("md");
-    const resizeObserver = new ResizeObserver(() => {
+    new ResizeObserver(() => {
         isMobile = isMediaBreakpointUp("md");
         if (isMobile) {
             mapEditorModeStore.set(false);
         }
     });
+
+
+    let sound = new Audio(speakerAudio)
+    function playSoundClick() {
+      sound.load()
+      sound.play().catch(e => console.error(e));
+    }
+
 </script>
 <svelte:window on:keydown={onKeyDown} />
 {#if !$chatVisibilityStore}
@@ -455,6 +471,7 @@
                     on:click={toggleChat}
                     on:mouseenter={() => { !navigating ? helpActive = "chat" : '' }}
                     on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+                    on:mouseenter={playSoundClick}
             >
                 <div class="h-12 w-12 rounded group-hover/btn-message-circle:bg-white/10 aspect-square flex items-center justify-center transition-all"
                 >
@@ -483,6 +500,7 @@
                 <div class="h-12 w-12 rounded group-hover/btn-users:bg-white/10 aspect-square flex items-center justify-center transition-all"
                      on:mouseenter={() => { !navigating ? helpActive = "users" : '' }}
                      on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+                     on:mouseenter={playSoundClick}
                 >
                     <UsersIcon />
                 </div>
@@ -497,12 +515,14 @@
             {#if !$silentStore}
             <div in:fly={{delay: 750, y: -200, duration: 750 }}>
                 <div class="flex items-center">
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
                         on:click={toggleEmojiPicker}
                         on:click={helpActive = false}
                         on:mouseenter={() => { !navigating ? helpActive = "emoji" : '' }}
                         on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+                        on:mouseenter={playSoundClick}
                     >
                         <div
                                 class="h-12 w-12 rounded aspect-square flex items-center justify-center transition-all {$emoteMenuSubStore ? 'bg-secondary group-hover/bg-secondary-600' : ' group-hover/btn-emoji:bg-white/10'}"
@@ -521,7 +541,7 @@
                                 <div class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg px-3 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 sm:flex-row">
                                     <div class="flex animate flex-row flex items-center">
                                         <div class="py-1 flex">
-                                            {#each [...$emoteDataStore.keys()] as key}
+                                            {#each [...$emoteDataStore.keys()] as key (key)}
                                                 <div class="transition-all bottom-action-button divide-x">
                                                     <button
                                                             on:click|stopPropagation|preventDefault={() => {
@@ -582,6 +602,7 @@
                             <div class="h-12 w-12 rounded btn-layout/btn-more:bg-white/10 aspect-square flex items-center justify-center transition-all"
                                  on:click={() => analyticsClient.layoutPresentChange()}
                                  on:click={switchLayoutMode}
+                                 on:mouseenter={playSoundClick}
                             >
                                 {#if $embedScreenLayoutStore === LayoutMode.Presentation}
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrows-minimize" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -611,6 +632,7 @@
                             </div>
                         </div>
                         <div class="group/btn-follow bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg  aspect-square">
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div class="h-12 w-12 rounded group-hover/btn-follow:bg-white/10 aspect-square flex items-center justify-center transition-all {$followStateStore === 'active' ? 'bg-secondary' : '' }"
                                  class:disabled={$followStateStore !== "off"}
                                  on:click={() => analyticsClient.follow()}
@@ -624,6 +646,7 @@
                                 <HelpTooltip title="Ask to someone to follow you" />
                             {/if}
                         </div>
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div class="group/btn-lock relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
                              class:disabled={$currentPlayerGroupLockStateStore}
                              on:click={() =>analyticsClient.lockDiscussion()}
@@ -664,6 +687,7 @@
                                         on:click={microphoneClick}
                                         on:mouseenter={() => { !navigating ? helpActive = "mic" : '' }}
                                         on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+                                        on:mouseenter={playSoundClick}
                                 >
                                     {#if $requestedMicrophoneState && !$silentStore}
                                         <MicOnIcon />
@@ -681,6 +705,7 @@
                     <!--{#if $microphoneListStore.length > 1 || $cameraListStore.length > 1 || $speakerListStore.length > 0}
                     {/if}-->
                         <div class="absolute h-3 w-7 rounded-b bg-contrast/80 backdrop-blur left-0 right-0 m-auto p-1 z-10 opacity-0 transition-all -bottom-3 {cameraActive ? 'opacity-100' : 'group-hover/hardware:opacity-100' }">
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
                                 class="absolute bottom-1 left-0 right-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm"
                                 on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
@@ -698,8 +723,7 @@
                                         <div class="flex text-xxs uppercase text-white/50 px-3 py-2 relative">
                                             {$LL.actionbar.subtitle.camera()}
                                         </div>
-                                        {#each $cameraListStore as camera}
-                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                        {#each $cameraListStore as camera (camera.deviceId)}                                           <!-- svelte-ignore a11y-click-events-have-key-events -->
                                             <div
                                                     class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$usedCameraDeviceIdStore === camera.deviceId ? 'bg-secondary' : 'hover:bg-white/10'}"
                                                     on:click={() => {
@@ -715,8 +739,7 @@
                                                 <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" color="stroke-white fill-transparent {$usedCameraDeviceIdStore === camera.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
                                                 {/if}
                                             </div>
-                                        {/each}
-                                    </div>
+                                        {/each}                                </div>
                                 {:else}
                                     <div class="my-2">
                                         <div class="flex text-xxs uppercase text-white/50 px-3 py-2 relative">
@@ -742,7 +765,8 @@
                                         <div class="flex text-xxs uppercase text-white/50 px-3 py-2 relative">
                                             {$LL.actionbar.subtitle.microphone()}
                                         </div>
-                                        {#each $microphoneListStore as microphone}
+                                        {#each $microphoneListStore as microphone (microphone.deviceId)}
+                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                                             <div
                                                 class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$usedMicrophoneDeviceIdStore === microphone.deviceId ? 'bg-secondary' : 'hover:bg-white/10'}"
                                                 on:click={() => {
@@ -785,7 +809,8 @@
                                         <div class="flex text-xxs uppercase text-white/50 px-3 py-1 relative">
                                             {$LL.actionbar.subtitle.speaker()}
                                         </div>
-                                        {#each $speakerListStore as speaker}
+                                        {#each $speakerListStore as speaker (speaker.deviceId)}
+                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                                             <div
                                                     class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$speakerSelectedStore === speaker.deviceId ? 'bg-secondary' : 'hover:bg-white/10'}"
                                                     on:click={() => {
@@ -822,6 +847,7 @@
                                     on:click={cameraClick}
                                     on:mouseenter={() => { !navigating ? helpActive = "cam" : '' }}
                                     on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+                                    on:mouseenter={playSoundClick}
                             >
                                 {#if $requestedCameraState && !$silentStore}
                                     <CamOnIcon />
@@ -866,7 +892,7 @@
         <div class="flex space-x-2 xl:space-x-4">
             {#if $addActionButtonActionBarEvent.length > 0}
                 <div class="flex items-center relative">
-                    {#each $addActionButtonActionBarEvent as button}
+                    {#each $addActionButtonActionBarEvent as button (button.id)}
                         <div class="group/btn-custom{button.id} peer/custom{button.id} relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg">
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
@@ -908,9 +934,9 @@
             {#if $inviteUserActivated}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div transition:fly={{delay: 1250, y: -200, duration: 750 }}>
-                    <div class="flex items-center hidden xl:block">
-                        <div class="bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg flex">
-                            {#each $addClassicButtonActionBarEvent as button}
+                    <div class="flex items-center hidden xl:block" on:mouseenter={playSoundClick}>
+                        <div class="bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg flex" >
+                            {#each $addClassicButtonActionBarEvent as button (button.id)}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
                                         class="flex flex-initial"
@@ -932,6 +958,8 @@
                                     on:dragstart|preventDefault={noDrag}
                                     on:click={() => analyticsClient.openInvite()}
                                     on:click={() => showMenuItem(SubMenusInterface.invite)}
+
+
                                     class="btn rounded h-12 select-none !px-4 {!$userIsConnected && ENABLE_OPENID ? 'btn-ghost btn-light' : 'btn-secondary' }"
                             >
                                 {$LL.menu.sub.invite()}
@@ -949,8 +977,10 @@
                 </div>
             {/if}
             {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
-                <div class="items-center relative hidden xl:block" transition:fly={{delay: 1500, y: -200, duration: 750 }}>
-                    <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false } tabindex="0">
+                <div class="items-center relative hidden xl:block" transition:fly={{delay: 1500, y: -200, duration: 750 }} on:mouseenter={playSoundClick}>
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+                    <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false } tabindex="0" >
                         <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-4 pr-3">
                             <AdminPanIcon />
                             <div class="pr-2">
@@ -963,6 +993,7 @@
                     <div class="absolute mt-2 top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all" transition:fly={{y: 40, duration: 150 }}>
                         <ul class="p-0 m-0">
                             {#if $mapEditorActivated}
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => toggleMapEditorMode()}>
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -973,6 +1004,7 @@
                                 </li>
                             {/if}
                             {#if $userHasAccessToBackOfficeStore}
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openBo()}>
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                         <AdjustmentsIcon />
@@ -987,6 +1019,7 @@
                                 <div>Envoyer message global<!-- trad --></div>
                             </li>
                             {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <li on:click={toggleMegaphone} class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
                                 <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                     <MegaphoneIcon />
@@ -1002,8 +1035,10 @@
                     {/if}
                 </div>
             {/if}
-            <div class="flex items-center relative hidden xl:block min-w-40" transition:fly={{delay: 1750, y: -200, duration: 750 }}>
-                <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => profileMenuIsDropped = !profileMenuIsDropped} on:click={close} tabindex="0">
+            <div class="flex items-center relative hidden xl:block min-w-40" transition:fly={{delay: 1750, y: -200, duration: 750 }} >
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+                <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => profileMenuIsDropped = !profileMenuIsDropped} on:click={close} tabindex="0" on:mouseenter={playSoundClick}>
                     <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-2 pr-3">
                         <Woka userId={-1} placeholderSrc="" customWidth="32px" customHeight="32px" />
                         <div class="grow flex flex-col justify-start text-left pr-2">
@@ -1121,6 +1156,7 @@
                 {/if}
             </div>
             <div class="group/btn-burger relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 rounded-l-lg rounded-r-lg aspect-square block xl:hidden">
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     on:click={() => burgerOpen = !burgerOpen}
                     class="h-12 min-w-[48px] p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
@@ -1149,7 +1185,7 @@
         {#if $inviteUserActivated}
             <div class="px-4">
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                {#each $addClassicButtonActionBarEvent as button}
+                {#each $addClassicButtonActionBarEvent as button (button.id)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                             class="flex flex-initial"
@@ -1186,10 +1222,10 @@
             </div>
         {/if}
         {#if $addActionButtonActionBarEvent.length > 0}
-            {#each $addActionButtonActionBarEvent as button}
+            {#each $addActionButtonActionBarEvent as button (button.id)}
                 <div class="px-4">
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div class="h-[1px] w-full bg-white/10 my-4"></div>
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                             in:fly={{}}
                             on:dragstart|preventDefault={noDrag}
