@@ -6,6 +6,7 @@
     import { roomListVisibilityStore } from "../../Stores/ModalStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { scriptUtils } from "../../Api/ScriptUtils";
+    import LL from "../../../i18n/i18n-svelte";
 
     interface RoomData {
         name: string;
@@ -55,7 +56,10 @@
         for (const [roomUrl, roomData] of roomList) {
             if (roomData.name.toLowerCase().indexOf(search.toLowerCase()) != -1) {
                 $roomListFiltered.set(roomUrl, roomData);
-            } else if (roomData.description?.toLowerCase().indexOf(search.toLowerCase()) != -1) {
+            } else if (
+                roomData.description != undefined &&
+                roomData.description.toLowerCase().indexOf(search.toLowerCase()) != -1
+            ) {
                 $roomListFiltered.set(roomUrl, roomData);
             }
         }
@@ -71,6 +75,7 @@
         roomNameSelected.set(roomName);
         // Use the room url to join the room
         scriptUtils.goToPage(roomUrl);
+        LL;
     }
 </script>
 
@@ -79,17 +84,23 @@
     transition:fly={{ x: 1000, duration: 500 }}
 >
     {#if $isMoving}
-        <h1>Moving to the room: {$roomNameSelected}... See you soon... 🫡</h1>
+        <h1>{$LL.mapEditor.listRoom.movingToRoom({ roomNameSelected: $roomNameSelected })}</h1>
     {:else}
-        <label for="search">Search a room</label>
-        <input id="search" type="text" placeholder="Value" bind:value={search} on:input={onUpdateSearch} />
+        <label for="search">{$LL.mapEditor.listRoom.searchLabel()}</label>
+        <input
+            id="search"
+            type="text"
+            placeholder={$LL.mapEditor.listRoom.searchPlaceholder()}
+            bind:value={search}
+            on:input={onUpdateSearch}
+        />
         <!-- room card -->
         <div class="tw-flex tw-flex-wrap tw-justify-center tw-overflow-auto">
             {#if $isFetching}
-                <h3>Room list is fetching... ⤵️</h3>
+                <h3>{$LL.mapEditor.listRoom.isFetching()}</h3>
             {/if}
             {#if !$isFetching && $roomListFiltered.size == 0}
-                <h3>No Room found 🙅‍♂️</h3>
+                <h3>{$LL.mapEditor.listRoom.noRoomFound()}</h3>
             {/if}
             {#each Array.from($roomListFiltered) as [roomUrl, roomData] (roomUrl)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -102,14 +113,16 @@
                     <img
                         class="tw-pointer-events-none tw-rounded-full tw-h-56 tw-w-56 tw-mb-3"
                         src={roomData.thumbnail ?? defaultMapImg}
-                        alt={roomData.description}
+                        alt={roomData.name}
                     />
                     <span class="tw-pointer-events-none tw-text-2xl tw-font-bold tw-m-0">{roomData.name}</span>
                     {#if roomData.areasSearchable || roomData.entitiesSearchable}
-                        <span class="tw-pointer-events-none tw-m-0"
-                            >{roomData.entitiesSearchable ?? 0} objets / {roomData.areasSearchable ?? 0}
-                            zones</span
-                        >
+                        <span class="tw-pointer-events-none tw-m-0">
+                            {$LL.mapEditor.listRoom.items({
+                                countEntity: roomData.entitiesSearchable ?? 0,
+                                countArea: roomData.areasSearchable ?? 0,
+                            })}
+                        </span>
                     {/if}
                 </div>
             {/each}
@@ -117,7 +130,7 @@
         <div
             class="tw-bg-dark-purple/90 tw-backdrop-blur-sm tw-absolute tw-bottom-0 tw-left-0 tw-h-16 tw-w-screen tw-flex tw-justify-center tw-content-center tw-items-center"
         >
-            <button class="light" on:click={close}>Close</button>
+            <button class="light" on:click={close}>{$LL.mapEditor.listRoom.close()}</button>
         </div>
     {/if}
 </div>

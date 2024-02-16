@@ -166,7 +166,7 @@ const mapEditor: BaseTranslation = {
         nameLabelPlaceholder: "MyArea",
         areaDescription: "Description",
         areaDescriptionPlaceholder: "My area is a...",
-        areaSerchable: "Searchable into the exploration mode",
+        areaSerchable: "Searchable in the exploration mode",
         addDescriptionField: "Add description field",
     },
     areaEditorInstructions: {
@@ -192,7 +192,7 @@ const mapEditor: BaseTranslation = {
         objectNamePlaceholder: "MyObject",
         objectDescription: "Object Description",
         objectDescriptionPlaceholder: "My object is a...",
-        objectSearchable: "Searchable into the exploration mode",
+        objectSearchable: "Searchable in the exploration mode",
         addDescriptionField: "Add description field",
     },
     settings: {
@@ -276,6 +276,15 @@ const mapEditor: BaseTranslation = {
             // Translate previous sentence to english
             // "The explorer mode allows you to visualize the map, find objects and areas. There are 2 systems in the explorer mode, the free exploration system or the object and area search system. The video above shows you how to use the explorer mode 💪"
         },
+    },
+    listRoom: {
+        isFetching: "Room list is fetching... ⤵️",
+        noRoomFound: "No room found 🙅‍♂️",
+        items: "{countEntity} entities / {countArea} areas",
+        close: "Close",
+        movingToRoom: "Moving to the room: {roomNameSelected}... See you soon... 🫡",
+        searchLabel: "Search a room",
+        searchPlaceholder: "Write...",
     },
 };
 

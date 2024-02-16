@@ -3365,9 +3365,9 @@ ${escapedMessage}
         // Rule: if the velocity is over 1, we could imagine that the user force to switch on the explorer mode
         if (
             velocity &&
-            velocity > 1 &&
+            velocity > 2 &&
             zoomFactor < 1 &&
-            waScaleManager.zoomModifier <= waScaleManager.maxZoomOut &&
+            waScaleManager.isMaximumZoomReached &&
             !get(mapEditorModeStore)
         ) {
             const askAgainPopup = localStorage.getItem("notAskAgainPopupExplorerMode");
@@ -3377,10 +3377,8 @@ ${escapedMessage}
                 const matEditoreModeState = get(mapEditorModeStore);
                 analyticsClient.toggleMapEditor(!matEditoreModeState);
                 mapEditorModeStore.switchMode(!matEditoreModeState);
+                this.mapEditorModeManager.equipTool(EditorToolName.ExploreTheRoom);
             }
-
-            // Lock the camera to keep the same zoom after animation. The camera will be unlock when the Explorer tool is activated or after 3000ms.
-            this.cameraManager.lockCameraDuring(3000);
             return;
         }
 

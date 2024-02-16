@@ -19,7 +19,7 @@
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
-    import ListAddPropertyButton from "./PropertyEditor/ListAddPropertyButton.svelte";
+    import AddPropertyButtonWrapper from "./PropertyEditor/AddPropertyButtonWrapper.svelte";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
@@ -228,20 +228,20 @@
     </p>
     <div class="properties-buttons tw-flex tw-flex-row">
         {#if !hasJitsiRoomProperty}
-            <ListAddPropertyButton
+            <AddPropertyButtonWrapper
                 property="jitsiRoomProperty"
                 on:click={() => {
                     onAddProperty("jitsiRoomProperty");
                 }}
             />
         {/if}
-        <ListAddPropertyButton
+        <AddPropertyButtonWrapper
             property="playAudio"
             on:click={() => {
                 onAddProperty("playAudio");
             }}
         />
-        <ListAddPropertyButton
+        <AddPropertyButtonWrapper
             property="openWebsite"
             on:click={() => {
                 onAddProperty("openWebsite");
@@ -249,49 +249,49 @@
         />
     </div>
     <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
-        <ListAddPropertyButton
+        <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="klaxoon"
             on:click={() => {
                 onAddProperty("openWebsite", "klaxoon");
             }}
         />
-        <ListAddPropertyButton
+        <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="youtube"
             on:click={() => {
                 onAddProperty("openWebsite", "youtube");
             }}
         />
-        <ListAddPropertyButton
+        <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="googleDrive"
             on:click={() => {
                 onAddProperty("openWebsite", "googleDrive");
             }}
         />
-        <ListAddPropertyButton
+        <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="googleDocs"
             on:click={() => {
                 onAddProperty("openWebsite", "googleDocs");
             }}
         />
-        <ListAddPropertyButton
+        <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="googleSheets"
             on:click={() => {
                 onAddProperty("openWebsite", "googleSheets");
             }}
         />
-        <ListAddPropertyButton
+        <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="googleSlides"
             on:click={() => {
                 onAddProperty("openWebsite", "googleSlides");
             }}
         />
-        <ListAddPropertyButton
+        <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="eraser"
             on:click={() => {

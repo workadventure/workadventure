@@ -1,6 +1,6 @@
 <script lang="ts">
     import { writable } from "svelte/store";
-    import { ChevronDownIcon } from "svelte-feather-icons";
+    import { ChevronDownIcon, ChevronUpIcon } from "svelte-feather-icons";
     import { onMount } from "svelte";
     import { fly } from "svelte/transition";
     import { LL } from "../../../i18n/i18n-svelte";
@@ -18,7 +18,7 @@
     import { Entity } from "../../Phaser/ECS/Entity";
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import { ExplorerTool } from "../../Phaser/Game/MapEditor/Tools/ExplorerTool";
-    import ListAddPropertyButton from "../MapEditor/PropertyEditor/ListAddPropertyButton.svelte";
+    import AddPropertyButtonWrapper from "../MapEditor/PropertyEditor/AddPropertyButtonWrapper.svelte";
 
     let filter = "";
     let selectFilters = writable<Array<string>>(new Array<string>());
@@ -199,50 +199,58 @@
             </div>
 
             <div class="tw-flex tw-flex-row tw-overflow-y-hidden tw-overflow-x-scroll">
-                <ListAddPropertyButton
+                <AddPropertyButtonWrapper
                     property="jitsiRoomProperty"
+                    isActive={$selectFilters.includes("jitsiRoomProperty")}
                     on:click={() => {
                         addFilter("jitsiRoomProperty");
                     }}
                 />
-                <ListAddPropertyButton
+                <AddPropertyButtonWrapper
                     property="playAudio"
+                    isActive={$selectFilters.includes("playAudio")}
                     on:click={() => {
                         addFilter("playAudio");
                     }}
                 />
-                <ListAddPropertyButton
+                <AddPropertyButtonWrapper
                     property="openWebsite"
+                    isActive={$selectFilters.includes("openWebsite")}
                     on:click={() => {
                         addFilter("openWebsite");
                     }}
                 />
-                <ListAddPropertyButton
+                <AddPropertyButtonWrapper
                     property="speakerMegaphone"
+                    isActive={$selectFilters.includes("speakerMegaphone")}
                     on:click={() => {
                         addFilter("speakerMegaphone");
                     }}
                 />
-                <ListAddPropertyButton
+                <AddPropertyButtonWrapper
                     property="listenerMegaphone"
+                    isActive={$selectFilters.includes("listenerMegaphone")}
                     on:click={() => {
                         addFilter("listenerMegaphone");
                     }}
                 />
-                <ListAddPropertyButton
+                <AddPropertyButtonWrapper
                     property="exit"
+                    isActive={$selectFilters.includes("exit")}
                     on:click={() => {
                         addFilter("exit");
                     }}
                 />
-                <ListAddPropertyButton
+                <AddPropertyButtonWrapper
                     property="start"
+                    isActive={$selectFilters.includes("start")}
                     on:click={() => {
                         addFilter("silent");
                     }}
                 />
-                <ListAddPropertyButton
+                <AddPropertyButtonWrapper
                     property="focusable"
+                    isActive={$selectFilters.includes("focusable")}
                     on:click={() => {
                         addFilter("focusable");
                     }}
@@ -260,10 +268,14 @@
                         >{$entitessListFiltered.size}
                         {$LL.mapEditor.explorer.entitiesFound($entitessListFiltered.size > 1)}</span
                     >
+                    {#if entityListActive}
+                        <ChevronDownIcon class="tw-pointer-events-none" size="32" />
+                    {:else}
+                        <ChevronUpIcon class="tw-pointer-events-none" size="32" />
+                    {/if}
                 {:else}
-                    <p>{$LL.mapEditor.explorer.noEntitiesFound()}</p>
+                    <p class="tw-m-0">{$LL.mapEditor.explorer.noEntitiesFound()}</p>
                 {/if}
-                <ChevronDownIcon class="tw-pointer-events-none" size="32" />
             </div>
 
             {#if entityListActive && $entitessListFiltered.size > 0}
@@ -301,10 +313,14 @@
                         >{$areasListFiltered.size}
                         {$LL.mapEditor.explorer.areasFound($areasListFiltered.size > 1)}</span
                     >
+                    {#if areaListActive}
+                        <ChevronDownIcon class="tw-pointer-events-none" size="32" />
+                    {:else}
+                        <ChevronUpIcon class="tw-pointer-events-none" size="32" />
+                    {/if}
                 {:else}
-                    <p>{$LL.mapEditor.explorer.noAreasFound()}</p>
+                    <p class="tw-m-0">{$LL.mapEditor.explorer.noAreasFound()}</p>
                 {/if}
-                <ChevronDownIcon class="tw-pointer-events-none" size="32" />
             </div>
             {#if areaListActive && $areasListFiltered.size > 0}
                 <div class="area-items tw-p-4 tw-flex tw-flex-col">

@@ -12,7 +12,7 @@
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import AreaToolImg from "../images/icon-tool-area.png";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import ListAddPropertyButton from "../MapEditor/PropertyEditor/ListAddPropertyButton.svelte";
+    import AddPropertyButtonWrapper from "../MapEditor/PropertyEditor/AddPropertyButtonWrapper.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
 
@@ -137,7 +137,7 @@
         </div>
         <div class="tw-flex tw-flew-wrap tw-justify-center">
             {#each [...$iconProperties.entries()] as [key, { property, subProperty }] (key)}
-                <ListAddPropertyButton {property} {subProperty} />
+                <AddPropertyButtonWrapper {property} {subProperty} />
             {/each}
         </div>
         <div
@@ -164,7 +164,7 @@
         </div>
         <div class="tw-flex tw-flew-wrap tw-justify-center">
             {#each [...$iconProperties.entries()] as [key, { property, subProperty }] (key)}
-                <ListAddPropertyButton {property} {subProperty} />
+                <AddPropertyButtonWrapper {property} {subProperty} />
             {/each}
         </div>
         <div
