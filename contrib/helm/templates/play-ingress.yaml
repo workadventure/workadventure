@@ -44,4 +44,14 @@ spec:
                 name: {{ include "workadventure.fullname" . }}-play
                 port:
                   number: {{ .Values.play.service.port }}
+    - host: {{ (include "workadventure.roomApiDomainName" .) | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-room-api
+                port:
+                  number: {{ .Values.play.roomApiService.port }}
 {{- end }}

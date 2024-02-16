@@ -1,17 +1,21 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "workadventure.fullname" . }}-play
+  name: {{ include "workadventure.fullname" . }}-room-api
   labels:
     {{- include "workadventure.labels" . | nindent 4 }}
-    role: play
+    role: room-api
+  {{- with .Values.play.roomApiService.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   type: {{ .Values.play.service.type }}
   ports:
     - port: {{ .Values.play.service.port }}
-      targetPort: http
+      targetPort: grpc
       protocol: TCP
-      name: http
+      name: grpc
   selector:
     {{- include "workadventure.selectorLabels" . | nindent 4 }}
     role: play
