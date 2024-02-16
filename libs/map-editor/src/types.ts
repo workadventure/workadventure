@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UploadEntityMessage_Direction } from "@workadventure/messages";
+import { CustomEntityDirection } from "@workadventure/messages";
 
 export type AtLeast<T, K extends keyof T> = Partial<T> & Pick<T, K>;
 
@@ -379,17 +379,15 @@ export enum GameMapProperties {
     ZOOM_MARGIN = "zoomMargin",
 }
 
-export const mapUploadEntityMessageDirectionToDirection = (
-    uploadEntityMessageDirection: UploadEntityMessage_Direction
-) => {
+export const mapCustomEntityDirectionToDirection = (uploadEntityMessageDirection: CustomEntityDirection) => {
     switch (uploadEntityMessageDirection) {
-        case UploadEntityMessage_Direction.Up:
+        case CustomEntityDirection.Up:
             return Direction.Up;
-        case UploadEntityMessage_Direction.Right:
+        case CustomEntityDirection.Right:
             return Direction.Right;
-        case UploadEntityMessage_Direction.Down:
+        case CustomEntityDirection.Down:
             return Direction.Down;
-        case UploadEntityMessage_Direction.Left:
+        case CustomEntityDirection.Left:
             return Direction.Left;
         default:
             return Direction.Down;
