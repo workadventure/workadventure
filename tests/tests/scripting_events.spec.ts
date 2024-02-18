@@ -7,7 +7,7 @@ test.describe('Scripting API Events', () => {
     test('test events', async ({ page, browser, request }) => {
         // Go to 
         await page.goto(
-            `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+            `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
         );
         await login(page, "Alice");
 
@@ -48,7 +48,7 @@ test.describe('Scripting API Events', () => {
         const page2 = await newBrowser.newPage();
 
         await page2.goto(
-            `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+            `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
         );
 
         await login(page2, 'Bob');
@@ -143,7 +143,7 @@ test.describe('Scripting API Events', () => {
             });
         });
 
-        const result = await request.post("http://play.workadventure.localhost/global/event", {
+        const result = await request.post("/global/event", {
             headers: {
                 "Authorization": process.env.ADMIN_API_TOKEN,
             },

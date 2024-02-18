@@ -10,10 +10,11 @@ import Map from "./utils/map";
 import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import {resetWamMaps} from "./utils/map-editor/uploader";
 import {evaluateScript} from "./utils/scripting";
+import {map_storage_url} from "./utils/urls";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
-  baseURL: (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://john.doe:password@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost'),
+  baseURL: map_storage_url,
 })
 test.describe('Map editor', () => {
   test('Successfully set the megaphone feature', async ({ page, browser, request, browserName }) => {

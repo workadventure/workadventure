@@ -22,7 +22,7 @@ test.describe('Chat', () => {
 
 
     await page.goto(
-        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
+        `/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
     );
     const nickname = getUniqueNickname('A');
     await login(page, nickname, 2);
@@ -44,7 +44,7 @@ test.describe('Chat', () => {
       const newBrowser = await browser.browserType().launch();
       const page2 = await newBrowser.newPage();
       await page2.goto(
-          `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
+          `/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
       );
       const nickname2 = getUniqueNickname('B');
       await login(page2, nickname2, 3);
@@ -205,7 +205,7 @@ test.describe('Use application into TimeLine', () => {
   test('main', async ({ page, browser, browserName }) => {
 
     await page.goto(
-        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
+        `/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
     );
     const nickname = getUniqueNickname('A');
     await login(page, nickname, 2);
