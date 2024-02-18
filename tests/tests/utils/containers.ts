@@ -1,6 +1,7 @@
 import { execSync } from 'child_process';
 import { Page } from '@playwright/test';
 import Dockerode from 'dockerode';
+import {play_url} from "./urls";
 
 /**
  * Execute Docker compose, passing the correct host directory
@@ -70,7 +71,8 @@ export async function upMapStorage(): Promise<void> {
 export async function gotoWait200(page: Page, url: string): Promise<void> {
     // eslint-disable-next-line no-constant-condition
     while (true) {
-        const response = await page.goto(url);
+        const targetUrl = new URL(url, play_url).toString();
+        const response = await page.goto(targetUrl);
         // Because we just rebooted play, we might get HTTP 502 errors from Traefik.
         // Let's wait for a correct answer.
         if (response.ok()) {
