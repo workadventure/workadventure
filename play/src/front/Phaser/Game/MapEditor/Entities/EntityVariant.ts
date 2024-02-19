@@ -6,7 +6,7 @@ export class EntityVariant {
     private readonly _defaultPrefab: EntityPrefab;
     private variants: Map<string, Map<string, EntityPrefab>>;
     constructor(defaultPrefab: EntityPrefab) {
-        this._id = `${defaultPrefab.collectionName}__${defaultPrefab.name}`;
+        this._id = defaultPrefab.id;
         this._defaultPrefab = defaultPrefab;
         this.variants = new Map();
         this.addPrefab(defaultPrefab);

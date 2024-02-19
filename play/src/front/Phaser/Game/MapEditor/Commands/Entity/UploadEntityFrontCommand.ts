@@ -1,4 +1,4 @@
-import { EntityRawPrefab, UploadEntityCommand, mapCustomEntityDirectionToDirection } from "@workadventure/map-editor";
+import { EntityRawPrefab, mapCustomEntityDirectionToDirection, UploadEntityCommand } from "@workadventure/map-editor";
 import { UploadEntityMessage } from "@workadventure/messages";
 import { RoomConnection } from "../../../../../Connection/RoomConnection";
 import { gameManager } from "../../../GameManager";
@@ -14,14 +14,19 @@ export class UploadEntityFrontCommand extends UploadEntityCommand implements Fro
     }
     execute(): Promise<void> {
         const customEntityCollectionUrl = gameManager.getCurrentGameScene().getCustomEntityCollectionUrl();
-        const uploadedEntity = EntityRawPrefab.parse({
-            ...this.uploadEntityMessage,
-            direction: mapCustomEntityDirectionToDirection(this.uploadEntityMessage.direction),
-        });
-        gameManager
-            .getCurrentGameScene()
-            .getEntitiesCollectionsManager()
-            .addUploadedEntity(uploadedEntity, customEntityCollectionUrl);
+        try {
+            const uploadedEntity = EntityRawPrefab.parse({
+                ...this.uploadEntityMessage,
+                direction: mapCustomEntityDirectionToDirection(this.uploadEntityMessage.direction),
+            });
+            gameManager
+                .getCurrentGameScene()
+                .getEntitiesCollectionsManager()
+                .addUploadedEntity(uploadedEntity, customEntityCollectionUrl);
+        } catch (e) {
+            console.error(e);
+        }
+
         return super.execute();
     }
 

@@ -4,16 +4,16 @@
 
     export let entityPrefabVariants:EntityVariant[];
     export let onSelectEntity:(entityVariant:EntityVariant)=>void
-    export let currentSelectedEntityName:string|undefined
+    export let currentSelectedEntityId:string|undefined
 
 </script>
 
 <div class="tw-grid tw-grid-cols-[repeat(auto-fit,minmax(64px,1fr))] tw-gap-2">
-    {#each entityPrefabVariants as entityPrefabVariant (entityPrefabVariant.id)}
+    {#each entityPrefabVariants as entityPrefabVariant}
         <EntityItem
             on:selectEntity={(event) => onSelectEntity(event.detail)}
             entityVariant={entityPrefabVariant}
-            isActive={entityPrefabVariant.defaultPrefab.name === currentSelectedEntityName}
+            isActive={entityPrefabVariant.defaultPrefab.id === currentSelectedEntityId}
         />
     {/each}
 </div>

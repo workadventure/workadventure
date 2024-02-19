@@ -237,13 +237,14 @@ enum CustomEntityDirection {
 
 message UploadEntityMessage {
   bytes file = 1;
-  string name = 2;
-  repeated string tags = 3;
-  string imagePath = 4;
-  CustomEntityDirection direction = 5;
-  string color = 6;
-  optional google.protobuf.Value collisionGrid = 7;
-  optional uint32 depthOffset = 8;
+  string id = 2;
+  string name = 3;
+  repeated string tags = 4;
+  string imagePath = 5;
+  CustomEntityDirection direction = 6;
+  string color = 7;
+  optional google.protobuf.Value collisionGrid = 8;
+  optional uint32 depthOffset = 9;
 }
 
 message ModifyCustomEntityMessage {

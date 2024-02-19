@@ -5,10 +5,11 @@ import {
     AddSpaceFilterMessage,
     AddSpaceUserMessage,
     AnswerMessage,
-    AskMuteMicrophoneMessage,
-    AskMuteVideoMessage,
+    apiVersionHash,
     AskMutedMessage,
     AskMutedVideoMessage,
+    AskMuteMicrophoneMessage,
+    AskMuteVideoMessage,
     AvailabilityStatus,
     CharacterTextureMessage,
     ClientToServerMessage as ClientToServerMessageTsProto,
@@ -27,12 +28,12 @@ import {
     ModifyCustomEntityMessage,
     MoveToPositionMessage as MoveToPositionMessageProto,
     MucRoomDefinitionMessage,
+    MutedMessage,
+    MutedVideoMessage,
     MuteMicrophoneEverybodyMessage,
     MuteMicrophoneMessage,
     MuteVideoEverybodyMessage,
     MuteVideoMessage,
-    MutedMessage,
-    MutedVideoMessage,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     PositionMessage_Direction,
@@ -1432,21 +1433,24 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyCustomEntity(commandId:string, modifyCustomEntityMessage: ModifyCustomEntityMessage) : void {
+    public emitMapEditorModifyCustomEntity(
+        commandId: string,
+        modifyCustomEntityMessage: ModifyCustomEntityMessage
+    ): void {
         this.send({
-            message:{
+            message: {
                 $case: "editMapCommandMessage",
-                editMapCommandMessage : {
+                editMapCommandMessage: {
                     id: commandId,
-                    editMapMessage : {
-                        message : {
+                    editMapMessage: {
+                        message: {
                             $case: "modifyCustomEntityMessage",
-                            modifyCustomEntityMessage
-                        }
-                    }
-                }
-            }
-        })
+                            modifyCustomEntityMessage,
+                        },
+                    },
+                },
+            },
+        });
     }
 
     public getAllTags(): string[] {

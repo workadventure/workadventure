@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { IconChevronLeft, IconPencil } from "@tabler/icons-svelte";
+    import { IconChevronLeft, IconDeselect, IconPencil } from "@tabler/icons-svelte";
     import type { EntityPrefab } from "@workadventure/map-editor";
-    import { onDestroy } from "svelte";
     import { get } from "svelte/store";
+    import { onDestroy } from "svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
@@ -35,6 +35,7 @@
 
     onDestroy(() => {
         mapEditorSelectedEntityPrefabStoreUnsubscriber();
+        entitiesPrefabsVariantStoreUnsubscriber();
     });
 
     const mapEditorSelectedEntityPrefabStoreUnsubscriber = mapEditorSelectedEntityPrefabStore.subscribe(
@@ -42,6 +43,17 @@
             pickedEntity = prefab;
         }
     );
+
+    const entitiesPrefabsVariantStoreUnsubscriber = entitiesCollectionsManager
+        .getEntitiesPrefabsVariantStore()
+        .subscribe((entitiesPrefabsVariants) => {
+            if (pickedEntityVariant) {
+                pickedEntityVariant = entitiesPrefabsVariants.find(
+                    (entityPrefabVariant) => pickedEntityVariant?.id === entityPrefabVariant.id
+                );
+                pickedEntity = pickedEntityVariant?.defaultPrefab;
+            }
+        });
 
     function onPickItem(entityPrefab: EntityPrefab) {
         pickedEntity = entityPrefab;
@@ -179,7 +191,9 @@
                     />
                     {#if isEditingCustomEntity}
                         <CustomEntityEditionForm
-                            on:closeForm={() => setIsEditingCustomEntity(false)}
+                            on:closeForm={() => {
+                                setIsEditingCustomEntity(false);
+                            }}
                             customEntity={pickedEntity}
                         />
                     {:else}
@@ -201,6 +215,12 @@
                                 ><IconPencil size={16} />{$LL.mapEditor.entityEditor.buttons.editEntity()}</button
                             >
                         {/if}
+                        <button
+                            class="tw-self-start tw-absolute tw-right-0"
+                            on:click={() => {
+                                (pickedEntity = undefined), (pickedEntityVariant = undefined);
+                            }}><IconDeselect/></button
+                        >
                     {/if}
                 </div>
             {/if}
@@ -212,7 +232,7 @@
                         searchTerm
                     )}
                     onSelectEntity={onPickEntityVariant}
-                    currentSelectedEntityName={pickedEntity?.name}
+                    currentSelectedEntityId={pickedEntity?.id}
                 />
             {/if}
         {/if}

@@ -37,7 +37,7 @@ export class CustomEntityCollectionService {
         const { id, name, tags, depthOffset, collisionGrid } = modifyCustomEntityMessage;
         const customEntityCollectionFileContent = await this.readOrCreateEntitiesCollectionFile();
         const customEntityCollection = EntityCollectionRaw.parse(JSON.parse(customEntityCollectionFileContent));
-        const indexOfEntityToModify = customEntityCollection.collection.findIndex((entity) => entity.name === id);
+        const indexOfEntityToModify = customEntityCollection.collection.findIndex((entity) => entity.id === id);
         if (indexOfEntityToModify !== -1) {
             const entityToModify = customEntityCollection.collection[indexOfEntityToModify];
             customEntityCollection.collection[indexOfEntityToModify] = {
@@ -59,12 +59,14 @@ export class CustomEntityCollectionService {
         const fileExist = await fileSystem.exist(entityCollectionFileVirtualPath);
         if (!fileExist) {
             const entityCollectionFile: EntityCollectionRaw = {
+                version: "1.0",
                 collection: [],
                 collectionName: "custom entities",
                 tags: [],
             };
             await fileSystem.writeStringAsFile(entityCollectionFileVirtualPath, JSON.stringify(entityCollectionFile));
         }
+        //Check current version and migrate to new one
         return fileSystem.readFileAsString(entityCollectionFileVirtualPath);
     }
 

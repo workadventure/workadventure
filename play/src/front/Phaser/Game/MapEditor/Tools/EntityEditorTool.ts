@@ -138,7 +138,13 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 break;
             }
             case "modifyCustomEntityMessage": {
-                console.log("Not yet implemented");
+                const modifyCustomEntityMessage =
+                    editMapCommandMessage.editMapMessage?.message.modifyCustomEntityMessage;
+                await this.mapEditorModeManager.executeCommand(
+                    new ModifyCustomEntityFrontCommand(modifyCustomEntityMessage),
+                    false,
+                    false
+                );
                 break;
             }
             case "deleteCustomEntityMessage": {

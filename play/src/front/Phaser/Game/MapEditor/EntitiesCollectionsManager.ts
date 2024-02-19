@@ -7,12 +7,12 @@ import {
 } from "@workadventure/map-editor";
 import { derived, Readable, Writable, writable } from "svelte/store";
 import { EntityVariant } from "./Entities/EntityVariant";
+import { EntitiesFileMigration } from "@workadventure/map-editor/src/Migrations/EntitiesFileMigration";
 
 export class EntitiesCollectionsManager {
     private entitiesPrefabsMapPromise!: Promise<Map<string, EntityPrefab>>;
     private tags: string[] = [];
 
-    private filter = "";
     private currentCollection: EntityCollection = { collectionName: "All Object Collection", collection: [], tags: [] };
     private readonly entitiesPrefabsStore: Writable<EntityPrefab[]>;
     private readonly entitiesPrefabsVariantStore: Readable<EntityVariant[]>;
@@ -23,11 +23,14 @@ export class EntitiesCollectionsManager {
             // entityVariants ordered by collectionName+name
             const entityVariants = new Map<string, EntityVariant>();
             for (const entityPrefab of $entitiesPrefabsStore) {
-                const fullName = entityPrefab.collectionName + "__" + entityPrefab.name;
-                let variant = entityVariants.get(fullName);
+                const idOrGeneratedName =
+                    entityPrefab.type === "Custom"
+                        ? entityPrefab.id
+                        : entityPrefab.collectionName + "__" + entityPrefab.name;
+                let variant = entityVariants.get(idOrGeneratedName);
                 if (variant === undefined) {
                     variant = new EntityVariant(entityPrefab);
-                    entityVariants.set(fullName, variant);
+                    entityVariants.set(idOrGeneratedName, variant);
                 } else {
                     variant.addPrefab(entityPrefab);
                 }
@@ -54,7 +57,9 @@ export class EntitiesCollectionsManager {
                 fetchUrlPromises.push(promise);
                 promise
                     .then((entityCollectionRaw) => {
-                        console.debug(entityCollectionRaw);
+                        entityCollectionRaw = new EntitiesFileMigration(
+                            entityCollectionRaw
+                        ).getLastVersionForEntitiesFile();
                         entityCollections.push({
                             collection: this.parseRawCollection(entityCollectionRaw, descriptor.type),
                             url: descriptor.url,
@@ -127,6 +132,28 @@ export class EntitiesCollectionsManager {
         this.entitiesPrefabsMapPromise = entitiesPrefabsMapPromiseWithUploadedEntity;
     }
 
+    public modifyCustomEntity(
+        id: string,
+        name: string,
+        tags: string[],
+        depthOffset?: number,
+        collisionGrid?: number[][]
+    ): void {
+        this.entitiesPrefabsStore.update((currentEntitiesPrefabs) => {
+            const indexOfCustomEntity = currentEntitiesPrefabs.findIndex((entityPrefab) => entityPrefab.id === id);
+            if (indexOfCustomEntity !== -1) {
+                currentEntitiesPrefabs[indexOfCustomEntity] = {
+                    ...currentEntitiesPrefabs[indexOfCustomEntity],
+                    name,
+                    tags,
+                    depthOffset,
+                    collisionGrid,
+                };
+            }
+            return currentEntitiesPrefabs;
+        });
+    }
+
     private async fetchRawCollection(url: string): Promise<EntityCollectionRaw> {
         const response = await fetch(url);
         if (!response.ok) {
@@ -161,7 +188,6 @@ export class EntitiesCollectionsManager {
         return {
             ...rawPrefab,
             collectionName,
-            id: `${collectionName}:${rawPrefab.name}:${rawPrefab.color}:${rawPrefab.direction}`,
             type: entityPrefabType,
         };
     }

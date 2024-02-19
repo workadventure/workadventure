@@ -1,7 +1,8 @@
 import { ModifyCustomEntityCommand } from "@workadventure/map-editor";
 import { ModifyCustomEntityMessage } from "@workadventure/messages";
-import { FrontCommand } from "../FrontCommand";
 import { RoomConnection } from "../../../../../Connection/RoomConnection";
+import { FrontCommand } from "../FrontCommand";
+import { gameManager } from "../../../GameManager";
 
 export class ModifyCustomEntityFrontCommand extends ModifyCustomEntityCommand implements FrontCommand {
     constructor(modifyCustomEntityMessage: ModifyCustomEntityMessage) {
@@ -13,8 +14,12 @@ export class ModifyCustomEntityFrontCommand extends ModifyCustomEntityCommand im
     }
 
     execute(): Promise<void> {
-        //TODO put execution here
-        return Promise.resolve();
+        const { id, name, tags, depthOffset, collisionGrid } = this.modifyCustomEntityMessage;
+        gameManager
+            .getCurrentGameScene()
+            .getEntitiesCollectionsManager()
+            .modifyCustomEntity(id, name, tags, depthOffset, collisionGrid);
+        return super.execute();
     }
 
     getUndoCommand(): ModifyCustomEntityFrontCommand {

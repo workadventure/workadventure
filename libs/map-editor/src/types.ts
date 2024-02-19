@@ -162,6 +162,7 @@ export const EntityDataProperty = z.discriminatedUnion("type", [
 export const EntityDataProperties = z.array(EntityDataProperty);
 
 export const EntityRawPrefab = z.object({
+    id: z.string(),
     name: z.string(),
     tags: z.array(z.string()),
     imagePath: z.string(),
@@ -175,7 +176,6 @@ export const EntityPrefabType = z.union([z.literal("Default"), z.literal("Custom
 
 export const EntityPrefab = EntityRawPrefab.extend({
     collectionName: z.string(),
-    id: z.string(),
     type: EntityPrefabType,
 });
 
@@ -194,6 +194,7 @@ export const EntityCollectionRaw = z.object({
     collectionName: z.string(),
     tags: z.array(z.string()),
     collection: z.array(EntityRawPrefab),
+    version: z.string().optional(),
 });
 
 // TODO: get rid of this type and use only WAMEntityData

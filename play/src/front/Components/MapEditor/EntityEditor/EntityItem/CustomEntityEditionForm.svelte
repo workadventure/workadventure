@@ -10,33 +10,40 @@
 
     function saveCustomEntityModifications() {
         mapEditorModifyCustomEntityEventStore.set({
-            id: customEntity.name,
+            id: customEntity.id,
             name,
-            tags: inputTags.trim().length === 0 ? [] : inputTags.trim().split(","),
+            tags: convertTagsInputIntoTagArray(inputTags),
         });
         dispatch("closeForm");
+    }
+
+    function convertTagsInputIntoTagArray(tags: string) {
+        return tags.trim().length === 0 ? [] : tags.split(",").map((tag) => tag.trim());
     }
 </script>
 
 <div class="tw-flex tw-flex-col tw-flex-1 tw-gap-2">
     <div>
-        <b>Image name</b>
+        <label for="id"><b>Image name</b></label>
         <input
             class="tw-p-1 tw-rounded-md tw-bg-dark-purple !tw-border-solid !tw-border !tw-border-gray-400 tw-text-white tw-min-w-full"
             bind:value={name}
+            id="name"
         />
     </div>
     <div>
-        <b>Tags</b>
+        <label for="tags"><b>Tags</b></label>
         <input
             class="tw-p-1 tw-rounded-md tw-bg-dark-purple !tw-border-solid !tw-border !tw-border-gray-400 tw-text-white tw-min-w-full"
             bind:value={inputTags}
+            id="tags"
         />
     </div>
     <div>
-        <b>Object type</b>
+        <label for="type"><b>Object type</b></label>
         <input
             class="tw-p-1 tw-rounded-md tw-bg-dark-purple !tw-border-solid !tw-border !tw-border-gray-400 tw-text-white tw-min-w-full"
+            id="type"
         />
     </div>
     <div class="tw-flex tw-flex-row tw-self-end tw-gap-2">
