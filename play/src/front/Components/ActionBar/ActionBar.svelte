@@ -785,101 +785,11 @@
                         <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
                     </button>
                 </div>
-                {#if $mapEditorActivated}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        on:dragstart|preventDefault={noDrag}
-                        on:click={toggleMapEditorMode}
-                        class="bottom-action-button"
-                    >
-                        {#if isMobile}
-                            <Tooltip text={$LL.actionbar.mapEditorMobileLocked()} />
-                        {:else}
-                            <Tooltip text={$LL.actionbar.mapEditor()} />
-                        {/if}
-                        <button
-                            id="mapEditorIcon"
-                            class:border-top-light={$mapEditorModeStore && !isMobile}
-                            name="toggle-map-editor"
-                            disabled={isMobile}
-                        >
-                            <img
-                                draggable="false"
-                                src={mapBuilder}
-                                class:disable-opacity={isMobile}
-                                style="padding: 2px"
-                                alt="toggle-map-editor"
-                            />
-                        </button>
-                    </div>
-                {/if}
-                {#if $userHasAccessToBackOfficeStore}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        on:dragstart|preventDefault={noDrag}
-                        on:click={() => analyticsClient.openBackOffice()}
-                        on:click={openBo}
-                        class="bottom-action-button"
-                    >
-                        <Tooltip text={$LL.actionbar.bo()} />
-
-                        <button id="backOfficeIcon">
-                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-bo" />
-                        </button>
-                    </div>
-                {/if}
             </div>
             <div class="bottom-action-section tw-flex tw-flex-initial">
                 <AvailabilityStatusComponent />
             </div>
             <div class="bottom-action-section tw-flex tw-flex-initial">
-                {#if $mapEditorActivated}
-                    <div
-                        on:dragstart|preventDefault={noDrag}
-                        on:click={toggleMapEditorMode}
-                        class="bottom-action-button"
-                    >
-                        {#if isMobile}
-                            <Tooltip text={$LL.actionbar.mapEditorMobileLocked()} />
-                        {:else}
-                            <Tooltip text={$LL.actionbar.mapEditor()} />
-                        {/if}
-                        <button
-                            id="mapEditorIcon"
-                            class:border-top-light={$mapEditorModeStore && !isMobile}
-                            name="toggle-map-editor"
-                            disabled={isMobile}
-                        >
-                            <img
-                                draggable="false"
-                                src={mapBuilder}
-                                class:disable-opacity={isMobile}
-                                style="padding: 2px"
-                                alt="toggle-map-editor"
-                            />
-                        </button>
-                    </div>
-                {/if}
-                {#if $userHasAccessToBackOfficeStore}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        on:dragstart|preventDefault={noDrag}
-                        on:click={() => analyticsClient.openBackOffice()}
-                        on:click={openBo}
-                        class="bottom-action-button"
-                    >
-                        <Tooltip text={$LL.actionbar.bo()} />
-
-                        <button id="backOfficeIcon">
-                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-bo" />
-                        </button>
-                    </div>
-                {/if}
-            </div>
-
-            <div class="bottom-action-section tw-flex tw-flex-initial">
-                <AvailabilityStatusComponent />
-
                 {#if $mapEditorActivated}
                     <div
                         on:dragstart|preventDefault={noDrag}
