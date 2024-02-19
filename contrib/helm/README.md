@@ -2,12 +2,10 @@
 
 This Helm chart deploys Workadventure on Kubernetes.
 
-It is an adaption of the [Docker Compose deployment](../docker).
-
 ## Installation
 
-    helm repo add workadventure-k8s https://workadventure.github.io/workadventure-k8s
-    helm install workadventure workadventure-k8s/workadventure
+    helm repo add workadventure https://charts.workadventu.re/
+    helm install workadventure workadventure/workadventure
 
 ## Configuration
 
