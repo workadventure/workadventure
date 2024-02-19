@@ -1041,6 +1041,7 @@ jobs:
           appVersion: \"${DEPLOY_REF}\"
           domainName: ${DEPLOY_REF}.test.workadventu.re
           ejabberdJwtSecret: \"${EJABBERD_JWT_SECRET}\"
+          forceRedeploy: true
           mapstorage:
             env:
               AUTHENTICATION_USER: \"john.doe\"
@@ -1157,6 +1158,14 @@ jobs:
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
         working-directory: tests
+
+      - name: "Install Room Api client dependencies"
+        run: npm ci
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Build Room Api client proto files"
+        run: npm run ts-proto
+        working-directory: "libs/room-api-clients/room-api-client-js"
 
       #- name: Upload test-map
       #  run: |

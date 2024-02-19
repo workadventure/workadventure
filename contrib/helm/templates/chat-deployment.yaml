@@ -18,6 +18,9 @@ spec:
       annotations:
         checksum/config: {{ (include (print $.Template.BasePath "/chat-env.yaml") .) | sha256sum }}
         checksum/secret: {{ (include (print $.Template.BasePath "/chat-secret-env.yaml") .) | sha256sum }}
+        {{- if .Values.forceRedeploy }}
+        forceRedeploy: {{ randAlphaNum 10 | quote }}
+        {{- end }}
         {{- with .Values.chat.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
