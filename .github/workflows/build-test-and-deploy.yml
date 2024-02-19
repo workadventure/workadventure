@@ -1178,9 +1178,10 @@ jobs:
         run: npm run test-helm-install -- --shard ${{ matrix.shard }}/${{ matrix.nbShards }}
         working-directory: tests
         env:
-          PLAY_URI: "https://play-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
+          PLAY_URL: "https://play-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
           ROOM_API_HOSTNAME: "https://map-storage-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
           MAP_STORAGE_ENDPOINT: "map-storage-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
+          ROOM_API_SECRET_KEY: "password"
       - uses: actions/upload-artifact@v2
         if: always()
         with:
