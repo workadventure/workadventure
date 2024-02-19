@@ -1,4 +1,8 @@
-# WorkAdventure on Kubernetes
+# Self-hosting WorkAdventure using Kubernetes Helm chart
+
+> [!WARNING]
+> If you haven't already, please check the [Setting up a self-hosted production environment](../../docs/others/self-hosting/install.md) guide
+> before getting started.
 
 This Helm chart deploys Workadventure on Kubernetes.
 
