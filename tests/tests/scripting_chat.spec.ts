@@ -5,11 +5,12 @@ import Chat from './utils/chat';
 import {expectInViewport, expectOutViewport} from "./utils/viewport";
 import Map from './utils/map';
 import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Scripting chat functions', () => {
     test('can open / close chat + start / stop typing', async ({ page}) => {
         await page.goto(
-            `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+            publicTestMapUrl("tests/E2E/empty.json", "scripting_chat")
         );
 
         await login(page);
@@ -79,7 +80,7 @@ test.describe('Scripting chat functions', () => {
         }
 
         await page.goto(
-            `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+            publicTestMapUrl("tests/E2E/empty.json", "scripting_chat")
         );
 
         await login(page);
@@ -87,7 +88,7 @@ test.describe('Scripting chat functions', () => {
 
         const newBrowser = await browser.browserType().launch();
         const page2 = await newBrowser.newPage();
-        await page2.goto(`/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`);
+        await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "scripting_chat"));
 
 
         await evaluateScript(page, async () => {

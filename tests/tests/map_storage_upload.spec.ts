@@ -4,7 +4,7 @@ import { login } from './utils/roles';
 import {createZipFromDirectory} from "./utils/zip";
 import { gotoWait200 } from "./utils/containers";
 import {RENDERER_MODE} from "./utils/environment";
-import {map_storage_url} from "./utils/urls";
+import {map_storage_url, maps_domain} from "./utils/urls";
 
 test.use({
     baseURL: map_storage_url,
@@ -38,7 +38,7 @@ test.describe('Map-storage Upload API', () => {
                     mimeType: "application/json",
                     buffer: Buffer.from(JSON.stringify({
                         version: "1.0.0",
-                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://maps.workadventure.localhost/tests/E2E/empty.json`,
+                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://${maps_domain}/tests/E2E/empty.json`,
                         areas: [],
                         entities: {},
                         entityCollections: [],
@@ -64,7 +64,7 @@ test.describe('Map-storage Upload API', () => {
                     mimeType: "application/json",
                     buffer: Buffer.from(JSON.stringify({
                         version: "1.0.0",
-                        mapUrl: "http://maps.workadventure.localhost/tests/E2E/empty.json",
+                        mapUrl: `http://${maps_domain}/tests/E2E/empty.json`,
                         areas: [],
                         entities: {},
                         entityCollections: [],
@@ -589,7 +589,7 @@ test.describe('Map-storage Upload API', () => {
                     mimeType: "application/json",
                     buffer: Buffer.from(JSON.stringify({
                         version: "1.0.0",
-                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://maps.workadventure.localhost/tests/E2E/empty.json`,
+                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://${maps_domain}/tests/E2E/empty.json`,
                         areas: [],
                         entities: {},
                         entityCollections: [],

@@ -1047,6 +1047,8 @@ jobs:
               AUTHENTICATION_USER: \"john.doe\"
             secretEnv:
               AUTHENTICATION_PASSWORD: \"password\"
+          maps:
+            enabled: true
           commonSecretEnv:
             ADMIN_API_TOKEN: \"${ADMIN_API_TOKEN}\"
             ADMIN_SOCKETS_TOKEN: \"${ADMIN_SOCKETS_TOKEN}\"
@@ -1185,6 +1187,7 @@ jobs:
           PLAY_URL: "https://play-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
           ROOM_API_HOSTNAME: "https://map-storage-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
           MAP_STORAGE_ENDPOINT: "map-storage-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
+          MAPS_DOMAIN: "maps-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
           ROOM_API_SECRET_KEY: "password"
       - uses: actions/upload-artifact@v2
         if: always()

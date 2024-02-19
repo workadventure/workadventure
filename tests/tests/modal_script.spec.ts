@@ -3,12 +3,13 @@ import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {expectInViewport} from "./utils/viewport";
 import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Modal', () => {
     test('test', async ({ page }) => {
         // Go to 
         await page.goto(
-            `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+            publicTestMapUrl("tests/E2E/empty.json", "modal_script")
         );
         await login(page, "Alice");
         await evaluateScript(page, async () => {

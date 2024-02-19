@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test';
+import {maps_domain} from "./utils/urls";
 
 test.describe('Meta tags', () => {
   test('check they are populated when the user-agent is a bot. @selfsigned', async ({
       request,
   }) => {
-    const result = await request.get('/_/global/maps.workadventure.localhost/tests/Properties/mapProperties.json', {
+    const result = await request.get(`/_/global/${maps_domain}/tests/Properties/mapProperties.json`, {
         headers: {
             'User-Agent': 'Mozilla/5.0 (compatible; adidxbot/2.0; +http://www.bing.com/bingbot.htm)',
         }
@@ -17,7 +18,7 @@ test.describe('Meta tags', () => {
     await expect(data).toContain('Cette carte est tr');
 
     // But if we scan with a normal browser, we don't get the metadata:
-    const result2 = await request.get('/_/global/maps.workadventure.localhost/tests/Properties/mapProperties.json', {
+    const result2 = await request.get(`/_/global/${maps_domain}/tests/Properties/mapProperties.json`, {
         headers: {
             'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:106.0) Gecko/20100101 Firefox/106.0',
         }

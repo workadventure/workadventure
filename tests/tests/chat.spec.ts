@@ -6,6 +6,7 @@ import {findContainer, startContainer, stopContainer} from "./utils/containers";
 import {createFileOfSize, deleteFile, fileExist} from "./utils/file";
 import Menu from "./utils/menu";
 import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 const TIMEOUT_TO_GET_LIST = 60_000;
 
@@ -22,7 +23,7 @@ test.describe('Chat', () => {
 
 
     await page.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/livezone.json", "chat")
     );
     const nickname = getUniqueNickname('A');
     await login(page, nickname, 2);
@@ -44,7 +45,7 @@ test.describe('Chat', () => {
       const newBrowser = await browser.browserType().launch();
       const page2 = await newBrowser.newPage();
       await page2.goto(
-          `/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
+          publicTestMapUrl("tests/E2E/livezone.json", "chat")
       );
       const nickname2 = getUniqueNickname('B');
       await login(page2, nickname2, 3);
@@ -205,7 +206,7 @@ test.describe('Use application into TimeLine', () => {
   test('main', async ({ page, browser, browserName }) => {
 
     await page.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/livezone.json", "chat")
     );
     const nickname = getUniqueNickname('A');
     await login(page, nickname, 2);
