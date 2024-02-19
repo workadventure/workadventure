@@ -180,6 +180,21 @@ https://{{ .Values.domainName }}/uploader
 {{- end -}}
 {{- end }}
 
+{{- define "workadventure.mapsDomainName" -}}
+{{- coalesce .Values.maps.ingress.domainName (printf "maps%s%s" .Values.domainNamePrefix .Values.domainName) }}
+{{- end -}}
+{{- define "workadventure.mapsUrl" -}}
+{{- if .Values.singleDomain -}}
+https://{{ .Values.domainName }}/maps
+{{- else -}}
+{{- if .Values.maps.ingress.domainName -}}
+{{ printf "https://%s" .Values.maps.ingress.domainName }}
+{{- else -}}
+{{- printf "https://maps%s%s" .Values.domainNamePrefix .Values.domainName }}
+{{- end }}
+{{- end -}}
+{{- end }}
+
 {{- define "workadventure.chatDomainName" -}}
 {{- coalesce .Values.chat.ingress.domainName (printf "chat%s%s" .Values.domainNamePrefix .Values.domainName) }}
 {{- end -}}

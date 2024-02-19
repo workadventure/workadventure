@@ -364,6 +364,89 @@ uploader:
     className: ""
 
 # #########################################################
+# maps service
+# #########################################################
+# Note: the maps container only contains test maps.
+# It is not meant to be used in production and is therefore disabled by default.
+maps:
+  enabled: false
+  replicaCount: 1
+
+  image:
+    repository: thecodingmachine/workadventure-maps
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is appVersion.
+    tag: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+  # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+  # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+  #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
+  env: {}
+    # AWS_DEFAULT_REGION:
+    # AWS_BUCKET:
+    # AWS_URL:
+    # AWS_ENDPOINT:
+    # # or
+    # REDIS_HOST:
+  # REDIS_PORT:
+
+  secretEnv: {}
+    # AWS_ACCESS_KEY_ID:
+  # AWS_SECRET_ACCESS_KEY:
+
+  ingress:
+    # This setting is used to enable the maps ingress in multiDomain mode.
+    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
+    enabled: true
+    tls: false
+    secretName: ""
+    # Domain name to be used for the container.
+    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
+    domainName: ""
+    # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
+    className: ""
+
+# #########################################################
 # icon service
 # #########################################################
 icon:

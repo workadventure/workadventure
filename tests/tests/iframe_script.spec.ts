@@ -3,13 +3,14 @@ import { login } from './utils/roles';
 import Menu from "./utils/menu";
 import {evaluateScript} from "./utils/scripting";
 import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Iframe API', () => {
   test('can be called from an iframe loading a script', async ({
     page,
   }) => {
     await page.goto(
-      `/_/global/maps.workadventure.localhost/tests/Metadata/cowebsiteAllowApi.json?phaserMode=${RENDERER_MODE}`
+      publicTestMapUrl("tests/Metadata/cowebsiteAllowApi.json", "iframe_script")
     );
 
     await login(page);
@@ -22,7 +23,7 @@ test.describe('Iframe API', () => {
     page
   }) => {
     await page.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
 
     await login(page);
@@ -83,7 +84,7 @@ test.describe('Iframe API', () => {
                                                           page
                                                         }) => {
     await page.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}#foo=bar`
+        publicTestMapUrl("tests/E2E/empty.json", "iframe_script")+"#foo=bar"
     );
 
     await login(page);

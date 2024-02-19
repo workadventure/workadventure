@@ -2,12 +2,13 @@ import { expect, test } from '@playwright/test';
 import {findContainer, rebootPlay, stopContainer} from './utils/containers';
 import { login } from './utils/roles';
 import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.setTimeout(180_000);
 test.describe('Connection', () => {
   test('can succeed even if WorkAdventure starts while pusher is down @docker', async ({ page }) => {
     await page.goto(
-      `/_/global/maps.workadventure.localhost/tests/mousewheel.json?phaserMode=${RENDERER_MODE}`
+      publicTestMapUrl("tests/mousewheel.json", "reconnect")
     );
 
     await login(page);

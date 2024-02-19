@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Error pages', () => {
   test('successfully displayed for unsupported URLs', async ({ page }) => {
@@ -12,7 +13,7 @@ test.describe('Error pages', () => {
 
   test('successfully displayed for not found pages', async ({ page }) => {
     await page.goto(
-        `/_/global/maps.workadventure.localhost/does/not/exist?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("does/not/exist", "error_pages")
     );
 
     await page.fill('input[name="loginSceneName"]', 'Alice');
