@@ -1,0 +1,76 @@
+{{- if .Values.maps.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "workadventure.fullname" . }}-maps
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+    role: maps
+spec:
+  {{- if not .Values.maps.autoscaling.enabled }}
+  replicas: {{ .Values.maps.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "workadventure.selectorLabels" . | nindent 6 }}
+      role: maps
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ (include (print $.Template.BasePath "/maps-env.yaml") .) | sha256sum }}
+        checksum/secret: {{ (include (print $.Template.BasePath "/maps-secret-env.yaml") .) | sha256sum }}
+        {{- if .Values.forceRedeploy }}
+        forceRedeploy: {{ randAlphaNum 10 | quote }}
+        {{- end }}
+        {{- with .Values.maps.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "workadventure.selectorLabels" . | nindent 8 }}
+        role: maps
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "workadventure.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.maps.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-maps
+          securityContext:
+            {{- toYaml .Values.maps.securityContext | nindent 12 }}
+          image: "{{ .Values.maps.image.repository }}:{{ .Values.maps.image.tag | default .Values.appVersion }}"
+          imagePullPolicy: {{ .Values.maps.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "workadventure.fullname" . }}-env-maps
+            - secretRef:
+                name: {{ include "workadventure.fullname" . }}-secret-env-maps
+          ports:
+            - name: http
+              containerPort: {{ .Values.maps.service.port }}
+              protocol: TCP
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          resources:
+            {{- toYaml .Values.maps.resources | nindent 12 }}
+      {{- with .Values.maps.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.maps.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.maps.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- end }}
