@@ -73,7 +73,14 @@ seen people using Ansible, NixOS or Kubernetes to host WorkAdventure. You can ho
 domain name or run a "single-domain" install. The core maintainers of this project cannot possibly support all possible 
 installation methods.
 
-So we are maintaining ONE installation method:
+So we are maintaining TWO installation methods:
+
+1. using Docker Compose
+2. using Kubernetes (Helm chart)
+
+### Docker Compose
+
+The easiest way to install WorkAdventure if you do not have a Kubernetes cluster is to use Docker Compose.
 
 - **WorkAdventure works as a set of Docker containers.**
 - **We provide Docker images for each container in the Docker hub registry, and a docker-compose file to easily start the containers.**
@@ -89,14 +96,17 @@ solution on Kubernetes if you want.
 If you have specific needs for a custom deployment, the WorkAdventure company can offer paid support. Don't hesitate to
 contact us at hello@workadventu.re. We also provide support to integrate WorkAdventure in your existing application.
 
+### Helm chart for Kubernetes
+
+If you have a Kubernetes cluster, you can use the Helm chart to install WorkAdventure.
+
+The Helm Chart is well tested on each release and is known to work.
+It is newer than the Docker Compose install and might change more frequently in the coming month. Therefore,
+we do not (yet) guarantee the absence of breaking changes between minor versions.
+
 ### Alternative installation methods
 
-Below is a list of alternative installation methods contributed by the community. Please note that the core team does not 
-provide support for those methods.
-
-- Helm chart by @klauserber: https://github.com/klauserber/workadventure-k8s.
-
-For any question related to non-standard deployments, you can ask the community on the "self-hosting" Discord
+For any question related to non-standard deployments, you can ask the community on the "server-sorcery" Discord
 channel: [![Discord](https://img.shields.io/discord/821338762134290432?label=Discord)](https://discord.gg/G6Xh9ZM9aR)
 
 ## Hardware requirements
