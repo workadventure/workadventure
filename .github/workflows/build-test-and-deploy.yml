@@ -1149,6 +1149,10 @@ jobs:
             nbShards: 2
     steps:
       - uses: actions/checkout@v2
+
+      # Create a slugified value of the branch
+      - uses: rlespinasse/github-slug-action@4.2.3
+
       - uses: actions/setup-node@v3
         with:
           node-version: 18
