@@ -557,7 +557,7 @@
                     <input
                         id="websiteWidth"
                         type="range"
-                        min="0"
+                        min="1"
                         max="100"
                         placeholder="50"
                         bind:value={property.width}
