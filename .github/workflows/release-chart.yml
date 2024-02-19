@@ -4,13 +4,12 @@ on:
   push:
     branches:
       - master
+  release:
+    types:
+      - created
 
 jobs:
   release:
-    # depending on default permission settings for your org (contents being read-only or read-write for workloads), you will have to add permissions
-    # see: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#modifying-the-permissions-for-the-github_token
-    permissions:
-      contents: write
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -18,23 +17,36 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Configure Git
-        run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-
       - name: Install Helm
         uses: azure/setup-helm@v3
 
       - name: Add repositories
-        run: |
-          for dir in $(ls -d contrib/helm/*/); do
-            helm dependency list $dir 2> /dev/null | tail +2 | head -n -1 | awk '{ print "helm repo add " $1 " " $3 }' | while read cmd; do $cmd; done
-          done
+        run: helm dependency update
+        working-directory: contrib/helm
 
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
-        with:
-          charts_dir: ./contrib/helm
+      - name: Configure proper version number. Use "0.0.9-dev1" for master and "tag" for releases
+        run: |
+            if [ -z "$GITHUB_REF" ]; then
+                echo "GITHUB_REF is not set. Exiting."
+                exit 1
+            fi
+            # Remove the helm-chart branch check when it is merged
+            if [ "$GITHUB_REF" != "refs/heads/master" ]; then
+                echo "Setting version to $GITHUB_REF"
+                sed -i "s/version: 0.0.9-dev1/version: $GITHUB_REF/g" contrib/helm/Chart.yaml
+                sed -i "s/appVersion: \"0.0.9-dev1\"/appVersion: \"$GITHUB_REF\"/g" contrib/helm/Chart.yaml
+            fi
+        working-directory: contrib/helm
+
+      - name: Install chart-museum push plugin
+        run: helm plugin install https://github.com/chartmuseum/helm-push
+
+      - name: Adding WorkAdventure repository
+        run: helm repo add workadventure-charts https://charts.workadventu.re
+
+      - name: Package and push Helm chart
+        run: helm cm-push . --force workadventure-charts
+        working-directory: contrib/helm
         env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          HELM_REPO_USERNAME: workadventure
+          HELM_REPO_PASSWORD: ${{ secrets.HELM_REPO_PASSWORD }}
