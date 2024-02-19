@@ -102,14 +102,8 @@ const mapStorageServer: MapStorageServer = {
             const mapUrl = new URL(call.request.mapKey);
             const mapKey = mapPathUsingDomainWithPrefix(mapUrl.pathname, mapUrl.hostname);
 
-            const gameMap = mapsManager.getGameMap(mapKey);
-            if (!gameMap) {
-                callback(
-                    { name: "MapStorageError", message: `Could not find the game map of ${mapKey} key!` },
-                    { id: editMapCommandMessage.id, editMapMessage: undefined }
-                );
-                return;
-            }
+            const gameMap = await mapsManager.getOrLoadGameMap(mapKey);
+
             const editMapMessage = editMapCommandMessage.editMapMessage.message;
             const commandId = editMapCommandMessage.id;
             switch (editMapMessage.$case) {
