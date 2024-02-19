@@ -46,6 +46,7 @@
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
+    import ChangeStatusConfirmationModal from "./ActionBar/AvailabilityStatus/ChangeStatusConfirmationModal.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -157,6 +158,8 @@
     {#if $actionsMenuStore}
         <ActionsMenu />
     {/if}
+
+    <ChangeStatusConfirmationModal />
 
     <ActionBar />
 
