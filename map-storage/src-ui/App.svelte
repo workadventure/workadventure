@@ -6,7 +6,8 @@
     import {onMount} from "svelte";
 
     // TODO: not perfect. We should instead get data from an env var.
-    const playUrl = window.location.protocol + "//" + window.location.host.replace("map-storage.", "play.").replace("map-storage-", "play-") + "/";
+    const playUrl = window.location.protocol + "//" + window.location.host.replace("map-storage.", "play.").replace("map-storage-", "play-");
+    const mapStorageUrl = window.location.protocol + "//" + window.location.host;
 
     const responsePromise = fetch<MapsCacheFileFormat>('../maps', {
         redirect: "follow"
@@ -81,7 +82,11 @@
             <h2>Maps list</h2>
             <ul>
                 {#each Object.entries(json.maps) as [name, map]}
-                    <li><a href={playUrl + "~/" + name} target="_blank">{name}</a></li>
+                <li>
+                    <a href={mapStorageUrl + "/" + name} target="_blank">{name}</a>
+                    &rarr;
+                    <a href={map.mapUrl} target="_blank">{map.mapUrl}</a>
+                </li>
                 {/each}
             </ul>
         {:catch error}
