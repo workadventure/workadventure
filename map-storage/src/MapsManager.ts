@@ -47,10 +47,16 @@ class MapsManager {
             this.startSavingMapInterval(mapKey, this.AUTO_SAVE_INTERVAL_MS);
         }
         const wamFile = await command.execute();
-        if (wamFile != undefined)
+
+        // Security check: Check that the map is valid after the change (it should be, but better safe than sorry)
+        const map = gameMap.getWam();
+        WAMFileFormat.parse(map);
+
+        if (wamFile != undefined) {
             this.mapListService
                 .updateWAMFileInCache(domain, mapKey.replace(domain, ""), wamFile)
                 .catch((e) => console.error(e));
+        }
     }
 
     public getCommandsNewerThan(mapKey: string, commandId: string | undefined): EditMapCommandMessage[] {
@@ -66,6 +72,14 @@ class MapsManager {
         return [];
     }
 
+    public async getOrLoadGameMap(key: string): Promise<GameMap> {
+        let gameMap = this.getGameMap(key);
+        if (!gameMap) {
+            gameMap = await this.loadWAMToMemory(key);
+        }
+        return gameMap;
+    }
+
     public getGameMap(key: string): GameMap | undefined {
         return this.loadedMaps.get(key);
     }
@@ -74,18 +88,23 @@ class MapsManager {
         return Array.from(this.loadedMaps.keys());
     }
 
-    public isMapAlreadyLoaded(key: string): boolean {
-        return this.loadedMaps.has(key);
-    }
+    public async loadWAMToMemory(key: string): Promise<GameMap> {
+        const file = await fileSystem.readFileAsString(key);
+        const oldGameMap = this.loadedMaps.get(key);
+        if (oldGameMap) {
+            return oldGameMap;
+        }
+        const wam = WAMFileFormat.parse(JSON.parse(file));
 
-    public loadWAMToMemory(key: string, wam: WAMFileFormat): void {
         const gameMap = new GameMap(this.getMockITiledMap(), wam);
         gameMap.initialize();
         this.loadedMaps.set(key, gameMap);
+
+        return gameMap;
     }
 
     public clearAfterUpload(key: string): void {
-        console.log(`UPLOAD DETECTED. CLEAR CACHE FOR: ${key}`);
+        console.log(`UPLOAD/DELETE DETECTED. CLEAR CACHE FOR: ${key}`);
         this.loadedMaps.delete(key);
         this.loadedMapsCommandsQueue.delete(key);
         this.clearSaveMapInterval(key);
