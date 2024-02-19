@@ -19,6 +19,9 @@ spec:
         checksum/config: {{ (include (print $.Template.BasePath "/play-env.yaml") .) | sha256sum }}
         checksum/secret: {{ (include (print $.Template.BasePath "/play-secret-env.yaml") .) | sha256sum }}
         checksum/shared-secret: {{ (include (print $.Template.BasePath "/shared-secret-env.yaml") .) | sha256sum }}
+        {{- if .Values.forceRedeploy }}
+        forceRedeploy: {{ randAlphaNum 10 | quote }}
+        {{- end }}
         {{- with .Values.play.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

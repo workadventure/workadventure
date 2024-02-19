@@ -31,6 +31,10 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
+# If true, when the chart is installed, all services will be restarted (even if the configuration has not changed).
+# This is done by adding a random number as an annotation to the deployment.
+forceRedeploy: false
+
 serviceAccount:
   # Specifies whether a service account should be created
   create: false
