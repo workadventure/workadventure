@@ -967,14 +967,14 @@ jobs:
 #          check_for_duplicate_msg: true
 
   helm-deploy:
-    needs:
-      - build-play
-      - build-chat
-      - build-back
-      - build-maps
-      - build-uploader
-      - build-map-storage
-      - build-ejabberd
+#    needs:
+#      - build-play
+#      - build-chat
+#      - build-back
+#      - build-maps
+#      - build-uploader
+#      - build-map-storage
+#      - build-ejabberd
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
 
@@ -1133,3 +1133,48 @@ jobs:
         with:
           msg: "Environment deployed at https://play-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re \nTests available at https://maps-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re/tests"
           check_for_duplicate_msg: true
+
+  helm-test:
+    needs:
+      - helm-deploy
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: 1
+            nbShards: 2
+          - shard: 2
+            nbShards: 2
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: npm ci
+        working-directory: tests
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+        working-directory: tests
+
+      #- name: Upload test-map
+      #  run: |
+      #    sed -i "s/http:/https:/g" tests/assets/maps/empty.wam
+      #    sleep 10
+      #    npm run upload-test-map-single-domain
+      #  working-directory: map-storage
+      - name: Run Playwright tests
+        # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
+        run: npm run test-helm-install -- --shard ${{ matrix.shard }}/${{ matrix.nbShards }}
+        working-directory: tests
+        env:
+          PLAY_URI: "https://play-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
+          ROOM_API_HOSTNAME: "https://map-storage-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
+          MAP_STORAGE_ENDPOINT: "map-storage-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: playwright-report-helm-${{ matrix.shard }}-${{ matrix.nbShards }}
+          path: tests/playwright-report/
+          retention-days: 30
