@@ -82,7 +82,6 @@ test.describe('Chat @chat', () => {
       await Chat.AT_sendMessage(page, 'Hello, how are you ?');
       await Chat.AT_checkLastMessageSent(page);
       // Receive the message
-      await page2.pause();
       await Chat.AT_lastMessageContain(page2, 'Hello, how are you ?');
 
 
