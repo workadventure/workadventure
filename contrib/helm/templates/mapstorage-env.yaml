@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "workadventure.labels" . | nindent 4 }}
 data:
-  API_URL: "{{ include "workadventure.fullname" . }}-back:50051"
+  API_URL: {{ range $replica, $f := until (int .Values.back.replicaCount) }}{{ include "workadventure.fullname" $ }}-back-{{ $replica }}:50051{{ if ne $replica (sub (int $.Values.back.replicaCount) 1)  }}{{ "," }}{{ end }}{{ end }}
   PATH_PREFIX: "{{ if .Values.singleDomain }}/map-storage{{ end }}"
 
   {{- range $key, $val := .Values.commonEnv }}
