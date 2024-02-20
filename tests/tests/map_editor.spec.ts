@@ -646,9 +646,7 @@ test.describe("Map editor", () => {
       EntityEditor.getTestAssetName()
     );
     const uploadedEntityElement = await uploadedEntityLocator.innerHTML();
-    await expect(uploadedEntityElement).toContain(
-      EntityEditor.getTestAssetName()
-    );
+    expect(uploadedEntityElement).toContain(EntityEditor.getTestAssetName());
   });
 
   test("Successfully upload and use custom entity in the map", async ({
