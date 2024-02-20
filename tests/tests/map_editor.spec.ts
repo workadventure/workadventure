@@ -10,21 +10,25 @@ import Map from "./utils/map";
 import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import { resetWamMaps } from "./utils/map-editor/uploader";
 import { evaluateScript } from "./utils/scripting";
-import {map_storage_url} from "./utils/urls";
+import { map_storage_url } from "./utils/urls";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
   baseURL: map_storage_url,
-})
-test.describe('Map editor', () => {
-  test('Successfully set the megaphone feature', async ({ page, browser, request, browserName }, { project }) => {
+});
+test.describe("Map editor", () => {
+  test("Successfully set the megaphone feature", async ({
+    page,
+    browser,
+    request,
+    browserName,
+  }, { project }) => {
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
     }
-
     await resetWamMaps(request);
     await page.goto(Map.url("empty"));
     //await page.evaluate(() => localStorage.setItem('debug', '*'));
@@ -636,11 +640,15 @@ test.describe('Map editor', () => {
 
     // Click on upload asset
     await EntityEditor.uploadTestAsset(page);
-    
-    const uploadedEntityLocator = await EntityEditor.searchEntity(page,EntityEditor.getTestAssetName())
-    const uploadedEntityElement = await uploadedEntityLocator.innerHTML();
-    await expect(uploadedEntityElement).toContain(EntityEditor.getTestAssetName());
 
+    const uploadedEntityLocator = await EntityEditor.searchEntity(
+      page,
+      EntityEditor.getTestAssetName()
+    );
+    const uploadedEntityElement = await uploadedEntityLocator.innerHTML();
+    await expect(uploadedEntityElement).toContain(
+      EntityEditor.getTestAssetName()
+    );
   });
 
   test("Successfully upload and use custom entity in the map", async ({
@@ -680,7 +688,12 @@ test.describe('Map editor', () => {
     //TODO find a way to read wam file or spyOn the method to update wam
   });
 
-  test('Successfully set searchable processus for entity and zone', async ({ page, browser, request, browserName }, { project }) => {
+  test("Successfully set searchable processus for entity and zone", async ({
+    page,
+    browser,
+    request,
+    browserName,
+  }, { project }) => {
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
@@ -691,7 +704,7 @@ test.describe('Map editor', () => {
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
     // Because webkit in playwright does not support Camera/Microphone Permission by settings
-    if(browserName === "webkit"){
+    if (browserName === "webkit") {
       await hideNoCamera(page);
     }
 
@@ -700,25 +713,35 @@ test.describe('Map editor', () => {
 
     // Area
     await MapEditor.openAreaEditor(page);
-    await AreaEditor.drawArea(page, {x: 1*32*1.5, y: 5}, {x: 9*32*1.5, y: 4*32*1.5});
-    await AreaEditor.setAreaName(page, 'My Focusable Zone');
-    await AreaEditor.setAreaDescription(page, 'This is a focus zone to test the search feature in the exploration mode. It should be searchable.');
+    await AreaEditor.drawArea(
+      page,
+      { x: 1 * 32 * 1.5, y: 5 },
+      { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 }
+    );
+    await AreaEditor.setAreaName(page, "My Focusable Zone");
+    await AreaEditor.setAreaDescription(
+      page,
+      "This is a focus zone to test the search feature in the exploration mode. It should be searchable."
+    );
     await AreaEditor.setAreaSearcheable(page, true);
-    await AreaEditor.addProperty(page, 'Focusable');
+    await AreaEditor.addProperty(page, "Focusable");
 
     // Entity
     // Webkit is somehow failing on this, maybe it is too slow
     if (browser.browserType() !== webkit) {
       //eslint-disable-next-line playwright/no-skipped-test
       await MapEditor.openEntityEditor(page);
-      await EntityEditor.selectEntity(page, 0, 'small table');
-      await EntityEditor.moveAndClick(page, 14*32, 13*32);
+      await EntityEditor.selectEntity(page, 0, "small table");
+      await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
       await EntityEditor.quitEntitySelector(page);
-      await EntityEditor.moveAndClick(page, 14*32, 13*32);
-      await EntityEditor.setEntityName(page, 'My Jitsi Entity');
-      await EntityEditor.setEntityDescription(page, 'This is a Jitsi entity to test the search feature in the exploration mode. It should be searchable.');
+      await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
+      await EntityEditor.setEntityName(page, "My Jitsi Entity");
+      await EntityEditor.setEntityDescription(
+        page,
+        "This is a Jitsi entity to test the search feature in the exploration mode. It should be searchable."
+      );
       await EntityEditor.setEntitySearcheable(page, true);
-      await EntityEditor.addProperty(page, 'Jitsi Room');
+      await EntityEditor.addProperty(page, "Jitsi Room");
     }
 
     // Open the map exploration mode
@@ -729,18 +752,28 @@ test.describe('Map editor', () => {
     // With webkit, something wrong to put an object and clik on it, so in this case, we don't have an object
     if (browser.browserType() !== webkit) {
       // Test if the entity is searchable
-      await expect(page.locator('.map-editor .sidebar .entities')).toContainText('1 objects found');
-      await page.locator('.map-editor .sidebar .entities').click();
-      expect(await page.locator('.map-editor .sidebar .entity-items .item').count()).toBe(1);
-    }else{
+      await expect(
+        page.locator(".map-editor .sidebar .entities")
+      ).toContainText("1 objects found");
+      await page.locator(".map-editor .sidebar .entities").click();
+      expect(
+        await page.locator(".map-editor .sidebar .entity-items .item").count()
+      ).toBe(1);
+    } else {
       // For webkit, we don't have an object
-      await expect(page.locator('.map-editor .sidebar .entities')).toContainText('No entity found in the room 🙅‍♂️');
+      await expect(
+        page.locator(".map-editor .sidebar .entities")
+      ).toContainText("No entity found in the room 🙅‍♂️");
     }
 
     // Test if the area is searchable
-    await expect(page.locator('.map-editor .sidebar .areas')).toContainText('1 areas found');
-    await page.locator('.map-editor .sidebar .areas').click();
-    expect(await page.locator('.map-editor .sidebar .area-items .item').count()).toBe(1);
+    await expect(page.locator(".map-editor .sidebar .areas")).toContainText(
+      "1 areas found"
+    );
+    await page.locator(".map-editor .sidebar .areas").click();
+    expect(
+      await page.locator(".map-editor .sidebar .area-items .item").count()
+    ).toBe(1);
   });
 
   test('Successfully test global message text and sound feature', async ({ page, browser, request, browserName }, { project }) => {

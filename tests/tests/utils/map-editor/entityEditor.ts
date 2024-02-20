@@ -1,4 +1,4 @@
-import {expect, Page} from "@playwright/test";
+import { expect, Page } from "@playwright/test";
 import * as path from "path";
 
 class EntityEditor {
@@ -17,11 +17,11 @@ class EntityEditor {
 
     return await page.getByTestId("entity-item").nth(0);
   }
-    async moveAndClick(page: Page, x: number, y: number) {
-        await page.mouse.move(x, y);
-        await page.mouse.down();
-        await page.mouse.up();
-    }
+  async moveAndClick(page: Page, x: number, y: number) {
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.up();
+  }
 
   async quitEntitySelector(page: Page) {
     await page.getByTestId("mapEditor-close-button").click();
@@ -32,26 +32,45 @@ class EntityEditor {
     await page.waitForTimeout(2000);
   }
 
-    async addProperty(page: Page, property: string) {
-        await page.locator('.map-editor .sidebar .properties-buttons .add-property-button', {hasText: property}).click();
-    }
+  async addProperty(page: Page, property: string) {
+    await page
+      .locator(
+        ".map-editor .sidebar .properties-buttons .add-property-button",
+        { hasText: property }
+      )
+      .click();
+  }
 
-    async setEntityName(page: Page, name: string){
-        await page.getByPlaceholder('MyObject').click();
-        await page.getByPlaceholder('MyObject').fill(name);
-        await page.getByPlaceholder('MyObject').press('Enter');
-    }
+  async setEntityName(page: Page, name: string) {
+    await page.getByPlaceholder("MyObject").click();
+    await page.getByPlaceholder("MyObject").fill(name);
+    await page.getByPlaceholder("MyObject").press("Enter");
+  }
 
-    async setEntityDescription(page: Page, Description: string){
-        await page.getByText('+ Add description field').click();
-        await page.getByPlaceholder('My object is a...').click();
-        await page.getByPlaceholder('My object is a...').fill(Description);
-        await page.getByPlaceholder('My object is a...').press('Enter');
-    }
+  async setEntityDescription(page: Page, Description: string) {
+    await page.getByText("+ Add description field").click();
+    await page.getByPlaceholder("My object is a...").click();
+    await page.getByPlaceholder("My object is a...").fill(Description);
+    await page.getByPlaceholder("My object is a...").press("Enter");
+  }
 
-    async setEntitySearcheable(page: Page, value: boolean){
-        await page.locator('.map-editor .sidebar input#searchable').setChecked(value);
-    }
+  async setEntitySearcheable(page: Page, value: boolean) {
+    await page
+      .locator(".map-editor .sidebar input#searchable")
+      .setChecked(value);
+  }
+
+  async uploadTestAsset(page: Page) {
+    await page
+      .getByTestId("uploadCustomAsset")
+      .setInputFiles(
+        path.join(__dirname, `../../assets/${this.getTestAssetName()}`)
+      );
+  }
+
+  getTestAssetName() {
+    return "testAsset.png";
+  }
 }
 
 export default new EntityEditor();
