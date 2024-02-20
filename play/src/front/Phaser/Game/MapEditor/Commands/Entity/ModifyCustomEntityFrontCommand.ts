@@ -23,6 +23,6 @@ export class ModifyCustomEntityFrontCommand extends ModifyCustomEntityCommand im
     }
 
     getUndoCommand(): ModifyCustomEntityFrontCommand {
-        return new ModifyCustomEntityFrontCommand(this.modifyCustomEntityMessage);
+        throw new Error("Not supported.");
     }
 }
