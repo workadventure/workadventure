@@ -10,9 +10,9 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  type: {{ .Values.play.service.type }}
+  type: {{ .Values.play.roomApiService.type }}
   ports:
-    - port: {{ .Values.play.service.port }}
+    - port: {{ .Values.play.roomApiService.port }}
       targetPort: grpc
       protocol: TCP
       name: grpc

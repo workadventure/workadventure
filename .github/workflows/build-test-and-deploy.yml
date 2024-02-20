@@ -1042,6 +1042,9 @@ jobs:
           domainName: ${DEPLOY_REF}.test.workadventu.re
           ejabberdJwtSecret: \"${EJABBERD_JWT_SECRET}\"
           forceRedeploy: true
+          play:
+            secretEnv:
+              ROOM_API_SECRET_KEY: \"password\"
           mapstorage:
             env:
               AUTHENTICATION_USER: \"john.doe\"
