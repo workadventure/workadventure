@@ -1052,6 +1052,17 @@ jobs:
               AUTHENTICATION_PASSWORD: \"password\"
           maps:
             enabled: true
+          commonEnv:
+            KLAXOON_ENABLED: true
+            JITSI_DOMAIN: coremeet.workadventu.re
+            JITSI_MUC_DOMAIN: muc.prosody.workadventu.re
+            JITSI_XMPP_DOMAIN: prosody.workadventu.re
+            FEATURE_FLAG_BROADCAST_AREAS: true
+            YOUTUBE_ENABLED: true
+            GOOGLE_DRIVE_ENABLED: true
+            GOOGLE_DOCS_ENABLED: true
+            GOOGLE_SHEETS_ENABLED: true
+            GOOGLE_SLIDES_ENABLED: true
           commonSecretEnv:
             ADMIN_API_TOKEN: \"${ADMIN_API_TOKEN}\"
             ADMIN_SOCKETS_TOKEN: \"${ADMIN_SOCKETS_TOKEN}\"
