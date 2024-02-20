@@ -1,5 +1,5 @@
 import { Status } from "@grpc/grpc-js/build/src/constants";
-import { PUSHER_URL, ROOM_API_SECRET_KEY } from "../../pusher/enums/EnvironmentVariable";
+import {FRONT_URL, PUSHER_URL, ROOM_API_SECRET_KEY} from "../../pusher/enums/EnvironmentVariable";
 import { GuardError } from "../types/GuardError";
 import { AuthenticatorInterface } from "./AuthenticatorInterface";
 
@@ -10,7 +10,7 @@ const authenticator: AuthenticatorInterface = (apiKey, room) => {
             return;
         }
 
-        if (PUSHER_URL !== "/" && !room.startsWith(PUSHER_URL)) {
+        if (FRONT_URL !== "/" && !room.startsWith(FRONT_URL)) {
             reject(new GuardError(Status.PERMISSION_DENIED, "You cannot interact with this room!"));
             return;
         }
