@@ -21,7 +21,7 @@ class EntitiesFileMigration {
 
     public migrate(entitiesFileContent: any): EntityCollectionRaw {
         for (const [version, migrationFunction] of Object.entries(this.migrations)) {
-            const fileVersion = entitiesFileContent.version;
+            const fileVersion = entitiesFileContent.version ?? "0.0";
             if (fileVersion === version) {
                 entitiesFileContent = migrationFunction(entitiesFileContent);
             }
