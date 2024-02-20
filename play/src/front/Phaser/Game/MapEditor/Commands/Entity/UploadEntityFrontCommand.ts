@@ -3,9 +3,11 @@ import { UploadEntityMessage } from "@workadventure/messages";
 import { RoomConnection } from "../../../../../Connection/RoomConnection";
 import { gameManager } from "../../../GameManager";
 import { FrontCommand } from "../FrontCommand";
+import { DeleteCustomEntityFrontCommand } from "./DeleteCustomEntityFrontCommand";
+import { EntitiesManager } from "../../../GameMap/EntitiesManager";
 
 export class UploadEntityFrontCommand extends UploadEntityCommand implements FrontCommand {
-    constructor(uploadEntityMessage: UploadEntityMessage) {
+    constructor(uploadEntityMessage: UploadEntityMessage, private entitiesManager: EntitiesManager) {
         super(uploadEntityMessage);
     }
 
@@ -30,7 +32,11 @@ export class UploadEntityFrontCommand extends UploadEntityCommand implements Fro
         return super.execute();
     }
 
-    getUndoCommand(): UploadEntityFrontCommand {
-        return new UploadEntityFrontCommand(this.uploadEntityMessage);
+    getUndoCommand(): DeleteCustomEntityFrontCommand {
+        return new DeleteCustomEntityFrontCommand(
+            { id: this.uploadEntityMessage.id },
+            gameManager.getCurrentGameScene().getGameMap(),
+            this.entitiesManager
+        );
     }
 }
