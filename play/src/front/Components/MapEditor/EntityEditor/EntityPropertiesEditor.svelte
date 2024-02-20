@@ -5,21 +5,21 @@
         EntityDataPropertiesKeys,
         EntityDataProperty,
         EntityDescriptionPropertyData,
-        OpenWebsiteTypePropertiesKeys,
+        OpenWebsiteTypePropertiesKeys
     } from "@workadventure/map-editor";
     import { ArrowLeftIcon } from "svelte-feather-icons";
     import { get } from "svelte/store";
-    import { LL } from "../../../i18n/i18n-svelte";
     import {
         mapEditorEntityModeStore,
         mapEditorSelectedEntityPrefabStore,
-        mapEditorSelectedEntityStore,
-    } from "../../Stores/MapEditorStore";
-    import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
-    import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
-    import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
-    import AddPropertyButtonWrapper from "./PropertyEditor/AddPropertyButtonWrapper.svelte";
+        mapEditorSelectedEntityStore
+    } from "../../../Stores/MapEditorStore";
+    import { analyticsClient } from "../../../Administration/AnalyticsClient";
+    import LL from "../../../../i18n/i18n-svelte";
+    import AddPropertyButtonWrapper from "../PropertyEditor/AddPropertyButtonWrapper.svelte";
+    import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
+    import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
+    import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
