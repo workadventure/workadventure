@@ -1,5 +1,7 @@
 <script lang="ts">
+    import { createEventDispatcher } from "svelte";
     import Select from "svelte-select";
+    const dispatch = createEventDispatcher();
 
     type Option = {
         value: string;
@@ -28,7 +30,7 @@
             delete i.created;
             return { ...i, label: i.label.toLowerCase() };
         });
-        handleChange();
+        dispatch("change", value);
     }
 </script>
 
