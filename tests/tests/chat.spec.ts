@@ -33,7 +33,6 @@ test.describe('Chat @chat', () => {
     }
 
     await Menu.openChat(page);
-    const ejabberd = await findContainer('ejabberd');
 
     await test.step('all tests of chat', async () => {
       await Map.goToRoom(page, '#Out_LiveZone_a');
@@ -179,6 +178,8 @@ test.describe('Chat @chat', () => {
     });
 
     await test.step('disconnect and reconnect to ejabberd and pusher @docker', async () => {
+      const ejabberd = await findContainer('ejabberd');
+
       const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await Chat.slideToUsers(page);
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
