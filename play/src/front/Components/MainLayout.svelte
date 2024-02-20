@@ -23,6 +23,10 @@
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { askDialogStore } from "../Stores/MeetingStore";
+    import {
+        bubbleModalVisibility,
+        changeStatusConfirmationModalVisibility,
+    } from "../Stores/AvailabilityStatusModalsStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
@@ -46,7 +50,8 @@
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
-    import ChangeStatusConfirmationModal from "./ActionBar/AvailabilityStatus/ChangeStatusConfirmationModal.svelte";
+    import ChangeStatusConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/ChangeStatusConfirmationModal.svelte";
+    import BubbleConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/BubbleConfirmationModal.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -159,10 +164,15 @@
         <ActionsMenu />
     {/if}
 
-    <ChangeStatusConfirmationModal />
-
     <ActionBar />
 
+    {#if $changeStatusConfirmationModalVisibility}
+        <ChangeStatusConfirmationModal />
+    {/if}
+
+    {#if $bubbleModalVisibility}
+        <BubbleConfirmationModal />
+    {/if}
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 
