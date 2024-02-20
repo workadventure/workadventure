@@ -59,11 +59,7 @@
             class:mozaic-full-width={mozaicSolo}
             class:mozaic-quarter={mozaicQuarter}
         >
-            <div
-                class="tw-w-full tw-flex screen-blocker tw-items-center"
-                class:tw-mx-auto={!isHightlighted}
-                class:tw-h-full={isHightlighted && videoEnabled}
-            >
+            <div class="tw-w-full tw-h-full tw-flex screen-blocker tw-items-center" class:tw-mx-auto={!isHightlighted}>
                 <VideoMediaBox peer={streamable} clickable={isClickable} {isHightlighted} />
             </div>
         </div>
@@ -99,11 +95,7 @@
         class:mozaic-quarter={mozaicQuarter}
         transition:fly={{ x: 200, duration: 250 }}
     >
-        <div
-            class="tw-w-full tw-flex screen-blocker"
-            class:tw-mx-auto={!isHightlighted}
-            class:tw-h-full={isHightlighted && videoEnabled}
-        >
+        <div class="tw-w-full tw-h-full tw-flex screen-blocker" class:tw-mx-auto={!isHightlighted}>
             <JitsiMediaBox peer={streamable} clickable={isClickable} {isHightlighted} />
         </div>
     </div>
