@@ -1,3 +1,4 @@
+{{- if .Values.ejabberd.enabled }}
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -6,8 +7,8 @@ metadata:
   labels:
     {{- include "workadventure.labels" . | nindent 4 }}
 data:
-  CTL_ON_CREATE: "register {{ .Values.commonEnv.EJABBERD_USER }} {{ .Values.commonEnv.EJABBERD_DOMAIN }} {{ .Values.commonSecretEnv.EJABBERD_PASSWORD }}"
-  EJABBERD_DOMAIN: {{ .Values.ejabberdDomain }}
+  CTL_ON_CREATE: "register {{ required "Missing .commonEnv.EJABBERD_USER entry in values file" .Values.commonEnv.EJABBERD_USER }} {{ required "Missing .ejabberdDomain entry in values file" .Values.ejabberdDomain }} {{ required "Missing .commonEnv.EJABBERD_PASSWORD entry in values file" .Values.commonSecretEnv.EJABBERD_PASSWORD }}"
+  EJABBERD_DOMAIN: {{ .Values.ejabberdDomain | quote }}
 
   {{- range $key, $val := .Values.commonEnv }}
   {{ $key }}: {{ $val | quote }}
@@ -16,3 +17,4 @@ data:
   {{- range $key, $val := .Values.ejabberd.env }}
   {{ $key }}: {{ $val | quote }}
   {{- end }}
+{{- end }}

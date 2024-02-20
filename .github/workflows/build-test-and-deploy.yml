@@ -861,6 +861,7 @@ jobs:
           retention-days: 30
 
   helm-deploy:
+    name: "Deploy in Kubernetes"
     needs:
       - build-play
       - build-chat
@@ -1039,6 +1040,7 @@ jobs:
           check_for_duplicate_msg: true
 
   helm-test:
+    name: "End to end tests in Kubernetes (${{ matrix.shard }}/${{ matrix.nbShards }})"
     needs:
       - helm-deploy
     runs-on: ubuntu-latest
