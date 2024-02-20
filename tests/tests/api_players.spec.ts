@@ -6,7 +6,6 @@ import {getCoWebsiteIframe} from "./utils/iframe";
 import {assertLogMessage, startRecordLogs} from "./utils/log";
 import {evaluateScript} from "./utils/scripting";
 import {oidcLogin, oidcLogout} from "./utils/oidc";
-import {RENDERER_MODE} from "./utils/environment";
 import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('API WA.players', () => {

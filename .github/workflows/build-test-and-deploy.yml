@@ -1173,6 +1173,10 @@ jobs:
         run: npm run ts-proto
         working-directory: "libs/room-api-clients/room-api-client-js"
 
+      - name: Create assets.zip needed by the tests
+        run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip *
+        working-directory: map-storage
+
       #- name: Upload test-map
       #  run: |
       #    sed -i "s/http:/https:/g" tests/assets/maps/empty.wam
@@ -1189,6 +1193,7 @@ jobs:
           MAP_STORAGE_ENDPOINT: "map-storage-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
           MAPS_DOMAIN: "maps-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
           ROOM_API_SECRET_KEY: "password"
+          ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
       - uses: actions/upload-artifact@v2
         if: always()
         with:

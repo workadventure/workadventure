@@ -2,7 +2,6 @@ import { expect, test } from '@playwright/test';
 import { login } from './utils/roles';
 import {oidcLogin, oidcLogout} from "./utils/oidc";
 import {evaluateScript} from "./utils/scripting";
-import {RENDERER_MODE} from "./utils/environment";
 import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('OpenID connect @oidc', () => {

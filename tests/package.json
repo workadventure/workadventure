@@ -27,7 +27,7 @@
     "test-headed-webkit": "dotenv -e ../.env -- playwright test --headed --project=webkit",
     "test-prod-like": "OVERRIDE_DOCKER_COMPOSE=docker-compose.e2e.yml npm run test -- ",
     "test-single-domain-install": "NODE_TLS_REJECT_UNAUTHORIZED=0 ROOM_API_HOSTNAME=https://play.workadventure.localhost ROOM_API_PORT=50051 MAP_STORAGE_PROTOCOL=https MAP_STORAGE_ENDPOINT=play.workadventure.localhost/map-storage/ dotenv -e ../contrib/docker/.env -- playwright test --project=chromium --grep-invert \"@docker|@oidc|@selfsigned\"",
-    "test-helm-install": "NODE_TLS_REJECT_UNAUTHORIZED=0 ROOM_API_PORT=443 MAP_STORAGE_PROTOCOL=https playwright test --project=chromium --grep-invert \"@docker|@oidc|@selfsigned\"",
+    "test-helm-install": "NODE_TLS_REJECT_UNAUTHORIZED=0 ROOM_API_PORT=443 MAP_STORAGE_PROTOCOL=https playwright test --project=chromium --grep-invert \"@docker|@oidc|@selfsigned|@local|@chat\"",
     "precommit": "lint-staged"
   },
   "lint-staged": {

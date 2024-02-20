@@ -4,7 +4,6 @@ import {evaluateScript} from "./utils/scripting";
 import Chat from './utils/chat';
 import {expectInViewport, expectOutViewport} from "./utils/viewport";
 import Map from './utils/map';
-import {RENDERER_MODE} from "./utils/environment";
 import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Scripting chat functions', () => {

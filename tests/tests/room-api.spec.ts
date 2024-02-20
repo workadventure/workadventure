@@ -15,8 +15,6 @@ if (!apiKey) {
 
 const client = createRoomApiClient(apiKey, process.env.ROOM_API_HOSTNAME ?? "room-api.workadventure.localhost", process.env.ROOM_API_PORT ? Number(process.env.ROOM_API_PORT) : 80);
 
-const protocol = process.env.ROOM_API_HOSTNAME && process.env.ROOM_API_HOSTNAME.startsWith("https") ? "https" : "http";
-
 const roomUrl = `${play_url}/_/room-api/${maps_domain}/tests/Variables/shared_variables.json`;
 const variableName = "textField";
 
