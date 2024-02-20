@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
 
 const createConfirmationModalVisibilityStore = () => {
-    const { subscribe, set } = writable(true);
+    const { subscribe, set } = writable(false);
 
     return {
         subscribe,
@@ -11,7 +11,7 @@ const createConfirmationModalVisibilityStore = () => {
 };
 
 const createBubbleModalVisibilityStore = () => {
-    const { subscribe, set } = writable(true);
+    const { subscribe, set } = writable(false);
 
     return {
         subscribe,
