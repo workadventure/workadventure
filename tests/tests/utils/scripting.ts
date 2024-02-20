@@ -3,6 +3,7 @@ import {} from "../../../play/packages/iframe-api-typings/iframe_api";
 
 import {expect, Frame, Page} from "@playwright/test";
 import {ElementHandle, JSHandle} from "playwright-core";
+import {play_url} from "./urls";
 
 // Types copied from "playwright-core" because they are not exposed.
 type NoHandles<Arg> = Arg extends JSHandle ? never : (Arg extends object ? { [Key in keyof Arg]: NoHandles<Arg[Key]> } : Arg);
@@ -63,12 +64,26 @@ export async function getScriptFrame(page: Page, title: string) : Promise<Frame>
 }
 
 async function getFrameWithTitle(page: Page, searchedTitle: string) : Promise<Frame | undefined> {
-    for (const frame of page.frames()) {
-        await frame.waitForLoadState("domcontentloaded");
-        const title = await frame.title();
-        if (title === searchedTitle) {
-            return frame;
+    if (searchedTitle === "") {
+        for (const frame of page.frames()) {
+            await frame.waitForLoadState("domcontentloaded");
+
+            // Let's only select the frames that are part of the play domain.
+            const url = frame.url();
+            if (url === "about:srcdoc") {
+                return frame;
+            }
+        }
+    } else {
+        for (const frame of page.frames()) {
+            await frame.waitForLoadState("domcontentloaded");
+            const title = await frame.title();
+
+            if (title === searchedTitle) {
+                return frame;
+            }
         }
     }
+
     return undefined;
 }
