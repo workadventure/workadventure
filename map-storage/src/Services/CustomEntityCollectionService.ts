@@ -5,7 +5,7 @@ import {
     EntityRawPrefab,
     mapCustomEntityDirectionToDirection,
 } from "@workadventure/map-editor";
-import { ModifyCustomEntityMessage, UploadEntityMessage } from "@workadventure/messages";
+import { DeleteCustomEntityMessage, ModifyCustomEntityMessage, UploadEntityMessage } from "@workadventure/messages";
 import { fileSystem } from "../fileSystem";
 import { mapPathUsingDomainWithPrefix } from "./PathMapper";
 
@@ -51,6 +51,23 @@ export class CustomEntityCollectionService {
                 this.getEntityCollectionFileVirtualPath(),
                 JSON.stringify(customEntityCollection)
             );
+        }
+    }
+
+    public async deleteEntity(deleteCustomEntityMessage: DeleteCustomEntityMessage) {
+        const { id } = deleteCustomEntityMessage;
+        const customEntityCollectionFileContent = await this.readOrCreateEntitiesCollectionFile();
+        const customEntityCollection = EntityCollectionRaw.parse(JSON.parse(customEntityCollectionFileContent));
+        const customEntityToDelete = customEntityCollection.collection.find((entity) => entity.id === id);
+        customEntityCollection.collection = customEntityCollection.collection.filter(
+            (customEntity) => customEntity.id !== id
+        );
+        await fileSystem.writeStringAsFile(
+            this.getEntityCollectionFileVirtualPath(),
+            JSON.stringify(customEntityCollection)
+        );
+        if (customEntityToDelete) {
+            await fileSystem.deleteFiles(this.getEntityToUploadVirtualPath(customEntityToDelete.imagePath));
         }
     }
 

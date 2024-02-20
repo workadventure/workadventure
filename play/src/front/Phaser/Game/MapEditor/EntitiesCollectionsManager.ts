@@ -154,6 +154,26 @@ export class EntitiesCollectionsManager {
         });
     }
 
+    public deleteCustomEntity(id: string): void {
+        this.entitiesPrefabsStore.update((currentEntitiesPrefabs) => {
+            return currentEntitiesPrefabs.filter((entityPrefab) => entityPrefab.id !== id);
+        });
+        const entitiesPrefabsMapPromiseWithUploadedEntity = new Promise<Map<string, EntityPrefab>>(
+            (resolve, reject) => {
+                this.entitiesPrefabsMapPromise
+                    .then((existingEntitiesPrefabsMap) => {
+                        existingEntitiesPrefabsMap.delete(id);
+                        resolve(existingEntitiesPrefabsMap);
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                        reject(error);
+                    });
+            }
+        );
+        this.entitiesPrefabsMapPromise = entitiesPrefabsMapPromiseWithUploadedEntity;
+    }
+
     private async fetchRawCollection(url: string): Promise<EntityCollectionRaw> {
         const response = await fetch(url);
         if (!response.ok) {

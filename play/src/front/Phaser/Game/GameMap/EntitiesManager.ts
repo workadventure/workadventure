@@ -10,11 +10,11 @@ import { get, Unsubscriber } from "svelte/store";
 import { z } from "zod";
 import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
 import {
+    mapEditorEntityModeStore,
     mapEditorModeStore,
+    mapEditorSelectedEntityDraggedStore,
     mapEditorSelectedEntityPrefabStore,
     mapEditorSelectedEntityStore,
-    mapEditorEntityModeStore,
-    mapEditorSelectedEntityDraggedStore,
     mapEditorSelectedToolStore,
 } from "../../../Stores/MapEditorStore";
 import { Entity, EntityEvent } from "../../ECS/Entity";
@@ -165,6 +165,11 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         this.scene.markDirty();
 
         return this.entities.delete(id);
+    }
+
+    public deleteEntities(idsToRemove: string[]): boolean {
+        const removedEntitiesStatus: boolean[] = idsToRemove.map((id) => this.deleteEntity(id));
+        return removedEntitiesStatus.every(Boolean);
     }
 
     public getProperties(): Map<string, string | boolean | number> {
