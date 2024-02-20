@@ -20,6 +20,7 @@ import {
 import { UploadEntityFrontCommand } from "../Commands/Entity/UploadEntityFrontCommand";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 import { ModifyCustomEntityFrontCommand } from "../Commands/Entity/ModifyCustomEntityFrontCommand";
+import { DeleteCustomEntityFrontCommand } from "../Commands/Entity/DeleteCustomEntityFrontCommand";
 
 export class EntityEditorTool extends EntityRelatedEditorTool {
     protected shiftKey?: Phaser.Input.Keyboard.Key;
@@ -131,7 +132,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             case "uploadEntityMessage": {
                 const uploadEntityMessage = editMapCommandMessage.editMapMessage?.message.uploadEntityMessage;
                 await this.mapEditorModeManager.executeCommand(
-                    new UploadEntityFrontCommand(uploadEntityMessage),
+                    new UploadEntityFrontCommand(uploadEntityMessage, this.entitiesManager),
                     false,
                     false
                 );
@@ -148,7 +149,17 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 break;
             }
             case "deleteCustomEntityMessage": {
-                console.log("Not yet implemented");
+                const deleteCustomEntityMessage =
+                    editMapCommandMessage.editMapMessage?.message.deleteCustomEntityMessage;
+                await this.mapEditorModeManager.executeCommand(
+                    new DeleteCustomEntityFrontCommand(
+                        deleteCustomEntityMessage,
+                        this.scene.getGameMap(),
+                        this.entitiesManager
+                    ),
+                    false,
+                    false
+                );
                 break;
             }
         }
@@ -230,7 +241,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 if (uploadEntityMessage) {
                     (async () => {
                         await this.mapEditorModeManager.executeCommand(
-                            new UploadEntityFrontCommand(uploadEntityMessage)
+                            new UploadEntityFrontCommand(uploadEntityMessage, this.entitiesManager)
                         );
                         mapEditorEntityUploadEventStore.set(undefined);
                     })().catch((e) => {
@@ -262,7 +273,23 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
 
     protected subscribeToDeleteCustomEntityEventStore() {
         this.mapEditorDeleteCustomEntityEventStoreUnsubscriber = mapEditorDeleteCustomEntityEventStore.subscribe(
-            () => {}
+            (deleteCustomEntityMessage) => {
+                if (deleteCustomEntityMessage) {
+                    (async () => {
+                        await this.mapEditorModeManager.executeCommand(
+                            new DeleteCustomEntityFrontCommand(
+                                deleteCustomEntityMessage,
+                                this.scene.getGameMap(),
+                                this.entitiesManager
+                            )
+                        );
+                        mapEditorDeleteCustomEntityEventStore.set(undefined);
+                    })().catch((e) => {
+                        console.error(e);
+                        Sentry.captureException(e);
+                    });
+                }
+            }
         );
     }
 
