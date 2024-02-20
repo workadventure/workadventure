@@ -78,13 +78,18 @@
 
     function displayTagListAndClearCurrentSelection() {
         get(mapEditorSelectedEntityStore)?.delete();
-        mapEditorSelectedEntityStore.set(undefined);
-        mapEditorSelectedEntityPrefabStore.set(undefined);
         mapEditorEntityModeStore.set("ADD");
-        pickedEntityVariant = undefined;
+        clearEntitySelection();
         selectedTag = undefined;
         searchTerm = "";
         setIsEditingCustomEntity(false);
+    }
+
+    function clearEntitySelection() {
+        pickedEntityVariant = undefined;
+        pickedEntity = undefined;
+        mapEditorSelectedEntityStore.set(undefined);
+        mapEditorSelectedEntityPrefabStore.set(undefined);
     }
 
     let isEditingCustomEntity = false;
@@ -184,19 +189,23 @@
                 <div
                     class="tw-flex tw-flex-row tw-gap-2 tw-items-center tw-justify-center tw-border-b-blue-50 tw-mb-2 tw-min-h-[200px]"
                 >
-                    <EntityImage
-                        classNames="tw-h-16 tw-w-[64px] tw-object-contain"
-                        imageSource={pickedEntity.imagePath}
-                        imageAlt={pickedEntity.name}
-                    />
                     {#if isEditingCustomEntity}
                         <CustomEntityEditionForm
                             on:closeForm={() => {
                                 setIsEditingCustomEntity(false);
                             }}
+                            on:onRemoveEntity={() => {
+                                clearEntitySelection();
+                                setIsEditingCustomEntity(false);
+                            }}
                             customEntity={pickedEntity}
                         />
                     {:else}
+                        <EntityImage
+                            classNames="tw-h-16 tw-w-[64px] tw-object-contain"
+                            imageSource={pickedEntity.imagePath}
+                            imageAlt={pickedEntity.name}
+                        />
                         <div>
                             <p class="tw-m-0"><b>{pickedEntityVariant.defaultPrefab.name}</b></p>
                             <EntityVariantColorPicker
@@ -219,7 +228,7 @@
                             class="tw-self-start tw-absolute tw-right-0"
                             on:click={() => {
                                 (pickedEntity = undefined), (pickedEntityVariant = undefined);
-                            }}><IconDeselect/></button
+                            }}><IconDeselect /></button
                         >
                     {/if}
                 </div>

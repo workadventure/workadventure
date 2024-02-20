@@ -204,6 +204,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             chooseFile: "Choisir ",
         },
         images: "Image{{s}}",
+        noImage: "Aucune image",
+        customEntityEditorForm: {
+            imageName: "Nom de l'image",
+            tags: "Tags",
+            objectType: "Type d'objet",
+        },
         buttons: {
             editEntity: "Editer",
             back: "Retour",

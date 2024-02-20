@@ -206,6 +206,12 @@ const mapEditor: BaseTranslation = {
             chooseFile: "Choose file",
         },
         images: "Image{{s}}",
+        noImage: "No image",
+        customEntityEditorForm: {
+            imageName: "Image name",
+            tags: "Tags",
+            objectType: "Object type",
+        },
         buttons: {
             editEntity: "Edit",
             back: "Back",

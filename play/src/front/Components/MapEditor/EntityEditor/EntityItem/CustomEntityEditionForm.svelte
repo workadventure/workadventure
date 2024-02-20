@@ -1,7 +1,12 @@
 <script lang="ts">
     import { EntityPrefab } from "@workadventure/map-editor";
     import { createEventDispatcher } from "svelte";
-    import { mapEditorModifyCustomEntityEventStore } from "../../../../Stores/MapEditorStore";
+    import {
+        mapEditorDeleteCustomEntityEventStore,
+        mapEditorModifyCustomEntityEventStore
+    } from "../../../../Stores/MapEditorStore";
+    import EntityImage from "./EntityImage.svelte";
+    import LL from "../../../../../i18n/i18n-svelte";
 
     export let customEntity: EntityPrefab;
     let { name, tags } = structuredClone(customEntity);
@@ -20,11 +25,19 @@
     function convertTagsInputIntoTagArray(tags: string) {
         return tags.trim().length === 0 ? [] : tags.split(",").map((tag) => tag.trim());
     }
+
+    function removeCustomEntity(){
+        mapEditorDeleteCustomEntityEventStore.set({id:customEntity.id})
+        dispatch("onRemoveEntity")
+    }
+
+
 </script>
 
 <div class="tw-flex tw-flex-col tw-flex-1 tw-gap-2">
+    <EntityImage imageSource={customEntity.imagePath} imageAlt={customEntity.name}/>
     <div>
-        <label for="id"><b>Image name</b></label>
+        <label for="id"><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.imageName()}</b></label>
         <input
             class="tw-p-1 tw-rounded-md tw-bg-dark-purple !tw-border-solid !tw-border !tw-border-gray-400 tw-text-white tw-min-w-full"
             bind:value={name}
@@ -32,7 +45,7 @@
         />
     </div>
     <div>
-        <label for="tags"><b>Tags</b></label>
+        <label for="tags"><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.tags()}</b></label>
         <input
             class="tw-p-1 tw-rounded-md tw-bg-dark-purple !tw-border-solid !tw-border !tw-border-gray-400 tw-text-white tw-min-w-full"
             bind:value={inputTags}
@@ -40,16 +53,17 @@
         />
     </div>
     <div>
-        <label for="type"><b>Object type</b></label>
+        <label for="type"><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.objectType()}</b></label>
         <input
             class="tw-p-1 tw-rounded-md tw-bg-dark-purple !tw-border-solid !tw-border !tw-border-gray-400 tw-text-white tw-min-w-full"
             id="type"
         />
     </div>
-    <div class="tw-flex tw-flex-row tw-self-end tw-gap-2">
+    <div class="tw-flex tw-flex-row  tw-gap-2 tw-flex-wrap tw-justify-end">
+        <button class="tw-bg-red-500 tw-rounded-xl" on:click={removeCustomEntity}>{$LL.mapEditor.entityEditor.buttons.delete()}</button>
         <button class="tw-rounded-xl tw-border-white tw-border tw-border-solid" on:click={() => dispatch("closeForm")}
-            >Cancel</button
+            >{$LL.mapEditor.entityEditor.buttons.cancel()}</button
         >
-        <button class="tw-bg-blue-500 tw-rounded-xl" on:click={saveCustomEntityModifications}>Save</button>
+        <button class="tw-bg-blue-500 tw-rounded-xl" on:click={saveCustomEntityModifications}>{$LL.mapEditor.entityEditor.buttons.save()}</button>
     </div>
 </div>
