@@ -1053,6 +1053,7 @@ jobs:
           maps:
             enabled: true
           commonEnv:
+            ENABLE_MAP_EDITOR: true
             KLAXOON_ENABLED: true
             JITSI_DOMAIN: coremeet.workadventu.re
             JITSI_MUC_DOMAIN: muc.prosody.workadventu.re
