@@ -21,7 +21,7 @@ test.describe('Map-storage Upload API', () => {
                     mimeType: "application/json",
                     buffer: Buffer.from(JSON.stringify({
                         version: "1.0.0",
-                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://maps.workadventure.localhost/tests/E2E/empty.json`,
+                        mapUrl: `${(process.env.MAP_STORAGE_PROTOCOL ?? "http")}://${maps_domain}/tests/E2E/empty.json`,
                         areas: [],
                         entities: {},
                         entityCollections: [],
@@ -136,7 +136,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }) => {
         createZipFromDirectory("./assets/file1/", "./assets/file1.zip");
-        const uploadFile1 = await request.post((process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://bad:credentials@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost/') + "upload", {
+        const uploadFile1 = await request.post((process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://bad:credentials@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost') + "/upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
             }

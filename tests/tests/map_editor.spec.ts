@@ -354,7 +354,7 @@ test.describe('Map editor', () => {
     await expect(page.locator('.actions-menu .actions button').nth(3)).toContainText('Open Google Drive');
   });
 
-  test('Successfully set Klaxoon\'s application entity in the map editor', async ({ page, browser, request, browserName }) => {
+  test('Successfully set Klaxoon\'s application entity in the map editor @local', async ({ page, browser, request, browserName }) => {
     if (browser.browserType() === webkit) {
       // Webkit is somehow failing on this, maybe it is too slow
       //eslint-disable-next-line playwright/no-skipped-test
