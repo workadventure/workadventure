@@ -12,7 +12,6 @@ import {
 import {getBackDump, getPusherDump, getPusherRooms} from './utils/debug';
 import {assertLogMessage, startRecordLogs} from './utils/log';
 import { login } from './utils/roles';
-import {RENDERER_MODE} from "./utils/environment";
 import {maps_domain, maps_test_url, play_url, publicTestMapUrl} from "./utils/urls";
 
 test.setTimeout(360000);
@@ -131,7 +130,7 @@ test.describe('Variables', () => {
     await expect(textField).toHaveValue('value set after pusher restart');
   });
 
-  test('cache doesnt prevent setting a variable in case the map changes', async ({
+  test('cache doesnt prevent setting a variable in case the map changes @local', async ({
     page,
     browser,
     request,

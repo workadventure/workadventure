@@ -1,6 +1,7 @@
 import {Page} from "@playwright/test";
 import {evaluateScript} from "./scripting";
 import { RENDERER_MODE } from "./environment";
+import {play_url} from "./urls";
 
 class Map {
     async walkTo(page: Page, key: string, delay = 0){
@@ -40,8 +41,7 @@ class Map {
     }
 
     url(end: string){
-        const protocol = process.env.MAP_STORAGE_PROTOCOL ?? 'http';
-        return `${protocol}://play.workadventure.localhost/~/maps/${end}.wam?phaserMode=${RENDERER_MODE}`;
+        return `${play_url}/~/maps/${end}.wam?phaserMode=${RENDERER_MODE}`;
     }
 }
 

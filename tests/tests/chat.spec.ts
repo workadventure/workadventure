@@ -5,14 +5,13 @@ import Map from './utils/map';
 import {findContainer, startContainer, stopContainer} from "./utils/containers";
 import {createFileOfSize, deleteFile, fileExist} from "./utils/file";
 import Menu from "./utils/menu";
-import {RENDERER_MODE} from "./utils/environment";
 import {publicTestMapUrl} from "./utils/urls";
 
 const TIMEOUT_TO_GET_LIST = 60_000;
 
 test.setTimeout(750_000);
 
-test.describe('Chat', () => {
+test.describe('Chat @chat', () => {
   test('main', async ({ page, browser, browserName }) => {
     /*page.on('console', msg => console.log(browserName + ' - ' + msg.type() + ' - ' + msg.text()));
     page.on('response', response => {
@@ -202,7 +201,7 @@ test.describe('Chat', () => {
   });
 });
 
-test.describe('Use application into TimeLine', () => {
+test.describe('Use application into TimeLine @chat', () => {
   test('main', async ({ page, browser, browserName }) => {
 
     await page.goto(

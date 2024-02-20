@@ -3,7 +3,6 @@ import {} from "../../../play/packages/iframe-api-typings/iframe_api";
 
 import {expect, Frame, Page} from "@playwright/test";
 import {ElementHandle, JSHandle} from "playwright-core";
-import {play_url} from "./urls";
 
 // Types copied from "playwright-core" because they are not exposed.
 type NoHandles<Arg> = Arg extends JSHandle ? never : (Arg extends object ? { [Key in keyof Arg]: NoHandles<Arg[Key]> } : Arg);

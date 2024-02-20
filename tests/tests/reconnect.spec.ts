@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 import {findContainer, rebootPlay, stopContainer} from './utils/containers';
 import { login } from './utils/roles';
-import {RENDERER_MODE} from "./utils/environment";
 import {publicTestMapUrl} from "./utils/urls";
 
 test.setTimeout(180_000);

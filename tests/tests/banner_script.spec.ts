@@ -2,7 +2,6 @@ import { expect, test } from '@playwright/test';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {expectInViewport} from "./utils/viewport";
-import {RENDERER_MODE} from "./utils/environment";
 import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Modal', () => {

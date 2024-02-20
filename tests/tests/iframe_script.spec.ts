@@ -2,7 +2,6 @@ import { expect, test } from '@playwright/test';
 import { login } from './utils/roles';
 import Menu from "./utils/menu";
 import {evaluateScript} from "./utils/scripting";
-import {RENDERER_MODE} from "./utils/environment";
 import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Iframe API', () => {

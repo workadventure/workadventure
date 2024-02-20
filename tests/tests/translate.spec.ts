@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
 import { login } from './utils/roles';
-import {RENDERER_MODE} from "./utils/environment";
 import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Translation', () => {

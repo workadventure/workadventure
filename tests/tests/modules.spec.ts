@@ -1,7 +1,6 @@
 import { test } from '@playwright/test';
 import { assertLogMessage, startRecordLogs} from './utils/log';
 import { login } from './utils/roles';
-import {RENDERER_MODE} from "./utils/environment";
 import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Module', () => {
