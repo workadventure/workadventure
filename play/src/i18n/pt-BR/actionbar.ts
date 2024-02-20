@@ -16,7 +16,6 @@ const actionbar: BaseTranslation = {
         speaker: "Speaker",
     },
     app: "Open / Close applications",
-    listStatusTitle: "Change your status",
     status: {
         ONLINE: "Online",
         AWAY: "Away",

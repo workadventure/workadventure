@@ -16,7 +16,6 @@ const actionbar: BaseTranslation = {
         speaker: "wótřerěčak",
     },
     app: "aplikacije wočinić/začinić",
-    listStatusTitle: "Promijeni svoj status",
     status: {
         ONLINE: "Online",
         AWAY: "Daleko",

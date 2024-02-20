@@ -27,10 +27,6 @@
         statusColorHex: getColorHexOfStatus($availabilityStatusStore || AvailabilityStatus.ONLINE),
     };
 
-    const noDrag = (): boolean => {
-        return false;
-    };
-
     const toggleStatusPicker = (): void => {
         if ($availabilityStatusMenuStore == true) {
             availabilityStatusMenuStore.closeAvailabilityStatusMenu();
@@ -41,7 +37,6 @@
 </script>
 
 <div
-    on:dragstart|preventDefault={noDrag}
     on:click={toggleStatusPicker}
     class="bottom-action-button tw-w-full tw-overflow-ellipsis tw-max-w-24"
 >
