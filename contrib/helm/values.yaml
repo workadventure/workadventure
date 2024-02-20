@@ -567,9 +567,17 @@ ejabberd:
   secretEnv: {}
 
   ingress:
-    # Domain name to be used for the ejabberd container.
+    # This setting is used to enable the ingress in multiDomain mode.
+    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
+    enabled: true
+    tls: false
+    secretName: ""
+    # Domain name to be used for the container.
     # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
     domainName: ""
+    # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
+    className: ""
+
 
 # #########################################################
 # mapstorage service
