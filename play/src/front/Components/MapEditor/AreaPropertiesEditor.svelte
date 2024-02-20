@@ -6,13 +6,16 @@
         AreaDataProperties,
         OpenWebsiteTypePropertiesKeys,
         PlayAudioPropertyData,
+        AreaRightPropertyData,
     } from "@workadventure/map-editor";
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
+    import { InfoIcon } from "svelte-feather-icons";
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import { FEATURE_FLAG_BROADCAST_AREAS } from "../../Enum/EnvironmentVariable";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { connectionManager } from "../../Connection/ConnectionManager";
+    import InputTags from "../Input/InputTags.svelte";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
@@ -37,24 +40,65 @@
     let hasExitProperty: boolean;
     let hasplayAudioProperty: boolean;
     let showDescriptionField = false;
+    let addRights = false;
+
+    type Option = {
+        value: string;
+        label: string;
+        created: undefined | boolean;
+    };
+    let writeTags: Option[] = [];
+    let readTags: Option[] = [];
+    let _tag: Option[] = [
+        {
+            value: "member",
+            label: "member",
+            created: false,
+        },
+        {
+            value: "admin",
+            label: "admin",
+            created: false,
+        },
+    ];
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
             properties = structuredClone(currentAreaPreview.getProperties());
             areaName = currentAreaPreview.getAreaData().name;
-            const property = $mapEditorSelectedAreaPreviewStore
+            const descriptionProperty = $mapEditorSelectedAreaPreviewStore
                 ?.getProperties()
                 .find((property) => property.type === "areaDescriptionProperties");
-            if (property == undefined) {
+            if (descriptionProperty == undefined) {
                 $mapEditorSelectedAreaPreviewStore?.addProperty({
                     id: crypto.randomUUID(),
                     type: "areaDescriptionProperties",
                     description: areaDescription,
                     searchable: areaSearchable,
                 });
-            } else if (property.type === "areaDescriptionProperties") {
-                areaDescription = property.description ?? "";
-                areaSearchable = property.searchable ?? false;
+            } else if (descriptionProperty.type === "areaDescriptionProperties") {
+                areaDescription = descriptionProperty.description ?? "";
+                areaSearchable = descriptionProperty.searchable ?? false;
+            }
+
+            const rightsProperty = $mapEditorSelectedAreaPreviewStore
+                ?.getProperties()
+                .find((property) => property.type === "areaRightPropertyData");
+            if (rightsProperty == undefined) {
+                $mapEditorSelectedAreaPreviewStore?.addProperty({
+                    id: crypto.randomUUID(),
+                    type: "areaRightPropertyData",
+                    writeTags: [],
+                    readTags: [],
+                    searchable: false,
+                });
+            } else if (rightsProperty.type === "areaRightPropertyData") {
+                writeTags = rightsProperty.writeTags.map((tag) => {
+                    return { value: tag, label: tag, created: false };
+                });
+                readTags = rightsProperty.readTags.map((tag) => {
+                    return { value: tag, label: tag, created: false };
+                });
             }
             refreshFlags();
         }
@@ -292,6 +336,30 @@
     function toggleDescriptionField() {
         showDescriptionField = !showDescriptionField;
     }
+
+    function toggleRight() {
+        addRights = !addRights;
+    }
+
+    function onChangeWriteReadTags() {
+        let properties = $mapEditorSelectedAreaPreviewStore
+            ?.getProperties()
+            .find((p) => p.type === "areaRightPropertyData");
+        if (!properties || (properties && properties.type !== "areaRightPropertyData")) {
+            properties = {
+                id: crypto.randomUUID(),
+                type: "areaRightPropertyData",
+                readTags: [],
+                writeTags: [],
+                searchable: false,
+            } as AreaRightPropertyData;
+            $mapEditorSelectedAreaPreviewStore?.addProperty(properties);
+        }
+
+        properties.readTags = readTags.map((tag) => tag.value);
+        properties.writeTags = writeTags.map((tag) => tag.value);
+        $mapEditorSelectedAreaPreviewStore?.updateProperty(properties);
+    }
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
@@ -438,6 +506,9 @@
                 >+ {$LL.mapEditor.areaEditor.addDescriptionField()}</a
             >
         {:else}
+            <a href="#addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
+                >- {$LL.mapEditor.areaEditor.addDescriptionField()}</a
+            >
             <label for="objectDescription">{$LL.mapEditor.areaEditor.areaDescription()}</label>
             <textarea
                 id="objectDescription"
@@ -456,6 +527,36 @@
             bind:checked={areaSearchable}
             on:change={onUpdateAreaSearchable}
         />
+    </div>
+    <div class="properties-container">
+        {#if !addRights}
+            <a href="#toggleRight" on:click|preventDefault|stopPropagation={toggleRight}
+                >+ {$LL.mapEditor.areaEditor.addRight()} ({writeTags.length + readTags.length})</a
+            >
+        {:else}
+            <a href="#toggleRight" class="tw-cursor-pointer" on:click|preventDefault|stopPropagation={toggleRight}
+                >- {$LL.mapEditor.areaEditor.rightTitle()}</a
+            >
+            <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.areaEditor.rightWriteDescription()}</p>
+            <InputTags
+                label={$LL.mapEditor.areaEditor.rightWriteTitle()}
+                options={_tag}
+                on:change={onChangeWriteReadTags}
+                bind:value={writeTags}
+            />
+            <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.areaEditor.rightReadDescription()}</p>
+            <InputTags
+                label={$LL.mapEditor.areaEditor.rightReadTitle()}
+                options={_tag}
+                on:change={onChangeWriteReadTags}
+                bind:value={readTags}
+            />
+            <div class="tw-flex tw-flex-wrap tw-gap-1">
+                {#each writeTags as tag (tag.value)}
+                    <span class="tw-py-1 tw-px-2 tw-bg-gray-400 tw-text-black tw-rounded-lg">{tag.label}</span>
+                {/each}
+            </div>
+        {/if}
     </div>
     <div class="properties-container">
         {#each properties as property (property.id)}

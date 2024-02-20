@@ -119,6 +119,13 @@ export const AreaDescriptionPropertyData = PropertyBase.extend({
     searchable: z.boolean().default(false),
 });
 
+export const AreaRightPropertyData = PropertyBase.extend({
+    type: z.literal("areaRightPropertyData"),
+    writeTags: z.array(z.string()).default([]),
+    readTags: z.array(z.string()).default([]),
+    searchable: z.boolean().default(false),
+});
+
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,
@@ -130,6 +137,7 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     SpeakerMegaphonePropertyData,
     ListenerMegaphonePropertyData,
     AreaDescriptionPropertyData,
+    AreaRightPropertyData,
 ]);
 
 export const AreaDataProperties = z.array(AreaDataProperty);
@@ -334,6 +342,7 @@ export type SpeakerMegaphonePropertyData = z.infer<typeof SpeakerMegaphoneProper
 export type ListenerMegaphonePropertyData = z.infer<typeof ListenerMegaphonePropertyData>;
 export type EntityDescriptionPropertyData = z.infer<typeof EntityDescriptionPropertyData>;
 export type AreaDescriptionPropertyData = z.infer<typeof AreaDescriptionPropertyData>;
+export type AreaRightPropertyData = z.infer<typeof AreaRightPropertyData>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",
