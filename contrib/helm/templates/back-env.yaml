@@ -10,7 +10,7 @@ data:
   REDIS_HOST: {{ .Release.Name }}-redis-master
   MAP_STORAGE_URL: {{ include "workadventure.fullname" . }}-mapstorage:50053
   INTERNAL_MAP_STORAGE_URL: http://{{ include "workadventure.fullname" . }}-mapstorage:3000
-  PUBLIC_MAP_STORAGE_URL: https://{{ .Values.domainName }}/map-storage
+  PUBLIC_MAP_STORAGE_URL: {{ include "workadventure.mapStorageUrl" . | quote }}
   EJABBERD_API_URI: http://{{ include "workadventure.fullname" . }}-ejabberd:5443/api
   EJABBERD_DOMAIN: {{ .Values.ejabberdDomain }}
 
