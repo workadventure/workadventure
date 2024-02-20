@@ -6,8 +6,8 @@ import {
     EntityRawPrefab,
 } from "@workadventure/map-editor";
 import { derived, Readable, Writable, writable } from "svelte/store";
+import { entitiesFileMigration } from "@workadventure/map-editor/src/Migrations/EntitiesFileMigration";
 import { EntityVariant } from "./Entities/EntityVariant";
-import { EntitiesFileMigration } from "@workadventure/map-editor/src/Migrations/EntitiesFileMigration";
 
 export class EntitiesCollectionsManager {
     private entitiesPrefabsMapPromise!: Promise<Map<string, EntityPrefab>>;
@@ -57,9 +57,7 @@ export class EntitiesCollectionsManager {
                 fetchUrlPromises.push(promise);
                 promise
                     .then((entityCollectionRaw) => {
-                        entityCollectionRaw = new EntitiesFileMigration(
-                            entityCollectionRaw
-                        ).getLastVersionForEntitiesFile();
+                        entityCollectionRaw = entitiesFileMigration.migrate(entityCollectionRaw);
                         entityCollections.push({
                             collection: this.parseRawCollection(entityCollectionRaw, descriptor.type),
                             url: descriptor.url,

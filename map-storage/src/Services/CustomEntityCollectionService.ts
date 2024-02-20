@@ -1,4 +1,5 @@
 import {
+    CollisionGrid,
     ENTITIES_FOLDER_PATH,
     ENTITY_COLLECTION_FILE,
     EntityCollectionRaw,
@@ -34,7 +35,8 @@ export class CustomEntityCollectionService {
     }
 
     public async modifyEntity(modifyCustomEntityMessage: ModifyCustomEntityMessage) {
-        const { id, name, tags, depthOffset, collisionGrid } = modifyCustomEntityMessage;
+        const { id, name, tags, depthOffset } = modifyCustomEntityMessage;
+        const collisionGrid = CollisionGrid.parse(modifyCustomEntityMessage.collisionGrid);
         const customEntityCollectionFileContent = await this.readOrCreateEntitiesCollectionFile();
         const customEntityCollection = EntityCollectionRaw.parse(JSON.parse(customEntityCollectionFileContent));
         const indexOfEntityToModify = customEntityCollection.collection.findIndex((entity) => entity.id === id);

@@ -1,42 +1,34 @@
 import { EntityCollectionRaw } from "../types";
 
+/**
+ * Eslint rules are disabled here, because we don't want to type for all possible version of the file.
+ * Only the last version has his own type
+ */
+/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/restrict-template-expressions */
 export interface Migrations {
-    v0: (fileContent: any) => any;
-    v1: (fileContent: any) => any;
+    [migrationVersionKey: string]: (fileContent: any) => any;
 }
 
-export class EntitiesFileMigration {
-    private entitiesFileContent: any;
+class EntitiesFileMigration {
     private readonly migrations: Migrations;
 
-    constructor(entitiesFileContent: any) {
-        this.entitiesFileContent = entitiesFileContent;
+    constructor() {
         this.migrations = {
-            v0: (fileContent: any) => this.migrate_v0_to_v1(fileContent),
-            v1: () => this.entitiesFileContent,
+            "0.0": (fileContent: any) => this.migrate_v0_to_v1(fileContent),
+            "1.0": (fileContent) => fileContent,
         };
     }
 
-    public getLastVersionForEntitiesFile(): EntityCollectionRaw {
+    public migrate(entitiesFileContent: any): EntityCollectionRaw {
         for (const [version, migrationFunction] of Object.entries(this.migrations)) {
-            const fileVersion = this.mapFileVersionToMigrationVersion();
+            const fileVersion = entitiesFileContent.version;
             if (fileVersion === version) {
-                this.entitiesFileContent = migrationFunction(this.entitiesFileContent);
+                entitiesFileContent = migrationFunction(entitiesFileContent);
             }
         }
-        return EntityCollectionRaw.parse(this.entitiesFileContent);
+        return EntityCollectionRaw.parse(entitiesFileContent);
     }
 
-    private mapFileVersionToMigrationVersion(): keyof Migrations {
-        const { version } = this.entitiesFileContent as unknown as { version?: string };
-        switch (version) {
-            case "1.0": {
-                return "v1";
-            }
-            default:
-                return "v0";
-        }
-    }
     private migrate_v0_to_v1(fileContent: any): any {
         return {
             ...fileContent,
@@ -48,3 +40,5 @@ export class EntitiesFileMigration {
         };
     }
 }
+
+export const entitiesFileMigration = new EntitiesFileMigration();

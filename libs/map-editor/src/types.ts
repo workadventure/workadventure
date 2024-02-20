@@ -161,6 +161,8 @@ export const EntityDataProperty = z.discriminatedUnion("type", [
 
 export const EntityDataProperties = z.array(EntityDataProperty);
 
+export const CollisionGrid = z.array(z.array(z.number()));
+
 export const EntityRawPrefab = z.object({
     id: z.string(),
     name: z.string(),
@@ -168,7 +170,7 @@ export const EntityRawPrefab = z.object({
     imagePath: z.string(),
     direction: z.enum(["Left", "Up", "Down", "Right"]),
     color: z.string(),
-    collisionGrid: z.array(z.array(z.number())).optional(),
+    collisionGrid: CollisionGrid.optional(),
     depthOffset: z.number().optional(),
 });
 
@@ -295,6 +297,7 @@ export type EntityPrefabType = z.infer<typeof EntityPrefabType>;
 export type EntityCollection = z.infer<typeof EntityCollection>;
 export type EntityCollectionRaw = z.infer<typeof EntityCollectionRaw>;
 export type CollectionUrl = z.infer<typeof CollectionUrl>;
+export type CollisionGrid = z.infer<typeof CollisionGrid>;
 export type EntityData = z.infer<typeof EntityData>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
