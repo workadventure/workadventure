@@ -136,7 +136,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }) => {
         createZipFromDirectory("./assets/file1/", "./assets/file1.zip");
-        const uploadFile1 = await request.post((process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://bad:credentials@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost') + "/upload", {
+        const uploadFile1 = await request.post(new URL("upload", (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://bad:credentials@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost')).toString(), {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
             }
@@ -207,7 +207,8 @@ test.describe('Map-storage Upload API', () => {
         }
     });
 
-    test('old .wam file is replaced by new .wam file', async ({
+    // Test marked as local because CDN might cache the old wam file and serve it back.
+    test('old .wam file is replaced by new .wam file @local', async ({
         request,
     }) => {
         createZipFromDirectory("./assets/wam-files-base/", "./assets/wam-files-base.zip");
@@ -510,7 +511,7 @@ test.describe('Map-storage Upload API', () => {
         await expect((await uploadFile1.json())['map.json']['map'][0]['message']).toBe('Invalid file extension. Maps should end with the ".tmj" extension.');
     });
 
-    test('upload / patch / delete single file', async ({
+    test('upload / patch / delete single file @local', async ({
         request,
     }) => {
         const uploadFile1 = await request.put("single-map.wam", {
