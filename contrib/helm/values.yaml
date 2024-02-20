@@ -510,6 +510,7 @@ icon:
 # ejabberd service
 # #########################################################
 ejabberd:
+  enabled: true
   replicaCount: 1
 
   image:

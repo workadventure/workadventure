@@ -1,3 +1,4 @@
+{{- if .Values.ejabberd.enabled }}
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -286,3 +287,4 @@ data:
     ### mode: yaml
     ### End:
     ### vim: set filetype=yaml tabstop=8
+{{- end }}

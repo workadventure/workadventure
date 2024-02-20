@@ -8,7 +8,7 @@ metadata:
 data:
   PUSHER_URL: {{ include "workadventure.pusherUrl" . | quote }}
   UPLOADER_URL: {{ include "workadventure.uploaderUrl" . | quote }}
-  EJABBERD_WS_URI: {{ printf "%s/xmpp/ws" (include "workadventure.ejabberdWsUrl" .) }}/xmpp/ws
+  EJABBERD_WS_URI: {{ (printf "%s/xmpp/ws" (include "workadventure.ejabberdWsUrl" .)) | quote }}
   EJABBERD_DOMAIN: {{ .Values.ejabberdDomain | quote }}
 
   {{- range $key, $val := .Values.commonEnv }}
