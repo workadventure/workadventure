@@ -1137,6 +1137,12 @@ jobs:
 #          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} apply -f cd/map-storage-traefik-ingress-route.yaml
 #        if: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin')) || env.GITHUB_REF_SLUG == 'develop'  }}
 
+      - name: "Fix path to assets in WAM test files"
+        run: find "." -type f -name "*.wam" -exec sed -i "s|http://play.workadventure.localhost|${PLAY_URL}|g" {} \;
+        working-directory: map-storage/tests
+        env:
+          PLAY_URL: "https://play-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
+
       - name: Upload demo maps in map-storage
         run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip * && curl -F 'file=@../assets.zip' https://map-storage-${DEPLOY_REF}.test.workadventu.re/upload --basic -u john.doe:password
         env:
@@ -1187,6 +1193,12 @@ jobs:
       - name: "Build Room Api client proto files"
         run: npm run ts-proto
         working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Fix path to assets in WAM test files"
+        run: find "." -type f -name "*.wam" -exec sed -i "s|http://play.workadventure.localhost|${PLAY_URL}|g" {} \;
+        working-directory: map-storage/tests
+        env:
+          PLAY_URL: "https://play-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
 
       - name: Create assets.zip needed by the tests
         run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip *
