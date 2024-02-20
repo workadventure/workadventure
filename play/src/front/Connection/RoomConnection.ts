@@ -14,6 +14,7 @@ import {
     CharacterTextureMessage,
     ClientToServerMessage as ClientToServerMessageTsProto,
     CompanionTextureMessage,
+    DeleteCustomEntityMessage,
     EditMapCommandMessage,
     EmbeddableWebsiteAnswer,
     EmoteEventMessage as EmoteEventMessageTsProto,
@@ -1446,6 +1447,26 @@ export class RoomConnection implements RoomConnection {
                         message: {
                             $case: "modifyCustomEntityMessage",
                             modifyCustomEntityMessage,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitMapEditorDeleteCustomEntity(
+        commandId: string,
+        deleteCustomEntityMessage: DeleteCustomEntityMessage
+    ): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "deleteCustomEntityMessage",
+                            deleteCustomEntityMessage,
                         },
                     },
                 },
