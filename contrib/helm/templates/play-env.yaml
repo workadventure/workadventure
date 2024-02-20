@@ -14,6 +14,7 @@ data:
   FRONT_URL: {{ include "workadventure.playUrl" . | quote }}
   # The PUBLIC_MAP_STORAGE_URL is only used when no admin is connected
   PUBLIC_MAP_STORAGE_URL: {{ include "workadventure.mapStorageUrl" . | quote }}
+  INTERNAL_MAP_STORAGE_URL: http://{{ include "workadventure.fullname" . }}-mapstorage:3000
   EJABBERD_API_URI: {{ printf "%s-ejabberd:%d" (include "workadventure.fullname" .) (int .Values.ejabberd.service.port) }}
   ENABLE_OPENAPI_ENDPOINT: "true"
   ROOM_API_PORT: "50051"
