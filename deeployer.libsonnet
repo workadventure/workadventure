@@ -94,8 +94,8 @@
           "JITSI_URL": env.JITSI_URL,
           "API_URL": "back1:50051,back2:50051",
           "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
-          "FRONT_URL": "https://play-"+url,
-          "PUSHER_URL": "https://play-"+url,
+          "FRONT_URL": "https://front-"+url,
+          "PUSHER_URL": "https://pusher-"+url,
           "PUBLIC_MAP_STORAGE_URL": "https://map-storage-"+url,
           "ENABLE_OPENAPI_ENDPOINT": "true",
           "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
@@ -157,7 +157,7 @@
       },
       "ports": [80],
       "env": {
-        "PUSHER_URL": "//play-"+url,
+        "PUSHER_URL": "//pusher-"+url,
         "UPLOADER_URL": "//uploader-"+url,
         "EMBEDLY_KEY": if std.objectHas(env, 'EMBEDLY_KEY') then env.EMBEDLY_KEY else "",
         "ICON_URL": "//icon-"+url,
@@ -220,7 +220,7 @@
       },
       "ports": [80],
       "env": {
-          "FRONT_URL": "https://play-"+url
+          "FRONT_URL": "https://front-"+url
       }
     },
     "redis": {
@@ -336,7 +336,57 @@
                     "type": "ClusterIP"
                 }
             },
+            servicepusher: {
+                "apiVersion": "v1",
+                "kind": "Service",
+                "metadata": {
+                    "name": "pusher"
+                },
+                "spec": {
+                    "ports": [
+                        {
+                            "name": "pusher-p3000",
+                            "port": 3000,
+                            "protocol": "TCP",
+                            "targetPort": 3000
+                        }
+                    ],
+                    "selector": {
+                        "name": "play"
+                    },
+                    "type": "ClusterIP"
+                }
+            },
+            servicefront: {
+                "apiVersion": "v1",
+                "kind": "Service",
+                "metadata": {
+                    "name": "front"
+                },
+                "spec": {
+                    "ports": [
+                        {
+                            "name": "front-p3000",
+                            "port": 3000,
+                            "protocol": "TCP",
+                            "targetPort": 3000
+                        }
+                    ],
+                    "selector": {
+                        "name": "play"
+                    },
+                    "type": "ClusterIP"
+                }
+            },
             ingress+: {
+              metadata+: {
+                annotations+: {
+                  "nginx.ingress.kubernetes.io/proxy-body-size": "512m",
+                  "nginx.ingress.kubernetes.io/configuration-snippet": |||
+                    more_set_headers "Access-Control-Allow-Origin": "*";
+                  |||
+                }
+              },
               spec+: {
                 rules+:[
                   {
@@ -356,10 +406,46 @@
                         }
                       ]
                     }
+                  },
+                  {
+                    host: "pusher-"+url,
+                    http: {
+                      paths: [
+                        {
+                          backend: {
+                            service: {
+                              name: "pusher",
+                              port: {
+                                number: 3000
+                              }
+                            }
+                          },
+                          pathType: "ImplementationSpecific"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    host: "front-"+url,
+                    http: {
+                      paths: [
+                        {
+                          backend: {
+                            service: {
+                              name: "front",
+                              port: {
+                                number: 3000
+                              }
+                            }
+                          },
+                          pathType: "ImplementationSpecific"
+                        }
+                      ]
+                    }
                   }
                 ],
                 tls+: [{
-                  hosts: ["play-"+url, "room-api-"+url],
+                  hosts: ["play-"+url, "pusher-"+url, "front-"+url, "room-api-"+url],
                   secretName: "certificate-tls"
                 }]
               }
