@@ -67,9 +67,8 @@
 </script>
 
 <div
-    class={`tw-absolute tw-top-0 
-    ${$moreActionOpened ? (!videoEnabled ? "-tw-left-56" : "-tw-left-14") : "-tw-left-8"} 
-    tw-flex tw-flex-col tw-flex-wrap tw-justify-between tw-items-center tw-p-1 tw-bg-black tw-bg-opacity-50 tw-rounded-lg tw-max-h-full`}
+    class="tw-absolute tw-top-0 tw-left-0 tw-flex tw-flex-col tw-flex-wrap tw-justify-between tw-items-center tw-p-1 tw-bg-black tw-bg-opacity-10 tw-rounded-lg tw-max-h-full tw-z-50 hover:tw-bg-opacity-90"
+    class:tw-mt-[0.3rem]={!videoEnabled}
 >
     {#if !$moreActionOpened}
         <!-- More action -->

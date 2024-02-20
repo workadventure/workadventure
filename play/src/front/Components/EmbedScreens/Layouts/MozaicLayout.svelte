@@ -38,7 +38,13 @@
             <MyCamera />
         {/if}
         {#if $myJitsiCameraStore}
-            <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
+            <MediaBox
+                streamable={$myJitsiCameraStore}
+                isClickable={false}
+                mozaicSolo={$streamableCollectionStore.size === 1}
+                mozaicDuo={$streamableCollectionStore.size === 2}
+                mozaicQuarter={$streamableCollectionStore.size === 3 || $streamableCollectionStore.size >= 4}
+            />
         {/if}
     </div>
     <div class="tw-absolute tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-right-5">
