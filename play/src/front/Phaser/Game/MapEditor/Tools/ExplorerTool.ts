@@ -242,13 +242,6 @@ export class ExplorerTool implements MapEditorTool {
         // Create flash animation
         this.scene.cameras.main.flash();
 
-        // Create zoon animation
-        this.scene.cameras.main.zoomEffect.start(0.8, 500);
-        // FIWME: the zoom effect working, but the and of effect can be calledback. Override this effect and call method complete
-        setTimeout(() => {
-            this.scene.cameras.main.zoomEffect.start(1, 500);
-        }, 500);
-
         // Define new zone to zoom
         this.defineZoomToCenterCameraPosition();
 
