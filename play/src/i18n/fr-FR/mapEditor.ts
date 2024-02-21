@@ -209,6 +209,9 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             imageName: "Nom de l'image",
             tags: "Tags",
             objectType: "Type d'objet",
+            floatingObject: "Objet flottant",
+            floatingObjectDescription:
+                "Un objet flottant peut être placé librement sur la carte. Autrement, il sera aligné sur la grille de la carte.",
         },
         buttons: {
             editEntity: "Editer",
@@ -216,6 +219,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             cancel: "Annuler",
             delete: "Supprimer",
             save: "Enregister",
+            upload: "Charger",
         },
     },
     settings: {

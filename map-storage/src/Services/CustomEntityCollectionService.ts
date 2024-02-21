@@ -26,8 +26,8 @@ export class CustomEntityCollectionService {
     }
 
     public async uploadEntity(uploadEntityMessage: UploadEntityMessage) {
-        const { name, file } = uploadEntityMessage;
-        await fileSystem.writeByteAsFile(this.getEntityToUploadVirtualPath(name), file);
+        const { imagePath, file } = uploadEntityMessage;
+        await fileSystem.writeByteAsFile(this.getEntityToUploadVirtualPath(imagePath), file);
         await this.addEntityInEntityCollectionFile(
             this.mapEntityFromUploadEntityMessageToEntityRawPrefab(uploadEntityMessage)
         );

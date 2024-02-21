@@ -15,7 +15,7 @@
     import EntityImage from "./EntityItem/EntityImage.svelte";
     import EntityVariantColorPicker from "./EntityItem/EntityVariantColorPicker.svelte";
     import EntityVariantPositionPicker from "./EntityItem/EntityVariantPositionPicker.svelte";
-    import EntityUpload from "./EntityUpload.svelte";
+    import EntityUpload from "./EntityUpload/EntityUpload.svelte";
     import TagListItem from "./TagListItem.svelte";
     import CustomEntityEditionForm from "./EntityItem/CustomEntityEditionForm.svelte";
 
@@ -32,11 +32,6 @@
 
     let searchTerm = "";
     let selectedTag: selectableTag = undefined;
-
-    onDestroy(() => {
-        mapEditorSelectedEntityPrefabStoreUnsubscriber();
-        entitiesPrefabsVariantStoreUnsubscriber();
-    });
 
     const mapEditorSelectedEntityPrefabStoreUnsubscriber = mapEditorSelectedEntityPrefabStore.subscribe(
         (prefab?: EntityPrefab) => {
@@ -145,6 +140,11 @@
                 entityPrefabVariant.defaultPrefab.name.toLowerCase().includes(searchTerm)
         );
     }
+
+    onDestroy(() => {
+        mapEditorSelectedEntityPrefabStoreUnsubscriber();
+        entitiesPrefabsVariantStoreUnsubscriber();
+    });
 </script>
 
 <div class="tw-flex tw-flex-col tw-flex-1 tw-overflow-auto tw-gap-2">
@@ -226,9 +226,7 @@
                         {/if}
                         <button
                             class="tw-self-start tw-absolute tw-right-0"
-                            on:click={() => {
-                                (pickedEntity = undefined), (pickedEntityVariant = undefined);
-                            }}><IconDeselect /></button
+                            on:click={clearEntitySelection}><IconDeselect /></button
                         >
                     {/if}
                 </div>

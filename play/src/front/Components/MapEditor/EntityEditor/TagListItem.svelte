@@ -19,7 +19,7 @@
         <div class="entities-tag-list-item-grid tw-p-2">
             <div class="asset">
                 <EntityImage
-                    classNames="tw-h-[32px]"
+                    classNames="tw-w-[32px] tw-h-[32px] tw-object-contain"
                     imageSource={entitiesPrefabsVariants[0].defaultPrefab.imagePath}
                     imageAlt={entitiesPrefabsVariants[0].defaultPrefab.name}
                 />

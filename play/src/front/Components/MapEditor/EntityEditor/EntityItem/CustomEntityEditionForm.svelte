@@ -5,8 +5,8 @@
         mapEditorDeleteCustomEntityEventStore,
         mapEditorModifyCustomEntityEventStore
     } from "../../../../Stores/MapEditorStore";
-    import EntityImage from "./EntityImage.svelte";
     import LL from "../../../../../i18n/i18n-svelte";
+    import EntityImage from "./EntityImage.svelte";
 
     export let customEntity: EntityPrefab;
     let { name, tags } = structuredClone(customEntity);
@@ -26,16 +26,23 @@
         return tags.trim().length === 0 ? [] : tags.split(",").map((tag) => tag.trim());
     }
 
-    function removeCustomEntity(){
-        mapEditorDeleteCustomEntityEventStore.set({id:customEntity.id})
-        dispatch("onRemoveEntity")
+    function removeCustomEntity() {
+        mapEditorDeleteCustomEntityEventStore.set({ id: customEntity.id });
+        dispatch("onRemoveEntity");
     }
 
 
 </script>
 
-<div class="tw-flex tw-flex-col tw-flex-1 tw-gap-2">
-    <EntityImage imageSource={customEntity.imagePath} imageAlt={customEntity.name}/>
+<div class="tw-flex tw-flex-col tw-flex-1 tw-gap-2 tw-relative">
+    <div class="tw-self-center">
+        <EntityImage
+            classNames="tw-w-32 "
+            imageSource={customEntity.imagePath}
+            imageAlt={customEntity.name}
+        />
+    </div>
+
     <div>
         <label for="id"><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.imageName()}</b></label>
         <input
@@ -60,10 +67,14 @@
         />
     </div>
     <div class="tw-flex tw-flex-row  tw-gap-2 tw-flex-wrap tw-justify-end">
-        <button class="tw-bg-red-500 tw-rounded-xl" on:click={removeCustomEntity}>{$LL.mapEditor.entityEditor.buttons.delete()}</button>
+        <button class="tw-bg-red-500 tw-rounded-xl" on:click={removeCustomEntity}
+            >{$LL.mapEditor.entityEditor.buttons.delete()}</button
+        >
         <button class="tw-rounded-xl tw-border-white tw-border tw-border-solid" on:click={() => dispatch("closeForm")}
             >{$LL.mapEditor.entityEditor.buttons.cancel()}</button
         >
-        <button class="tw-bg-blue-500 tw-rounded-xl" on:click={saveCustomEntityModifications}>{$LL.mapEditor.entityEditor.buttons.save()}</button>
+        <button class="tw-bg-blue-500 tw-rounded-xl" on:click={saveCustomEntityModifications}
+            >{$LL.mapEditor.entityEditor.buttons.save()}</button
+        >
     </div>
 </div>

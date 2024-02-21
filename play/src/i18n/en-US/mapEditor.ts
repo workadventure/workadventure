@@ -211,6 +211,9 @@ const mapEditor: BaseTranslation = {
             imageName: "Image name",
             tags: "Tags",
             objectType: "Object type",
+            floatingObject: "Floating object",
+            floatingObjectDescription:
+                "A floating object can be placed freely on the map. Otherwise, it will be aligned on the map grid.",
         },
         buttons: {
             editEntity: "Edit",
@@ -218,6 +221,7 @@ const mapEditor: BaseTranslation = {
             cancel: "Cancel",
             delete: "Delete",
             save: "Save",
+            upload: "Upload",
         },
     },
     settings: {
