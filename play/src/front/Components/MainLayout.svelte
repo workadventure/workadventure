@@ -144,10 +144,11 @@
             <UiWebsiteContainer />
         {/if}
 
-        {#if $modalVisibilityStore}
-            <Modal />
-        {/if}
     </section>
+
+    {#if $modalVisibilityStore}
+        <Modal />
+    {/if}
 
     {#if $layoutManagerActionVisibilityStore}
         <LayoutActionManager />

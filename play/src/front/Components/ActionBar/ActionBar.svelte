@@ -128,6 +128,7 @@
     import PenIcon from "../Icons/PenIcon.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
+    let userName = gameManager.getPlayerName() || "";
 
     let selectedMicrophone: string | undefined = undefined;
     let cameraActive = false;
@@ -441,8 +442,8 @@
 {#if !$chatVisibilityStore}
     <ChatOverlay />
 {/if}
-<div class="grid grid-cols-3 justify-items-stretch absolute w-full p-2 xl:p-4 pointer-events-none bp-menu z-[301] @container top-0">
-    <div class="justify-self-start pointer-events-auto" transition:fly={{delay: 500, y: -200, duration: 750 }}>
+<div class="@container/actions grid grid-cols-3 justify-items-stretch absolute w-full p-2 xl:p-4 pointer-events-none bp-menu z-[301] @container top-0">
+    <div class="@lg/actions:bg-white justify-self-start pointer-events-auto" transition:fly={{delay: 500, y: -200, duration: 750 }}>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
                 class="flex relative transition-all duration-150 z-[2]"
@@ -528,7 +529,7 @@
                                                             clickEmoji(key);
                                                         }}
                                                             id={`button-${$emoteDataStore.get(key)?.name}`}
-                                                            class="group emoji py-2 px-2 block m-0 rounded-none flex items-center transition-all rounded-sm {$emoteMenuStore && $emoteMenuSubCurrentEmojiSelectedStore === key ? 'bg-secondary' : 'hover:bg-white/20'}"
+                                                            class="group emoji py-2 px-2 block m-0 rounded-none flex items-center transition-all rounded-sm outline-none border-none {$emoteMenuStore && $emoteMenuSubCurrentEmojiSelectedStore === key ? 'bg-secondary' : 'hover:bg-white/20'}"
                                                     >
                                                         <div class="emoji transition-all group-hover:-rotate-6 group-hover:scale-[2.5]" style="margin:auto" id={`icon-${$emoteDataStore.get(key)?.name}`}>
                                                             {$emoteDataStore.get(key)?.emoji}
@@ -862,7 +863,7 @@
             </div>
         </div>
     </div>
-    <div class="justify-self-end pointer-events-auto menu-right @6xl:text-danger">
+    <div class="justify-self-end pointer-events-auto menu-right">
         <div class="flex space-x-2 xl:space-x-4">
             {#if $addActionButtonActionBarEvent.length > 0}
                 <div class="flex items-center relative">
@@ -921,7 +922,7 @@
                                             buttonActionBarTrigger(button.id);
                                         }}
                                 >
-                                    <button class="btn btn-light rounded h-12 mr-2 select-none !px-4" id={button.id}>
+                                    <button class="btn btn-light rounded h-12 mr-2 select-none !px-4 leading-4" id={button.id}>
                                         {button.label}
                                     </button>
                                 </div>
@@ -932,7 +933,7 @@
                                     on:dragstart|preventDefault={noDrag}
                                     on:click={() => analyticsClient.openInvite()}
                                     on:click={() => showMenuItem(SubMenusInterface.invite)}
-                                    class="btn rounded h-12 select-none !px-4 {!$userIsConnected && ENABLE_OPENID ? 'btn-ghost btn-light' : 'btn-secondary' }"
+                                    class="btn rounded h-12 select-none leading-4 !px-4 {!$userIsConnected && ENABLE_OPENID ? 'btn-ghost btn-light' : 'btn-secondary' }"
                             >
                                 {$LL.menu.sub.invite()}
                             </button>
@@ -950,7 +951,7 @@
             {/if}
             {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
                 <div class="items-center relative hidden xl:block" transition:fly={{delay: 1500, y: -200, duration: 750 }}>
-                    <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false } tabindex="0">
+                    <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => adminMenuIsDropped = !adminMenuIsDropped} on:click={close} tabindex="0">
                         <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-4 pr-3">
                             <AdminPanIcon />
                             <div class="pr-2">
@@ -960,7 +961,7 @@
                         </div>
                     </div>
                     {#if adminMenuIsDropped}
-                    <div class="absolute mt-2 top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all" transition:fly={{y: 40, duration: 150 }}>
+                    <div class="absolute mt-2 top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all" transition:fly={{y: -40, duration: 100 }}>
                         <ul class="p-0 m-0">
                             {#if $mapEditorActivated}
                                 <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => toggleMapEditorMode()}>
@@ -1007,7 +1008,7 @@
                     <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-2 pr-3">
                         <Woka userId={-1} placeholderSrc="" customWidth="32px" customHeight="32px" />
                         <div class="grow flex flex-col justify-start text-left pr-2">
-                            <div class="font-bold text-white leading-5 whitespace-nowrap select-none">Hugo</div>
+                            <div class="font-bold text-white leading-5 whitespace-nowrap select-none">{userName}</div>
                             <div class="text-xxs bold whitespace-nowrap select-none flex items-center">
                                 {#if $availabilityStatusStore === 1}
                                     <div class="aspect-ratio h-2 w-2 bg-success rounded-full mr-2"></div>
@@ -1024,12 +1025,12 @@
                             </div>
                         </div>
                         <div>
-                            <ChevronDownIcon strokeWidth="2" classList="transition-all opacity-50 {adminMenuIsDropped ? 'rotate-180' : '' }" height="h-4" width="w-4"  />
+                            <ChevronDownIcon strokeWidth="2" classList="transition-all opacity-50 {profileMenuIsDropped ? 'rotate-180' : '' }" height="h-4" width="w-4"  />
                         </div>
                     </div>
                 </div>
                 {#if profileMenuIsDropped}
-                <div class="absolute mt-2 top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all" transition:fly={{y: 40, duration: 150 }}>
+                <div class="absolute mt-2 top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all" transition:fly={{y: -40, duration: 100 }}>
                     <div class="p-0 m-0 list-none">
                         <button class="group flex px-2 transition-all cursor-pointer text-sm font-bold w-full">
                             <div class="flex items-center px-3 py-3 w-full bg-white/10 rounded">
@@ -1044,7 +1045,7 @@
                         <div class="h-[1px] w-full bg-white/20 my-2"></div>
                         <button class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditNameScene()}>
                             <div class="aspect-ratio h-2 w-2 bg-success rounded-full ml-2 mr-3"></div>
-                            <div class="mr-3 grow text-left {$availabilityStatusStore === 1 ? '' : 'opacity-50' }">Online<!-- trad --></div>
+                            <div class="mr-3 grow text-left transition-all {$availabilityStatusStore === 1 ? '' : 'opacity-50 hover:-translate-x-1 hover:opacity-100' }">Online<!-- trad --></div>
                             {#if $availabilityStatusStore === 1}
                                 <div class="">
                                     <CheckIcon height="h-4" width="h-4" />
@@ -1053,7 +1054,7 @@
                         </button>
                         <button class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditNameScene()}>
                             <div class="aspect-ratio h-2 w-2 bg-warning rounded-full ml-2 mr-3"></div>
-                            <div class="mr-3 grow text-left {$availabilityStatusStore === 2 ? '' : 'opacity-50' }">Away<!-- trad --></div>
+                            <div class="mr-3 grow text-left transition-all {$availabilityStatusStore === 2 ? '' : 'opacity-50 hover:-translate-x-1 hover:opacity-100' }">Away<!-- trad --></div>
                             {#if $availabilityStatusStore === 2}
                                 <div class="">
                                     <CheckIcon height="h-4" width="h-4" />
@@ -1062,7 +1063,7 @@
                         </button>
                         <button class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditNameScene()}>
                             <div class="aspect-ratio h-2 w-2 bg-danger rounded-full ml-2 mr-3"></div>
-                            <div class="mr-3 grow text-left {$availabilityStatusStore === 3 ? '' : 'opacity-50' }">Do not disturb<!-- trad --></div>
+                            <div class="mr-3 grow text-left transition-all {$availabilityStatusStore === 3 ? '' : 'opacity-50 hover:-translate-x-1 hover:opacity-100' }">Do not disturb<!-- trad --></div>
                             {#if $availabilityStatusStore === 3}
                                 <div class="">
                                     <CheckIcon height="h-4" width="h-4" />
@@ -1071,7 +1072,7 @@
                         </button>
                         <button class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditNameScene()}>
                             <div class="aspect-ratio h-2 w-2 bg-neutral rounded-full ml-2 mr-3"></div>
-                            <div class="mr-3 grow text-left {$availabilityStatusStore === 4 ? '' : 'opacity-50' }">Offline<!-- trad --></div>
+                            <div class="mr-3 grow text-left transition-all {$availabilityStatusStore === 4 ? '' : 'opacity-50 hover:-translate-x-1 hover:opacity-100' }">Offline<!-- trad --></div>
                             {#if $availabilityStatusStore === 4}
                                 <div class="">
                                     <CheckIcon height="h-4" width="h-4" />

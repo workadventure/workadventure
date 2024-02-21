@@ -20,6 +20,7 @@
         } else {
             playerWokaPictureStore = gameScene.MapPlayersByKey.getNestedStore(userId, (item) => item.pictureStore);
         }
+        console.log(playerWokaPictureStore);
         src = placeholderSrc;
         unsubscribe = playerWokaPictureStore.subscribe((source) => {
             src = source ?? placeholderSrc;

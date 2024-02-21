@@ -1,13 +1,17 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
+    import { blur } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
     import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import XIcon from "../Icons/XIcon.svelte";
+    import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
 
     let modalIframe: HTMLIFrameElement;
     let mainModal: HTMLDivElement;
+
+    let isFullScreened = false;
 
     function close() {
         modalVisibilityStore.set(false);
@@ -26,6 +30,9 @@
         resizeObserver.observe(mainModal);
         if ($modalIframeStore?.allowApi) {
             iframeListener.registerIframe(modalIframe);
+        }
+        if($modalIframeStore?.position == "center") {
+            isFullScreened = true;
         }
     });
 
@@ -47,9 +54,34 @@
 
 <svelte:window on:keydown={onKeyDown} />
 
-<div class="menu-container {isMobile ? 'mobile' : $modalIframeStore?.position}" bind:this={mainModal}>
-    <div class="w-full bg-dark-purple/95 rounded" transition:fly={{ x: 1000, duration: 500 }}>
-        <button type="button" class="close-window" on:click={close}>&times</button>
+<div class="menu-container fixed h-screen w-screen z-[2000] pointer-events-auto top-0 {isMobile ? 'mobile' : $modalIframeStore?.position} {isFullScreened ? 'fullscreened' : ''}" bind:this={mainModal}>
+    <div class="w-full h-full bg-contrast/80 backdrop-blur rounded" transition:blur={{ amount: 10, duration: 250 }}>
+        <div class="flex bg-contrast/80 backdrop-blur p-2 space-x-2 rounded-lg absolute top-4 right-4 z-50 ">
+            {#if modalUrl != undefined}
+                {#if $modalIframeStore?.allow}
+                    <button class="btn btn-light btn-ghost rounded"  on:click={() => isFullScreened = !isFullScreened}>
+                    {#if isFullScreened}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrows-minimize" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M5 9l4 0l0 -4" />
+                            <path d="M3 3l6 6" />
+                            <path d="M5 15l4 0l0 4" />
+                            <path d="M3 21l6 -6" />
+                            <path d="M19 9l-4 0l0 -4" />
+                            <path d="M15 9l6 -6" />
+                            <path d="M19 15l-4 0l0 4" />
+                            <path d="M15 15l6 6" />
+                        </svg>
+                    {:else }
+                        <FullScreenIcon />
+                    {/if}
+                    </button>
+                {/if}
+            {/if}
+            <button on:click={close} class="btn btn-danger rounded">
+                <XIcon />
+            </button>
+        </div>
         {#if modalUrl != undefined}
             <iframe
                 id="modalIframe"
@@ -59,14 +91,15 @@
                 allow={$modalIframeStore?.allow}
                 title={$modalIframeStore?.title}
                 src={modalUrl}
-                class="border-0"
-            />
+                class="border-0 relative z-40"
+            ></iframe>
         {/if}
     </div>
 </div>
 
 <style lang="scss">
     .menu-container {
+        @apply transition-all;
         &.mobile {
             width: 100% !important;
             height: 100% !important;
@@ -75,5 +108,14 @@
             right: 0 !important;
             bottom: 0 !important;
         }
+      &.right:not(.fullscreened), &.left:not(.fullscreened) {
+        @apply w-1/3;
+      }
+      &.right {
+        right: 0;
+      }
+      &.left {
+        left: 0;
+      }
     }
 </style>
