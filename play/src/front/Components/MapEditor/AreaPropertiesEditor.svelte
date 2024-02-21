@@ -551,11 +551,13 @@
                 on:change={onChangeWriteReadTags}
                 bind:value={readTags}
             />
-            <div class="tw-flex tw-flex-wrap tw-gap-1">
-                {#each writeTags as tag (tag.value)}
-                    <span class="tw-py-1 tw-px-2 tw-bg-gray-400 tw-text-black tw-rounded-lg">{tag.label}</span>
-                {/each}
-            </div>
+            {#if writeTags != undefined && writeTags.length > 0}
+                <div class="tw-flex tw-flex-wrap tw-gap-1">
+                    {#each writeTags as tag, index (`${index}-${tag.value}`)}
+                        <span class="tw-py-1 tw-px-2 tw-bg-gray-400 tw-text-black tw-rounded-lg">{tag.label}</span>
+                    {/each}
+                </div>
+            {/if}
         {/if}
     </div>
     <div class="properties-container">
