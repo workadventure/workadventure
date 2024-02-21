@@ -62,12 +62,19 @@ export class AreasPropertiesListener {
             const areaRight = area.properties.find((property) => property.type === "areaRightPropertyData") as
                 | AreaRightPropertyData
                 | undefined;
-            if (areaRight != undefined) {
+            if (
+                !gameManager.getCurrentGameScene().connection?.isAdmin() &&
+                areaRight != undefined &&
+                (areaRight.readTags.length > 0 || areaRight.writeTags.length > 0)
+            ) {
                 // Check that the user have right to read the area
                 if (
-                    !areaRight.writeTags.find((tag) => gameManager.getCurrentGameScene().connection?.hasTag(tag)) &&
-                    !areaRight.writeTags.find((tag) => gameManager.getCurrentGameScene().connection?.hasTag(tag)) &&
-                    !gameManager.getCurrentGameScene().connection?.isAdmin()
+                    (areaRight.readTags.length > 0 &&
+                        !areaRight.writeTags.find((tag) =>
+                            gameManager.getCurrentGameScene().connection?.hasTag(tag)
+                        )) ||
+                    (areaRight.writeTags.length > 0 &&
+                        !areaRight.writeTags.find((tag) => gameManager.getCurrentGameScene().connection?.hasTag(tag)))
                 ) {
                     continue;
                 }
