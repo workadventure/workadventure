@@ -15,7 +15,7 @@
         <p>{$LL.mapEditor.entityEditor.noImage()}</p>
     </div>
 {:else}
-    <div class="tw-grid tw-grid-cols-[repeat(auto-fit,minmax(64px,1fr))] tw-gap-2">
+    <div class="tw-grid tw-grid-cols-[repeat(auto-fit,minmax(64px,3.6em))] tw-gap-2 tw-justify-center">
         {#each entityPrefabVariants as entityPrefabVariant (entityPrefabVariant.defaultPrefab.id)}
             <EntityItem
                 on:selectEntity={(event) => onSelectEntity(event.detail)}

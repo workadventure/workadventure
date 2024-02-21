@@ -17,7 +17,7 @@
     on:click={() => dispatch("selectEntity", entityVariant)}
 >
     <EntityImage
-        classNames="tw-cursor-pointer tw-max-w-[3.6em] tw-max-h-[3.6em] tw-m-auto"
+        classNames="tw-cursor-pointer tw-w-14 tw-h-14 tw-object-contain tw-m-auto"
         imageSource={entityVariant.defaultPrefab.imagePath}
         imageAlt={entityVariant.defaultPrefab.name}
     />
