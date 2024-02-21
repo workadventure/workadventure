@@ -643,9 +643,33 @@ mapstorage:
   env:
     ENABLE_BASIC_AUTHENTICATION: "true"
     AUTHENTICATION_USER: admin
+    AWS_DEFAULT_REGION: ~
+    AWS_BUCKET: ~
+    AWS_URL: ~
+    AWS_ENDPOINT: ~
+    S3_UPLOAD_CONCURRENCY_LIMIT: ~
+    MAX_UNCOMPRESSED_SIZE: ~
+    USE_DOMAIN_NAME_IN_PATH: "false"
+    CACHE_CONTROL: ~
+    ENABLE_WEB_HOOK: "false"
+    WEB_HOOK_URL: ~
+    WEB_HOOK_API_TOKEN: ~
+    SENTRY_DSN: ~
+    SENTRY_RELEASE: ~
+    SENTRY_ENVIRONMENT: ~
+    SENTRY_TRACES_SAMPLE_RATE: ~
+    ENABLE_BEARER_AUTHENTICATION: "false"
+    AUTHENTICATION_VALIDATOR_URL: ~
+    ENABLE_DIGEST_AUTHENTICATION: "false"
+
 
   secretEnv:
-    AUTHENTICATION_PASSWORD: ""
+    AUTHENTICATION_PASSWORD: "ssssssssssss"
+    AWS_ACCESS_KEY_ID: ~
+    AWS_SECRET_ACCESS_KEY: ~
+    AUTHENTICATION_TOKEN: ~
+
+
 
   ingress:
     # This setting is used to enable the map-storage ingress in multiDomain mode.
