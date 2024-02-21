@@ -3,6 +3,7 @@ import {
     AreaData,
     AreaDataProperties,
     AreaDataProperty,
+    AreaRightPropertyData,
     FocusablePropertyData,
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
@@ -33,6 +34,7 @@ import { gameManager } from "../GameManager";
 import { iframeListener } from "../../../Api/IframeListener";
 import { chatZoneLiveStore } from "../../../Stores/ChatStore";
 import { Room } from "../../../Connection/Room";
+import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -54,6 +56,26 @@ export class AreasPropertiesListener {
 
             if (!area.properties) {
                 continue;
+            }
+
+            // Get area right properties
+            const areaRight = area.properties.find((property) => property.type === "areaRightPropertyData") as
+                | AreaRightPropertyData
+                | undefined;
+            if (areaRight != undefined) {
+                // Check that the user have right to read the area
+                if (
+                    !areaRight.writeTags.find((tag) => gameManager.getCurrentGameScene().connection?.hasTag(tag)) &&
+                    !areaRight.writeTags.find((tag) => gameManager.getCurrentGameScene().connection?.hasTag(tag)) &&
+                    !gameManager.getCurrentGameScene().connection?.isAdmin()
+                ) {
+                    continue;
+                }
+            }
+
+            // Add new notification to show at the user that he entered a new area
+            if (area.name && area.name !== "") {
+                notificationPlayingStore.playNotification(area.name);
             }
             for (const property of area.properties) {
                 this.addPropertyFilter(property, area);

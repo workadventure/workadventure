@@ -25,7 +25,7 @@
 
 <div class="notification-playing tw-bg-dark-blue/95 tw-mt-1" transition:fly={{ x: 210, duration: 500 }}>
     <img
-        src={icons.get(notification.icon) ?? waImg}
+        src={notification.icon ? icons.get(notification.icon) : waImg}
         alt="Audio playing"
         class="tw-bg-medium-purple tw-rounded-full tw-h-14"
     />
