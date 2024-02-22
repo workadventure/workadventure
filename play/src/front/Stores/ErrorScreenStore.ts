@@ -95,7 +95,6 @@ function createErrorScreenStore() {
             if (error instanceof Error) {
                 console.error("Stacktrace: ", error.stack);
             }
-            console.trace();
 
             if (typeof error === "string" || error instanceof String) {
                 set(

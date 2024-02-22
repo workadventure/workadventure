@@ -236,7 +236,7 @@ export class MapEditorModeManager {
     public handleKeyDownEvent(event: KeyboardEvent): void {
         this.currentlyActiveTool?.handleKeyDownEvent(event);
         const mapEditorModeActivated = get(mapEditorActivated);
-        if (!mapEditorModeActivated) return;
+        if (!mapEditorModeActivated || this.currentlyActiveTool != undefined) return;
         switch (event.key.toLowerCase()) {
             case "`": {
                 this.equipTool(undefined);
@@ -414,7 +414,10 @@ export class MapEditorModeManager {
                 this.equipTool(undefined);
                 return;
             }
-            this.equipTool(this.lastlyUsedTool ?? EditorToolName.EntityEditor);
+            this.equipTool(
+                this.lastlyUsedTool ??
+                    (get(mapEditorActivated) ? EditorToolName.EntityEditor : EditorToolName.ExploreTheRoom)
+            );
         });
     }
 

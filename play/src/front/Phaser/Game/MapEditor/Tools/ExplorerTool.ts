@@ -139,7 +139,6 @@ export class ExplorerTool implements MapEditorTool {
     public clear(): void {
         // Put analytics for exploration mode
         analyticsClient.closeExplorationMode();
-        this.scene.getCameraManager().unlockCameraWithDelay(0);
 
         // Restore controls of the scene
         this.scene.userInputManager.restoreControls();

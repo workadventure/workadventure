@@ -32,7 +32,7 @@ export class WaScaleManager {
         this.game = game;
     }
 
-    public applyNewSize() {
+    public applyNewSize(camera?: Phaser.Cameras.Scene2D.Camera) {
         if (this.scaleManager === undefined) {
             return;
         }
@@ -47,8 +47,18 @@ export class WaScaleManager {
             this.actualZoom = realSize.width / gameSize.width / devicePixelRatio;
         }
 
-        this.scaleManager.resize(gameSize.width, gameSize.height);
-        this.scaleManager.setZoom(this.actualZoom);
+        // The performance shows us that resizing the game size outside its real size causes many lags and bad game performance.
+        //      So we apply this condition: if the game size is greater than the real size, we don't zoom through the canvas.
+        //      To zoom in and out, we use the camera. This is used in the Explorer mode. The zoom is calculated using the optimal zoom level.
+        if (gameSize.width <= realSize.width && gameSize.height <= realSize.height) {
+            this.scaleManager.resize(gameSize.width, gameSize.height);
+            this.scaleManager.setZoom(this.actualZoom);
+            camera?.setZoom(1);
+        } else {
+            camera?.setZoom(
+                this.hdpiManager.zoomModifier * this.hdpiManager.getOptimalZoomLevel(realSize.width * realSize.height)
+            );
+        }
 
         // Override bug in canvas resizing in Phaser. Let's resize the canvas ourselves
         const style = this.scaleManager.canvas.style;
@@ -74,12 +84,15 @@ export class WaScaleManager {
     /**
      * Use this in case of resizing while focusing on something
      */
-    public refreshFocusOnTarget(): void {
+    public refreshFocusOnTarget(camera?: Phaser.Cameras.Scene2D.Camera): void {
         if (!this.focusTarget) {
             return;
         }
         if (this.focusTarget.width && this.focusTarget.height) {
-            this.zoomModifier = this.getTargetZoomModifierFor(this.focusTarget.width, this.focusTarget.height);
+            this.setZoomModifier(
+                this.getTargetZoomModifierFor(this.focusTarget.width, this.focusTarget.height),
+                camera
+            );
         }
 
         this.game.events.emit(WaScaleManagerEvent.RefreshFocusOnTarget, this.focusTarget);
@@ -107,12 +120,21 @@ export class WaScaleManager {
     }
 
     public set zoomModifier(zoomModifier: number) {
-        this.hdpiManager.zoomModifier = zoomModifier;
-        this.applyNewSize();
+        this.setZoomModifier(zoomModifier);
     }
 
-    public handleZoomByFactor(zoomFactor: number): void {
-        this.zoomModifier *= zoomFactor;
+    public setZoomModifier(zoomModifier: number, camera?: Phaser.Cameras.Scene2D.Camera): void {
+        this.hdpiManager.zoomModifier = zoomModifier;
+        this.applyNewSize(camera);
+    }
+
+    public handleZoomByFactor(zoomFactor: number, camera: Phaser.Cameras.Scene2D.Camera): void {
+        if (zoomFactor > 1 && this.zoomModifier * zoomFactor - this.zoomModifier > 0.02)
+            this.setZoomModifier(this.zoomModifier * 1.02, camera);
+        else if (zoomFactor < 1 && this.zoomModifier - this.zoomModifier * zoomFactor > 0.02)
+            this.setZoomModifier(this.zoomModifier * 0.98, camera);
+        else this.setZoomModifier(this.zoomModifier * zoomFactor, camera);
+
         if (this.focusTarget) {
             this.game.events.emit(WaScaleManagerEvent.RefreshFocusOnTarget, this.focusTarget);
         }
