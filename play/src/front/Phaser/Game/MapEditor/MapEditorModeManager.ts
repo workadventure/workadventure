@@ -414,7 +414,10 @@ export class MapEditorModeManager {
                 this.equipTool(undefined);
                 return;
             }
-            this.equipTool(this.lastlyUsedTool ?? EditorToolName.EntityEditor);
+            this.equipTool(
+                this.lastlyUsedTool ??
+                    (this.scene.connection?.isAdmin() ? EditorToolName.EntityEditor : EditorToolName.ExploreTheRoom)
+            );
         });
     }
 
