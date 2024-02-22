@@ -1,9 +1,9 @@
 div.main-audio-manager {
   max-height: clamp(150px, 10vh, 15vh); /*replace @media for small screen*/
-  width: clamp(200px, 15vw, 15vw);
   z-index: 550;
   text-align: center;
   pointer-events: auto;
+  margin-bottom: 72px;
 
   section.audio-manager-file {
     display: none;

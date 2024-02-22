@@ -132,10 +132,13 @@
     }
 </script>
 
-<div class="main-audio-manager absolute bottom-4 bg-contrast/80 backdrop-blur left-0 right-0 m-auto rounded-lg p-4">
+
+
+
+<div class="main-audio-manager absolute bottom-4 w-[500px] left-0 right-0 m-auto rounded-lg p-4">
     <div class:hidden={state !== "playing"} class="">
-        <div class="font-lg text-center text-white mb-4 opacity-50">
-            Manage background music <!-- Trad -->
+        <div class="font-lg text-center text-white mb-7">
+            Manage background music<!-- Trad -->
         </div>
         <div class="audio-manager-player-volume flex items-center justify-center">
             <div id="audioplayer_volume_icon_playing" bind:this={audioPlayerVolumeIcon} on:click={onMute} class="pr-4 flex items-center">

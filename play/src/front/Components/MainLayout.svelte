@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
+    // import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
     import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { emoteDataStoreLoading, emoteMenuStore } from "../Stores/EmoteStore";
     import { requestVisitCardsStore } from "../Stores/GameStore";
@@ -23,7 +23,7 @@
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     // import { askDialogStore } from "../Stores/MeetingStore";
-    import AudioManager from "./AudioManager/AudioManager.svelte";
+    // import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
@@ -44,10 +44,10 @@
     import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
     import Modal from "./Modal/Modal.svelte";
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
-    import XIcon from "./Icons/XIcon.svelte";
-    import ChevronLeftIcon from "./Icons/ChevronLeftIcon.svelte";
-    import ChevronRightIcon from "./Icons/ChevronRightIcon.svelte";
-    import PopUp from "./PopUp.svelte";
+    // import PopUpTutorial from "./PopUp/PopUpTutorial.svelte";
+    import PopUpSound from "./PopUp/PopUpSound.svelte";
+    // import PopUpFollow from "./PopUp/PopUpFollow.svelte";
+    // import PopUpJitsi from "./PopUp/PopUpJitsi.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -97,9 +97,7 @@
             </div>
         {/if}
 
-        {#if $soundPlayingStore}
-            <AudioPlaying url={$soundPlayingStore} />
-        {/if}
+
 
         {#if $warningContainerStore}
             <WarningContainer />
@@ -121,8 +119,9 @@
             <HelpPopUpBlocked />
         {/if}
 
-        {#if $audioManagerVisibilityStore}
-            <AudioManager />
+
+        {#if $soundPlayingStore}
+            <AudioPlaying url={$soundPlayingStore} />
         {/if}
 
         {#if $showLimitRoomModalStore}
@@ -151,6 +150,7 @@
 
 
 
+
     </section>
 
     {#if $layoutManagerActionVisibilityStore}
@@ -162,6 +162,12 @@
     {/if}
 
     <ActionBar />
+
+
+    <!-- <PopUpTutorial /> -->
+    <PopUpSound />
+    <!-- <PopUpFollow /> -->
+    <!-- <PopUpJitsi /> -->
 
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
@@ -281,8 +287,8 @@
       </div>
 
     </div>-->
-
     <!--<div class="fixed bottom-4 left-0 right-0 m-auto bg-contrast/80 backdrop-blur text-white w-[500px] rounded-lg overflow-hidden z-[203]">
+
       <div class="flex p-4 space-x-4 pointer-events-auto">
           <div class="">
               <button class="btn btn-light btn-ghost opacity-20 btn-sm">
@@ -337,9 +343,9 @@
           <button class="btn btn-secondary w-1/2 justify-center">Close</button>
       </div>
     </div>
-      -->
+  -->
 
-    <PopUp />
+
 
     <Lazy
         on:onload={() => emoteDataStoreLoading.set(true)}

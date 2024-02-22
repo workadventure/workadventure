@@ -448,7 +448,7 @@
 
     let sound = new Audio(speakerAudio)
     function playSoundClick() {
-      sound.load()
+      sound.load();
       sound.play().catch(e => console.error(e));
     }
 
@@ -479,7 +479,7 @@
                 </div>
 
                 {#if helpActive === "chat"}
-                    <HelpTooltip title="Send text message with chat" />
+                    <HelpTooltip title="Send text message with chat"/>
                 {/if}
                 {#if $chatZoneLiveStore || $peerStore.size > 0}
                     <div>
@@ -525,7 +525,7 @@
                         on:mouseenter={playSoundClick}
                     >
                         <div
-                                class="h-12 w-12 rounded aspect-square flex items-center justify-center transition-all {$emoteMenuSubStore ? 'bg-secondary group-hover/bg-secondary-600' : ' group-hover/btn-emoji:bg-white/10'}"
+                          class="h-12 w-12 rounded aspect-square flex items-center justify-center transition-all {$emoteMenuSubStore ? 'bg-secondary group-hover/bg-secondary-600' : ' group-hover/btn-emoji:bg-white/10'}"
                         >
                             <EmojiIcon color="{$emoteMenuSubStore ? 'stroke-white fill-white' : 'stroke-white fill-transparent'}" hover="group-hover/btn-emoji:fill-white" />
                         </div>
