@@ -119,6 +119,10 @@ export class WaScaleManager {
         return this.hdpiManager.zoomModifier;
     }
 
+    public set zoomModifier(zoomModifier: number) {
+        this.setZoomModifier(zoomModifier);
+    }
+
     public setZoomModifier(zoomModifier: number, camera?: Phaser.Cameras.Scene2D.Camera): void {
         this.hdpiManager.zoomModifier = zoomModifier;
         this.applyNewSize(camera);
