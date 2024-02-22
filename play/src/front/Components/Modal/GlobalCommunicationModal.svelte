@@ -193,7 +193,7 @@
         <div class="tw-h-5/6 tw-px-5 tw-overflow-auto">
             {#if !activeLiveMessage && !inputSendTextActive && !uploadAudioActive}
                 <div class="tw-flex tw-flex-row tw-justify-center">
-                    <div class="tw-flex tw-flex-col tw-px-5 tw-w-1/3">
+                    <div id="content-liveMessage" class="tw-flex tw-flex-col tw-px-5 tw-w-1/3">
                         <h3>
                             <img
                                 src={liveMessageImg}
@@ -209,7 +209,7 @@
                             {$LL.megaphone.modal.liveMessage.notice()}
                         </p>
                     </div>
-                    <div class="tw-flex tw-flex-col tw-px-5 tw-w-1/3">
+                    <div id="content-textMessage" class="tw-flex tw-flex-col tw-px-5 tw-w-1/3">
                         <h3>
                             <img
                                 src={textMessageImg}
@@ -225,7 +225,7 @@
                             {$LL.megaphone.modal.textMessage.notice()}
                         </p>
                     </div>
-                    <div class="tw-flex tw-flex-col tw-px-5 tw-w-1/3">
+                    <div id="content-soundMessage" class="tw-flex tw-flex-col tw-px-5 tw-w-1/3">
                         <h3>
                             <img
                                 src={audioMessageImg}
@@ -286,7 +286,7 @@
             {/if}
 
             {#if inputSendTextActive || uploadAudioActive}
-                <div class="tw-flex tw-flex-col tw-p-5">
+                <div id="active-globalMessage" class="tw-flex tw-flex-col tw-p-5">
                     {#if inputSendTextActive}
                         <h3>
                             <img
@@ -324,7 +324,7 @@
                 </div>
             {/if}
             {#if activeLiveMessage}
-                <div class="tw-flex tw-flex-col tw-p-5">
+                <div id="active-liveMessage" class="tw-flex tw-flex-col tw-p-5">
                     <h3>
                         <img
                             src={liveMessageImg}
