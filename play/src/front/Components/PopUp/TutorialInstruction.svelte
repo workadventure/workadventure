@@ -2,46 +2,24 @@
 import ChevronLeftIcon from "../Icons/ChevronLeftIcon.svelte";
 import ChevronRightIcon from "../Icons/ChevronRightIcon.svelte";
 import XIcon from "../Icons/XIcon.svelte";
-import { bannerVisible, currentBannerIndex } from '../../Stores/TutorialBanner'
+import { bannerVisible, currentBannerIndex } from '../../Stores/PopUpBannerStore'
 
 
-let chevronLeft;
-let chevronRight;
+function goToPreviousBanner() {
+  if ($currentBannerIndex === 0) return;
+  currentBannerIndex.update((slide) => slide - 1);
+}
 
-export function goToPreviousBanner() {
-    console.log("bonjour je suis dans le fonction previous composant")
-    currentBannerIndex.update((n) => n - 1);
-    console.log($currentBannerIndex)
-  }
-
-export function goToNextBanner() {
-    console.log("bonjour je suis dans le fonction next composant")
-    currentBannerIndex.update((n) => n + 1);
-    console.log($currentBannerIndex)
-  }
+function goToNextBanner() {
+  if ($currentBannerIndex === 4) return;
+  currentBannerIndex.update((slide) => slide + 1);
+}
 
 function closeBanner() {
   bannerVisible.set(false)
 }
 
-//Pour cette fonction il manque encore le premier click
-function arrowsColor() {
-  chevronRight = document?.getElementById("chevron-right") as HTMLButtonElement
-  chevronLeft = document?.getElementById("chevron-left") as HTMLButtonElement
 
-  if (0 < $currentBannerIndex && $currentBannerIndex < 5) {
-    chevronLeft?.classList.remove("opacity-20")
-    chevronRight?.classList.remove("opacity-20")
-  } else if ($currentBannerIndex === 0) {
-    chevronLeft?.classList.add("opacity-20")
-    chevronLeft.disabled = true
-    chevronRight.disabled = false
-  } else if ($currentBannerIndex === 5) {
-    chevronRight?.classList.add("opacity-20")
-    chevronRight.disabled = true
-    chevronLeft.disabled = false
-  }
-}
 
 
 </script>
@@ -49,13 +27,15 @@ function arrowsColor() {
   <div class="fixed bottom-2 left-0 right-0 m-auto bg-contrast/80 backdrop-blur text-white w-[500px] h-[250px] rounded-lg overflow-hidden z-[203]">
     <div class="flex p-4 space-x-4 pointer-events-auto">
         <div class="">
-
-            <button class="btn btn-light btn-ghost btn-sm opacity-20" id="chevron-left" on:click={goToPreviousBanner} on:click={arrowsColor}>
+            <button class="btn btn-light btn-ghost btn-sm {0 < $currentBannerIndex && $currentBannerIndex < 5 ? "" : "opacity-20"}" id="chevron-left" on:click={goToPreviousBanner}
+            >
                 <ChevronLeftIcon height="h-4" width="w-4" />
             </button>
         </div>
         <div class="grow">
-            <button class="btn btn-light btn-ghost btn-sm " id="chevron-right" on:click={goToNextBanner} on:click={arrowsColor}>
+            <button class="btn btn-light btn-ghost btn-sm {$currentBannerIndex === 4 ? "opacity-20 disbabled" : ""}" id="chevron-right"
+            on:click={goToNextBanner}
+            >
                 <ChevronRightIcon height="h-4" width="w-4" />
             </button>
         </div>

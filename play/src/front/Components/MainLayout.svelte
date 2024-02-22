@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    // import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
+    import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
     import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { emoteDataStoreLoading, emoteMenuStore } from "../Stores/EmoteStore";
     import { requestVisitCardsStore } from "../Stores/GameStore";
@@ -10,7 +10,7 @@
     import { menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import { followStateStore } from "../Stores/FollowStore";
-    import { peerStore } from "../Stores/PeerStore";
+    // import { peerStore } from "../Stores/PeerStore";
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
@@ -28,13 +28,12 @@
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
-    import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
+    // import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
     import Menu from "./Menu/Menu.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
     import WarningContainer from "./WarningContainer/WarningContainer.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
-    import FollowMenu from "./FollowMenu/FollowMenu.svelte";
     import BanMessageContainer from "./TypeMessage/BanMessageContainer.svelte";
     import TextMessageContainer from "./TypeMessage/TextMessageContainer.svelte";
     import AudioPlaying from "./UI/AudioPlaying.svelte";
@@ -44,10 +43,10 @@
     import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
     import Modal from "./Modal/Modal.svelte";
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
-    // import PopUpTutorial from "./PopUp/PopUpTutorial.svelte";
     import PopUpSound from "./PopUp/PopUpSound.svelte";
-    // import PopUpFollow from "./PopUp/PopUpFollow.svelte";
-    // import PopUpJitsi from "./PopUp/PopUpJitsi.svelte";
+    import PopUpFollow from "./PopUp/PopUpFollow.svelte";
+    import PopUpJitsi from "./PopUp/PopUpJitsi.svelte";
+
 
     let mainLayout: HTMLDivElement;
 
@@ -128,9 +127,6 @@
             <LimitRoomModal />
         {/if}
 
-        {#if $followStateStore !== "off" || $peerStore.size > 0}
-            <FollowMenu />
-        {/if}
 
         {#if $requestVisitCardsStore}
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
@@ -148,26 +144,41 @@
             <Modal />
         {/if}
 
+        {#if $audioManagerVisibilityStore}
+            <PopUpSound />
+        {/if}
 
+        {#if $layoutManagerActionVisibilityStore}
+            <PopUpJitsi />
+        {/if}
+
+        <!-- {#if $} -->
+
+        <!-- {/if} -->
+
+
+        {#if $followStateStore !== "off"}
+          <PopUpFollow />
+        {/if}
 
 
     </section>
 
-    {#if $layoutManagerActionVisibilityStore}
-        <LayoutActionManager />
-    {/if}
+
 
     {#if $actionsMenuStore}
         <ActionsMenu />
     {/if}
 
+
     <ActionBar />
-
-
     <!-- <PopUpTutorial /> -->
-    <PopUpSound />
-    <!-- <PopUpFollow /> -->
-    <!-- <PopUpJitsi /> -->
+
+
+
+
+
+
 
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />

@@ -14,7 +14,7 @@
     import { LL } from "../../i18n/i18n-svelte";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
     import { gameManager } from "../Phaser/Game/GameManager";
-    import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
+    // import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import { heightCamWrapper } from "../Stores/EmbedScreensStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
@@ -81,6 +81,7 @@
         <div
             class="z-[250] rounded-lg py-4 px-3 text-white border-[1px] border-solid border-danger flex flex-col items-center content-center justify-between media-box-camera-off-size bg-no-repeat bg-center bg-danger-1000/70 backdrop-blur rounded-xl text-center -translate-y-8">
             <div class="flex flex-col -mt-20 leading-3">
+                <!-- svelte-ignore a11y-missing-attribute -->
                 <img src="{silentImg}" class="h-40 w-40" />
             </div>
             <div class="m-0 text-center -mt-4 text-lg bold">

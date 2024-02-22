@@ -1,11 +1,8 @@
 <script lang="ts">
   import TutorialInstruction from './TutorialInstruction.svelte';
-  import { bannerVisible, currentBannerIndex } from '../../Stores/TutorialBanner'
+  import { bannerVisible, currentBannerIndex } from '../../Stores/PopUpBannerStore'
 </script>
 
-<!-- Banner for Tutorial-->
-<!-- {#if $helpActive} -->
-  <!-- {openBannerSound()} -->
   {#if $currentBannerIndex === 0 && $bannerVisible }
     <TutorialInstruction>
       <div class="text-xs uppercase opacity-50">
@@ -61,4 +58,3 @@
       </div>
     </TutorialInstruction>
   {/if}
-<!-- Banner for Tutorial-->

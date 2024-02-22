@@ -131,7 +131,9 @@
     import PenIcon from "../Icons/PenIcon.svelte";
     import speakerAudio from "../../../../../maps/tests/webrtc-out.mp3"
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
-
+    // import { popUpFollowVisibility } from "../../Stores/PopUpBanner";
+    // import PopUpFollow from "../PopUp/PopUpFollow.svelte";
+    // import { openComponent } from "../../Stores/TutorialBanner";
 
     gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -180,6 +182,7 @@
     }
 
     function followClick() {
+
         switch ($followStateStore) {
             case "off":
                 gameManager.getCurrentGameScene().connection?.emitFollowRequest();
@@ -445,12 +448,33 @@
         }
     });
 
-
     let sound = new Audio(speakerAudio)
     function playSoundClick() {
       sound.load();
       sound.play().catch(e => console.error(e));
     }
+
+
+// on:mouseenter={() => { !navigating ? helpActive = "chat" : '' }}
+// on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+
+// on:mouseenter={() => { !navigating ? helpActive = "users" : '' }}
+// on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+
+// on:mouseenter={() => { !navigating ? helpActive = "follow" : '' }}
+// on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+
+// on:mouseenter={() => { !navigating ? helpActive = "lock" : '' }}
+// on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+
+// on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+// on:mouseenter={() => { !navigating ? helpActive = "emoji" : '' }}
+
+// on:mouseenter={() => { !navigating ? helpActive = "mic" : '' }}
+// on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+
+// on:mouseenter={() => { !navigating ? helpActive = "cam" : '' }}
+// on:mouseleave={() => { !navigating ? helpActive = false : '' }}
 
 </script>
 <svelte:window on:keydown={onKeyDown} />
@@ -469,8 +493,6 @@
                     class="group/btn-message-circle relative bg-contrast/80 transition-all backdrop-blur first:rounded-l-lg last:rounded-r-lg p-2 aspect-square"
                     on:click={() =>analyticsClient.openedChat()}
                     on:click={toggleChat}
-                    on:mouseenter={() => { !navigating ? helpActive = "chat" : '' }}
-                    on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                     on:mouseenter={playSoundClick}
             >
                 <div class="h-12 w-12 rounded group-hover/btn-message-circle:bg-white/10 aspect-square flex items-center justify-center transition-all"
@@ -498,8 +520,6 @@
                  on:click={toggleChat}
                 >
                 <div class="h-12 w-12 rounded group-hover/btn-users:bg-white/10 aspect-square flex items-center justify-center transition-all"
-                     on:mouseenter={() => { !navigating ? helpActive = "users" : '' }}
-                     on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                      on:mouseenter={playSoundClick}
                 >
                     <UsersIcon />
@@ -520,8 +540,6 @@
                         class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
                         on:click={toggleEmojiPicker}
                         on:click={helpActive = false}
-                        on:mouseenter={() => { !navigating ? helpActive = "emoji" : '' }}
-                        on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                         on:mouseenter={playSoundClick}
                     >
                         <div
@@ -637,8 +655,6 @@
                                  class:disabled={$followStateStore !== "off"}
                                  on:click={() => analyticsClient.follow()}
                                  on:click={followClick}
-                                 on:mouseenter={() => { !navigating ? helpActive = "follow" : '' }}
-                                 on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                             >
                                 <FollowIcon />
                             </div>
@@ -651,8 +667,6 @@
                              class:disabled={$currentPlayerGroupLockStateStore}
                              on:click={() =>analyticsClient.lockDiscussion()}
                              on:click={lockClick}
-                             on:mouseenter={() => { !navigating ? helpActive = "lock" : '' }}
-                             on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                         >
 
                             <div class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-lock:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all">
@@ -685,8 +699,6 @@
                                         class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-mic:bg-danger hover:bg-white/10 flex items-center justify-center transition-all"
                                         on:click={() =>analyticsClient.microphone()}
                                         on:click={microphoneClick}
-                                        on:mouseenter={() => { !navigating ? helpActive = "mic" : '' }}
-                                        on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                                         on:mouseenter={playSoundClick}
                                 >
                                     {#if $requestedMicrophoneState && !$silentStore}
@@ -845,8 +857,6 @@
                                     class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-cam:bg-danger hover:bg-white/10 flex items-center justify-center transition-all"
                                     on:click={() => analyticsClient.camera()}
                                     on:click={cameraClick}
-                                    on:mouseenter={() => { !navigating ? helpActive = "cam" : '' }}
-                                    on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                                     on:mouseenter={playSoundClick}
                             >
                                 {#if $requestedCameraState && !$silentStore}
