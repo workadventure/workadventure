@@ -75,12 +75,14 @@ test.describe('Map editor', () => {
 
     await Menu.toggleMegaphoneButton(page);
 
-    // check if the megaphone confirmation box is opened
-    await expect(await page.locator('.megaphone-confirm')).toBeVisible({timeout: 5_000});
-    // click on the megaphone button to start the streaming session
-    await page.locator('.megaphone-confirm button.light').click({timeout: 15_000});
+    // Check that the live message is displayed
+    await expect(page.locator('.menu-container #content-liveMessage h3')).toContainText('Live message', {timeout: 5_000});
+    // Click on the button to start live message
+    await page.locator('.menu-container #content-liveMessage').getByRole('button', {name: 'Start a live message'}).click();
+    await page.locator('.menu-container #active-liveMessage').getByRole('button', {name: 'Start live message'}).click();
 
-    await expect(await page2.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 15_000});
+    // click on the megaphone button to start the streaming session
+    await expect(page2.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 15_000});
 
     await Menu.toggleMegaphoneButton(page);
 
