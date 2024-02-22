@@ -162,6 +162,8 @@
 
         {#if $showModalGlobalComminucationVisibilityStore}
             <GlobalCommunicationModal />
+        {/if}
+
         {#if $mapExplorationObjectSelectedStore}
             <ObjectDetails />
         {/if}

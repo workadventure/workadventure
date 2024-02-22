@@ -69,6 +69,7 @@
     });
 
     function close() {
+        streamingMegaphoneStore.set(false);
         showModalGlobalComminucationVisibilityStore.set(false);
     }
 
