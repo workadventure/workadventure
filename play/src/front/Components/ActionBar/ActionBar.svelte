@@ -31,7 +31,7 @@
     import followImg from "../images/follow.png";
     import lockOpenImg from "../images/lock-opened.png";
     import lockCloseImg from "../images/lock-closed.png";
-    import mapBuilder from "../images/maps-builder.png";
+    import mapBuilder from "../images/maps-builder.svg";
     import screenshareOn from "../images/screenshare-on.png";
     import screenshareOff from "../images/screenshare-off.png";
     import emojiPickOn from "../images/emoji-on.png";
@@ -40,6 +40,7 @@
     import hammerImg from "../images/hammer.png";
     import megaphoneImg from "../images/megaphone.svg";
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
+    import worldImg from "../images/world.svg";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
@@ -62,7 +63,6 @@
         additionnalButtonsMenu,
         addClassicButtonActionBarEvent,
         addActionButtonActionBarEvent,
-        mapEditorActivated,
     } from "../../Stores/MenuStore";
     import {
         emoteDataStore,
@@ -84,6 +84,7 @@
         modalIframeStore,
         modalVisibilityStore,
         showModalGlobalComminucationVisibilityStore,
+        roomListVisibilityStore,
     } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
@@ -196,6 +197,7 @@
 
     function toggleMapEditorMode() {
         if (isMobile) return;
+        if ($mapEditorModeStore) gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
         analyticsClient.toggleMapEditor(!$mapEditorModeStore);
         mapEditorModeStore.switchMode(!$mapEditorModeStore);
     }
@@ -393,6 +395,13 @@
             mapEditorModeStore.set(false);
         }
     });
+
+    function showRoomList() {
+        resetChatVisibility();
+        resetModalVisibility();
+
+        roomListVisibilityStore.set(true);
+    }
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -438,16 +447,16 @@
                         {#if $embedScreenLayoutStore === LayoutMode.Presentation}
                             <img
                                 draggable="false"
-                                src={layoutPresentationImg}
+                                src={layoutChatImg}
                                 style="padding: 2px"
-                                alt="Switch to mosaic mode"
+                                alt="Switch to presentation mode"
                             />
                         {:else}
                             <img
                                 draggable="false"
-                                src={layoutChatImg}
+                                src={layoutPresentationImg}
                                 style="padding: 2px"
-                                alt="Switch to presentation mode"
+                                alt="Switch to mosaic mode"
                             />
                         {/if}
                     </button>
@@ -705,6 +714,34 @@
                 {/if}
 
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
+                {#if $isSpeakerStore && !$streamingMegaphoneStore}
+                    <div
+                        class="tw-transition-all bottom-action-button"
+                        on:click={() => analyticsClient.layoutPresentChange()}
+                        on:click={switchLayoutMode}
+                    >
+                        <Tooltip text={$LL.actionbar.layout()} />
+                        <button>
+                            {#if $embedScreenLayoutStore === LayoutMode.Presentation}
+                                <img
+                                    draggable="false"
+                                    src={layoutChatImg}
+                                    style="padding: 2px"
+                                    alt="Switch to presentation mode"
+                                />
+                            {:else}
+                                <img
+                                    draggable="false"
+                                    src={layoutPresentationImg}
+                                    style="padding: 2px"
+                                    alt="Switch to mosaic mode"
+                                />
+                            {/if}
+                        </button>
+                    </div>
+                {/if}
+
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     on:click={() => analyticsClient.openedChat()}
                     on:click={toggleChat}
@@ -788,34 +825,28 @@
                         <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
                     </button>
                 </div>
-                {#if $mapEditorActivated}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        on:dragstart|preventDefault={noDrag}
-                        on:click={toggleMapEditorMode}
-                        class="bottom-action-button"
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div on:dragstart|preventDefault={noDrag} on:click={toggleMapEditorMode} class="bottom-action-button">
+                    {#if isMobile}
+                        <Tooltip text={$LL.actionbar.mapEditorMobileLocked()} />
+                    {:else}
+                        <Tooltip text={$LL.actionbar.mapEditor()} />
+                    {/if}
+                    <button
+                        id="mapEditorIcon"
+                        class:border-top-light={$mapEditorModeStore && !isMobile}
+                        name="toggle-map-editor"
+                        disabled={isMobile}
                     >
-                        {#if isMobile}
-                            <Tooltip text={$LL.actionbar.mapEditorMobileLocked()} />
-                        {:else}
-                            <Tooltip text={$LL.actionbar.mapEditor()} />
-                        {/if}
-                        <button
-                            id="mapEditorIcon"
-                            class:border-top-light={$mapEditorModeStore && !isMobile}
-                            name="toggle-map-editor"
-                            disabled={isMobile}
-                        >
-                            <img
-                                draggable="false"
-                                src={mapBuilder}
-                                class:disable-opacity={isMobile}
-                                style="padding: 2px"
-                                alt="toggle-map-editor"
-                            />
-                        </button>
-                    </div>
-                {/if}
+                        <img
+                            draggable="false"
+                            src={mapBuilder}
+                            class:disable-opacity={isMobile}
+                            style="padding: 2px"
+                            alt="toggle-map-editor"
+                        />
+                    </button>
+                </div>
                 {#if $userHasAccessToBackOfficeStore}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
@@ -831,6 +862,25 @@
                         </button>
                     </div>
                 {/if}
+            </div>
+
+            <div class="bottom-action-section tw-flex tw-flex-initial">
+                <!-- TODO button hep -->
+                <!-- Room list button -->
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div
+                    on:dragstart|preventDefault={noDrag}
+                    on:click={() => analyticsClient.openedRoomList()}
+                    on:click={showRoomList}
+                    class="bottom-action-button"
+                >
+                    <Tooltip text="Open the room list" />
+
+                    <button id="roomListIcon" class:border-top-light={$roomListVisibilityStore}>
+                        <!-- svelte-ignore a11y-img-redundant-alt -->
+                        <img draggable="false" src={worldImg} style="padding: 2px" alt="Image for room list modal" />
+                    </button>
+                </div>
             </div>
 
             {#if $addActionButtonActionBarEvent.length > 0}

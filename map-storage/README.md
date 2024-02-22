@@ -59,16 +59,14 @@ The `/upload` endpoint MUST be protected by authentication.
 
 As of now, the map-storage supports 3 mechanisms for authentication basic enough (there is no integration with third party systems yet).
 
-- Basic auth
-- Digest auth
-- Bearer token
-
-You can configure the mode used with the `AUTHENTICATION_STRATEGY` environment variable.
-Allowed values are "Basic", "Digest" and "Bearer".
+- Basic auth (with environment variable `ENABLE_BASIC_AUTHENTICATION=true`)
+- Digest auth (with environment variable `ENABLE_DIGEST_AUTHENTICATION=true`)
+- Bearer token (with environment variable `ENABLE_BEARER_AUTHENTICATION=true`)
 
 If "Basic" or "Digest", you must use the `AUTHENTICATION_USER` and `AUTHENTICATION_PASSWORD` environment variable to pass the (only) valid user.
 
-If "Bearer", you must use the `AUTHENTICATION_TOKEN` environment variable to set the (only, hard-coded) credential.
+If "Bearer", you must use the `AUTHENTICATION_TOKEN` environment variable to set the (only, hard-coded) credential
+or you can use the `AUTHENTICATION_VALIDATOR_URL` environment variable to set a remote URL used to validate the credential.
 
 > **Note**
 > Contributions are welcome to improve this. Behind the scene, we use "passport" to the authentication.

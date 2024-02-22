@@ -62,7 +62,6 @@
     });
 
     function tryPlay() {
-        console.trace("tryPlay");
         HTMLAudioPlayer.onended = () => {
             // Fixme: this is a hack to close menu when audio is ends without cut the sound
             actionsMenuStore.clear();

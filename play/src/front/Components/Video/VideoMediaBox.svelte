@@ -246,11 +246,11 @@
         style={videoEnabled
             ? ""
             : `border: solid 2px ${backGroundColor}; color: ${textColor}; background-color: ${backGroundColor}; color: ${textColor}`}
-        class="tw-flex tw-w-full "
+        class="tw-flex tw-w-full"
         class:tw-flex-col={videoEnabled}
         class:tw-h-full={videoEnabled}
         class:tw-items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
-        class:tw-px-3={!videoEnabled}
+        class:tw-px-7={!videoEnabled}
         class:tw-rounded={!videoEnabled}
         class:tw-flex-row={!videoEnabled}
         class:tw-relative={!videoEnabled}

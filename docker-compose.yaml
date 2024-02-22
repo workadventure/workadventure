@@ -89,6 +89,7 @@ services:
             ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
             API_URL: back:50051
             DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
+            #Map editor
             PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
             INTERNAL_MAP_STORAGE_URL: "http://map-storage:3000"
             ENABLE_OPENAPI_ENDPOINT: "true"
@@ -272,7 +273,7 @@ services:
             STARTUP_COMMAND_2: ../npm-install.sh
             NODE_ENV: development
             PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
-            AUTHENTICATION_STRATEGY: "Basic"
+            ENABLE_BASIC_AUTHENTICATION: "true"
             AUTHENTICATION_USER: "john.doe"
             AUTHENTICATION_PASSWORD: "password"
             API_URL: back:50051

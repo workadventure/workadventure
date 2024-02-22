@@ -7,7 +7,13 @@ import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { screenShareBandwidthStore } from "../Stores/ScreenSharingStore";
 import type { PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
-import { StreamEndedMessage } from "./P2PMessages/StreamEndedMessage";
+import {
+    STREAM_ENDED_MESSAGE_TYPE,
+    STREAM_STOPPED_MESSAGE_TYPE,
+    StreamEndedMessage,
+    StreamMessage,
+    StreamStoppedMessage,
+} from "./P2PMessages/StreamEndedMessage";
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
@@ -45,34 +51,27 @@ export class ScreenSharingPeer extends Peer {
 
         this._streamStore = writable<MediaStream | null>(null);
 
-        this.on("stream", (stream: MediaStream | null) => {
-            highlightedEmbedScreen.highlight({
-                type: "streamable",
-                embed: this,
-            });
-            this._streamStore.set(stream);
-        });
-
         this.on("data", (chunk: Buffer) => {
             try {
                 const data = JSON.parse(chunk.toString("utf8"));
 
                 // The only message type we can send is a StreamEndedMessage
-                StreamEndedMessage.parse(data);
+                StreamMessage.parse(data);
                 this._streamStore.set(null);
-                /*const message = P2PScreenSharingMessage.parse(data);
-                switch (message.type) {
-                    // We unfortunately need to rely on an event to let the other party know a stream has stopped.
-                    // It seems there is no native way to detect that.
-                    // TODO: we might rely on the "ended" event: https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/ended_event
-                    case "stream_ended": {
-                        this._streamStore.set(null);
+                switch (data.type) {
+                    case STREAM_STOPPED_MESSAGE_TYPE: {
+                        if (this.isReceivingStream) {
+                            this.isReceivingStream = false;
+                        } else {
+                            this.close();
+                        }
                         break;
                     }
-                    default: {
-                        const _exhaustiveCheck: never = message;
+                    case STREAM_ENDED_MESSAGE_TYPE: {
+                        this.close();
+                        break;
                     }
-                }*/
+                }
             } catch (e) {
                 console.error("Unexpected P2P screen sharing message received from peer: ", e);
                 this._statusStore.set("error");
@@ -87,14 +86,16 @@ export class ScreenSharingPeer extends Peer {
         });
 
         this.on("stream", (stream: MediaStream) => {
+            highlightedEmbedScreen.highlight({
+                type: "streamable",
+                embed: this,
+            });
+            this._streamStore.set(stream);
             this.stream(stream);
         });
 
         this.on("close", () => {
-            this._statusStore.set("closed");
-            this._connected = false;
-            this.toClose = true;
-            this.destroy();
+            this.close();
         });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -116,6 +117,14 @@ export class ScreenSharingPeer extends Peer {
         if (stream) {
             this.addStream(stream);
         }
+    }
+
+    private close() {
+        this.isReceivingStream = false;
+        this._statusStore.set("closed");
+        this._connected = false;
+        this.toClose = true;
+        this.destroy();
     }
 
     private sendWebrtcScreenSharingSignal(data: unknown) {
@@ -178,7 +187,17 @@ export class ScreenSharingPeer extends Peer {
         this.write(
             new Buffer(
                 JSON.stringify({
-                    type: "stream_ended",
+                    type: STREAM_STOPPED_MESSAGE_TYPE,
+                } as StreamStoppedMessage)
+            )
+        );
+    }
+
+    public finishScreenSharingToRemoteUser() {
+        this.write(
+            new Buffer(
+                JSON.stringify({
+                    type: STREAM_ENDED_MESSAGE_TYPE,
                 } as StreamEndedMessage)
             )
         );

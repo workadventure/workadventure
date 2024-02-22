@@ -156,7 +156,7 @@ export class DiskFileSystem implements FileSystemInterface {
                     results.push(path.relative(startingDir, file));
                 }
             }
-            return results;
+            return results.map((path) => (path.indexOf("/") === 0 ? path.substring(1) : path));
         } catch (e) {
             const nodeError = NodeError.safeParse(e);
             if (e instanceof Error && nodeError.success && nodeError.data.code === "ENOENT") {

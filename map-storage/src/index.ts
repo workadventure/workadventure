@@ -6,13 +6,12 @@ import cors from "cors";
 import { MapStorageService } from "@workadventure/messages/src/ts-proto-generated/services";
 import passport from "passport";
 import bodyParser from "body-parser";
-import { WAMFileFormat } from "@workadventure/map-editor";
 import { mapStorageServer } from "./MapStorageServer";
 import { mapsManager } from "./MapsManager";
 import { proxyFiles } from "./FileFetcher/FileFetcher";
 import { UploadController } from "./Upload/UploadController";
 import { fileSystem } from "./fileSystem";
-import { passportStrategy } from "./Services/Authentication";
+import { passportStrategies } from "./Services/Authentication";
 import { mapPathUsingDomain } from "./Services/PathMapper";
 import { ValidatorController } from "./Upload/ValidatorController";
 import {
@@ -70,7 +69,9 @@ app.use(
     })
 );
 
-passport.use(passportStrategy);
+for (const passportStrategy of passportStrategies) {
+    passport.use(passportStrategy);
+}
 app.use(passport.initialize());
 
 app.get("*.wam", (req, res, next) => {
@@ -82,13 +83,10 @@ app.get("*.wam", (req, res, next) => {
             return;
         }
         const key = mapPathUsingDomain(wamPath, domain);
-        const file = await fileSystem.readFileAsString(key);
-        const wam = WAMFileFormat.parse(JSON.parse(file));
 
-        if (!mapsManager.isMapAlreadyLoaded(key)) {
-            mapsManager.loadWAMToMemory(key, wam);
-        }
-        res.send(wam);
+        const gameMap = await mapsManager.loadWAMToMemory(key);
+
+        res.send(gameMap.getWam());
     })().catch((e) => next());
 });
 

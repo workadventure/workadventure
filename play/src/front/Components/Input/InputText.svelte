@@ -6,9 +6,10 @@
     export let onBlur = () => {};
     export let onKeyPress: () => void;
     export let errorHelperText: string | undefined = undefined;
+    export let error = false;
 </script>
 
-<div class="input-text">
+<div class="tw-flex tw-flex-col">
     <label for="input">
         {label}
     </label>
@@ -20,7 +21,8 @@
         on:focus={onFocus}
         on:blur={onBlur}
         on:keypress={onKeyPress}
-        class:error={errorHelperText}
+        class:error={errorHelperText || error}
+        class:!tw-border-red-500={errorHelperText || error}
     />
     {#if errorHelperText}
         <span class="error">

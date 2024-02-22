@@ -3,6 +3,7 @@ import {
     EntityData,
     EntityDataProperties,
     EntityDataProperty,
+    EntityDescriptionPropertyData,
     EntityPrefab,
     GameMapProperties,
     WAMEntityData,
@@ -374,5 +375,19 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             ...data,
             id: this.entityId,
         };
+    }
+
+    public get description(): string | undefined {
+        const descriptionProperty: EntityDescriptionPropertyData | undefined = this.entityData.properties.find(
+            (p) => p.type === "entityDescriptionProperties"
+        ) as EntityDescriptionPropertyData | undefined;
+        return descriptionProperty?.description;
+    }
+
+    public get searchable(): boolean | undefined {
+        const descriptionProperty: EntityDescriptionPropertyData | undefined = this.entityData.properties.find(
+            (p) => p.type === "entityDescriptionProperties"
+        ) as EntityDescriptionPropertyData | undefined;
+        return descriptionProperty?.searchable;
     }
 }

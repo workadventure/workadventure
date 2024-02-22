@@ -208,11 +208,18 @@
 }
 
 .mozaic-duo-size {
-    @apply tw-h-[20vh] tw-w-[70vw] md:tw-h-[25vh] md:tw-w-[60vw] lg:tw-h-[30vh] lg:tw-w-[40vw];
+    @apply tw-h-[30vh] tw-w-[70vw] md:tw-h-[35vh] md:tw-w-[60vw] lg:tw-h-[40vh] lg:tw-w-[40vw];
+    
+    .jitsi-video video, video {
+        @apply tw-object-contain;
+    }
 }
 
 .mozaic-grid {
     @apply tw-gap-1 lg:tw-gap-4 tw-grid-cols-1 lg:tw-grid-cols-2;
+    .jitsi-video video, video {
+        @apply tw-object-contain;
+    }
 }
 
 

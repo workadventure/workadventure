@@ -2,7 +2,7 @@
     import { LocalizedString } from "typesafe-i18n";
     import { LL } from "../../../i18n/i18n-svelte";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import { mapEditorSelectedToolStore } from "../../Stores/MapEditorStore";
+    import { mapEditorSelectedToolStore, mapEditorVisibilityStore } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import AreaToolImg from "../images/icon-tool-area.png";
     // import FloorToolImg from "../images/icon-tool-floor.png";
@@ -10,50 +10,67 @@
     import Tooltip from "../Util/Tooltip.svelte";
     import ConfigureImg from "../images/configure.svg";
     import TrashImg from "../images/trash.svg";
+    import ExplorerImg from "../images/explorer.svg";
+    import CloseImg from "../images/close.png";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { mapEditorActivated } from "../../Stores/MenuStore";
+
     const gameScene = gameManager.getCurrentGameScene();
 
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
 
     availableTools.push({
-        toolName: EditorToolName.AreaEditor,
-        img: AreaToolImg,
-        tooltiptext: $LL.mapEditor.sideBar.areaEditor(),
+        toolName: EditorToolName.ExploreTheRoom,
+        img: ExplorerImg,
+        tooltiptext: $LL.mapEditor.sideBar.exploreTheRoom(),
     });
-    availableTools.push(
-        {
-            toolName: EditorToolName.EntityEditor,
-            img: EntityToolImg,
-            tooltiptext: $LL.mapEditor.sideBar.entityEditor(),
-        }
-        // NOTE: Hide it untill FloorEditing is done
-        // { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() }
-    );
+    if ($mapEditorActivated) {
+        availableTools.push({
+            toolName: EditorToolName.AreaEditor,
+            img: AreaToolImg,
+            tooltiptext: $LL.mapEditor.sideBar.areaEditor(),
+        });
+        availableTools.push(
+            {
+                toolName: EditorToolName.EntityEditor,
+                img: EntityToolImg,
+                tooltiptext: $LL.mapEditor.sideBar.entityEditor(),
+            }
+            // NOTE: Hide it untill FloorEditing is done
+            // { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() }
+        );
+        availableTools.push({
+            toolName: EditorToolName.WAMSettingsEditor,
+            img: ConfigureImg,
+            tooltiptext: $LL.mapEditor.sideBar.configureMyRoom(),
+        });
+        availableTools.push({
+            toolName: EditorToolName.TrashEditor,
+            img: TrashImg,
+            tooltiptext: $LL.mapEditor.sideBar.trashEditor(),
+        });
+    }
     availableTools.push({
-        toolName: EditorToolName.WAMSettingsEditor,
-        img: ConfigureImg,
-        tooltiptext: $LL.mapEditor.sideBar.configureMyRoom(),
-    });
-    availableTools.push({
-        toolName: EditorToolName.TrashEditor,
-        img: TrashImg,
-        tooltiptext: $LL.mapEditor.sideBar.trashEditor(),
+        toolName: EditorToolName.CloseMapEditor,
+        img: CloseImg,
+        tooltiptext: $LL.mapEditor.sideBar.closeMapEditor(),
     });
 
     function switchTool(newTool: EditorToolName) {
+        mapEditorVisibilityStore.set(true);
         analyticsClient.openMapEditorTool(newTool);
         gameScene.getMapEditorModeManager().equipTool(newTool);
     }
 </script>
 
-<section class="side-bar-container">
+<section class="side-bar-container" class:!tw-right-20={!$mapEditorVisibilityStore}>
     <!--put a section to avoid lower div to be affected by some css-->
     <div class="side-bar">
         {#each availableTools as tool (tool.toolName)}
             <div class="tool-button">
                 <button
                     id={tool.toolName}
-                    class={tool.toolName == $mapEditorSelectedToolStore ? "active" : ""}
+                    class:active={$mapEditorSelectedToolStore === tool.toolName}
                     on:click|preventDefault={() => switchTool(tool.toolName)}
                     type="button"><img src={tool.img} alt="open tool {tool.toolName}" /></button
                 >
@@ -100,7 +117,7 @@
                 }
             }
             button.active {
-                background-color: rgb(45 45 65);
+                border-left: 4px solid #56eaff;
             }
         }
         .tool-button:first-child button {
@@ -110,6 +127,11 @@
         .tool-button:last-child button {
             border-bottom-left-radius: 0.5em;
             border-bottom-right-radius: 0.5em;
+        }
+    }
+    #CloseMapEditor {
+        img {
+            width: 1.25rem;
         }
     }
 </style>

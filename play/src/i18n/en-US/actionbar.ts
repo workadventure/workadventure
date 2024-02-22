@@ -11,7 +11,7 @@ const actionbar: BaseTranslation = {
     emoji: "Open / Close emoji",
     disableMegaphone: "Disable megaphone",
     menu: "Open / Close menu",
-    mapEditor: "Open / Close mapEditor",
+    mapEditor: "Open / Close map manager",
     mapEditorMobileLocked: "Map editor is locked on mobile mode",
     bo: "Open back office",
     subtitle: {
