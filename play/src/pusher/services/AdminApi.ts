@@ -699,7 +699,13 @@ class AdminApi implements AdminInterface {
          *                     type: string
          *                     description: Name of a room
          *                     example: "My office"
-         *                   url:
+         *                     required: true
+         *                   roomUrl:
+         *                     type: string
+         *                     description: URL of a room
+         *                     example: "http://example.com/@/teamSlug/worldSlug/room2Slug"
+         *                     required: true
+         *                   wamUrl:
          *                     type: string
          *                     description: URL of a room
          *                     example: "http://example.com/@/teamSlug/worldSlug/room2Slug"
