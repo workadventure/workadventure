@@ -3382,7 +3382,7 @@ ${escapedMessage}
             return;
         }
 
-        waScaleManager.handleZoomByFactor(zoomFactor);
+        waScaleManager.handleZoomByFactor(zoomFactor, this.cameras.main);
     }
 
     public createSuccessorGameScene(autostart: boolean, reconnecting: boolean) {
