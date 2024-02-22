@@ -133,6 +133,10 @@ play:
   secretEnv:
     ROOM_API_SECRET_KEY: myRoomApiSecretKey
 
+  # The name of a configMap that should be added to the service.
+  externalConfigMapName: ""
+  # The name of a secret that should be added to the service.
+  externalSecretName: ""
 
   ingress:
     # This setting is used to enable the play (front and pusher) ingresses in multiDomain mode.
@@ -216,6 +220,11 @@ chat:
 
   secretEnv: {}
 
+  # The name of a configMap that should be added to the service.
+  externalConfigMapName: ""
+  # The name of a secret that should be added to the service.
+  externalSecretName: ""
+
   ingress:
     # This setting is used to enable the chat ingress in multiDomain mode.
     # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
@@ -282,6 +291,11 @@ back:
     PLAYER_VARIABLES_MAX_TTL: "-1"
 
   secretEnv: {}
+
+  # The name of a configMap that should be added to the service.
+  externalConfigMapName: ""
+  # The name of a secret that should be added to the service.
+  externalSecretName: ""
 
 # #########################################################
 # uploader service
@@ -350,6 +364,11 @@ uploader:
   secretEnv: {}
     # AWS_ACCESS_KEY_ID:
     # AWS_SECRET_ACCESS_KEY:
+
+  # The name of a configMap that should be added to the service.
+  externalConfigMapName: ""
+  # The name of a secret that should be added to the service.
+  externalSecretName: ""
 
   ingress:
     # This setting is used to enable the uploader ingress in multiDomain mode.
@@ -433,6 +452,11 @@ maps:
   secretEnv: {}
     # AWS_ACCESS_KEY_ID:
   # AWS_SECRET_ACCESS_KEY:
+
+  # The name of a configMap that should be added to the service.
+  externalConfigMapName: ""
+  # The name of a secret that should be added to the service.
+  externalSecretName: ""
 
   ingress:
     # This setting is used to enable the maps ingress in multiDomain mode.
@@ -566,6 +590,11 @@ ejabberd:
 
   secretEnv: {}
 
+  # The name of a configMap that should be added to the service.
+  externalConfigMapName: ""
+  # The name of a secret that should be added to the service.
+  externalSecretName: ""
+
   ingress:
     # This setting is used to enable the ingress in multiDomain mode.
     # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
@@ -667,9 +696,12 @@ mapstorage:
     AUTHENTICATION_PASSWORD: ""
     AWS_ACCESS_KEY_ID: ""
     AWS_SECRET_ACCESS_KEY: ""
-    AUTHENTICATION_TOKEN: ""
+    #AUTHENTICATION_TOKEN: ""
 
-
+  # The name of a configMap that should be added to the service.
+  externalConfigMapName: ""
+  # The name of a secret that should be added to the service.
+  externalSecretName: ""
 
   ingress:
     # This setting is used to enable the map-storage ingress in multiDomain mode.

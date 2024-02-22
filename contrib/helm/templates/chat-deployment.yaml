@@ -46,6 +46,14 @@ spec:
                 name: {{ include "workadventure.fullname" . }}-env-chat
             - secretRef:
                 name: {{ include "workadventure.fullname" . }}-secret-env-chat
+            {{- if .Values.chat.externalConfigMapName }}
+            - configMapRef:
+                name: {{ .Values.chat.externalConfigMapName }}
+            {{- end }}
+            {{- if .Values.chat.externalSecretName }}
+            - secretRef:
+                name: {{ .Values.chat.externalSecretName }}
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.chat.service.port }}

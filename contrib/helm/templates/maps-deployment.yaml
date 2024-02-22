@@ -47,6 +47,14 @@ spec:
                 name: {{ include "workadventure.fullname" . }}-env-maps
             - secretRef:
                 name: {{ include "workadventure.fullname" . }}-secret-env-maps
+            {{- if .Values.maps.externalConfigMapName }}
+            - configMapRef:
+                name: {{ .Values.maps.externalConfigMapName }}
+            {{- end }}
+            {{- if .Values.maps.externalSecretName }}
+            - secretRef:
+                name: {{ .Values.maps.externalSecretName }}
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.maps.service.port }}

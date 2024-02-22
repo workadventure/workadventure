@@ -64,6 +64,14 @@ spec:
                 name: {{ include "workadventure.fullname" . }}-env-mapstorage
             - secretRef:
                 name: {{ include "workadventure.fullname" . }}-secret-env-mapstorage
+            {{- if .Values.mapstorage.externalConfigMapName }}
+            - configMapRef:
+                name: {{ .Values.mapstorage.externalConfigMapName }}
+            {{- end }}
+            {{- if .Values.mapstorage.externalSecretName }}
+            - secretRef:
+                name: {{ .Values.mapstorage.externalSecretName }}
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.mapstorage.service.port }}

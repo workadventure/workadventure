@@ -49,6 +49,14 @@ spec:
                 name: {{ include "workadventure.fullname" . }}-env-ejabberd
             - secretRef:
                 name: {{ include "workadventure.fullname" . }}-secret-env-ejabberd
+            {{- if .Values.ejabberd.externalConfigMapName }}
+            - configMapRef:
+                name: {{ .Values.ejabberd.externalConfigMapName }}
+            {{- end }}
+            {{- if .Values.ejabberd.externalSecretName }}
+            - secretRef:
+                name: {{ .Values.ejabberd.externalSecretName }}
+            {{- end }}
           env:
             - name: JWT_SECRET
               valueFrom:

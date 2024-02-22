@@ -51,6 +51,14 @@ spec:
                 name: {{ include "workadventure.fullname" . }}-env-back
             - secretRef:
                 name: {{ include "workadventure.fullname" . }}-secret-env-back
+            {{- if .Values.back.externalConfigMapName }}
+            - configMapRef:
+                name: {{ .Values.back.externalConfigMapName }}
+            {{- end }}
+            {{- if .Values.back.externalSecretName }}
+            - secretRef:
+                name: {{ .Values.back.externalSecretName }}
+            {{- end }}
           env:
             - name: SECRET_KEY
               valueFrom:
