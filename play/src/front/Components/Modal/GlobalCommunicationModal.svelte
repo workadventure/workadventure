@@ -87,12 +87,14 @@
     }
 
     function activateInputText() {
+        analyticsClient.globalMessage();
         activeLiveMessage = false;
         inputSendTextActive = true;
         uploadAudioActive = false;
     }
 
     function activateUploadAudio() {
+        analyticsClient.globalMessage();
         activeLiveMessage = false;
         inputSendTextActive = false;
         uploadAudioActive = true;
@@ -106,9 +108,11 @@
 
     async function send(): Promise<void> {
         if (inputSendTextActive) {
+            analyticsClient.sendGlocalTextMessage();
             handleSendText.sendTextMessage(broadcastToWorld);
         }
         if (uploadAudioActive) {
+            analyticsClient.sendGlobalSoundMessage();
             await handleSendAudio.sendAudioMessage(broadcastToWorld);
         }
         close();
