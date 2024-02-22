@@ -325,6 +325,10 @@ export const inJitsiStore = writable(false);
 export const inBbbStore = writable(false);
 export const isSpeakerStore = writable(false);
 
+export const doNotDisturbStore = writable(false);
+export const backInAMomentStore = writable(false);
+export const busyStore = writable(false);
+
 export const inCowebsiteZone = derived(
     [inJitsiStore, inBbbStore, inOpenWebsite],
     ([$inJitsiStore, $inBbbStore, $inOpenWebsite]) => {
@@ -336,13 +340,36 @@ export const inCowebsiteZone = derived(
 export const silentStore = createSilentStore();
 
 export const availabilityStatusStore = derived(
-    [inJitsiStore, inBbbStore, silentStore, privacyShutdownStore, proximityMeetingStore, isSpeakerStore],
-    ([$inJitsiStore, $inBbbStore, $silentStore, $privacyShutdownStore, $proximityMeetingStore, $isSpeakerStore]) => {
+    [
+        inJitsiStore,
+        inBbbStore,
+        silentStore,
+        privacyShutdownStore,
+        proximityMeetingStore,
+        isSpeakerStore,
+        doNotDisturbStore,
+        backInAMomentStore,
+        busyStore,
+    ],
+    ([
+        $inJitsiStore,
+        $inBbbStore,
+        $silentStore,
+        $privacyShutdownStore,
+        $proximityMeetingStore,
+        $isSpeakerStore,
+        $doNotDisturbStore,
+        $backInAMomentStore,
+        $busyStore,
+    ]) => {
         if ($inJitsiStore) return AvailabilityStatus.JITSI;
         if ($inBbbStore) return AvailabilityStatus.BBB;
         if (!$proximityMeetingStore) return AvailabilityStatus.DENY_PROXIMITY_MEETING;
         if ($isSpeakerStore) return AvailabilityStatus.SPEAKER;
         if ($silentStore) return AvailabilityStatus.SILENT;
+        if ($doNotDisturbStore) return AvailabilityStatus.DO_NOT_DISTRUB;
+        if ($backInAMomentStore) return AvailabilityStatus.BACK_IN_A_MOMENT;
+        if ($busyStore) return AvailabilityStatus.BUSY;
         if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
         return AvailabilityStatus.ONLINE;
     },

@@ -12,7 +12,12 @@
         AvailabilityStatusListPropsInterface,
     } from "./Interfaces/AvailabilityStatusPropsInterface";
 
-    const statusToShow = [AvailabilityStatus.ONLINE, AvailabilityStatus.AWAY];
+    const statusToShow = [
+        AvailabilityStatus.ONLINE,
+        AvailabilityStatus.BUSY,
+        AvailabilityStatus.BACK_IN_A_MOMENT,
+        AvailabilityStatus.DO_NOT_DISTRUB,
+    ];
 
     const listProps: AvailabilityStatusListPropsInterface = {
         currentStatus: $availabilityStatusStore,

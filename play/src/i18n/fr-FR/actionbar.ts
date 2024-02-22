@@ -23,7 +23,10 @@ const actionbar: BaseTranslation = {
     listStatusTitle: "Changer de statut",
     status: {
         ONLINE: "En Ligne",
-        AWAY: "Occupé",
+        AWAY: "Loin",
+        BACK_IN_A_MOMENT: "Revient dans un moment",
+        DO_NOT_DISTRUB: "Ne pas déranger",
+        BUSY: "Occupé",
     },
 };
 

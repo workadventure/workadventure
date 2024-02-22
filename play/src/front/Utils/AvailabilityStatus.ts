@@ -12,6 +12,9 @@ const COLORS: Record<AvailabilityStatus, { filling: number; outline: number }> =
     [AvailabilityStatus.DENY_PROXIMITY_MEETING]: { filling: 0xffffff, outline: 0x404040 },
     [AvailabilityStatus.UNRECOGNIZED]: { filling: 0xffffff, outline: 0xffffff },
     [AvailabilityStatus.UNCHANGED]: { filling: 0xffffff, outline: 0xffffff },
+    [AvailabilityStatus.BACK_IN_A_MOMENT]: { filling: 0x6fa8dc, outline: 0x404040 },
+    [AvailabilityStatus.DO_NOT_DISTRUB]: { filling: 0xd00303, outline: 0xffffff },
+    [AvailabilityStatus.BUSY]: { filling: 0xf5931e, outline: 0xffffff },
 };
 
 export const getColorOfStatus = (status: AvailabilityStatus): { filling: number; outline: number } => {
