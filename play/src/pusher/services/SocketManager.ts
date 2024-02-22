@@ -1108,6 +1108,9 @@ export class SocketManager implements ZoneEventListener {
     forwardAdminMessageToBack(client: Socket, message: PusherToBackMessage["message"]): void {
         const socketData = client.getUserData();
         if (!socketData.canEdit) {
+            Sentry.captureException(
+                new Error(`Security esception, the client try to update the map: ${JSON.stringify(socketData)}`)
+            );
             // Emit error message
             socketData.emitInBatch({
                 message: {
