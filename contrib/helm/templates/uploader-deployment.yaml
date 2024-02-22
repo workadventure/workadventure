@@ -46,6 +46,14 @@ spec:
                 name: {{ include "workadventure.fullname" . }}-env-uploader
             - secretRef:
                 name: {{ include "workadventure.fullname" . }}-secret-env-uploader
+            {{- if .Values.uploader.externalConfigMapName }}
+            - configMapRef:
+                name: {{ .Values.uploader.externalConfigMapName }}
+            {{- end }}
+            {{- if .Values.uploader.externalSecretName }}
+            - secretRef:
+                name: {{ .Values.uploader.externalSecretName }}
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.uploader.service.port }}
