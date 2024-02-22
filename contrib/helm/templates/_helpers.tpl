@@ -209,3 +209,7 @@ https://{{ .Values.domainName }}/maps
 {{- end }}
 {{- end -}}
 {{- end }}
+
+{{- define "workadventure.isBooleanText" -}}
+{{- if or (or (or (eq . "false") (eq . "0")) (not .)) (eq . "FALSE") -}}{{- else -}}1{{- end -}}
+{{- end }}
