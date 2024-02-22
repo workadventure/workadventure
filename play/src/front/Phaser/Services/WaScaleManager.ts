@@ -112,7 +112,10 @@ export class WaScaleManager {
     }
 
     public handleZoomByFactor(zoomFactor: number): void {
-        this.zoomModifier *= zoomFactor;
+        if (zoomFactor > 1 && this.zoomModifier * zoomFactor - this.zoomModifier > 0.02) this.zoomModifier *= 1.02;
+        else if (zoomFactor < 1 && this.zoomModifier - this.zoomModifier * zoomFactor > 0.02) this.zoomModifier *= 0.98;
+        else this.zoomModifier *= zoomFactor;
+
         if (this.focusTarget) {
             this.game.events.emit(WaScaleManagerEvent.RefreshFocusOnTarget, this.focusTarget);
         }
