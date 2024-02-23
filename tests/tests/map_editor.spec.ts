@@ -75,12 +75,14 @@ test.describe('Map editor', () => {
 
     await Menu.toggleMegaphoneButton(page);
 
-    // check if the megaphone confirmation box is opened
-    await expect(await page.locator('.megaphone-confirm')).toBeVisible({timeout: 5_000});
-    // click on the megaphone button to start the streaming session
-    await page.locator('.megaphone-confirm button.light').click({timeout: 15_000});
+    // Check that the live message is displayed
+    //await expect(page.locator('.menu-container #content-liveMessage h3')).toContainText('Live message', {timeout: 5_000});
+    // Click on the button to start live message
+    await page.locator('.menu-container #content-liveMessage').getByRole('button', {name: 'Start a live message'}).click({timeout: 10_000});
+    await page.locator('.menu-container #active-liveMessage').getByRole('button', {name: 'Start live message'}).click({timeout: 10_000});
 
-    await expect(await page2.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 15_000});
+    // click on the megaphone button to start the streaming session
+    await expect(page2.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 15_000});
 
     await Menu.toggleMegaphoneButton(page);
 
@@ -229,7 +231,7 @@ test.describe('Map editor', () => {
     // check if the iframe activity picker is opened
     const popupPromise = page.waitForEvent('popup');
     await Map.teleportToPosition(page, 9 * 32, 9 * 32)
-    /*const popup =*/ await popupPromise;
+    await popupPromise;
 
     // TODO make same test with object editor
   });
@@ -404,13 +406,6 @@ test.describe('Map editor', () => {
   // Create test for Google picker drive
 
   test('Successfully set searchable processus for entity and zone', async ({ page, browser, request, browserName }) => {
-    /*if (browser.browserType() === webkit) {
-      // Webkit is somehow failing on this, maybe it is too slow
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }*/
-
     await resetWamMaps(request);
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
@@ -465,5 +460,88 @@ test.describe('Map editor', () => {
     await expect(page.locator('.map-editor .sidebar .areas')).toContainText('1 areas found');
     await page.locator('.map-editor .sidebar .areas').click();
     expect(await page.locator('.map-editor .sidebar .area-items .item').count()).toBe(1);
+  });
+
+  test('Successfully test global message text and sound feature', async ({ page, browser, request, browserName }) => {
+    await resetWamMaps(request);
+    await page.goto(Map.url("empty"));
+
+    await login(page, "test", 3);
+    // Because webkit in playwright does not support Camera/Microphone Permission by settings
+    if(browserName === "webkit"){
+      await hideNoCamera(page);
+    }
+
+    // Move user and not create discussion with the second user
+    await Map.teleportToPosition(page, 5*32, 5*32);
+
+    // Second browser
+    const newBrowser = await browser.browserType().launch();
+    const page2 = await newBrowser.newPage();
+    await page2.goto(Map.url("empty"));
+    await page2.evaluate(() => localStorage.setItem('debug', '*'));
+    await login(page2, "test2", 5);
+
+    // Open the map editor and configure the megaphone to have accès to the global message
+    await Menu.openMapEditor(page);
+    await MapEditor.openConfigureMyRoom(page);
+    await ConfigureMyRoom.selectMegaphoneItemInCMR(page);
+
+    // Enabling megaphone and settings default value
+    await Megaphone.toggleMegaphone(page);
+    await Megaphone.isMegaphoneEnabled(page);
+
+    // Testing if no input is set, megaphone should not be usable but WA should not crash
+    await Megaphone.megaphoneInputNameSpace(page, '');
+    await Megaphone.megaphoneSave(page);
+    await Megaphone.isNotCorrectlySaved(page);
+
+    await Megaphone.megaphoneInputNameSpace(page, `${browser.browserType().name()}MySpace`);
+    await Megaphone.megaphoneSelectScope(page);
+    await Megaphone.megaphoneAddNewRights(page, 'example');
+    await Megaphone.megaphoneSave(page);
+    await Megaphone.isCorrectlySaved(page);
+    // Test if tags are working correctly, all current users doesn't have the tag "example" to use megaphone
+    await Menu.isNotThereMegaphoneButton(page);
+    await Menu.isNotThereMegaphoneButton(page2);
+    // Remove rights
+    await Megaphone.megaphoneRemoveRights(page, 'example');
+    await Megaphone.megaphoneSave(page);
+    await Megaphone.isCorrectlySaved(page);
+    // Megaphone should be displayed and usable by all the current users
+    await Menu.isThereMegaphoneButton(page);
+    await Menu.isThereMegaphoneButton(page2);
+    await Menu.closeMapEditor(page);
+
+    // Play a sound using the megaphone
+    if(browser.browserType() === webkit) {
+      await page2.close();
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
+    // Oopen the global message menu
+    await Menu.toggleMegaphoneButton(page);
+
+    // Check that the live message is displayed
+    await expect(page.locator('.menu-container #content-textMessage h3')).toContainText('Text message', {timeout: 5_000});
+    // Click on the button to start text message
+    await page.locator('.menu-container #content-textMessage').getByRole('button', {name: 'Send a text message'}).click();
+    // Click fill and send a text message
+    await page.locator('.menu-container #active-globalMessage .ql-editor').fill('Hello world');
+    await page.locator('.menu-container #active-globalMessage').getByRole('button', {name: 'Send'}).click();
+    // Check that the user receive the message
+    // TODO : check this feature with environement .../~/...
+    //await expect(page2.locator('.main-text-message-container .content-text-message')).toContainText('Hello world', {timeout: 5_000});
+
+    // TODO: create to send a sound message
+
+    // Close the global message menu
+    await Menu.toggleMegaphoneButton(page);
+
+    await page2.close();
+    await page.close();
+    // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
   });
 });
