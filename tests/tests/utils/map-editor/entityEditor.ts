@@ -66,6 +66,7 @@ class EntityEditor {
       .setInputFiles(
         path.join(__dirname, `../../assets/${this.getTestAssetName()}`)
       );
+    await page.getByTestId("applyEntityModifications").click();
   }
 
   getTestAssetName() {

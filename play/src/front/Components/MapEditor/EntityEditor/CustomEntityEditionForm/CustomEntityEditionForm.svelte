@@ -170,6 +170,7 @@
         >
         <button
             class="tw-bg-blue-500 tw-rounded-xl"
+            data-testid="applyEntityModifications"
             on:click={() => dispatch("applyEntityModifications", getModifiedCustomEntity())}
             >{isUploadForm
                 ? $LL.mapEditor.entityEditor.buttons.upload()
