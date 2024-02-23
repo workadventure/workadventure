@@ -235,7 +235,7 @@
                             />
                         </div>
                         {#if pickedEntity.type === "Custom"}
-                            <button class="tw-bg-blue-500 tw-rounded-xl" on:click={() => setIsEditingCustomEntity(true)}
+                            <button class="tw-bg-blue-500 tw-rounded" on:click={() => setIsEditingCustomEntity(true)}
                                 ><IconPencil size={16} />{$LL.mapEditor.entityEditor.buttons.editEntity()}</button
                             >
                         {/if}

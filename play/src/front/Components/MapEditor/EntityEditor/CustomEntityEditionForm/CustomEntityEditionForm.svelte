@@ -157,19 +157,19 @@
             >
         </div>
     {/if}
-    <div class="tw-flex tw-flex-row  tw-gap-2 tw-flex-wrap tw-justify-end">
+    <div class="tw-flex tw-flex-row  tw-gap-2 tw-flex-wrap tw-justify-end tw-text-sm">
         {#if !isUploadForm}
             <button
-                class="tw-bg-red-500 tw-rounded-xl"
+                class="tw-bg-red-500 tw-rounded"
                 on:click={() => dispatch("removeEntity", { entityId: customEntity.id })}
                 >{$LL.mapEditor.entityEditor.buttons.delete()}</button
             >
         {/if}
-        <button class="tw-rounded-xl tw-border-white tw-border tw-border-solid" on:click={() => dispatch("closeForm")}
+        <button class="tw-rounded tw-border-white tw-border tw-border-solid" on:click={() => dispatch("closeForm")}
             >{$LL.mapEditor.entityEditor.buttons.cancel()}</button
         >
         <button
-            class="tw-bg-blue-500 tw-rounded-xl"
+            class="tw-bg-blue-500 tw-rounded"
             data-testid="applyEntityModifications"
             on:click={() => dispatch("applyEntityModifications", getModifiedCustomEntity())}
             >{isUploadForm
