@@ -17,8 +17,6 @@
     let entityImageRef: HTMLImageElement;
     let displayDepthCustomSelector = false;
 
-    console.debug(depthOffset);
-
     const dispatch = createEventDispatcher<{
         applyEntityModifications: EntityPrefab;
         closeForm: undefined;

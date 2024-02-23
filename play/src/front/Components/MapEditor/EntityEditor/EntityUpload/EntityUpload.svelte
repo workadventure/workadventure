@@ -83,7 +83,7 @@
 </script>
 
 {#if customEntityToUpload}
-    <div class="tw-absolute tw-top-0 tw-left-0 tw-w-full tw-backdrop-blur-3xl tw-p-8 tw-h-full tw-overflow-auto">
+    <div class="tw-absolute tw-top-0 tw-left-0 tw-w-full tw-bg-dark-blue/95 tw-backdrop-blur-md tw-p-8 tw-h-full tw-overflow-auto">
         <CustomEntityEditionForm
             isUploadForm
             customEntity={customEntityToUpload}

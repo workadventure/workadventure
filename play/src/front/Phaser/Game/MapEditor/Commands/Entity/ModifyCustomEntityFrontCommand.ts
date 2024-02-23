@@ -19,6 +19,7 @@ export class ModifyCustomEntityFrontCommand extends ModifyCustomEntityCommand im
             .getCurrentGameScene()
             .getEntitiesCollectionsManager()
             .modifyCustomEntity(id, name, tags, depthOffset, collisionGrid);
+        gameManager.getCurrentGameScene().getGameMapFrontWrapper().recomputeEntitiesCollisionGrid();
         return super.execute();
     }
 
