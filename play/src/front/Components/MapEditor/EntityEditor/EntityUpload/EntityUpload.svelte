@@ -11,6 +11,7 @@
     let files: FileList | undefined = undefined;
     let dropZoneRef: HTMLDivElement;
     let customEntityToUpload: EntityPrefab | undefined = undefined;
+    const allowedImageFormats = ["image/png", "image/jpeg", "image/webp"];
 
     $: {
         if (files) {
@@ -71,7 +72,12 @@
             if (filesFromDropEvent.length > 1) {
                 console.error("Only one file is permitted");
             } else {
-                files = filesFromDropEvent;
+                if (allowedImageFormats.includes(filesFromDropEvent.item(0)?.type ?? "")) {
+                    files = filesFromDropEvent;
+                }
+                else {
+                    console.error("File format not supported")
+                }
             }
         }
         dropZoneRef.classList.remove("tw-border-cyan-400");
@@ -83,12 +89,15 @@
 </script>
 
 {#if customEntityToUpload}
-    <div class="tw-absolute tw-top-0 tw-left-0 tw-w-full tw-bg-dark-blue/95 tw-backdrop-blur-md tw-p-8 tw-h-full tw-overflow-auto">
+    <div
+        class="tw-absolute tw-top-0 tw-left-0 tw-w-full tw-bg-dark-blue/95 tw-backdrop-blur-md tw-p-8 tw-h-full tw-overflow-auto"
+    >
         <CustomEntityEditionForm
             isUploadForm
             customEntity={customEntityToUpload}
             on:closeForm={initFileUpload}
-            on:applyEntityModifications={({ detail: customModifiedEntity }) => processFileToUpload(customModifiedEntity)}
+            on:applyEntityModifications={({ detail: customModifiedEntity }) =>
+                processFileToUpload(customModifiedEntity)}
         />
     </div>
 {:else}
@@ -106,7 +115,7 @@
                 id="upload"
                 class="tw-hidden"
                 type="file"
-                accept="image/png"
+                accept={allowedImageFormats.join(",")}
                 bind:files
                 data-testid="uploadCustomAsset"
             />
@@ -116,15 +125,15 @@
                 for="upload"
             >
                 <IconCloudUpload size={32} stroke={1} />
-                <div>
-                    <p class="hover:tw-cursor-pointer tw-m-0">
+                <span class="tw-flex tw-flex-col">
+                    <span class="hover:tw-cursor-pointer">
                         {$LL.mapEditor.entityEditor.uploadEntity.dragDrop()}
                         <span class="hover:tw-cursor-pointer tw-underline tw-text-contrast-300"
                             >{$LL.mapEditor.entityEditor.uploadEntity.chooseFile()}</span
                         >
-                    </p>
-                    <p class="tw-text-xs tw-m-0 tw-opacity-50">PNG, JPG, WebP</p>
-                </div></label
+                    </span>
+                    <span class="tw-text-xs tw-m-0 tw-opacity-50">PNG, JPG, WebP</span>
+                </span></label
             >
         </div>
     </div>
