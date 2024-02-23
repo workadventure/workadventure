@@ -172,6 +172,18 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         return removedEntitiesStatus.every(Boolean);
     }
 
+    public updateEntitiesDepth(modifiedEntityPrefabId: string, depthOffset: number) {
+        const entities = this.getEntities();
+        for (const entity of entities.values()) {
+            const entityPrefab = entity.getPrefab();
+            if (entityPrefab.id === modifiedEntityPrefabId) {
+                if (entityPrefab.depthOffset !== depthOffset) {
+                    entity.setDepth(entity.y + entity.displayHeight + depthOffset);
+                }
+            }
+        }
+    }
+
     public getProperties(): Map<string, string | boolean | number> {
         return this.properties;
     }

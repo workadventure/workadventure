@@ -142,7 +142,12 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 const modifyCustomEntityMessage =
                     editMapCommandMessage.editMapMessage?.message.modifyCustomEntityMessage;
                 await this.mapEditorModeManager.executeCommand(
-                    new ModifyCustomEntityFrontCommand(modifyCustomEntityMessage),
+                    new ModifyCustomEntityFrontCommand(
+                        modifyCustomEntityMessage,
+                        this.scene.getEntitiesCollectionsManager(),
+                        this.scene.getGameMapFrontWrapper(),
+                        this.entitiesManager
+                    ),
                     false,
                     false
                 );
@@ -155,7 +160,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                     new DeleteCustomEntityFrontCommand(
                         deleteCustomEntityMessage,
                         this.scene.getGameMap(),
-                        this.entitiesManager
+                        this.entitiesManager,
+                        this.scene.getEntitiesCollectionsManager()
                     ),
                     false,
                     false
@@ -259,7 +265,12 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 if (modifyCustomEntityMessage) {
                     (async () => {
                         await this.mapEditorModeManager.executeCommand(
-                            new ModifyCustomEntityFrontCommand(modifyCustomEntityMessage)
+                            new ModifyCustomEntityFrontCommand(
+                                modifyCustomEntityMessage,
+                                this.scene.getEntitiesCollectionsManager(),
+                                this.scene.getGameMapFrontWrapper(),
+                                this.entitiesManager
+                            )
                         );
                         mapEditorModifyCustomEntityEventStore.set(undefined);
                     })().catch((e) => {
@@ -280,7 +291,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                             new DeleteCustomEntityFrontCommand(
                                 deleteCustomEntityMessage,
                                 this.scene.getGameMap(),
-                                this.entitiesManager
+                                this.entitiesManager,
+                                this.scene.getEntitiesCollectionsManager()
                             )
                         );
                         mapEditorDeleteCustomEntityEventStore.set(undefined);

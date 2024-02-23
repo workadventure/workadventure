@@ -2,14 +2,15 @@ import { Command, DeleteCustomEntityCommand, GameMap } from "@workadventure/map-
 import { DeleteCustomEntityMessage } from "@workadventure/messages";
 import { RoomConnection } from "../../../../../Connection/RoomConnection";
 import { FrontCommand } from "../FrontCommand";
-import { gameManager } from "../../../GameManager";
 import { EntitiesManager } from "../../../GameMap/EntitiesManager";
+import { EntitiesCollectionsManager } from "../../EntitiesCollectionsManager";
 
 export class DeleteCustomEntityFrontCommand extends DeleteCustomEntityCommand implements FrontCommand {
     constructor(
         deleteCustomEntityMessage: DeleteCustomEntityMessage,
         gameMap: GameMap,
-        private entitiesManager: EntitiesManager
+        private entitiesManager: EntitiesManager,
+        private entitiesCollectionManager: EntitiesCollectionsManager
     ) {
         super(deleteCustomEntityMessage, gameMap);
     }
@@ -20,7 +21,7 @@ export class DeleteCustomEntityFrontCommand extends DeleteCustomEntityCommand im
 
     execute(): Promise<void> {
         const { id } = this.deleteCustomEntityMessage;
-        gameManager.getCurrentGameScene().getEntitiesCollectionsManager().deleteCustomEntity(id);
+        this.entitiesCollectionManager.deleteCustomEntity(id);
         const gameMapEntitiesIdToRemove =
             this.gameMap?.getGameMapEntities()?.getCustomEntitiesKeysByCustomEntityId(id) ?? [];
         this.entitiesManager.deleteEntities(gameMapEntitiesIdToRemove);

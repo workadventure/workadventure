@@ -113,21 +113,18 @@ export class EntitiesCollectionsManager {
         };
         this.currentCollection.collection.push(uploadedEntityPrefab);
 
-        const entitiesPrefabsMapPromiseWithUploadedEntity = new Promise<Map<string, EntityPrefab>>(
-            (resolve, reject) => {
-                this.entitiesPrefabsMapPromise
-                    .then((existingEntitiesPrefabsMap) => {
-                        existingEntitiesPrefabsMap.set(uploadedEntityPrefab.id, uploadedEntityPrefab);
-                        resolve(existingEntitiesPrefabsMap);
-                    })
-                    .catch((error) => {
-                        console.error(error);
-                        reject(error);
-                    });
-            }
-        );
         this.entitiesPrefabsStore.update((currentEntitiesPrefabs) => [...currentEntitiesPrefabs, uploadedEntityPrefab]);
-        this.entitiesPrefabsMapPromise = entitiesPrefabsMapPromiseWithUploadedEntity;
+        this.entitiesPrefabsMapPromise = new Promise<Map<string, EntityPrefab>>((resolve, reject) => {
+            this.entitiesPrefabsMapPromise
+                .then((existingEntitiesPrefabsMap) => {
+                    existingEntitiesPrefabsMap.set(uploadedEntityPrefab.id, uploadedEntityPrefab);
+                    resolve(existingEntitiesPrefabsMap);
+                })
+                .catch((error) => {
+                    console.error(error);
+                    reject(error);
+                });
+        });
     }
 
     public modifyCustomEntity(
@@ -150,26 +147,43 @@ export class EntitiesCollectionsManager {
             }
             return currentEntitiesPrefabs;
         });
+        this.entitiesPrefabsMapPromise = new Promise<Map<string, EntityPrefab>>((resolve, reject) => {
+            this.entitiesPrefabsMapPromise
+                .then((existingEntitiesPrefabsMap) => {
+                    const entity = existingEntitiesPrefabsMap.get(id);
+                    if (entity) {
+                        existingEntitiesPrefabsMap.set(id, {
+                            ...entity,
+                            name,
+                            tags,
+                            depthOffset,
+                            collisionGrid,
+                        });
+                    }
+                    resolve(existingEntitiesPrefabsMap);
+                })
+                .catch((error) => {
+                    console.error(error);
+                    reject(error);
+                });
+        });
     }
 
     public deleteCustomEntity(id: string): void {
         this.entitiesPrefabsStore.update((currentEntitiesPrefabs) => {
             return currentEntitiesPrefabs.filter((entityPrefab) => entityPrefab.id !== id);
         });
-        const entitiesPrefabsMapPromiseWithUploadedEntity = new Promise<Map<string, EntityPrefab>>(
-            (resolve, reject) => {
-                this.entitiesPrefabsMapPromise
-                    .then((existingEntitiesPrefabsMap) => {
-                        existingEntitiesPrefabsMap.delete(id);
-                        resolve(existingEntitiesPrefabsMap);
-                    })
-                    .catch((error) => {
-                        console.error(error);
-                        reject(error);
-                    });
-            }
-        );
-        this.entitiesPrefabsMapPromise = entitiesPrefabsMapPromiseWithUploadedEntity;
+        this.entitiesPrefabsMapPromise = new Promise<Map<string, EntityPrefab>>((resolve, reject) => {
+            this.entitiesPrefabsMapPromise
+                .then((existingEntitiesPrefabsMap) => {
+                    existingEntitiesPrefabsMap.delete(id);
+                    resolve(existingEntitiesPrefabsMap);
+                })
+                .catch((error) => {
+                    console.error(error);
+                    reject(error);
+                });
+        });
     }
 
     private async fetchRawCollection(url: string): Promise<EntityCollectionRaw> {

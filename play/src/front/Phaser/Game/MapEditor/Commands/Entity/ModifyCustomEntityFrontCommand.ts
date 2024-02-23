@@ -2,10 +2,17 @@ import { ModifyCustomEntityCommand } from "@workadventure/map-editor";
 import { ModifyCustomEntityMessage } from "@workadventure/messages";
 import { RoomConnection } from "../../../../../Connection/RoomConnection";
 import { FrontCommand } from "../FrontCommand";
-import { gameManager } from "../../../GameManager";
+import { EntitiesCollectionsManager } from "../../EntitiesCollectionsManager";
+import { GameMapFrontWrapper } from "../../../GameMap/GameMapFrontWrapper";
+import { EntitiesManager } from "../../../GameMap/EntitiesManager";
 
 export class ModifyCustomEntityFrontCommand extends ModifyCustomEntityCommand implements FrontCommand {
-    constructor(modifyCustomEntityMessage: ModifyCustomEntityMessage) {
+    constructor(
+        modifyCustomEntityMessage: ModifyCustomEntityMessage,
+        private entitiesCollectionManager: EntitiesCollectionsManager,
+        private gameFrontWrapper: GameMapFrontWrapper,
+        private entitiesManager: EntitiesManager
+    ) {
         super(modifyCustomEntityMessage);
     }
 
@@ -15,11 +22,11 @@ export class ModifyCustomEntityFrontCommand extends ModifyCustomEntityCommand im
 
     execute(): Promise<void> {
         const { id, name, tags, depthOffset, collisionGrid } = this.modifyCustomEntityMessage;
-        gameManager
-            .getCurrentGameScene()
-            .getEntitiesCollectionsManager()
-            .modifyCustomEntity(id, name, tags, depthOffset, collisionGrid);
-        gameManager.getCurrentGameScene().getGameMapFrontWrapper().recomputeEntitiesCollisionGrid();
+        this.entitiesCollectionManager.modifyCustomEntity(id, name, tags, depthOffset, collisionGrid);
+        if (depthOffset !== undefined) {
+            this.entitiesManager.updateEntitiesDepth(id, depthOffset);
+        }
+        this.gameFrontWrapper.recomputeEntitiesCollisionGrid();
         return super.execute();
     }
 
