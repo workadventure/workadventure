@@ -1,4 +1,5 @@
 import {
+    AreaRightPropertyData,
     AtLeast,
     EntityData,
     EntityDataProperties,
@@ -53,6 +54,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             ...data,
             name: data.name ?? "",
             properties: data.properties ?? [],
+            areaId: data.areaId ?? "", // Ensure areaId is always assigned a string value
         };
         this.prefab = prefab;
 
@@ -87,7 +89,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.setPosition(this.entityData.x, this.entityData.y);
         this.oldPosition = this.getPosition();
         this.activatable = this.hasAnyPropertiesSet();
-        if (this.activatable) {
+        if (this.activatable && this.userHasAccess) {
             this.setInteractive({ pixelPerfect: true, cursor: "pointer" });
             this.scene.input.setDraggable(this);
         } else if (!get(mapEditorModeStore)) {
@@ -389,5 +391,38 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             (p) => p.type === "entityDescriptionProperties"
         ) as EntityDescriptionPropertyData | undefined;
         return descriptionProperty?.searchable;
+    }
+
+    public get userHasAccess(): boolean {
+        // If property have area, get area by ID
+        if (!this.entityData.areaId) return true;
+
+        // Get area associated
+        const area = (this.scene as GameScene).getGameMapFrontWrapper().getArea(this.entityData.areaId);
+
+        // Check the area tag and user tag to define if the user can interact with the entity
+        if (!area) return true;
+
+        // Get area right properties
+        const areaRight = area.properties.find((property) => property.type === "areaRightPropertyData") as
+            | AreaRightPropertyData
+            | undefined;
+        if (
+            !(this.scene as GameScene).connection?.isAdmin() &&
+            areaRight != undefined &&
+            (areaRight.readTags.length > 0 || areaRight.writeTags.length > 0)
+        ) {
+            // Check that the user have right to read the area
+            if (
+                (areaRight.readTags.length > 0 &&
+                    !areaRight.writeTags.find((tag) => (this.scene as GameScene).connection?.hasTag(tag))) ||
+                (areaRight.writeTags.length > 0 &&
+                    !areaRight.writeTags.find((tag) => (this.scene as GameScene).connection?.hasTag(tag)))
+            ) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

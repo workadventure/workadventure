@@ -1,5 +1,6 @@
 import { MathUtils } from "@workadventure/math-utils";
 import { isOutlineable } from "../../Utils/CustomTypeGuards";
+import { Entity } from "../ECS/Entity";
 import type { Player } from "../Player/Player";
 import type { ActivatableInterface } from "./ActivatableInterface";
 
@@ -122,6 +123,7 @@ export class ActivatablesManager {
 
         for (const [object, distance] of this.activatableObjectsDistances.entries()) {
             if (object.isActivatable() && object.activationRadius > distance && shortestDistance > distance) {
+                if (object instanceof Entity && !object.userHasAccess) continue;
                 shortestDistance = distance;
                 closestObject = object;
             }
