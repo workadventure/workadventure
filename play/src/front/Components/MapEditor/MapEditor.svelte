@@ -1,20 +1,20 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
     import { MinusIcon } from "svelte-feather-icons";
+    import { fly } from "svelte/transition";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import {
         mapEditorModeStore,
         mapEditorSelectedToolStore,
-        mapEditorVisibilityStore
+        mapEditorVisibilityStore,
     } from "../../Stores/MapEditorStore";
-    import { gameManager } from "../../Phaser/Game/GameManager";
-    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import Explorer from "../Exploration/Explorer.svelte";
-    import MapEditorSideBar from "./MapEditorSideBar.svelte";
-    import EntityEditor from "./EntityEditor/EntityEditor.svelte";
     import AreaEditor from "./AreaEditor.svelte";
-    import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
+    import EntityEditor from "./EntityEditor/EntityEditor.svelte";
+    import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import TrashEditor from "./TrashEditor.svelte";
+    import ConfigureMyRoom from "./WAMSettingsEditor.svelte";
 
     function closeMapEditor() {
         analyticsClient.toggleMapEditor(false);
@@ -35,7 +35,7 @@
             <button class="tw-absolute tw-right-10 tw-p-1 tw-cursor-pointer" on:click={hideMapEditor}
                 ><MinusIcon size="20" /></button
             >
-            <button class="close-window" on:click={closeMapEditor}>&#215;</button>
+            <button class="close-window" data-testid="mapEditor-close-button" on:click={closeMapEditor}>&#215;</button>
             {#if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
                 <TrashEditor />
             {/if}

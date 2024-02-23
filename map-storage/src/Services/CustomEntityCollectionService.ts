@@ -36,7 +36,10 @@ export class CustomEntityCollectionService {
 
     public async modifyEntity(modifyCustomEntityMessage: ModifyCustomEntityMessage) {
         const { id, name, tags, depthOffset } = modifyCustomEntityMessage;
-        const collisionGrid = CollisionGrid.parse(modifyCustomEntityMessage.collisionGrid);
+        let collisionGrid = undefined;
+        if (modifyCustomEntityMessage.collisionGrid) {
+            collisionGrid = CollisionGrid.parse(modifyCustomEntityMessage.collisionGrid);
+        }
         const customEntityCollectionFileContent = await this.readOrCreateEntitiesCollectionFile();
         const customEntityCollection = EntityCollectionRaw.parse(JSON.parse(customEntityCollectionFileContent));
         const indexOfEntityToModify = customEntityCollection.collection.findIndex((entity) => entity.id === id);

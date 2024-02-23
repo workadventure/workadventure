@@ -1,8 +1,8 @@
 <script lang="ts">
     import { IconChevronLeft, IconDeselect, IconPencil } from "@tabler/icons-svelte";
     import type { EntityPrefab } from "@workadventure/map-editor";
-    import { get } from "svelte/store";
     import { onDestroy } from "svelte";
+    import { get } from "svelte/store";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
@@ -13,13 +13,13 @@
         mapEditorSelectedEntityPrefabStore,
         mapEditorSelectedEntityStore
     } from "../../../Stores/MapEditorStore";
+    import CustomEntityEditionForm from "./CustomEntityEditionForm/CustomEntityEditionForm.svelte";
     import EntitiesGrid from "./EntitiesGrid.svelte";
     import EntityImage from "./EntityItem/EntityImage.svelte";
     import EntityVariantColorPicker from "./EntityItem/EntityVariantColorPicker.svelte";
     import EntityVariantPositionPicker from "./EntityItem/EntityVariantPositionPicker.svelte";
     import EntityUpload from "./EntityUpload/EntityUpload.svelte";
     import TagListItem from "./TagListItem.svelte";
-    import CustomEntityEditionForm from "./CustomEntityEditionForm/CustomEntityEditionForm.svelte";
 
     type customTag = "Custom";
 
@@ -59,6 +59,7 @@
     }
 
     function saveCustomEntityModifications(customEntity: EntityPrefab) {
+        console.log(customEntity);
         mapEditorModifyCustomEntityEventStore.set({
             ...customEntity,
         });
@@ -210,10 +211,11 @@
                             on:closeForm={() => {
                                 setIsEditingCustomEntity(false);
                             }}
-                            on:removeEntity={({ detail:{entityId} }) => {
+                            on:removeEntity={({ detail: { entityId } }) => {
                                 removeEntity(entityId);
                             }}
-                            on:applyEntityModifications={({ detail:customModifiedEntity }) => saveCustomEntityModifications(customModifiedEntity)}
+                            on:applyEntityModifications={({ detail: customModifiedEntity }) =>
+                                saveCustomEntityModifications(customModifiedEntity)}
                         />
                     {:else}
                         <EntityImage
@@ -235,12 +237,17 @@
                             />
                         </div>
                         {#if pickedEntity.type === "Custom"}
-                            <button class="tw-bg-blue-500 tw-rounded" on:click={() => setIsEditingCustomEntity(true)}
+                            <button
+                                class="tw-bg-blue-500 tw-rounded"
+                                data-testid="editEntity"
+                                on:click={() => setIsEditingCustomEntity(true)}
                                 ><IconPencil size={16} />{$LL.mapEditor.entityEditor.buttons.editEntity()}</button
                             >
                         {/if}
-                        <button class="tw-self-start tw-absolute tw-right-0" on:click={clearEntitySelection}
-                            ><IconDeselect /></button
+                        <button
+                            class="tw-self-start tw-absolute tw-right-0"
+                            data-testid="clearEntitySelection"
+                            on:click={clearEntitySelection}><IconDeselect /></button
                         >
                     {/if}
                 </div>

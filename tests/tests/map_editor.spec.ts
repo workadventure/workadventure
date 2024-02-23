@@ -1,14 +1,14 @@
 import { expect, test, webkit } from "@playwright/test";
-import Menu from "./utils/menu";
-import { hideNoCamera, login } from "./utils/roles";
-import MapEditor from "./utils/mapeditor";
-import Megaphone from "./utils/map-editor/megaphone";
+import Map from "./utils/map";
 import AreaEditor from "./utils/map-editor/areaEditor";
+import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import EntityEditor from "./utils/map-editor/entityEditor";
 import Exploration from "./utils/map-editor/exploration";
-import Map from "./utils/map";
-import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
+import Megaphone from "./utils/map-editor/megaphone";
 import { resetWamMaps } from "./utils/map-editor/uploader";
+import MapEditor from "./utils/mapeditor";
+import Menu from "./utils/menu";
+import { hideNoCamera, login } from "./utils/roles";
 import { evaluateScript } from "./utils/scripting";
 import { map_storage_url } from "./utils/urls";
 
@@ -478,7 +478,7 @@ test.describe("Map editor", () => {
     await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
 
     // quit object selector
-    await EntityEditor.quitEntitySelector(page);
+    await EntityEditor.clearEntitySelection(page);
     await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
 
     // add property Google Docs
@@ -582,7 +582,7 @@ test.describe("Map editor", () => {
     await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
 
     // quit object selector
-    await EntityEditor.quitEntitySelector(page);
+    await EntityEditor.clearEntitySelection(page);
     await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
 
     // add property Klaxoon
@@ -616,7 +616,6 @@ test.describe("Map editor", () => {
     page,
     browser,
     request,
-    browserName,
   }) => {
     if (browser.browserType() === webkit) {
       // Webkit is somehow failing on this, maybe it is too slow
@@ -629,10 +628,6 @@ test.describe("Map editor", () => {
 
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
-    if (browserName === "webkit") {
-      // Because webkit in playwright does not support Camera/Microphone Permission by settings
-      await hideNoCamera(page);
-    }
 
     // open map editor
     await page.getByRole("button", { name: "toggle-map-editor" }).click();
@@ -641,6 +636,7 @@ test.describe("Map editor", () => {
     // Click on upload asset
     await EntityEditor.uploadTestAsset(page);
 
+    // Search uploaded asset
     const uploadedEntityLocator = await EntityEditor.searchEntity(
       page,
       EntityEditor.getTestAssetName()
@@ -653,7 +649,6 @@ test.describe("Map editor", () => {
     page,
     browser,
     request,
-    browserName,
   }) => {
     if (browser.browserType() === webkit) {
       // Webkit is somehow failing on this, maybe it is too slow
@@ -664,12 +659,16 @@ test.describe("Map editor", () => {
 
     await resetWamMaps(request);
 
+    // First browser + moved woka
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
-    if (browserName === "webkit") {
-      // Because webkit in playwright does not support Camera/Microphone Permission by settings
-      await hideNoCamera(page);
-    }
+    await Map.teleportToPosition(page, 0, 0);
+
+    // Second browser
+    const newBrowser = await browser.browserType().launch();
+    const page2 = await newBrowser.newPage();
+    await page2.goto(Map.url("empty"));
+    await login(page2, "test2", 3);
 
     // open map editor
     await page.getByRole("button", { name: "toggle-map-editor" }).click();
@@ -682,8 +681,140 @@ test.describe("Map editor", () => {
     await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName());
     await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
 
-    //Check if testAsset is present in the map
-    //TODO find a way to read wam file or spyOn the method to update wam
+    // Add open link interaction on uploaded asset
+    await EntityEditor.clearEntitySelection(page);
+    await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
+    await EntityEditor.addProperty(page, "Open Link");
+
+    // fill link
+    await page
+      .getByPlaceholder("https://workadventu.re")
+      .first()
+      .fill("https://workadventu.re");
+
+    // close object selector
+    await Menu.closeMapEditor(page);
+
+    // click on the object and open popup on both pages
+    await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
+    await EntityEditor.moveAndClick(page2, 14 * 32, 13 * 32);
+
+    // check if the popup with application is opened on both pages
+    await expect(
+      page.locator(".actions-menu .actions button").nth(0)
+    ).toContainText("Open Link");
+    await expect(
+      page2.locator(".actions-menu .actions button").nth(0)
+    ).toContainText("Open Link");
+  });
+
+  test("Successfully upload and edit asset name", async ({
+    page,
+    browser,
+    request,
+  }) => {
+    if (browser.browserType() === webkit) {
+      // Webkit is somehow failing on this, maybe it is too slow
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
+    // Init wam file
+    await resetWamMaps(request);
+
+    // First browser + moved woka
+    await page.goto(Map.url("empty"));
+    await login(page, "test", 3);
+    await Map.teleportToPosition(page, 0, 0);
+
+    // Second browser
+    const newBrowser = await browser.browserType().launch();
+    const page2 = await newBrowser.newPage();
+    await page2.goto(Map.url("empty"));
+    await login(page2, "test2", 3);
+
+    // open map editor on both pages
+    await page.getByRole("button", { name: "toggle-map-editor" }).click();
+    await page2.getByRole("button", { name: "toggle-map-editor" }).click();
+    await MapEditor.openEntityEditor(page);
+    await MapEditor.openEntityEditor(page2);
+
+    // Click on upload asset on page 1
+    await EntityEditor.uploadTestAsset(page);
+
+    // Select uploaded entity and rename it on page 1
+    await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName());
+    await EntityEditor.openEditEntityForm(page);
+    const newEntityName = "My Entity";
+    await page.getByTestId("name").fill(newEntityName);
+    await EntityEditor.applyEntityModifications(page);
+
+    // Search uploaded entity on both pages
+    const uploadedEntityLocator = await EntityEditor.searchEntity(
+      page,
+      newEntityName
+    );
+    const uploadedEntityLocator2 = await EntityEditor.searchEntity(
+      page2,
+      newEntityName
+    );
+
+    // Get inner html on both pages
+    const uploadedEntityElement = await uploadedEntityLocator.innerHTML();
+    const uploadedEntityElement2 = await uploadedEntityLocator2.innerHTML();
+
+    // Expect inner html in string to contain the new entity name
+    expect(uploadedEntityElement).toContain(newEntityName);
+    expect(uploadedEntityElement2).toContain(newEntityName);
+  });
+
+  test("Successfully upload and remove custom entity", async ({
+    page,
+    browser,
+    request,
+  }) => {
+    if (browser.browserType() === webkit) {
+      // Webkit is somehow failing on this, maybe it is too slow
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
+    await resetWamMaps(request);
+
+    // First browser + moved woka
+    await page.goto(Map.url("empty"));
+    await login(page, "test", 3);
+    await Map.teleportToPosition(page, 0, 0);
+
+    // Second browser
+    const newBrowser = await browser.browserType().launch();
+    const page2 = await newBrowser.newPage();
+    await page2.goto(Map.url("empty"));
+    await login(page2, "test2", 3);
+
+    // open map editor on both pages
+    await page.getByRole("button", { name: "toggle-map-editor" }).click();
+    await page2.getByRole("button", { name: "toggle-map-editor" }).click();
+
+    await MapEditor.openEntityEditor(page);
+    await MapEditor.openEntityEditor(page2);
+
+    // Click on upload asset on page 1
+    await EntityEditor.uploadTestAsset(page);
+
+    // Select uploaded entity on both pages
+    await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName());
+    await EntityEditor.selectEntity(page2, 0, EntityEditor.getTestAssetName());
+
+    // Click on edit button and remove entity on page1
+    await EntityEditor.openEditEntityForm(page);
+    await EntityEditor.removeEntity(page);
+
+    // Expect both pages to have no entities
+    await expect(page.getByTestId("entity-item")).toHaveCount(0);
+    await expect(page2.getByTestId("entity-item")).toHaveCount(0);
   });
 
   test("Successfully set searchable processus for entity and zone", async ({
@@ -731,7 +862,7 @@ test.describe("Map editor", () => {
       await MapEditor.openEntityEditor(page);
       await EntityEditor.selectEntity(page, 0, "small table");
       await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
-      await EntityEditor.quitEntitySelector(page);
+      await EntityEditor.clearEntitySelection(page);
       await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
       await EntityEditor.setEntityName(page, "My Jitsi Entity");
       await EntityEditor.setEntityDescription(

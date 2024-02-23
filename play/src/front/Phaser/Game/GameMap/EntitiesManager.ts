@@ -71,7 +71,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
      */
     private pointerOverEntitySubject = new Subject<Entity>();
     private pointerOutEntitySubject = new Subject<Entity>();
-
     constructor(scene: GameScene, gameMapFrontWrapper: GameMapFrontWrapper) {
         super();
         this.scene = scene;

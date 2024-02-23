@@ -7,7 +7,6 @@ class EntityEditor {
       await page.getByPlaceholder("Search").click();
       await page.getByPlaceholder("Search").fill(search);
     }
-
     await page.getByTestId("entity-item").nth(nb).click();
   }
 
@@ -15,7 +14,7 @@ class EntityEditor {
     await page.getByPlaceholder("Search").click();
     await page.getByPlaceholder("Search").fill(search);
 
-    return await page.getByTestId("entity-item").nth(0);
+    return page.getByTestId("entity-item").nth(0);
   }
   async moveAndClick(page: Page, x: number, y: number) {
     await page.mouse.move(x, y);
@@ -23,10 +22,10 @@ class EntityEditor {
     await page.mouse.up();
   }
 
-  async quitEntitySelector(page: Page) {
-    await page.getByTestId("mapEditor-close-button").click();
+  async clearEntitySelection(page: Page) {
+    await page.getByTestId("clearEntitySelection").click();
 
-    await expect(page.getByTestId("mapEditor-close-button")).toHaveCount(0);
+    await expect(page.getByTestId("clearEntitySelection")).toHaveCount(0);
     // That's bad, but we need to wait a bit for the canvas to put the object.
     // eslint-disable-next-line playwright/no-wait-for-timeout
     await page.waitForTimeout(2000);
@@ -66,7 +65,20 @@ class EntityEditor {
       .setInputFiles(
         path.join(__dirname, `../../assets/${this.getTestAssetName()}`)
       );
+    await page.getByTestId("floatingObject").check();
+    await this.applyEntityModifications(page);
+  }
+
+  async openEditEntityForm(page: Page) {
+    await page.getByTestId("editEntity").click();
+  }
+
+  async applyEntityModifications(page: Page) {
     await page.getByTestId("applyEntityModifications").click();
+  }
+
+  async removeEntity(page: Page) {
+    await page.getByTestId("removeEntity").click();
   }
 
   getTestAssetName() {
