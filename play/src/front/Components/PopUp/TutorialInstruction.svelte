@@ -24,7 +24,7 @@ function closeBanner() {
 
 </script>
 <!-- {#if $bannerVisible} -->
-  <div class="fixed bottom-2 left-0 right-0 m-auto bg-contrast/80 backdrop-blur text-white w-[500px] h-[250px] rounded-lg overflow-hidden z-[203]">
+  <div class="fixed bottom-2 left-0 right-0 m-auto bg-contrast/80 backdrop-blur text-white w-[500px] h-[250px] rounded-lg overflow-hidden z-[200] animation">
     <div class="flex p-4 space-x-4 pointer-events-auto">
         <div class="">
             <button class="btn btn-light btn-ghost btn-sm {0 < $currentBannerIndex && $currentBannerIndex < 5 ? "" : "opacity-20"}" id="chevron-left" on:click={goToPreviousBanner}
@@ -78,3 +78,21 @@ function closeBanner() {
     </div>
   </div>
 <!-- {/if} -->
+
+
+<style>
+  .animation {
+    animation-duration: 0.5s;
+    animation-name: slidein;
+  }
+
+  @keyframes slidein {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+  </style>

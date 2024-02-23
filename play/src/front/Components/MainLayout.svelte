@@ -46,6 +46,8 @@
     import PopUpSound from "./PopUp/PopUpSound.svelte";
     import PopUpFollow from "./PopUp/PopUpFollow.svelte";
     import PopUpJitsi from "./PopUp/PopUpJitsi.svelte";
+    import PopUpMessage from './PopUp/PopUpMessage.svelte'
+
 
 
     let mainLayout: HTMLDivElement;
@@ -144,26 +146,33 @@
             <Modal />
         {/if}
 
-        {#if $audioManagerVisibilityStore}
-            <PopUpSound />
-        {/if}
 
-        {#if $layoutManagerActionVisibilityStore}
-            <PopUpJitsi />
-        {/if}
+        <section id="main-layout-main" class="">
+          <div class="popup-stack">
 
-        <!-- {#if $} -->
+              {#if $layoutManagerActionVisibilityStore}
+                  <PopUpJitsi priority={1} className="popup"/>
+              {/if}
 
-        <!-- {/if} -->
-
-
-        {#if $followStateStore !== "off"}
-          <PopUpFollow />
-        {/if}
+              {#if $followStateStore !== "off"}
+                  <PopUpFollow priority={2} className="popup"/>
+              {/if}
 
 
+              {#if $audioManagerVisibilityStore}
+                <PopUpSound priority={4} className="popup"/> 
+              {/if}
+
+              <!-- <PopUpTutorial priority={5} className="popup" /> -->
+
+
+
+              <!-- {#if $textMessageStore} ou celui là {#if $MessageStore} ou pour message globaux {#if $GlobalMessageManagerStore}-->
+                <PopUpMessage priority={3} className="popup" />
+              <!--{/if}-->
+          </div>
+      </section>
     </section>
-
 
 
     {#if $actionsMenuStore}
@@ -172,10 +181,6 @@
 
 
     <ActionBar />
-    <!-- <PopUpTutorial /> -->
-
-
-
 
 
 
@@ -369,5 +374,4 @@
 
 <style lang="scss">
     @import "../style/breakpoints.scss";
-
 </style>

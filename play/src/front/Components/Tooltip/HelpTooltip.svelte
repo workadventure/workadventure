@@ -2,8 +2,6 @@
     // import { from } from "rxjs";
 
     import { fly } from "svelte/transition";
-
-    // import XIcon from "../Icons/XIcon.svelte";
     import tooltipArrow from "../images/arrow-top.svg";
 
     export let hasImage = true;
