@@ -216,6 +216,7 @@ export const EntityData = z.object({
     properties: EntityDataProperties.optional(),
     prefab: EntityRawPrefab,
     prefabRef: EntityPrefabRef,
+    areaId: z.string().optional(),
 });
 
 export const WAMEntityData = EntityData.omit({ prefab: true, id: true });

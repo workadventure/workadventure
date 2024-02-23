@@ -9,6 +9,7 @@ import { Observable, Subject } from "rxjs";
 import { get, Unsubscriber } from "svelte/store";
 import { z } from "zod";
 import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
+import { gameSceneIsLoadedStore } from "../../../Stores/GameSceneStore";
 import {
     mapEditorEntityModeStore,
     mapEditorModeStore,
@@ -30,6 +31,7 @@ export const CopyEntityEventData = z.object({
     }),
     prefabRef: EntityPrefabRef,
     properties: EntityDataProperties.optional(),
+    areaId: z.string().optional(),
 });
 
 export const CopyAreaEventData = z.object({
@@ -65,6 +67,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     private properties: Map<string, string | boolean | number>;
     private actionsMenuStoreUnsubscriber: Unsubscriber;
+    private gameSceneIsLoadedStoreUnsubscriber: Unsubscriber;
 
     /**
      * Firing on map change, containing newest collision grid array
@@ -85,6 +88,13 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         this.actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((data) => {
             this.clearProperties();
             this.gameMapFrontWrapper.handleEntityActionTrigger();
+        });
+
+        // When the gamescene is loaded (connection realy defined, etc.), we update all entities
+        this.gameSceneIsLoadedStoreUnsubscriber = gameSceneIsLoadedStore.subscribe((isLoaded) => {
+            if (isLoaded) {
+                this.makeAllEntitiesInteractive(true);
+            }
         });
 
         this.bindEventHandlers();
@@ -204,7 +214,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     public makeAllEntitiesInteractive(activatableOnly = false): void {
         const entities = activatableOnly
-            ? Array.from(this.entities.values()).filter((entity) => entity.isActivatable())
+            ? Array.from(this.entities.values()).filter((entity) => entity.isActivatable() && entity.userHasAccess)
             : this.entities;
         entities.forEach((entity) => {
             entity.setInteractive({ pixelPerfect: true, cursor: "pointer" });

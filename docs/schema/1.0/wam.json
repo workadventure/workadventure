@@ -256,6 +256,9 @@
                   "id"
                 ],
                 "additionalProperties": false
+              },
+              "areaId": {
+                "type": "string"
               }
             },
             "required": [

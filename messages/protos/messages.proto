@@ -218,6 +218,7 @@ message CreateEntityMessage {
   string prefabId = 5;
   repeated google.protobuf.Value properties = 6;
   optional string name = 7;
+  optional string areaId = 8;
 }
 
 message DeleteEntityMessage {
@@ -266,6 +267,7 @@ message ModifyEntityMessage {
   repeated google.protobuf.Value properties = 4;
   optional bool modifyProperties = 5;
   optional string name = 6;
+  optional string areaId = 7;
 }
 
 message ClientToServerMessage {
