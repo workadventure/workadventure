@@ -212,6 +212,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             floatingObject: "Objet flottant",
             floatingObjectDescription:
                 "Un objet flottant peut être placé librement sur la carte. Autrement, il sera aligné sur la grille de la carte.",
+            depth: "Prodondeur",
+            groundLevel: "Au sol",
+            custom: "Personnalisé",
+            standing: "Debout",
         },
         buttons: {
             editEntity: "Editer",

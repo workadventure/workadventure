@@ -214,6 +214,10 @@ const mapEditor: BaseTranslation = {
             floatingObject: "Floating object",
             floatingObjectDescription:
                 "A floating object can be placed freely on the map. Otherwise, it will be aligned on the map grid.",
+            depth: "Depth",
+            groundLevel: "Ground level",
+            custom: "Custom",
+            standing: "Standing",
         },
         buttons: {
             editEntity: "Edit",

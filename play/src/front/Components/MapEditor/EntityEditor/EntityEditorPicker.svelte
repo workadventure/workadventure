@@ -7,7 +7,9 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { EntityVariant } from "../../../Phaser/Game/MapEditor/Entities/EntityVariant";
     import {
+        mapEditorDeleteCustomEntityEventStore,
         mapEditorEntityModeStore,
+        mapEditorModifyCustomEntityEventStore,
         mapEditorSelectedEntityPrefabStore,
         mapEditorSelectedEntityStore
     } from "../../../Stores/MapEditorStore";
@@ -17,7 +19,7 @@
     import EntityVariantPositionPicker from "./EntityItem/EntityVariantPositionPicker.svelte";
     import EntityUpload from "./EntityUpload/EntityUpload.svelte";
     import TagListItem from "./TagListItem.svelte";
-    import CustomEntityEditionForm from "./EntityItem/CustomEntityEditionForm.svelte";
+    import CustomEntityEditionForm from "./CustomEntityEditionForm/CustomEntityEditionForm.svelte";
 
     type customTag = "Custom";
 
@@ -49,6 +51,19 @@
                 pickedEntity = pickedEntityVariant?.defaultPrefab;
             }
         });
+
+    function removeEntity(id: string) {
+        mapEditorDeleteCustomEntityEventStore.set({ id });
+        clearEntitySelection();
+        setIsEditingCustomEntity(false);
+    }
+
+    function saveCustomEntityModifications(customEntity: EntityPrefab) {
+        mapEditorModifyCustomEntityEventStore.set({
+            ...customEntity,
+        });
+        setIsEditingCustomEntity(false);
+    }
 
     function onPickItem(entityPrefab: EntityPrefab) {
         pickedEntity = entityPrefab;
@@ -191,14 +206,14 @@
                 >
                     {#if isEditingCustomEntity}
                         <CustomEntityEditionForm
+                            customEntity={pickedEntity}
                             on:closeForm={() => {
                                 setIsEditingCustomEntity(false);
                             }}
-                            on:onRemoveEntity={() => {
-                                clearEntitySelection();
-                                setIsEditingCustomEntity(false);
+                            on:removeEntity={({ detail:{entityId} }) => {
+                                removeEntity(entityId);
                             }}
-                            customEntity={pickedEntity}
+                            on:applyEntityModifications={({ detail:customModifiedEntity }) => saveCustomEntityModifications(customModifiedEntity)}
                         />
                     {:else}
                         <EntityImage
@@ -224,9 +239,8 @@
                                 ><IconPencil size={16} />{$LL.mapEditor.entityEditor.buttons.editEntity()}</button
                             >
                         {/if}
-                        <button
-                            class="tw-self-start tw-absolute tw-right-0"
-                            on:click={clearEntitySelection}><IconDeselect /></button
+                        <button class="tw-self-start tw-absolute tw-right-0" on:click={clearEntitySelection}
+                            ><IconDeselect /></button
                         >
                     {/if}
                 </div>

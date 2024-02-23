@@ -244,7 +244,7 @@ message UploadEntityMessage {
   CustomEntityDirection direction = 6;
   string color = 7;
   optional google.protobuf.Value collisionGrid = 8;
-  optional uint32 depthOffset = 9;
+  optional int32 depthOffset = 9;
 }
 
 message ModifyCustomEntityMessage {
@@ -252,7 +252,7 @@ message ModifyCustomEntityMessage {
   string name = 2;
   repeated string tags = 3;
   optional google.protobuf.Value collisionGrid = 4;
-  optional uint32 depthOffset = 5;
+  optional int32 depthOffset = 5;
 }
 
 message DeleteCustomEntityMessage {

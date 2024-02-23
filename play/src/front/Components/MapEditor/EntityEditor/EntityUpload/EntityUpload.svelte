@@ -6,7 +6,7 @@
     import { Direction, EntityPrefab } from "@workadventure/map-editor";
     import LL from "../../../../../i18n/i18n-svelte";
     import { mapEditorEntityUploadEventStore } from "../../../../Stores/MapEditorStore";
-    import EntityEditionUploadForm from "./EntityEditionUploadForm.svelte";
+    import CustomEntityEditionForm from "../CustomEntityEditionForm/CustomEntityEditionForm.svelte";
 
     let files: FileList | undefined = undefined;
     let dropZoneRef: HTMLDivElement;
@@ -16,7 +16,7 @@
         if (files) {
             customEntityToUpload = {
                 collectionName: "custom entities",
-                name:files.item(0)!.name,
+                name: files.item(0)!.name,
                 imagePath: URL.createObjectURL(files.item(0)!),
                 id: uuidv4(),
                 direction: Direction.Down,
@@ -44,14 +44,16 @@
         if (fileToUpload) {
             const fileBuffer = await fileToUpload.arrayBuffer();
             const fileAsUint8Array = new Uint8Array(fileBuffer);
+            const generatedId = uuidv4();
             mapEditorEntityUploadEventStore.set({
-                id: uuidv4(),
+                id: generatedId,
                 file: fileAsUint8Array,
                 direction: CustomEntityDirection.Down,
                 name: customEditedEntity.name,
                 tags: customEditedEntity.tags,
-                imagePath: fileToUpload.name,
+                imagePath: `${generatedId}-${fileToUpload.name}`,
                 collisionGrid: customEditedEntity.collisionGrid,
+                depthOffset: customEditedEntity.depthOffset,
                 color: "",
             });
         }
@@ -82,10 +84,11 @@
 
 {#if customEntityToUpload}
     <div class="tw-absolute tw-top-0 tw-left-0 tw-w-full tw-backdrop-blur-3xl tw-p-8 tw-h-full tw-overflow-auto">
-        <EntityEditionUploadForm
-            on:closeForm={initFileUpload}
+        <CustomEntityEditionForm
+            isUploadForm
             customEntity={customEntityToUpload}
-            onConfirmUpload={processFileToUpload}
+            on:closeForm={initFileUpload}
+            on:applyEntityModifications={({ detail: customModifiedEntity }) => processFileToUpload(customModifiedEntity)}
         />
     </div>
 {:else}

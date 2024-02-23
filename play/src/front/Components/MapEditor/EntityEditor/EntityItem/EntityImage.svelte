@@ -17,6 +17,7 @@
 
 <img
     class={classNames}
+    style="image-rendering: pixelated"
     src={imageSource}
     alt={imageAlt}
     on:load={()=>dispatch("onImageLoad",imageElementRef)}
