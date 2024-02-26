@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/svelte";
 import { EntityData, WAMEntityData } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
-import { Unsubscriber, get } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 import {
     mapEditorCopiedEntityDataPropertiesStore,
     mapEditorDeleteCustomEntityEventStore,
@@ -251,7 +251,11 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 if (uploadEntityMessage) {
                     (async () => {
                         await this.mapEditorModeManager.executeCommand(
-                            new UploadEntityFrontCommand(uploadEntityMessage, this.entitiesManager)
+                            new UploadEntityFrontCommand(
+                                uploadEntityMessage,
+                                this.entitiesManager,
+                                this.scene.getEntitiesCollectionsManager()
+                            )
                         );
                         mapEditorEntityUploadEventStore.set(undefined);
                     })().catch((e) => {
