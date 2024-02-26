@@ -15,6 +15,9 @@ enum AvailabilityStatus {
   BBB = 5;
   DENY_PROXIMITY_MEETING = 6;
   SPEAKER = 7;
+  BUSY = 8;
+  DO_NOT_DISTURB= 9;
+  BACK_IN_A_MOMENT=10;
 }
 
 message PositionMessage {
