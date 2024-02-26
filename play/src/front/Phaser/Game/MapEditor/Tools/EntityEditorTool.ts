@@ -1,14 +1,7 @@
+import * as Sentry from "@sentry/svelte";
 import { EntityData, WAMEntityData } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
-import { get, Unsubscriber } from "svelte/store";
-import * as Sentry from "@sentry/svelte";
-import { Entity } from "../../../ECS/Entity";
-import { CopyEntityEventData, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
-import { MapEditorModeManager } from "../MapEditorModeManager";
-import { CreateEntityFrontCommand } from "../Commands/Entity/CreateEntityFrontCommand";
-import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand";
-import { UpdateEntityFrontCommand } from "../Commands/Entity/UpdateEntityFrontCommand";
-import { TexturesHelper } from "../../../Helpers/TexturesHelper";
+import { Unsubscriber, get } from "svelte/store";
 import {
     mapEditorCopiedEntityDataPropertiesStore,
     mapEditorDeleteCustomEntityEventStore,
@@ -17,10 +10,17 @@ import {
     mapEditorModifyCustomEntityEventStore,
     mapEditorSelectedEntityStore,
 } from "../../../../Stores/MapEditorStore";
-import { UploadEntityFrontCommand } from "../Commands/Entity/UploadEntityFrontCommand";
-import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
-import { ModifyCustomEntityFrontCommand } from "../Commands/Entity/ModifyCustomEntityFrontCommand";
+import { Entity } from "../../../ECS/Entity";
+import { TexturesHelper } from "../../../Helpers/TexturesHelper";
+import { CopyEntityEventData, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
+import { CreateEntityFrontCommand } from "../Commands/Entity/CreateEntityFrontCommand";
 import { DeleteCustomEntityFrontCommand } from "../Commands/Entity/DeleteCustomEntityFrontCommand";
+import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand";
+import { ModifyCustomEntityFrontCommand } from "../Commands/Entity/ModifyCustomEntityFrontCommand";
+import { UpdateEntityFrontCommand } from "../Commands/Entity/UpdateEntityFrontCommand";
+import { UploadEntityFrontCommand } from "../Commands/Entity/UploadEntityFrontCommand";
+import { MapEditorModeManager } from "../MapEditorModeManager";
+import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
 export class EntityEditorTool extends EntityRelatedEditorTool {
     protected shiftKey?: Phaser.Input.Keyboard.Key;
@@ -132,7 +132,11 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             case "uploadEntityMessage": {
                 const uploadEntityMessage = editMapCommandMessage.editMapMessage?.message.uploadEntityMessage;
                 await this.mapEditorModeManager.executeCommand(
-                    new UploadEntityFrontCommand(uploadEntityMessage, this.entitiesManager),
+                    new UploadEntityFrontCommand(
+                        uploadEntityMessage,
+                        this.entitiesManager,
+                        this.scene.getEntitiesCollectionsManager()
+                    ),
                     false,
                     false
                 );

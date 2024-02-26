@@ -2,12 +2,17 @@ import { EntityRawPrefab, mapCustomEntityDirectionToDirection, UploadEntityComma
 import { UploadEntityMessage } from "@workadventure/messages";
 import { RoomConnection } from "../../../../../Connection/RoomConnection";
 import { gameManager } from "../../../GameManager";
+import { EntitiesManager } from "../../../GameMap/EntitiesManager";
+import { EntitiesCollectionsManager } from "../../EntitiesCollectionsManager";
 import { FrontCommand } from "../FrontCommand";
 import { DeleteCustomEntityFrontCommand } from "./DeleteCustomEntityFrontCommand";
-import { EntitiesManager } from "../../../GameMap/EntitiesManager";
 
 export class UploadEntityFrontCommand extends UploadEntityCommand implements FrontCommand {
-    constructor(uploadEntityMessage: UploadEntityMessage, private entitiesManager: EntitiesManager) {
+    constructor(
+        uploadEntityMessage: UploadEntityMessage,
+        private entitiesManager: EntitiesManager,
+        private entitiesCollectionManager: EntitiesCollectionsManager
+    ) {
         super(uploadEntityMessage);
     }
 
@@ -36,7 +41,8 @@ export class UploadEntityFrontCommand extends UploadEntityCommand implements Fro
         return new DeleteCustomEntityFrontCommand(
             { id: this.uploadEntityMessage.id },
             gameManager.getCurrentGameScene().getGameMap(),
-            this.entitiesManager
+            this.entitiesManager,
+            this.entitiesCollectionManager
         );
     }
 }
