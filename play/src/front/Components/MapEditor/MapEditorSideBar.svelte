@@ -13,7 +13,7 @@
     import ExplorerImg from "../images/explorer.svg";
     import CloseImg from "../images/close.png";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { mapEditorActivated } from "../../Stores/MenuStore";
+    import { mapEditorActivated, mapEditorActivatedForCurrentArea } from "../../Stores/MenuStore";
 
     const gameScene = gameManager.getCurrentGameScene();
 
@@ -24,43 +24,51 @@
         img: ExplorerImg,
         tooltiptext: $LL.mapEditor.sideBar.exploreTheRoom(),
     });
+
+    const entityEditorTool = {
+        toolName: EditorToolName.EntityEditor,
+        img: EntityToolImg,
+        tooltiptext: $LL.mapEditor.sideBar.entityEditor(),
+    };
+    const trashEditorTool = {
+        toolName: EditorToolName.TrashEditor,
+        img: TrashImg,
+        tooltiptext: $LL.mapEditor.sideBar.trashEditor(),
+    };
+
+    if($mapEditorActivatedForCurrentArea){
+        availableTools.push(entityEditorTool);
+        availableTools.push(trashEditorTool);
+    }
+
     if ($mapEditorActivated) {
         availableTools.push({
             toolName: EditorToolName.AreaEditor,
             img: AreaToolImg,
             tooltiptext: $LL.mapEditor.sideBar.areaEditor(),
         });
-        availableTools.push(
-            {
-                toolName: EditorToolName.EntityEditor,
-                img: EntityToolImg,
-                tooltiptext: $LL.mapEditor.sideBar.entityEditor(),
-            }
-            // NOTE: Hide it untill FloorEditing is done
-            // { toolName: EditorToolName.FloorEditor, img: FloorToolImg, tooltiptext: $LL.mapEditor.sideBar.tileEditor() }
-        );
+        availableTools.push(entityEditorTool);
         availableTools.push({
             toolName: EditorToolName.WAMSettingsEditor,
             img: ConfigureImg,
             tooltiptext: $LL.mapEditor.sideBar.configureMyRoom(),
         });
-        availableTools.push({
-            toolName: EditorToolName.TrashEditor,
-            img: TrashImg,
-            tooltiptext: $LL.mapEditor.sideBar.trashEditor(),
-        });
+        availableTools.push(trashEditorTool);
     }
     availableTools.push({
         toolName: EditorToolName.CloseMapEditor,
         img: CloseImg,
         tooltiptext: $LL.mapEditor.sideBar.closeMapEditor(),
-    });
+    })
+
+
 
     function switchTool(newTool: EditorToolName) {
         mapEditorVisibilityStore.set(true);
         analyticsClient.openMapEditorTool(newTool);
         gameScene.getMapEditorModeManager().equipTool(newTool);
     }
+
 </script>
 
 <section class="side-bar-container" class:!tw-right-20={!$mapEditorVisibilityStore}>
