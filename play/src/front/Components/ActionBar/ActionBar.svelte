@@ -26,11 +26,13 @@
         speakerSelectedStore,
         streamingMegaphoneStore, enableCameraSceneVisibilityStore,
     } from "../../Stores/MediaStore";
+
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
     import tooltipArrow from "../images/arrow-top.svg";
 
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
 
+    import worldImg from "../images/world.svg";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
@@ -72,7 +74,12 @@
     import { peerStore } from "../../Stores/PeerStore";
     //import { StringUtils } from "../../Utils/StringUtils";
     import Tooltip from "../Util/Tooltip.svelte";
-    import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
+    import {
+        modalIframeStore,
+        modalVisibilityStore,
+        showModalGlobalComminucationVisibilityStore,
+        roomListVisibilityStore,
+    } from "../../Stores/ModalStore";
     import {bannerStore, userHasAccessToBackOfficeStore} from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
@@ -126,6 +133,7 @@
     import XIcon from "../Icons/XIcon.svelte";
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
+    import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -222,22 +230,28 @@
         }
     }
 
-    function toggleMegaphone() {
-        if ($streamingMegaphoneStore) {
-            streamingMegaphoneStore.set(false);
-            return;
-        }
-        if ($requestedMegaphoneStore || $liveStreamingEnabledStore) {
+    function toggleGlobalMessage() {
+        if ($requestedMegaphoneStore || $liveStreamingEnabledStore || $streamingMegaphoneStore) {
             analyticsClient.stopMegaphone();
             requestedMegaphoneStore.set(false);
+            streamingMegaphoneStore.set(false);
+            showModalGlobalComminucationVisibilityStore.set(false);
+            return;
+        }
+        if ($showModalGlobalComminucationVisibilityStore) {
+            showModalGlobalComminucationVisibilityStore.set(false);
             return;
         }
 
-        streamingMegaphoneStore.set(true);
+        resetChatVisibility();
+        resetModalVisibility();
+        mapEditorModeStore.switchMode(false);
+        showModalGlobalComminucationVisibilityStore.set(true);
     }
 
     function toggleMapEditorMode() {
         if (isMobile) return;
+        if ($mapEditorModeStore) gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
         analyticsClient.toggleMapEditor(!$mapEditorModeStore);
         mapEditorModeStore.switchMode(!$mapEditorModeStore);
     }
@@ -380,6 +394,7 @@
     function resetModalVisibility() {
         modalVisibilityStore.set(false);
         modalIframeStore.set(null);
+        showModalGlobalComminucationVisibilityStore.set(false);
     }
 
     /*function resetMenuVisibility() {
@@ -437,6 +452,13 @@
             mapEditorModeStore.set(false);
         }
     });
+
+    function showRoomList() {
+        resetChatVisibility();
+        resetModalVisibility();
+
+        roomListVisibilityStore.set(true);
+    }
 </script>
 <svelte:window on:keydown={onKeyDown} />
 {#if !$chatVisibilityStore}

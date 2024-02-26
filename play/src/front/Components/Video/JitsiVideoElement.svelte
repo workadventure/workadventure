@@ -38,7 +38,7 @@
     class="h-full max-w-full rounded-sm"
     class:object-contain={isMobileFormat || aspectRatio < 1}
     class:tw-scale-x-[-1]={isLocal && jitsiTrack.getVideoType() === "camera"}
-    class:tw-max-h-[230px]={!isHightlighted}
+    class:tw-max-h-[40vh]={!isHightlighted}
     class:tw-max-h-[80vh]={isHightlighted}
     autoplay
     playsinline

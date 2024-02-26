@@ -5,3 +5,8 @@ export const showLimitRoomModalStore = writable(false);
 
 export const modalIframeStore = writable<ModalEvent | null>(null);
 export const modalVisibilityStore = writable(false);
+
+export const showModalGlobalComminucationVisibilityStore = writable(false);
+export const modalPopupVisibilityStore = writable(false);
+
+export const roomListVisibilityStore = writable<boolean>(false);

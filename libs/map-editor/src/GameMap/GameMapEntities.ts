@@ -45,4 +45,8 @@ export class GameMapEntities {
     public getEntities(): Record<string, WAMEntityData> {
         return this.wam.entities;
     }
+
+    get wamFile(): WAMFileFormat {
+        return this.wam;
+    }
 }

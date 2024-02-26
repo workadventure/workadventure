@@ -312,7 +312,6 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
     public destroy(): void {
         try {
             this._connected = false;
-            console.log("destroy => this.toClose", this.toClose, this.closing);
             if (!this.toClose || this.closing) {
                 return;
             }

@@ -18,25 +18,25 @@
 // import {getBackDump, getPusherDump} from "./utils/debug";
 //
 // fixture `XMPP`
-//     .page `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json`;
+//     .page `/_/global/maps.workadventure.localhost/tests/mousewheel.json`;
 //
 // test("Test that XMPP server works", async (t: TestController) => {
 //
 //     const userListBtn = Selector('.user-list-btn');
 //     const userList = Selector('.roomsList');
 //
-//     await login(t, 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json');
+//     await login(t, '/_/global/maps.workadventure.localhost/tests/mousewheel.json');
 //
 //     await t
 //         .click(userListBtn)
 //         .expect(userList.innerText).contains('Alice');
 //
 //     const aliceWindow = await t.getCurrentWindow();
-//     const bobWindow = await t.openWindow('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json');
+//     const bobWindow = await t.openWindow('/_/global/maps.workadventure.localhost/tests/mousewheel.json');
 //
 //     await t.resizeWindow(960, 800);
 //
-//     await login(t, 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json', 'Bob', 3);
+//     await login(t, '/_/global/maps.workadventure.localhost/tests/mousewheel.json', 'Bob', 3);
 //
 //     await t
 //         .click(userListBtn)
@@ -74,7 +74,7 @@
 //     const chatWindow = Selector('.chatWindow');
 //     const errorDiv = Selector('.error-div');
 //
-//     await login(t, 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json');
+//     await login(t, '/_/global/maps.workadventure.localhost/tests/mousewheel.json');
 //
 //     await t
 //         .click(userListBtn)
