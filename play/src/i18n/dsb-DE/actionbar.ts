@@ -16,12 +16,6 @@ const actionbar: BaseTranslation = {
         microphone: "Mikrofon",
         speaker: "Głosniki",
     },
-    app: "Aplikacije wótcyniś / zacyniś",
-    listStatusTitle: "Spremenite svoj status",
-    status: {
-        ONLINE: "Spletu",
-        AWAY: "Stran",
-    },
 };
 
 export default actionbar;

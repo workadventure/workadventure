@@ -23,7 +23,9 @@ const actionbar: BaseTranslation = {
     listStatusTitle: "Change your status",
     status: {
         ONLINE: "Online",
-        AWAY: "Away",
+        BACK_IN_A_MOMENT: "Back in a moment",
+        DO_NOT_DISTURB: "Do not disturb",
+        BUSY: "Busy",
     },
 };
 

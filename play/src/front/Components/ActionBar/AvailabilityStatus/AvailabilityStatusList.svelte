@@ -1,12 +1,22 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { AvailabilityStatus } from "../../../../../../libs/messages";
+    import { resetAllStatusStoreExcept } from "../../../Rules/StatusRules/statusChangerFunctions";
     import { AvailabilityStatusListPropsInterface } from "./Interfaces/AvailabilityStatusPropsInterface";
     import AvailabilityStatusCircle from "./AvailabilityStatusCircle.svelte";
 
     export let props: AvailabilityStatusListPropsInterface;
 
     $: ({ listStatusTitle, statusInformations, currentStatus } = props);
+
+    const handleKeyPress = (e: KeyboardEvent, newStatus: AvailabilityStatus) => {
+        if (e.key === "Enter") {
+            resetAllStatusStoreExcept(newStatus);
+        }
+    };
+    const handleClick = (newStatus: AvailabilityStatus) => {
+        resetAllStatusStoreExcept(newStatus);
+    };
 </script>
 
 <div
@@ -35,7 +45,13 @@
         >
     </div>
     {#each statusInformations as statusInformation (statusInformation.AvailabilityStatus)}
-        <div class="tw-px-5 tw-py-10px tw-m-0 tw-list-none hover:tw-bg-[rgb(56,56,74)]">
+        <div
+            class="tw-px-5 tw-py-10px tw-m-0 tw-list-none hover:tw-bg-[rgb(56,56,74)]"
+            on:keyup={(e) => {
+                handleKeyPress(e, statusInformation.AvailabilityStatus);
+            }}
+            on:click={() => handleClick(statusInformation.AvailabilityStatus)}
+        >
             <div class="tw-flex tw-justify-start tw-my-1 tw-py-1.5">
                 <AvailabilityStatusCircle position="relative" colorHex={statusInformation.colorHex} />
                 <div

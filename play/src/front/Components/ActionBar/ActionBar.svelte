@@ -7,6 +7,7 @@
     import { Subscription } from "rxjs";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
+        availabilityStatusStore,
         cameraListStore,
         isSpeakerStore,
         microphoneListStore,
@@ -92,6 +93,7 @@
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
+    import { AvailabilityStatus } from "../../../../../libs/messages";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
@@ -503,7 +505,7 @@
 
         <div class="tw-flex tw-flex-row base-section animated tw-flex-wrap tw-justify-center">
             <div class="bottom-action-section tw-flex tw-flex-initial">
-                {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
+                {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore && ![AvailabilityStatus.BUSY, AvailabilityStatus.DO_NOT_DISTURB, AvailabilityStatus.BACK_IN_A_MOMENT].includes($availabilityStatusStore)}
                     {#if $myCameraStore}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
@@ -518,7 +520,7 @@
                                 class="tooltiptext sm:tw-w-56 md:tw-w-96"
                                 class:border-top-light={$requestedCameraState}
                             >
-                                {#if $requestedCameraState && !$silentStore}
+                                {#if $requestedCameraState}
                                     <img
                                         draggable="false"
                                         src={cameraImg}

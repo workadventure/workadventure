@@ -2,13 +2,17 @@
     import { ConfirmationModalPropsInterface } from "../Interfaces/ConfirmationModalPropsInterface";
     import { changeStatusConfirmationModalVisibility } from "../../../../Stores/AvailabilityStatusModalsStore";
     import LL from "../../../../../i18n/i18n-svelte";
+    import { resetAllStatusStoreExcept } from "../../../../Rules/StatusRules/statusChangerFunctions";
+    import { StatusChangerStore } from "../../../../Stores/statusChangerStore";
     import ConfirmationModal from "./ConfirmationModal.svelte";
 
     const confirmationModalProps: ConfirmationModalPropsInterface = {
         handleAccept: () => {
+            resetAllStatusStoreExcept();
             changeStatusConfirmationModalVisibility.close();
         },
         handleClose: () => {
+            $StatusChangerStore.applyTimedRules();
             changeStatusConfirmationModalVisibility.close();
         },
         acceptLabel: $LL.statusModal.confirm(),

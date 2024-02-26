@@ -367,7 +367,7 @@ export const availabilityStatusStore = derived(
         if (!$proximityMeetingStore) return AvailabilityStatus.DENY_PROXIMITY_MEETING;
         if ($isSpeakerStore) return AvailabilityStatus.SPEAKER;
         if ($silentStore) return AvailabilityStatus.SILENT;
-        if ($doNotDisturbStore) return AvailabilityStatus.DO_NOT_DISTRUB;
+        if ($doNotDisturbStore) return AvailabilityStatus.DO_NOT_DISTURB;
         if ($backInAMomentStore) return AvailabilityStatus.BACK_IN_A_MOMENT;
         if ($busyStore) return AvailabilityStatus.BUSY;
         if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
@@ -468,7 +468,10 @@ export const mediaStreamConstraintsStore = derived(
         if (
             $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
             $availabilityStatusStore === AvailabilityStatus.SILENT ||
-            $availabilityStatusStore === AvailabilityStatus.SPEAKER
+            $availabilityStatusStore === AvailabilityStatus.SPEAKER ||
+            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
+            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
+            $availabilityStatusStore === AvailabilityStatus.BUSY
         ) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;

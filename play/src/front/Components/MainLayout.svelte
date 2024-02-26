@@ -26,6 +26,7 @@
     import {
         bubbleModalVisibility,
         changeStatusConfirmationModalVisibility,
+        notificationPermissionModalVisibility,
     } from "../Stores/AvailabilityStatusModalsStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
@@ -52,6 +53,7 @@
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
     import ChangeStatusConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/ChangeStatusConfirmationModal.svelte";
     import BubbleConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/BubbleConfirmationModal.svelte";
+    import NotificationPermissionModal from "./ActionBar/AvailabilityStatus/Modals/NotificationPermissionModal.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -172,6 +174,9 @@
 
     {#if $bubbleModalVisibility}
         <BubbleConfirmationModal />
+    {/if}
+    {#if $notificationPermissionModalVisibility}
+        <NotificationPermissionModal />
     {/if}
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />

@@ -1,10 +1,12 @@
 <script lang="ts">
+    import { onDestroy } from "svelte";
     import { availabilityStatusMenuStore } from "../../../Stores/AvailabilityStatusMenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { AvailabilityStatus } from "../../../../../../libs/messages";
     import { menuVisiblilityStore } from "../../../Stores/MenuStore";
     import { getColorHexOfStatus, getStatusInformation } from "../../../Utils/AvailabilityStatus";
     import { availabilityStatusStore } from "../../../Stores/MediaStore";
+    import { StatusChangerStore } from "../../../Stores/statusChangerStore";
     import AvailabilityStatusList from "./AvailabilityStatusList.svelte";
     import AvailabilityStatusButton from "./AvailabilityStatusButton.svelte";
     import {
@@ -16,7 +18,7 @@
         AvailabilityStatus.ONLINE,
         AvailabilityStatus.BUSY,
         AvailabilityStatus.BACK_IN_A_MOMENT,
-        AvailabilityStatus.DO_NOT_DISTRUB,
+        AvailabilityStatus.DO_NOT_DISTURB,
     ];
 
     const listProps: AvailabilityStatusListPropsInterface = {
@@ -32,10 +34,6 @@
         statusColorHex: getColorHexOfStatus($availabilityStatusStore || AvailabilityStatus.ONLINE),
     };
 
-    const noDrag = (): boolean => {
-        return false;
-    };
-
     const toggleStatusPicker = (): void => {
         if ($availabilityStatusMenuStore == true) {
             availabilityStatusMenuStore.closeAvailabilityStatusMenu();
@@ -43,13 +41,18 @@
             availabilityStatusMenuStore.openAvailabilityStatusMenu();
         }
     };
+
+    const unsubcribeToAvailabilityStatusStore = availabilityStatusStore.subscribe((newStatus: AvailabilityStatus) => {
+        $StatusChangerStore.changeStatusTo(newStatus);
+        buttonProps.statusColorHex = getColorHexOfStatus($availabilityStatusStore);
+    });
+
+    onDestroy(() => {
+        unsubcribeToAvailabilityStatusStore();
+    });
 </script>
 
-<div
-    on:dragstart|preventDefault={noDrag}
-    on:click={toggleStatusPicker}
-    class="bottom-action-button tw-w-full tw-overflow-ellipsis tw-max-w-24"
->
+<div on:click={toggleStatusPicker} class="bottom-action-button tw-w-full tw-overflow-ellipsis tw-max-w-24">
     <AvailabilityStatusButton props={buttonProps} />
     {#if $availabilityStatusMenuStore}
         <AvailabilityStatusList props={listProps} />

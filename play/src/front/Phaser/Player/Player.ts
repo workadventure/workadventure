@@ -10,6 +10,7 @@ import { userMovingStore } from "../../Stores/GameStore";
 import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
 import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 import { visibilityStore } from "../../Stores/VisibilityStore";
+import { passStatusToOnlineWhenUserIsInSetableStatus } from "../../Rules/StatusRules/statusChangerFunctions";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -141,6 +142,15 @@ export class Player extends Character {
             x = x - 1;
         } else if (activeEvents.get(UserInputEvent.MoveRight)) {
             x = x + 1;
+        }
+
+        if (
+            activeEvents.get(UserInputEvent.MoveRight) ||
+            activeEvents.get(UserInputEvent.MoveLeft) ||
+            activeEvents.get(UserInputEvent.MoveDown) ||
+            activeEvents.get(UserInputEvent.MoveUp)
+        ) {
+            passStatusToOnlineWhenUserIsInSetableStatus();
         }
 
         // Compute movement deltas
