@@ -513,32 +513,8 @@ test.describe('Map editor', () => {
     await Menu.isThereMegaphoneButton(page2);
     await Menu.closeMapEditor(page);
 
-    // Play a sound using the megaphone
-    if(browser.browserType() === webkit) {
-      await page2.close();
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
-    // Oopen the global message menu
-    await Menu.toggleMegaphoneButton(page);
-
-    // Check that the live message is displayed
-    await expect(page.locator('.menu-container #content-textMessage h3')).toContainText('Text message', {timeout: 5_000});
-    // Click on the button to start text message
-    await page.locator('.menu-container #content-textMessage').getByRole('button', {name: 'Send a text message'}).click();
-    // Click fill and send a text message
-    await page.locator('.menu-container #active-globalMessage .ql-editor').fill('Hello world');
-    await page.locator('.menu-container #active-globalMessage').getByRole('button', {name: 'Send'}).click();
-    // Check that the user receive the message
-    // TODO : check this feature with environement .../~/...
-    //await expect(page2.locator('.main-text-message-container .content-text-message')).toContainText('Hello world', {timeout: 5_000});
-
-    // TODO: create to send a sound message
-
-    // Close the global message menu
-    await Menu.toggleMegaphoneButton(page);
+    // TODO : create this test in admin part (global message and text audio message if an admin feature)
+    // TODO : change to use the global message feature for user through megaphon settings rights
 
     await page2.close();
     await page.close();

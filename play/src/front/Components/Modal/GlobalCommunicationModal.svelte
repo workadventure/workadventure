@@ -1,6 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
+    import { InfoIcon } from "svelte-feather-icons";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { showModalGlobalComminucationVisibilityStore } from "../../Stores/ModalStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
@@ -29,6 +30,7 @@
     import { StringUtils } from "../../Utils/StringUtils";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
+    import { userIsAdminStore } from "../../Stores/GameStore";
 
     let mainModal: HTMLDivElement;
 
@@ -218,8 +220,9 @@
                             />
                             {$LL.megaphone.modal.textMessage.title()}
                         </h3>
-                        <button class="light tw-max-w-fit" on:click={activateInputText}
-                            >{$LL.megaphone.modal.textMessage.button()}</button
+                        <p class="help-text"><InfoIcon size="18" /> {$LL.megaphone.modal.audioMessage.noAccess()}</p>
+                        <button class="light tw-max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
+                            {$LL.megaphone.modal.textMessage.button()}</button
                         >
                         <p class="tw-text-white tw-text-sm tw-whitespace-pre-line">
                             {$LL.megaphone.modal.textMessage.notice()}
@@ -234,8 +237,9 @@
                             />
                             {$LL.megaphone.modal.audioMessage.title()}
                         </h3>
-                        <button class="light tw-max-w-fit" on:click={activateUploadAudio}
-                            >{$LL.megaphone.modal.audioMessage.button()}</button
+                        <p class="help-text"><InfoIcon size="18" /> {$LL.megaphone.modal.audioMessage.noAccess()}</p>
+                        <button class="light tw-max-w-fit" on:click={activateUploadAudio} disabled={!$userIsAdminStore}>
+                            {$LL.megaphone.modal.audioMessage.button()}</button
                         >
                         <p class="tw-text-white tw-text-sm tw-whitespace-pre-line">
                             {$LL.megaphone.modal.audioMessage.notice()}
@@ -453,5 +457,10 @@
         &:hover {
             scale: 1.1;
         }
+    }
+
+    button.light[disabled] {
+        background-color: #4a5568;
+        cursor: not-allowed;
     }
 </style>
