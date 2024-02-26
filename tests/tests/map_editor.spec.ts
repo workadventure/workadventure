@@ -531,10 +531,11 @@ test.describe('Map editor', () => {
     // Click fill and send a text message
     await page.locator('.menu-container #active-globalMessage .ql-editor').fill('Hello world');
     await page.locator('.menu-container #active-globalMessage').getByRole('button', {name: 'Send'}).click();
+    
     // Check that the user receive the message
-    // TODO : check this feature with environement .../~/...
+    // TODO : create this test in admin part (global message and text audio message if an admin feature)
+    // TODO : change to use the global message feature for user through megaphon settings rights
     //await expect(page2.locator('.main-text-message-container .content-text-message')).toContainText('Hello world', {timeout: 5_000});
-
     // TODO: create to send a sound message
 
     // Close the global message menu
