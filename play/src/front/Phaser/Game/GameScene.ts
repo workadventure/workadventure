@@ -2050,6 +2050,30 @@ ${escapedMessage}
             })
         );
 
+        this.iframeSubscriptionList.push(
+            iframeListener.mapEditorStream.subscribe(() => {
+                // TODO : disble map editor
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.screenSharingStream.subscribe(() => {
+                // TODO : disble screesharing
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.doubleClickStream.subscribe(() => {
+                // TODO : disble double click
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.wheelZoomStream.subscribe(() => {
+                // TODO : disble wheel zoom
+            })
+        );
+
         iframeListener.registerAnswerer("openCoWebsite", async (openCoWebsite, source) => {
             if (!source) {
                 throw new Error("Unknown query source");

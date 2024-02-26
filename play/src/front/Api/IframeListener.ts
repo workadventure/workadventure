@@ -192,6 +192,18 @@ class IframeListener {
     private readonly _banPlayerIframeEvent: Subject<BanEvent> = new Subject();
     public readonly banPlayerIframeEvent = this._banPlayerIframeEvent.asObservable();
 
+    private readonly _mapEditorStream: Subject<boolean> = new Subject();
+    public readonly mapEditorStream = this._mapEditorStream.asObservable();
+
+    private readonly _screenSharingStream: Subject<boolean> = new Subject();
+    public readonly screenSharingStream = this._screenSharingStream.asObservable();
+
+    private readonly _doubleClickStream: Subject<boolean> = new Subject();
+    public readonly doubleClickStream = this._doubleClickStream.asObservable();
+
+    private readonly _wheelZoomStream: Subject<boolean> = new Subject();
+    public readonly wheelZoomStream = this._wheelZoomStream.asObservable();
+
     private readonly iframes = new Map<HTMLIFrameElement, string | undefined>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -491,6 +503,22 @@ class IframeListener {
                         window.dispatchEvent(event);
                     } else if (iframeEvent.type == "banUser") {
                         this._banPlayerIframeEvent.next(iframeEvent.data);
+                    } else if (iframeEvent.type == "disableMapEditor") {
+                        this._mapEditorStream.next(false);
+                    } else if (iframeEvent.type == "restoreMapEditor") {
+                        this._mapEditorStream.next(true);
+                    } else if (iframeEvent.type == "disableScreenSharing") {
+                        this._screenSharingStream.next(false);
+                    } else if (iframeEvent.type == "restoreScreenSharing") {
+                        this._screenSharingStream.next(true);
+                    } else if (iframeEvent.type == "disableDoubleClicked") {
+                        this._doubleClickStream.next(false);
+                    } else if (iframeEvent.type == "restoreDoubleClicked") {
+                        this._doubleClickStream.next(true);
+                    } else if (iframeEvent.type == "disableWheelZoom") {
+                        this._wheelZoomStream.next(false);
+                    } else if (iframeEvent.type == "restoreWheelZoom") {
+                        this._wheelZoomStream.next(true);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
