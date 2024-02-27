@@ -36,10 +36,11 @@
             {/if}
         </p>
         {#if $bannerStore.closable}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <span
                 class="tw-absolute tw-right-4 tw-top-0 tw-flex tw-items-center tw-h-10 tw-text-xl tw-cursor-pointer"
                 style={`color: ${$bannerStore.textColor ?? "red"};`}
-                on:pointerdown|preventDefault={closeBanner}>x</span
+                on:click|preventDefault={closeBanner}>x</span
             >
         {/if}
     {:else if $userIsAdminStore}

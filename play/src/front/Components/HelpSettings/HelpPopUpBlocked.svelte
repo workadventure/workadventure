@@ -34,6 +34,6 @@
     </section>
 
     <section class="tw-flex tw-row tw-justify-center">
-        <button class="light" on:pointerdown|preventDefault={close}>{$LL.warning.popupBlocked.done()}</button>
+        <button class="light" on:click|preventDefault={close}>{$LL.warning.popupBlocked.done()}</button>
     </section>
 </form>

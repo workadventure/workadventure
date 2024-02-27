@@ -61,14 +61,14 @@
             <h3 class="blue-title">{$LL.menu.invite.description()}</h3>
             <input type="text" readonly id="input-share-link" class="tw-w-full" value={location.toString()} />
             <div class="centered-column">
-                <button type="button" class="light" on:pointerdown={copyLink}>{$LL.menu.invite.copy()}</button>
+                <button type="button" class="light" on:click={copyLink}>{$LL.menu.invite.copy()}</button>
             </div>
         </section>
     {:else}
         <section class="is-mobile">
             <h3 class="blue-title">{$LL.menu.invite.description()}</h3>
             <input type="hidden" readonly id="input-share-link" value={location.toString()} />
-            <button type="button" class="light" on:pointerdown={shareLink}>{$LL.menu.invite.share()}</button>
+            <button type="button" class="light" on:click={shareLink}>{$LL.menu.invite.share()}</button>
         </section>
     {/if}
     <h3 class="blue-title">{$LL.menu.invite.selectEntryPoint()}</h3>

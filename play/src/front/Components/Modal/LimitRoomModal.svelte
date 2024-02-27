@@ -17,7 +17,7 @@
         </p>
     </section>
     <section>
-        <button class="nes-btn is-primary" on:pointerdown|preventDefault={register}>Register</button>
+        <button class="nes-btn is-primary" on:click|preventDefault={register}>Register</button>
     </section>
 </div>
 

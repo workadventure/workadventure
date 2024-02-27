@@ -40,41 +40,33 @@
         {#if $collectionsSizeStore > 1 && $selectedCollection}
             <button
                 class="outline tw-mr-2 selectCompanionCollectionButton selectCharacterButtonLeft"
-                on:pointerdown|preventDefault={selectLeftCollection}
+                on:click|preventDefault={selectLeftCollection}
             >
                 &lt;
             </button>
             <strong class="category-text">{$selectedCollection}</strong>
             <button
                 class="outline tw-ml-2 selectCompanionCollectionButton selectCompanionButtonRight"
-                on:pointerdown|preventDefault={selectRightCollection}
+                on:click|preventDefault={selectRightCollection}
             >
                 &gt;
             </button>
         {/if}
-        <button
-            class="outline selectCharacterButton selectCharacterButtonLeft"
-            on:pointerdown|preventDefault={selectLeft}
-        >
+        <button class="outline selectCharacterButton selectCharacterButtonLeft" on:click|preventDefault={selectLeft}>
             &lt;
         </button>
-        <button
-            class="outline selectCharacterButton selectCharacterButtonRight"
-            on:pointerdown|preventDefault={selectRight}
-        >
+        <button class="outline selectCharacterButton selectCharacterButtonRight" on:click|preventDefault={selectRight}>
             &gt;
         </button>
     </section>
     <section class="action tw-flex tw-flex-row tw-justify-center">
-        <button
-            href="/"
-            class="outline tw-mr-2 selectCompanionSceneFormBack"
-            on:pointerdown|preventDefault={noCompanion}>{$LL.companion.select.any()}</button
+        <button href="/" class="outline tw-mr-2 selectCompanionSceneFormBack" on:click|preventDefault={noCompanion}
+            >{$LL.companion.select.any()}</button
         >
         <button
             type="submit"
             class="light tw-ml-2 selectCompanionSceneFormSubmit"
-            on:pointerdown|preventDefault={selectCompanion}>{$LL.companion.select.continue()}</button
+            on:click|preventDefault={selectCompanion}>{$LL.companion.select.continue()}</button
         >
     </section>
 </form>

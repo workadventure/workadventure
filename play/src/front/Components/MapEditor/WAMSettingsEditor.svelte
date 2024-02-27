@@ -33,16 +33,17 @@
 </script>
 
 <div class="configure-my-room" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
-    <button class="close-window" on:pointerdown={close}>&#215;</button>
+    <button class="close-window" on:click={close}>&#215;</button>
     <div class="menu">
         <h3>{$LL.mapEditor.sideBar.configureMyRoom()}</h3>
         <ul>
             <!-- check if the user has right to update room settings -->
             {#if $userIsAdminStore}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <li
                     class:selected={$mapEditorWamSettingsEditorToolCurrentMenuItemStore ===
                         WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings}
-                    on:pointerdown={() =>
+                    on:click={() =>
                         mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
                             WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings
                         )}
@@ -51,11 +52,11 @@
                     <ChevronRightIcon class={`tw--mr-2`} />
                 </li>
             {/if}
-
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <li
                 class:selected={$mapEditorWamSettingsEditorToolCurrentMenuItemStore ===
                     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone}
-                on:pointerdown={() =>
+                on:click={() =>
                     mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
                         WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone
                     )}

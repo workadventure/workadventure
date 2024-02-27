@@ -71,7 +71,7 @@
             unsubscriber();
         }
 
-        document.body.removeEventListener("pointerdown", checkClickOutSide);
+        document.body.removeEventListener("click", checkClickOutSide);
         picker.destroyPicker();
     });
 
@@ -88,7 +88,7 @@
 
     function clickOutside(element: unknown) {
         console.info("clickOutside event listener attached to element: ", element);
-        document.body.addEventListener("pointerdown", checkClickOutSide);
+        document.body.addEventListener("click", checkClickOutSide);
     }
 </script>
 

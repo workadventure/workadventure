@@ -71,8 +71,8 @@
                 <button
                     type="button"
                     class="tw-w-full outline tw-min-w-[220px]"
-                    on:pointerdown={() => analyticsClient.editName()}
-                    on:pointerdown={openEditNameScene}
+                    on:click={() => analyticsClient.editName()}
+                    on:click={openEditNameScene}
                 >
                     <img
                         draggable="false"
@@ -88,8 +88,8 @@
             <button
                 type="button"
                 class="tw-w-full outline tw-min-w-[220px]"
-                on:pointerdown={() => analyticsClient.editWoka()}
-                on:pointerdown={openEditSkinScene}
+                on:click={() => analyticsClient.editWoka()}
+                on:click={openEditSkinScene}
             >
                 <Woka userId={-1} placeholderSrc="" customWidth="26px" customHeight="26px" />
                 <span class="">{$LL.menu.profile.edit.woka()}</span>
@@ -97,8 +97,8 @@
             <button
                 type="button"
                 class="tw-w-full outline tw-min-w-[220px]"
-                on:pointerdown={() => analyticsClient.editCompanion()}
-                on:pointerdown={openEditCompanionScene}
+                on:click={() => analyticsClient.editCompanion()}
+                on:click={openEditCompanionScene}
             >
                 <Companion userId={-1} placeholderSrc={btnProfileSubMenuCompanion} width="26px" height="26px" />
                 <span class="">{$LL.menu.profile.edit.companion()}</span>
@@ -106,8 +106,8 @@
             <button
                 type="button"
                 class="tw-w-full outline tw-min-w-[220px]"
-                on:pointerdown={() => analyticsClient.editCamera()}
-                on:pointerdown={openEnableCameraScene}
+                on:click={() => analyticsClient.editCamera()}
+                on:click={openEnableCameraScene}
             >
                 <img
                     draggable="false"
@@ -124,15 +124,15 @@
                     <button
                         type="button"
                         class="tw-w-full outline tw-min-w-[220px] tw-flex tw-justify-center tw-items-center"
-                        on:pointerdown={() => analyticsClient.logout()}
-                        on:pointerdown={logOut}>{$LL.menu.profile.logout()}</button
+                        on:click={() => analyticsClient.logout()}
+                        on:click={logOut}>{$LL.menu.profile.logout()}</button
                     >
                 {:else}
                     <a
                         type="button"
                         class="btn light tw-min-w-[220px] tw-flex tw-justify-center tw-items-center"
                         href="/login"
-                        on:pointerdown={() => analyticsClient.login()}
+                        on:click={() => analyticsClient.login()}
                     >
                         {$LL.menu.profile.login()}</a
                     >

@@ -130,7 +130,7 @@
 <div class="main-audio-manager">
     <div class:hidden={state !== "playing"}>
         <div class="audio-manager-player-volume">
-            <span id="audioplayer_volume_icon_playing" bind:this={audioPlayerVolumeIcon} on:pointerdown={onMute}>
+            <span id="audioplayer_volume_icon_playing" bind:this={audioPlayerVolumeIcon} on:click={onMute}>
                 <svg
                     width="2em"
                     height="2em"
@@ -183,7 +183,7 @@
         <button
             type="button"
             class="btn light tw-justify-center tw-font-bold tw-text-xs sm:tw-text-base tw-w-fit"
-            on:pointerdown={tryPlay}>{$LL.audio.manager.allow()}</button
+            on:click={tryPlay}>{$LL.audio.manager.allow()}</button
         >
     </div>
     <div

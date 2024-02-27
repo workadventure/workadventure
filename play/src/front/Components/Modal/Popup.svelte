@@ -26,8 +26,7 @@
 </script>
 
 <div class="popup-menu tw-min-h-fit tw-rounded-3xl tw-overflow-visible" transition:fly={{ x: 1000, duration: 500 }}>
-    <button type="button" class="close-window !tw-bg-transparent !tw-border-none " on:pointerdown={close}>&times</button
-    >
+    <button type="button" class="close-window !tw-bg-transparent !tw-border-none " on:click={close}>&times</button>
     <div class="tw-p-8 tw-flex tw-flex-col tw-justify-center tw-items-center">
         <h1 class="tw-p-2">{$LL.mapEditor.explorer.popup.title()}</h1>
         <video
@@ -48,12 +47,8 @@
     <div
         class="footer tw-flex tw-flex-row tw-justify-evenly tw-items-center tw-bg-dark-purple tw-w-full tw-p-2 tw-rounded-b-3xl"
     >
-        <button on:pointerdown={close} class="tw-bg-dark-purple tw-p-4">
-            {$LL.mapEditor.explorer.popup.close()}
-        </button>
-        <button on:pointerdown={activeExplorerMode} class="light tw-p-4">
-            {$LL.mapEditor.explorer.popup.continue()}
-        </button>
+        <button on:click={close} class="tw-bg-dark-purple tw-p-4"> {$LL.mapEditor.explorer.popup.close()} </button>
+        <button on:click={activeExplorerMode} class="light tw-p-4"> {$LL.mapEditor.explorer.popup.continue()} </button>
     </div>
 </div>
 

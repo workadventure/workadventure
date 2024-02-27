@@ -28,7 +28,7 @@
             autoplay
             muted
             playsinline
-            on:pointerdown={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
+            on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
         />
     {/if}
 </div>

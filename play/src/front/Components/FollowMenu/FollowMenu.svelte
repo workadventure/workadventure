@@ -45,10 +45,10 @@
     >
         <p class="tw-mt-2">{$LL.follow.interactMenu.title.follow({ leader: name($followUsersStore[0]) })}</p>
         <div class="tw-flex tw-flex-row tw-justify-evenly">
-            <button type="button" class="btn light" on:pointerdown|preventDefault={acceptFollowRequest}
+            <button type="button" class="btn light" on:click|preventDefault={acceptFollowRequest}
                 >{$LL.follow.interactMenu.yes()}</button
             >
-            <button type="button" class="btn outline" on:pointerdown|preventDefault={reset}
+            <button type="button" class="btn outline" on:click|preventDefault={reset}
                 >{$LL.follow.interactMenu.no()}</button
             >
         </div>
@@ -67,10 +67,10 @@
             <p class="tw-m-1">{$LL.follow.interactMenu.stop.leader()}</p>
         {/if}
         <div class="tw-flex tw-flex-row tw-justify-evenly">
-            <button type="button" class="btn light" on:pointerdown|preventDefault={reset}
+            <button type="button" class="btn light" on:click|preventDefault={reset}
                 >{$LL.follow.interactMenu.yes()}</button
             >
-            <button type="button" class="btn outline" on:pointerdown|preventDefault={abortEnding}
+            <button type="button" class="btn outline" on:click|preventDefault={abortEnding}
                 >{$LL.follow.interactMenu.no()}</button
             >
         </div>

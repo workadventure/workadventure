@@ -221,8 +221,8 @@
     <div class="header-container">
         <h3>{$LL.mapEditor.entityEditor.editing({ name: $mapEditorSelectedEntityStore.getPrefab().name })}</h3>
     </div>
-
-    <p on:pointerdown|preventDefault={backToSelectObject} class="tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0">
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <p on:click|preventDefault={backToSelectObject} class="tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0">
         <ArrowLeftIcon size="12" class="tw-cursor-pointer" />
         <span class="tw-ml-1 tw-cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
     </p>
@@ -230,20 +230,20 @@
         {#if !hasJitsiRoomProperty}
             <AddPropertyButtonWrapper
                 property="jitsiRoomProperty"
-                on:pointerdown={() => {
+                on:click={() => {
                     onAddProperty("jitsiRoomProperty");
                 }}
             />
         {/if}
         <AddPropertyButtonWrapper
             property="playAudio"
-            on:pointerdown={() => {
+            on:click={() => {
                 onAddProperty("playAudio");
             }}
         />
         <AddPropertyButtonWrapper
             property="openWebsite"
-            on:pointerdown={() => {
+            on:click={() => {
                 onAddProperty("openWebsite");
             }}
         />
@@ -252,49 +252,49 @@
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="klaxoon"
-            on:pointerdown={() => {
+            on:click={() => {
                 onAddProperty("openWebsite", "klaxoon");
             }}
         />
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="youtube"
-            on:pointerdown={() => {
+            on:click={() => {
                 onAddProperty("openWebsite", "youtube");
             }}
         />
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="googleDrive"
-            on:pointerdown={() => {
+            on:click={() => {
                 onAddProperty("openWebsite", "googleDrive");
             }}
         />
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="googleDocs"
-            on:pointerdown={() => {
+            on:click={() => {
                 onAddProperty("openWebsite", "googleDocs");
             }}
         />
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="googleSheets"
-            on:pointerdown={() => {
+            on:click={() => {
                 onAddProperty("openWebsite", "googleSheets");
             }}
         />
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="googleSlides"
-            on:pointerdown={() => {
+            on:click={() => {
                 onAddProperty("openWebsite", "googleSlides");
             }}
         />
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="eraser"
-            on:pointerdown={() => {
+            on:click={() => {
                 onAddProperty("openWebsite", "eraser");
             }}
         />
@@ -311,7 +311,7 @@
     </div>
     <div class="entity-name-container">
         {#if !showDescriptionField}
-            <a href="#addDescriptionField" on:pointerdown|preventDefault|stopPropagation={toggleDescriptionField}
+            <a href="#addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
                 >+ {$LL.mapEditor.entityEditor.addDescriptionField()}</a
             >
         {:else}

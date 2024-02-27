@@ -6,8 +6,8 @@
 
 <button
     class="close-button"
-    on:pointerdown={() => {
-        dispatch("pointerdown");
+    on:click={() => {
+        dispatch("click");
     }}
 >
     x

@@ -72,11 +72,11 @@
                 &gt; <a href={mapLink} target="_blank">{$LL.menu.about.mapLink()}</a> &lt;
             </p>
         {/if}
-        <h3 class="blue-title" on:pointerdown={() => (expandedMapCopyright = !expandedMapCopyright)}>
+        <h3 class="blue-title" on:click={() => (expandedMapCopyright = !expandedMapCopyright)}>
             {$LL.menu.about.copyrights.map.title()}
         </h3>
         <p class="tw-whitespace-pre-line" hidden={!expandedMapCopyright}>{mapCopyright}</p>
-        <h3 class="blue-title" on:pointerdown={() => (expandedTilesetCopyright = !expandedTilesetCopyright)}>
+        <h3 class="blue-title" on:click={() => (expandedTilesetCopyright = !expandedTilesetCopyright)}>
             {$LL.menu.about.copyrights.tileset.title()}
         </h3>
         <section hidden={!expandedTilesetCopyright}>
@@ -86,7 +86,7 @@
                 <p>{$LL.menu.about.copyrights.tileset.empty()}</p>
             {/each}
         </section>
-        <h3 class="blue-title" on:pointerdown={() => (expandedAudioCopyright = !expandedAudioCopyright)}>
+        <h3 class="blue-title" on:click={() => (expandedAudioCopyright = !expandedAudioCopyright)}>
             {$LL.menu.about.copyrights.audio.title()}
         </h3>
         <section hidden={!expandedAudioCopyright}>

@@ -231,13 +231,14 @@
     }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     class="video-container"
     class:video-off={!videoEnabled}
     class:tw-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
     bind:this={videoContainer}
-    on:pointerdown={() => analyticsClient.pinMeetingAction()}
-    on:pointerdown={() => hightlight()}
+    on:click={() => analyticsClient.pinMeetingAction()}
+    on:click={() => hightlight()}
 >
     <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
 

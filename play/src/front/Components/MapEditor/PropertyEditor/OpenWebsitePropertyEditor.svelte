@@ -470,7 +470,7 @@
                     on:keypress={onKeyPressed}
                     on:change={onValueChange}
                     on:blur={checkWebsiteProperty}
-                    on:pointerdown={onClickInputHandler}
+                    on:click={onClickInputHandler}
                     disabled={embeddableLoading}
                 />
                 {#if property.application === "googleDocs" || property.application === "googleSheets" || property.application === "googleSlides" || property.application === "klaxoon" || property.application === "googleDrive"}
@@ -482,7 +482,7 @@
                             on:keydown
                             on:keyup
                             on:keypress
-                            on:pointerdown|preventDefault|stopPropagation={openPicker}
+                            on:click|preventDefault|stopPropagation={openPicker}
                         />
                         <Tooltip
                             text={$LL.mapEditor.properties.linkProperties.openPickerSelector()}

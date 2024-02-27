@@ -33,7 +33,7 @@
     <section class="tw-w-full">
         <h3 class="blue-title tw-justify-start">{$LL.report.block.title()}</h3>
         <p>{$LL.report.block.content({ userName })}</p>
-        <button type="button" class="btn danger" on:pointerdown|preventDefault={blockUser}>
+        <button type="button" class="btn danger" on:click|preventDefault={blockUser}>
             {userIsBlocked ? $LL.report.block.unblock() : $LL.report.block.block()}
         </button>
     </section>

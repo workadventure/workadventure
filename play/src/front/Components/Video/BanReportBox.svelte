@@ -11,7 +11,7 @@
 
 <button
     class="report-ban-btn tw-bg-pop-red tw-flex tw-justify-center tw-h-7 tw-w-7 md:tw-h-5 md:tw-w-5 tw-p-1 tw-min-h-[1px]"
-    on:pointerdown|stopPropagation={() => openReport(peer)}
+    on:click|stopPropagation={() => openReport(peer)}
 >
     <img alt="Report this user" draggable="false" src={reportImg} class="tw-w-3 tw-h-3 tw-flex" />
 </button>

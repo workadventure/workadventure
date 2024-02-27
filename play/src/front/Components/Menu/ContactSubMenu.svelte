@@ -28,7 +28,7 @@
                 <h3 class="blue-title">{$LL.menu.contact.gettingStarted.title()}</h3>
                 <p>{$LL.menu.contact.gettingStarted.description()}</p>
                 <div class="centered-column">
-                    <button type="button" class="light" on:pointerdown={goToGettingStarted}
+                    <button type="button" class="light" on:click={goToGettingStarted}
                         >{$LL.menu.contact.gettingStarted.title()}</button
                     >
                 </div>
@@ -38,7 +38,7 @@
                 <h3 class="blue-title">{$LL.menu.contact.createMap.title()}</h3>
                 <p>{$LL.menu.contact.createMap.description()}</p>
                 <div class="centered-column">
-                    <button type="button" class="light" on:pointerdown={goToBuildingMap}
+                    <button type="button" class="light" on:click={goToBuildingMap}
                         >{$LL.menu.contact.createMap.title()}</button
                     >
                 </div>

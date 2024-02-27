@@ -151,7 +151,7 @@
     <div class="item-variations">
         {#if pickedItem}
             <p
-                on:pointerdown|preventDefault={backToSelectObject}
+                on:click|preventDefault={backToSelectObject}
                 class="tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0"
             >
                 <ArrowLeftIcon size="12" class="tw-cursor-pointer" />
@@ -166,14 +166,14 @@
                     src={closeImg}
                     alt="Unselect object picked"
                     on:keyup
-                    on:pointerdown={backToSelectObject}
+                    on:click={backToSelectObject}
                 />
             </div>
             <div class="item-variant-picker-container tw-h-28">
                 {#each currentVariants as item (item.id)}
                     <div
                         class="pickable-item {item.imagePath === pickedVariant?.imagePath ? 'active' : ''}"
-                        on:pointerdown={() => onPickItemVariant(item)}
+                        on:click={() => onPickItemVariant(item)}
                     >
                         <img class="item-image" src={item.imagePath} alt={item.name} />
                     </div>
@@ -185,7 +185,7 @@
                         <button
                             class="color-selector"
                             style="background-color: {color};"
-                            on:pointerdown={() => onColorChange(color)}
+                            on:click={() => onColorChange(color)}
                         />
                     </div>
                 {/each}
@@ -197,10 +197,7 @@
     </div>
     <div class="item-picker-container">
         {#each rootItem as item (item.id)}
-            <div
-                class="pickable-item {item.id === pickedItem?.id ? 'active' : ''}"
-                on:pointerdown={() => onPickItem(item)}
-            >
+            <div class="pickable-item {item.id === pickedItem?.id ? 'active' : ''}" on:click={() => onPickItem(item)}>
                 <img class="item-image" src={item.imagePath} alt={item.name} />
             </div>
         {/each}

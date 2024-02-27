@@ -53,7 +53,7 @@
             type="button"
             class="{nameButton === NAME_BUTTON ? 'light' : 'disabled'} tw-h-10"
             disabled={!(nameButton === NAME_BUTTON)}
-            on:pointerdown|preventDefault={closeBanMessage}>{nameButton}</button
+            on:click|preventDefault={closeBanMessage}>{nameButton}</button
         >
     </div>
 </div>

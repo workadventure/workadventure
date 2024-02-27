@@ -107,8 +107,8 @@
     class:ready={$state === "ready"}
     class:displayed={isMain || isHighlight}
     class:vertical
-    on:pointerdown={() => analyticsClient.stackOpenCloseMultiIframe()}
-    on:pointerdown={onClick}
+    on:click={() => analyticsClient.stackOpenCloseMultiIframe()}
+    on:click={onClick}
 >
     <img
         class="cowebsite-icon noselect clickable tw-bg-dark-blue/50 tw-p-0 tw-border-medium-purple tw-border-solid tw-rounded tw-pointer-events-auto hover:tw-border-light-purple hover:tw-bg-dark-blue/75 hover:tw-scale-105 tw-transition-all"

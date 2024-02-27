@@ -29,9 +29,10 @@
     }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     class="video-container screen-sharing tw-flex tw-w-full tw-flex-col tw-h-full"
-    on:pointerdown={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
+    on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     {#if $statusStore === "connecting"}
         <div class="connecting-spinner" />

@@ -95,7 +95,7 @@
                                         <button
                                             type="button"
                                             class="close-window top-right-btn"
-                                            on:pointerdown={closeCoWebsite}
+                                            on:click={closeCoWebsite}
                                         >
                                             &times;
                                         </button>

@@ -131,7 +131,7 @@
             {#each $subMenusStore as submenu, i (submenu.key + "_" + submenu.type)}
                 <div
                     class="menu-item-container {activeSubMenu === submenu ? 'active' : ''}"
-                    on:pointerdown|preventDefault={() => switchMenu(submenu)}
+                    on:click|preventDefault={() => switchMenu(submenu)}
                 >
                     <button type="button" class="tw-flex menu-item">
                         {subMenuTranslations[i]}
@@ -142,7 +142,7 @@
         </nav>
     </div>
     <div class="menu-submenu-container tw-bg-dark-purple/95 tw-rounded" transition:fly={{ y: -1000, duration: 500 }}>
-        <button type="button" class="close-window" on:pointerdown={closeMenu}>&times;</button>
+        <button type="button" class="close-window" on:click={closeMenu}>&times;</button>
         <h2>{activeSubMenuTranslation}</h2>
         <svelte:component this={activeComponent} {...props} />
     </div>

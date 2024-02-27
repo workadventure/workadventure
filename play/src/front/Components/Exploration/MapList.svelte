@@ -103,11 +103,12 @@
                 <h3>{$LL.mapEditor.listRoom.noRoomFound()}</h3>
             {/if}
             {#each Array.from($roomListFiltered) as [roomUrl, roomData] (roomUrl)}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     id={roomUrl}
                     class:active={currentRoomUrl == roomData.roomUrl}
                     class="room-card tw-flex tw-flex-col tw-items-center tw-justify-center tw-cursor-pointer tw-rounded-xl tw-m-12 tw-p-12"
-                    on:pointerdown={() => clickRoom(roomData.roomUrl, roomData.name)}
+                    on:click={() => clickRoom(roomData.roomUrl, roomData.name)}
                 >
                     <img
                         class="tw-pointer-events-none tw-rounded-full tw-h-56 tw-w-56 tw-mb-3"
@@ -129,7 +130,7 @@
         <div
             class="tw-bg-dark-purple/90 tw-backdrop-blur-sm tw-absolute tw-bottom-0 tw-left-0 tw-h-16 tw-w-screen tw-flex tw-justify-center tw-content-center tw-items-center"
         >
-            <button class="light" on:pointerdown={close}>{$LL.mapEditor.listRoom.close()}</button>
+            <button class="light" on:click={close}>{$LL.mapEditor.listRoom.close()}</button>
         </div>
     {/if}
 </div>

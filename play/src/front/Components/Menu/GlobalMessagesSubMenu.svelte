@@ -36,12 +36,12 @@
             <button
                 type="button"
                 class=" {inputSendTextActive ? 'light' : 'outline'}"
-                on:pointerdown|preventDefault={activateInputText}>{$LL.menu.globalMessage.text()}</button
+                on:click|preventDefault={activateInputText}>{$LL.menu.globalMessage.text()}</button
             >
             <button
                 type="button"
                 class=" {uploadAudioActive ? 'light' : 'outline'}"
-                on:pointerdown|preventDefault={activateUploadAudio}>{$LL.menu.globalMessage.audio()}</button
+                on:click|preventDefault={activateUploadAudio}>{$LL.menu.globalMessage.audio()}</button
             >
         </section>
     </div>
@@ -59,7 +59,7 @@
             <span>{$LL.menu.globalMessage.warning()}</span>
         </label>
         <section class="centered-column">
-            <button class="light" on:pointerdown|preventDefault={send}>{$LL.menu.globalMessage.send()}</button>
+            <button class="light" on:click|preventDefault={send}>{$LL.menu.globalMessage.send()}</button>
         </section>
     </div>
 </div>

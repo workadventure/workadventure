@@ -301,7 +301,7 @@
         {#if !hasFocusableProperty}
             <AddPropertyButtonWrapper
                 property="focusable"
-                on:pointerdown={() => {
+                on:click={() => {
                     onAddProperty("focusable");
                 }}
             />
@@ -309,7 +309,7 @@
         {#if !hasSilentProperty}
             <AddPropertyButtonWrapper
                 property="silent"
-                on:pointerdown={() => {
+                on:click={() => {
                     onAddProperty("silent");
                 }}
             />
@@ -317,7 +317,7 @@
         {#if !hasJitsiRoomProperty}
             <AddPropertyButtonWrapper
                 property="jitsiRoomProperty"
-                on:pointerdown={() => {
+                on:click={() => {
                     onAddProperty("jitsiRoomProperty");
                 }}
             />
@@ -326,7 +326,7 @@
             {#if !hasSpeakerMegaphoneProperty}
                 <AddPropertyButtonWrapper
                     property="speakerMegaphone"
-                    on:pointerdown={() => {
+                    on:click={() => {
                         onAddProperty("speakerMegaphone");
                     }}
                 />
@@ -334,7 +334,7 @@
             {#if !hasListenerMegaphoneProperty}
                 <AddPropertyButtonWrapper
                     property="listenerMegaphone"
-                    on:pointerdown={() => {
+                    on:click={() => {
                         onAddProperty("listenerMegaphone");
                     }}
                 />
@@ -343,7 +343,7 @@
         {#if !hasStartProperty}
             <AddPropertyButtonWrapper
                 property="start"
-                on:pointerdown={() => {
+                on:click={() => {
                     onAddProperty("start");
                 }}
             />
@@ -351,7 +351,7 @@
         {#if !hasExitProperty}
             <AddPropertyButtonWrapper
                 property="exit"
-                on:pointerdown={() => {
+                on:click={() => {
                     onAddProperty("exit");
                 }}
             />
@@ -359,14 +359,14 @@
         {#if !hasplayAudioProperty}
             <AddPropertyButtonWrapper
                 property="playAudio"
-                on:pointerdown={() => {
+                on:click={() => {
                     onAddProperty("playAudio");
                 }}
             />
         {/if}
         <AddPropertyButtonWrapper
             property="openWebsite"
-            on:pointerdown={() => {
+            on:click={() => {
                 onAddProperty("openWebsite");
             }}
         />
@@ -375,49 +375,49 @@
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="klaxoon"
-            on:pointerdown={() => {
+            on:click={() => {
                 onAddProperty("openWebsite", "klaxoon");
             }}
         />
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="youtube"
-            on:pointerdown={() => {
+            on:click={() => {
                 onAddProperty("openWebsite", "youtube");
             }}
         />
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="googleDrive"
-            on:pointerdown={() => {
+            on:click={() => {
                 onAddProperty("openWebsite", "googleDrive");
             }}
         />
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="googleDocs"
-            on:pointerdown={() => {
+            on:click={() => {
                 onAddProperty("openWebsite", "googleDocs");
             }}
         />
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="googleSheets"
-            on:pointerdown={() => {
+            on:click={() => {
                 onAddProperty("openWebsite", "googleSheets");
             }}
         />
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="googleSlides"
-            on:pointerdown={() => {
+            on:click={() => {
                 onAddProperty("openWebsite", "googleSlides");
             }}
         />
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="eraser"
-            on:pointerdown={() => {
+            on:click={() => {
                 onAddProperty("openWebsite", "eraser");
             }}
         />
@@ -434,7 +434,7 @@
     </div>
     <div class="area-name-container">
         {#if !showDescriptionField}
-            <a href="#addDescriptionField" on:pointerdown|preventDefault|stopPropagation={toggleDescriptionField}
+            <a href="#addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
                 >+ {$LL.mapEditor.areaEditor.addDescriptionField()}</a
             >
         {:else}

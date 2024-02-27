@@ -64,7 +64,7 @@
 
 <div class="menu-container center">
     <div class="tw-w-full tw-bg-dark-purple/95 tw-rounded" transition:fly={{ x: 1000, duration: 500 }}>
-        <button type="button" class="close-window" on:pointerdown={close}>&times</button>
+        <button type="button" class="close-window" on:click={close}>&times</button>
         <select class="tag-selector" bind:value={selectedKey} on:change={() => onSelectedKey()}>
             <option value="">{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.addConfig()}</option>
             {#each defaultConfigKeys as configKey (configKey)}
@@ -78,9 +78,7 @@
         <div class="config-element-container">
             {#each defaultConfigKeys as configKey (configKey)}
                 <div class="config-element">
-                    <button on:pointerdown={() => onDeleteConfig(configKey)}
-                        ><div class="delete-button">&times</div></button
-                    >
+                    <button on:click={() => onDeleteConfig(configKey)}><div class="delete-button">&times</div></button>
                     <label class="config-element-label" for={configKey}>
                         {$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig[configKey]()}
                     </label>
@@ -98,10 +96,8 @@
             {/each}
         </div>
         <div class="action-buttons">
-            <button on:pointerdown={close}>{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.cancel()}</button>
-            <button on:pointerdown={validate}
-                >{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.validate()}</button
-            >
+            <button on:click={close}>{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.cancel()}</button>
+            <button on:click={validate}>{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.validate()}</button>
         </div>
     </div>
 </div>

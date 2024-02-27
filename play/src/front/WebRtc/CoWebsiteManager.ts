@@ -148,7 +148,7 @@ class CoWebsiteManager {
         this.resizeObserver.observe(this.cowebsiteDom);
         this.resizeObserver.observe(this.gameOverlayDom);
 
-        this.buttonCloseCoWebsite.addEventListener("pointerdown", () => {
+        this.buttonCloseCoWebsite.addEventListener("click", () => {
             analyticsClient.closeMultiIframe();
             const coWebsite = this.getMainCoWebsite();
 
@@ -167,7 +167,7 @@ class CoWebsiteManager {
         });
 
         const buttonFullScreenFrame = HtmlUtils.getElementByIdOrFail(cowebsiteFullScreenButtonId);
-        buttonFullScreenFrame.addEventListener("pointerdown", () => {
+        buttonFullScreenFrame.addEventListener("click", () => {
             analyticsClient.fullScreenMultiIframe();
             buttonFullScreenFrame.blur();
             this.toggleFullscreen();
@@ -184,7 +184,7 @@ class CoWebsiteManager {
             buttonSwipe.style.display = "block";
         });
 
-        buttonSwipe.addEventListener("pointerdown", () => {
+        buttonSwipe.addEventListener("click", () => {
             analyticsClient.switchMultiIframe();
             const mainCoWebsite = this.getMainCoWebsite();
             const highlightedEmbed = get(highlightedEmbedScreen);

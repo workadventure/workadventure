@@ -64,9 +64,7 @@
         </ul>
     </section>
     <section class="tw-flex tw-row tw-justify-center">
-        <button class="light" on:pointerdown|preventDefault={refresh}>{$LL.camera.webrtc.refresh()}</button>
-        <button type="submit" class="outline" on:pointerdown|preventDefault={close}
-            >{$LL.camera.webrtc.continue()}</button
-        >
+        <button class="light" on:click|preventDefault={refresh}>{$LL.camera.webrtc.refresh()}</button>
+        <button type="submit" class="outline" on:click|preventDefault={close}>{$LL.camera.webrtc.continue()}</button>
     </section>
 </form>

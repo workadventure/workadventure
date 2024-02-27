@@ -53,7 +53,7 @@
     md:tw-top-14 tw-w-full md:tw-w-1/2 tw-m-auto tw-z-[650]"
 >
     <section>
-        <button type="button" class="close-window" on:pointerdown|preventDefault={close}>&times;</button>
+        <button type="button" class="close-window" on:click|preventDefault={close}>&times;</button>
         <h2>{$LL.report.moderate.title({ userName })}</h2>
     </section>
 
