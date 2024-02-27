@@ -2,14 +2,14 @@ import {expect, test} from '@playwright/test';
 import Menu from "./utils/menu";
 import {login} from "./utils/roles";
 import Map from "./utils/map";
-import {map_storage_url} from "./utils/urls";
+import {play_url} from "./utils/urls";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
-  baseURL: map_storage_url,
+  baseURL: play_url,
 })
 test.describe('Map editor', () => {
-  test('Successfully bubble discussion with mobile device', async ({ page, browser, request, browserName }) => {
+    test('Successfully bubble discussion with mobile device', async ({ page, browser, request, browserName }) => {
         await page.goto(Map.url("empty"));
         await login(page, "Bob", 3);
 
