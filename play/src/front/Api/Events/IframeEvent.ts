@@ -338,11 +338,11 @@ export const isIframeEventWrapper = z.union([
         data: z.undefined(),
     }),
     z.object({
-        type: z.literal("disableDoubleClicked"),
+        type: z.literal("disableRightClick"),
         data: z.undefined(),
     }),
     z.object({
-        type: z.literal("restoreDoubleClicked"),
+        type: z.literal("restoreRightClick"),
         data: z.undefined(),
     }),
     z.object({
@@ -351,6 +351,14 @@ export const isIframeEventWrapper = z.union([
     }),
     z.object({
         type: z.literal("restoreWheelZoom"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("disableInviteUserButton"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restoreInviteUserButton"),
         data: z.undefined(),
     }),
 ]);

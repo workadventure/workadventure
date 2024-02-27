@@ -78,8 +78,11 @@ import {
 import {
     activeSubMenuStore,
     contactPageStore,
+    inviteUserActivated,
     mapEditorActivated,
+    mapManagerActivated,
     menuVisiblilityStore,
+    screenSharingActivatedStore,
     SubMenusInterface,
     subMenusStore,
 } from "../../Stores/MenuStore";
@@ -2058,26 +2061,38 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.mapEditorStream.subscribe(() => {
-                // TODO : disble map editor
+            iframeListener.mapEditorStream.subscribe((isActivated: boolean) => {
+                mapManagerActivated.set(isActivated);
             })
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.screenSharingStream.subscribe(() => {
-                // TODO : disble screesharing
+            iframeListener.screenSharingStream.subscribe((isActivated: boolean) => {
+                screenSharingActivatedStore.set(isActivated);
             })
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.doubleClickStream.subscribe(() => {
-                // TODO : disble double click
+            iframeListener.rightClickStream.subscribe((isRestore: boolean) => {
+                if(isRestore)
+                    this.userInputManager.restoreRightClick();
+                else 
+                    this.userInputManager.disableRightClick();
             })
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.wheelZoomStream.subscribe(() => {
-                // TODO : disble wheel zoom
+            iframeListener.wheelZoomStream.subscribe((isRestore: boolean) => {
+                if(isRestore)
+                    this.cameraManager.unlockZoom();
+                else 
+                    this.cameraManager.lockZoom();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.inviteUserButtonStream.subscribe((isActivated: boolean) => {
+                inviteUserActivated.set(isActivated);
             })
         );
 
@@ -3389,7 +3404,7 @@ ${escapedMessage}
     }
 
     zoomByFactor(zoomFactor: number, velocity?: number) {
-        if (this.cameraManager.isCameraLocked()) {
+        if (this.cameraManager.isZoomLocked()) {
             return;
         }
         // If the zoom modifier is over the max zoom out, we propose to the user to switch to the explorer mode
