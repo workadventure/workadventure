@@ -1,4 +1,3 @@
-import { get } from "svelte/store";
 import {
     AreaData,
     AreaDataProperties,
@@ -11,30 +10,34 @@ import {
     PlayAudioPropertyData,
     SpeakerMegaphonePropertyData,
 } from "@workadventure/map-editor";
-import { Jitsi } from "@workadventure/shared-utils";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
+import { Jitsi } from "@workadventure/shared-utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import { OpenCoWebsite } from "../GameMapPropertiesListener";
-import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
-import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
-import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
-import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
-import { analyticsClient } from "../../../Administration/AnalyticsClient";
-import { localUserStore } from "../../../Connection/LocalUserStore";
-import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
+import { get } from "svelte/store";
 import { LL } from "../../../../i18n/i18n-svelte";
-import { GameScene } from "../GameScene";
-import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
-import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
-import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
-import { scriptUtils } from "../../../Api/ScriptUtils";
-import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
-import { currentLiveStreamingNameStore } from "../../../Stores/MegaphoneStore";
-import { gameManager } from "../GameManager";
+import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { iframeListener } from "../../../Api/IframeListener";
-import { chatZoneLiveStore } from "../../../Stores/ChatStore";
+import { scriptUtils } from "../../../Api/ScriptUtils";
+import { localUserStore } from "../../../Connection/LocalUserStore";
 import { Room } from "../../../Connection/Room";
+import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
+import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
+import { chatZoneLiveStore } from "../../../Stores/ChatStore";
+import { userIsAdminStore } from "../../../Stores/GameStore";
+import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
+import { mapEditorCurrentAreaIdOnUserPositionStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
+import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
+import { currentLiveStreamingNameStore } from "../../../Stores/MegaphoneStore";
+import { mapEditorActivatedForCurrentArea } from "../../../Stores/MenuStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
+import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
+import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
+import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
+import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
+import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
+import { gameManager } from "../GameManager";
+import { OpenCoWebsite } from "../GameMapPropertiesListener";
+import { GameScene } from "../GameScene";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -58,25 +61,21 @@ export class AreasPropertiesListener {
                 continue;
             }
 
+            mapEditorCurrentAreaIdOnUserPositionStore.set(area.id);
+
             // Get area right properties
             const areaRight = area.properties.find((property) => property.type === "areaRightPropertyData") as
                 | AreaRightPropertyData
                 | undefined;
-            if (
-                !gameManager.getCurrentGameScene().connection?.isAdmin() &&
-                areaRight != undefined &&
-                (areaRight.readTags.length > 0 || areaRight.writeTags.length > 0)
-            ) {
+
+            const isAreaHasRightPropertyData =
+                areaRight !== undefined && (areaRight.readTags.length > 0 || areaRight.writeTags.length > 0);
+            const isAdmin = get(userIsAdminStore);
+            const userTags = gameManager.getCurrentGameScene().connection?.getTags() ?? [];
+            if (!isAdmin && isAreaHasRightPropertyData) {
                 // Check that the user have right to read the area
-                if (
-                    (areaRight.readTags.length > 0 &&
-                        !areaRight.writeTags.find((tag) =>
-                            gameManager.getCurrentGameScene().connection?.hasTag(tag)
-                        )) ||
-                    (areaRight.writeTags.length > 0 &&
-                        !areaRight.writeTags.find((tag) => gameManager.getCurrentGameScene().connection?.hasTag(tag)))
-                ) {
-                    continue;
+                if (areaRight?.writeTags?.find((tag) => userTags.includes(tag))) {
+                    this.allowEntityEditorToolOnArea();
                 }
             }
 
@@ -88,6 +87,15 @@ export class AreasPropertiesListener {
                 this.addPropertyFilter(property, area);
             }
         }
+    }
+
+    private allowEntityEditorToolOnArea() {
+        mapEditorActivatedForCurrentArea.set(true);
+    }
+    private disableAndCloseMapEntityEditorTool() {
+        mapEditorActivatedForCurrentArea.set(false);
+        this.scene.getMapEditorModeManager().equipTool(undefined);
+        mapEditorModeStore.switchMode(false);
     }
 
     public onUpdateAreasHandler(
@@ -132,7 +140,12 @@ export class AreasPropertiesListener {
         for (const area of areas) {
             // analytics event for area
             analyticsClient.leaveAreaMapEditor(area.id, area.name);
+            mapEditorCurrentAreaIdOnUserPositionStore.set(undefined);
 
+            if (get(mapEditorActivatedForCurrentArea)) {
+                this.disableAndCloseMapEntityEditorTool();
+            }
+            //Init mapEditor store value
             if (!area.properties) {
                 continue;
             }

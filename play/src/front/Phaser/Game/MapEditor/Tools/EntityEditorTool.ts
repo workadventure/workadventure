@@ -23,10 +23,18 @@ import { MapEditorModeManager } from "../MapEditorModeManager";
 import { TexturesHelper } from "../../../Helpers/TexturesHelper";
 import {
     mapEditorCopiedEntityDataPropertiesStore,
+    mapEditorCurrentAreaIdOnUserPositionStore,
     mapEditorEntityModeStore,
     mapEditorSelectedEntityStore,
 } from "../../../../Stores/MapEditorStore";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
+import { Entity } from "../../../ECS/Entity";
+import { TexturesHelper } from "../../../Helpers/TexturesHelper";
+import { CopyEntityEventData, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
+import { CreateEntityFrontCommand } from "../Commands/Entity/CreateEntityFrontCommand";
+import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand";
+import { UpdateEntityFrontCommand } from "../Commands/Entity/UpdateEntityFrontCommand";
+import { MapEditorModeManager } from "../MapEditorModeManager";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
 export class EntityEditorTool extends EntityRelatedEditorTool {
@@ -393,18 +401,26 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         if (!this.entityPrefabPreview || !this.entityPrefab) {
             return;
         }
-        if (
-            !this.scene
-                .getGameMapFrontWrapper()
-                .canEntityBePlaced(
-                    this.entityPrefabPreview.getTopLeft(),
-                    this.entityPrefabPreview.displayWidth,
-                    this.entityPrefabPreview.displayHeight,
-                    this.entityPrefab.collisionGrid,
-                    undefined,
-                    this.shiftKey?.isDown
-                )
-        ) {
+        const gameMapFrontWrapper = this.scene.getGameMapFrontWrapper();
+        const currentAreaIdOnUserPosition = get(mapEditorCurrentAreaIdOnUserPositionStore);
+        const canEntityBePlaced = gameMapFrontWrapper.canEntityBePlaced(
+            this.entityPrefabPreview.getTopLeft(),
+            this.entityPrefabPreview.displayWidth,
+            this.entityPrefabPreview.displayHeight,
+            this.entityPrefab.collisionGrid,
+            undefined,
+            this.shiftKey?.isDown
+        );
+        const canEntityBePlacedInThematicArea =
+            currentAreaIdOnUserPosition &&
+            gameMapFrontWrapper.canEntityBePlacedInThematicArea(
+                this.entityPrefabPreview.getTopLeft(),
+                this.entityPrefabPreview.displayWidth,
+                this.entityPrefabPreview.displayHeight,
+                currentAreaIdOnUserPosition
+            );
+
+        if (!canEntityBePlaced || !canEntityBePlacedInThematicArea) {
             this.entityPrefabPreview.setTint(0xff0000);
         } else {
             if (this.shiftKey?.isDown) {
@@ -440,6 +456,20 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                     this.entityPrefab.collisionGrid,
                     undefined,
                     this.shiftKey?.isDown
+                )
+        ) {
+            return;
+        }
+        const currentUserAreaIdOnUserPosition = get(mapEditorCurrentAreaIdOnUserPositionStore);
+        if (
+            currentUserAreaIdOnUserPosition &&
+            !this.scene
+                .getGameMapFrontWrapper()
+                .canEntityBePlacedInThematicArea(
+                    this.entityPrefabPreview.getTopLeft(),
+                    this.entityPrefabPreview.displayWidth,
+                    this.entityPrefabPreview.displayHeight,
+                    currentUserAreaIdOnUserPosition
                 )
         ) {
             return;
