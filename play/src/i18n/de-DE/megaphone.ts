@@ -5,7 +5,9 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
         selectCamera: "Wählen Sie eine Kamera 📹",
         selectMicrophone: "Wählen Sie ein Mikrofon 🎙️",
-        startMegaphone: "Megaphon starten",
+        liveMessage: {
+            startMegaphone: "Megaphon starten",
+        },
     },
 };
 

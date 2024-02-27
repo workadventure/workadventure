@@ -7,7 +7,7 @@ test.describe('Module', () => {
   test('loading should work out of the box', async ({ page }) => {
     startRecordLogs(page);
     await page.goto(
-      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Modules/with_modules.json?phaserMode=${RENDERER_MODE}`
+      `/_/global/maps.workadventure.localhost/tests/Modules/with_modules.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page, 'Alice', 2);

@@ -80,7 +80,12 @@
     import { peerStore } from "../../Stores/PeerStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import Tooltip from "../Util/Tooltip.svelte";
-    import { modalIframeStore, modalVisibilityStore, roomListVisibilityStore } from "../../Stores/ModalStore";
+    import {
+        modalIframeStore,
+        modalVisibilityStore,
+        showModalGlobalComminucationVisibilityStore,
+        roomListVisibilityStore,
+    } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
@@ -92,7 +97,6 @@
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
-    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -172,19 +176,23 @@
         }
     }
 
-    function toggleMegaphone() {
-        if ($streamingMegaphoneStore) {
-            streamingMegaphoneStore.set(false);
-            return;
-        }
-        if ($requestedMegaphoneStore || $liveStreamingEnabledStore) {
+    function toggleGlobalMessage() {
+        if ($requestedMegaphoneStore || $liveStreamingEnabledStore || $streamingMegaphoneStore) {
             analyticsClient.stopMegaphone();
             requestedMegaphoneStore.set(false);
+            streamingMegaphoneStore.set(false);
+            showModalGlobalComminucationVisibilityStore.set(false);
+            return;
+        }
+        if ($showModalGlobalComminucationVisibilityStore) {
+            showModalGlobalComminucationVisibilityStore.set(false);
             return;
         }
 
-        analyticsClient.startMegaphone();
-        streamingMegaphoneStore.set(true);
+        resetChatVisibility();
+        resetModalVisibility();
+        mapEditorModeStore.switchMode(false);
+        showModalGlobalComminucationVisibilityStore.set(true);
     }
 
     function toggleMapEditorMode() {
@@ -326,6 +334,7 @@
     function resetModalVisibility() {
         modalVisibilityStore.set(false);
         modalIframeStore.set(null);
+        showModalGlobalComminucationVisibilityStore.set(false);
     }
 
     /*function resetMenuVisibility() {
@@ -774,19 +783,16 @@
                 </div>
                 {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div on:click={toggleMegaphone} class="bottom-action-button tw-relative">
-                        {#if $streamingMegaphoneStore}
-                            <MegaphoneConfirm />
+                    <div on:click={toggleGlobalMessage} class="bottom-action-button tw-relative">
+                        {#if $liveStreamingEnabledStore}
+                            <Tooltip text={$LL.actionbar.disableMegaphone()} />
                         {:else}
-                            <Tooltip
-                                text={$liveStreamingEnabledStore
-                                    ? $LL.actionbar.disableMegaphone()
-                                    : $LL.actionbar.enableMegaphone()}
-                            />
+                            <Tooltip text={$LL.actionbar.globalMessage()} />
                         {/if}
 
                         <button
-                            class:border-top-warning={$liveStreamingEnabledStore || $streamingMegaphoneStore}
+                            class:border-top-warning={$liveStreamingEnabledStore}
+                            class:border-top-light={$showModalGlobalComminucationVisibilityStore}
                             id="megaphone"
                         >
                             <img draggable="false" src={megaphoneImg} style="padding: 2px" alt="Toggle megaphone" />

@@ -6,10 +6,6 @@ import Menu from "./utils/menu";
 import MapEditor from "./utils/mapeditor";
 import AreaEditor from "./utils/map-editor/areaEditor";
 
-test.use({
-  baseURL: (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://john.doe:password@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost'),
-})
-
 test.describe('Meeting actions test', () => {
   test('Meeting action to mute microphone & video', async ({page, browser}) => {
     // Because webkit in playwright does not support Camera/Microphone Permission by settings
@@ -20,7 +16,7 @@ test.describe('Meeting actions test', () => {
     }
 
     // Go to the empty map
-    await page.goto(`http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json`);
+    await page.goto(`/_/global/maps.workadventure.localhost/tests/E2E/empty.json`);
     // Login user "Alice"
     await login(page, 'Alice');
 
@@ -30,7 +26,7 @@ test.describe('Meeting actions test', () => {
     const newBrowser = await browser.browserType().launch();
     const userBob = await newBrowser.newPage();
     // Go to the empty map
-    await userBob.goto(`http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json`);
+    await userBob.goto(`/_/global/maps.workadventure.localhost/tests/E2E/empty.json`);
     // Login user "Bob"
     await login(userBob, 'Bob');
     // Move user

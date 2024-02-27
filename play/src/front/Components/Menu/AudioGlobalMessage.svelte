@@ -2,7 +2,8 @@
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { AdminMessageEventTypes } from "../../Connection/AdminMessagesService";
-    import uploadFile from "../images/music-file.svg";
+    import uploadFile from "../images/drag-and-drop.svg";
+    import uploadFileActive from "../images/drag-and-drop-active.svg";
     import type { PlayGlobalMessageInterface } from "../../Connection/ConnexionModels";
     import { LL } from "../../../i18n/i18n-svelte";
 
@@ -16,6 +17,7 @@
     let fileSize: string;
     let errorFile: boolean;
     let errorUpload: boolean;
+    let dropHover = false;
 
     const AUDIO_TYPE = AdminMessageEventTypes.audio;
 
@@ -52,6 +54,22 @@
         },
     };
 
+    function dropAudioFile(event: DragEvent) {
+        event.preventDefault();
+        if (!event.dataTransfer) {
+            return;
+        }
+
+        const file = event.dataTransfer.files[0];
+        if (!file) {
+            return;
+        }
+        fileName = file.name;
+        fileSize = getFileSize(file.size);
+        errorFile = false;
+        errorUpload = false;
+    }
+
     function inputAudioFile(event: Event) {
         const eventTarget: EventTargetFiles = event.target as EventTargetFiles;
         if (!eventTarget || !eventTarget.files || eventTarget.files.length === 0) {
@@ -82,18 +100,43 @@
     }
 </script>
 
-<section class="section-input-send-audio centered-column">
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<section
+    class="section-input-send-audio centered-column tw-cursor-pointer"
+    on:dragover|preventDefault={() => {
+        dropHover = true;
+    }}
+    on:dragleave|preventDefault={() => {
+        dropHover = false;
+    }}
+    on:drop|preventDefault={(e) => {
+        dropAudioFile(e);
+        dropHover = false;
+    }}
+    on:click={() => {
+        fileInput.click();
+    }}
+>
+    <p class="tw-pointer-events-none">
+        {$LL.menu.globalAudio.dragAndDrop()}
+    </p>
     <img
-        class="clickable tw-w-1/4"
+        class="clickable tw-w-1/6 tw-pointer-events-none"
+        class:tw-hidden={!dropHover}
+        draggable="false"
+        src={uploadFileActive}
+        alt={$LL.menu.globalAudio.uploadInfo()}
+    />
+    <img
+        class="clickable tw-w-1/6 tw-pointer-events-none"
+        class:tw-hidden={dropHover}
         draggable="false"
         src={uploadFile}
         alt={$LL.menu.globalAudio.uploadInfo()}
-        on:click|preventDefault={() => {
-            fileInput.click();
-        }}
     />
+
     {#if fileName !== undefined}
-        <p>{fileName} : {fileSize}</p>
+        <p class="tw-p-4">{fileName} : {fileSize}</p>
     {/if}
     {#if errorFile}
         <p class="err">{$LL.menu.globalAudio.error()}</p>

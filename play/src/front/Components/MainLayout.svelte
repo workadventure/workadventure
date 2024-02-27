@@ -17,6 +17,7 @@
     import {
         showLimitRoomModalStore,
         modalVisibilityStore,
+        showModalGlobalComminucationVisibilityStore,
         modalPopupVisibilityStore,
         roomListVisibilityStore,
     } from "../Stores/ModalStore";
@@ -52,6 +53,7 @@
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
+    import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
     import ObjectDetails from "./Modal/ObjectDetails.svelte";
     import Popup from "./Modal/Popup.svelte";
     import MapList from "./Exploration/MapList.svelte";
@@ -156,6 +158,10 @@
 
         {#if $askDialogStore}
             <MuteDialogBox />
+        {/if}
+
+        {#if $showModalGlobalComminucationVisibilityStore}
+            <GlobalCommunicationModal />
         {/if}
 
         {#if $mapExplorationObjectSelectedStore}
