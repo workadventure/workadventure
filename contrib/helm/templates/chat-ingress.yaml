@@ -19,8 +19,8 @@ spec:
   {{- if $tls }}
   tls:
     - hosts:
-        - {{ .Values.chat.ingress.domainName }}
-      secretName: {{ .Values.chat.ingress.secretName | default printf ("%s-chat-cert" (include "workadventure.fullname" .)) }}
+        - {{ (include "workadventure.chatDomainName" .) | quote }}
+      secretName: {{ .Values.chat.ingress.secretName | default (printf "%s-chat-cert" (include "workadventure.fullname" .)) }}
   {{- end }}
   rules:
     - host: {{ (include "workadventure.chatDomainName" .) | quote }}

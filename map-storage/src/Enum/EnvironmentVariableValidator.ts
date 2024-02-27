@@ -14,8 +14,13 @@ export const EnvironmentVariables = z.object({
     AWS_SECRET_ACCESS_KEY: z.string().optional().transform(emptyStringToUndefined),
     AWS_DEFAULT_REGION: z.string().optional().transform(emptyStringToUndefined),
     AWS_BUCKET: z.string().optional().transform(emptyStringToUndefined),
-    AWS_URL: z.string().url().or(z.literal("")).optional().transform(emptyStringToUndefined),
-    AWS_ENDPOINT: z.string().url().or(z.literal("")).optional().transform(emptyStringToUndefined),
+    AWS_URL: z
+        .string()
+        .url()
+        .or(z.literal(""))
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("URL of the S3 endpoint."),
     //UPLOADER_AWS_SIGNED_URL_EXPIRATION: PositiveIntAsString.optional(),
     S3_UPLOAD_CONCURRENCY_LIMIT: PositiveIntAsString.optional().transform((val) => toNumber(val, 100)),
     MAX_UNCOMPRESSED_SIZE: PositiveIntAsString.optional()

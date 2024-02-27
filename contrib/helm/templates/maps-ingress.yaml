@@ -20,8 +20,8 @@ spec:
   {{- if $tls }}
   tls:
     - hosts:
-        - {{ .Values.maps.ingress.domainName }}
-      secretName: {{ .Values.maps.ingress.secretName | default printf ("%s-maps-cert" (include "workadventure.fullname" .)) }}
+        - {{ (include "workadventure.mapsDomainName" .) | quote }}
+      secretName: {{ .Values.maps.ingress.secretName | default (printf "%s-maps-cert" (include "workadventure.fullname" .)) }}
   {{- end }}
   rules:
     - host: {{ (include "workadventure.mapsDomainName" .) | quote }}

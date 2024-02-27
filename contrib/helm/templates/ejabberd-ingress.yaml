@@ -20,8 +20,8 @@ spec:
   {{- if $tls }}
   tls:
     - hosts:
-        - {{ .Values.ejabberd.ingress.domainName }}
-      secretName: {{ .Values.ejabberd.ingress.secretName | default printf ("%s-ejabberd-cert" (include "workadventure.fullname" .)) }}
+        - {{ (include "workadventure.ejabberdDomainName" .) | quote }}
+      secretName: {{ .Values.ejabberd.ingress.secretName | default (printf "%s-ejabberd-cert" (include "workadventure.fullname" .)) }}
   {{- end }}
   rules:
     - host: {{ (include "workadventure.ejabberdDomainName" .) | quote }}

@@ -8,11 +8,12 @@ metadata:
 spec:
   replicas: {{ .Values.back.replicaCount }}
   podManagementPolicy: Parallel
+  serviceName: {{ include "workadventure.fullname" . }}-back
   updateStrategy:
     type: RollingUpdate
     # Back servers are independent, so we can update all at once
     # See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#maximum-unavailable-pods
-    maxUnavailable: "100%"
+    #maxUnavailable: "100%"
   selector:
     matchLabels:
       {{- include "workadventure.selectorLabels" . | nindent 6 }}
