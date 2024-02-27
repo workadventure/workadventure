@@ -21,7 +21,7 @@ spec:
     - hosts:
         - {{ (include "workadventure.playDomainName" .) | quote }}
         - {{ (include "workadventure.pusherDomainName" .) | quote }}
-      secretName: {{ .Values.play.ingress.secretName | default printf ("%s-play-cert" (include "workadventure.fullname" .)) }}
+      secretName: {{ .Values.play.ingress.secretName | default (printf "%s-play-cert" (include "workadventure.fullname" .)) }}
   {{- end }}
   rules:
     - host: {{ (include "workadventure.playDomainName" .) | quote }}

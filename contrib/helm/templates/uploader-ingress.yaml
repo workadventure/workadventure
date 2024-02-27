@@ -19,8 +19,8 @@ spec:
   {{- if $tls }}
   tls:
     - hosts:
-        - {{ .Values.uploader.ingress.domainName }}
-      secretName: {{ .Values.uploader.ingress.secretName | default printf ("%s-uploader-cert" (include "workadventure.fullname" .)) }}
+        - {{ (include "workadventure.uploaderDomainName" .) | quote }}
+      secretName: {{ .Values.uploader.ingress.secretName | default (printf "%s-uploader-cert" (include "workadventure.fullname" .)) }}
   {{- end }}
   rules:
     - host: {{ (include "workadventure.uploaderDomainName" .) | quote }}

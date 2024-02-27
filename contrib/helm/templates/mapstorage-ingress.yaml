@@ -19,8 +19,14 @@ spec:
   {{- if $tls }}
   tls:
     - hosts:
-        - {{ .Values.mapstorage.ingress.domainName }}
-      secretName: {{ .Values.mapstorage.ingress.secretName | default printf ("%s-mapstorage-cert" (include "workadventure.fullname" .)) }}
+        {{- if .Values.mapstorage.ingress.domainNames }}
+        {{- range $index, $domainName := .Values.mapstorage.ingress.domainNames }}
+        - {{ $domainName }}
+        {{- end }}
+        {{- else }}
+        - {{ (include "workadventure.mapStorageDomainName" .) | quote }}
+        {{- end }}
+      secretName: {{ .Values.mapstorage.ingress.secretName | default (printf "%s-mapstorage-cert" (include "workadventure.fullname" .)) }}
   {{- end }}
   rules:
   {{- if .Values.mapstorage.ingress.domainNames }}
