@@ -14,6 +14,7 @@ import { Subject } from "rxjs";
 import { get } from "svelte/store";
 import { Deferred } from "ts-deferred";
 import { userIsAdminStore, userIsEditorStore } from "../../../Stores/GameStore";
+import { mapEditorAreaOnUserPositionStore } from "../../../Stores/MapEditorStore";
 import { PathTileType } from "../../../Utils/PathfindingManager";
 import { Entity } from "../../ECS/Entity";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
@@ -586,15 +587,24 @@ export class GameMapFrontWrapper {
     public canEntityBePlacedInThematicArea(
         entityTopLeftCoordinates: { x: number; y: number },
         entityWidth: number,
-        entityHeight: number,
-        areaId: string
+        entityHeight: number
     ) {
         if (get(userIsAdminStore) || get(userIsEditorStore)) {
             return true;
         }
 
-        const area = this.scene.getGameMap().getGameMapAreas()?.getArea(areaId);
+        const areaOnUserPosition = get(mapEditorAreaOnUserPositionStore);
+
+        if (areaOnUserPosition === undefined) {
+            return true;
+        }
+
+        const area = this.scene.getGameMap().getGameMapAreas()?.getArea(areaOnUserPosition.id);
         if (area === undefined) {
+            return false;
+        }
+
+        if (areaOnUserPosition.accessRights === "read") {
             return false;
         }
 
@@ -602,6 +612,7 @@ export class GameMapFrontWrapper {
             x: Math.ceil(entityTopLeftCoordinates.x + entityWidth / 2),
             y: Math.ceil(entityTopLeftCoordinates.y + entityHeight / 2),
         };
+
         const inPositionX = entityCenterCoordinates.x >= area.x && entityCenterCoordinates.x <= area.x + area.width;
         const inPositionY = entityCenterCoordinates.y >= area.y && entityCenterCoordinates.y <= area.y + area.height;
         if (inPositionX && inPositionY) {

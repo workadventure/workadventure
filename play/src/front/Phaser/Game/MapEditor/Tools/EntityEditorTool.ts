@@ -22,8 +22,8 @@ import { UploadEntityFrontCommand } from "../Commands/Entity/UploadEntityFrontCo
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { TexturesHelper } from "../../../Helpers/TexturesHelper";
 import {
+    mapEditorAreaOnUserPositionStore,
     mapEditorCopiedEntityDataPropertiesStore,
-    mapEditorCurrentAreaIdOnUserPositionStore,
     mapEditorEntityModeStore,
     mapEditorSelectedEntityStore,
 } from "../../../../Stores/MapEditorStore";
@@ -397,12 +397,11 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         this.changePreviewTint();
     }
 
-    protected changePreviewTint(): void {
-        if (!this.entityPrefabPreview || !this.entityPrefab) {
-            return;
-        }
+    private canEntityBePlaced(): boolean {
         const gameMapFrontWrapper = this.scene.getGameMapFrontWrapper();
-        const currentAreaIdOnUserPosition = get(mapEditorCurrentAreaIdOnUserPositionStore);
+        if (!this.entityPrefabPreview || !this.entityPrefab) {
+            return false;
+        }
         const canEntityBePlaced = gameMapFrontWrapper.canEntityBePlaced(
             this.entityPrefabPreview.getTopLeft(),
             this.entityPrefabPreview.displayWidth,
@@ -411,16 +410,24 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             undefined,
             this.shiftKey?.isDown
         );
-        const canEntityBePlacedInThematicArea =
-            currentAreaIdOnUserPosition &&
-            gameMapFrontWrapper.canEntityBePlacedInThematicArea(
-                this.entityPrefabPreview.getTopLeft(),
-                this.entityPrefabPreview.displayWidth,
-                this.entityPrefabPreview.displayHeight,
-                currentAreaIdOnUserPosition
-            );
+        const areaOnUserPosition = get(mapEditorAreaOnUserPositionStore);
+        const canEntityBePlacedInArea =
+            areaOnUserPosition !== undefined &&
+            this.scene
+                .getGameMapFrontWrapper()
+                .canEntityBePlacedInThematicArea(
+                    this.entityPrefabPreview.getTopLeft(),
+                    this.entityPrefabPreview.displayWidth,
+                    this.entityPrefabPreview.displayHeight
+                );
+        return canEntityBePlaced && canEntityBePlacedInArea;
+    }
 
-        if (!canEntityBePlaced || !canEntityBePlacedInThematicArea) {
+    protected changePreviewTint(): void {
+        if (!this.entityPrefabPreview || !this.entityPrefab) {
+            return;
+        }
+        if (!this.canEntityBePlaced()) {
             this.entityPrefabPreview.setTint(0xff0000);
         } else {
             if (this.shiftKey?.isDown) {
@@ -446,34 +453,11 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         if (!this.entityPrefabPreview || !this.entityPrefab) {
             return;
         }
-        if (
-            !this.scene
-                .getGameMapFrontWrapper()
-                .canEntityBePlaced(
-                    this.entityPrefabPreview.getTopLeft(),
-                    this.entityPrefabPreview.displayWidth,
-                    this.entityPrefabPreview.displayHeight,
-                    this.entityPrefab.collisionGrid,
-                    undefined,
-                    this.shiftKey?.isDown
-                )
-        ) {
+
+        if (!this.canEntityBePlaced()) {
             return;
         }
-        const currentUserAreaIdOnUserPosition = get(mapEditorCurrentAreaIdOnUserPositionStore);
-        if (
-            currentUserAreaIdOnUserPosition &&
-            !this.scene
-                .getGameMapFrontWrapper()
-                .canEntityBePlacedInThematicArea(
-                    this.entityPrefabPreview.getTopLeft(),
-                    this.entityPrefabPreview.displayWidth,
-                    this.entityPrefabPreview.displayHeight,
-                    currentUserAreaIdOnUserPosition
-                )
-        ) {
-            return;
-        }
+
         if (pointer.rightButtonDown()) {
             this.cleanPreview();
             return;
