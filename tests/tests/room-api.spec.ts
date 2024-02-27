@@ -22,7 +22,7 @@ const variableName = "textField";
 test.describe('Room API', async () => {
     test("With a bad API key", async ({ browser }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -52,7 +52,7 @@ test.describe('Room API', async () => {
 
     test("Save & read a variable", async ({ page, browser }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -94,7 +94,7 @@ test.describe('Room API', async () => {
 
     test("Listen to a variable", async ({ page, browser }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -138,7 +138,7 @@ test.describe('Room API', async () => {
 
     test("Listen to an event emitted from the game", async ({ page, browser }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -180,7 +180,7 @@ test.describe('Room API', async () => {
 
     test("Send an event from the Room API", async ({ page, browser }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;

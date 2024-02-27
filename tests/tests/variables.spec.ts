@@ -21,7 +21,7 @@ test.describe('Variables', () => {
   // when running with --headed you can manually reload the page to avoid this issue.
   test('storage works @docker', async ({ page }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -144,7 +144,7 @@ test.describe('Variables', () => {
     request,
   }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;

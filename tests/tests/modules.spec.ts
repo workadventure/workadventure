@@ -6,7 +6,7 @@ import {RENDERER_MODE} from "./utils/environment";
 test.describe('Module', () => {
   test('loading should work out of the box', async ({ page }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
