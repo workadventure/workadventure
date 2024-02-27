@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, test, vi } from "vitest";
-import { AvailabilityStatus } from "../../../../../../libs/messages";
+import { AvailabilityStatus } from "@workadventure/messages";
 import { StatusRules, StatusRulesVerificationInterface, TimedRules } from "../statusRules";
 import { BasicStatusStrategy } from "../StatusStrategy/BasicStatusStrategy";
 import { UnvalidStatusTransitionError } from "../Errors/UnvalidStatusTransitionError";

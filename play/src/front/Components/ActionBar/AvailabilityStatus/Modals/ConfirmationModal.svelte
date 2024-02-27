@@ -20,14 +20,10 @@
             tw-bg-medium-purple/70 tw-max-w-sm tw-max-h-44 tw-self-center tw-justify-self-center "
 >
     <section class="tw-flex tw-grow tw-items-center">
-        <slot>Define Description Part...</slot>
+        <slot />
     </section>
     <footer class="tw-flex tw-justify-end tw-p-2 tw-backdrop-blur-2xl tw-rounded-b-2xl ">
-        <button class="tw-bg-blue-500 tw-rounded-2xl hover:tw-brightness-125" on:click={handleAccept}
-            >{acceptLabel}</button
-        >
-        <button class="tw-bg-medium-purple tw-rounded-2xl  hover:tw-brightness-125" on:click={handleClose}
-            >{closeLabel}</button
-        >
+        <button class="light" on:click={handleAccept}>{acceptLabel}</button>
+        <button class="light" on:click={handleClose}>{closeLabel}</button>
     </footer>
 </div>

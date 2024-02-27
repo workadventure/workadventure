@@ -5,6 +5,7 @@
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { Subscription } from "rxjs";
+    import { AvailabilityStatus } from "@workadventure/messages";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
         availabilityStatusStore,
@@ -93,7 +94,6 @@
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
-    import { AvailabilityStatus } from "../../../../../libs/messages";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";

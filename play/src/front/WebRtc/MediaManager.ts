@@ -127,6 +127,21 @@ export class MediaManager {
         }
     }
 
+    public askNotificationPermission(): Promise<boolean> {
+        return Notification.requestPermission()
+            .then((response) => {
+                if (response === "granted") {
+                    localUserStore.setNotification(true);
+                    return Promise.resolve(true);
+                } else {
+                    return Promise.resolve(false);
+                }
+            })
+            .catch((e) => {
+                return Promise.reject(e);
+            });
+    }
+
     public createNotification(userName: string, notificationType: NotificationType, forum: string | null = null) {
         if (document.hasFocus()) {
             return;

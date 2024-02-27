@@ -1,6 +1,6 @@
 import { get, writable } from "svelte/store";
+import { AvailabilityStatus } from "@workadventure/messages";
 import { setableStatus } from "../Rules/StatusRules/statusRules";
-import { AvailabilityStatus } from "../../../../libs/messages";
 import { availabilityStatusStore } from "./MediaStore";
 
 function createAvailabilityStatusMenuStore() {

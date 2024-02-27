@@ -5,6 +5,7 @@ import { MobileJoystick } from "../Components/MobileJoystick";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { passStatusToOnlineWhenUserIsInSetableStatus } from "../../Rules/StatusRules/statusChangerFunctions";
 
 interface UserInputManagerDatum {
     keyInstance?: Phaser.Input.Keyboard.Key;
@@ -250,6 +251,20 @@ export class UserInputManager {
         this.joystick = undefined;
     }
 
+    private isMoveKey(keyCode: number): boolean {
+        return [
+            Phaser.Input.Keyboard.KeyCodes.Z,
+            Phaser.Input.Keyboard.KeyCodes.W,
+            Phaser.Input.Keyboard.KeyCodes.Q,
+            Phaser.Input.Keyboard.KeyCodes.A,
+            Phaser.Input.Keyboard.KeyCodes.S,
+            Phaser.Input.Keyboard.KeyCodes.D,
+            Phaser.Input.Keyboard.KeyCodes.UP,
+            Phaser.Input.Keyboard.KeyCodes.LEFT,
+            Phaser.Input.Keyboard.KeyCodes.DOWN,
+            Phaser.Input.Keyboard.KeyCodes.RIGHT,
+        ].includes(keyCode);
+    }
     private bindInputEventHandlers() {
         this.scene.input.on(
             Phaser.Input.Events.POINTER_WHEEL,
@@ -318,6 +333,9 @@ export class UserInputManager {
         this.scene.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
             if (this.isInputDisabled) {
                 return;
+            }
+            if (this.isMoveKey(event.keyCode)) {
+                passStatusToOnlineWhenUserIsInSetableStatus();
             }
             this.userInputHandler.handleKeyDownEvent(event);
         });

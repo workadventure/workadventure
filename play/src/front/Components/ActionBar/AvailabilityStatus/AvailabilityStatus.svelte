@@ -1,8 +1,8 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
+    import { AvailabilityStatus } from "@workadventure/messages";
     import { availabilityStatusMenuStore } from "../../../Stores/AvailabilityStatusMenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { AvailabilityStatus } from "../../../../../../libs/messages";
     import { menuVisiblilityStore } from "../../../Stores/MenuStore";
     import { getColorHexOfStatus, getStatusInformation } from "../../../Utils/AvailabilityStatus";
     import { availabilityStatusStore } from "../../../Stores/MediaStore";

@@ -1,4 +1,4 @@
-import { AvailabilityStatus } from "../../../../../../libs/messages";
+import { AvailabilityStatus } from "@workadventure/messages";
 import { TimedRules } from "../statusRules";
 import { StatusStrategy } from "./AbstractStatusStrategy";
 

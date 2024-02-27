@@ -1,4 +1,4 @@
-import { AvailabilityStatus } from "../../../../../libs/messages";
+import { AvailabilityStatus } from "@workadventure/messages";
 
 export interface StatusRulesVerificationInterface {
     canChangeStatus: (actualStatus: AvailabilityStatus) => { to: (futureStatus: AvailabilityStatus) => boolean };

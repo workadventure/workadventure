@@ -1,9 +1,9 @@
 import { get } from "svelte/store";
+import { AvailabilityStatus } from "@workadventure/messages";
 import {
     bubbleModalVisibility,
     changeStatusConfirmationModalVisibility,
 } from "../../Stores/AvailabilityStatusModalsStore";
-import { AvailabilityStatus } from "../../../../../libs/messages";
 import { availabilityStatusStore, backInAMomentStore, busyStore, doNotDisturbStore } from "../../Stores/MediaStore";
 import { setableStatus } from "./statusRules";
 

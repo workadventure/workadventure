@@ -1,5 +1,5 @@
+import { AvailabilityStatus } from "@workadventure/messages";
 import { StatusStrategyInterface } from "../StatusStrategyInterface";
-import { AvailabilityStatus } from "../../../../../libs/messages";
 import { BasicStatusStrategy } from "./StatusStrategy/BasicStatusStrategy";
 import { StatusRulesVerificationInterface } from "./statusRules";
 import { UnvalidStatusTransitionError } from "./Errors/UnvalidStatusTransitionError";
