@@ -1,19 +1,19 @@
 <script lang="ts">
     import { LocalizedString } from "typesafe-i18n";
     import { LL } from "../../../i18n/i18n-svelte";
+    import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import { mapEditorSelectedToolStore, mapEditorVisibilityStore } from "../../Stores/MapEditorStore";
-    import { gameManager } from "../../Phaser/Game/GameManager";
     import AreaToolImg from "../images/icon-tool-area.png";
     // import FloorToolImg from "../images/icon-tool-floor.png";
-    import EntityToolImg from "../images/icon-tool-entity.svg";
-    import Tooltip from "../Util/Tooltip.svelte";
-    import ConfigureImg from "../images/configure.svg";
-    import TrashImg from "../images/trash.svg";
-    import ExplorerImg from "../images/explorer.svg";
-    import CloseImg from "../images/close.png";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { mapEditorActivated, mapEditorActivatedForCurrentArea } from "../../Stores/MenuStore";
+    import Tooltip from "../Util/Tooltip.svelte";
+    import CloseImg from "../images/close.png";
+    import ConfigureImg from "../images/configure.svg";
+    import ExplorerImg from "../images/explorer.svg";
+    import EntityToolImg from "../images/icon-tool-entity.svg";
+    import TrashImg from "../images/trash.svg";
 
     const gameScene = gameManager.getCurrentGameScene();
 
@@ -36,7 +36,7 @@
         tooltiptext: $LL.mapEditor.sideBar.trashEditor(),
     };
 
-    if($mapEditorActivatedForCurrentArea){
+    if ($mapEditorActivatedForCurrentArea) {
         availableTools.push(entityEditorTool);
         availableTools.push(trashEditorTool);
     }
@@ -59,16 +59,13 @@
         toolName: EditorToolName.CloseMapEditor,
         img: CloseImg,
         tooltiptext: $LL.mapEditor.sideBar.closeMapEditor(),
-    })
-
-
+    });
 
     function switchTool(newTool: EditorToolName) {
         mapEditorVisibilityStore.set(true);
         analyticsClient.openMapEditorTool(newTool);
         gameScene.getMapEditorModeManager().equipTool(newTool);
     }
-
 </script>
 
 <section class="side-bar-container" class:!tw-right-20={!$mapEditorVisibilityStore}>
