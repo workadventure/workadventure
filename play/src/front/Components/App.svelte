@@ -20,13 +20,12 @@ import {waScaleManager} from "../Phaser/Services/WaScaleManager";
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {iframeListener} from "../Api/IframeListener";
 import {desktopApi} from "../Api/Desktop";
-
-import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 import CoWebsiteTab from "./EmbedScreens/CoWebsiteTab.svelte";
 import XIcon from "./Icons/XIcon.svelte";
 import FullScreenIcon from "./Icons/FullScreenIcon.svelte";
 import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
+let WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 let game: Game;
 let gameDiv: HTMLDivElement;
 

@@ -128,12 +128,13 @@
     import SettingsIcon from "../Icons/SettingsIcon.svelte";
     import ChatOverlay from "../Chat/ChatOverlay.svelte";
     import ChevronUpIcon from "../Icons/ChevronUpIcon.svelte";
-    import {StringUtils} from "../../Utils/StringUtils";
     import CheckIcon from "../Icons/CheckIcon.svelte";
     import PlusIcon from "../Icons/PlusIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
+
+    import {StringUtils} from "../../Utils/StringUtils";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -143,7 +144,8 @@
     let profileMenuIsDropped = false;
     let adminMenuIsDropped = false;
     let burgerOpen = false;
-    let helpActive = false, navigating = false;
+    let helpActive: string | undefined = undefined;
+    let navigating = false;
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -476,7 +478,7 @@
                     on:click={() =>analyticsClient.openedChat()}
                     on:click={toggleChat}
                     on:mouseenter={() => { !navigating ? helpActive = "chat" : '' }}
-                    on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+                    on:mouseleave={() => { !navigating ? helpActive = undefined : '' }}
             >
                 <div class="h-12 w-12 rounded group-hover/btn-message-circle:bg-white/10 aspect-square flex items-center justify-center transition-all"
                 >
@@ -504,7 +506,7 @@
                 >
                 <div class="h-12 w-12 rounded group-hover/btn-users:bg-white/10 aspect-square flex items-center justify-center transition-all"
                      on:mouseenter={() => { !navigating ? helpActive = "users" : '' }}
-                     on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+                     on:mouseleave={() => { !navigating ? helpActive = undefined : '' }}
                 >
                     <UsersIcon />
                 </div>
@@ -522,14 +524,14 @@
                     <div
                         class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
                         on:click={toggleEmojiPicker}
-                        on:click={helpActive = false}
+                        on:click={helpActive = undefined}
                         on:mouseenter={() => { !navigating ? helpActive = "emoji" : '' }}
-                        on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+                        on:mouseleave={() => { !navigating ? helpActive = undefined : '' }}
                     >
                         <div
                                 class="h-12 w-12 rounded aspect-square flex items-center justify-center transition-all {$emoteMenuSubStore ? 'bg-secondary group-hover/bg-secondary-600' : ' group-hover/btn-emoji:bg-white/10'}"
                         >
-                            <EmojiIcon color="{$emoteMenuSubStore ? 'stroke-white fill-white' : 'stroke-white fill-transparent'}" hover="group-hover/btn-emoji:fill-white" />
+                            <EmojiIcon strokeColor="{$emoteMenuSubStore ? 'stroke-white fill-white' : 'stroke-white fill-transparent'}" hover="group-hover/btn-emoji:fill-white" />
                         </div>
                         {#if helpActive === "emoji" && !$emoteMenuSubStore}
                             <HelpTooltip title="Display an emoji above your Woka" />
@@ -638,7 +640,7 @@
                                  on:click={() => analyticsClient.follow()}
                                  on:click={followClick}
                                  on:mouseenter={() => { !navigating ? helpActive = "follow" : '' }}
-                                 on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+                                 on:mouseleave={() => { !navigating ? helpActive = undefined : '' }}
                             >
                                 <FollowIcon />
                             </div>
@@ -651,7 +653,7 @@
                              on:click={() =>analyticsClient.lockDiscussion()}
                              on:click={lockClick}
                              on:mouseenter={() => { !navigating ? helpActive = "lock" : '' }}
-                             on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+                             on:mouseleave={() => { !navigating ? helpActive = undefined : '' }}
                         >
 
                             <div class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-lock:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all">
@@ -685,7 +687,7 @@
                                         on:click={() =>analyticsClient.microphone()}
                                         on:click={microphoneClick}
                                         on:mouseenter={() => { !navigating ? helpActive = "mic" : '' }}
-                                        on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+                                        on:mouseleave={() => { !navigating ? helpActive = undefined : '' }}
                                 >
                                     {#if $requestedMicrophoneState && !$silentStore}
                                         <MicOnIcon />
@@ -734,7 +736,7 @@
                                                     {StringUtils.normalizeDeviceName(camera.label)}
                                                 </div>
                                                 {#if $usedCameraDeviceIdStore === camera.deviceId}
-                                                <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" color="stroke-white fill-transparent {$usedCameraDeviceIdStore === camera.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
+                                                <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" strokeColor="stroke-white fill-transparent {$usedCameraDeviceIdStore === camera.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
                                                 {/if}
                                             </div>
                                         {/each}
@@ -777,7 +779,7 @@
                                                     {StringUtils.normalizeDeviceName(microphone.label)}
                                                 </div>
                                                 {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
-                                                <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" color="stroke-white fill-transparent {$usedMicrophoneDeviceIdStore === microphone.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
+                                                <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" strokeColor="stroke-white fill-transparent {$usedMicrophoneDeviceIdStore === microphone.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
                                                 {/if}
                                             </div>
                                         {/each}
@@ -820,7 +822,7 @@
                                                     {StringUtils.normalizeDeviceName(speaker.label)}
                                                 </div>
                                                 {#if $speakerSelectedStore === speaker.deviceId}
-                                                <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" color="stroke-white fill-transparent {$speakerSelectedStore === speaker.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
+                                                <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" strokeColor="stroke-white fill-transparent {$speakerSelectedStore === speaker.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
                                                 {/if}
                                             </div>
                                         {/each}
@@ -843,7 +845,7 @@
                                     on:click={() => analyticsClient.camera()}
                                     on:click={cameraClick}
                                     on:mouseenter={() => { !navigating ? helpActive = "cam" : '' }}
-                                    on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+                                    on:mouseleave={() => { !navigating ? helpActive = undefined : '' }}
                             >
                                 {#if $requestedCameraState && !$silentStore}
                                     <CamOnIcon />
@@ -865,7 +867,7 @@
                          on:click={() =>analyticsClient.screenSharing()}
                          on:click={screenSharingClick}
                          on:mouseenter={() => { !navigating ? helpActive = "share" : '' }}
-                         on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+                         on:mouseleave={() => { !navigating ? helpActive = undefined : '' }}
                     >
                         <div class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-screen-share:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all {$requestedScreenSharingState && !$silentStore ? 'bg-secondary hover:bg-danger' : ''}">
                             {#if $requestedScreenSharingState && !$silentStore}
@@ -881,51 +883,11 @@
                     {/if}
                     <!-- NAV : SCREENSHARING END -->
                 </div>
-                {#if $mapEditorActivated}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        on:dragstart|preventDefault={noDrag}
-                        on:click={toggleMapEditorMode}
-                        class="bottom-action-button"
-                    >
-                        {#if isMobile}
-                            <Tooltip text={$LL.actionbar.mapEditorMobileLocked()} />
-                        {:else}
-                            <Tooltip text={$LL.actionbar.mapEditor()} />
-                        {/if}
-                        <button
-                            id="mapEditorIcon"
-                            class:border-top-light={$mapEditorModeStore && !isMobile}
-                            name="toggle-map-editor"
-                            disabled={isMobile}
-                        >
-                            <img
-                                draggable="false"
-                                src={mapBuilder}
-                                class:disable-opacity={isMobile}
-                                style="padding: 2px"
-                                alt="toggle-map-editor"
-                            />
-                        </button>
-                    </div>
-                {/if}
-                {#if $userHasAccessToBackOfficeStore}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div
-                        on:dragstart|preventDefault={noDrag}
-                        on:click={() => analyticsClient.openBackOffice()}
-                        on:click={openBo}
-                        class="bottom-action-button"
-                    >
-                        <Tooltip text={$LL.actionbar.bo()} />
-
-                        <button id="backOfficeIcon">
-                            <img draggable="false" src={hammerImg} style="padding: 2px" alt="toggle-bo" />
-                        </button>
-                    </div>
-                {/if}
             </div>
-
+        </div>
+    </div>
+    <div class="justify-self-end pointer-events-auto menu-right @6xl:text-danger">
+        <div class="flex space-x-2 xl:space-x-4">
             {#if $addActionButtonActionBarEvent.length > 0}
                 <div class="flex items-center relative">
                     {#each $addActionButtonActionBarEvent as button}
@@ -945,12 +907,12 @@
                                         buttonActionBarTrigger(button.id);
                                     }}
                                     on:mouseenter={() => { !navigating ? helpActive = button.id : '' }}
-                                    on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+                                    on:mouseleave={() => { !navigating ? helpActive = undefined : '' }}
                                     class="h-12 min-w-[48px] p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
                             >
                                 {#if button.toolTip}
                                     {#if helpActive === button.id}
-                                        <HelpTooltip delayBeforeAppear="0" hasDesc="{false}" hasImage="{false}" title={button.toolTip} />
+                                        <HelpTooltip delayBeforeAppear="{0}" hasDesc="{false}" hasImage="{false}" title={button.toolTip} />
                                     {/if}
                                 {/if}
                                 <div id={button.id} class="h-6">
@@ -1049,7 +1011,7 @@
                                 <div>Envoyer message global<!-- trad --></div>
                             </li>
                             {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
-                            <li on:click={toggleMegaphone} class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
+                            <li  class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
                                 <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                     <MegaphoneIcon />
                                 </div>

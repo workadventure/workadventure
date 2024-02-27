@@ -7,6 +7,11 @@
     import { emoteMenuSubStore } from "../../Stores/EmoteStore";
     import "../../style/wa-theme/video-ui.scss";
 
+    /**
+     * Hugo :
+     * Goal : make a resizable cam height
+     * Doesn't work properly : buggy */
+    /*
     export let y = 20
 
     let expanding = null
@@ -42,9 +47,10 @@
             return
         }
     }
+     */
 </script>
 
-<div id="embedScreensContainer" class="group relative h-full pt-24 flex justify-center items-center pointer-events-auto transition-all pb-7" style="{$emoteMenuSubStore ? 'padding-top:96px;' : '' }" on:mouseleave={stopExpand} >
+<div id="embedScreensContainer" class="group relative h-full pt-24 flex justify-center items-center pointer-events-auto transition-all pb-7" style="{$emoteMenuSubStore ? 'padding-top:96px;' : '' }">
     {#if $embedScreenLayoutStore === LayoutMode.Presentation}
         <PresentationLayout />
     {:else}
