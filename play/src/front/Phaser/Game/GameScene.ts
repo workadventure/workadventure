@@ -161,7 +161,6 @@ import { RemotePlayersRepository } from "./RemotePlayersRepository";
 import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
 import { IframeEventDispatcher } from "./IframeEventDispatcher";
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
-import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
@@ -174,6 +173,7 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import {UIWebsiteManager} from "./UI/UIWebsiteManager";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -290,6 +290,7 @@ export class GameScene extends DirtyScene {
     private playersDebugLogAlreadyDisplayed = false;
     private _broadcastService: BroadcastService | undefined;
     private hideTimeout: ReturnType<typeof setTimeout> | undefined;
+    private uiWebsiteManager: UIWebsiteManager;
 
     constructor(private _room: Room, customKey?: string | undefined) {
         super({
@@ -313,6 +314,7 @@ export class GameScene extends DirtyScene {
         this.connectionAnswerPromiseDeferred = new Deferred<RoomJoinedMessageInterface>();
         this.loader = new Loader(this);
         this.superLoad = new SuperLoaderPlugin(this);
+        this.uiWebsiteManager = new UIWebsiteManager();
     }
 
     //hook preload scene
@@ -2106,15 +2108,15 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("openUIWebsite", (websiteConfig) => {
-            return uiWebsiteManager.open(websiteConfig);
+            return this.uiWebsiteManager.open(websiteConfig);
         });
 
         iframeListener.registerAnswerer("getUIWebsites", () => {
-            return uiWebsiteManager.getAll();
+            return this.uiWebsiteManager.getAll();
         });
 
         iframeListener.registerAnswerer("getUIWebsiteById", (websiteId) => {
-            const website = uiWebsiteManager.getById(websiteId);
+            const website = this.uiWebsiteManager.getById(websiteId);
             if (!website) {
                 throw new Error("Unknown ui-website");
             }
@@ -2122,7 +2124,7 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("closeUIWebsite", (websiteId) => {
-            return uiWebsiteManager.close(websiteId);
+            return this.uiWebsiteManager.close(websiteId);
         });
 
         iframeListener.registerAnswerer("getMapData", () => {
@@ -2522,7 +2524,7 @@ ${escapedMessage}
         }
 
         iframeListener.cleanup();
-        uiWebsiteManager.closeAll();
+        this.uiWebsiteManager.closeAll();
         followUsersStore.stopFollowing();
 
         audioManagerFileStore.unloadAudio();
