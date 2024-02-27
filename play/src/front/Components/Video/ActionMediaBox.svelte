@@ -67,8 +67,8 @@
 </script>
 
 <div
-    class={`absolute top-0 
-    ${$moreActionOpened ? (!videoEnabled ? "-left-56" : "-left-14") : "-left-8"} 
+    class={`absolute top-0
+    ${$moreActionOpened ? (!videoEnabled ? "-left-56" : "-left-14") : "-left-8"}
     flex flex-col flex-wrap justify-between items-center p-1 bg-black bg-opacity-50 rounded-lg max-h-full`}
 >
     {#if !$moreActionOpened}

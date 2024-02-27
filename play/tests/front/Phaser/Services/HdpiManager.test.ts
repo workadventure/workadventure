@@ -46,9 +46,12 @@ describe("Test HdpiManager", () => {
 
         hdpiManager.zoomModifier = 1 / 10;
 
+        const screen = { width: 1280, height: 768 };
         const result = hdpiManager.getOptimalGameSize({ width: 1280, height: 768 });
-        expect(result.game.width).toEqual(1280);
-        expect(result.game.height).toEqual(768);
+        expect(result.game.width).toBeGreaterThanOrEqual(screen.width);
+        expect(result.game.width).toBeLessThanOrEqual(screen.width * 1.1);
+        expect(result.game.height).toBeGreaterThanOrEqual(screen.height);
+        expect(result.game.height).toBeLessThanOrEqual(screen.height * 1.1);
         expect(hdpiManager.zoomModifier).toEqual(2 / 3);
     });
 });

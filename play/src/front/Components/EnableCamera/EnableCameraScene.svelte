@@ -33,7 +33,6 @@
     import CheckIcon from "../Icons/CheckIcon.svelte";
     import MicOffIcon from "../Icons/MicOffIcon.svelte";
     import VolumeIcon from "../Icons/VolumeIcon.svelte";
-    import speakerAudio from "../../../../../maps/tests/webrtc-in.mp3"
     import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
 
 
@@ -48,6 +47,7 @@
     let selectedCamera: string | undefined = undefined;
     let selectedMicrophone: string | undefined = undefined;
     // let selectedSpeaker: string | undefined = undefined;
+    const sound = new Audio("/resources/objects/webrtc-in.mp3");
 
     let legalStrings: string[] = [];
     if (legals?.termsOfUseUrl) {
@@ -129,6 +129,8 @@
         requestedCameraState.enableWebcam();
         requestedMicrophoneState.enableMicrophone();
         batchGetUserMediaStore.commitChanges();
+
+        sound.load();
     });
 
     function selectCamera(selectedCamera) {
@@ -158,10 +160,8 @@
         speakerSelectedStore.set(deviceId);
     }
 
-    let sound = new Audio(speakerAudio)
     function playSoundClick() {
-      sound.load()
-      sound.play().catch(e => console.error(e));;
+        sound.play().catch(e => console.error(e));
     }
 
 </script>

@@ -265,7 +265,7 @@
         class:flex-col={videoEnabled}
         class:h-full={videoEnabled}
         class:items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
-        class:px-3={!videoEnabled}
+        class:px-7={!videoEnabled}
         class:rounded={!videoEnabled}
         class:flex-row={!videoEnabled}
         class:relative={!videoEnabled}

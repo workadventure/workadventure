@@ -7,6 +7,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         entityEditor: "Entität bearbeiten",
         tileEditor: "Kachel bearbeiten",
         trashEditor: "Papierkorb",
+        closeMapEditor: "Karte schließen",
     },
     properties: {
         silentProperty: {
@@ -152,6 +153,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     areaEditor: {
         editInstructions: "Klicken Sie auf eine Fläche, um ihre Eigenschaften zu ändern.",
         nameLabel: "Name",
+        nameLabelPlaceholder: "Geben Sie hier den Namen des Bereichs ein.",
+        areaDescription: "Beschreibung",
+        areaDescriptionPlaceholder: "Geben Sie hier die Beschreibung des Bereichs ein.",
+        addDescriptionField: "Beschreibung hinzufügen",
     },
     areaEditorInstructions: {
         title: "Wie funktioniert das?",
@@ -170,6 +175,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         buttonLabel: "Knopfbeschrifung",
         editInstructions: "Klicken Sie auf ein Objekt, um seine Eigenschaften zu ändern.",
         selectObject: "Klicken Sie auf ein Objekt, um es auszuwählen",
+        objectName: "Objektname",
+        objectNamePlaceholder: "Geben Sie hier den Namen des Objekts ein.",
+        objectDescription: "Objektbeschreibung",
+        objectDescriptionPlaceholder: "Geben Sie hier die Beschreibung des Objekts ein.",
+        addDescriptionField: "Beschreibung hinzufügen",
     },
     settings: {
         loading: "Laden...",

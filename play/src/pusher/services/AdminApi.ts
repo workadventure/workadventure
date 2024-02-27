@@ -664,7 +664,11 @@ class AdminApi implements AdminInterface {
             });
     }
 
-    async getUrlRoomsFromSameWorld(roomUrl: string, locale?: string): Promise<ShortMapDescriptionList> {
+    async getUrlRoomsFromSameWorld(
+        roomUrl: string,
+        locale?: string,
+        tags?: string[]
+    ): Promise<ShortMapDescriptionList> {
         /**
          * @openapi
          * /api/room/sameWorld:
@@ -703,8 +707,15 @@ class AdminApi implements AdminInterface {
          *         schema:
          *             $ref: '#/definitions/ErrorApiErrorData'
          */
+
+        // Build the URL to call the API
+        const url = new URL(`${ADMIN_API_URL}/api/room/sameWorld`);
+        url.searchParams.append("roomUrl", roomUrl);
+        if (tags) {
+            url.searchParams.append("tags", tags.join(","));
+        }
         return axios
-            .get<unknown>(ADMIN_API_URL + "/api/room/sameWorld" + "?roomUrl=" + encodeURIComponent(roomUrl), {
+            .get<unknown>(url.toString(), {
                 headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
             })
             .then((data) => {

@@ -801,7 +801,8 @@ class CoWebsiteManager {
     private fire(): void {
         this._onResize.next();
         waScaleManager.applyNewSize();
-        waScaleManager.refreshFocusOnTarget();
+        // TODO: this line because the refresh focus should be emited with an event
+        waScaleManager.refreshFocusOnTarget(gameManager.getCurrentGameScene().cameras.main);
     }
 
     private toggleFullscreen(): void {

@@ -8,7 +8,7 @@ test.describe('Modal', () => {
     test('test', async ({ page }) => {
         // Go to
         await page.goto(
-            `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+            `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
         );
 
         // Connection with Alice

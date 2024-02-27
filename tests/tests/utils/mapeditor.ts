@@ -14,6 +14,10 @@ class MapEditor {
     async openEntityEditor(page: Page) {
         await page.locator('section.side-bar-container .side-bar .tool-button button#EntityEditor').first().click();
     }
+
+    async openExploration(page: Page) {
+        await page.locator('section.side-bar-container .side-bar .tool-button button#ExploreTheRoom').first().click();
+    }
 }
 
 export default new MapEditor();

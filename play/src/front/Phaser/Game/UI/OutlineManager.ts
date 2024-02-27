@@ -10,13 +10,13 @@ import { DirtyScene } from "../DirtyScene";
 export class OutlineManager {
     private scene: DirtyScene;
     private gameObjects: Map<Phaser.GameObjects.GameObject, () => { thickness: number; color?: number }>;
-    private readonly scaleManagerResizeCallback: () => void;
+    //private readonly scaleManagerResizeCallback: () => void;
 
     constructor(scene: DirtyScene) {
         this.scene = scene;
         this.gameObjects = new Map<Phaser.GameObjects.GameObject, () => { thickness: number; color?: number }>();
 
-        this.scaleManagerResizeCallback = () => {
+        /*this.scaleManagerResizeCallback = () => {
             for (const [gameObject, getOutline] of this.gameObjects) {
                 this.getOutlinePlugin()?.remove(gameObject);
                 const outline = getOutline();
@@ -30,11 +30,11 @@ export class OutlineManager {
             this.scene.markDirty();
         };
 
-        this.scene.scale.on(Phaser.Scale.Events.RESIZE, this.scaleManagerResizeCallback);
+        this.scene.scale.on(Phaser.Scale.Events.RESIZE, this.scaleManagerResizeCallback);*/
     }
 
     public clear(): void {
-        this.scene.scale.off(Phaser.Scale.Events.RESIZE, this.scaleManagerResizeCallback);
+        //this.scene.scale.off(Phaser.Scale.Events.RESIZE, this.scaleManagerResizeCallback);
         this.gameObjects.clear();
     }
 

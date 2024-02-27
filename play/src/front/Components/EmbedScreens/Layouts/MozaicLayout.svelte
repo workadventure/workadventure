@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
-    import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
+    import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import MediaBox from "../../Video/MediaBox.svelte";
     import MyCamera from "../../MyCamera.svelte";
     import { myCameraStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
@@ -39,8 +39,17 @@
         {#if $myCameraStore && displayFullMedias && $proximityMeetingStore === true}
             <MyCamera />
         {/if}
+        {#if $myJitsiCameraStore}
+            <MediaBox
+                streamable={$myJitsiCameraStore}
+                isClickable={false}
+                mozaicSolo={$streamableCollectionStore.size === 1}
+                mozaicDuo={$streamableCollectionStore.size === 2}
+                mozaicQuarter={$streamableCollectionStore.size === 3 || $streamableCollectionStore.size >= 4}
+            />
+        {/if}
     </div>
-    <div class="absolute self-end z-[300] bottom-6 md:bottom-4 right-5 ">
+    <div class="absolute self-end z-[300] bottom-6 md:bottom-4 right-5">
         {#if $myCameraStore && !displayFullMedias}
             <MyCamera />
         {/if}

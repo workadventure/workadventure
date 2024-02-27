@@ -8,7 +8,7 @@
     import { isMediaBreakpointUp , isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    import { Streamable } from "../../Stores/StreamableCollectionStore";
+    import { Streamable, myJitsiCameraStore } from "../../Stores/StreamableCollectionStore";
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
         import { analyticsClient } from "../../Administration/AnalyticsClient";
@@ -71,12 +71,13 @@
             ? highlightedEmbedScreen.toggleHighlight(embedScreen)
             : null}
 >
-    <ActionMediaBox
-        {embedScreen}
-        trackStreamWraper={peer}
-        videoEnabled={$videoTrackStore ? $videoTrackStore?.isActive() : false}
-    />
-
+    {#if $myJitsiCameraStore?.uniqueId != peer.uniqueId}
+        <ActionMediaBox
+            {embedScreen}
+            trackStreamWraper={peer}
+            videoEnabled={$videoTrackStore ? $videoTrackStore?.isActive() : false}
+        />
+    {/if}
     {#if $videoTrackStore}
         <div class="rounded-sm overflow-hidden flex w-full flex-col h-full">
             <JitsiVideoElement

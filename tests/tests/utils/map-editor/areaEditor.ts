@@ -26,9 +26,20 @@ class AreaEditor {
     }
 
     async setAreaName(page: Page, name: string){
-        await page.getByPlaceholder('Value').click();
-        await page.getByPlaceholder('Value').fill(name);
-        await page.getByPlaceholder('Value').press('Enter');
+        await page.getByPlaceholder('MyArea').click();
+        await page.getByPlaceholder('MyArea').fill(name);
+        await page.getByPlaceholder('MyArea').press('Enter');
+    }
+
+    async setAreaDescription(page: Page, Description: string){
+        await page.getByText('+ Add description field').click();
+        await page.getByPlaceholder('My area is a...').click();
+        await page.getByPlaceholder('My area is a...').fill(Description);
+        await page.getByPlaceholder('My area is a...').press('Enter');
+    }
+
+    async setAreaSearcheable(page: Page, value: boolean){
+        await page.locator('.map-editor .sidebar input#searchable').setChecked(value);
     }
 
     async setExitProperty(page: Page, mapName: string, startAreaName: string){

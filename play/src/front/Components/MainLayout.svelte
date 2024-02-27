@@ -15,7 +15,13 @@
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
-    import { showLimitRoomModalStore, modalVisibilityStore } from "../Stores/ModalStore";
+    import {
+        showLimitRoomModalStore,
+        modalVisibilityStore,
+        showModalGlobalComminucationVisibilityStore,
+        modalPopupVisibilityStore,
+        roomListVisibilityStore,
+    } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
@@ -26,6 +32,9 @@
     // import { askDialogStore } from "../Stores/MeetingStore";
     // import AudioManager from "./AudioManager/AudioManager.svelte";
     import { popupStore } from "../Stores/PopupStore";
+    import { askDialogStore } from "../Stores/MeetingStore";
+    import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
+    import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
@@ -55,6 +64,17 @@
     // import JitsiTrack from "../Streaming/Jitsi/JitsiTrackWrapper";
 
 
+    import XIcon from "./Icons/XIcon.svelte";
+    import ChevronLeftIcon from "./Icons/ChevronLeftIcon.svelte";
+    import ChevronRightIcon from "./Icons/ChevronRightIcon.svelte";
+    import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
+    import ObjectDetails from "./Modal/ObjectDetails.svelte";
+    import Popup from "./Modal/Popup.svelte";
+    import MapList from "./Exploration/MapList.svelte";
+    import Notification from "./UI/Notification.svelte";
+    import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
+    import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
+    import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -71,7 +91,7 @@
 
 <!-- Components ordered by z-index -->
 <div id="main-layout" class="relative z-10 h-screen pointer-events-none {[...$coWebsites.values()].length === 0 ? 'not-cowebsite' : ''}" bind:this={mainLayout}>
-    {#if $modalVisibilityStore}
+    {#if $modalVisibilityStore || $modalPopupVisibilityStore}
         <div class="bg-black/60 w-full h-full fixed left-0 right-0">
 
         </div>
@@ -154,6 +174,19 @@
         {/if}
 
         <!-- <PopUpTutorial priority={5} className="popup" /> -->
+    </section>
+
+    {#if $modalVisibilityStore}
+        <Modal />
+    {/if}
+
+    {#if $askDialogStore}
+        <MuteDialogBox />
+    {/if}
+
+    {#if $layoutManagerActionVisibilityStore}
+        <LayoutActionManager />
+    {/if}
 
         <!-- {#if $textMessageStore} ou celui là {#if $MessageStore} ou pour message globaux {#if $GlobalMessageManagerStore}-->
           <!-- <PopUpMessage /> -->
@@ -164,7 +197,6 @@
           {/each}
             <!-- {#if (component.length > 1)}
             {/if} -->
-          </section>
 
 
           {#if $actionsMenuStore}
