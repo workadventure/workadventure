@@ -9,7 +9,7 @@ test.describe('Iframe API', () => {
     page,
   }) => {
     await page.goto(
-      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Metadata/cowebsiteAllowApi.json?phaserMode=${RENDERER_MODE}`
+      `/_/global/maps.workadventure.localhost/tests/Metadata/cowebsiteAllowApi.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page);
@@ -22,7 +22,7 @@ test.describe('Iframe API', () => {
     page
   }) => {
     await page.goto(
-        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page);
@@ -83,7 +83,7 @@ test.describe('Iframe API', () => {
                                                           page
                                                         }) => {
     await page.goto(
-        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}#foo=bar`
+        `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}#foo=bar`
     );
 
     await login(page);

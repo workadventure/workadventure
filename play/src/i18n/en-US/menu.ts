@@ -76,6 +76,7 @@ const menu: BaseTranslation = {
         error: "No file selected. You need to upload a file before sending it.",
         errorUpload:
             "Uploading file error. Please check your file and try again. If the problem persists, contact the administrator.",
+        dragAndDrop: "Drag and drop or click here to upload your file 🎧",
     },
     contact: {
         gettingStarted: {
