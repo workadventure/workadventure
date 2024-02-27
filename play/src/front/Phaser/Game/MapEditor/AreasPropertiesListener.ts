@@ -25,7 +25,7 @@ import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Sto
 import { chatZoneLiveStore } from "../../../Stores/ChatStore";
 import { userIsAdminStore } from "../../../Stores/GameStore";
 import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
-import { mapEditorCurrentAreaIdOnUserPositionStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
+import { mapEditorAreaOnUserPositionStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
 import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
 import { currentLiveStreamingNameStore } from "../../../Stores/MegaphoneStore";
 import { mapEditorActivatedForCurrentArea } from "../../../Stores/MenuStore";
@@ -61,23 +61,7 @@ export class AreasPropertiesListener {
                 continue;
             }
 
-            mapEditorCurrentAreaIdOnUserPositionStore.set(area.id);
-
-            // Get area right properties
-            const areaRight = area.properties.find((property) => property.type === "areaRightPropertyData") as
-                | AreaRightPropertyData
-                | undefined;
-
-            const isAreaHasRightPropertyData =
-                areaRight !== undefined && (areaRight.readTags.length > 0 || areaRight.writeTags.length > 0);
-            const isAdmin = get(userIsAdminStore);
-            const userTags = gameManager.getCurrentGameScene().connection?.getTags() ?? [];
-            if (!isAdmin && isAreaHasRightPropertyData) {
-                // Check that the user have right to read the area
-                if (areaRight?.writeTags?.find((tag) => userTags.includes(tag))) {
-                    this.allowEntityEditorToolOnArea();
-                }
-            }
+            this.setAreaWithAccessRightsOnUserPosition(area);
 
             // Add new notification to show at the user that he entered a new area
             if (area.name && area.name !== "") {
@@ -85,6 +69,34 @@ export class AreasPropertiesListener {
             }
             for (const property of area.properties) {
                 this.addPropertyFilter(property, area);
+            }
+        }
+    }
+
+    private setAreaWithAccessRightsOnUserPosition(area: AreaData) {
+        // Get area right properties
+        const areaRight = area.properties.find((property) => property.type === "areaRightPropertyData") as
+            | AreaRightPropertyData
+            | undefined;
+
+        const isAreaHasRightPropertyData =
+            areaRight !== undefined && (areaRight.readTags.length > 0 || areaRight.writeTags.length > 0);
+        const isAdmin = get(userIsAdminStore);
+        const userTags = gameManager.getCurrentGameScene().connection?.getTags() ?? [];
+        if (isAdmin) {
+            mapEditorAreaOnUserPositionStore.set({ id: area.id, accessRights: "full" });
+        } else if (isAreaHasRightPropertyData) {
+            const writeAccess = areaRight?.writeTags?.find((tag) => userTags.includes(tag));
+            const readAccess = areaRight?.readTags?.find((tag) => userTags.includes(tag));
+            if (writeAccess) {
+                this.allowEntityEditorToolOnArea();
+                if (readAccess) {
+                    mapEditorAreaOnUserPositionStore.set({ id: area.id, accessRights: "full" });
+                } else {
+                    mapEditorAreaOnUserPositionStore.set({ id: area.id, accessRights: "write" });
+                }
+            } else if (readAccess) {
+                mapEditorAreaOnUserPositionStore.set({ id: area.id, accessRights: "read" });
             }
         }
     }
@@ -140,7 +152,7 @@ export class AreasPropertiesListener {
         for (const area of areas) {
             // analytics event for area
             analyticsClient.leaveAreaMapEditor(area.id, area.name);
-            mapEditorCurrentAreaIdOnUserPositionStore.set(undefined);
+            mapEditorAreaOnUserPositionStore.set(undefined);
 
             if (get(mapEditorActivatedForCurrentArea)) {
                 this.disableAndCloseMapEntityEditorTool();
