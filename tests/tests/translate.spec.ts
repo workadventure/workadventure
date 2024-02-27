@@ -7,7 +7,7 @@ test.describe('Translation', () => {
     page,
   }) => {
     await page.goto(
-      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json?phaserMode=${RENDERER_MODE}`
+      `/_/global/maps.workadventure.localhost/tests/mousewheel.json?phaserMode=${RENDERER_MODE}`
     );
 
     await login(page);

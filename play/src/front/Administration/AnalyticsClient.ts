@@ -371,6 +371,22 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
+    sendGlocalTextMessage(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_menu_globalmessage_send");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    sendGlobalSoundMessage(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_menu_globalmessage_sound");
+            })
+            .catch((e) => console.error(e));
+    }
+
     reportIssue(): void {
         this.posthogPromise
             ?.then((posthog) => {

@@ -76,6 +76,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         error: "Aucun fichier sélectionné. Vous devez télécharger un fichier avant de l'envoyer.",
         errorUpload:
             "Erreur lors de l'envoi du fichier. Veuillez vérifier votre fichier et réessayer. Si le problème persiste, contacter l'administrateur.",
+        dragAndDrop: "Glisser-déposer un fichier ici ou cliquer pour sélectionner un fichier 🎧",
     },
     contact: {
         gettingStarted: {

@@ -7,7 +7,7 @@ test.describe('Button in action bar', () => {
     test('test', async ({ page }) => {
         // Go to WorkAdventure platform
         await page.goto(
-            `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+            `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
         );
 
         // Login Alice
@@ -36,7 +36,7 @@ test.describe('Action button in action bar', () => {
     test('test', async ({ page }) => {
         // Go to WorkAdventure platform
         await page.goto(
-            `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+            `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
         );
 
         // Login Alice
