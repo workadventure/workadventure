@@ -100,7 +100,6 @@
     }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
 <section
     class="section-input-send-audio centered-column tw-cursor-pointer"
     on:dragover|preventDefault={() => {
@@ -113,7 +112,7 @@
         dropAudioFile(e);
         dropHover = false;
     }}
-    on:click={() => {
+    on:pointerdown={() => {
         fileInput.click();
     }}
 >

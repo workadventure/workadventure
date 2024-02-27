@@ -80,7 +80,7 @@
         on:keydown|preventDefault={noDrag}
         on:focus|preventDefault={noDrag}
         on:blur|preventDefault={noDrag}
-        on:click={() => {
+        on:pointerdown={() => {
             toggleAppMenu();
         }}
         class="bottom-action-button"
@@ -107,7 +107,7 @@
                     <div class="tw-transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.klaxoonProperties.label()} />
                         <button
-                            on:click={() => {
+                            on:pointerdown={() => {
                                 klaxoonButtonHandler();
                                 appMenuOpened = false;
                             }}
@@ -124,7 +124,7 @@
                     <div class="tw-transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleDocsProperties.label()} />
                         <button
-                            on:click={() => {
+                            on:pointerdown={() => {
                                 window.open(`https://docs.google.com/document/u/1/`, "_blanck");
                                 appMenuOpened = false;
                             }}
@@ -139,7 +139,7 @@
                     <div class="tw-transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleSheetsProperties.label()} />
                         <button
-                            on:click={() => {
+                            on:pointerdown={() => {
                                 window.open(`https://docs.google.com/spreadsheets/u/1/`, "_blanck");
                                 appMenuOpened = false;
                             }}
@@ -154,7 +154,7 @@
                     <div class="tw-transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleSlidesProperties.label()} />
                         <button
-                            on:click={() => {
+                            on:pointerdown={() => {
                                 window.open(`https://docs.google.com/presentation/u/1/`, "_blanck");
                                 appMenuOpened = false;
                             }}
@@ -169,7 +169,7 @@
                     <div class="tw-transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.eraserProperties.label()} />
                         <button
-                            on:click={() => {
+                            on:pointerdown={() => {
                                 window.open(`https://app.eraser.io/dashboard/all`, "_blanck");
                                 appMenuOpened = false;
                             }}

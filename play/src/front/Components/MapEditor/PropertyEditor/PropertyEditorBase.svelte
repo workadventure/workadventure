@@ -14,7 +14,7 @@
     <div class="header">
         <slot name="header">_MISSING_</slot>
         <CloseButton
-            on:click={() => {
+            on:pointerdown={() => {
                 dispatch("close");
             }}
         />

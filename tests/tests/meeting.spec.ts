@@ -7,7 +7,14 @@ import MapEditor from "./utils/mapeditor";
 import AreaEditor from "./utils/map-editor/areaEditor";
 
 test.describe('Meeting actions test', () => {
-  test('Meeting action to mute microphone & video', async ({page, browser}) => {
+  test('Meeting action to mute microphone & video', async ({page, browser}, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     // Because webkit in playwright does not support Camera/Microphone Permission by settings
     if(browser.browserType() === webkit) {
       //eslint-disable-next-line playwright/no-skipped-test
@@ -64,7 +71,14 @@ test.describe('Meeting actions test', () => {
     userBob.close();
   });
 
-  test('Jitsi meeting action to mute microphone & video', async ({ page, browser, request }) => {
+  test('Jitsi meeting action to mute microphone & video', async ({ page, browser, request }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     if(browser.browserType() === webkit) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();

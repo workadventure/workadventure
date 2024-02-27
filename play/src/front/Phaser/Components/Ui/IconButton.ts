@@ -16,7 +16,7 @@ export interface IconButtonAppearanceConfig {
 }
 
 export enum IconButtonEvent {
-    Clicked = "IconButton:Clicked",
+    Clicked = "IconButton:pointerdowned",
 }
 
 export class IconButton extends Phaser.GameObjects.Container {

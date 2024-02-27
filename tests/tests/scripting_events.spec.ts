@@ -4,7 +4,14 @@ import {evaluateScript} from "./utils/scripting";
 import {RENDERER_MODE} from "./utils/environment";
 
 test.describe('Scripting API Events', () => {
-    test('test events', async ({ page, browser, request }) => {
+    test('test events', async ({ page, browser, request }, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechrome") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         // Go to 
         await page.goto(
             `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`

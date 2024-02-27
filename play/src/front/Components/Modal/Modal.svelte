@@ -49,7 +49,7 @@
 
 <div class="menu-container {isMobile ? 'mobile' : $modalIframeStore?.position}" bind:this={mainModal}>
     <div class="tw-w-full tw-bg-dark-purple/95 tw-rounded" transition:fly={{ x: 1000, duration: 500 }}>
-        <button type="button" class="close-window" on:click={close}>&times</button>
+        <button type="button" class="close-window" on:pointerdown={close}>&times</button>
         {#if modalUrl != undefined}
             <iframe
                 id="modalIframe"

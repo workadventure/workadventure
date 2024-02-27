@@ -150,7 +150,7 @@
                 >
                     <button
                         class="add-property-button tooltip tw-p-4 tw-flex tw-justify-center tw-items-center"
-                        on:click={explorationMode}
+                        on:pointerdown={explorationMode}
                     >
                         <div class="tw-w-10 tw-h-10 tw-flex tw-flex-wrap tw-items-center tw-justify-center">
                             <img
@@ -174,7 +174,7 @@
             >
                 <button
                     class="add-property-button tooltip tw-p-4 tw-flex tw-justify-center tw-items-center"
-                    on:click={toggleSearchMode}
+                    on:pointerdown={toggleSearchMode}
                 >
                     <div class="tw-w-10 tw-h-10 tw-flex tw-flex-wrap tw-items-center tw-justify-center">
                         <img draggable="false" class="tw-max-w-[75%] tw-max-h-[75%]" src={visioSvg} alt="info icon" />
@@ -202,65 +202,64 @@
                 <AddPropertyButtonWrapper
                     property="jitsiRoomProperty"
                     isActive={$selectFilters.includes("jitsiRoomProperty")}
-                    on:click={() => {
+                    on:pointerdown={() => {
                         addFilter("jitsiRoomProperty");
                     }}
                 />
                 <AddPropertyButtonWrapper
                     property="playAudio"
                     isActive={$selectFilters.includes("playAudio")}
-                    on:click={() => {
+                    on:pointerdown={() => {
                         addFilter("playAudio");
                     }}
                 />
                 <AddPropertyButtonWrapper
                     property="openWebsite"
                     isActive={$selectFilters.includes("openWebsite")}
-                    on:click={() => {
+                    on:pointerdown={() => {
                         addFilter("openWebsite");
                     }}
                 />
                 <AddPropertyButtonWrapper
                     property="speakerMegaphone"
                     isActive={$selectFilters.includes("speakerMegaphone")}
-                    on:click={() => {
+                    on:pointerdown={() => {
                         addFilter("speakerMegaphone");
                     }}
                 />
                 <AddPropertyButtonWrapper
                     property="listenerMegaphone"
                     isActive={$selectFilters.includes("listenerMegaphone")}
-                    on:click={() => {
+                    on:pointerdown={() => {
                         addFilter("listenerMegaphone");
                     }}
                 />
                 <AddPropertyButtonWrapper
                     property="exit"
                     isActive={$selectFilters.includes("exit")}
-                    on:click={() => {
+                    on:pointerdown={() => {
                         addFilter("exit");
                     }}
                 />
                 <AddPropertyButtonWrapper
                     property="start"
                     isActive={$selectFilters.includes("start")}
-                    on:click={() => {
+                    on:pointerdown={() => {
                         addFilter("silent");
                     }}
                 />
                 <AddPropertyButtonWrapper
                     property="focusable"
                     isActive={$selectFilters.includes("focusable")}
-                    on:click={() => {
+                    on:pointerdown={() => {
                         addFilter("focusable");
                     }}
                 />
             </div>
 
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
                 class="entities tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
-                on:click={toggleEntityList}
+                on:pointerdown={toggleEntityList}
             >
                 <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={EntityToolImg} alt="link icon" />
                 {#if $entitessListFiltered.size > 0}
@@ -281,12 +280,11 @@
             {#if entityListActive && $entitessListFiltered.size > 0}
                 <div class="entity-items tw-p-4 tw-flex tw-flex-col">
                     {#each [...$entitessListFiltered] as [key, entity] (key)}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             id={entity.entityId}
                             on:mouseenter={() => highlightEntity(entity)}
                             on:mouseleave={() => unhighlightEntity(entity)}
-                            on:click={() => mapExplorationObjectSelectedStore.set(entity)}
+                            on:pointerdown={() => mapExplorationObjectSelectedStore.set(entity)}
                             class="item tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
                         >
                             <img
@@ -302,10 +300,9 @@
                 </div>
             {/if}
 
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
                 class="areas tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
-                on:click={toggleAreaList}
+                on:pointerdown={toggleAreaList}
             >
                 <img class="tw-w-10 tw-h-auto tw-mr-2 tw-pointer-events-none" src={AreaToolImg} alt="link icon" />
                 {#if $areasListFiltered.size > 0}
@@ -326,12 +323,11 @@
                 <div class="area-items tw-p-4 tw-flex tw-flex-col">
                     {#if $areasListFiltered.size > 0}
                         {#each [...$areasListFiltered] as [key, area] (key)}
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
                                 id={key}
                                 on:mouseenter={() => highlightArea(area)}
                                 on:mouseleave={() => unhighlightArea(area)}
-                                on:click={() => mapExplorationObjectSelectedStore.set(area)}
+                                on:pointerdown={() => mapExplorationObjectSelectedStore.set(area)}
                                 class="item tw-p-4 tw-rounded-2xl tw-flex tw-flex-row tw-justify-around tw-items-center tw-cursor-pointer"
                             >
                                 <img

@@ -19,7 +19,14 @@ test.setTimeout(360000);
 test.describe('Variables', () => {
   // WARNING: Since this test restarts traefik and other components, it might fail when run against the vite dev server.
   // when running with --headed you can manually reload the page to avoid this issue.
-  test('storage works @docker', async ({ page }) => {
+  test('storage works @docker', async ({ page }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await resetRedis();
 
     await Promise.all([rebootBack(), rebootPlay()]);
@@ -135,7 +142,14 @@ test.describe('Variables', () => {
     page,
     browser,
     request,
-  }) => {
+  }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+    
     // Let's start by visiting a map that DOES not have the variable.
 
     fs.copyFileSync(

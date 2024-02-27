@@ -87,9 +87,9 @@
                     on:change={onValueChange}
                 />
                 {#if !playing}
-                    <button on:click={playAudio} class="tw-m-0 tw-pl-1 tw-pr-0 tw-text-xl"> ▶️ </button>
+                    <button on:pointerdown={playAudio} class="tw-m-0 tw-pl-1 tw-pr-0 tw-text-xl"> ▶️ </button>
                 {:else}
-                    <button on:click={stopAudio} class="tw-m-0 tw-pl-1 tw-pr-0 tw-text-xl"> ⏹️ </button>
+                    <button on:pointerdown={stopAudio} class="tw-m-0 tw-pl-1 tw-pr-0 tw-text-xl"> ⏹️ </button>
                 {/if}
             </div>
             <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />

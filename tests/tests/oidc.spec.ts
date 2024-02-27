@@ -7,7 +7,14 @@ import {RENDERER_MODE} from "./utils/environment";
 test.describe('OpenID connect @oidc', () => {
   test('can login and logout', async ({
     page,
-  }) => {
+  }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await page.goto(
         `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
     );

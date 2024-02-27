@@ -33,7 +33,7 @@
 >
     <section class="header">
         {#if $hasClosableMessagesInErrorStore}
-            <button type="button" class="close-window" on:click|preventDefault={close}>&times;</button>
+            <button type="button" class="close-window" on:pointerdown|preventDefault={close}>&times;</button>
         {/if}
         <h2 class="is-error title">{$LL.error.errorDialog.title()}</h2>
     </section>
@@ -57,7 +57,7 @@
                 {$LL.error.errorDialog.messageFAQ()}
                 <a
                     href="https://workadventu.re/faq"
-                    on:click|stopPropagation|preventDefault={openCwebsiteLink}
+                    on:pointerdown|stopPropagation|preventDefault={openCwebsiteLink}
                     target="_blank"
                     rel="noopener noreferrer">FAQ</a
                 >
@@ -66,8 +66,8 @@
     </section>
     {#if $hasClosableMessagesInErrorStore}
         <section class="foote tw-w-full tw-flex tw-flex-row tw-justify-center tw-backdrop-blur-sm">
-            <button class="light" on:click={close}>{$LL.error.errorDialog.close()}</button>
-            <button class="light outline" on:click={refresh}>{$LL.error.errorDialog.reload()}</button>
+            <button class="light" on:pointerdown={close}>{$LL.error.errorDialog.close()}</button>
+            <button class="light outline" on:pointerdown={refresh}>{$LL.error.errorDialog.reload()}</button>
         </section>
     {/if}
 </div>

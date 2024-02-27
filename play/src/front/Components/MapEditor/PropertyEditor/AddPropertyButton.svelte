@@ -13,9 +13,9 @@
 <button
     class="add-property-button tooltip tw-p-4 tw-flex tw-justify-center tw-items-center"
     {style}
-    on:click={() => {
+    on:pointerdown={() => {
         if (disabled) return;
-        dispatch("click");
+        dispatch("pointerdown");
     }}
     {disabled}
 >

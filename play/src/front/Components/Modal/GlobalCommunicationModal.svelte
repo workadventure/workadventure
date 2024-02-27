@@ -164,7 +164,7 @@
 
 <div class="menu-container {isMobile ? 'mobile' : 'center'} tw-h-3/4" bind:this={mainModal}>
     <div class="tw-w-full tw-bg-dark-purple/95 tw-rounded" transition:fly={{ x: 1000, duration: 500 }}>
-        <button type="button" class="close-window" on:click={close}>&times</button>
+        <button type="button" class="close-window" on:pointerdown={close}>&times</button>
         <header>
             <h2 class="tw-p-5 blue-title">Global communication</h2>
             {#if activeLiveMessage || inputSendTextActive || uploadAudioActive}
@@ -172,7 +172,7 @@
                 <a
                     href="#"
                     class="tw-px-5 tw-flex tw-flex-row tw-items-center tw-text-xs tw-m-0"
-                    on:click|preventDefault|stopPropagation={() => back()}
+                    on:pointerdown|preventDefault|stopPropagation={() => back()}
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -204,7 +204,7 @@
                             />
                             {$LL.megaphone.modal.liveMessage.title()}
                         </h3>
-                        <button class="light tw-max-w-fit" on:click={activateLiveMessage}
+                        <button class="light tw-max-w-fit" on:pointerdown={activateLiveMessage}
                             >{$LL.megaphone.modal.liveMessage.button()}</button
                         >
                         <p class="tw-text-white tw-text-sm tw-whitespace-pre-line">
@@ -221,7 +221,11 @@
                             {$LL.megaphone.modal.textMessage.title()}
                         </h3>
                         <p class="help-text"><InfoIcon size="18" /> {$LL.megaphone.modal.audioMessage.noAccess()}</p>
-                        <button class="light tw-max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
+                        <button
+                            class="light tw-max-w-fit"
+                            on:pointerdown={activateInputText}
+                            disabled={!$userIsAdminStore}
+                        >
                             {$LL.megaphone.modal.textMessage.button()}</button
                         >
                         <p class="tw-text-white tw-text-sm tw-whitespace-pre-line">
@@ -238,7 +242,11 @@
                             {$LL.megaphone.modal.audioMessage.title()}
                         </h3>
                         <p class="help-text"><InfoIcon size="18" /> {$LL.megaphone.modal.audioMessage.noAccess()}</p>
-                        <button class="light tw-max-w-fit" on:click={activateUploadAudio} disabled={!$userIsAdminStore}>
+                        <button
+                            class="light tw-max-w-fit"
+                            on:pointerdown={activateUploadAudio}
+                            disabled={!$userIsAdminStore}
+                        >
                             {$LL.megaphone.modal.audioMessage.button()}</button
                         >
                         <p class="tw-text-white tw-text-sm tw-whitespace-pre-line">
@@ -256,7 +264,7 @@
                                 muted
                                 on:mouseover={playVideo}
                                 on:mouseout={stopVideo}
-                                on:click={fullScreenVideo}
+                                on:pointerdown={fullScreenVideo}
                             />
                         </div>
                     </div>
@@ -269,7 +277,7 @@
                                 muted
                                 on:mouseover={playVideo}
                                 on:mouseout={stopVideo}
-                                on:click={fullScreenVideo}
+                                on:pointerdown={fullScreenVideo}
                             />
                         </div>
                     </div>
@@ -282,7 +290,7 @@
                                 muted
                                 on:mouseover={playVideo}
                                 on:mouseout={stopVideo}
-                                on:click={fullScreenVideo}
+                                on:pointerdown={fullScreenVideo}
                             />
                         </div>
                     </div>
@@ -321,7 +329,8 @@
                     </div>
                     <div class="tw-flex tw-justify-center">
                         <section class="centered-column">
-                            <button class="light" on:click|preventDefault={send}>{$LL.menu.globalMessage.send()}</button
+                            <button class="light" on:pointerdown|preventDefault={send}
+                                >{$LL.menu.globalMessage.send()}</button
                             >
                         </section>
                     </div>
@@ -430,7 +439,7 @@
                     <div class="tw-flex tw-flew-row tw-justify-center">
                         <button
                             class="light"
-                            on:click={startLive}
+                            on:pointerdown={startLive}
                             disabled={!$requestedCameraState && !$requestedMicrophoneState}>Start live message</button
                         >
                     </div>

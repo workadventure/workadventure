@@ -33,7 +33,7 @@
     >
         {@html converter.convert()}
     </div>
-    <button type="button" class="btn close-window !tw-right-1" on:click|preventDefault={closeTextMessage}
+    <button type="button" class="btn close-window !tw-right-1" on:pointerdown|preventDefault={closeTextMessage}
         >&times;</button
     >
 </div>

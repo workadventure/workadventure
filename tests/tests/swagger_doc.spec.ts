@@ -1,7 +1,14 @@
 import {expect, test} from '@playwright/test';
 
 test.describe('Swagger documentation', () => {
-    test('Admin -> External Admin', async ({page}) => {
+    test('Admin -> External Admin', async ({page}, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechrome") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         await page.goto(
             `/swagger-ui/?urls.primaryName=Admin%20->%20External%20Admin`
         );
@@ -34,7 +41,14 @@ test.describe('Swagger documentation', () => {
         await expect(page.locator('#model-WokaDetail')).toBeVisible();
     });
 
-    test('Pusher -> Admin', async ({page}) => {
+    test('Pusher -> Admin', async ({page}, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechrome") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         await page.goto(
             `/swagger-ui/?urls.primaryName=Pusher%20->%20Admin`
         );

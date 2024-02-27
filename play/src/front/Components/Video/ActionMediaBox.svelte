@@ -75,8 +75,8 @@
         <button
             id="more-action"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
-            on:click={() => analyticsClient.moreActionMetting()}
-            on:click|preventDefault|stopPropagation={() => toggleActionMenu(true)}
+            on:pointerdown={() => analyticsClient.moreActionMetting()}
+            on:pointerdown|preventDefault|stopPropagation={() => toggleActionMenu(true)}
         >
             <img src={MoreActionSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
         </button>
@@ -85,7 +85,7 @@
         <button
             id="less-action"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
-            on:click|preventDefault|stopPropagation={() => toggleActionMenu(false)}
+            on:pointerdown|preventDefault|stopPropagation={() => toggleActionMenu(false)}
         >
             <img src={MoreActionSvg} class="tw-w-4 tw-h-4 tw-rotate-90" alt="Ellipsis icon" />
             <Tooltip text={$LL.camera.menu.closeMenu()} leftPosition="true" />
@@ -96,8 +96,8 @@
             <button
                 id="pin"
                 class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
-                on:click={() => analyticsClient.pinMeetingAction()}
-                on:click|preventDefault|stopPropagation={() => pin()}
+                on:pointerdown={() => analyticsClient.pinMeetingAction()}
+                on:pointerdown|preventDefault|stopPropagation={() => pin()}
             >
                 <img src={PinSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
                 <Tooltip text={$LL.camera.menu.pin()} leftPosition="true" />
@@ -108,8 +108,8 @@
         <button
             id="mute-audio-user"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
-            on:click={() => analyticsClient.muteMicrophoneMeetingAction()}
-            on:click|preventDefault|stopPropagation={() => muteAudio()}
+            on:pointerdown={() => analyticsClient.muteMicrophoneMeetingAction()}
+            on:pointerdown|preventDefault|stopPropagation={() => muteAudio()}
         >
             <img src={MicrophoneCloseSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
             <Tooltip text={$LL.camera.menu.muteAudioUser()} leftPosition="true" />
@@ -120,8 +120,8 @@
             <button
                 id="mute-audio-everybody"
                 class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
-                on:click={() => analyticsClient.muteMicrophoneEverybodyMeetingAction()}
-                on:click|preventDefault|stopPropagation={() => muteAudioEveryBody()}
+                on:pointerdown={() => analyticsClient.muteMicrophoneEverybodyMeetingAction()}
+                on:pointerdown|preventDefault|stopPropagation={() => muteAudioEveryBody()}
             >
                 <img src={MicrophoneCloseSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
                 <Tooltip text={$LL.camera.menu.muteAudioEveryBody()} leftPosition="true" />
@@ -132,8 +132,8 @@
         <button
             id="mute-video-user"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
-            on:click={() => analyticsClient.muteVideoMeetingAction()}
-            on:click|preventDefault|stopPropagation={() => muteVideo()}
+            on:pointerdown={() => analyticsClient.muteVideoMeetingAction()}
+            on:pointerdown|preventDefault|stopPropagation={() => muteVideo()}
         >
             <img src={NoVideoSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
             <Tooltip text={$LL.camera.menu.muteVideoUser()} leftPosition="true" />
@@ -144,8 +144,8 @@
             <button
                 id="mute-video-everybody"
                 class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
-                on:click={() => analyticsClient.muteVideoEverybodyMeetingAction()}
-                on:click|preventDefault|stopPropagation={() => muteVideoEveryBody()}
+                on:pointerdown={() => analyticsClient.muteVideoEverybodyMeetingAction()}
+                on:pointerdown|preventDefault|stopPropagation={() => muteVideoEveryBody()}
             >
                 <img src={NoVideoSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
                 <Tooltip text={$LL.camera.menu.muteVideoEveryBody()} leftPosition="true" />
@@ -157,8 +157,8 @@
             <button
                 id="kickoff-user"
                 class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
-                on:click={() => analyticsClient.kickoffMeetingAction()}
-                on:click|preventDefault|stopPropagation={() => kickoff()}
+                on:pointerdown={() => analyticsClient.kickoffMeetingAction()}
+                on:pointerdown|preventDefault|stopPropagation={() => kickoff()}
             >
                 <img src={banUserSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
                 <Tooltip text={$LL.camera.menu.kickoffUser()} leftPosition="true" />
@@ -169,8 +169,8 @@
         <button
             id="send-private-message"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
-            on:click={() => analyticsClient.sendPrivateMessageMeetingAction()}
-            on:click|preventDefault|stopPropagation={() => sendPrivateMessage()}
+            on:pointerdown={() => analyticsClient.sendPrivateMessageMeetingAction()}
+            on:pointerdown|preventDefault|stopPropagation={() => sendPrivateMessage()}
         >
             <img src={BubbleTalkPng} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
             <Tooltip text={$LL.camera.menu.senPrivateMessage()} leftPosition="true" />
@@ -181,8 +181,8 @@
             <button
                 id="block-or-report-user"
                 class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
-                on:click={() => analyticsClient.reportMeetingAction()}
-                on:click|preventDefault|stopPropagation={() => openBlockOrReportPopup()}
+                on:pointerdown={() => analyticsClient.reportMeetingAction()}
+                on:pointerdown|preventDefault|stopPropagation={() => openBlockOrReportPopup()}
             >
                 <img src={reportImg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
                 <Tooltip text={$LL.camera.menu.blockOrReportUser()} leftPosition="true" />

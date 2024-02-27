@@ -5,7 +5,14 @@ import {expectInViewport} from "./utils/viewport";
 import {RENDERER_MODE} from "./utils/environment";
 
 test.describe('Modal', () => {
-    test('test', async ({ page }) => {
+    test('test', async ({ page }, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechrome") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+      
         // Go to
         await page.goto(
             `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`

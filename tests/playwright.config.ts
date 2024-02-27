@@ -78,7 +78,6 @@ const config: PlaywrightTestConfig = {
         ...devices['Desktop Firefox'],
       },
     },
-
     {
       name: 'webkit',
       use: {
@@ -88,18 +87,25 @@ const config: PlaywrightTestConfig = {
     },
 
     /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: {
-    //     ...devices['Pixel 5'],
-    //   },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: {
-    //     ...devices['iPhone 12'],
-    //   },
-    // },
+    {
+      name: 'mobilechrome',
+      use: {
+        ...devices['Pixel 5'],
+        permissions: ["microphone","camera"],
+        ignoreHTTPSErrors: true,
+        launchOptions: {
+          args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
+        },
+      },
+    },
+     
+    /* To use safari project and test on mobile safari, we need to have https test environment ¨*/
+     //{
+     //  name: 'mobilesafari',
+     //  use: {
+     //    ...devices['iPhone 13'],
+     //  },
+    //},
 
     /* Test against branded browsers. */
     // {

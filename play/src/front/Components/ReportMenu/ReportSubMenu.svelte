@@ -56,7 +56,7 @@
             {/if}
         </section>
         <section>
-            <button type="submit" class="btn danger" on:click|preventDefault|stopPropagation={submitReport}
+            <button type="submit" class="btn danger" on:pointerdown|preventDefault|stopPropagation={submitReport}
                 >{$LL.report.submit()}</button
             >
         </section>

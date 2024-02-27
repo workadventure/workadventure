@@ -139,7 +139,7 @@
                 </div>
             {/if}
             <button
-                on:click={() => {
+                on:pointerdown={() => {
                     jitsiConfigModalOpened = true;
                 }}>{$LL.mapEditor.properties.jitsiProperties.moreOptionsLabel()}</button
             >

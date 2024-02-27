@@ -51,7 +51,7 @@
 {#if actionsMenuData}
     <div class="tw-flex tw-w-full tw-h-full tw-justify-center tw-items-center">
         <div class="actions-menu tw-p-4 is-rounded tw-max-w-xs">
-            <button type="button" class="close-window" on:click={closeActionsMenu}>×</button>
+            <button type="button" class="close-window" on:pointerdown={closeActionsMenu}>×</button>
             {#if actionsMenuData.menuName}
                 <h2 class="name tw-mb-2 tw-mx-2 margin-close">{actionsMenuData.menuName}</h2>
             {/if}
@@ -65,8 +65,8 @@
                             type="button"
                             class="btn light tw-justify-center tw-font-bold tw-text-xs sm:tw-text-base tw-text-center tw-h-fit tw-m-2 tw-w-full {action.style ??
                                 ''}"
-                            on:click={analyticsClient.clicPropertykMapEditor(action.actionName, action.style)}
-                            on:click|preventDefault={() => {
+                            on:pointerdown={analyticsClient.clicPropertykMapEditor(action.actionName, action.style)}
+                            on:pointerdown|preventDefault={() => {
                                 action.callback();
                             }}
                         >
