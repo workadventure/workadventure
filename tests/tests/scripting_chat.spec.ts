@@ -7,7 +7,14 @@ import Map from './utils/map';
 import {RENDERER_MODE} from "./utils/environment";
 
 test.describe('Scripting chat functions', () => {
-    test('can open / close chat + start / stop typing', async ({ page}) => {
+    test('can open / close chat + start / stop typing', async ({ page}, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechrome") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         await page.goto(
             `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
         );
@@ -70,7 +77,14 @@ test.describe('Scripting chat functions', () => {
         await expectOutViewport("#chatWindow", page);
     });
 
-    test('can send message to bubble users', async ({ page, browser}) => {
+    test('can send message to bubble users', async ({ page, browser}, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechrome") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         // It seems WebRTC fails to start on Webkit
         if(browser.browserType() === webkit) {
             //eslint-disable-next-line playwright/no-skipped-test

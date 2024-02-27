@@ -7,7 +7,14 @@ import {RENDERER_MODE} from "./utils/environment";
 test.describe('Iframe API', () => {
   test('can be called from an iframe loading a script', async ({
     page,
-  }) => {
+  }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+    
     await page.goto(
       `/_/global/maps.workadventure.localhost/tests/Metadata/cowebsiteAllowApi.json?phaserMode=${RENDERER_MODE}`
     );
@@ -20,7 +27,14 @@ test.describe('Iframe API', () => {
 
   test('can add a custom menu by scripting API', async ({
     page
-  }) => {
+  }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+    
     await page.goto(
         `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
     );
@@ -79,9 +93,14 @@ test.describe('Iframe API', () => {
     await expect(page.locator('.menu-container')).toContainText("Share the link of the room");
   });
 
-  test('base room properties', async ({
-                                                          page
-                                                        }) => {
+  test('base room properties', async ({ page }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+    
     await page.goto(
         `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}#foo=bar`
     );

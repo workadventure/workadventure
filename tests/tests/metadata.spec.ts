@@ -3,7 +3,14 @@ import { expect, test } from '@playwright/test';
 test.describe('Meta tags', () => {
   test('check they are populated when the user-agent is a bot. @selfsigned', async ({
       request,
-  }) => {
+  }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     const result = await request.get('/_/global/maps.workadventure.localhost/tests/Properties/mapProperties.json', {
         headers: {
             'User-Agent': 'Mozilla/5.0 (compatible; adidxbot/2.0; +http://www.bing.com/bingbot.htm)',
@@ -30,9 +37,13 @@ test.describe('Meta tags', () => {
     await expect(data2).not.toContain('Cette carte est tr');
   });
 
-  test('there is no error an funky URLs with bots. @selfsigned', async ({
-                                                                          request,
-                                                                        }) => {
+  test('there is no error an funky URLs with bots. @selfsigned', async ({ request }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
 
     const result = await request.get(`/_/global/`, {
       headers: {

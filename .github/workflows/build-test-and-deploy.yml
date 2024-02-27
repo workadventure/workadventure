@@ -624,6 +624,11 @@ jobs:
             shard: 5
             nbShards: 5
             renderer: headless
+            renderer: auto
+          - browser: mobilechrome
+            shard: 1
+            nbShards: 1
+            renderer: auto
     needs:
       - build-play
       - build-chat

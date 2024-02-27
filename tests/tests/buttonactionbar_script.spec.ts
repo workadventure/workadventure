@@ -4,7 +4,14 @@ import {evaluateScript} from "./utils/scripting";
 import {RENDERER_MODE} from "./utils/environment";
 
 test.describe('Button in action bar', () => {
-    test('test', async ({ page }) => {
+    test('test', async ({ page }, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechrome") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+      
         // Go to WorkAdventure platform
         await page.goto(
             `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
@@ -33,7 +40,14 @@ test.describe('Button in action bar', () => {
 });
 
 test.describe('Action button in action bar', () => {
-    test('test', async ({ page }) => {
+    test('test', async ({ page }, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechrome") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+      
         // Go to WorkAdventure platform
         await page.goto(
             `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`

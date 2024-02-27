@@ -17,7 +17,14 @@ test.use({
   baseURL: map_storage_url,
 })
 test.describe('Map editor', () => {
-  test('Successfully set the megaphone feature', async ({ page, browser, request, browserName }) => {
+  test('Successfully set the megaphone feature', async ({ page, browser, request, browserName }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+        
     await resetWamMaps(request);
     await page.goto(Map.url("empty"));
     //await page.evaluate(() => localStorage.setItem('debug', '*'));
@@ -92,7 +99,14 @@ test.describe('Map editor', () => {
     // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
   });
 
-  test('Successfully set "SpeakerZone" in the map editor', async ({ page, browser, request }) => {
+  test('Successfully set "SpeakerZone" in the map editor', async ({ page, browser, request }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     if(browser.browserType() === webkit) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
@@ -145,7 +159,14 @@ test.describe('Map editor', () => {
 
   });
 
-  test('Successfully set start area in the map editor', async ({ page, browser, request, browserName }) => {
+  test('Successfully set start area in the map editor', async ({ page, browser, request, browserName }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await resetWamMaps(request);
     await page.goto(Map.url("start"));
     await login(page, "test", 3);
@@ -162,7 +183,14 @@ test.describe('Map editor', () => {
     await Menu.closeMapEditor(page);
   });
 
-  test('Successfully set and working exit area in the map editor', async ({ page, browser, request, browserName }) => {
+  test('Successfully set and working exit area in the map editor', async ({ page, browser, request, browserName }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await resetWamMaps(request);
 
     await page.goto(Map.url("exit"));
@@ -198,7 +226,14 @@ test.describe('Map editor', () => {
   });
 
   // Test to set Klaxoon application in the area with the map editor
-  test('Successfully set Klaxoon\'s application in the area in the map editor', async ({ page, browser, request, browserName }) => {
+  test('Successfully set Klaxoon\'s application in the area in the map editor', async ({ page, browser, request, browserName }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
@@ -236,7 +271,14 @@ test.describe('Map editor', () => {
     // TODO make same test with object editor
   });
 
-  test('Successfully set GoogleWorkspace\'s applications in the area in the map editor', async ({ page, browser, request, browserName }) => {
+  test('Successfully set GoogleWorkspace\'s applications in the area in the map editor', async ({ page, browser, request, browserName }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     if (browser.browserType() === webkit) {
       // Webkit is somehow failing on this, maybe it is too slow
       //eslint-disable-next-line playwright/no-skipped-test
@@ -292,7 +334,14 @@ test.describe('Map editor', () => {
     await expect(page.locator('#cowebsite-thumbnail-2')).toBeVisible();
   });
 
-  test('Successfully set GoogleWorkspace\'s application entity in the map editor', async ({ page, browser, request, browserName }) => {
+  test('Successfully set GoogleWorkspace\'s application entity in the map editor', async ({ page, browser, request, browserName }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     if (browser.browserType() === webkit) {
       // Webkit is somehow failing on this, maybe it is too slow
       //eslint-disable-next-line playwright/no-skipped-test
@@ -354,7 +403,14 @@ test.describe('Map editor', () => {
     await expect(page.locator('.actions-menu .actions button').nth(3)).toContainText('Open Google Drive');
   });
 
-  test('Successfully set Klaxoon\'s application entity in the map editor', async ({ page, browser, request, browserName }) => {
+  test('Successfully set Klaxoon\'s application entity in the map editor', async ({ page, browser, request, browserName }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     if (browser.browserType() === webkit) {
       // Webkit is somehow failing on this, maybe it is too slow
       //eslint-disable-next-line playwright/no-skipped-test
@@ -405,7 +461,14 @@ test.describe('Map editor', () => {
   // Create test fir Google picker presentation
   // Create test for Google picker drive
 
-  test('Successfully set searchable processus for entity and zone', async ({ page, browser, request, browserName }) => {
+  test('Successfully set searchable processus for entity and zone', async ({ page, browser, request, browserName }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await resetWamMaps(request);
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
@@ -462,7 +525,14 @@ test.describe('Map editor', () => {
     expect(await page.locator('.map-editor .sidebar .area-items .item').count()).toBe(1);
   });
 
-  test('Successfully test global message text and sound feature', async ({ page, browser, request, browserName }) => {
+  test('Successfully test global message text and sound feature', async ({ page, browser, request, browserName }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechrome") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await resetWamMaps(request);
     await page.goto(Map.url("empty"));
 
