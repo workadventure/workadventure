@@ -25,13 +25,13 @@
     function handleChange() {
         options = options.map((i) => {
             delete i.created;
-            return { ...i, label: i.label.toLocaleUpperCase() };
+            return { ...i, label: i.label.toLowerCase() };
         });
     }
 </script>
 
-<div class="input-tags">
-    <label for="selector">
+<div class="input-tags tw-flex tw-flex-col tw-pb-5 tw-text-dark-purple">
+    <label for="selector" class="tw-text-white">
         {label}
     </label>
     <Select
@@ -47,6 +47,7 @@
         on:blur={onBlur}
         showChevron={true}
         --icons-color="var(--brand-blue)"
+        --text-color="var(--brand-blue)"
     >
         <div slot="item" let:item>
             {item.created ? "Add new : " : ""}

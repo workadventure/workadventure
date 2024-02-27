@@ -32,5 +32,7 @@
     <div class="content-text-message flex text-white max-h-60 w-full overflow-auto mt-7 mr-6">
         {@html converter.convert()}
     </div>
-    <button type="button" class="btn close-window" on:click|preventDefault={closeTextMessage}>&times;</button>
+    <button type="button" class="btn close-window !tw-right-1" on:click|preventDefault={closeTextMessage}
+        >&times;</button
+    >
 </div>

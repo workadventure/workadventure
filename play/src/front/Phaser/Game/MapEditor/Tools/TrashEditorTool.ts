@@ -3,13 +3,13 @@ import { EditMapCommandMessage } from "@workadventure/messages";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import { DeleteAreaFrontCommand } from "../Commands/Area/DeleteAreaFrontCommand";
-import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
+import { mapEditorSelectedAreaPreviewStore, mapEditorVisibilityStore } from "../../../../Stores/MapEditorStore";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
 import { Entity } from "../../../ECS/Entity";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
 export class TrashEditorTool extends EntityRelatedEditorTool {
-    private areaPreviews: AreaPreview[];
+    private areaPreviews: AreaPreview[] = [];
     protected ctrlKey?: Phaser.Input.Keyboard.Key;
     private active = false;
 
@@ -18,8 +18,6 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
 
         this.active = false;
         this.ctrlKey = this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.CTRL);
-        this.areaPreviews = this.createAreaPreviews();
-        this.bindEventHandlers();
     }
 
     private createAreaPreviews(): AreaPreview[] {
@@ -210,14 +208,19 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
 
     public activate() {
         super.activate();
+        this.areaPreviews = this.createAreaPreviews();
+        this.bindEventHandlers();
         this.active = true;
         this.setAreaPreviewsVisibility(true);
         this.updateAreaPreviews();
         this.scene.markDirty();
+        mapEditorVisibilityStore.set(false);
     }
 
     public clear() {
         super.clear();
+        this.areaPreviews.forEach((preview) => preview.destroy());
+        this.unbindEventHandlers();
         this.active = false;
         this.setAreaPreviewsVisibility(false);
         this.scene.markDirty();

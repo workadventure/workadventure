@@ -14,7 +14,13 @@
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
-    import { showLimitRoomModalStore, modalVisibilityStore } from "../Stores/ModalStore";
+    import {
+        showLimitRoomModalStore,
+        modalVisibilityStore,
+        showModalGlobalComminucationVisibilityStore,
+        modalPopupVisibilityStore,
+        roomListVisibilityStore,
+    } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
@@ -23,6 +29,7 @@
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { askDialogStore } from "../Stores/MeetingStore";
+    import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
@@ -45,8 +52,14 @@
     import Modal from "./Modal/Modal.svelte";
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import XIcon from "./Icons/XIcon.svelte";
+    import Notification from "./UI/Notification.svelte";
+    import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
     import ChevronLeftIcon from "./Icons/ChevronLeftIcon.svelte";
     import ChevronRightIcon from "./Icons/ChevronRightIcon.svelte";
+    import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
+    import ObjectDetails from "./Modal/ObjectDetails.svelte";
+    import Popup from "./Modal/Popup.svelte";
+    import MapList from "./Exploration/MapList.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -62,7 +75,7 @@
 
 <!-- Components ordered by z-index -->
 <div id="main-layout" class="relative z-10 h-screen pointer-events-none {[...$coWebsites.values()].length === 0 ? 'not-cowebsite' : ''}" bind:this={mainLayout}>
-    {#if $modalVisibilityStore}
+    {#if $modalVisibilityStore || $modalPopupVisibilityStore}
         <div class="bg-black/60 w-full h-full fixed left-0 right-0">
 
         </div>
@@ -146,6 +159,25 @@
 
         {#if $modalVisibilityStore}
             <Modal />
+        {/if}
+
+        {#if $askDialogStore}
+            <MuteDialogBox />
+        {/if}
+
+        {#if $showModalGlobalComminucationVisibilityStore}
+            <GlobalCommunicationModal />
+        {/if}
+
+        {#if $mapExplorationObjectSelectedStore}
+            <ObjectDetails />
+        {/if}
+
+        {#if $modalPopupVisibilityStore}
+            <Popup />
+        {/if}
+        {#if $roomListVisibilityStore}
+            <MapList />
         {/if}
     </section>
 

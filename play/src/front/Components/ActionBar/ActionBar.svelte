@@ -27,6 +27,7 @@
         streamingMegaphoneStore, enableCameraSceneVisibilityStore,
     } from "../../Stores/MediaStore";
     import WorkAdventureImg from "../images/icon-workadventure-white.png";
+    import worldImg from "../images/world.svg";
     import tooltipArrow from "../images/arrow-top.svg";
 
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
@@ -54,7 +55,9 @@
         additionnalButtonsMenu,
         addClassicButtonActionBarEvent,
         addActionButtonActionBarEvent,
-        mapEditorActivated, menuIconVisiblilityStore, userIsConnected,
+        mapEditorActivated,
+        menuIconVisiblilityStore,
+        userIsConnected,
     } from "../../Stores/MenuStore";
     import {
         emoteDataStore,
@@ -72,7 +75,12 @@
     import { peerStore } from "../../Stores/PeerStore";
     //import { StringUtils } from "../../Utils/StringUtils";
     import Tooltip from "../Util/Tooltip.svelte";
-    import { modalIframeStore, modalVisibilityStore } from "../../Stores/ModalStore";
+    import {
+        modalIframeStore,
+        modalVisibilityStore,
+        showModalGlobalComminucationVisibilityStore,
+        roomListVisibilityStore,
+    } from "../../Stores/ModalStore";
     import {bannerStore, userHasAccessToBackOfficeStore} from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
@@ -221,22 +229,28 @@
         }
     }
 
-    function toggleMegaphone() {
-        if ($streamingMegaphoneStore) {
-            streamingMegaphoneStore.set(false);
-            return;
-        }
-        if ($requestedMegaphoneStore || $liveStreamingEnabledStore) {
+    function toggleGlobalMessage() {
+        if ($requestedMegaphoneStore || $liveStreamingEnabledStore || $streamingMegaphoneStore) {
             analyticsClient.stopMegaphone();
             requestedMegaphoneStore.set(false);
+            streamingMegaphoneStore.set(false);
+            showModalGlobalComminucationVisibilityStore.set(false);
+            return;
+        }
+        if ($showModalGlobalComminucationVisibilityStore) {
+            showModalGlobalComminucationVisibilityStore.set(false);
             return;
         }
 
-        streamingMegaphoneStore.set(true);
+        resetChatVisibility();
+        resetModalVisibility();
+        mapEditorModeStore.switchMode(false);
+        showModalGlobalComminucationVisibilityStore.set(true);
     }
 
     function toggleMapEditorMode() {
         if (isMobile) return;
+        if ($mapEditorModeStore) gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
         analyticsClient.toggleMapEditor(!$mapEditorModeStore);
         mapEditorModeStore.switchMode(!$mapEditorModeStore);
     }
@@ -379,6 +393,7 @@
     function resetModalVisibility() {
         modalVisibilityStore.set(false);
         modalIframeStore.set(null);
+        showModalGlobalComminucationVisibilityStore.set(false);
     }
 
     /*function resetMenuVisibility() {
@@ -436,6 +451,13 @@
             mapEditorModeStore.set(false);
         }
     });
+
+    function showRoomList() {
+        resetChatVisibility();
+        resetModalVisibility();
+
+        roomListVisibilityStore.set(true);
+    }
 </script>
 <svelte:window on:keydown={onKeyDown} />
 {#if !$chatVisibilityStore}

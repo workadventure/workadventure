@@ -9,7 +9,6 @@ const actionbar: BaseTranslation = {
     camera: "Activer / Couper la caméra",
     microphone: "Activer / Couper le microphone",
     emoji: "Ouvrir / Fermer les émoticônes",
-    enableMegaphone: "Activer le mégaphone",
     disableMegaphone: "Couper le mégaphone",
     menu: "Ouvrir / Fermer le menu",
     mapEditor: "Ouvrir / Fermer l'éditeur de carte",
@@ -20,6 +19,7 @@ const actionbar: BaseTranslation = {
         speaker: "Speaker",
     },
     app: "Ouvrir / Fermer les applications",
+    globalMessage: "Envoyer un message global",
 };
 
 export default actionbar;

@@ -1,4 +1,10 @@
-import { EntityData, EntityDataProperties, EntityPrefabRef, WAMEntityData } from "@workadventure/map-editor";
+import {
+    AreaDataProperties,
+    EntityData,
+    EntityDataProperties,
+    EntityPrefabRef,
+    WAMEntityData,
+} from "@workadventure/map-editor";
 import { Observable, Subject } from "rxjs";
 import { get, Unsubscriber } from "svelte/store";
 import { z } from "zod";
@@ -34,7 +40,8 @@ export const CopyAreaEventData = z.object({
     width: z.number(),
     height: z.number(),
     name: z.string(),
-    properties: EntityDataProperties.optional(),
+    description: z.string(),
+    properties: AreaDataProperties.optional(),
 });
 
 export type CopyEntityEventData = z.infer<typeof CopyEntityEventData>;
@@ -408,5 +415,16 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     public close() {
         this.actionsMenuStoreUnsubscriber();
+    }
+
+    public setAllEntitiesPointedToEditColor(color: number) {
+        for (const entity of this.entities.values()) {
+            entity.setPointedToEditColor(color);
+        }
+    }
+    public removeAllEntitiesPointedToEditColor() {
+        for (const entity of this.entities.values()) {
+            entity.removePointedToEditColor();
+        }
     }
 }

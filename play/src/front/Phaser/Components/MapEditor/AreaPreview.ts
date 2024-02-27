@@ -1,4 +1,10 @@
-import type { AreaData, AreaDataProperties, AreaDataProperty, AtLeast } from "@workadventure/map-editor";
+import type {
+    AreaData,
+    AreaDataProperties,
+    AreaDataProperty,
+    AreaDescriptionPropertyData,
+    AtLeast,
+} from "@workadventure/map-editor";
 import _ from "lodash";
 import { GameObjects } from "phaser";
 import { GameScene } from "../../Game/GameScene";
@@ -72,6 +78,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         this.setSize(bounds.width, bounds.height);
         this.setInteractive({ cursor: "grab" });
         this.scene.input.setDraggable(this);
+        this.drawAreaPreviewFromAreaData(areaData);
 
         this.showSizeAlteringSquares(false);
 
@@ -117,8 +124,12 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
 
     public updatePreview(dataToModify: AtLeast<AreaData, "id">): void {
         _.merge(this.areaData, dataToModify);
-        if (dataToModify.properties !== undefined) {
-            this.areaData.properties = dataToModify.properties;
+        this.drawAreaPreviewFromAreaData(dataToModify);
+    }
+
+    private drawAreaPreviewFromAreaData(areaData: AreaData | AtLeast<AreaData, "id">): void {
+        if (areaData.properties !== undefined) {
+            this.areaData.properties = areaData.properties;
 
             this.propertiesIcon.forEach((icon: GameObjects.Image) => icon.destroy());
             let counter = 0;
@@ -187,13 +198,6 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     public destroy(): void {
         super.destroy();
         this.squares.forEach((square) => square.destroy());
-    }
-
-    public updateAreaData(dataToChange: Partial<AreaData>): void {
-        const oldAreaData = structuredClone(this.areaData);
-        const data = { id: this.areaData.id, ...dataToChange };
-        this.updatePreview(data);
-        this.emit(AreaPreviewEvent.Updated, data, oldAreaData);
     }
 
     private showSizeAlteringSquares(show = true): void {
@@ -411,7 +415,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
     public setAreaName(name: string): void {
         const oldAreaData = structuredClone(this.areaData);
         this.areaData.name = name;
-        const data = { id: this.areaData.id, name };
+        const data = { id: this.areaData.id, name: this.areaData.name };
         this.emit(AreaPreviewEvent.Updated, data, oldAreaData);
     }
 
@@ -494,5 +498,19 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
             }
         }
         this.updateSquaresPositions();
+    }
+
+    public get description(): string | undefined {
+        const descriptionProperty: AreaDescriptionPropertyData | undefined = this.areaData.properties.find(
+            (p) => p.type === "areaDescriptionProperties"
+        ) as AreaDescriptionPropertyData | undefined;
+        return descriptionProperty?.description;
+    }
+
+    public get searchable(): boolean | undefined {
+        const descriptionProperty: AreaDescriptionPropertyData | undefined = this.areaData.properties.find(
+            (p) => p.type === "areaDescriptionProperties"
+        ) as AreaDescriptionPropertyData | undefined;
+        return descriptionProperty?.searchable;
     }
 }

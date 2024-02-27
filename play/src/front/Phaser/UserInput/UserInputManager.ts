@@ -175,10 +175,6 @@ export class UserInputManager {
         ];
     }
 
-    clearAllListeners() {
-        this.scene.input.keyboard?.removeAllListeners();
-    }
-
     disableControls() {
         try {
             this.scene.input.keyboard?.disableGlobalCapture();
@@ -304,6 +300,9 @@ export class UserInputManager {
         this.scene.input.on(
             Phaser.Input.Events.POINTER_MOVE,
             (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+                if (this.isInputDisabled) {
+                    return;
+                }
                 this.userInputHandler.handlePointerMoveEvent(pointer, gameObjects);
             }
         );
