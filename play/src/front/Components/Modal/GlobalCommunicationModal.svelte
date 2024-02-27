@@ -17,8 +17,8 @@
         streamingMegaphoneStore,
     } from "../../Stores/MediaStore";
     import LL from "../../../i18n/i18n-svelte";
-    import microphoneImg from "../images/microphone.png";
-    import cameraImg from "../images/camera.png";
+    import microphoneImg from "../images/mic.svg";
+    import cameraImg from "../images/cam.svg";
     import liveMessageImg from "../images/live-message.svg";
     import textMessageImg from "../images/text-message.svg";
     import audioMessageImg from "../images/audio-message.svg";

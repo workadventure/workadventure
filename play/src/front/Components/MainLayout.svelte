@@ -102,7 +102,7 @@
         {/if}
 
         {#if $notificationPlayingStore}
-            <div class="tw-flex tw-flex-col tw-absolute tw-w-auto tw-right-0">
+            <div class="flex flex-col absolute w-auto right-0">
                 {#each [...$notificationPlayingStore.values()] as notification (notification.id)}
                     <Notification {notification} />
                 {/each}

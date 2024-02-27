@@ -2,8 +2,8 @@
     import { fly } from "svelte/transition";
     import { onMount } from "svelte";
     import { Notification, notificationPlayingStore } from "../../Stores/NotificationStore";
-    import microphoneOffImg from "../images/microphone-off.png";
-    import cameraOffImg from "../images/camera-off.png";
+    import microphoneOffImg from "../images/mic.svg";
+    import cameraOffImg from "../images/cam.svg";
     import jistiImg from "../images/jitsi.png";
     import waImg from "../images/icon-workadventure-white.png";
 

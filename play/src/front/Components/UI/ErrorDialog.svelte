@@ -35,17 +35,17 @@
             <p>{error.message}</p>
         {/each}
         {#if connectionManager.currentRoom?.reportIssuesUrl}
-            <p class="tw-text-xs">
+            <p class="text-xs">
                 {$LL.error.errorDialog.hasReportIssuesUrl()}
                 <a href={connectionManager.currentRoom.reportIssuesUrl} target="_blank" rel="noopener noreferrer"
                     >{connectionManager.currentRoom.reportIssuesUrl}</a
                 >
             </p>
         {:else}
-            <p class="tw-text-xs">
+            <p class="text-xs">
                 {$LL.error.errorDialog.noReportIssuesUrl()}
             </p>
-            <p class="tw-text-xs">
+            <p class="text-xs">
                 {$LL.error.errorDialog.messageFAQ()}
                 <a
                     href="https://workadventu.re/faq"
@@ -56,7 +56,7 @@
             </p>
         {/if}
     {#if $hasClosableMessagesInErrorStore}
-        <section class="footer tw-w-full tw-flex tw-flex-row tw-justify-center tw-backdrop-blur-sm">
+        <section class="footer w-full flex flex-row justify-center backdrop-blur-sm">
             <button class="light" on:click={close}>{$LL.error.errorDialog.close()}</button>
             <button class="light outline" on:click={refresh}>{$LL.error.errorDialog.reload()}</button>
         </section>

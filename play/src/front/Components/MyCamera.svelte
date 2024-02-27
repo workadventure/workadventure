@@ -118,7 +118,7 @@
                 <video
                     class="h-full w-full rounded-lg md:object-cover relative z-20"
                     class:object-contain={stream}
-                    class:tw-max-h-[230px]={stream}
+                    class:max-h-[230px]={stream}
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay
