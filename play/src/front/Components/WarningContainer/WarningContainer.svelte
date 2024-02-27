@@ -4,7 +4,6 @@
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import { LL } from "../../../i18n/i18n-svelte";
     import { warningContainerStore } from "../../Stores/MenuStore";
-    import XIcon from "../Icons/XIcon.svelte";
 
     /* eslint-disable svelte/no-at-html-tags */
 

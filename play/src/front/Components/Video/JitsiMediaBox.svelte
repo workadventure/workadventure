@@ -3,10 +3,8 @@
     import { Readable, Unsubscriber } from "svelte/store";
     import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
     import { onDestroy, onMount } from "svelte";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { Streamable, myJitsiCameraStore } from "../../Stores/StreamableCollectionStore";
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
@@ -25,12 +23,12 @@
     const audioTrackStore: Readable<JitsiTrack | undefined> = peer.audioTrackStore;
 
     let embedScreen: EmbedScreen;
-    let videoContainer: HTMLDivElement;
+    //let videoContainer: HTMLDivElement;
     //let minimized: boolean;
-    let isMobile: boolean;
+    //let isMobile: boolean;
 
     let backGroundColor = Color.getColorByString(peer.jitsiTrackWrapper.spaceUser?.name ?? "");
-    let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
+    //let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
 
     if (peer) {
         embedScreen = {
@@ -84,8 +82,7 @@
                 jitsiTrack={$videoTrackStore}
                 isLocal={$videoTrackStore?.isLocal()}
                 {isHightlighted}
-                isMobileFormat={isMobileFormat}
-                isMobile={isMobileFormat}
+                {isMobileFormat}
             />
         </div>
     {/if}

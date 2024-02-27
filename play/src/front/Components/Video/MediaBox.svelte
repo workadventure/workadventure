@@ -12,7 +12,6 @@
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
-    import loaderImg from "./../images/loader.svg";
 
     export let streamable: Streamable;
     export let isHightlighted = false;

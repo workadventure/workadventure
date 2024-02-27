@@ -1,9 +1,6 @@
 <script lang="ts">
     import { afterUpdate, onMount } from "svelte";
     import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
-
-    import { LayoutMode } from "../../WebRtc/LayoutManager";
 
     export let jitsiTrack: JitsiTrack;
     export let isMobile: boolean;
@@ -42,7 +39,7 @@
     class:max-h-[80vh]={isHightlighted}
     autoplay
     playsinline
-/>
+></video>
 
 <style lang="scss">
     /*    video.no-video {

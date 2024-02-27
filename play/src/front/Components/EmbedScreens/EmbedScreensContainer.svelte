@@ -1,10 +1,9 @@
 <script lang="ts">
-    import { get } from "svelte/store";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { embedScreenLayoutStore, heightCamWrapper } from "../../Stores/EmbedScreensStore";
+    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+    import { emoteMenuSubStore } from "../../Stores/EmoteStore";
     import PresentationLayout from "./Layouts/PresentationLayout.svelte";
     import MozaicLayout from "./Layouts/MozaicLayout.svelte";
-    import { emoteMenuSubStore } from "../../Stores/EmoteStore";
     import "../../style/wa-theme/video-ui.scss";
 
     /**

@@ -2,7 +2,6 @@
     import { errorStore, hasClosableMessagesInErrorStore } from "../../Stores/ErrorStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { connectionManager } from "../../Connection/ConnectionManager";
-    import ImgVirtualhugsvirtualhug from "../images/virtual-hugs-virtual-hug.gif";
     import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
     import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 

@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { gameManager } from "../../Phaser/Game/GameManager";
     import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { GameScene } from "../../Phaser/Game/GameScene";

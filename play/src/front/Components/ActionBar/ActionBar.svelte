@@ -4,18 +4,10 @@
     import { onDestroy, onMount } from "svelte";
     import { writable } from "svelte/store";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
-    import { myJitsiCameraStore, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
-    //import { jitsiLoadingStore } from "../../Streaming/BroadcastService";
-    //import Loading from "../Video/Loading.svelte";
-    //import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
-    //import CamerasContainer from "../EmbedScreens/CamerasContainer.svelte";
-    //import MediaBox from "../Video/MediaBox.svelte";
-    import MyCamera from "../MyCamera.svelte";
     import {
         cameraListStore,
         microphoneListStore,
         speakerListStore,
-        localVolumeStore,
         requestedCameraState,
         requestedMicrophoneState,
         requestedCameraDeviceIdStore,
@@ -25,9 +17,7 @@
         silentStore,
         speakerSelectedStore,
         streamingMegaphoneStore, enableCameraSceneVisibilityStore,
-    } from "../../Stores/MediaStore";
-    import WorkAdventureImg from "../images/icon-workadventure-white.png";
-    import worldImg from "../images/world.svg";
+     availabilityStatusStore } from "../../Stores/MediaStore";
     import tooltipArrow from "../images/arrow-top.svg";
 
     import HelpTooltip from "../Tooltip/HelpTooltip.svelte";
@@ -56,7 +46,6 @@
         addClassicButtonActionBarEvent,
         addActionButtonActionBarEvent,
         mapEditorActivated,
-        menuIconVisiblilityStore,
         userIsConnected,
     } from "../../Stores/MenuStore";
     import {
@@ -74,25 +63,20 @@
     import { iframeListener } from "../../Api/IframeListener";
     import { peerStore } from "../../Stores/PeerStore";
     //import { StringUtils } from "../../Utils/StringUtils";
-    import Tooltip from "../Util/Tooltip.svelte";
     import {
         modalIframeStore,
         modalVisibilityStore,
         showModalGlobalComminucationVisibilityStore,
-        roomListVisibilityStore,
     } from "../../Stores/ModalStore";
-    import {bannerStore, userHasAccessToBackOfficeStore} from "../../Stores/GameStore";
+    import {userHasAccessToBackOfficeStore} from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
     import {
         megaphoneCanBeUsedStore,
-        liveStreamingEnabledStore,
-        requestedMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {ADMIN_URL, ENABLE_OPENID} from "../../Enum/EnvironmentVariable";
-    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
     import Woka from "../Woka/WokaFromUserId.svelte";
     import Companion from "../Companion/Companion.svelte";
     import {loginSceneVisibleStore} from "../../Stores/LoginSceneStore";
@@ -102,9 +86,6 @@
     import {selectCompanionSceneVisibleStore} from "../../Stores/SelectCompanionStore";
     import {SelectCompanionScene, SelectCompanionSceneName} from "../../Phaser/Login/SelectCompanionScene";
     import {EnableCameraScene, EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
-
-    import { availabilityStatusStore } from "../../Stores/MediaStore";
-    import HorizontalSoundMeterWidget from "../EnableCamera/HorizontalSoundMeterWidget.svelte";
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
     import UsersIcon from "../Icons/UsersIcon.svelte";
     import EmojiIcon from "../Icons/EmojiIcon.svelte";
@@ -129,16 +110,13 @@
     import ChatOverlay from "../Chat/ChatOverlay.svelte";
     import ChevronUpIcon from "../Icons/ChevronUpIcon.svelte";
     import CheckIcon from "../Icons/CheckIcon.svelte";
-    import PlusIcon from "../Icons/PlusIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
 
     import {StringUtils} from "../../Utils/StringUtils";
+    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
-    const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
-
-    let selectedMicrophone: string | undefined = undefined;
     let cameraActive = false;
     let microphoneActive = false;
     let profileMenuIsDropped = false;
@@ -200,6 +178,8 @@
         }
     }
 
+    /*
+    TODO Hugo
     function getStatus() {
         switch ($availabilityStatusStore) {
             case 1:
@@ -210,6 +190,8 @@
                 return "Do not disturb";
         }
     }
+
+     */
 
     function lockClick() {
         gameManager.getCurrentGameScene().connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
@@ -229,25 +211,6 @@
         } else {
             emoteMenuSubStore.openEmoteMenu();
         }
-    }
-
-    function toggleGlobalMessage() {
-        if ($requestedMegaphoneStore || $liveStreamingEnabledStore || $streamingMegaphoneStore) {
-            analyticsClient.stopMegaphone();
-            requestedMegaphoneStore.set(false);
-            streamingMegaphoneStore.set(false);
-            showModalGlobalComminucationVisibilityStore.set(false);
-            return;
-        }
-        if ($showModalGlobalComminucationVisibilityStore) {
-            showModalGlobalComminucationVisibilityStore.set(false);
-            return;
-        }
-
-        resetChatVisibility();
-        resetModalVisibility();
-        mapEditorModeStore.switchMode(false);
-        showModalGlobalComminucationVisibilityStore.set(true);
     }
 
     function toggleMapEditorMode() {
@@ -445,21 +408,23 @@
         return iframeListener.sendButtonActionBarTriggered(button);
     }
 
-    let mainHtmlDiv: HTMLDivElement;
     let isMobile = isMediaBreakpointUp("md");
-    const resizeObserver = new ResizeObserver(() => {
+    new ResizeObserver(() => {
         isMobile = isMediaBreakpointUp("md");
         if (isMobile) {
             mapEditorModeStore.set(false);
         }
     });
 
+    /*
+    TODO Hugo : Add Room list
     function showRoomList() {
         resetChatVisibility();
         resetModalVisibility();
 
         roomListVisibilityStore.set(true);
     }
+     */
 </script>
 <svelte:window on:keydown={onKeyDown} />
 {#if !$chatVisibilityStore}

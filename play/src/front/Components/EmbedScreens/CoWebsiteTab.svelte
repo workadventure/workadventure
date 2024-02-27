@@ -2,7 +2,6 @@
     import SettingsIcon from "../Icons/SettingsIcon.svelte";
     import CopyIcon from "../Icons/CopyIcon.svelte";
     import ExternalLinkIcon from "../Icons/ExternalLinkIcon.svelte";
-    import Loading from "../Video/Loading.svelte";
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
 
     export let title = "GitHub - Workadventure";
