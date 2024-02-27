@@ -28,16 +28,16 @@ test.describe('Iframe API', () => {
     await login(page);
 
     await evaluateScript(page, async () => {
-      // @ts-ignore
+      
       await WA.onInit();
 
-      // @ts-ignore
+      
       WA.ui.registerMenuCommand('custom callback menu', () => {
-        // @ts-ignore
+        
         WA.chat.sendChatMessage('Custom menu clicked', 'Mr Robot');
       })
 
-      // @ts-ignore
+      
       WA.ui.registerMenuCommand('custom iframe menu', {iframe: '../Metadata/customIframeMenu.html'});
     });
 
@@ -59,10 +59,10 @@ test.describe('Iframe API', () => {
 
     // Now, let's add a menu item and open an iframe
     await evaluateScript(page, async () => {
-      // @ts-ignore
+      
       await WA.onInit();
 
-      // @ts-ignore
+      
       const menu = WA.ui.registerMenuCommand('autoopen iframe menu', {iframe: '../Metadata/customIframeMenu.html'});
       await menu.open();
     });
@@ -76,10 +76,10 @@ test.describe('Iframe API', () => {
 
     // Now, let's test that we can open a default menu:
     await evaluateScript(page, async () => {
-      // @ts-ignore
+      
       await WA.onInit();
 
-      // @ts-ignore
+      
       const menu = await WA.ui.getMenuCommand('invite');
       await menu.open();
     });
@@ -97,10 +97,10 @@ test.describe('Iframe API', () => {
     await login(page);
 
     const parameter = await evaluateScript(page, async () => {
-      // @ts-ignore
+      
       await WA.onInit();
 
-      // @ts-ignore
+      
       return WA.room.hashParameters.foo;
     });
 
@@ -116,9 +116,9 @@ test.describe('Iframe API', () => {
 
       // Create a script to evaluate function to disable map editor
       await evaluateScript(page, async () => {
-        // @ts-ignore
+        
         await WA.onInit();
-        // @ts-ignore
+        
         WA.controls.disableMapEditor();
       });
 
@@ -127,9 +127,9 @@ test.describe('Iframe API', () => {
 
       // Create a script to evaluate function to enable map editor
       await evaluateScript(page, async () => {
-        // @ts-ignore
+        
         await WA.onInit();
-        // @ts-ignore
+        
         WA.controls.restoreMapEditor();
       });
 
@@ -149,9 +149,9 @@ test.describe('Iframe API', () => {
 
     // Create a script to evaluate function to disable map editor
     await evaluateScript(page, async () => {
-      // @ts-ignore
+      
       await WA.onInit();
-      // @ts-ignore
+      
       WA.controls.disableScreenSharing();
     });
 
@@ -169,9 +169,9 @@ test.describe('Iframe API', () => {
 
     // Create a script to evaluate function to enable map editor
     await evaluateScript(page, async () => {
-      // @ts-ignore
+      
       await WA.onInit();
-      // @ts-ignore
+      
       WA.controls.restoreScreenSharing();
     });
 
@@ -192,9 +192,9 @@ test.describe('Iframe API', () => {
 
     // Create a script to evaluate function to disable map editor
     await evaluateScript(page, async () => {
-      // @ts-ignore
+      
       await WA.onInit();
-      // @ts-ignore
+      
       WA.controls.disableInviteButton();
     });
 
@@ -203,9 +203,9 @@ test.describe('Iframe API', () => {
 
     // Create a script to evaluate function to enable map editor
     await evaluateScript(page, async () => {
-      // @ts-ignore
+      
       await WA.onInit();
-      // @ts-ignore
+      
       WA.controls.restoreInviteButton();
     });
 
@@ -215,6 +215,48 @@ test.describe('Iframe API', () => {
     page.close();
   });
 
-  // TDODO: disable and restore right click
+  test('test disable right click user button', async ({ page }) => {
+    await page.goto(
+        `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+    );
+
+    await page.evaluate(() => localStorage.setItem('debug', '*'));
+    await login(page, 'Alice', 3);
+
+    // Right click to move the user
+    await page.locator('canvas').click({
+      button: 'right',
+      position: {
+        x: 381,
+        y: 121
+      }
+    });
+ 
+    // Create a script to evaluate function to disable map editor
+    await evaluateScript(page, async () => {
+      await WA.onInit();
+      WA.controls.disableRightClick();
+    });
+
+    // Right click to move the user
+    await page.locator('canvas').click({
+      button: 'right',
+      position: {
+        x: 246,
+        y: 295
+      }
+    });
+
+    // Create a script to evaluate function to enable map editor
+    await evaluateScript(page, async () => {
+      await WA.onInit();
+      WA.controls.restoreRightClick();
+    });
+
+    // TODO: check if the right click is enabled
+
+    page.close();
+  });
+
   // TDODO: disable and restore wheel zoom 
 });

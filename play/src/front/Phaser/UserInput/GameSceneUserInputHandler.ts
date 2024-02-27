@@ -48,7 +48,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         }
 
         // If right click is disabled, we don't want to move the player
-        if (pointer.rightButtonDown() && !this.gameScene.userInputManager.isRightClickEnabled) {
+        if (!this.gameScene.userInputManager.isRightClickEnabled) {
             return;
         }
 
