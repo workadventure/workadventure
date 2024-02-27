@@ -75,7 +75,7 @@ test.describe('Mobile', () => {
         await login(page, "Bob", 3);
 
         // Move to open a cowebsite
-        await page.locator('#body').press('ArrowRight', { delay: 2000 });
+        await page.locator('#body').press('ArrowRight', { delay: 3000 });
         await page.locator('.blue-dialog-box').click({timeout: 10000});
 
         // Check that the cowebsite is visible
