@@ -2,8 +2,8 @@ import type { EntityDataProperties, EntityPrefab } from "@workadventure/map-edit
 import { writable } from "svelte/store";
 import { DeleteCustomEntityMessage, ModifyCustomEntityMessage, UploadEntityMessage } from "@workadventure/messages";
 import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
-import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
 import { Entity } from "../Phaser/ECS/Entity";
+import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
 
 type ObjectValues<T> = T[keyof T];
 

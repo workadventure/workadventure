@@ -1,5 +1,6 @@
 import type { AreaChangeCallback, AreaData, AtLeast, GameMap } from "@workadventure/map-editor";
 import { AreaCoordinates, AreaDataProperties, AreaUpdateCallback, GameMapProperties } from "@workadventure/map-editor";
+import { MathUtils } from "@workadventure/math-utils";
 import type {
     ITiledMap,
     ITiledMapLayer,
@@ -10,13 +11,14 @@ import type {
 } from "@workadventure/tiled-map-type-guard";
 import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
-import { MathUtils } from "@workadventure/math-utils";
+import { get } from "svelte/store";
 import { Deferred } from "ts-deferred";
+import { userIsAdminStore, userIsEditorStore } from "../../../Stores/GameStore";
 import { PathTileType } from "../../../Utils/PathfindingManager";
-import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
-import type { GameScene } from "../GameScene";
 import { Entity } from "../../ECS/Entity";
+import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 import { ITiledPlace } from "../GameMapPropertiesListener";
+import type { GameScene } from "../GameScene";
 import { EntitiesManager } from "./EntitiesManager";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 
@@ -531,10 +533,12 @@ export class GameMapFrontWrapper {
         if (isOutOfBounds) {
             return false;
         }
+
         // no collision grid means we can place it anywhere on the map
         if (!collisionGrid) {
             return true;
         }
+
         // prevent entity's old position from blocking it when repositioning
         const positionsToIgnore: Map<string, number> = new Map<string, number>();
         const tileDim = this.scene.getGameMapFrontWrapper().getTileDimensions();
@@ -575,7 +579,35 @@ export class GameMapFrontWrapper {
                 }
             }
         }
+
         return true;
+    }
+
+    public canEntityBePlacedInThematicArea(
+        entityTopLeftCoordinates: { x: number; y: number },
+        entityWidth: number,
+        entityHeight: number,
+        areaId: string
+    ) {
+        if (get(userIsAdminStore) || get(userIsEditorStore)) {
+            return true;
+        }
+
+        const area = this.scene.getGameMap().getGameMapAreas()?.getArea(areaId);
+        if (area === undefined) {
+            return false;
+        }
+
+        const entityCenterCoordinates = {
+            x: Math.ceil(entityTopLeftCoordinates.x + entityWidth / 2),
+            y: Math.ceil(entityTopLeftCoordinates.y + entityHeight / 2),
+        };
+        const inPositionX = entityCenterCoordinates.x >= area.x && entityCenterCoordinates.x <= area.x + area.width;
+        const inPositionY = entityCenterCoordinates.y >= area.y && entityCenterCoordinates.y <= area.y + area.height;
+        if (inPositionX && inPositionY) {
+            return true;
+        }
+        return false;
     }
 
     public isSpaceAvailable(topLeftX: number, topLeftY: number, ignoreCollisionGrid?: boolean): boolean {
