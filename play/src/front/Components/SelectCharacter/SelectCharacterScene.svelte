@@ -38,24 +38,26 @@
 </section>
 <section class="category tw-flex tw-flex-row tw-justify-center">
     {#if $collectionsSizeStore > 1 && $selectedCollection}
-        <button class="light tw-mr-2 selectCharacterButton" on:click|preventDefault={selectLeft}> &lt; </button>
+        <button class="light tw-mr-2 selectCharacterButton" on:pointerdown|preventDefault={selectLeft}> &lt; </button>
         <strong class="category-text">{$selectedCollection}</strong>
-        <button class="outline tw-ml-2 selectCharacterButton" on:click|preventDefault={selectRight}> &gt; </button>
+        <button class="outline tw-ml-2 selectCharacterButton" on:pointerdown|preventDefault={selectRight}>
+            &gt;
+        </button>
     {/if}
 </section>
 <section class="action tw-flex tw-flex-row tw-justify-center">
     <button
         type="submit"
         class="light tw-mr-2 selectCharacterSceneFormSubmit"
-        on:click={() => analyticsClient.selectWoka()}
-        on:click={cameraScene}>{$LL.woka.selectWoka.continue()}</button
+        on:pointerdown={() => analyticsClient.selectWoka()}
+        on:pointerdown={cameraScene}>{$LL.woka.selectWoka.continue()}</button
     >
     {#if $customizeAvailableStore}
         <button
             type="submit"
             class="outline tw-ml-2 selectCharacterSceneFormCustomYourOwnSubmit"
-            on:click={() => analyticsClient.selectCustomWoka()}
-            on:click={customizeScene}>{$LL.woka.selectWoka.customize()}</button
+            on:pointerdown={() => analyticsClient.selectCustomWoka()}
+            on:pointerdown={customizeScene}>{$LL.woka.selectWoka.customize()}</button
         >
     {/if}
 </section>

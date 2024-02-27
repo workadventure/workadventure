@@ -175,8 +175,9 @@ waScaleManager.setGame(game);
 const canvas = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
 
 if (canvas) {
-    canvas.addEventListener("click", function () {
+    canvas.addEventListener("pointerdown", function () {
         if (document.activeElement instanceof HTMLElement) {
+            // This is a workaround for a bug introduce in the new version of Phaser 3.80.0 => https://github.com/phaserjs/phaser/issues/6747
             document.activeElement.blur();
         }
     });

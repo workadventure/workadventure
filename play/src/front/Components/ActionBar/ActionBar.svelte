@@ -421,12 +421,11 @@
                 class:tw-translate-x-0={$bottomActionBarVisibilityStore}
                 class:translate-right={!$bottomActionBarVisibilityStore}
             >
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="tw-transition-all bottom-action-button"
                     class:disabled={$followStateStore !== "off"}
-                    on:click={() => analyticsClient.follow()}
-                    on:click={followClick}
+                    on:pointerdown={() => analyticsClient.follow()}
+                    on:pointerdown={followClick}
                 >
                     <Tooltip text={$LL.actionbar.follow()} />
 
@@ -435,11 +434,10 @@
                     </button>
                 </div>
 
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="tw-transition-all bottom-action-button"
-                    on:click={() => analyticsClient.layoutPresentChange()}
-                    on:click={switchLayoutMode}
+                    on:pointerdown={() => analyticsClient.layoutPresentChange()}
+                    on:pointerdown={switchLayoutMode}
                 >
                     <Tooltip text={$LL.actionbar.layout()} />
 
@@ -462,12 +460,11 @@
                     </button>
                 </div>
 
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="tw-transition-all bottom-action-button"
                     class:disabled={$currentPlayerGroupLockStateStore}
-                    on:click={() => analyticsClient.lockDiscussion()}
-                    on:click={lockClick}
+                    on:pointerdown={() => analyticsClient.lockDiscussion()}
+                    on:pointerdown={lockClick}
                 >
                     <Tooltip text={$LL.actionbar.lock()} />
 
@@ -485,11 +482,10 @@
                     </button>
                 </div>
 
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="tw-transition-all bottom-action-button"
-                    on:click={() => analyticsClient.screenSharing()}
-                    on:click={screenSharingClick}
+                    on:pointerdown={() => analyticsClient.screenSharing()}
+                    on:pointerdown={screenSharingClick}
                     class:enabled={$requestedScreenSharingState}
                 >
                     <Tooltip text={$LL.actionbar.screensharing()} />
@@ -519,11 +515,10 @@
             <div class="bottom-action-section tw-flex tw-flex-initial">
                 {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                     {#if $myCameraStore}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             class="bottom-action-button tw-relative"
-                            on:click={() => analyticsClient.camera()}
-                            on:click={cameraClick}
+                            on:pointerdown={() => analyticsClient.camera()}
+                            on:pointerdown={cameraClick}
                             class:disabled={!$requestedCameraState || $silentStore}
                         >
                             <Tooltip text={$LL.actionbar.camera()} />
@@ -552,7 +547,7 @@
                             {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
                                 <button
                                     class="camera tw-absolute tw-text-light-purple focus:outline-none tw-m-0"
-                                    on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
+                                    on:pointerdown|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
                                 >
                                     {#if cameraActive}
                                         <ChevronDownIcon size="13" />
@@ -568,13 +563,12 @@
                                     on:mouseleave={() => (cameraActive = false)}
                                 >
                                     {#each $cameraListStore as camera (camera.deviceId)}
-                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <span
                                             class="wa-dropdown-item tw-flex"
-                                            on:click={() => {
+                                            on:pointerdown={() => {
                                                 analyticsClient.selectCamera();
                                             }}
-                                            on:click|stopPropagation|preventDefault={() =>
+                                            on:pointerdown|stopPropagation|preventDefault={() =>
                                                 selectCamera(camera.deviceId)}
                                         >
                                             {StringUtils.normalizeDeviceName(camera.label)}
@@ -589,11 +583,10 @@
                     {/if}
 
                     {#if $myMicrophoneStore}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             class="bottom-action-button tw-relative"
-                            on:click={() => analyticsClient.microphone()}
-                            on:click={microphoneClick}
+                            on:pointerdown={() => analyticsClient.microphone()}
+                            on:pointerdown={microphoneClick}
                             class:disabled={!$requestedMicrophoneState || $silentStore}
                         >
                             <Tooltip text={$LL.actionbar.microphone()} />
@@ -619,7 +612,7 @@
                             {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 1}
                                 <button
                                     class="microphone tw-absolute tw-text-light-purple focus:outline-none tw-m-0"
-                                    on:click|stopPropagation|preventDefault={() =>
+                                    on:pointerdown|stopPropagation|preventDefault={() =>
                                         (microphoneActive = !microphoneActive)}
                                 >
                                     {#if microphoneActive}
@@ -642,10 +635,10 @@
                                         {#each $microphoneListStore as microphone (microphone.deviceId)}
                                             <span
                                                 class="wa-dropdown-item"
-                                                on:click={() => {
+                                                on:pointerdown={() => {
                                                     analyticsClient.selectMicrophone();
                                                 }}
-                                                on:click|stopPropagation|preventDefault={() =>
+                                                on:pointerdown|stopPropagation|preventDefault={() =>
                                                     selectMicrophone(microphone.deviceId)}
                                             >
                                                 {StringUtils.normalizeDeviceName(microphone.label)}
@@ -664,10 +657,10 @@
                                         {#each $speakerListStore as speaker (speaker.deviceId)}
                                             <span
                                                 class="wa-dropdown-item"
-                                                on:click={() => {
+                                                on:pointerdown={() => {
                                                     analyticsClient.selectSpeaker();
                                                 }}
-                                                on:click|stopPropagation|preventDefault={() =>
+                                                on:pointerdown|stopPropagation|preventDefault={() =>
                                                     selectSpeaker(speaker.deviceId)}
                                             >
                                                 {StringUtils.normalizeDeviceName(speaker.label)}
@@ -684,11 +677,10 @@
                 {/if}
 
                 {#if $isSpeakerStore || $streamingMegaphoneStore || $liveStreamingEnabledStore}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         class="tw-transition-all bottom-action-button"
-                        on:click={() => analyticsClient.screenSharing()}
-                        on:click={screenSharingClick}
+                        on:pointerdown={() => analyticsClient.screenSharing()}
+                        on:pointerdown={screenSharingClick}
                         class:enabled={$requestedScreenSharingState}
                     >
                         <Tooltip text={$LL.actionbar.screensharing()} />
@@ -713,12 +705,11 @@
                     </div>
                 {/if}
 
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 {#if $isSpeakerStore && !$streamingMegaphoneStore}
                     <div
                         class="tw-transition-all bottom-action-button"
-                        on:click={() => analyticsClient.layoutPresentChange()}
-                        on:click={switchLayoutMode}
+                        on:pointerdown={() => analyticsClient.layoutPresentChange()}
+                        on:pointerdown={switchLayoutMode}
                     >
                         <Tooltip text={$LL.actionbar.layout()} />
                         <button>
@@ -741,10 +732,9 @@
                     </div>
                 {/if}
 
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
-                    on:click={() => analyticsClient.openedChat()}
-                    on:click={toggleChat}
+                    on:pointerdown={() => analyticsClient.openedChat()}
+                    on:pointerdown={toggleChat}
                     class="bottom-action-button tw-relative"
                 >
                     <Tooltip text={$LL.actionbar.chat()} />
@@ -773,8 +763,8 @@
                         </span>
                     {/if}
                 </div>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div on:click={toggleEmojiPicker} class="bottom-action-button">
+
+                <div on:pointerdown={toggleEmojiPicker} class="bottom-action-button">
                     <Tooltip text={$LL.actionbar.emoji()} />
 
                     <button class:border-top-light={$emoteMenuSubStore}>
@@ -782,8 +772,7 @@
                     </button>
                 </div>
                 {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div on:click={toggleGlobalMessage} class="bottom-action-button tw-relative">
+                    <div on:pointerdown={toggleGlobalMessage} class="bottom-action-button tw-relative">
                         {#if $liveStreamingEnabledStore}
                             <Tooltip text={$LL.actionbar.disableMegaphone()} />
                         {:else}
@@ -812,11 +801,10 @@
             </div>
 
             <div class="bottom-action-section tw-flex tw-flex-initial">
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openedMenu()}
-                    on:click={showMenu}
+                    on:pointerdown={() => analyticsClient.openedMenu()}
+                    on:pointerdown={showMenu}
                     class="bottom-action-button"
                 >
                     <Tooltip text={$LL.actionbar.menu()} />
@@ -825,8 +813,12 @@
                         <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
                     </button>
                 </div>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div on:dragstart|preventDefault={noDrag} on:click={toggleMapEditorMode} class="bottom-action-button">
+
+                <div
+                    on:dragstart|preventDefault={noDrag}
+                    on:pointerdown={toggleMapEditorMode}
+                    class="bottom-action-button"
+                >
                     {#if isMobile}
                         <Tooltip text={$LL.actionbar.mapEditorMobileLocked()} />
                     {:else}
@@ -848,11 +840,10 @@
                     </button>
                 </div>
                 {#if $userHasAccessToBackOfficeStore}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         on:dragstart|preventDefault={noDrag}
-                        on:click={() => analyticsClient.openBackOffice()}
-                        on:click={openBo}
+                        on:pointerdown={() => analyticsClient.openBackOffice()}
+                        on:pointerdown={openBo}
                         class="bottom-action-button"
                     >
                         <Tooltip text={$LL.actionbar.bo()} />
@@ -867,11 +858,11 @@
             <div class="bottom-action-section tw-flex tw-flex-initial">
                 <!-- TODO button hep -->
                 <!-- Room list button -->
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
+
                 <div
                     on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openedRoomList()}
-                    on:click={showRoomList}
+                    on:pointerdown={() => analyticsClient.openedRoomList()}
+                    on:pointerdown={showRoomList}
                     class="bottom-action-button"
                 >
                     <Tooltip text="Open the room list" />
@@ -886,18 +877,17 @@
             {#if $addActionButtonActionBarEvent.length > 0}
                 <div class="bottom-action-section tw-flex tw-flex-initial">
                     {#each $addActionButtonActionBarEvent as button (button.id)}
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             in:fly={{}}
                             on:dragstart|preventDefault={noDrag}
-                            on:click={() =>
+                            on:pointerdown={() =>
                                 analyticsClient.clickOnCustomButton(
                                     button.id,
                                     undefined,
                                     button.toolTip,
                                     button.imageSrc
                                 )}
-                            on:click={() => {
+                            on:pointerdown={() => {
                                 buttonActionBarTrigger(button.id);
                             }}
                             class="bottom-action-button"
@@ -919,13 +909,12 @@
             {/if}
 
             {#if $inviteUserActivated}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
                     in:fly={{}}
                     on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openInvite()}
-                    on:click={showInvite}
+                    on:pointerdown={() => analyticsClient.openInvite()}
+                    on:pointerdown={showInvite}
                 >
                     <button
                         class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
@@ -937,13 +926,12 @@
                 </div>
             {/if}
             {#each $addClassicButtonActionBarEvent as button (button.id)}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="bottom-action-section tw-flex tw-flex-initial"
                     in:fly={{}}
                     on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.clickOnCustomButton(button.id, button.label)}
-                    on:click={() => {
+                    on:pointerdown={() => analyticsClient.clickOnCustomButton(button.id, button.label)}
+                    on:pointerdown={() => {
                         buttonActionBarTrigger(button.id);
                     }}
                 >
@@ -966,7 +954,7 @@
                 {#each [...$emoteDataStore.keys()] as key (key)}
                     <div class="tw-transition-all bottom-action-button">
                         <button
-                            on:click={() => {
+                            on:pointerdown={() => {
                                 clickEmoji(key);
                             }}
                             id={`button-${$emoteDataStore.get(key)?.name}`}
@@ -984,7 +972,7 @@
                 {/each}
 
                 <div class="tw-transition-all bottom-action-button">
-                    <button on:click={() => analyticsClient.editEmote()} on:click|preventDefault={edit}>
+                    <button on:pointerdown={() => analyticsClient.editEmote()} on:pointerdown|preventDefault={edit}>
                         {#if $emoteDataStoreLoading}
                             <div class="tw-rounded-lg tw-bg-dark tw-text-xs">
                                 <!-- loading animation -->
@@ -1005,7 +993,7 @@
                     </button>
                 </div>
                 <div class="tw-transition-all bottom-action-button">
-                    <button on:click|preventDefault={close}>
+                    <button on:pointerdown|preventDefault={close}>
                         <img
                             draggable="false"
                             src={closeImg}

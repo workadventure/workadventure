@@ -21,13 +21,16 @@
                 {askDialog.message}
             </p>
             <div class="tw-flex tw-flex-row tw-justify-evenly">
-                <button type="button" class="btn light accept-request" on:click={() => acceptRequest(askDialog.uuid)}
-                    >{$LL.follow.interactMenu.yes()}</button
+                <button
+                    type="button"
+                    class="btn light accept-request"
+                    on:pointerdown={() => acceptRequest(askDialog.uuid)}>{$LL.follow.interactMenu.yes()}</button
                 >
                 <button
                     type="button"
                     class="btn outline refuse-request"
-                    on:click|preventDefault={() => refuseRequest(askDialog.uuid)}>{$LL.follow.interactMenu.no()}</button
+                    on:pointerdown|preventDefault={() => refuseRequest(askDialog.uuid)}
+                    >{$LL.follow.interactMenu.no()}</button
                 >
             </div>
         </div>

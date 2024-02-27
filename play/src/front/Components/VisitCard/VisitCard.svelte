@@ -41,7 +41,7 @@
     />
     {#if !hidden}
         <div class="buttonContainer">
-            <button class="nes-btn is-popUpElement" on:click={closeCard}>{$LL.menu.visitCard.close()}</button>
+            <button class="nes-btn is-popUpElement" on:pointerdown={closeCard}>{$LL.menu.visitCard.close()}</button>
         </div>
     {/if}
 </section>

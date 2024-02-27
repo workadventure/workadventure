@@ -54,13 +54,12 @@
     });
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     id="container"
     class="jitsi-video"
     bind:this={jitsiMediaBoxHtml}
-    on:click={() => analyticsClient.pinMeetingAction()}
-    on:click={() =>
+    on:pointerdown={() => analyticsClient.pinMeetingAction()}
+    on:pointerdown={() =>
         clickable && $videoTrackStore && $videoTrackStore?.isActive()
             ? highlightedEmbedScreen.toggleHighlight(embedScreen)
             : null}

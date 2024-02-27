@@ -71,7 +71,7 @@
                 <button
                     id={tool.toolName}
                     class:active={$mapEditorSelectedToolStore === tool.toolName}
-                    on:click|preventDefault={() => switchTool(tool.toolName)}
+                    on:pointerdown|preventDefault={() => switchTool(tool.toolName)}
                     type="button"><img src={tool.img} alt="open tool {tool.toolName}" /></button
                 >
                 <Tooltip text={tool.tooltiptext} leftPosition="true" />

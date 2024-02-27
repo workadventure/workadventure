@@ -21,7 +21,7 @@
         <button
             type="button"
             class="light tw-m-auto tw-cursor-pointer tw-px-3"
-            on:click|preventDefault={() => window.location.reload()}
+            on:pointerdown|preventDefault={() => window.location.reload()}
             >{`${$LL.refreshPrompt.refresh()} (${timeToRefreshSeconds})`}
         </button>
     </div>
