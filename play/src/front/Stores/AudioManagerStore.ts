@@ -1,5 +1,9 @@
 import { get, writable } from "svelte/store";
+// import PopUpSound from "../Components/PopUp/PopUpSound.svelte";
 import { peerStore } from "./PeerStore";
+// import { popupStore } from "./PopupStore";
+
+// let popupUUID: void;
 
 export interface audioManagerVolume {
     muted: boolean;
@@ -90,13 +94,11 @@ function createAudioManagerFileStore() {
 }
 
 export const audioManagerVisibilityStore = writable(false);
-
 export const audioManagerVolumeStore = createAudioManagerVolumeStore();
-
 export const audioManagerFileStore = createAudioManagerFileStore();
 
 // Not unsubscribing is ok, this is a singleton.
 //eslint-disable-next-line svelte/no-ignored-unsubscribe
 peerStore.subscribe((peers) => {
-    audioManagerVolumeStore.setTalking(peers.size > 0);
+  audioManagerVolumeStore.setTalking(peers.size > 0);
 });

@@ -1,22 +1,17 @@
 <script lang="ts">
+  import { createEventDispatcher } from "svelte";
   import XIcon from "../Icons/XIcon.svelte";
-  // import { bannerVisible } from '../../Stores/TutorialBanner'
   import FollowMenu from "../FollowMenu/FollowMenu.svelte";
 
-
-  let banner;
-  export let priority;
-  export let className;
+  const dispatch = createEventDispatcher()
 
   function closeBanner() {
-    banner = document.getElementById("close-banner")
-    banner?.classList.add("hidden")
+    dispatch('close')
   }
-
 </script>
 
 
-<div class="fixed bottom-2 left-0 right-0 m-auto bg-contrast/80 backdrop-blur text-white w-[500px] h-[200px] rounded-lg overflow-hidden z-[208] mb-12 animation" id="close-banner">
+<div class="fixed bottom-4 left-0 right-0 m-auto bg-contrast/80 backdrop-blur text-white w-[500px] h-[200px] rounded-lg overflow-hidden z-[208] mb-12 animation" id="close-banner">
   <div class="flex p-4 space-x-4 pointer-events-auto">
       <div class="">
       </div>

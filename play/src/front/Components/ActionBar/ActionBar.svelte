@@ -130,9 +130,10 @@
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
     import speakerAudio from "../../../../../maps/tests/webrtc-out.mp3"
-    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
+    // import { popupStore } from "../../Stores/PopupStore";
     // import { popUpFollowVisibility } from "../../Stores/PopUpBanner";
     // import PopUpFollow from "../PopUp/PopUpFollow.svelte";
+    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
     // import { openComponent } from "../../Stores/TutorialBanner";
 
     gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;

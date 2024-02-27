@@ -1,6 +1,6 @@
 <script lang="ts">
+  import { bannerVisible, currentBannerIndex } from '../../Stores/PopupStore'
   import TutorialInstruction from './TutorialInstruction.svelte';
-  import { bannerVisible, currentBannerIndex } from '../../Stores/PopUpBannerStore'
 </script>
 
   {#if $currentBannerIndex === 0 && $bannerVisible }
