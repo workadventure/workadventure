@@ -20,23 +20,26 @@ Check out resources developed by the WorkAdventure community at [awesome-workadv
 
 ## Setting up a production environment
 
-We provide a [reference installation method](https://github.com/thecodingmachine/workadventure/tree/master/contrib/docker): 
-a production-ready `docker-compose` file that you can use out-of-the-box in the [contrib/docker](https://github.com/thecodingmachine/workadventure/tree/master/contrib/docker) directory.
-The way you set up your production environment will ultimately depend on your servers. Feel free to adapt the `docker-compose` file to your needs.
+We support 2 ways to set up a production environment:
 
-> **Note**
+- using Docker Compose
+- or using a Helm chart for Kubernetes
+
+Please check the [Setting up a production environment](docs/others/self-hosting/install.md) guide for more information.
+
+> [!NOTE]
 > WorkAdventure also provides a [hosted version](https://workadventu.re) of the application. Using the hosted version is 
 > the easiest way to get started and helps us to keep the project alive.
 
 ## Setting up a development environment
 
-> **Note**
+> [!NOTE]
 > These installation instructions are for local development only. They will not work on
 > remote servers as local environments do not have HTTPS certificates.
 
 Install Docker and clone this repository.
 
-> **Warning**
+> [!WARNING]
 > If you are using Windows, make sure the End-Of-Line character is not modified by the cloning process by setting
 > the `core.autocrlf` setting to false: `git config --global core.autocrlf false`
 

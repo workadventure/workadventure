@@ -5,6 +5,7 @@ import { gotoWait200 } from './utils/containers';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {RENDERER_MODE} from "./utils/environment";
+import {maps_domain, play_url, publicTestMapUrl} from "./utils/urls";
 
 const apiKey = process.env.ROOM_API_SECRET_KEY;
 
@@ -14,9 +15,7 @@ if (!apiKey) {
 
 const client = createRoomApiClient(apiKey, process.env.ROOM_API_HOSTNAME ?? "room-api.workadventure.localhost", process.env.ROOM_API_PORT ? Number(process.env.ROOM_API_PORT) : 80);
 
-const protocol = process.env.ROOM_API_HOSTNAME && process.env.ROOM_API_HOSTNAME.startsWith("https") ? "https" : "http";
-
-const roomUrl = `${protocol}://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json`;
+const roomUrl = `${play_url}/_/room-api/${maps_domain}/tests/Variables/shared_variables.json`;
 const variableName = "textField";
 
 test.describe('Room API', async () => {
@@ -153,7 +152,7 @@ test.describe('Room API', async () => {
 
         const listenEvent = client.listenToEvent({
             name: "my-event",
-            room: protocol + '://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json',
+            room: `${play_url}/_/room-api/${maps_domain}/tests/E2E/empty.json`,
         });
 
         let resolved = false;
@@ -166,7 +165,7 @@ test.describe('Room API', async () => {
             resolved = true;
         })
 
-        await page.goto(`${protocol}://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`);
+        await page.goto(publicTestMapUrl("tests/E2E/empty.json", "room-api"));
         await login(page);
 
         await evaluateScript(page, async () => {
@@ -193,7 +192,7 @@ test.describe('Room API', async () => {
             return;
         }
 
-        await page.goto(`${protocol}://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`);
+        await page.goto(publicTestMapUrl("tests/E2E/empty.json", "room-api"));
         await login(page);
 
         let gotExpectedBroadcastNotification = false;
@@ -221,7 +220,7 @@ test.describe('Room API', async () => {
 
         await client.broadcastEvent({
             name: "key",
-            room: protocol + '://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json',
+            room: `${play_url}/_/room-api/${maps_domain}/tests/E2E/empty.json`,
             data: "value",
         });
 

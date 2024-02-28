@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {expectInViewport} from "./utils/viewport";
-import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Modal', () => {
     test('test', async ({ page }, { project }) => {
@@ -15,7 +15,7 @@ test.describe('Modal', () => {
       
         // Go to
         await page.goto(
-            `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+            publicTestMapUrl("tests/E2E/empty.json", "banner_script")
         );
 
         // Connection with Alice

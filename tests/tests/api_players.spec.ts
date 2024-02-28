@@ -6,7 +6,7 @@ import {getCoWebsiteIframe} from "./utils/iframe";
 import {assertLogMessage, startRecordLogs} from "./utils/log";
 import {evaluateScript} from "./utils/scripting";
 import {oidcLogin, oidcLogout} from "./utils/oidc";
-import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('API WA.players', () => {
   test('enter leave events are received', async ({ page, browser }, {project}) => {
@@ -19,7 +19,7 @@ test.describe('API WA.players', () => {
     }
 
     await page.goto(
-      `/_/global/maps.workadventure.localhost/tests/RemotePlayers/remote_players.json?phaserMode=${RENDERER_MODE}`
+      publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
     );
     await login(page, 'Alice');
 
@@ -27,7 +27,7 @@ test.describe('API WA.players', () => {
     const page2 = await newBrowser.newPage();
 
     await page2.goto(
-      `/_/global/maps.workadventure.localhost/tests/RemotePlayers/remote_players.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
     );
 
     await login(page2, 'Bob');
@@ -69,7 +69,7 @@ test.describe('API WA.players', () => {
     }
 
     await page.goto(
-        `/_/global/maps.workadventure.localhost/tests/RemotePlayers/remote_players_no_init.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl(`tests/RemotePlayers/remote_players_no_init.json`, "api_players")
     );
     await login(page);
 
@@ -86,7 +86,7 @@ test.describe('API WA.players', () => {
     }
 
     await page.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
     await login(page, "Alice");
@@ -105,7 +105,7 @@ test.describe('API WA.players', () => {
     const page2 = await newBrowser.newPage();
 
     await page2.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
     await login(page2, 'Bob');
@@ -206,7 +206,7 @@ test.describe('API WA.players', () => {
     const page2 = await newBrowser.newPage();
 
     await page2.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
     await login(page2, 'Bob');
@@ -306,7 +306,7 @@ test.describe('API WA.players', () => {
     }
 
     await page.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
     await login(page, "Alice");
@@ -324,7 +324,7 @@ test.describe('API WA.players', () => {
 
     test.setTimeout(120_000); // Fix Webkit that can take more than 60s
     await page.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
     await login(page, "Alice");
@@ -345,7 +345,7 @@ test.describe('API WA.players', () => {
     }
     
     await page.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/empty_2_frames.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty_2_frames.json", "api_players")
     );
 
     await login(page, "Alice");
@@ -388,7 +388,7 @@ test.describe('API WA.players', () => {
     }
     
     await page.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
     await login(page, "Alice");
@@ -402,7 +402,7 @@ test.describe('API WA.players', () => {
     const page2 = await context.newPage();
 
     await page2.goto(
-      `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+      publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
     /*console.log("PAGE 2 MY ID", await evaluateScript(page2, async () => {
@@ -472,7 +472,7 @@ test.describe('API WA.players', () => {
     }
     
     await page.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
     await login(page, "Alice");

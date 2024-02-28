@@ -5,13 +5,13 @@ import Map from './utils/map';
 import {findContainer, startContainer, stopContainer} from "./utils/containers";
 import {createFileOfSize, deleteFile, fileExist} from "./utils/file";
 import Menu from "./utils/menu";
-import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 const TIMEOUT_TO_GET_LIST = 60_000;
 
 test.setTimeout(750_000);
 
-test.describe('Chat', () => {
+test.describe('Chat @chat', () => {
   test('main', async ({ page, browser, browserName }, { project }) => {
 
     // Skip test for mobile device
@@ -20,7 +20,6 @@ test.describe('Chat', () => {
       test.skip();
       return;
     }
-
     /*page.on('console', msg => console.log(browserName + ' - ' + msg.type() + ' - ' + msg.text()));
     page.on('response', response => {
       if (response.status() >= 400) {
@@ -29,7 +28,7 @@ test.describe('Chat', () => {
     });*/
 
     await page.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/livezone.json", "chat")
     );
     const nickname = getUniqueNickname('A');
     await login(page, nickname, 2);
@@ -40,7 +39,6 @@ test.describe('Chat', () => {
     }
 
     await Menu.openChat(page);
-    const ejabberd = await findContainer('ejabberd');
 
     await test.step('all tests of chat', async () => {
       await Map.goToRoom(page, '#Out_LiveZone_a');
@@ -51,7 +49,7 @@ test.describe('Chat', () => {
       const newBrowser = await browser.browserType().launch();
       const page2 = await newBrowser.newPage();
       await page2.goto(
-          `/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
+          publicTestMapUrl("tests/E2E/livezone.json", "chat")
       );
       const nickname2 = getUniqueNickname('B');
       await login(page2, nickname2, 3);
@@ -89,7 +87,6 @@ test.describe('Chat', () => {
       await Chat.AT_sendMessage(page, 'Hello, how are you ?');
       await Chat.AT_checkLastMessageSent(page);
       // Receive the message
-      await page2.pause();
       await Chat.AT_lastMessageContain(page2, 'Hello, how are you ?');
 
 
@@ -187,6 +184,8 @@ test.describe('Chat', () => {
     });
 
     await test.step('disconnect and reconnect to ejabberd and pusher @docker', async () => {
+      const ejabberd = await findContainer('ejabberd');
+
       const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await Chat.slideToUsers(page);
       await Chat.checkNameInChat(page, nickname, TIMEOUT_TO_GET_LIST);
@@ -208,7 +207,7 @@ test.describe('Chat', () => {
   });
 });
 
-test.describe('Use application into TimeLine', () => {
+test.describe('Use application into TimeLine @chat', () => {
   test('main', async ({ page, browser, browserName }, { project }) => {
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
@@ -216,9 +215,9 @@ test.describe('Use application into TimeLine', () => {
       test.skip();
       return;
     }
-    
+
     await page.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/livezone.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/livezone.json", "chat")
     );
     const nickname = getUniqueNickname('A');
     await login(page, nickname, 2);

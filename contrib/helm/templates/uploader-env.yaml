@@ -1,0 +1,21 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "workadventure.fullname" . }}-env-uploader
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+data:
+  UPLOADER_URL: {{ include "workadventure.uploaderUrl" . | quote }}
+  {{- if and (not .Values.uploader.env.REDIS_HOST) (not .Values.uploader.env.AWS_ACCESS_KEY_ID) }}
+  REDIS_HOST: {{ .Release.Name }}-redis-master
+  REDIS_PORT: "6379"
+  REDIS_DB_NUMBER: "1"
+  {{- end }}
+  {{- range $key, $val := .Values.commonEnv }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+
+  {{- range $key, $val := .Values.uploader.env }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}

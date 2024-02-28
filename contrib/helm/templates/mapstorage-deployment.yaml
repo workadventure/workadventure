@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "workadventure.fullname" . }}-mapstorage
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+    role: mapstorage
+spec:
+  replicas: {{ .Values.mapstorage.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "workadventure.selectorLabels" . | nindent 6 }}
+      role: mapstorage
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ (include (print $.Template.BasePath "/mapstorage-env.yaml") .) | sha256sum }}
+        checksum/secret: {{ (include (print $.Template.BasePath "/mapstorage-secret-env.yaml") .) | sha256sum }}
+        {{- if .Values.forceRedeploy }}
+        forceRedeploy: {{ randAlphaNum 10 | quote }}
+        {{- end }}
+        {{- with .Values.mapstorage.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "workadventure.selectorLabels" . | nindent 8 }}
+        role: mapstorage
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "workadventure.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.mapstorage.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: mapstorage
+          {{- if .Values.mapstorage.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "workadventure.fullname" . }}-mapstorage
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+      initContainers:
+        - name: mapstorage-init
+          image: busybox
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              chown -R 1000:1000 /maps
+          volumeMounts:
+            - name: mapstorage
+              mountPath: /maps
+      containers:
+        - name: {{ .Chart.Name }}-mapstorage
+          securityContext:
+            {{- toYaml .Values.mapstorage.securityContext | nindent 12 }}
+          image: "{{ .Values.mapstorage.image.repository }}:{{ .Values.mapstorage.image.tag | default .Values.appVersion }}"
+          imagePullPolicy: {{ .Values.mapstorage.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "workadventure.fullname" . }}-env-mapstorage
+            - secretRef:
+                name: {{ include "workadventure.fullname" . }}-secret-env-mapstorage
+            {{- if .Values.mapstorage.externalConfigMapName }}
+            - configMapRef:
+                name: {{ .Values.mapstorage.externalConfigMapName }}
+            {{- end }}
+            {{- if .Values.mapstorage.externalSecretName }}
+            - secretRef:
+                name: {{ .Values.mapstorage.externalSecretName }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.mapstorage.service.port }}
+              protocol: TCP
+            - name: grpc
+              containerPort: 50053
+              protocol: TCP
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: http
+          volumeMounts:
+            - name: mapstorage
+              mountPath: /maps
+          resources:
+            {{- toYaml .Values.mapstorage.resources | nindent 12 }}
+          # lifecycle:
+          #   postStart:
+          #     exec:
+          #       command:
+          #         - sh
+          #         - -c
+          #         - |
+          #           chown -R node:node /maps
+
+      {{- with .Values.mapstorage.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mapstorage.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mapstorage.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

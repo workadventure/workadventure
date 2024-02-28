@@ -11,7 +11,7 @@ describe("LocalAuthenticator", () => {
     beforeAll(() => {
         vi.mock("../../../src/pusher/enums/EnvironmentVariable", () => {
             return {
-                PUSHER_URL: "http://play.workadventure.localhost",
+                FRONT_URL: "http://play.workadventure.localhost",
                 ROOM_API_SECRET_KEY: "MYAWESOMEKEY",
             };
         });
