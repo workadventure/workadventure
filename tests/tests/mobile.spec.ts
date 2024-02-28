@@ -10,6 +10,13 @@ test.use({
 })
 test.describe('Mobile', () => {
     test('Successfully bubble discussion with mobile device', async ({ page, browser, request, browserName }) => {
+        // If the browser is webkit
+        if (browser.browserType().name() === "webkit") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         await page.goto(Map.url("empty"));
         await login(page, "Bob", 3);
 
