@@ -2,6 +2,7 @@
     import type { Unsubscriber } from "svelte/store";
     import { get } from "svelte/store";
     import { onDestroy, onMount } from "svelte";
+    import { fly } from "svelte/transition";
     import type { audioManagerVolume } from "../../Stores/AudioManagerStore";
     import {
         audioManagerFileStore,
@@ -129,7 +130,11 @@
     }
 </script>
 
-<div class="main-audio-manager">
+<div
+    class="main-audio-manager"
+    transition:fly={{ y: -200, duration: 500 }}
+    class:hidden={state !== "playing" && state !== "not_allowed"}
+>
     <div class:hidden={state !== "playing"}>
         <div class="audio-manager-player-volume">
             <span id="audioplayer_volume_icon_playing" bind:this={audioPlayerVolumeIcon} on:click={onMute}>
