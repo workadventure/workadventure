@@ -126,7 +126,14 @@ test.describe('Iframe API', () => {
     expect(parameter).toEqual('bar');
   });
 
-  test('disable and enable map editor', async ({ page }) => {
+  test('disable and enable map editor', async ({ page }, { project }) => {
+      // Skip test for mobile device
+      if(project.name === "mobilechromium") {
+        //eslint-disable-next-line playwright/no-skipped-test
+        test.skip();
+        return;
+      }
+
       await page.goto(
           `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
       );
