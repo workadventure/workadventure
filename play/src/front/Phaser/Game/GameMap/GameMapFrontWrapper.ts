@@ -613,12 +613,7 @@ export class GameMapFrontWrapper {
             y: Math.ceil(entityTopLeftCoordinates.y + entityHeight / 2),
         };
 
-        const inPositionX = entityCenterCoordinates.x >= area.x && entityCenterCoordinates.x <= area.x + area.width;
-        const inPositionY = entityCenterCoordinates.y >= area.y && entityCenterCoordinates.y <= area.y + area.height;
-        if (inPositionX && inPositionY) {
-            return true;
-        }
-        return false;
+        return this.isInsideAreaByCoordinates(area, entityCenterCoordinates);
     }
 
     public isSpaceAvailable(topLeftX: number, topLeftY: number, ignoreCollisionGrid?: boolean): boolean {
@@ -808,6 +803,15 @@ export class GameMapFrontWrapper {
             return false;
         }
         return this.gameMap.getGameMapAreas()?.isPlayerInsideArea(id, this.position) || false;
+    }
+
+    public isEntityInsideArea(areaId: string, objectCoordinates: { x: number; y: number }) {
+        const area = this.getArea(areaId);
+        if (area === undefined) {
+            console.error("Unable to find the area from id : ", areaId);
+            return false;
+        }
+        return this.isInsideAreaByCoordinates({ ...area }, objectCoordinates);
     }
 
     private isPlayerInsideAreaByCoordinates(
@@ -1290,6 +1294,18 @@ export class GameMapFrontWrapper {
             }
         }
         return properties;
+    }
+
+    private isInsideAreaByCoordinates(
+        areaCoordinates: { x: number; y: number; width: number; height: number },
+        objectCoordinates: { x: number; y: number }
+    ) {
+        return (
+            objectCoordinates.x >= areaCoordinates.x &&
+            objectCoordinates.x <= areaCoordinates.x + areaCoordinates.width &&
+            objectCoordinates.y >= areaCoordinates.y &&
+            objectCoordinates.y <= areaCoordinates.y + areaCoordinates.height
+        );
     }
 
     public close() {
