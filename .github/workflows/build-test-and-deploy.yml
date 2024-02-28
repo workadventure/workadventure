@@ -581,49 +581,65 @@ jobs:
       matrix:
         include:
           - browser: chromium
+            project: chromium
             shard: 1
             nbShards: 3
             renderer: auto
           - browser: chromium
+            project: chromium
             shard: 2
             nbShards: 3
             renderer: auto
           - browser: chromium
+            project: chromium
             shard: 3
             nbShards: 3
             renderer: auto
           - browser: firefox
+            project: firefox
             shard: 1
             nbShards: 3
             renderer: auto
           - browser: firefox
+            project: firefox
             shard: 2
             nbShards: 3
             renderer: auto
           - browser: firefox
+            project: firefox
             shard: 3
             nbShards: 3
             renderer: auto
           - browser: webkit
+            project: webkit
             shard: 1
             nbShards: 5
             renderer: headless
           - browser: webkit
+            project: webkit
             shard: 2
             nbShards: 5
             renderer: headless
           - browser: webkit
+            project: webkit
             shard: 3
             nbShards: 5
             renderer: headless
           - browser: webkit
+            project: webkit
             shard: 4
             nbShards: 5
             renderer: headless
           - browser: webkit
+            project: webkit
             shard: 5
             nbShards: 5
             renderer: headless
+          - browser: chromium
+            project: mobilechromium
+            shard: 1
+            nbShards: 1
+            renderer: auto
     needs:
       - build-play
       - build-chat
@@ -726,7 +742,7 @@ jobs:
         run: sleep 30 && npm run upload-test-map
         working-directory: map-storage
       - name: Run Playwright tests
-        run: npm run test-prod-like -- --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }}
+        run: npm run test-prod-like -- --project=${{ matrix.project }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }}
         working-directory: tests
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}

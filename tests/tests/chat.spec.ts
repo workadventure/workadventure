@@ -12,14 +12,20 @@ const TIMEOUT_TO_GET_LIST = 60_000;
 test.setTimeout(750_000);
 
 test.describe('Chat @chat', () => {
-  test('main', async ({ page, browser, browserName }) => {
+  test('main', async ({ page, browser, browserName }, { project }) => {
+
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
     /*page.on('console', msg => console.log(browserName + ' - ' + msg.type() + ' - ' + msg.text()));
     page.on('response', response => {
       if (response.status() >= 400) {
         console.log('>>', response.status(), response.url());
       }
     });*/
-
 
     await page.goto(
         publicTestMapUrl("tests/E2E/livezone.json", "chat")
@@ -202,7 +208,13 @@ test.describe('Chat @chat', () => {
 });
 
 test.describe('Use application into TimeLine @chat', () => {
-  test('main', async ({ page, browser, browserName }) => {
+  test('main', async ({ page, browser, browserName }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
 
     await page.goto(
         publicTestMapUrl("tests/E2E/livezone.json", "chat")

@@ -19,7 +19,14 @@ const roomUrl = `${play_url}/_/room-api/${maps_domain}/tests/Variables/shared_va
 const variableName = "textField";
 
 test.describe('Room API', async () => {
-    test("With a bad API key", async ({ browser }) => {
+    test("With a bad API key", async ({ browser }, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+      
         // This test does not depend on the browser. Let's only run it in Chromium.
         if(browser.browserType() !== chromium) {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -42,7 +49,14 @@ test.describe('Room API', async () => {
         }
     });
 
-    test("Save & read a variable", async ({ page, browser }) => {
+    test("Save & read a variable", async ({ page, browser }, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         // This test does not depend on the browser. Let's only run it in Chromium.
         if(browser.browserType() !== chromium) {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -77,7 +91,14 @@ test.describe('Room API', async () => {
         expect(Value.unwrap(value)).toEqual(newValue);
     });
 
-    test("Listen to a variable", async ({ page, browser }) => {
+    test("Listen to a variable", async ({ page, browser }, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         // This test does not depend on the browser. Let's only run it in Chromium.
         if(browser.browserType() !== chromium) {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -114,7 +135,14 @@ test.describe('Room API', async () => {
         }
     });
 
-    test("Listen to an event emitted from the game", async ({ page, browser }) => {
+    test("Listen to an event emitted from the game", async ({ page, browser }, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         // This test does not depend on the browser. Let's only run it in Chromium.
         if(browser.browserType() !== chromium) {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -149,7 +177,14 @@ test.describe('Room API', async () => {
         await expect.poll(() => resolved).toBeTruthy();
     });
 
-    test("Send an event from the Room API", async ({ page, browser }) => {
+    test("Send an event from the Room API", async ({ page, browser }, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         // This test does not depend on the browser. Let's only run it in Chromium.
         if(browser.browserType() !== chromium) {
             //eslint-disable-next-line playwright/no-skipped-test

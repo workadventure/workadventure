@@ -5,7 +5,13 @@ import {publicTestMapUrl} from "./utils/urls";
 test.describe('Translation', () => {
   test('can be switched to French', async ({
     page,
-  }) => {
+  }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
     await page.goto(
       publicTestMapUrl("tests/mousewheel.json", "translate")
     );

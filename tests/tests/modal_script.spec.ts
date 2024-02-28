@@ -5,7 +5,14 @@ import {expectInViewport} from "./utils/viewport";
 import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Modal', () => {
-    test('test', async ({ page }) => {
+    test('test', async ({ page }, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         // Go to 
         await page.goto(
             publicTestMapUrl("tests/E2E/empty.json", "modal_script")

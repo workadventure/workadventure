@@ -4,7 +4,14 @@ import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Button in action bar', () => {
-    test('test', async ({ page }) => {
+    test('test', async ({ page }, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+      
         // Go to WorkAdventure platform
         await page.goto(
             publicTestMapUrl("tests/E2E/empty.json", "buttonactionbar_script")
@@ -33,7 +40,14 @@ test.describe('Button in action bar', () => {
 });
 
 test.describe('Action button in action bar', () => {
-    test('test', async ({ page }) => {
+    test('test', async ({ page }, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+      
         // Go to WorkAdventure platform
         await page.goto(
             publicTestMapUrl("tests/E2E/empty.json", "buttonactionbar_script")

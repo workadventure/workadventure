@@ -7,7 +7,14 @@ import {publicTestMapUrl} from "./utils/urls";
 test.describe('OpenID connect @oidc', () => {
   test('can login and logout', async ({
     page,
-  }) => {
+  }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await page.goto(
         publicTestMapUrl("tests/E2E/empty.json", "oidc")
     );

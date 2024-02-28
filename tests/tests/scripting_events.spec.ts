@@ -4,7 +4,14 @@ import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Scripting API Events', () => {
-    test('test events', async ({ page, browser, request }) => {
+    test('test events', async ({ page, browser, request }, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         // Go to 
         await page.goto(
             publicTestMapUrl("tests/E2E/empty.json", "scripting_events")

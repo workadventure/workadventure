@@ -6,8 +6,14 @@ import {evaluateScript} from "./utils/scripting";
 import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Areas', () => {
-    test('can edit Tiled area from scripting API', async ({ page, browser }) => {
-
+    test('can edit Tiled area from scripting API', async ({ page, browser }, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+      
         // This tests connects on a map with an area named "silent".
         // The Woka is out of the zone, but we move the zone to cover the Woka.
         // We check the silent zone applies to the Woka.

@@ -5,7 +5,14 @@ import {publicTestMapUrl} from "./utils/urls";
 
 test.setTimeout(180_000);
 test.describe('Connection', () => {
-  test('can succeed even if WorkAdventure starts while pusher is down @docker', async ({ page }) => {
+  test('can succeed even if WorkAdventure starts while pusher is down @docker', async ({ page }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await page.goto(
       publicTestMapUrl("tests/mousewheel.json", "reconnect")
     );

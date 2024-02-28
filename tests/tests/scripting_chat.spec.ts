@@ -7,7 +7,13 @@ import Map from './utils/map';
 import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Scripting chat functions', () => {
-    test('can open / close chat + start / stop typing @chat', async ({ page}) => {
+    test('can open / close chat + start / stop typing @chat', async ({ page}, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
         await page.goto(
             publicTestMapUrl("tests/E2E/empty.json", "scripting_chat")
         );
@@ -70,7 +76,13 @@ test.describe('Scripting chat functions', () => {
         await expectOutViewport("#chatWindow", page);
     });
 
-    test('can send message to bubble users @chat', async ({ page, browser}) => {
+    test('can send message to bubble users @chat', async ({ page, browser}, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
         // It seems WebRTC fails to start on Webkit
         if(browser.browserType() === webkit) {
             //eslint-disable-next-line playwright/no-skipped-test
