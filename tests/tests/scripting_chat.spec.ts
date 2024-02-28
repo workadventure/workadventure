@@ -9,7 +9,7 @@ import {RENDERER_MODE} from "./utils/environment";
 test.describe('Scripting chat functions', () => {
     test('can open / close chat + start / stop typing', async ({ page}, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -79,7 +79,7 @@ test.describe('Scripting chat functions', () => {
 
     test('can send message to bubble users', async ({ page, browser}, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;

@@ -3,7 +3,7 @@ import {expect, test} from '@playwright/test';
 test.describe('Swagger documentation', () => {
     test('Admin -> External Admin', async ({page}, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -43,7 +43,7 @@ test.describe('Swagger documentation', () => {
 
     test('Pusher -> Admin', async ({page}, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;

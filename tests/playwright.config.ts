@@ -88,7 +88,7 @@ const config: PlaywrightTestConfig = {
 
     /* Test against mobile viewports. */
     {
-      name: 'mobilechrome',
+      name: 'mobilechromium',
       use: {
         ...devices['Pixel 5'],
         permissions: ["microphone","camera"],

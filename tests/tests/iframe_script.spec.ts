@@ -9,7 +9,7 @@ test.describe('Iframe API', () => {
     page,
   }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -29,7 +29,7 @@ test.describe('Iframe API', () => {
     page
   }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -95,7 +95,7 @@ test.describe('Iframe API', () => {
 
   test('base room properties', async ({ page }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;

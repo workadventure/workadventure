@@ -4,7 +4,7 @@ import {RENDERER_MODE} from "./utils/environment";
 test.describe('Error pages', () => {
   test('successfully displayed for unsupported URLs', async ({ page }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -19,7 +19,7 @@ test.describe('Error pages', () => {
 
   test('successfully displayed for not found pages', async ({ page }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;

@@ -9,7 +9,7 @@ import AreaEditor from "./utils/map-editor/areaEditor";
 test.describe('Meeting actions test', () => {
   test('Meeting action to mute microphone & video', async ({page, browser}, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -73,7 +73,7 @@ test.describe('Meeting actions test', () => {
 
   test('Jitsi meeting action to mute microphone & video', async ({ page, browser, request }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;

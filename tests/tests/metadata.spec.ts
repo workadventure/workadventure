@@ -5,7 +5,7 @@ test.describe('Meta tags', () => {
       request,
   }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -39,7 +39,7 @@ test.describe('Meta tags', () => {
 
   test('there is no error an funky URLs with bots. @selfsigned', async ({ request }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;

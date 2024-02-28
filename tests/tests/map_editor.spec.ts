@@ -19,7 +19,7 @@ test.use({
 test.describe('Map editor', () => {
   test('Successfully set the megaphone feature', async ({ page, browser, request, browserName }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -101,7 +101,7 @@ test.describe('Map editor', () => {
 
   test('Successfully set "SpeakerZone" in the map editor', async ({ page, browser, request }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -161,7 +161,7 @@ test.describe('Map editor', () => {
 
   test('Successfully set start area in the map editor', async ({ page, browser, request, browserName }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -185,7 +185,7 @@ test.describe('Map editor', () => {
 
   test('Successfully set and working exit area in the map editor', async ({ page, browser, request, browserName }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -228,7 +228,7 @@ test.describe('Map editor', () => {
   // Test to set Klaxoon application in the area with the map editor
   test('Successfully set Klaxoon\'s application in the area in the map editor', async ({ page, browser, request, browserName }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -273,7 +273,7 @@ test.describe('Map editor', () => {
 
   test('Successfully set GoogleWorkspace\'s applications in the area in the map editor', async ({ page, browser, request, browserName }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -336,7 +336,7 @@ test.describe('Map editor', () => {
 
   test('Successfully set GoogleWorkspace\'s application entity in the map editor', async ({ page, browser, request, browserName }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -405,7 +405,7 @@ test.describe('Map editor', () => {
 
   test('Successfully set Klaxoon\'s application entity in the map editor', async ({ page, browser, request, browserName }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -463,7 +463,7 @@ test.describe('Map editor', () => {
 
   test('Successfully set searchable processus for entity and zone', async ({ page, browser, request, browserName }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -527,7 +527,7 @@ test.describe('Map editor', () => {
 
   test('Successfully test global message text and sound feature', async ({ page, browser, request, browserName }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;

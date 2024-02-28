@@ -9,7 +9,7 @@ test.describe('OpenID connect @oidc', () => {
     page,
   }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;

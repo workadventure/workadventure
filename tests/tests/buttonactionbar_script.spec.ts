@@ -6,7 +6,7 @@ import {RENDERER_MODE} from "./utils/environment";
 test.describe('Button in action bar', () => {
     test('test', async ({ page }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -42,7 +42,7 @@ test.describe('Button in action bar', () => {
 test.describe('Action button in action bar', () => {
     test('test', async ({ page }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;

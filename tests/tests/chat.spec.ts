@@ -15,7 +15,7 @@ test.describe('Chat', () => {
   test('main', async ({ page, browser, browserName }, { project }) => {
 
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
@@ -211,7 +211,7 @@ test.describe('Chat', () => {
 test.describe('Use application into TimeLine', () => {
   test('main', async ({ page, browser, browserName }, { project }) => {
     // Skip test for mobile device
-    if(project.name === "mobilechrome") {
+    if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;

@@ -15,7 +15,7 @@ test.describe('Map-storage Upload API', () => {
         request, page, browser
     }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -90,7 +90,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -150,7 +150,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -170,7 +170,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -214,7 +214,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -246,7 +246,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -285,7 +285,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -327,7 +327,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -366,7 +366,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -399,7 +399,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -445,7 +445,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -478,7 +478,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -510,7 +510,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -548,7 +548,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -586,7 +586,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }, {  project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -606,7 +606,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -626,7 +626,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
@@ -686,7 +686,7 @@ test.describe('Map-storage Upload API', () => {
         request,
     }, { project }) => {
         // Skip test for mobile device
-        if(project.name === "mobilechrome") {
+        if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
             return;
