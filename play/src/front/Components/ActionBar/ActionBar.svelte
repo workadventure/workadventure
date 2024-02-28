@@ -438,8 +438,8 @@
 {#if !$chatVisibilityStore}
     <ChatOverlay />
 {/if}
-<div class="grid grid-cols-3 auto-cols-min grid-flow-row-dense absolute w-full p-2 xl:p-4 pointer-events-none bp-menu z-[301] top-0">
-    <div class="justify-self-start pointer-events-auto w-32" transition:fly={{delay: 500, y: -200, duration: 750 }}>
+<div class="flex absolute w-full p-2 xl:p-4 pointer-events-none bp-menu z-[301] top-0">
+    <div class="justify-start w-full pointer-events-auto w-32" transition:fly={{delay: 500, y: -200, duration: 750 }}>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
                 class="flex relative transition-all duration-150 z-[2]"
@@ -489,8 +489,8 @@
             </div>
         </div>
     </div>
-    <div class="justify-self-center pointer-events-auto min-w-[200px] max-w-[424px]">
-        <div class="flex relative space-x-2 xl:space-x-4">
+    <div class="justify-center w-full pointer-events-auto min-w-[200px] max-w-[424px]">
+        <div class="flex justify-center relative space-x-2 xl:space-x-4">
             {#if !$silentStore}
             <div in:fly={{delay: 750, y: -200, duration: 750 }}>
                 <div class="flex items-center">
@@ -859,8 +859,8 @@
             </div>
         </div>
     </div>
-    <div class="justify-self-end pointer-events-auto menu-right @6xl:text-danger" bind:clientWidth={elementsWidth}>
-        <div class="flex space-x-2 xl:space-x-4">
+    <div class="justify-end w-full pointer-events-auto menu-right @6xl:text-danger" bind:clientWidth={elementsWidth}>
+        <div class="flex justify-end space-x-2 xl:space-x-4">
             {#if $addActionButtonActionBarEvent.length > 0}
                 <div class="flex items-center relative">
                     {#each $addActionButtonActionBarEvent as button}
