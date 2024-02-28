@@ -5,7 +5,7 @@
     import { onDestroy, onMount } from "svelte";
     import { writable } from "svelte/store";
     import { Subscription } from "rxjs";
-    import { requestedScreenSharingState, screenSharingAvailableStore } from "../../Stores/ScreenSharingStore";
+    import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
         cameraListStore,
         microphoneListStore,
