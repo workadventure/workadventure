@@ -2074,19 +2074,15 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.rightClickStream.subscribe((isRestore: boolean) => {
-                if(isRestore)
-                    this.userInputManager.restoreRightClick();
-                else 
-                    this.userInputManager.disableRightClick();
+                if (isRestore) this.userInputManager.restoreRightClick();
+                else this.userInputManager.disableRightClick();
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.wheelZoomStream.subscribe((isRestore: boolean) => {
-                if(isRestore)
-                    this.cameraManager.unlockZoom();
-                else 
-                    this.cameraManager.lockZoom();
+                if (isRestore) this.cameraManager.unlockZoom();
+                else this.cameraManager.lockZoom();
             })
         );
 

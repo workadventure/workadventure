@@ -496,7 +496,8 @@
                 >
                     <Tooltip text={$LL.actionbar.screensharing()} />
 
-                    <button id="screenSharing" 
+                    <button
+                        id="screenSharing"
                         class:border-top-light={$requestedScreenSharingState}
                         disabled={!$screenSharingActivatedStore}
                     >

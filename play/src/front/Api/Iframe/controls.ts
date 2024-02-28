@@ -162,7 +162,6 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
     restoreInviteButton(): void {
         sendToWorkadventure({ type: "restoreInviteUserButton", data: undefined });
     }
-
 }
 
 export default new WorkadventureControlsCommands();
