@@ -881,7 +881,7 @@
                     on:click={showRoomList}
                     class="bottom-action-button"
                 >
-                    <Tooltip text="Open the room list" />
+                    <Tooltip text={$LL.actionbar.roomList()} />
 
                     <button id="roomListIcon" class:border-top-light={$roomListVisibilityStore}>
                         <!-- svelte-ignore a11y-img-redundant-alt -->
