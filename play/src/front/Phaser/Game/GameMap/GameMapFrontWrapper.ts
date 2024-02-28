@@ -11,12 +11,10 @@ import type {
 } from "@workadventure/tiled-map-type-guard";
 import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
-import { get } from "svelte/store";
 import { Deferred } from "ts-deferred";
-import { userIsAdminStore, userIsEditorStore } from "../../../Stores/GameStore";
-import { mapEditorAreaOnUserPositionStore } from "../../../Stores/MapEditorStore";
 import { PathTileType } from "../../../Utils/PathfindingManager";
 import { Entity } from "../../ECS/Entity";
+import { EntityPermissions } from "../../Permissions/EntityPermissions";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 import { ITiledPlace } from "../GameMapPropertiesListener";
 import type { GameScene } from "../GameScene";
@@ -100,6 +98,8 @@ export class GameMapFrontWrapper {
     private enterDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
     private leaveDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
 
+    private entityPermissions: EntityPermissions;
+
     /**
      * Firing on map change, containing newest collision grid array
      */
@@ -129,6 +129,10 @@ export class GameMapFrontWrapper {
         this.entitiesManager = new EntitiesManager(this.scene, this);
 
         this.gameMap.initialize();
+
+        this.updateCollisionGrid(undefined, false);
+
+        this.entityPermissions = new EntityPermissions(scene);
 
         let depth = -2;
         for (const layer of this.gameMap.flatLayers) {
@@ -537,14 +541,12 @@ export class GameMapFrontWrapper {
             ignoreCollisionGrid
         );
 
-        if (get(userIsAdminStore) || get(userIsEditorStore)) {
-            return canEntityBePlaced;
-        }
+        const entityCenterCoordinates = {
+            x: Math.ceil(topLeftPos.x + width / 2),
+            y: Math.ceil(topLeftPos.y + height / 2),
+        };
 
-        const areaOnUserPosition = get(mapEditorAreaOnUserPositionStore);
-        const canEntityBePlacedInArea =
-            areaOnUserPosition !== undefined && this.canEntityBePlacedInThematicArea(topLeftPos, width, height);
-        return canEntityBePlaced && canEntityBePlacedInArea;
+        return canEntityBePlaced && this.entityPermissions.isAllowedToPlaceEntityOnMap(entityCenterCoordinates);
     }
 
     private canEntityBePlaced(
@@ -609,34 +611,6 @@ export class GameMapFrontWrapper {
         }
 
         return true;
-    }
-
-    private canEntityBePlacedInThematicArea(
-        entityTopLeftCoordinates: { x: number; y: number },
-        entityWidth: number,
-        entityHeight: number
-    ) {
-        const areaOnUserPosition = get(mapEditorAreaOnUserPositionStore);
-
-        if (areaOnUserPosition === undefined) {
-            return false;
-        }
-
-        const area = this.scene.getGameMap().getGameMapAreas()?.getArea(areaOnUserPosition.id);
-        if (area === undefined) {
-            return false;
-        }
-
-        if (areaOnUserPosition.accessRights === "read") {
-            return false;
-        }
-
-        const entityCenterCoordinates = {
-            x: Math.ceil(entityTopLeftCoordinates.x + entityWidth / 2),
-            y: Math.ceil(entityTopLeftCoordinates.y + entityHeight / 2),
-        };
-
-        return this.isInsideAreaByCoordinates(area, entityCenterCoordinates);
     }
 
     public isSpaceAvailable(topLeftX: number, topLeftY: number, ignoreCollisionGrid?: boolean): boolean {
@@ -841,12 +815,7 @@ export class GameMapFrontWrapper {
         areaCoordinates: { x: number; y: number; width: number; height: number },
         playerPosition: { x: number; y: number }
     ): boolean {
-        return (
-            playerPosition.x >= areaCoordinates.x &&
-            playerPosition.x <= areaCoordinates.x + areaCoordinates.width &&
-            playerPosition.y >= areaCoordinates.y &&
-            playerPosition.y <= areaCoordinates.y + areaCoordinates.height
-        );
+        return this.isInsideAreaByCoordinates(areaCoordinates, playerPosition);
     }
 
     public listenAreaCreation(areaData: AreaData): void {
@@ -1323,12 +1292,7 @@ export class GameMapFrontWrapper {
         areaCoordinates: { x: number; y: number; width: number; height: number },
         objectCoordinates: { x: number; y: number }
     ) {
-        return (
-            objectCoordinates.x >= areaCoordinates.x &&
-            objectCoordinates.x <= areaCoordinates.x + areaCoordinates.width &&
-            objectCoordinates.y >= areaCoordinates.y &&
-            objectCoordinates.y <= areaCoordinates.y + areaCoordinates.height
-        );
+        return MathUtils.isOverlappingWithRectangle(objectCoordinates, areaCoordinates);
     }
 
     public close() {

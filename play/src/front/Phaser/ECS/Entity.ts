@@ -12,14 +12,14 @@ import * as _ from "lodash";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { Unsubscriber, get } from "svelte/store";
 import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
-import { userIsAdminStore, userIsEditorStore } from "../../Stores/GameStore";
-import { mapEditorAreaOnUserPositionStore, mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
 import { GameScene } from "../Game/GameScene";
 import { OutlineableInterface } from "../Game/OutlineableInterface";
+import { EntityPermissions } from "../Permissions/EntityPermissions";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
@@ -44,11 +44,15 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     private activatable: boolean;
     private oldPosition: { x: number; y: number };
 
+    private entityPermissions: EntityPermissions;
+
     constructor(scene: GameScene, public readonly entityId: string, data: WAMEntityData, prefab: EntityPrefab) {
         super(scene, data.x, data.y, prefab.imagePath);
         this.setOrigin(0);
 
         this.oldPosition = this.getPosition();
+
+        this.entityPermissions = new EntityPermissions(scene);
 
         this.entityData = {
             ...data,
@@ -111,14 +115,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             actionsMenuStore.clear();
             return;
         }
-
-        /*        const editorMode = get(mapEditorEntityModeStore);
-
-        if (editorMode !== "EDIT") {
-            actionsMenuStore.clear();
-            return;
-        }*/
-
         this.toggleActionsMenu();
     }
 
@@ -394,25 +390,8 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public get userHasAccess(): boolean {
-        if (get(userIsAdminStore) || get(userIsEditorStore)) {
-            return true;
-        }
+        return this.entityPermissions.isAllowedToPlaceEntityOnMap(this.getCenter());
 
-        const areaOnUserPosition = get(mapEditorAreaOnUserPositionStore);
-        if (!areaOnUserPosition) {
-            return false;
-        }
-
-        if (areaOnUserPosition.accessRights === "read") {
-            return false;
-        }
-
-        const gameFrontWrapper = (this.scene as GameScene).getGameMapFrontWrapper();
-        const area = gameFrontWrapper.getArea(areaOnUserPosition.id);
-        if (!area) {
-            return false;
-        }
-
-        return gameFrontWrapper.isEntityInsideArea(areaOnUserPosition.id, this.getCenter());
+        //return this.userHasAccessInCurrentArea;
     }
 }

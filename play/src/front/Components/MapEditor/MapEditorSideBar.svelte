@@ -7,7 +7,7 @@
     import AreaToolImg from "../images/icon-tool-area.png";
     // import FloorToolImg from "../images/icon-tool-floor.png";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { mapEditorActivated, mapEditorActivatedForCurrentArea } from "../../Stores/MenuStore";
+    import { mapEditorActivated, mapEditorActivatedForThematics } from "../../Stores/MenuStore";
     import Tooltip from "../Util/Tooltip.svelte";
     import CloseImg from "../images/close.png";
     import ConfigureImg from "../images/configure.svg";
@@ -36,7 +36,7 @@
         tooltiptext: $LL.mapEditor.sideBar.trashEditor(),
     };
 
-    if ($mapEditorActivatedForCurrentArea) {
+    if ($mapEditorActivatedForThematics) {
         availableTools.push(entityEditorTool);
         availableTools.push(trashEditorTool);
     }
