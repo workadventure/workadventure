@@ -14,12 +14,12 @@ data:
   FRONT_URL: {{ include "workadventure.playUrl" . | quote }}
   # The PUBLIC_MAP_STORAGE_URL is only used when no admin is connected
   PUBLIC_MAP_STORAGE_URL: {{ include "workadventure.mapStorageUrl" . | quote }}
-  INTERNAL_MAP_STORAGE_URL: http://{{ include "workadventure.fullname" . }}-mapstorage:3000
-  EJABBERD_API_URI: {{ printf "%s-ejabberd:%d" (include "workadventure.fullname" .) (int .Values.ejabberd.service.port) }}
+  INTERNAL_MAP_STORAGE_URL: "http://{{ include "workadventure.fullname" . }}-mapstorage:3000"
+  EJABBERD_API_URI: "{{ printf "%s-ejabberd:%d" (include "workadventure.fullname" .) (int .Values.ejabberd.service.port) }}"
   ENABLE_OPENAPI_ENDPOINT: "true"
   ROOM_API_PORT: "50051"
-  MAP_STORAGE_PATH_PREFIX: {{ if .Values.singleDomain }}/map-storage{{ else }}/{{ end }}
-  EJABBERD_DOMAIN: {{ .Values.ejabberdDomain }}
+  MAP_STORAGE_PATH_PREFIX: "{{ if .Values.singleDomain }}/map-storage{{ else }}/{{ end }}"
+  EJABBERD_DOMAIN: {{ .Values.ejabberdDomain | quote }}
   {{- if not .Values.play.env.ALLOWED_CORS_ORIGIN }}
   ALLOWED_CORS_ORIGIN: {{ include "workadventure.playUrl" . | quote }}
   {{- end}}
