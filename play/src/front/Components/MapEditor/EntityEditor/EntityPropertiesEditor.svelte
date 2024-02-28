@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { onDestroy } from "svelte";
     import {
         EntityDataProperties,
         EntityDataPropertiesKeys,
@@ -7,6 +6,7 @@
         EntityDescriptionPropertyData,
         OpenWebsiteTypePropertiesKeys,
     } from "@workadventure/map-editor";
+    import { onDestroy } from "svelte";
     import { ArrowLeftIcon } from "svelte-feather-icons";
     import { get } from "svelte/store";
     import {
@@ -200,7 +200,6 @@
     }
 
     function backToSelectObject() {
-        get(mapEditorSelectedEntityStore)?.delete();
         mapEditorSelectedEntityStore.set(undefined);
         mapEditorSelectedEntityPrefabStore.set(undefined);
         mapEditorEntityModeStore.set("ADD");
