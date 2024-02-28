@@ -1,11 +1,17 @@
 import type { AreaData } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
-import { MapEditorModeManager } from "../MapEditorModeManager";
+import { get } from "svelte/store";
+import { userIsAdminStore, userIsEditorStore } from "../../../../Stores/GameStore";
+import {
+    mapEditorAreaOnUserPositionStore,
+    mapEditorSelectedAreaPreviewStore,
+    mapEditorVisibilityStore,
+} from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
-import { DeleteAreaFrontCommand } from "../Commands/Area/DeleteAreaFrontCommand";
-import { mapEditorSelectedAreaPreviewStore, mapEditorVisibilityStore } from "../../../../Stores/MapEditorStore";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
 import { Entity } from "../../../ECS/Entity";
+import { DeleteAreaFrontCommand } from "../Commands/Area/DeleteAreaFrontCommand";
+import { MapEditorModeManager } from "../MapEditorModeManager";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
 export class TrashEditorTool extends EntityRelatedEditorTool {
@@ -110,6 +116,9 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
         const firstGameObject = gameObjects[0];
 
         if (firstGameObject && firstGameObject instanceof Entity) {
+            if (!this.isAllowedToRemoveGameObject(firstGameObject)) {
+                return;
+            }
             firstGameObject.delete();
             return;
         }
@@ -211,10 +220,30 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
         this.areaPreviews = this.createAreaPreviews();
         this.bindEventHandlers();
         this.active = true;
-        this.setAreaPreviewsVisibility(true);
+        this.setAreaPreviewsVisibility(this.getAreaPreviewVisibileFromUserPermissions());
         this.updateAreaPreviews();
         this.scene.markDirty();
         mapEditorVisibilityStore.set(false);
+    }
+
+    private getAreaPreviewVisibileFromUserPermissions(): boolean {
+        if (get(userIsAdminStore) || get(userIsEditorStore)) {
+            return true;
+        }
+        return false;
+    }
+
+    private isAllowedToRemoveGameObject(gameObject: Entity) {
+        if (get(userIsAdminStore) || get(userIsEditorStore)) {
+            return true;
+        }
+        const areaOnUserPositionStore = get(mapEditorAreaOnUserPositionStore);
+        if (!areaOnUserPositionStore) {
+            return false;
+        }
+        return this.scene
+            .getGameMapFrontWrapper()
+            .isEntityInsideArea(areaOnUserPositionStore.id, gameObject.getCenter());
     }
 
     public clear() {
