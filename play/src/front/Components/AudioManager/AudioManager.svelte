@@ -11,6 +11,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
+    import { warningMessageStore } from "../../Stores/ErrorStore";
 
     let HTMLAudioPlayer: HTMLAudioElement;
     let audioPlayerVolumeIcon: HTMLElement;
@@ -80,6 +81,7 @@
                     state = "not_allowed";
                 } else {
                     state = "error";
+                    warningMessageStore.addWarningMessage($LL.audio.manager.error());
                     console.error("The audio could not be played: ", e.name, e);
                 }
             });
@@ -185,12 +187,6 @@
             class="btn light tw-justify-center tw-font-bold tw-text-xs sm:tw-text-base tw-w-fit"
             on:click={tryPlay}>{$LL.audio.manager.allow()}</button
         >
-    </div>
-    <div
-        class:hidden={state !== "error"}
-        class="tw-text-center tw-flex tw-justify-center tw-text-danger tw-h-6 tw-truncate"
-    >
-        ⚠️ {$LL.audio.manager.error()} ⚠️
     </div>
 </div>
 

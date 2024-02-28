@@ -137,7 +137,7 @@ import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { askDialogStore } from "../../Stores/MeetingStore";
-import { errorStore } from "../../Stores/ErrorStore";
+import { warningMessageStore } from "../../Stores/ErrorStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -1313,7 +1313,7 @@ export class GameScene extends DirtyScene {
                 // The errorMessageStream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.errorMessageStream.subscribe((errorMessage) => {
-                    errorStore.addErrorMessage(errorMessage.message, { closable: true });
+                    warningMessageStore.addWarningMessage(errorMessage.message);
                 });
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
