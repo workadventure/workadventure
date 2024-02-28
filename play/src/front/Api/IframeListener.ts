@@ -7,7 +7,7 @@ import {
     handleMenuRegistrationEvent,
     handleMenuUnregisterEvent,
     handleOpenMenuEvent,
-    warningContainerStore,
+    warningBannerStore,
 } from "../Stores/MenuStore";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
@@ -494,10 +494,10 @@ class IframeListener {
                             this.messagesToChatQueue = [];
                         }
                     } else if (iframeEvent.type == "openBanner") {
-                        warningContainerStore.activateWarningContainer(iframeEvent.data.timeToClose);
+                        warningBannerStore.activateWarningContainer(iframeEvent.data.timeToClose);
                         bannerStore.set(iframeEvent.data);
                     } else if (iframeEvent.type == "closeBanner") {
-                        warningContainerStore.set(false);
+                        warningBannerStore.set(false);
                         bannerStore.set(null);
                     } else if (iframeEvent.type == KLAXOON_ACTIVITY_PICKER_EVENT) {
                         // dispacth event on windows

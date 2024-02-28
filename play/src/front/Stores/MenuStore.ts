@@ -27,7 +27,7 @@ export const profileAvailable = derived(userIsConnected, ($userIsConnected) => {
 });
 
 let warningContainerTimeout: NodeJS.Timeout | null = null;
-function createWarningContainerStore() {
+function createWarningBannerStore() {
     const { subscribe, set } = writable<boolean>(false);
 
     return {
@@ -46,7 +46,7 @@ function createWarningContainerStore() {
     };
 }
 
-export const warningContainerStore = createWarningContainerStore();
+export const warningBannerStore = createWarningBannerStore();
 
 export enum SubMenusInterface {
     settings = "settings",

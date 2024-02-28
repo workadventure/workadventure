@@ -73,7 +73,7 @@ import {
     mapEditorActivated,
     menuIconVisiblilityStore,
     menuVisiblilityStore,
-    warningContainerStore,
+    warningBannerStore,
 } from "../Stores/MenuStore";
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
@@ -661,7 +661,7 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "worldFullWarningMessage": {
-                    warningContainerStore.activateWarningContainer();
+                    warningBannerStore.activateWarningContainer();
                     break;
                 }
                 case "refreshRoomMessage": {

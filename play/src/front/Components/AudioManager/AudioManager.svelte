@@ -2,6 +2,7 @@
     import type { Unsubscriber } from "svelte/store";
     import { get } from "svelte/store";
     import { onDestroy, onMount } from "svelte";
+    import { fly } from "svelte/transition";
     import type { audioManagerVolume } from "../../Stores/AudioManagerStore";
     import {
         audioManagerFileStore,
@@ -11,6 +12,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
+    import { warningMessageStore } from "../../Stores/ErrorStore";
 
     let HTMLAudioPlayer: HTMLAudioElement;
     let audioPlayerVolumeIcon: HTMLElement;
@@ -80,6 +82,7 @@
                     state = "not_allowed";
                 } else {
                     state = "error";
+                    warningMessageStore.addWarningMessage($LL.audio.manager.error());
                     console.error("The audio could not be played: ", e.name, e);
                 }
             });
@@ -127,7 +130,11 @@
     }
 </script>
 
-<div class="main-audio-manager">
+<div
+    class="main-audio-manager"
+    transition:fly={{ y: -200, duration: 500 }}
+    class:hidden={state !== "playing" && state !== "not_allowed"}
+>
     <div class:hidden={state !== "playing"}>
         <div class="audio-manager-player-volume">
             <span id="audioplayer_volume_icon_playing" bind:this={audioPlayerVolumeIcon} on:click={onMute}>
@@ -185,12 +192,6 @@
             class="btn light tw-justify-center tw-font-bold tw-text-xs sm:tw-text-base tw-w-fit"
             on:click={tryPlay}>{$LL.audio.manager.allow()}</button
         >
-    </div>
-    <div
-        class:hidden={state !== "error"}
-        class="tw-text-center tw-flex tw-justify-center tw-text-danger tw-h-6 tw-truncate"
-    >
-        ⚠️ {$LL.audio.manager.error()} ⚠️
     </div>
 </div>
 
