@@ -1,6 +1,13 @@
-import * as _ from "lodash";
 import { MathUtils } from "@workadventure/math-utils";
-import { AreaData, AreaDataProperties, AtLeast, GameMapProperties, WAMFileFormat } from "../types";
+import * as _ from "lodash";
+import {
+    AreaData,
+    AreaDataProperties,
+    AreaRightPropertyData,
+    AtLeast,
+    GameMapProperties,
+    WAMFileFormat,
+} from "../types";
 
 export type AreaChangeCallback = (
     areasChangedByAction: Array<AreaData>,
@@ -88,6 +95,23 @@ export class GameMapAreas {
             return this.addAreaToWAM(area);
         }
         return true;
+    }
+
+    public isUserHasWriteAccessOnAreaByTags(area: AreaData, userTags: string[]): boolean {
+        const areaRights = area.properties.find(
+            (property) => property.type === "areaRightPropertyData"
+        ) as AreaRightPropertyData;
+        if (areaRights === undefined) {
+            return false;
+        }
+        return areaRights.writeTags.some((tag) => userTags.includes(tag));
+    }
+
+    public isGameMapContainsThematics(): boolean {
+        return Object.values(this.areas).some(
+            (area: AreaData) =>
+                area.properties.find((property) => property.type === "areaRightPropertyData") !== undefined
+        );
     }
 
     public isPlayerInsideArea(id: string, playerPosition: { x: number; y: number }): boolean {
@@ -285,7 +309,7 @@ export class GameMapAreas {
         return flattenedProperties;
     }
 
-    private getAreasOnPosition(position: { x: number; y: number }, offsetY = 0): AreaData[] {
+    public getAreasOnPosition(position: { x: number; y: number }, offsetY = 0): AreaData[] {
         const areasOfInterest = [...this.areas.values()];
 
         const overlappedAreas: AreaData[] = [];

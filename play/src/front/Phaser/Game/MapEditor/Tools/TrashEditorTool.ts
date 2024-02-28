@@ -2,11 +2,7 @@ import type { AreaData } from "@workadventure/map-editor";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import { get } from "svelte/store";
 import { userIsAdminStore, userIsEditorStore } from "../../../../Stores/GameStore";
-import {
-    mapEditorAreaOnUserPositionStore,
-    mapEditorSelectedAreaPreviewStore,
-    mapEditorVisibilityStore,
-} from "../../../../Stores/MapEditorStore";
+import { mapEditorSelectedAreaPreviewStore, mapEditorVisibilityStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
 import { Entity } from "../../../ECS/Entity";
@@ -234,16 +230,7 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
     }
 
     private isAllowedToRemoveGameObject(gameObject: Entity) {
-        if (get(userIsAdminStore) || get(userIsEditorStore)) {
-            return true;
-        }
-        const areaOnUserPositionStore = get(mapEditorAreaOnUserPositionStore);
-        if (!areaOnUserPositionStore) {
-            return false;
-        }
-        return this.scene
-            .getGameMapFrontWrapper()
-            .isEntityInsideArea(areaOnUserPositionStore.id, gameObject.getCenter());
+        return gameObject.userHasAccess;
     }
 
     public clear() {

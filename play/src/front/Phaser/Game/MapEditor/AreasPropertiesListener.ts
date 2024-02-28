@@ -28,7 +28,7 @@ import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
 import { mapEditorAreaOnUserPositionStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
 import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
 import { currentLiveStreamingNameStore } from "../../../Stores/MegaphoneStore";
-import { mapEditorActivatedForCurrentArea } from "../../../Stores/MenuStore";
+import { mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
@@ -61,7 +61,7 @@ export class AreasPropertiesListener {
                 continue;
             }
 
-            this.setAreaWithAccessRightsOnUserPosition(area);
+            //this.setAreaWithAccessRightsOnUserPosition(area);
 
             // Add new notification to show at the user that he entered a new area
             if (area.name && area.name !== "") {
@@ -102,10 +102,10 @@ export class AreasPropertiesListener {
     }
 
     private allowEntityEditorToolOnArea() {
-        mapEditorActivatedForCurrentArea.set(true);
+        mapEditorActivatedForThematics.set(true);
     }
     private disableAndCloseMapEntityEditorTool() {
-        mapEditorActivatedForCurrentArea.set(false);
+        mapEditorActivatedForThematics.set(false);
         this.scene.getMapEditorModeManager().equipTool(undefined);
         mapEditorModeStore.switchMode(false);
     }
@@ -152,11 +152,7 @@ export class AreasPropertiesListener {
         for (const area of areas) {
             // analytics event for area
             analyticsClient.leaveAreaMapEditor(area.id, area.name);
-            mapEditorAreaOnUserPositionStore.set(undefined);
 
-            if (get(mapEditorActivatedForCurrentArea)) {
-                this.disableAndCloseMapEntityEditorTool();
-            }
             //Init mapEditor store value
             if (!area.properties) {
                 continue;

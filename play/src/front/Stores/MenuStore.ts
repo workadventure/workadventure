@@ -1,20 +1,20 @@
 import { derived, get, writable } from "svelte/store";
-import {
-    CONTACT_URL,
-    ENABLE_REPORT_ISSUES_MENU,
-    OPID_PROFILE_SCREEN_PROVIDER,
-    REPORT_ISSUES_URL,
-} from "../Enum/EnvironmentVariable";
 import type { Translation } from "../../i18n/i18n-types";
-import { localUserStore } from "../Connection/LocalUserStore";
-import { connectionManager } from "../Connection/ConnectionManager";
 import {
     AddActionButtonActionBarEvent,
     AddButtonActionBarEvent,
     AddClassicButtonActionBarEvent,
     RemoveButtonActionBarEvent,
 } from "../Api/Events/Ui/ButtonActionBarEvent";
+import { connectionManager } from "../Connection/ConnectionManager";
+import { localUserStore } from "../Connection/LocalUserStore";
 import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import {
+    CONTACT_URL,
+    ENABLE_REPORT_ISSUES_MENU,
+    OPID_PROFILE_SCREEN_PROVIDER,
+    REPORT_ISSUES_URL,
+} from "../Enum/EnvironmentVariable";
 import { userIsAdminStore } from "./GameStore";
 
 export const menuIconVisiblilityStore = writable(false);
@@ -86,6 +86,7 @@ export const mapEditorActivated = writable(false);
 export const mapManagerActivated = writable(true);
 export const screenSharingActivatedStore = writable(true);
 export const mapEditorActivatedForCurrentArea = writable(false);
+export const mapEditorActivatedForThematics = writable(true);
 
 function createSubMenusStore() {
     const store = writable<MenuItem[]>([
