@@ -581,17 +581,17 @@ jobs:
       matrix:
         include:
           - browser: chromium
-            project: firefox
+            project: chromium
             shard: 1
             nbShards: 3
             renderer: auto
           - browser: chromium
-            project: firefox
+            project: chromium
             shard: 2
             nbShards: 3
             renderer: auto
           - browser: chromium
-            project: firefox
+            project: chromium
             shard: 3
             nbShards: 3
             renderer: auto
