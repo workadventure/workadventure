@@ -520,7 +520,34 @@ export class GameMapFrontWrapper {
         }
     }
 
-    public canEntityBePlaced(
+    public canEntityBePlacedOnMap(
+        topLeftPos: { x: number; y: number },
+        width: number,
+        height: number,
+        collisionGrid?: number[][],
+        oldTopLeftPos?: { x: number; y: number },
+        ignoreCollisionGrid?: boolean
+    ): boolean {
+        const canEntityBePlaced = this.canEntityBePlaced(
+            topLeftPos,
+            width,
+            height,
+            collisionGrid,
+            oldTopLeftPos,
+            ignoreCollisionGrid
+        );
+
+        if (get(userIsAdminStore) || get(userIsEditorStore)) {
+            return canEntityBePlaced;
+        }
+
+        const areaOnUserPosition = get(mapEditorAreaOnUserPositionStore);
+        const canEntityBePlacedInArea =
+            areaOnUserPosition !== undefined && this.canEntityBePlacedInThematicArea(topLeftPos, width, height);
+        return canEntityBePlaced && canEntityBePlacedInArea;
+    }
+
+    private canEntityBePlaced(
         topLeftPos: { x: number; y: number },
         width: number,
         height: number,
@@ -584,19 +611,15 @@ export class GameMapFrontWrapper {
         return true;
     }
 
-    public canEntityBePlacedInThematicArea(
+    private canEntityBePlacedInThematicArea(
         entityTopLeftCoordinates: { x: number; y: number },
         entityWidth: number,
         entityHeight: number
     ) {
-        if (get(userIsAdminStore) || get(userIsEditorStore)) {
-            return true;
-        }
-
         const areaOnUserPosition = get(mapEditorAreaOnUserPositionStore);
 
         if (areaOnUserPosition === undefined) {
-            return true;
+            return false;
         }
 
         const area = this.scene.getGameMap().getGameMapAreas()?.getArea(areaOnUserPosition.id);
@@ -805,13 +828,13 @@ export class GameMapFrontWrapper {
         return this.gameMap.getGameMapAreas()?.isPlayerInsideArea(id, this.position) || false;
     }
 
-    public isEntityInsideArea(areaId: string, objectCoordinates: { x: number; y: number }) {
+    public isEntityInsideArea(areaId: string, objectCenterCoordinates: { x: number; y: number }) {
         const area = this.getArea(areaId);
         if (area === undefined) {
             console.error("Unable to find the area from id : ", areaId);
             return false;
         }
-        return this.isInsideAreaByCoordinates({ ...area }, objectCoordinates);
+        return this.isInsideAreaByCoordinates({ ...area }, objectCenterCoordinates);
     }
 
     private isPlayerInsideAreaByCoordinates(

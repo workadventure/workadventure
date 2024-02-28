@@ -1,5 +1,4 @@
 import {
-    AreaRightPropertyData,
     AtLeast,
     EntityData,
     EntityDataProperties,
@@ -9,14 +8,15 @@ import {
     GameMapProperties,
     WAMEntityData,
 } from "@workadventure/map-editor";
-import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
-import { get, Unsubscriber } from "svelte/store";
 import * as _ from "lodash";
+import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
+import { Unsubscriber, get } from "svelte/store";
+import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
+import { userIsAdminStore, userIsEditorStore } from "../../Stores/GameStore";
+import { mapEditorAreaOnUserPositionStore, mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { createColorStore } from "../../Stores/OutlineColorStore";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
-import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
-import { mapEditorModeStore } from "../../Stores/MapEditorStore";
-import { createColorStore } from "../../Stores/OutlineColorStore";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
 import { GameScene } from "../Game/GameScene";
 import { OutlineableInterface } from "../Game/OutlineableInterface";
@@ -394,35 +394,25 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public get userHasAccess(): boolean {
-        // If property have area, get area by ID
-        if (!this.entityData.areaId) return true;
-
-        // Get area associated
-        const area = (this.scene as GameScene).getGameMapFrontWrapper().getArea(this.entityData.areaId);
-
-        // Check the area tag and user tag to define if the user can interact with the entity
-        if (!area) return true;
-
-        // Get area right properties
-        const areaRight = area.properties.find((property) => property.type === "areaRightPropertyData") as
-            | AreaRightPropertyData
-            | undefined;
-        if (
-            !(this.scene as GameScene).connection?.isAdmin() &&
-            areaRight != undefined &&
-            (areaRight.readTags.length > 0 || areaRight.writeTags.length > 0)
-        ) {
-            // Check that the user have right to read the area
-            if (
-                (areaRight.readTags.length > 0 &&
-                    !areaRight.writeTags.find((tag) => (this.scene as GameScene).connection?.hasTag(tag))) ||
-                (areaRight.writeTags.length > 0 &&
-                    !areaRight.writeTags.find((tag) => (this.scene as GameScene).connection?.hasTag(tag)))
-            ) {
-                return false;
-            }
+        if (get(userIsAdminStore) || get(userIsEditorStore)) {
+            return true;
         }
 
-        return true;
+        const areaOnUserPosition = get(mapEditorAreaOnUserPositionStore);
+        if (!areaOnUserPosition) {
+            return false;
+        }
+
+        if (areaOnUserPosition.accessRights === "read") {
+            return false;
+        }
+
+        const gameFrontWrapper = (this.scene as GameScene).getGameMapFrontWrapper();
+        const area = gameFrontWrapper.getArea(areaOnUserPosition.id);
+        if (!area) {
+            return false;
+        }
+
+        return gameFrontWrapper.isEntityInsideArea(areaOnUserPosition.id, this.getCenter());
     }
 }
