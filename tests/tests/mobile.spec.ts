@@ -70,13 +70,15 @@ test.describe('Mobile', () => {
         page.close();
     });
 
-    test('Successfully jitsi cowebsite with mobile device', async ({ page, browser, request, browserName }) => {
-        page.goto('/_/global/maps.workadventure.localhost/tests/jitsi_config.json');
+    test('Successfully jitsi cowebsite with mobile device', async ({ page }) => {
+        page.goto('/_/global/maps.workadventure.localhost/CoWebsite/cowebsite_jitsiroom.json');
         await login(page, "Bob", 3);
 
         // Move to open a cowebsite
         await page.locator('#body').press('ArrowRight', { delay: 3000 });
-        await page.locator('.blue-dialog-box').click({timeout: 10000});
+
+        // Now, let's move player 2 to the speaker zone
+        //await Map.walkToPosition(page, 10*32, 4*32);
 
         // Check that the cowebsite is visible
         await expect(page.locator(`#cowebsite #cowebsite-aside #cowebsite-aside-buttons #cowebsite-close`)).toBeVisible({
