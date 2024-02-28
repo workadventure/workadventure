@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "workadventure.labels" . | nindent 4 }}
 data:
-  PLAY_URL: "{{ include "workadventure.playUrl" . | quote }}"
+  PLAY_URL: {{ include "workadventure.playUrl" . | quote }}
   REDIS_HOST: "{{ .Release.Name }}-redis-master"
   MAP_STORAGE_URL: "{{ include "workadventure.fullname" . }}-mapstorage:50053"
   INTERNAL_MAP_STORAGE_URL: "http://{{ include "workadventure.fullname" . }}-mapstorage:3000"
