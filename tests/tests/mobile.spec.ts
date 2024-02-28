@@ -13,9 +13,14 @@ test.describe('Mobile', () => {
         await page.goto(Map.url("empty"));
         await login(page, "Bob", 3);
 
-        // mouse click on the map not working withmobile playwright
+        const positionToDiscuss = {
+            x: 3 * 32,
+            y: 4 * 32
+        };
+
+        // walk on the position for the test
         // TODO: find a solution to test Joystick
-        await page.locator('#body').press('ArrowRight', { delay: 1000 });
+        await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
 
         // Text open menu
         await Menu.openMenu(page);
@@ -30,7 +35,8 @@ test.describe('Mobile', () => {
         await login(pageAlice, "Alice", 5);
 
         // Move Alice and create a bubble with another user
-        await pageAlice.locator('#body').press('ArrowRight', { delay: 1000 });
+        // TODO: find a solution to test Joystick
+        await Map.walkToPosition(pageAlice, positionToDiscuss.x, positionToDiscuss.y);
 
         await expect(pageAlice.locator(`.cameras-container .other-cameras .media-container`).nth(0)).toBeVisible({
             timeout: 10000
@@ -49,7 +55,8 @@ test.describe('Mobile', () => {
         await login(pageJohn, "John", 5);
 
         // Move John and create a bubble with another user
-        await pageJohn.locator('#body').press('ArrowRight', { delay: 1000 });
+        // TODO: find a solution to test Joystick
+        await Map.walkToPosition(pageJohn, positionToDiscuss.x, positionToDiscuss.y);
 
         // Expect to see camera of users
         await expect(pageJohn.locator(`.cameras-container .other-cameras .media-container`).nth(1)).toBeVisible({
@@ -70,12 +77,19 @@ test.describe('Mobile', () => {
         page.close();
     });
 
-    test('Successfully jitsi cowebsite with mobile device', async ({ page }) => {
+    test('Successfully jitsi cowebsite with mobile device', async ({ page, browser }) => {
+        // If the browser is webkit, we skip the test because the option 'ArrowRight' doesn't work
+        if (browser.browserType().name() === "webkit") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
         page.goto('/_/global/maps.workadventure.localhost/tests/CoWebsite/cowebsite_jitsiroom.json');
         await login(page, "Bob", 3);
 
         // Move to open a cowebsite
         await page.locator('#body').press('ArrowRight', { delay: 3000 });
+        // Now, let's move player 2 to the speaker zone
 
         // Check that the cowebsite is visible
         await expect(page.locator(`#cowebsite #cowebsite-aside #cowebsite-aside-buttons #cowebsite-close`)).toBeVisible({
