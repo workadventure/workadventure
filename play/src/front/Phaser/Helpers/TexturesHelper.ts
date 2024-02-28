@@ -19,7 +19,7 @@ export class TexturesHelper {
                 if (frame) {
                     sprite.setFrame(frame);
                 }
-                rt.draw(sprite, sprite.displayWidth * 0.5, sprite.displayHeight * 0.5);
+                rt.draw(sprite, sprite.displayWidth * 0.5, sprite.displayHeight);
             }
             return new Promise<string>((resolve, reject) => {
                 try {
