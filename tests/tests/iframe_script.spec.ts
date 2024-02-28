@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { chromium, expect, test } from '@playwright/test';
 import { login } from './utils/roles';
 import Menu from "./utils/menu";
 import {evaluateScript} from "./utils/scripting";
@@ -165,7 +165,47 @@ test.describe('Iframe API', () => {
       page.close();
   });
 
+  test('test disable invite user button', async ({ page }) => {
+    await page.goto(
+        `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+    );
+
+    await page.evaluate(() => localStorage.setItem('debug', '*'));
+    await login(page, 'Alice', 3);
+
+    // Create a script to evaluate function to disable map editor
+    await evaluateScript(page, async () => {
+      
+      await WA.onInit();
+      
+      WA.controls.disableInviteButton();
+    });
+
+    // Check if the screen sharing is disabled
+    expect(await page.locator('#invite-btn').isHidden({timeout: 10000})).toBeTruthy();
+
+    // Create a script to evaluate function to enable map editor
+    await evaluateScript(page, async () => {
+      
+      await WA.onInit();
+      
+      WA.controls.restoreInviteButton();
+    });
+
+    // Check if the screen sharing is enabled
+    expect(await page.locator('#invite-btn').isVisible({timeout: 10000})).toBeTruthy();
+
+    page.close();
+  });
+
   test('test disable screen sharing', async ({ page, browser }) => {
+    // This test does not depend on the browser. Let's only run it in Chromium.
+    if(browser.browserType() !== chromium) {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+    
     await page.goto(
         `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
     );
@@ -208,40 +248,15 @@ test.describe('Iframe API', () => {
     page.close();
   });
 
-  test('test disable invite user button', async ({ page }) => {
-    await page.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
-    );
+  test('test disable right click user button', async ({ page, browser}) => {
+    // This test does not depend on the browser. Let's only run it in Chromium.
+    if(browser.browserType() !== chromium) {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+  
 
-    await page.evaluate(() => localStorage.setItem('debug', '*'));
-    await login(page, 'Alice', 3);
-
-    // Create a script to evaluate function to disable map editor
-    await evaluateScript(page, async () => {
-      
-      await WA.onInit();
-      
-      WA.controls.disableInviteButton();
-    });
-
-    // Check if the screen sharing is disabled
-    expect(await page.locator('#invite-btn').isHidden({timeout: 10000})).toBeTruthy();
-
-    // Create a script to evaluate function to enable map editor
-    await evaluateScript(page, async () => {
-      
-      await WA.onInit();
-      
-      WA.controls.restoreInviteButton();
-    });
-
-    // Check if the screen sharing is enabled
-    expect(await page.locator('#invite-btn').isVisible({timeout: 10000})).toBeTruthy();
-
-    page.close();
-  });
-
-  test('test disable right click user button', async ({ page }) => {
     await page.goto(
         `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
     );
