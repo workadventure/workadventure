@@ -29,7 +29,6 @@ export class BusyStatusStrategy extends BasicStatusStrategy {
     }
 
     private canIaskNotificationPermission = () => {
-        console.log(Notification.permission);
         if (!("Notification" in window)) return false;
         return Notification.permission === "default";
     };

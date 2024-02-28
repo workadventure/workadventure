@@ -226,12 +226,12 @@ describe("Status Rules", () => {
                 const basicStatusStrategy = new BasicStatusStrategy(AvailabilityStatus.ONLINE, [], timedRules);
 
                 basicStatusStrategy.applyTimedRules();
-                vi.advanceTimersByTime(minTime + 10);
+                vi.advanceTimersToNextTimer();
 
                 expect(rule1.rule).toHaveBeenCalledOnce();
                 expect(rule2.rule).not.toHaveBeenCalledOnce();
 
-                vi.advanceTimersByTime(maxTime + 10);
+                vi.advanceTimersToNextTimer();
 
                 expect(rule1.rule).toHaveBeenCalledOnce();
                 expect(rule2.rule).toHaveBeenCalledOnce();
@@ -251,7 +251,7 @@ describe("Status Rules", () => {
                 basicStatusStrategy.applyTimedRules();
                 vi.advanceTimersByTime(time / 2);
                 basicStatusStrategy.cleanTimedRules();
-                vi.advanceTimersByTime(time);
+                vi.advanceTimersToNextTimer();
 
                 expect(rule1.rule).not.toHaveBeenCalled();
             });
@@ -271,7 +271,7 @@ describe("Status Rules", () => {
                 expect(rule).toHaveBeenCalled();
                 expect(timedRule.rule).not.toHaveBeenCalled();
 
-                vi.advanceTimersByTime(time + 10);
+                vi.advanceTimersToNextTimer();
 
                 expect(timedRule.rule).toHaveBeenCalled();
             });

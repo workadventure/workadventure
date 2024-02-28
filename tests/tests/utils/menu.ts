@@ -40,6 +40,39 @@ class Menu {
     async isNotThereMegaphoneButton(page: Page) {
         await expect(await page.locator('.bottom-action-bar .bottom-action-button #megaphone')).toBeHidden({timeout: 30_000});
     }
+
+    async openStatusList(page : Page){
+        await page.click('#AvailabilityStatus');
+    }
+
+    async clickOnStatus(page:Page,status: string){
+        await this.openStatusList(page);
+        await expect(page.getByText(status)).toBeVisible();
+        await page.getByText(status).click(); 
+    }
+
+    async turnOnCamera(page:Page){
+        if(await page.getByAltText('Turn off webcam').isVisible()) return;
+        await page.getByAltText('Turn on webcam').click();
+        await expect(page.getByAltText('Turn off webcam')).toBeVisible();
+    }
+    async turnOffCamera(page:Page){
+        if(await page.getByAltText('Turn on webcam').isVisible()) return;
+        await page.getByAltText('Turn off webcam').click();
+        await expect(page.getByAltText('Turn on webcam')).toBeVisible();
+    }
+    async turnOnMicrophone(page:Page){
+        if(await page.getByAltText('Turn off microphone').isVisible()) return;
+        await page.getByAltText('Turn on microphone').click();
+        await expect(page.getByAltText('Turn off microphone')).toBeVisible();
+    }
+    async turnOffMicrophone(page:Page){
+        if(await page.getByAltText('Turn on microphone').isVisible()) return;
+        await page.getByAltText('Turn off microphone').click();
+        await expect(page.getByAltText('Turn on microphone')).toBeVisible();
+    }
+
+
 }
 
 export default new Menu();

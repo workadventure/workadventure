@@ -45,6 +45,7 @@
     const unsubcribeToAvailabilityStatusStore = availabilityStatusStore.subscribe((newStatus: AvailabilityStatus) => {
         $StatusChangerStore.changeStatusTo(newStatus);
         buttonProps.statusColorHex = getColorHexOfStatus($availabilityStatusStore);
+        listProps.currentStatus = $availabilityStatusStore;
     });
 
     onDestroy(() => {
@@ -52,7 +53,11 @@
     });
 </script>
 
-<div on:click={toggleStatusPicker} class="bottom-action-button tw-w-full tw-overflow-ellipsis tw-max-w-24">
+<div
+    id="AvailabilityStatus"
+    on:click={toggleStatusPicker}
+    class="bottom-action-button tw-w-full tw-overflow-ellipsis tw-max-w-24"
+>
     <AvailabilityStatusButton props={buttonProps} />
     {#if $availabilityStatusMenuStore}
         <AvailabilityStatusList props={listProps} />

@@ -54,11 +54,7 @@
         >
             <div class="tw-flex tw-justify-start tw-my-1 tw-py-1.5">
                 <AvailabilityStatusCircle position="relative" colorHex={statusInformation.colorHex} />
-                <div
-                    class="tw-px-4 {AvailabilityStatus[currentStatus] !== statusInformation.label
-                        ? ''
-                        : 'tw-opacity-50'}"
-                >
+                <div class="tw-px-4 {currentStatus !== statusInformation.AvailabilityStatus ? '' : 'tw-opacity-50'}">
                     {statusInformation.label}
                 </div>
                 {#if AvailabilityStatus[currentStatus] === statusInformation.label}
