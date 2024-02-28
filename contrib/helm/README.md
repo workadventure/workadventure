@@ -11,6 +11,18 @@ This Helm chart deploys Workadventure on Kubernetes.
     helm repo add workadventure https://charts.workadventu.re/
     helm install workadventure workadventure/workadventure
 
+## Version numbering and upgrading
+
+Versions of the Helm chart are aligned with the versions of the WorkAdventure Docker image. 
+When a new version of the WorkAdventure Docker images are released, a new version of the Helm chart is released as well.
+
+> [!WARNING]
+> This Helm chart is newer than the [Docker Compose install](../docker/README.md) and might change more frequently in the 
+> coming month. Therefore, we do not (yet) guarantee the absence of breaking changes between minor or patch versions.
+> When upgrading, please check changes in `values.yaml`. We will try to document breaking changes in the 
+> [release notes](https://github.com/workadventure/workadventure/releases).
+
+
 ## Configuration
 
 The chart is designed to work out of the box with the minimum required configuration.
