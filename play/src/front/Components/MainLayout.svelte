@@ -194,6 +194,7 @@
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 
+    <!--
     <div class="fixed bottom-16 scale-[80%] blur-[4px] opacity-50 left-0 right-0 m-auto bg-contrast/80 backdrop-blur text-white w-[500px] rounded-lg overflow-hidden z-[201]">
         <div class="flex p-4 space-x-4 pointer-events-auto">
             <div class="">
@@ -236,19 +237,13 @@
             </div>
             <div class="flex flex-col">
                 <div class="text-xs uppercase opacity-50">
-                    Move your woka and discover world <!-- Trad -->
+                    Move your woka and discover world
                 </div>
                 <div class="text-lg">
-                    Use your keyboard to move and meet people! <!-- Trad -->
+                    Use your keyboard to move and meet people!
                 </div>
             </div>
         </div>
-        <!--
-        <div class="flex p-4 space-x-4 bg-contrast mt-4 pointer-events-auto">
-            <button class="btn btn-light btn-ghost w-1/2 justify-center">View full tutorial</button>
-            <button class="btn btn-secondary w-1/2 justify-center">Close</button>
-        </div>
-        -->
     </div>
 
     <div class="fixed bottom-10 scale-[90%] blur-[2px] opacity-75 left-0 right-0 m-auto bg-contrast/80 backdrop-blur text-white w-[500px] rounded-lg overflow-hidden z-[202]">
@@ -293,19 +288,13 @@
             </div>
             <div class="flex flex-col">
                 <div class="text-xs uppercase opacity-50">
-                    Move your woka and discover world <!-- Trad -->
+                    Move your woka and discover world
                 </div>
                 <div class="text-lg">
-                    Use your keyboard to move and meet people! <!-- Trad -->
+                    Use your keyboard to move and meet people!
                 </div>
             </div>
         </div>
-        <!--
-        <div class="flex p-4 space-x-4 bg-contrast mt-4 pointer-events-auto">
-            <button class="btn btn-light btn-ghost w-1/2 justify-center">View full tutorial</button>
-            <button class="btn btn-secondary w-1/2 justify-center">Close</button>
-        </div>
-        -->
     </div>
     <div class="fixed bottom-4 left-0 right-0 m-auto bg-contrast/80 backdrop-blur text-white w-[500px] rounded-lg overflow-hidden z-[203]">
         <div class="flex p-4 space-x-4 pointer-events-auto">
@@ -349,21 +338,20 @@
             </div>
             <div class="flex flex-col">
                 <div class="text-xs uppercase opacity-50">
-                    Move your woka and discover world <!-- Trad -->
+                    Move your woka and discover world
                 </div>
                 <div class="text-lg">
-                    Use your keyboard to move and meet people! <!-- Trad -->
+                    Use your keyboard to move and meet people!
                 </div>
             </div>
         </div>
-        <!--
         <div class="flex p-4 space-x-4 bg-contrast mt-4 pointer-events-auto">
             <button class="btn btn-light btn-ghost w-1/2 justify-center">View full tutorial</button>
             <button class="btn btn-secondary w-1/2 justify-center">Close</button>
         </div>
-        -->
     </div>
 
+        -->
     <Lazy
         on:onload={() => emoteDataStoreLoading.set(true)}
         on:loaded={() => emoteDataStoreLoading.set(false)}

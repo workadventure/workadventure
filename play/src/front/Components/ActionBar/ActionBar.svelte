@@ -116,6 +116,10 @@
 
     import {StringUtils} from "../../Utils/StringUtils";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
+    let userName = gameManager.getPlayerName() || "";
+
+    let elementsWidth;
+    let colWidth = window.innerWidth/3;
 
     let cameraActive = false;
     let microphoneActive = false;
@@ -124,6 +128,7 @@
     let burgerOpen = false;
     let helpActive: string | undefined = undefined;
     let navigating = false;
+
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -407,6 +412,9 @@
         const button = $additionnalButtonsMenu.get(id) as AddButtonActionBarEvent;
         return iframeListener.sendButtonActionBarTriggered(button);
     }
+    window.addEventListener("resize", () => {
+        colWidth = Math.round(window.innerWidth/3);
+    });
 
     let isMobile = isMediaBreakpointUp("md");
     new ResizeObserver(() => {
@@ -430,8 +438,8 @@
 {#if !$chatVisibilityStore}
     <ChatOverlay />
 {/if}
-<div class="grid grid-cols-3 justify-items-stretch absolute w-full p-2 xl:p-4 pointer-events-none bp-menu z-[301] @container top-0">
-    <div class="justify-self-start pointer-events-auto" transition:fly={{delay: 500, y: -200, duration: 750 }}>
+<div class="grid grid-cols-3 auto-cols-min grid-flow-row-dense absolute w-full p-2 xl:p-4 pointer-events-none bp-menu z-[301] top-0">
+    <div class="justify-self-start pointer-events-auto w-32" transition:fly={{delay: 500, y: -200, duration: 750 }}>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
                 class="flex relative transition-all duration-150 z-[2]"
@@ -481,7 +489,7 @@
             </div>
         </div>
     </div>
-    <div class="justify-self-center pointer-events-auto">
+    <div class="justify-self-center pointer-events-auto min-w-[200px] max-w-[424px]">
         <div class="flex relative space-x-2 xl:space-x-4">
             {#if !$silentStore}
             <div in:fly={{delay: 750, y: -200, duration: 750 }}>
@@ -851,7 +859,7 @@
             </div>
         </div>
     </div>
-    <div class="justify-self-end pointer-events-auto menu-right @6xl:text-danger">
+    <div class="justify-self-end pointer-events-auto menu-right @6xl:text-danger" bind:clientWidth={elementsWidth}>
         <div class="flex space-x-2 xl:space-x-4">
             {#if $addActionButtonActionBarEvent.length > 0}
                 <div class="flex items-center relative">
@@ -996,7 +1004,7 @@
                     <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-2 pr-3">
                         <Woka userId={-1} placeholderSrc="" customWidth="32px" customHeight="32px" />
                         <div class="grow flex flex-col justify-start text-left pr-2">
-                            <div class="font-bold text-white leading-5 whitespace-nowrap select-none">Hugo</div>
+                            <div class="font-bold text-white leading-5 whitespace-nowrap select-none">{userName} {colWidth} vs. {elementsWidth}px</div>
                             <div class="text-xxs bold whitespace-nowrap select-none flex items-center">
                                 {#if $availabilityStatusStore === 1}
                                     <div class="aspect-ratio h-2 w-2 bg-success rounded-full mr-2"></div>
@@ -1020,7 +1028,7 @@
                 {#if profileMenuIsDropped}
                 <div class="absolute mt-2 top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all" transition:fly={{y: 40, duration: 150 }}>
                     <div class="p-0 m-0 list-none">
-                        <button class="group flex px-2 transition-all cursor-pointer text-sm font-bold w-full">
+                        <a href="https://workadventu.re/pricing/" target="_blank" class="group flex px-2 transition-all cursor-pointer text-sm font-bold w-full text-white no-underline">
                             <div class="flex items-center px-3 py-3 w-full bg-white/10 rounded">
                                 <div class="w-full text-left">Basic account<!-- trad --></div>
                                 <div class="">
@@ -1029,7 +1037,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </button>
+                        </a>
                         <div class="h-[1px] w-full bg-white/20 my-2"></div>
                         <button class="group flex px-4 py-1 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full" on:click={() => openEditNameScene()}>
                             <div class="aspect-ratio h-2 w-2 bg-success rounded-full ml-2 mr-3"></div>
@@ -1120,6 +1128,7 @@
                         <XIcon />
                     {/if}
                 </div>
+
             </div>
         </div>
     </div>

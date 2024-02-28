@@ -264,7 +264,6 @@
         class:h-full={videoEnabled}
         class:items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
         class:px-7={!videoEnabled}
-        class:rounded={!videoEnabled}
         class:flex-row={!videoEnabled}
         class:relative={!videoEnabled}
         class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
@@ -284,7 +283,7 @@
             class:max-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
             class:max-h-[80vh]={videoEnabled && isHightlighted}
             class:h-full={videoEnabled}
-            class:rounded={videoEnabled}
+            class:rounded-lg={videoEnabled}
             autoplay
             playsinline
         />
@@ -319,7 +318,7 @@
                             />
                         </div>
                         {name}
-                        <div class="p-1 rounded-sm hover:bg-white/20 absolute right-0 top-0 bottom-0 m-auto h-6 w-6 mr-1 transition-all {showUserSubMenu ? 'bg-white/20 hover:bg-white/30' : '' }"  on:click={() => showUserSubMenu = !showUserSubMenu}>
+                        <div class="p-1 rounded-sm hover:bg-white/20 absolute right-0 top-0 bottom-0 m-auto h-6 w-6 mr-1 transition-all pointer-events-auto {showUserSubMenu ? 'bg-white/20 hover:bg-white/30' : '' }"  on:click={() => showUserSubMenu = !showUserSubMenu}>
                             <ChevronDownIcon strokeWidth="2.5" height="h-4" width="w-4" classList="aspect-ratio transition-all {showUserSubMenu ? 'rotate-180' : '' }"  />
                         </div>
                         {#if showUserSubMenu}
