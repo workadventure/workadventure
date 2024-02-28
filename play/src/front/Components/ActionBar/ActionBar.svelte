@@ -63,6 +63,8 @@
         additionnalButtonsMenu,
         addClassicButtonActionBarEvent,
         addActionButtonActionBarEvent,
+        mapManagerActivated,
+        screenSharingActivatedStore,
     } from "../../Stores/MenuStore";
     import {
         emoteDataStore,
@@ -494,10 +496,15 @@
                 >
                     <Tooltip text={$LL.actionbar.screensharing()} />
 
-                    <button class:border-top-light={$requestedScreenSharingState}>
+                    <button
+                        id="screenSharing"
+                        class:border-top-light={$requestedScreenSharingState}
+                        disabled={!$screenSharingActivatedStore}
+                    >
                         {#if $requestedScreenSharingState && !$silentStore}
                             <img
                                 draggable="false"
+                                class:border-top-light={$screenSharingActivatedStore}
                                 src={screenshareOn}
                                 style="padding: 2px;"
                                 alt="Stop screen sharing"
@@ -505,6 +512,7 @@
                         {:else}
                             <img
                                 draggable="false"
+                                class:border-top-light={$screenSharingActivatedStore}
                                 src={screenshareOff}
                                 style="padding: 2px;"
                                 alt="Start screen sharing"
@@ -827,7 +835,7 @@
                 </div>
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div on:dragstart|preventDefault={noDrag} on:click={toggleMapEditorMode} class="bottom-action-button">
-                    {#if isMobile}
+                    {#if isMobile || !$mapManagerActivated}
                         <Tooltip text={$LL.actionbar.mapEditorMobileLocked()} />
                     {:else}
                         <Tooltip text={$LL.actionbar.mapEditor()} />
@@ -836,12 +844,12 @@
                         id="mapEditorIcon"
                         class:border-top-light={$mapEditorModeStore && !isMobile}
                         name="toggle-map-editor"
-                        disabled={isMobile}
+                        disabled={isMobile || !$mapManagerActivated}
                     >
                         <img
                             draggable="false"
                             src={mapBuilder}
-                            class:disable-opacity={isMobile}
+                            class:disable-opacity={isMobile || !$mapManagerActivated}
                             style="padding: 2px"
                             alt="toggle-map-editor"
                         />

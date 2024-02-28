@@ -57,6 +57,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     private playerToFollow?: Player;
     private cameraLocked: boolean;
+    private zoomLocked: boolean;
 
     private readonly EDITOR_MODE_SCROLL_SPEED: number = 5;
 
@@ -69,6 +70,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.camera = scene.cameras.main;
         this.cameraBounds = cameraBounds;
         this.cameraLocked = false;
+        this.zoomLocked = false;
 
         this.waScaleManager = waScaleManager;
 
@@ -288,6 +290,10 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         return this.cameraLocked;
     }
 
+    public isZoomLocked(): boolean {
+        return this.isCameraLocked() || this.zoomLocked;
+    }
+
     private getZoomModifierChange(width?: number, height?: number, multiplier = 1): number {
         if (!width || !height) {
             return 0;
@@ -304,6 +310,14 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.scene.time.delayedCall(delay, () => {
             this.cameraLocked = false;
         });
+    }
+
+    public lockZoom(): void {
+        this.zoomLocked = true;
+    }
+
+    public unlockZoom(): void {
+        this.zoomLocked = false;
     }
 
     private setCameraMode(mode: CameraMode): void {

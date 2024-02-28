@@ -55,6 +55,7 @@ export class UserInputManager {
     private keysCode!: UserInputManagerDatum[];
     private scene: Phaser.Scene;
     private isInputDisabled: boolean;
+    private isRightClickDisabled: boolean;
 
     private joystick?: MobileJoystick;
     private joystickEvents = new ActiveEventList();
@@ -70,6 +71,7 @@ export class UserInputManager {
         this.userInputHandler = userInputHandler;
 
         this.isInputDisabled = false;
+        this.isRightClickDisabled = false;
         this.initKeyBoardEvent();
         this.bindInputEventHandlers();
         if (touchScreenManager.supportTouchScreen) {
@@ -195,6 +197,18 @@ export class UserInputManager {
 
     get isControlsEnabled() {
         return !this.isInputDisabled;
+    }
+
+    disableRightClick() {
+        this.isRightClickDisabled = true;
+    }
+
+    restoreRightClick() {
+        this.isRightClickDisabled = false;
+    }
+
+    get isRightClickEnabled() {
+        return !this.isRightClickDisabled;
     }
 
     getEventListForGameTick(): ActiveEventList {
