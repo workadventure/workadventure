@@ -7,7 +7,7 @@
     import { helpCameraSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
-    import { menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
+    import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import { followStateStore } from "../Stores/FollowStore";
     import { peerStore } from "../Stores/PeerStore";
@@ -30,6 +30,7 @@
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { askDialogStore } from "../Stores/MeetingStore";
     import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
+    import { warningMessageStore } from "../Stores/ErrorStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
@@ -39,7 +40,7 @@
     import Menu from "./Menu/Menu.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
-    import WarningContainer from "./WarningContainer/WarningContainer.svelte";
+    import WarningBanner from "./WarningContainer/WarningBanner.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import FollowMenu from "./FollowMenu/FollowMenu.svelte";
     import BanMessageContainer from "./TypeMessage/BanMessageContainer.svelte";
@@ -57,6 +58,7 @@
     import ObjectDetails from "./Modal/ObjectDetails.svelte";
     import Popup from "./Modal/Popup.svelte";
     import MapList from "./Exploration/MapList.svelte";
+    import WarningToast from "./WarningContainer/WarningToast.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -108,8 +110,8 @@
             <AudioPlaying url={$soundPlayingStore} />
         {/if}
 
-        {#if $warningContainerStore}
-            <WarningContainer />
+        {#if $warningBannerStore}
+            <WarningBanner />
         {/if}
 
         {#if $showReportScreenStore !== userReportEmpty}
@@ -173,6 +175,9 @@
         {/if}
         {#if $roomListVisibilityStore}
             <MapList />
+        {/if}
+        {#if $warningMessageStore.length > 0}
+            <WarningToast />
         {/if}
     </section>
 

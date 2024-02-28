@@ -27,7 +27,7 @@ export const profileAvailable = derived(userIsConnected, ($userIsConnected) => {
 });
 
 let warningContainerTimeout: NodeJS.Timeout | null = null;
-function createWarningContainerStore() {
+function createWarningBannerStore() {
     const { subscribe, set } = writable<boolean>(false);
 
     return {
@@ -46,7 +46,7 @@ function createWarningContainerStore() {
     };
 }
 
-export const warningContainerStore = createWarningContainerStore();
+export const warningBannerStore = createWarningBannerStore();
 
 export enum SubMenusInterface {
     settings = "settings",
@@ -83,6 +83,8 @@ export const inviteMenu: MenuItem = {
 
 export const inviteUserActivated = writable(true);
 export const mapEditorActivated = writable(false);
+export const mapManagerActivated = writable(true);
+export const screenSharingActivatedStore = writable(false);
 
 function createSubMenusStore() {
     const store = writable<MenuItem[]>([

@@ -78,8 +78,11 @@ import {
 import {
     activeSubMenuStore,
     contactPageStore,
+    inviteUserActivated,
     mapEditorActivated,
+    mapManagerActivated,
     menuVisiblilityStore,
+    screenSharingActivatedStore,
     SubMenusInterface,
     subMenusStore,
 } from "../../Stores/MenuStore";
@@ -137,6 +140,7 @@ import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { askDialogStore } from "../../Stores/MeetingStore";
+import { warningMessageStore } from "../../Stores/ErrorStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -1312,8 +1316,7 @@ export class GameScene extends DirtyScene {
                 // The errorMessageStream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.errorMessageStream.subscribe((errorMessage) => {
-                    // TODO: Create component to display error messages and test it
-                    //errorStore.addErrorMessage(errorMessage.message, { closable: true });
+                    warningMessageStore.addWarningMessage(errorMessage.message);
                 });
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
@@ -2054,6 +2057,38 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.banPlayerIframeEvent.subscribe((banPlayerEvent) => {
                 this.connection?.emitBanPlayerMessage(banPlayerEvent.uuid, banPlayerEvent.name);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.mapEditorStream.subscribe((isActivated: boolean) => {
+                mapManagerActivated.set(isActivated);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.screenSharingStream.subscribe((isActivated: boolean) => {
+                screenSharingActivatedStore.set(isActivated);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.rightClickStream.subscribe((isRestore: boolean) => {
+                if (isRestore) this.userInputManager.restoreRightClick();
+                else this.userInputManager.disableRightClick();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.wheelZoomStream.subscribe((isRestore: boolean) => {
+                if (isRestore) this.cameraManager.unlockZoom();
+                else this.cameraManager.lockZoom();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.inviteUserButtonStream.subscribe((isActivated: boolean) => {
+                inviteUserActivated.set(isActivated);
             })
         );
 
@@ -3365,7 +3400,7 @@ ${escapedMessage}
     }
 
     zoomByFactor(zoomFactor: number, velocity?: number) {
-        if (this.cameraManager.isCameraLocked()) {
+        if (this.cameraManager.isZoomLocked()) {
             return;
         }
         // If the zoom modifier is over the max zoom out, we propose to the user to switch to the explorer mode
