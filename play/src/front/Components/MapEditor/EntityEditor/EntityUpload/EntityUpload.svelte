@@ -74,9 +74,8 @@
             } else {
                 if (allowedImageFormats.includes(filesFromDropEvent.item(0)?.type ?? "")) {
                     files = filesFromDropEvent;
-                }
-                else {
-                    console.error("File format not supported")
+                } else {
+                    console.error("File format not supported");
                 }
             }
         }

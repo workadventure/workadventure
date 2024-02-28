@@ -1,5 +1,5 @@
 import type { EntityDataProperties, EntityPrefab } from "@workadventure/map-editor";
-import {  writable } from "svelte/store";
+import { writable } from "svelte/store";
 import { DeleteCustomEntityMessage, ModifyCustomEntityMessage, UploadEntityMessage } from "@workadventure/messages";
 import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
 import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";

@@ -153,7 +153,7 @@
             />
             <label class="tw-mt-[-4px]" for="floatingObject"
                 ><b>{$LL.mapEditor.entityEditor.customEntityEditorForm.floatingObject()}</b>
-                <br/>
+                <br />
                 {$LL.mapEditor.entityEditor.customEntityEditorForm.floatingObjectDescription()}
             </label>
         </div>

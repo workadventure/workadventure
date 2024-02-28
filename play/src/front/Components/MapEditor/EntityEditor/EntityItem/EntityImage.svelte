@@ -1,9 +1,9 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
 
-    export let classNames:string|undefined = undefined
-    export let imageSource:string;
-    export let imageAlt:string;
+    export let classNames: string | undefined = undefined;
+    export let imageSource: string;
+    export let imageAlt: string;
     let imageElementRef: HTMLImageElement;
 
     function retryImageLoading() {
@@ -11,8 +11,6 @@
     }
 
     const dispatch = createEventDispatcher();
-
-
 </script>
 
 <img
@@ -20,7 +18,7 @@
     style="image-rendering: pixelated"
     src={imageSource}
     alt={imageAlt}
-    on:load={()=>dispatch("onImageLoad",imageElementRef)}
+    on:load={() => dispatch("onImageLoad", imageElementRef)}
     bind:this={imageElementRef}
     on:error={() => retryImageLoading()}
 />

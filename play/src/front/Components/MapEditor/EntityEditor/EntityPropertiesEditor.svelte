@@ -5,14 +5,14 @@
         EntityDataPropertiesKeys,
         EntityDataProperty,
         EntityDescriptionPropertyData,
-        OpenWebsiteTypePropertiesKeys
+        OpenWebsiteTypePropertiesKeys,
     } from "@workadventure/map-editor";
     import { ArrowLeftIcon } from "svelte-feather-icons";
     import { get } from "svelte/store";
     import {
         mapEditorEntityModeStore,
         mapEditorSelectedEntityPrefabStore,
-        mapEditorSelectedEntityStore
+        mapEditorSelectedEntityStore,
     } from "../../../Stores/MapEditorStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import LL from "../../../../i18n/i18n-svelte";

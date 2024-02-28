@@ -11,7 +11,7 @@
         mapEditorEntityModeStore,
         mapEditorModifyCustomEntityEventStore,
         mapEditorSelectedEntityPrefabStore,
-        mapEditorSelectedEntityStore
+        mapEditorSelectedEntityStore,
     } from "../../../Stores/MapEditorStore";
     import CustomEntityEditionForm from "./CustomEntityEditionForm/CustomEntityEditionForm.svelte";
     import EntitiesGrid from "./EntitiesGrid.svelte";

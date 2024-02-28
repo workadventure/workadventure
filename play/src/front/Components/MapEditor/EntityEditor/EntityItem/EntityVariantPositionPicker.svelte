@@ -14,7 +14,9 @@
             <div class="hover:tw-cursor-pointer" on:click={() => onPickItem(item)}>
                 <img
                     class={`hover:tw-cursor-pointer item-image tw-max-w-[32px] ${
-                        item.imagePath === selectedEntity?.imagePath ? "tw-border-solid tw-border-yellow-400 tw-rounded-sm" : ""
+                        item.imagePath === selectedEntity?.imagePath
+                            ? "tw-border-solid tw-border-yellow-400 tw-rounded-sm"
+                            : ""
                     }`}
                     src={item.imagePath}
                     alt={item.name}
