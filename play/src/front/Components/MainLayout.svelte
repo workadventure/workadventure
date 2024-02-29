@@ -4,7 +4,11 @@
     import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { emoteDataStoreLoading, emoteMenuStore } from "../Stores/EmoteStore";
     import { requestVisitCardsStore } from "../Stores/GameStore";
-    import { helpCameraSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
+    import {
+        helpCameraSettingsVisibleStore,
+        helpWebRtcSettingsVisibleStore,
+        helpNotificationSettingsVisibleStore,
+    } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
     import { menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
@@ -33,6 +37,7 @@
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
+    import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
     import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
     import Menu from "./Menu/Menu.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
@@ -115,6 +120,10 @@
 
         {#if $helpCameraSettingsVisibleStore}
             <HelpCameraSettingsPopup />
+        {/if}
+
+        {#if $helpNotificationSettingsVisibleStore}
+            <HelpNotificationSettingsPopup />
         {/if}
 
         {#if $helpWebRtcSettingsVisibleStore !== "hidden" && $proximityMeetingStore === true}

@@ -6,8 +6,16 @@ import { login } from './utils/roles';
 import Menu  from './utils/menu';
 import Map  from './utils/map';
 
+const secondUserPermission = ['camera','microphone'];
+
+    test.beforeEach(async ({context})=>{
+       // await context.clearPermissions();
+        //await context.grantPermissions(['notifications','microphone','camera']);
+    })
 
 test.describe('Availability Status', () => {
+
+    
     test.describe('Busy Status',()=>{
         test('should return to online status when you move',async({ page, browser })=>{
             const statusName = "Busy";
@@ -39,15 +47,17 @@ test.describe('Availability Status', () => {
     
             await login(page, 'Alice');
             
-            await page.getByText("Continue without webcam").click();
 
-            await expect(page.getByAltText('Turn on webcam')).toBeVisible();
-            await expect(page.getByAltText('Turn on microphone')).toBeVisible();
+            await Menu.turnOnCamera(page);
+            await Menu.turnOnMicrophone(page);
+
+            await Menu.closeNotificationPopUp(page);
 
             await Menu.clickOnStatus(page,statusName); 
+            await Menu.closeNotificationPopUp(page);
 
-            await expect(page.getByAltText('Turn on webcam')).toBeHidden();
-            await expect(page.getByAltText('Turn on microphone')).toBeHidden();
+            await expect(page.getByAltText('Turn off webcam')).toBeHidden();
+            await expect(page.getByAltText('Turn off microphone')).toBeHidden();
             
 
         })
@@ -68,34 +78,33 @@ test.describe('Availability Status', () => {
             await expect(page.getByAltText('Turn off webcam')).toBeVisible();
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
 
-            await Menu.clickOnStatus(page,statusName); 
+            await Menu.clickOnStatus(page,statusName);
+            await Menu.closeNotificationPopUp(page);
             await Map.walkTo(page,'ArrowRight',500);
 
             await expect(page.getByAltText('Turn off webcam')).toBeVisible();
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
         })
-        test.skip('should ask notification permission when you pass in Busy status and your browser notification permission is default',async({ page, browser,context})=>{
-          
+        test('should ask to change notification permission when you pass in Busy status and your browser notification permission is denied',async({ page, browser,context})=>{
             const statusName = "Busy";
-
-            await context.clearPermissions();
-            await context.grantPermissions(['camera','microphone','notifications']);
-
-
             const map_URL =  `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`;
             
-   
+            await context.clearPermissions();
+            await context.grantPermissions(['microphone','camera']);
+
             await page.goto(map_URL);
     
             await login(page, 'Alice');
             await Map.walkTo(page,'ArrowRight',500);
             await Menu.clickOnStatus(page,statusName);
-            const permission =    await evaluateScript(page, async () => Notification.permission)
 
-            console.log(permission);
+            await expect(page.locator('.helpNotificationSettings')).toBeVisible();
 
-  
+            await page.getByText('continue without notification').click();
+
+            await expect(page.locator('.helpNotificationSettings')).toBeHidden();
         })
+        
         test.describe('busy interaction',async()=>{
             test('should open a popup when a bubble is create...',async({ page, browser,context})=>{
                 const statusName = "Busy";
@@ -103,8 +112,9 @@ test.describe('Availability Status', () => {
                 await page.goto(map_URL);
         
                 await login(page, 'Alice');
-                await Map.walkTo(page,'ArrowRight',500);
+                await Map.walkTo(page,'ArrowRight',600);
                 await Menu.clickOnStatus(page,statusName); 
+                await Menu.closeNotificationPopUp(page);
 
                 const isInBubble = evaluateScript(page, async () => {
                     return new Promise((resolve) => {
@@ -118,18 +128,19 @@ test.describe('Availability Status', () => {
                //creer un 2eme browser
                 const newBrowser = await browser.browserType().launch();
                 const userBob = await newBrowser.newPage();
+                await userBob.context().grantPermissions(secondUserPermission);
             
                 await userBob.goto(map_URL);
                // Login user "Bob"
                const secondPageName = 'Bob'
                 await login(userBob, secondPageName);
-                await Map.walkTo(userBob,'ArrowRight',500);
+                await Map.walkTo(userBob,'ArrowRight',600);
                 
 
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
                 expect(await isInBubble).toBeTruthy();
                 
-             
+                await newBrowser.close();
 
                 
             })
@@ -140,12 +151,15 @@ test.describe('Availability Status', () => {
         
                 await login(page, 'Alice');
                 await Map.walkTo(page,'ArrowRight',500);
-                await Menu.clickOnStatus(page,statusName); 
+
+                await Menu.clickOnStatus(page,statusName);
+                await Menu.closeNotificationPopUp(page);
 
                //creer un 2eme browser
                 const newBrowser = await browser.browserType().launch();
                 const userBob = await newBrowser.newPage();
-            
+                await userBob.context().grantPermissions(secondUserPermission);
+
                 await userBob.goto(map_URL);
                // Login user "Bob"
                 const secondPageName = 'Bob'
@@ -157,20 +171,24 @@ test.describe('Availability Status', () => {
                 await page.getByRole('button', { name: 'Accept' }).click()
                 await Menu.openStatusList(page);
                 await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')   
+                await newBrowser.close();
             })
-            test('should keep busy status  after refuse conversation',async({ page, browser,context})=>{
+            test('should keep busy status  after refuse conversation',async({ page, browser})=>{
                 const statusName = "Busy";
                 const map_URL =  `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`;
                 await page.goto(map_URL);
         
                 await login(page, 'Alice');
                 await Map.walkTo(page,'ArrowRight',500);
+
                 await Menu.clickOnStatus(page,statusName); 
+                await Menu.closeNotificationPopUp(page);
 
                //creer un 2eme browser
                 const newBrowser = await browser.browserType().launch();
                 const userBob = await newBrowser.newPage();
-            
+                await userBob.context().grantPermissions(secondUserPermission);
+
                 await userBob.goto(map_URL);
                // Login user "Bob"
                 const secondPageName = 'Bob'
@@ -181,7 +199,9 @@ test.describe('Availability Status', () => {
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
                 await page.getByRole('button', { name: 'Close' }).click()
                 await Menu.openStatusList(page);
-                await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')    
+                await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')  
+                
+                await newBrowser.close();
             })
         })
 
@@ -197,7 +217,6 @@ test.describe('Availability Status', () => {
     
             await login(page, 'Alice');
             
-           // await page.getByText("Continue without webcam").click();
 
             await Menu.clickOnStatus(page,statusName); 
             
@@ -267,18 +286,20 @@ test.describe('Availability Status', () => {
                //creer un 2eme browser
                 const newBrowser = await browser.browserType().launch();
                 const userBob = await newBrowser.newPage();
-            
+                await userBob.context().grantPermissions(secondUserPermission);
+
                 await userBob.goto(map_URL);
                // Login user "Bob"
                const secondPageName = 'Bob'
                 await login(userBob, secondPageName);
                 await Map.walkTo(userBob,'ArrowRight',500);
                 await expect( page.locator('button.chat-btn + div>span.tw-animate-ping')).toBeHidden();
+                await newBrowser.close();
             })
         })
 
     })
-    test.describe('do not disturb Status',()=>{
+    test.describe('Do not disturb Status',()=>{
         test('should return to online status when you move',async({ page, browser })=>{
             const statusName = "Do not disturb";
     
@@ -287,8 +308,6 @@ test.describe('Availability Status', () => {
             );
     
             await login(page, 'Alice');
-            
-           // await page.getByText("Continue without webcam").click();
 
             await Menu.clickOnStatus(page,statusName); 
             
@@ -315,6 +334,7 @@ test.describe('Availability Status', () => {
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
 
             await Menu.clickOnStatus(page,statusName); 
+            
 
             await expect(page.getByAltText('Turn on webcam')).toBeHidden();
             await expect(page.getByAltText('Turn on microphone')).toBeHidden();
@@ -331,7 +351,6 @@ test.describe('Availability Status', () => {
     
             await login(page, 'Alice');
             
-           // await page.getByText("Continue without webcam").click();
 
             await Menu.turnOnCamera(page);
             await Menu.turnOffMicrophone(page)
@@ -360,13 +379,15 @@ test.describe('Availability Status', () => {
                //creer un 2eme browser
                 const newBrowser = await browser.browserType().launch();
                 const userBob = await newBrowser.newPage();
-            
+                await userBob.context().grantPermissions(secondUserPermission);
+
                 await userBob.goto(map_URL);
                // Login user "Bob"
                const secondPageName = 'Bob'
                 await login(userBob, secondPageName);
                 await Map.walkTo(userBob,'ArrowRight',500);
                 await expect( page.locator('button.chat-btn + div>span.tw-animate-ping')).toBeHidden();
+                await newBrowser.close();
             })
         })
 

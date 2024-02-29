@@ -8,15 +8,6 @@ const createNamePlayerInBubbleModalStore = () => {
     };
 };
 export const namePlayerInBubbleModalStore = createNamePlayerInBubbleModalStore();
-const createConfirmationModalVisibilityStore = () => {
-    const { subscribe, set } = writable(false);
-
-    return {
-        subscribe,
-        open: () => set(true),
-        close: () => set(false),
-    };
-};
 
 const createBubbleModalVisibilityStore = () => {
     const { subscribe, set } = writable(false);
@@ -34,7 +25,7 @@ const createBubbleModalVisibilityStore = () => {
     };
 };
 
-const createNotificationPermissionModal = () => {
+const createBasicBooleanModalStore = () => {
     const { subscribe, set } = writable(false);
 
     return {
@@ -44,6 +35,7 @@ const createNotificationPermissionModal = () => {
     };
 };
 
-export const notificationPermissionModalVisibility = createNotificationPermissionModal();
-export const changeStatusConfirmationModalVisibility = createConfirmationModalVisibilityStore();
+export const notificationPermissionModalVisibility = createBasicBooleanModalStore();
+export const changeStatusConfirmationModalVisibility = createBasicBooleanModalStore();
 export const bubbleModalVisibility = createBubbleModalVisibilityStore();
+export const recommendedActiveNotification = createBasicBooleanModalStore();

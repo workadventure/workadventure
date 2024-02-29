@@ -72,7 +72,12 @@ class Menu {
         await expect(page.getByAltText('Turn on microphone')).toBeVisible();
     }
 
+    async closeNotificationPopUp(page:Page){
+        if(await page.getByText('Continue without notification').isHidden())return;
+        await page.getByText('Continue without notification').click();
+        await expect(page.getByText('Continue without notification')).toBeVisible();
 
+    }
 }
 
 export default new Menu();

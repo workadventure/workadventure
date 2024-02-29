@@ -20,7 +20,7 @@
 </script>
 
 <div
-    class="tw-absolute tw-mt-2 tw-bottom-16 tw-bg-contrast/80 tw-backdrop-blur tw-rounded-lg tw-py-2 tw-w-52 tw-right-0 tw-text-white
+    class="tw-absolute tw-mt-2 tw-bottom-16  tw-bg-dark-purple/75 tw-backdrop-blur tw-rounded-lg tw-py-2 tw-w-52 tw-right-0 tw-text-white
             before:tw-content-[''] before:tw-absolute before:tw-w-0 before:tw-h-0 before:tw--bottom-[14px] before:tw-left-8
             before:tw-border-solid before:tw-border-8 before:tw-border-transparent
             before:tw-border-b-contrast/80 tw-transition-all before:tw-rotate-180"
@@ -46,7 +46,7 @@
     </div>
     {#each statusInformations as statusInformation (statusInformation.AvailabilityStatus)}
         <div
-            class="tw-px-5 tw-py-10px tw-m-0 tw-list-none hover:tw-bg-[rgb(56,56,74)]"
+            class="tw-px-5 tw-py-10px tw-m-0 tw-list-none hover:tw-bg-dark-purple/80"
             on:keyup={(e) => {
                 handleKeyPress(e, statusInformation.AvailabilityStatus);
             }}

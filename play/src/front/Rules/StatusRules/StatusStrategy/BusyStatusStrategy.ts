@@ -2,6 +2,7 @@ import { AvailabilityStatus } from "@workadventure/messages";
 import { TimedRules } from "../statusRules";
 import { askIfUserWantToJoinBubbleOf, askToChangeStatus } from "../statusChangerFunctions";
 import { notificationPermissionModalVisibility } from "../../../Stores/AvailabilityStatusModalsStore";
+import { helpNotificationSettingsVisibleStore } from "../../../Stores/HelpSettingsStore";
 import { BasicStatusStrategy } from "./BasicStatusStrategy";
 
 export class BusyStatusStrategy extends BasicStatusStrategy {
@@ -28,11 +29,14 @@ export class BusyStatusStrategy extends BasicStatusStrategy {
         return true;
     }
 
-    private canIaskNotificationPermission = () => {
+    private NotificationPermissionIs = (permission: "denied" | "default" | "granted") => {
+        console.log("Notification Permission : ", Notification.permission);
         if (!("Notification" in window)) return false;
-        return Notification.permission === "default";
+        return Notification.permission === permission;
     };
+
     private showNotificationPermissionModal = () => {
-        if (this.canIaskNotificationPermission()) notificationPermissionModalVisibility.open();
+        if (this.NotificationPermissionIs("default")) notificationPermissionModalVisibility.open();
+        if (this.NotificationPermissionIs("denied")) helpNotificationSettingsVisibleStore.set(true);
     };
 }

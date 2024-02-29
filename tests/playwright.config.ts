@@ -55,7 +55,7 @@ const config: PlaywrightTestConfig = {
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        permissions: ["microphone","camera"],
+        permissions: ["microphone","camera",'notifications'],
         ignoreHTTPSErrors: true,
         launchOptions: {
           args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
