@@ -84,7 +84,7 @@ export const inviteMenu: MenuItem = {
 export const inviteUserActivated = writable(true);
 export const mapEditorActivated = writable(false);
 export const mapManagerActivated = writable(true);
-export const screenSharingActivatedStore = writable(false);
+export const screenSharingActivatedStore = writable(true);
 
 function createSubMenusStore() {
     const store = writable<MenuItem[]>([

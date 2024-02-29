@@ -20,9 +20,13 @@
     });
 </script>
 
-<div id="mozaic-layout" class="tw-flex tw-justify-center lg:tw-pt-9" bind:this={layoutDom}>
+<div
+    id="mozaic-layout"
+    class="tw-flex tw-justify-center tw-content-center tw-items-center lg:tw-pt-9 tw-pb-16"
+    bind:this={layoutDom}
+>
     <div
-        class="media-container tw-grid mozaic-grid tw-content-start"
+        class="media-container tw-grid mozaic-grid tw-content-start tw-backdrop-blur-sm tw-bg-black/20 tw-pointer-events-auto tw-max-h-full tw-overflow-y-auto"
         class:tw-grid-cols-1={$streamableCollectionStore.size === 1}
         class:tw-grid-cols-2={$streamableCollectionStore.size >= 2}
     >

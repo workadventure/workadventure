@@ -109,7 +109,7 @@
         </div>
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div
-                class="tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-max-w-[25%] 2xl:tw-max-w-[420px] tw-w-full"
+                class="tw-flex tw-flex-col tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-max-w-[25%] 2xl:tw-max-w-[420px] tw-w-full tw-max-h-full"
                 class:tw-w-[10%]={$highlightedEmbedScreen != undefined}
             >
                 {#if $jitsiLoadingStore}
