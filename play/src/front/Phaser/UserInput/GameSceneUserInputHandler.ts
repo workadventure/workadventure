@@ -21,7 +21,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         deltaY: number,
         deltaZ: number
     ): void {
-        this.gameScene.zoomByFactor(1 - (deltaY / 53) * 0.1);
+        // Calculate the velocity of the zoom
+        const velocity = deltaY / 53;
+        // Calculate the zoom factor
+        const zoomFactor = 1 - velocity * 0.1;
+        // Apply the zoom
+        this.gameScene.zoomByFactor(zoomFactor, velocity);
     }
 
     public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
@@ -39,6 +44,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         }
 
         if (!this.gameScene.userInputManager.isControlsEnabled) {
+            return;
+        }
+
+        // If right click is disabled, we don't want to move the player
+        if (!this.gameScene.userInputManager.isRightClickEnabled) {
             return;
         }
 
@@ -72,9 +82,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
 
     public handleKeyDownEvent(event: KeyboardEvent): KeyboardEvent {
-        if (get(mapEditorModeStore)) {
-            this.gameScene.getMapEditorModeManager()?.handleKeyDownEvent(event);
-        }
+        this.gameScene.getMapEditorModeManager()?.handleKeyDownEvent(event);
         switch (event.code) {
             case "KeyE": {
                 mapEditorModeStore.switchMode(!get(mapEditorModeStore));

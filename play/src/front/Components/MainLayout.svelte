@@ -11,14 +11,20 @@
     } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
-    import { menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
+    import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import { followStateStore } from "../Stores/FollowStore";
     import { peerStore } from "../Stores/PeerStore";
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
-    import { showLimitRoomModalStore, modalVisibilityStore } from "../Stores/ModalStore";
+    import {
+        showLimitRoomModalStore,
+        modalVisibilityStore,
+        showModalGlobalComminucationVisibilityStore,
+        modalPopupVisibilityStore,
+        roomListVisibilityStore,
+    } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
@@ -32,6 +38,8 @@
         changeStatusConfirmationModalVisibility,
         notificationPermissionModalVisibility,
     } from "../Stores/AvailabilityStatusModalsStore";
+    import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
+    import { warningMessageStore } from "../Stores/ErrorStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
@@ -42,7 +50,7 @@
     import Menu from "./Menu/Menu.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
-    import WarningContainer from "./WarningContainer/WarningContainer.svelte";
+    import WarningBanner from "./WarningContainer/WarningBanner.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import FollowMenu from "./FollowMenu/FollowMenu.svelte";
     import BanMessageContainer from "./TypeMessage/BanMessageContainer.svelte";
@@ -59,6 +67,11 @@
     import ChangeStatusConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/ChangeStatusConfirmationModal.svelte";
     import BubbleConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/BubbleConfirmationModal.svelte";
     import NotificationPermissionModal from "./ActionBar/AvailabilityStatus/Modals/NotificationPermissionModal.svelte";
+    import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
+    import ObjectDetails from "./Modal/ObjectDetails.svelte";
+    import Popup from "./Modal/Popup.svelte";
+    import MapList from "./Exploration/MapList.svelte";
+    import WarningToast from "./WarningContainer/WarningToast.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -74,7 +87,7 @@
 
 <!-- Components ordered by z-index -->
 <div id="main-layout" class={[...$coWebsites.values()].length === 0 ? "not-cowebsite" : ""} bind:this={mainLayout}>
-    {#if $modalVisibilityStore}
+    {#if $modalVisibilityStore || $modalPopupVisibilityStore}
         <div class="tw-bg-black/60 tw-w-full tw-h-full tw-fixed tw-left-0 tw-right-0" />
     {/if}
 
@@ -110,8 +123,8 @@
             <AudioPlaying url={$soundPlayingStore} />
         {/if}
 
-        {#if $warningContainerStore}
-            <WarningContainer />
+        {#if $warningBannerStore}
+            <WarningBanner />
         {/if}
 
         {#if $showReportScreenStore !== userReportEmpty}
@@ -164,6 +177,24 @@
 
         {#if $askDialogStore}
             <MuteDialogBox />
+        {/if}
+
+        {#if $showModalGlobalComminucationVisibilityStore}
+            <GlobalCommunicationModal />
+        {/if}
+
+        {#if $mapExplorationObjectSelectedStore}
+            <ObjectDetails />
+        {/if}
+
+        {#if $modalPopupVisibilityStore}
+            <Popup />
+        {/if}
+        {#if $roomListVisibilityStore}
+            <MapList />
+        {/if}
+        {#if $warningMessageStore.length > 0}
+            <WarningToast />
         {/if}
     </section>
 

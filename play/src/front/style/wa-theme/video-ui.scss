@@ -27,7 +27,7 @@
 }
 
 .cameras-container{
-    @apply tw-max-h-[46vh] tw-pointer-events-auto tw-overflow-visible tw-flex tw-z-[150] tw-gap-5 tw-self-end tw-relative;
+    @apply tw-max-h-[46vh] tw-pointer-events-auto tw-overflow-visible tw-flex tw-z-[150] tw-gap-5 tw-relative;
     @media (min-height: 500px) {
         @apply tw-max-h-[80vh];
     }
@@ -41,7 +41,7 @@
 }
 
 .media-container {
-    @apply tw-mt-2 tw-max-w-full tw-h-auto;
+    @apply tw-max-w-full tw-h-auto;
 
     &.hightlighted {
         @apply tw-pointer-events-auto tw-h-full;
@@ -171,8 +171,6 @@
 
 /* MOZAIC MODE */
 .mozaic-full-width {
-    @apply mozaic-full-size;
-
     .nametag-webcam-container,
     .woka-webcam-container,
     .voice-meter-webcam-container,
@@ -201,18 +199,25 @@
 }
 
 .mozaic-full-size {
-    @apply md:tw-h-[60vh] md:tw-w-[70vw];
+    @apply md:tw-h-[60vh] md:tw-w-[60vw];
     &.media-box-camera-off-size{
         @apply md:tw-h-[4vh];
     }
 }
 
 .mozaic-duo-size {
-    @apply tw-h-[20vh] tw-w-[70vw] md:tw-h-[25vh] md:tw-w-[60vw] lg:tw-h-[30vh] lg:tw-w-[40vw];
+    @apply tw-h-[30vh] tw-w-[70vw] md:tw-h-[35vh] md:tw-w-[60vw] lg:tw-h-[40vh] lg:tw-w-[40vw];
+    
+    .jitsi-video video, video {
+        @apply tw-object-contain;
+    }
 }
 
 .mozaic-grid {
-    @apply tw-gap-1 lg:tw-gap-4 tw-grid-cols-1 lg:tw-grid-cols-2;
+    @apply tw-gap-1 lg:tw-gap-4;
+    .jitsi-video video, video {
+        @apply tw-object-contain;
+    }
 }
 
 

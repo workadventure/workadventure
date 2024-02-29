@@ -9,8 +9,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaEditor: "Outil d'édition de zone",
         entityEditor: "Outil d'édition d'entités",
         tileEditor: "Outil d'édition de tuiles",
-        configureMyRoom: "Configurer la salle",
+        configureMyRoom: "Configurer le salon",
         trashEditor: "Corbeille",
+        exploreTheRoom: "Explorer le salon",
+        closeMapEditor: "Fermer l'éditeur de carte",
     },
     properties: {
         silentProperty: {
@@ -112,6 +114,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Où les joueurs apparaissent lorsqu'ils quittent la carte.",
             exitMap: "Quitter la carte",
             exitMapStartAreaName: "Nom de la zone de départ",
+            defaultStartArea: "Zone de départ par défaut",
         },
         youtubeProperties: {
             label: "Ouvrir Youtube",
@@ -159,12 +162,19 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     areaEditor: {
         editInstructions: "Sélectionnez une zone pour modifier ses propriétés.",
         nameLabel: "Nom de la zone",
+        nameLabelPlaceholder: "MaZone",
+        areaDescription: "Description de la zone",
+        areaDescriptionPlaceholder: "Description de la zone",
+        areaSerchable: "Recherchable dans le mode exploration",
+        addDescriptionField: "Ajouter une description",
     },
     areaEditorInstructions: {
         title: "Comment ca marche ?",
         description: "Dessinez une zone sur la carte afin d'en créer une nouvelle.",
     },
     entityEditor: {
+        title: "Outil d'édition d'entités",
+        editing: "Edition : {name}",
         itemPicker: {
             searchPlaceholder: "Rechercher",
             backToSelectObject: "Retour à la sélection d'objet",
@@ -177,6 +187,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         buttonLabel: "Texte du bouton",
         editInstructions: "Sélectionnez un objet pour modifier ses propriétés.",
         selectObject: "Cliquer sur un objet pour le selectionner",
+        objectName: "Nom de l'objet",
+        objectNamePlaceholder: "MonObjet",
+        objectDescription: "Description de l'objet",
+        objectDescriptionPlaceholder: "Description de l'objet",
+        objectSearchable: "Recherchable dans le mode exploration",
+        addDescriptionField: "Ajouter une description",
     },
     settings: {
         loading: "Chargement en cours",
@@ -203,6 +219,42 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 },
             },
         },
+    },
+    explorer: {
+        title: "Explorateur de carte",
+        description:
+            "Permet d'explorer la salle. Vous pourrez vous déplacer dans la salle et interagir avec les objets. Deux modes sont disponibles : 'Exploration' et 'Recherche'. Le mode 'Recherche' vous proposera de rechercher ou de filtrer les entités et les zones de la salle. Le mode 'Exploration' vous permettra de vous déplacer librement dans la salle.",
+        explorationModeTitle: "Mode exploration",
+        explorationModeDescription: "Naviguer dans la carte et interagir avec les entités et les zones 🚶‍♂️",
+        searchModeTitle: "Mode recherche",
+        searchModeDescription: "Rechercher ou filtrer les entités et les zones dans la carte 🧐",
+        noEntitiesFound: "Aucune entité trouvée dans la carte 🙅‍♂️",
+        entitiesFound: "Entités trouvées",
+        noAreasFound: "Aucune zone trouvée dans la carte 🙅‍♀️",
+        areasFound: "Zones trouvées",
+        noDescriptionFound: "No description found 🫥",
+        details: {
+            close: "Fermer",
+            moveToEntity: "Aller à l'entité {name}",
+            moveToArea: "Aller à la zone {name}",
+        },
+        popup: {
+            title: "Est-ce que tu veux continuer avec le Map Explorer ? 🤔",
+            content:
+                "Le mode exploreur permet de visualiser la carte, trouver des objets et des zones. Il existe 2 systèmes dans le mode exploreur, le système d'exploration libre ou le système de recherche d'objets et de zone. La vidéo ci-dessus vous montre comment utiliser le mode exploreur 💪",
+            notAskAgain: "Ne plus demander",
+            close: "Fermer",
+            continue: "Continuer",
+        },
+    },
+    listRoom: {
+        isFetching: "Récupération des salles en cours...⤵️",
+        noRoomFound: "Aucune salle trouvée 🙅‍♂️",
+        items: "{countEntity} objets / {countArea} zones",
+        close: "Fermer",
+        movingToRoom: "En partance pour la salle : {roomNameSelected}... À très vite... 🫡",
+        searchLabel: "Chercher une salle",
+        searchPlaceholder: "Par nom ou description...",
     },
 };
 

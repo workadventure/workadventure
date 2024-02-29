@@ -6,10 +6,10 @@ const actionbar: BaseTranslation = {
     lock: "Verrouiller / Déverrouiller la discussion",
     screensharing: "Démarrer / Arrêter le partage d'écran",
     layout: "Changer l'affichage",
+    disableLayout: "Non disponible si une seul personne dans le meeting",
     camera: "Activer / Couper la caméra",
     microphone: "Activer / Couper le microphone",
     emoji: "Ouvrir / Fermer les émoticônes",
-    enableMegaphone: "Activer le mégaphone",
     disableMegaphone: "Couper le mégaphone",
     menu: "Ouvrir / Fermer le menu",
     mapEditor: "Ouvrir / Fermer l'éditeur de carte",
@@ -27,6 +27,8 @@ const actionbar: BaseTranslation = {
         DO_NOT_DISTURB: "Ne pas déranger",
         BUSY: "Occupé",
     },
+    globalMessage: "Envoyer un message global",
+    roomList: "Ouvrir / Fermer la liste des salons",
 };
 
 export default actionbar;

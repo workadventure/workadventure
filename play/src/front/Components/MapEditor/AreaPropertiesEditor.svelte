@@ -10,14 +10,6 @@
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
-    import audioSvg from "../images/audio-white.svg";
-    import youtubeSvg from "../images/applications/icon_youtube.svg";
-    import klaxoonSvg from "../images/applications/icon_klaxoon.svg";
-    import googleDriveSvg from "../images/applications/icon_google_drive.svg";
-    import googleDocsSvg from "../images/applications/icon_google_docs.svg";
-    import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
-    import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
-    import eraserSvg from "../images/applications/icon_eraser.svg";
     import { FEATURE_FLAG_BROADCAST_AREAS } from "../../Enum/EnvironmentVariable";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { connectionManager } from "../../Connection/ConnectionManager";
@@ -26,14 +18,16 @@
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
     import FocusablePropertyEditor from "./PropertyEditor/FocusablePropertyEditor.svelte";
     import SilentPropertyEditor from "./PropertyEditor/SilentPropertyEditor.svelte";
-    import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
     import SpeakerMegaphonePropertyEditor from "./PropertyEditor/SpeakerMegaphonePropertyEditor.svelte";
     import ListenerMegaphonePropertyEditor from "./PropertyEditor/ListenerMegaphonePropertyEditor.svelte";
     import StartPropertyEditor from "./PropertyEditor/StartPropertyEditor.svelte";
     import ExitPropertyEditor from "./PropertyEditor/ExitPropertyEditor.svelte";
+    import AddPropertyButtonWrapper from "./PropertyEditor/AddPropertyButtonWrapper.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
+    let areaDescription = "";
+    let areaSearchable = false;
     let hasJitsiRoomProperty: boolean;
     let hasFocusableProperty: boolean;
     let hasSilentProperty: boolean;
@@ -42,11 +36,26 @@
     let hasStartProperty: boolean;
     let hasExitProperty: boolean;
     let hasplayAudioProperty: boolean;
+    let showDescriptionField = false;
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
             properties = structuredClone(currentAreaPreview.getProperties());
             areaName = currentAreaPreview.getAreaData().name;
+            const property = $mapEditorSelectedAreaPreviewStore
+                ?.getProperties()
+                .find((property) => property.type === "areaDescriptionProperties");
+            if (property == undefined) {
+                $mapEditorSelectedAreaPreviewStore?.addProperty({
+                    id: crypto.randomUUID(),
+                    type: "areaDescriptionProperties",
+                    description: areaDescription,
+                    searchable: areaSearchable,
+                });
+            } else if (property.type === "areaDescriptionProperties") {
+                areaDescription = property.description ?? "";
+                areaSearchable = property.searchable ?? false;
+            }
             refreshFlags();
         }
     });
@@ -205,6 +214,32 @@
         }
     }
 
+    function onUpdateAreaDescription() {
+        let properties = $mapEditorSelectedAreaPreviewStore
+            ?.getProperties()
+            .find((p) => p.type === "areaDescriptionProperties");
+        if (!properties || (properties && properties.type !== "areaDescriptionProperties"))
+            throw new Error("Wrong property type");
+
+        properties.description = areaDescription;
+        if ($mapEditorSelectedAreaPreviewStore) {
+            $mapEditorSelectedAreaPreviewStore.updateProperty(properties);
+        }
+    }
+
+    function onUpdateAreaSearchable() {
+        let properties = $mapEditorSelectedAreaPreviewStore
+            ?.getProperties()
+            .find((p) => p.type === "areaDescriptionProperties");
+        if (!properties || (properties && properties.type !== "areaDescriptionProperties"))
+            throw new Error("Wrong property type");
+
+        properties.searchable = areaSearchable;
+        if ($mapEditorSelectedAreaPreviewStore) {
+            $mapEditorSelectedAreaPreviewStore.updateProperty(properties);
+        }
+    }
+
     function onUpdateProperty(property: AreaDataProperty) {
         if ($mapEditorSelectedAreaPreviewStore) {
             $mapEditorSelectedAreaPreviewStore.updateProperty(property);
@@ -253,6 +288,10 @@
     function onUpdateAudioProperty(data: CustomEvent<PlayAudioPropertyData>) {
         onUpdateProperty(data.detail);
     }
+
+    function toggleDescriptionField() {
+        showDescriptionField = !showDescriptionField;
+    }
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
@@ -260,33 +299,24 @@
 {:else}
     <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
         {#if !hasFocusableProperty}
-            <AddPropertyButton
-                headerText={$LL.mapEditor.properties.focusableProperties.label()}
-                descriptionText={$LL.mapEditor.properties.focusableProperties.description()}
-                img={"resources/icons/icon_focus.png"}
-                style="z-index: 14;"
+            <AddPropertyButtonWrapper
+                property="focusable"
                 on:click={() => {
                     onAddProperty("focusable");
                 }}
             />
         {/if}
         {#if !hasSilentProperty}
-            <AddPropertyButton
-                headerText={$LL.mapEditor.properties.silentProperty.label()}
-                descriptionText={$LL.mapEditor.properties.silentProperty.description()}
-                img={"resources/icons/icon_silent.png"}
-                style="z-index: 13;"
+            <AddPropertyButtonWrapper
+                property="silent"
                 on:click={() => {
                     onAddProperty("silent");
                 }}
             />
         {/if}
         {#if !hasJitsiRoomProperty}
-            <AddPropertyButton
-                headerText={$LL.mapEditor.properties.jitsiProperties.label()}
-                descriptionText={$LL.mapEditor.properties.jitsiProperties.description()}
-                img={"resources/icons/icon_meeting.png"}
-                style="z-index: 12;"
+            <AddPropertyButtonWrapper
+                property="jitsiRoomProperty"
                 on:click={() => {
                     onAddProperty("jitsiRoomProperty");
                 }}
@@ -294,22 +324,16 @@
         {/if}
         {#if FEATURE_FLAG_BROADCAST_AREAS}
             {#if !hasSpeakerMegaphoneProperty}
-                <AddPropertyButton
-                    headerText={$LL.mapEditor.properties.speakerMegaphoneProperties.label()}
-                    descriptionText={$LL.mapEditor.properties.speakerMegaphoneProperties.description()}
-                    img={"resources/icons/icon_speaker.png"}
-                    style="z-index: 11;"
+                <AddPropertyButtonWrapper
+                    property="speakerMegaphone"
                     on:click={() => {
                         onAddProperty("speakerMegaphone");
                     }}
                 />
             {/if}
             {#if !hasListenerMegaphoneProperty}
-                <AddPropertyButton
-                    headerText={$LL.mapEditor.properties.listenerMegaphoneProperties.label()}
-                    descriptionText={$LL.mapEditor.properties.listenerMegaphoneProperties.description()}
-                    img={"resources/icons/icon_listener.png"}
-                    style="z-index: 10;"
+                <AddPropertyButtonWrapper
+                    property="listenerMegaphone"
                     on:click={() => {
                         onAddProperty("listenerMegaphone");
                     }}
@@ -317,137 +341,121 @@
             {/if}
         {/if}
         {#if !hasStartProperty}
-            <AddPropertyButton
-                headerText={$LL.mapEditor.properties.startProperties.label()}
-                descriptionText={$LL.mapEditor.properties.startProperties.description()}
-                img={"resources/icons/icon_start.png"}
-                style="z-index: 9;"
+            <AddPropertyButtonWrapper
+                property="start"
                 on:click={() => {
                     onAddProperty("start");
                 }}
             />
         {/if}
         {#if !hasExitProperty}
-            <AddPropertyButton
-                headerText={$LL.mapEditor.properties.exitProperties.label()}
-                descriptionText={$LL.mapEditor.properties.exitProperties.description()}
-                img={"resources/icons/icon_exit.png"}
-                style="z-index: 8;"
+            <AddPropertyButtonWrapper
+                property="exit"
                 on:click={() => {
                     onAddProperty("exit");
                 }}
             />
         {/if}
         {#if !hasplayAudioProperty}
-            <AddPropertyButton
-                headerText={$LL.mapEditor.properties.audioProperties.label()}
-                descriptionText={$LL.mapEditor.properties.audioProperties.description()}
-                img={audioSvg}
-                style="z-index: 7;"
+            <AddPropertyButtonWrapper
+                property="playAudio"
                 on:click={() => {
                     onAddProperty("playAudio");
                 }}
             />
         {/if}
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.linkProperties.label()}
-            descriptionText={$LL.mapEditor.properties.linkProperties.description()}
-            img={"resources/icons/icon_link.png"}
-            style="z-index: 6;"
+        <AddPropertyButtonWrapper
+            property="openWebsite"
             on:click={() => {
                 onAddProperty("openWebsite");
             }}
         />
     </div>
     <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.klaxoonProperties.label()}
-            descriptionText={connectionManager.currentRoom?.klaxoonToolActivated
-                ? $LL.mapEditor.properties.klaxoonProperties.description()
-                : $LL.mapEditor.properties.klaxoonProperties.disabled()}
-            img={klaxoonSvg}
-            style="z-index: 4;"
-            disabled={!connectionManager.currentRoom?.klaxoonToolActivated}
+        <AddPropertyButtonWrapper
+            property="openWebsite"
+            subProperty="klaxoon"
             on:click={() => {
                 onAddProperty("openWebsite", "klaxoon");
             }}
         />
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.youtubeProperties.label()}
-            descriptionText={connectionManager.currentRoom?.youtubeToolActivated
-                ? $LL.mapEditor.properties.youtubeProperties.description()
-                : $LL.mapEditor.properties.youtubeProperties.disabled()}
-            img={youtubeSvg}
-            style="z-index: 5;"
-            disabled={!connectionManager.currentRoom?.youtubeToolActivated}
+        <AddPropertyButtonWrapper
+            property="openWebsite"
+            subProperty="youtube"
             on:click={() => {
                 onAddProperty("openWebsite", "youtube");
             }}
         />
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.googleDriveProperties.label()}
-            descriptionText={connectionManager.currentRoom?.googleDocsToolActivated
-                ? $LL.mapEditor.properties.googleDriveProperties.description()
-                : $LL.mapEditor.properties.googleDriveProperties.disabled()}
-            img={googleDriveSvg}
-            style="z-index: 3;"
-            disabled={!connectionManager.currentRoom?.googleDocsToolActivated}
+        <AddPropertyButtonWrapper
+            property="openWebsite"
+            subProperty="googleDrive"
             on:click={() => {
                 onAddProperty("openWebsite", "googleDrive");
             }}
         />
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.googleDocsProperties.label()}
-            descriptionText={connectionManager.currentRoom?.googleDocsToolActivated
-                ? $LL.mapEditor.properties.googleDocsProperties.description()
-                : $LL.mapEditor.properties.googleDocsProperties.disabled()}
-            img={googleDocsSvg}
-            style="z-index: 3;"
-            disabled={!connectionManager.currentRoom?.googleDocsToolActivated}
+        <AddPropertyButtonWrapper
+            property="openWebsite"
+            subProperty="googleDocs"
             on:click={() => {
                 onAddProperty("openWebsite", "googleDocs");
             }}
         />
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.googleSheetsProperties.label()}
-            descriptionText={connectionManager.currentRoom?.googleSheetsToolActivated
-                ? $LL.mapEditor.properties.googleSheetsProperties.description()
-                : $LL.mapEditor.properties.googleSheetsProperties.disabled()}
-            img={googleSheetsSvg}
-            style="z-index: 2;"
-            disabled={!connectionManager.currentRoom?.googleSheetsToolActivated}
+        <AddPropertyButtonWrapper
+            property="openWebsite"
+            subProperty="googleSheets"
             on:click={() => {
                 onAddProperty("openWebsite", "googleSheets");
             }}
         />
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.googleSlidesProperties.label()}
-            descriptionText={connectionManager.currentRoom?.googleSlidesToolActivated
-                ? $LL.mapEditor.properties.googleSlidesProperties.description()
-                : $LL.mapEditor.properties.googleSlidesProperties.disabled()}
-            img={googleSlidesSvg}
-            style="z-index: 1;"
-            disabled={!connectionManager.currentRoom?.googleSlidesToolActivated}
+        <AddPropertyButtonWrapper
+            property="openWebsite"
+            subProperty="googleSlides"
             on:click={() => {
                 onAddProperty("openWebsite", "googleSlides");
             }}
         />
-        <AddPropertyButton
-            headerText={$LL.mapEditor.properties.eraserProperties.label()}
-            descriptionText={connectionManager.currentRoom?.eraserToolActivated
-                ? $LL.mapEditor.properties.eraserProperties.description()
-                : $LL.mapEditor.properties.eraserProperties.disabled()}
-            img={eraserSvg}
-            style="z-index: 1;"
-            disabled={!connectionManager.currentRoom?.eraserToolActivated}
+        <AddPropertyButtonWrapper
+            property="openWebsite"
+            subProperty="eraser"
             on:click={() => {
                 onAddProperty("openWebsite", "eraser");
             }}
         />
     </div>
     <div class="area-name-container">
-        <label for="objectName">Area name</label>
-        <input id="objectName" type="text" placeholder="Value" bind:value={areaName} on:change={onUpdateName} />
+        <label for="objectName">{$LL.mapEditor.areaEditor.nameLabel()}</label>
+        <input
+            id="objectName"
+            type="text"
+            placeholder={$LL.mapEditor.areaEditor.nameLabelPlaceholder()}
+            bind:value={areaName}
+            on:change={onUpdateName}
+        />
+    </div>
+    <div class="area-name-container">
+        {#if !showDescriptionField}
+            <a href="#addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
+                >+ {$LL.mapEditor.areaEditor.addDescriptionField()}</a
+            >
+        {:else}
+            <label for="objectDescription">{$LL.mapEditor.areaEditor.areaDescription()}</label>
+            <textarea
+                id="objectDescription"
+                placeholder={$LL.mapEditor.areaEditor.areaDescriptionPlaceholder()}
+                bind:value={areaDescription}
+                on:change={onUpdateAreaDescription}
+            />
+        {/if}
+    </div>
+    <div class="value-switch">
+        <label for="searchable">{$LL.mapEditor.areaEditor.areaSerchable()}</label>
+        <input
+            id="searchable"
+            type="checkbox"
+            class="input-switch"
+            bind:checked={areaSearchable}
+            on:change={onUpdateAreaSearchable}
+        />
     </div>
     <div class="properties-container">
         {#each properties as property (property.id)}
@@ -561,5 +569,70 @@
         * {
             margin-bottom: 0;
         }
+    }
+
+    .input-switch {
+        position: relative;
+        top: 0px;
+        right: 0px;
+        bottom: 0px;
+        left: 0px;
+        display: inline-block;
+        height: 1rem;
+        width: 2rem;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border-radius: 9999px;
+        border-width: 1px;
+        border-style: solid;
+        --tw-border-opacity: 1;
+        border-color: rgb(77 75 103 / var(--tw-border-opacity));
+        --tw-bg-opacity: 1;
+        background-color: rgb(15 31 45 / var(--tw-bg-opacity));
+        background-image: none;
+        padding: 0px;
+        --tw-text-opacity: 1;
+        color: rgb(242 253 255 / var(--tw-text-opacity));
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+        cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
+    }
+
+    .input-switch::before {
+        position: absolute;
+        left: -3px;
+        top: -3px;
+        height: 1.25rem;
+        width: 1.25rem;
+        border-radius: 9999px;
+        --tw-bg-opacity: 1;
+        background-color: rgb(146 142 187 / var(--tw-bg-opacity));
+        transition-property: all;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 150ms;
+        --tw-content: "";
+        content: var(--tw-content);
+    }
+
+    .input-switch:checked {
+        --tw-border-opacity: 1;
+        border-color: rgb(146 142 187 / var(--tw-border-opacity));
+    }
+
+    .input-switch:checked::before {
+        left: 13px;
+        top: -3px;
+        --tw-bg-opacity: 1;
+        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
+        content: var(--tw-content);
+        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
+        --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
+        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
+    }
+
+    .input-switch:disabled {
+        cursor: not-allowed;
+        opacity: 0.4;
     }
 </style>

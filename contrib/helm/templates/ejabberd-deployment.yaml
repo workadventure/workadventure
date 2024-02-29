@@ -1,0 +1,104 @@
+{{- if .Values.ejabberd.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "workadventure.fullname" . }}-ejabberd
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+    role: ejabberd
+spec:
+  {{- if not .Values.ejabberd.autoscaling.enabled }}
+  replicas: {{ .Values.ejabberd.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "workadventure.selectorLabels" . | nindent 6 }}
+      role: ejabberd
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ (include (print $.Template.BasePath "/ejabberd-env.yaml") .) | sha256sum }}
+        checksum/secret: {{ (include (print $.Template.BasePath "/ejabberd-secret-env.yaml") .) | sha256sum }}
+        checksum/shared-secret: {{ (include (print $.Template.BasePath "/shared-secret-env.yaml") .) | sha256sum }}
+        {{- with .Values.ejabberd.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "workadventure.selectorLabels" . | nindent 8 }}
+        role: ejabberd
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "workadventure.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.ejabberd.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: ejabberd-template
+          configMap:
+            name: {{ include "workadventure.fullname" . }}-ejabberd-template
+      containers:
+        - name: {{ .Chart.Name }}-ejabberd
+          securityContext:
+            {{- toYaml .Values.ejabberd.securityContext | nindent 12 }}
+          image: "{{ .Values.ejabberd.image.repository }}:{{ .Values.ejabberd.image.tag | default .Values.appVersion }}"
+          imagePullPolicy: {{ .Values.ejabberd.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "workadventure.fullname" . }}-env-ejabberd
+            - secretRef:
+                name: {{ include "workadventure.fullname" . }}-secret-env-ejabberd
+            {{- if .Values.ejabberd.externalConfigMapName }}
+            - configMapRef:
+                name: {{ .Values.ejabberd.externalConfigMapName }}
+            {{- end }}
+            {{- if .Values.ejabberd.externalSecretName }}
+            - secretRef:
+                name: {{ .Values.ejabberd.externalSecretName }}
+            {{- end }}
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "workadventure.fullname" . }}-secret-env-shared
+                  key: EJABBERD_JWT_SECRET
+          ports:
+            - name: http
+              containerPort: {{ .Values.ejabberd.service.port }}
+              protocol: TCP
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          resources:
+            {{- toYaml .Values.ejabberd.resources | nindent 12 }}
+          volumeMounts:
+            - name: ejabberd-template
+              mountPath: /tmp/ejabberd.template.yml
+              subPath: ejabberd.template.yml
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - sh
+                  - -c
+                  - |
+                    cp /tmp/ejabberd.template.yml /opt/ejabberd/conf/ejabberd.template.yml
+      {{- with .Values.ejabberd.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ejabberd.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ejabberd.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

@@ -6,7 +6,6 @@ import cors from "cors";
 import { MapStorageService } from "@workadventure/messages/src/ts-proto-generated/services";
 import passport from "passport";
 import bodyParser from "body-parser";
-import { WAMFileFormat } from "@workadventure/map-editor";
 import { mapStorageServer } from "./MapStorageServer";
 import { mapsManager } from "./MapsManager";
 import { proxyFiles } from "./FileFetcher/FileFetcher";
@@ -41,6 +40,7 @@ if (SENTRY_DSN != undefined) {
 }
 import { MapListService } from "./Services/MapListService";
 import { WebHookService } from "./Services/WebHookService";
+import { PingController } from "./Upload/PingController";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -84,13 +84,10 @@ app.get("*.wam", (req, res, next) => {
             return;
         }
         const key = mapPathUsingDomain(wamPath, domain);
-        const file = await fileSystem.readFileAsString(key);
-        const wam = WAMFileFormat.parse(JSON.parse(file));
 
-        if (!mapsManager.isMapAlreadyLoaded(key)) {
-            mapsManager.loadWAMToMemory(key, wam);
-        }
-        res.send(wam);
+        const gameMap = await mapsManager.loadWAMToMemory(key);
+
+        res.send(gameMap.getWam());
     })().catch((e) => next());
 });
 
@@ -101,6 +98,7 @@ app.get("/ping", (req, res) => {
 const mapListService = new MapListService(fileSystem, new WebHookService(WEB_HOOK_URL));
 new UploadController(app, fileSystem, mapListService);
 new ValidatorController(app);
+new PingController(app);
 
 app.use(proxyFiles(fileSystem));
 

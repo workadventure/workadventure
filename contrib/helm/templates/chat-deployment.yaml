@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "workadventure.fullname" . }}-chat
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+    role: chat
+spec:
+  {{- if not .Values.chat.autoscaling.enabled }}
+  replicas: {{ .Values.chat.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "workadventure.selectorLabels" . | nindent 6 }}
+      role: chat
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ (include (print $.Template.BasePath "/chat-env.yaml") .) | sha256sum }}
+        checksum/secret: {{ (include (print $.Template.BasePath "/chat-secret-env.yaml") .) | sha256sum }}
+        {{- if .Values.forceRedeploy }}
+        forceRedeploy: {{ randAlphaNum 10 | quote }}
+        {{- end }}
+        {{- with .Values.chat.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "workadventure.selectorLabels" . | nindent 8 }}
+        role: chat
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "workadventure.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.chat.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-chat
+          securityContext:
+            {{- toYaml .Values.chat.securityContext | nindent 12 }}
+          image: "{{ .Values.chat.image.repository }}:{{ .Values.chat.image.tag | default .Values.appVersion }}"
+          imagePullPolicy: {{ .Values.chat.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "workadventure.fullname" . }}-env-chat
+            - secretRef:
+                name: {{ include "workadventure.fullname" . }}-secret-env-chat
+            {{- if .Values.chat.externalConfigMapName }}
+            - configMapRef:
+                name: {{ .Values.chat.externalConfigMapName }}
+            {{- end }}
+            {{- if .Values.chat.externalSecretName }}
+            - secretRef:
+                name: {{ .Values.chat.externalSecretName }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.chat.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.chat.resources | nindent 12 }}
+      {{- with .Values.chat.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.chat.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.chat.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -2,13 +2,20 @@ import {expect, test} from '@playwright/test';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import {expectInViewport} from "./utils/viewport";
-import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Modal', () => {
-    test('test', async ({ page }) => {
+    test('test', async ({ page }, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         // Go to 
         await page.goto(
-            `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+            publicTestMapUrl("tests/E2E/empty.json", "modal_script")
         );
         await login(page, "Alice");
         await evaluateScript(page, async () => {

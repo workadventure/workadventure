@@ -1,13 +1,20 @@
 import {expect, test} from '@playwright/test';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
-import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Scripting API Events', () => {
-    test('test events', async ({ page, browser, request }) => {
+    test('test events', async ({ page, browser, request }, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         // Go to 
         await page.goto(
-            `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+            publicTestMapUrl("tests/E2E/empty.json", "scripting_events")
         );
         await login(page, "Alice");
 
@@ -48,7 +55,7 @@ test.describe('Scripting API Events', () => {
         const page2 = await newBrowser.newPage();
 
         await page2.goto(
-            `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+            publicTestMapUrl("tests/E2E/empty.json", "scripting_events")
         );
 
         await login(page2, 'Bob');
@@ -143,7 +150,7 @@ test.describe('Scripting API Events', () => {
             });
         });
 
-        const result = await request.post("http://play.workadventure.localhost/global/event", {
+        const result = await request.post("/global/event", {
             headers: {
                 "Authorization": process.env.ADMIN_API_TOKEN,
             },

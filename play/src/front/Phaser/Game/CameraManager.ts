@@ -2,6 +2,8 @@ import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { Easing } from "../../types";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Box } from "../../WebRtc/LayoutManager";
+import { AreaPreview } from "../Components/MapEditor/AreaPreview";
+import { Entity } from "../ECS/Entity";
 import type { Player } from "../Player/Player";
 import { hasMovedEventName } from "../Player/Player";
 import type { WaScaleManagerFocusTarget, WaScaleManager } from "../Services/WaScaleManager";
@@ -23,6 +25,11 @@ export enum CameraMode {
      * Camera is focusing on certain point and will not break this focus even on player movement
      */
     Focus = "Focus",
+
+    /**
+     * Camera is free and can be moved anywhere on the map by the user (only in the exploration mode)
+     */
+    Exploration = "Exploration",
 }
 
 export enum CameraManagerEvent {
@@ -50,6 +57,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     private playerToFollow?: Player;
     private cameraLocked: boolean;
+    private zoomLocked: boolean;
 
     private readonly EDITOR_MODE_SCROLL_SPEED: number = 5;
 
@@ -62,6 +70,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.camera = scene.cameras.main;
         this.cameraBounds = cameraBounds;
         this.cameraLocked = false;
+        this.zoomLocked = false;
 
         this.waScaleManager = waScaleManager;
 
@@ -202,12 +211,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         }
     }
 
-    public scrollBy(x: number, y: number): void {
-        this.camera.scrollX += x;
-        this.camera.scrollY += y;
-        this.scene.markDirty();
-    }
-
     public startFollowPlayer(player: Player, duration = 0): void {
         this.playerToFollow = player;
         this.setCameraMode(CameraMode.Follow);
@@ -287,6 +290,10 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         return this.cameraLocked;
     }
 
+    public isZoomLocked(): boolean {
+        return this.isCameraLocked() || this.zoomLocked;
+    }
+
     private getZoomModifierChange(width?: number, height?: number, multiplier = 1): number {
         if (!width || !height) {
             return 0;
@@ -299,10 +306,18 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         return targetZoomModifier - currentZoomModifier;
     }
 
-    private unlockCameraWithDelay(delay: number): void {
+    public unlockCameraWithDelay(delay: number): void {
         this.scene.time.delayedCall(delay, () => {
             this.cameraLocked = false;
         });
+    }
+
+    public lockZoom(): void {
+        this.zoomLocked = true;
+    }
+
+    public unlockZoom(): void {
+        this.zoomLocked = false;
     }
 
     private setCameraMode(mode: CameraMode): void {
@@ -343,6 +358,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                     return;
                 }
                 this.camera.centerOn(focusOn.x, focusOn.y);
+
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             }
         );
@@ -360,5 +376,38 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             height: this.camera.worldView.height,
             zoom: this.camera.scaleManager.zoom,
         };
+    }
+
+    private explorationMouseIsActive = false;
+    // Create function to define the camera on exploration mode. The camera can be moved anywhere on the map. The camera is not locked on the player. The camera can be zoomed in and out. The camera can be moved with the mouse. The camera can be moved with the keyboard. The camera can be moved with the touchpad.
+    public setExplorationMode(): void {
+        this.cameraLocked = false;
+        this.stopFollow();
+        this.setCameraMode(CameraMode.Exploration);
+        this.scene.cameras.main.setBounds(
+            -this.cameraBounds.x,
+            -this.cameraBounds.y,
+            this.cameraBounds.x * 3,
+            this.cameraBounds.y * 3,
+            true
+        );
+
+        // Center the camera on the player
+        this.scene.cameras.main.centerOn(this.scene.CurrentPlayer.x, this.scene.CurrentPlayer.y);
+    }
+
+    public goToEntity(entity: Entity): void {
+        this.scene.cameras.main.centerOn(entity.x, entity.y);
+        this.scene.markDirty();
+    }
+    public goToAreaPreviex(area: AreaPreview): void {
+        this.scene.cameras.main.centerOn(area.x, area.y);
+        this.scene.markDirty();
+    }
+
+    emit(event: string | symbol, ...args: unknown[]): boolean {
+        // If the camera is defined on Exploration mode, the camaera manager events will be not emitted
+        if (event === CameraManagerEvent.CameraUpdate && CameraMode.Exploration === this.cameraMode) false;
+        return super.emit(event, ...args);
     }
 }

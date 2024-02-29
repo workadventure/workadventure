@@ -17,7 +17,8 @@
 <style lang="scss">
     #embedScreensContainer {
         display: flex;
-        padding-top: 2%;
+        padding-top: 0;
+        padding-bottom: 0;
         height: 100%;
         position: relative;
     }

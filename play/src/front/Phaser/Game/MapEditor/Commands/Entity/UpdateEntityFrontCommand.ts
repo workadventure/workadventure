@@ -1,4 +1,4 @@
-import { GameMap, UpdateEntityCommand, WAMEntityData } from "@workadventure/map-editor";
+import { GameMap, UpdateEntityCommand, WAMEntityData, WAMFileFormat } from "@workadventure/map-editor";
 import { EntitiesManager } from "../../../GameMap/EntitiesManager";
 import { Entity } from "../../../../ECS/Entity";
 import { GameScene } from "../../../GameScene";
@@ -18,7 +18,7 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
         super(gameMap, entityId, dataToModify, commandId, oldConfig);
     }
 
-    public execute(): Promise<void> {
+    public execute(): Promise<WAMFileFormat | undefined> {
         const returnVal = super.execute();
         this.handleEntityUpdate(this.newConfig);
 

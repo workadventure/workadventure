@@ -247,7 +247,6 @@ export const videoConstraintStore = derived(
         } as MediaTrackConstraints;
 
         if ($cameraDeviceIdStore !== undefined) {
-            console.log("Using camera device ID", $cameraDeviceIdStore);
             constraints.deviceId = {
                 exact: $cameraDeviceIdStore,
             };
@@ -812,10 +811,8 @@ export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {
 export const selectDefaultSpeaker = () => {
     const devices = get(speakerListStore);
     if (devices !== undefined && devices.length > 0) {
-        console.log("Selecting default speaker");
         speakerSelectedStore.set(devices[0].deviceId);
     } else {
-        console.log("No output device found");
         speakerSelectedStore.set(undefined);
     }
 };
@@ -870,7 +867,6 @@ cameraListStore.subscribe((devices) => {
     // If we cannot find the device ID, let's remove it.
     if (isConstrainDOMStringParameters(deviceId)) {
         if (!devices.find((device) => device.deviceId === deviceId.exact)) {
-            console.log("Camera unplugged, removing constraint on deviceId");
             requestedCameraDeviceIdStore.set(undefined);
         }
     }
@@ -897,7 +893,6 @@ microphoneListStore.subscribe((devices) => {
     // If we cannot find the device ID, let's remove it.
     if (isConstrainDOMStringParameters(deviceId)) {
         if (!devices.find((device) => device.deviceId === deviceId.exact)) {
-            console.log("Microphone unplugged, removing constraint on deviceId");
             requestedMicrophoneDeviceIdStore.set(undefined);
         }
     }

@@ -4,12 +4,18 @@ import {evaluateScript} from "./utils/scripting";
 import Chat from './utils/chat';
 import {expectInViewport, expectOutViewport} from "./utils/viewport";
 import Map from './utils/map';
-import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Scripting chat functions', () => {
-    test('can open / close chat + start / stop typing', async ({ page}) => {
+    test('can open / close chat + start / stop typing @chat', async ({ page}, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
         await page.goto(
-            `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+            publicTestMapUrl("tests/E2E/empty.json", "scripting_chat")
         );
 
         await login(page);
@@ -70,7 +76,13 @@ test.describe('Scripting chat functions', () => {
         await expectOutViewport("#chatWindow", page);
     });
 
-    test('can send message to bubble users', async ({ page, browser}) => {
+    test('can send message to bubble users @chat', async ({ page, browser}, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
         // It seems WebRTC fails to start on Webkit
         if(browser.browserType() === webkit) {
             //eslint-disable-next-line playwright/no-skipped-test
@@ -79,7 +91,7 @@ test.describe('Scripting chat functions', () => {
         }
 
         await page.goto(
-            `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+            publicTestMapUrl("tests/E2E/empty.json", "scripting_chat")
         );
 
         await login(page);
@@ -87,7 +99,7 @@ test.describe('Scripting chat functions', () => {
 
         const newBrowser = await browser.browserType().launch();
         const page2 = await newBrowser.newPage();
-        await page2.goto(`http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`);
+        await page2.goto(publicTestMapUrl("tests/E2E/empty.json", "scripting_chat"));
 
 
         await evaluateScript(page, async () => {

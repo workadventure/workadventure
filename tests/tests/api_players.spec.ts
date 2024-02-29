@@ -6,12 +6,20 @@ import {getCoWebsiteIframe} from "./utils/iframe";
 import {assertLogMessage, startRecordLogs} from "./utils/log";
 import {evaluateScript} from "./utils/scripting";
 import {oidcLogin, oidcLogout} from "./utils/oidc";
-import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('API WA.players', () => {
-  test('enter leave events are received', async ({ page, browser }) => {
+  test('enter leave events are received', async ({ page, browser }, {project}) => {
+
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await page.goto(
-      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/RemotePlayers/remote_players.json?phaserMode=${RENDERER_MODE}`
+      publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
     );
     await login(page, 'Alice');
 
@@ -19,7 +27,7 @@ test.describe('API WA.players', () => {
     const page2 = await newBrowser.newPage();
 
     await page2.goto(
-      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/RemotePlayers/remote_players.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl(`tests/RemotePlayers/remote_players.json`, "api_players")
     );
 
     await login(page2, 'Bob');
@@ -52,9 +60,16 @@ test.describe('API WA.players', () => {
     await expect(list).not.toContainText('Bob');
   });
 
-  test('exception if we forget to call WA.players.configureTracking', async ({ page }) => {
+  test('exception if we forget to call WA.players.configureTracking', async ({ page }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await page.goto(
-        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/RemotePlayers/remote_players_no_init.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl(`tests/RemotePlayers/remote_players_no_init.json`, "api_players")
     );
     await login(page);
 
@@ -62,9 +77,16 @@ test.describe('API WA.players', () => {
     await expect(getCoWebsiteIframe(page).locator('#onPlayerLeavesException')).toHaveText('Yes');
   });
 
-  test('Test that player B arriving after player A set his variables can read the variable.', async ({ page, browser }) => {
+  test('Test that player B arriving after player A set his variables can read the variable.', async ({ page, browser }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await page.goto(
-        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
     await login(page, "Alice");
@@ -83,7 +105,7 @@ test.describe('API WA.players', () => {
     const page2 = await newBrowser.newPage();
 
     await page2.goto(
-        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
     await login(page2, 'Bob');
@@ -184,7 +206,7 @@ test.describe('API WA.players', () => {
     const page2 = await newBrowser.newPage();
 
     await page2.goto(
-        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
     await login(page2, 'Bob');
@@ -275,9 +297,16 @@ test.describe('API WA.players', () => {
   };
 
 
-  test('Test variable persistence for anonymous users.', async ({ page, browser }) => {
+  test('Test variable persistence for anonymous users.', async ({ page, browser }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await page.goto(
-        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
     await login(page, "Alice");
@@ -285,10 +314,17 @@ test.describe('API WA.players', () => {
     await runPersistenceTest(page, browser);
   });
 
-  test('Test variable persistence for logged users. @oidc', async ({ page, browser }) => {
+  test('Test variable persistence for logged users. @oidc', async ({ page, browser }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     test.setTimeout(120_000); // Fix Webkit that can take more than 60s
     await page.goto(
-        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
     await login(page, "Alice");
@@ -300,9 +336,16 @@ test.describe('API WA.players', () => {
     await oidcLogout(page);
   });
 
-  test('Test variables are sent across frames.', async ({ page }) => {
+  test('Test variables are sent across frames.', async ({ page }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+    
     await page.goto(
-        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty_2_frames.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty_2_frames.json", "api_players")
     );
 
     await login(page, "Alice");
@@ -336,9 +379,16 @@ test.describe('API WA.players', () => {
 
   // This test is testing that we are listening on the back side to variables modification inside Redis.
   // All players with same UUID should share the same state (public or private as long as it is persisted)
-  test('Test that 2 players sharing the same UUID are notified of persisted private variable changes.', async ({ page, context }) => {
+  test('Test that 2 players sharing the same UUID are notified of persisted private variable changes.', async ({ page, context }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+    
     await page.goto(
-        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
     await login(page, "Alice");
@@ -352,7 +402,7 @@ test.describe('API WA.players', () => {
     const page2 = await context.newPage();
 
     await page2.goto(
-      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+      publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
     /*console.log("PAGE 2 MY ID", await evaluateScript(page2, async () => {
@@ -413,9 +463,16 @@ test.describe('API WA.players', () => {
     await page2.close();
   });
 
-  test('Test that a variable changed can be listened to locally.', async ({ page, browser }) => {
+  test('Test that a variable changed can be listened to locally.', async ({ page, browser }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+    
     await page.goto(
-        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "api_players")
     );
 
     await login(page, "Alice");

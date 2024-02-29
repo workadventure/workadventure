@@ -6,11 +6,14 @@ import { GameScene } from "../Phaser/Game/GameScene";
 import { JitsiTrackWrapper } from "../Streaming/Jitsi/JitsiTrackWrapper";
 import { JitsiTrackStreamWrapper } from "../Streaming/Jitsi/JitsiTrackStreamWrapper";
 import { TrackWrapper } from "../Streaming/Common/TrackWrapper";
+import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
+import { LayoutMode } from "../WebRtc/LayoutManager";
 import type { ScreenSharingLocalMedia } from "./ScreenSharingStore";
 import { screenSharingLocalMedia } from "./ScreenSharingStore";
 import { peerStore, screenSharingStreamStore } from "./PeerStore";
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
 import { gameSceneStore } from "./GameSceneStore";
+import { embedScreenLayoutStore } from "./EmbedScreensStore";
 
 export type Streamable = RemotePeer | ScreenSharingLocalMedia | JitsiTrackStreamWrapper;
 
@@ -40,16 +43,18 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
             const addPeer = (peer: Streamable) => {
                 peers.set(peer.uniqueId, peer);
+                // if peer is SreenHaring, change for presentation Layout mode
+                if (peer instanceof ScreenSharingPeer) {
+                    embedScreenLayoutStore.set(LayoutMode.Presentation);
+                }
             };
 
             $screenSharingStreamStore.forEach(addPeer);
             $peerStore.forEach(addPeer);
 
             $broadcastTracksStore.forEach((trackWrapper) => {
-                console.log("trackWrapper", trackWrapper);
                 if (trackWrapper instanceof JitsiTrackWrapper) {
                     const cameraTrackWrapper = trackWrapper.cameraTrackWrapper;
-                    console.log("cameraTrackWrapper", cameraTrackWrapper);
                     if (/*!cameraTrackWrapper.isEmpty() &&*/ !trackWrapper.isLocal) {
                         addPeer(cameraTrackWrapper);
                     }

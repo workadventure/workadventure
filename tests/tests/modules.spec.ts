@@ -1,13 +1,20 @@
 import { test } from '@playwright/test';
 import { assertLogMessage, startRecordLogs} from './utils/log';
 import { login } from './utils/roles';
-import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Module', () => {
-  test('loading should work out of the box', async ({ page }) => {
+  test('loading should work out of the box', async ({ page }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     startRecordLogs(page);
     await page.goto(
-      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Modules/with_modules.json?phaserMode=${RENDERER_MODE}`
+      publicTestMapUrl("tests/Modules/with_modules.json", "modules")
     );
 
     await login(page, 'Alice', 2);

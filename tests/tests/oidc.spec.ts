@@ -2,14 +2,21 @@ import { expect, test } from '@playwright/test';
 import { login } from './utils/roles';
 import {oidcLogin, oidcLogout} from "./utils/oidc";
 import {evaluateScript} from "./utils/scripting";
-import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('OpenID connect @oidc', () => {
   test('can login and logout', async ({
     page,
-  }) => {
+  }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     await page.goto(
-        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "oidc")
     );
 
     await login(page);

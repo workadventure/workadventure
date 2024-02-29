@@ -9,6 +9,7 @@ export * from "./Commands/Entity/UpdateEntityCommand";
 export * from "./Commands/Entity/CreateEntityCommand";
 export * from "./Commands/Entity/DeleteEntityCommand";
 export * from "./Commands/WAM/UpdateWAMSettingCommand";
+export * from "./Commands/WAM/UpdateWAMMetadataCommand";
 export * from "./Commands/Command";
 // MapFetcher is not exported because it is using Node imports that are not available in the browser
 //export * from "./MapFetcher";

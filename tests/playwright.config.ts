@@ -39,7 +39,7 @@ const config: PlaywrightTestConfig = {
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 20_000,
     /* Base URL to use in actions like `await page.goto('/')`. */
-    // baseURL: 'http://localhost:3000',
+    baseURL: process.env.PLAY_URL ?? 'http://play.workadventure.localhost/',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: process.env.CI ? 'on-first-retry' : 'retain-on-failure',
@@ -78,7 +78,6 @@ const config: PlaywrightTestConfig = {
         ...devices['Desktop Firefox'],
       },
     },
-
     {
       name: 'webkit',
       use: {
@@ -88,18 +87,25 @@ const config: PlaywrightTestConfig = {
     },
 
     /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: {
-    //     ...devices['Pixel 5'],
-    //   },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: {
-    //     ...devices['iPhone 12'],
-    //   },
-    // },
+    {
+      name: 'mobilechromium',
+      use: {
+        ...devices['Pixel 5'],
+        permissions: ["microphone","camera"],
+        ignoreHTTPSErrors: true,
+        launchOptions: {
+          args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
+        },
+      },
+    },
+     
+    /* To use safari project and test on mobile safari, we need to have https test environment ¨*/
+     //{
+     //  name: 'mobilesafari',
+     //  use: {
+     //    ...devices['iPhone 13'],
+     //  },
+    //},
 
     /* Test against branded browsers. */
     // {

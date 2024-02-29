@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { writable } from "svelte/store";
+    import { get, writable } from "svelte/store";
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import MoreActionSvg from "../images/ellipsis.svg";
     import MicrophoneCloseSvg from "../images/microphone-close.svg";
@@ -13,6 +13,8 @@
     import { VideoPeer } from "../../WebRtc/VideoPeer";
     import { userIsAdminStore } from "../../Stores/GameStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+    import { LayoutMode } from "../../WebRtc/LayoutManager";
     import reportImg from "./images/report.svg";
 
     export let embedScreen: EmbedScreen;
@@ -51,6 +53,7 @@
     function pin() {
         if (!videoEnabled) return;
         highlightedEmbedScreen.toggleHighlight(embedScreen);
+        embedScreenLayoutStore.set(LayoutMode.Presentation);
     }
 
     function sendPrivateMessage() {
@@ -58,6 +61,7 @@
     }
 
     function toggleActionMenu(value: boolean) {
+        console.log("value", value, $moreActionOpened, !$moreActionOpened);
         moreActionOpened.set(value);
     }
 
@@ -66,18 +70,19 @@
     }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
-    class={`tw-absolute tw-top-0 
-    ${$moreActionOpened ? (!videoEnabled ? "-tw-left-56" : "-tw-left-14") : "-tw-left-8"} 
-    tw-flex tw-flex-col tw-flex-wrap tw-justify-between tw-items-center tw-p-1 tw-bg-black tw-bg-opacity-50 tw-rounded-lg tw-max-h-full`}
+    class="tw-absolute tw-top-0 tw-left-0 tw-flex tw-flex-col tw-flex-wrap tw-justify-between tw-items-center tw-p-1 tw-bg-black tw-bg-opacity-10 tw-rounded-lg tw-max-h-full tw-z-50 hover:tw-bg-opacity-90 tw-cursor-pointer"
+    class:tw-mt-[0.2rem]={!videoEnabled}
+    on:click={() => analyticsClient.moreActionMetting()}
+    on:click|preventDefault|stopPropagation={() => toggleActionMenu(!get(moreActionOpened))}
+    on:mouseleave={() => toggleActionMenu(false)}
 >
     {#if !$moreActionOpened}
         <!-- More action -->
         <button
             id="more-action"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
-            on:click={() => analyticsClient.moreActionMetting()}
-            on:click|preventDefault|stopPropagation={() => toggleActionMenu(true)}
         >
             <img src={MoreActionSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
         </button>
@@ -86,7 +91,6 @@
         <button
             id="less-action"
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
-            on:click|preventDefault|stopPropagation={() => toggleActionMenu(false)}
         >
             <img src={MoreActionSvg} class="tw-w-4 tw-h-4 tw-rotate-90" alt="Ellipsis icon" />
             <Tooltip text={$LL.camera.menu.closeMenu()} leftPosition="true" />

@@ -1,18 +1,33 @@
 import { expect, test } from '@playwright/test';
 import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Error pages', () => {
-  test('successfully displayed for unsupported URLs', async ({ page }) => {
+  test('successfully displayed for unsupported URLs', async ({ page }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+    
     await page.goto(
-      `http://play.workadventure.localhost/@/not/supported?phaserMode=${RENDERER_MODE}`
+      `/@/not/supported?phaserMode=${RENDERER_MODE}`
     );
 
     await expect(page.getByText('Unsupported URL format')).toBeVisible();
   });
 
-  test('successfully displayed for not found pages', async ({ page }) => {
+  test('successfully displayed for not found pages', async ({ page }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+    
     await page.goto(
-        `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/does/not/exist?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("does/not/exist", "error_pages")
     );
 
     await page.fill('input[name="loginSceneName"]', 'Alice');

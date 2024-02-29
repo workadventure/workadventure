@@ -6,13 +6,13 @@ const actionbar: BaseTranslation = {
     lock: "Lock / Unlock discussion",
     screensharing: "Start / Stop sharing your screen",
     layout: "Toggle tile view",
+    disableLayout: "Not available if only one person in the meeting",
     camera: "Start / Stop camera",
     microphone: "Mute / Unmute",
     emoji: "Open / Close emoji",
-    enableMegaphone: "Enable megaphone",
     disableMegaphone: "Disable megaphone",
     menu: "Open / Close menu",
-    mapEditor: "Open / Close mapEditor",
+    mapEditor: "Open / Close map manager",
     mapEditorMobileLocked: "Map editor is locked on mobile mode",
     bo: "Open back office",
     subtitle: {
@@ -27,6 +27,8 @@ const actionbar: BaseTranslation = {
         DO_NOT_DISTURB: "Do not disturb",
         BUSY: "Busy",
     },
+    globalMessage: "Send a global message",
+    roomList: "Open / Close room list",
 };
 
 export default actionbar;

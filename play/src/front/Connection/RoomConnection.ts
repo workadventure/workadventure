@@ -59,6 +59,7 @@ import {
     AskMuteMicrophoneMessage,
     AskMutedMessage,
     AskMutedVideoMessage,
+    ModifiyWAMMetadataMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
@@ -72,7 +73,7 @@ import {
     mapEditorActivated,
     menuIconVisiblilityStore,
     menuVisiblilityStore,
-    warningContainerStore,
+    warningBannerStore,
 } from "../Stores/MenuStore";
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
@@ -453,7 +454,6 @@ export class RoomConnection implements RoomConnection {
                                 break;
                             }
                             case "muteMicrophoneMessage": {
-                                console.log("muteMicrophoneSpaceUserMessage", subMessage.muteMicrophoneMessage);
                                 if (subMessage.muteMicrophoneMessage.userId !== this.userId?.toString()) break;
 
                                 this._muteMicrophoneMessage.next(subMessage.muteMicrophoneMessage);
@@ -532,7 +532,7 @@ export class RoomConnection implements RoomConnection {
                             ? roomJoinedMessage.activatedInviteUser
                             : true
                     );
-                    mapEditorActivated.set(ENABLE_MAP_EDITOR && roomJoinedMessage.canEdit);
+                    mapEditorActivated.set(ENABLE_MAP_EDITOR && (roomJoinedMessage.canEdit || this.isAdmin()));
 
                     // If there are scripts from the admin, run it
                     if (roomJoinedMessage.applications != undefined) {
@@ -661,7 +661,7 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "worldFullWarningMessage": {
-                    warningContainerStore.activateWarningContainer();
+                    warningBannerStore.activateWarningContainer();
                     break;
                 }
                 case "refreshRoomMessage": {
@@ -740,7 +740,6 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "mutedMessage": {
-                    console.log("mutedMessage", message.mutedMessage);
                     this._mutedMessage.next(message.mutedMessage);
                     break;
                 }
@@ -749,7 +748,6 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "askMutedMessage": {
-                    console.log("askMutedMessage", message.askMutedMessage);
                     this._askMutedMessage.next(message.askMutedMessage);
                     break;
                 }
@@ -1363,6 +1361,26 @@ export class RoomConnection implements RoomConnection {
                             deleteEntityMessage: {
                                 id,
                             },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitModifiyWAMMetadataMessage(
+        commandId: string,
+        modifiyWAMMetadataMessage: ModifiyWAMMetadataMessage
+    ): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "modifiyWAMMetadataMessage",
+                            modifiyWAMMetadataMessage,
                         },
                     },
                 },

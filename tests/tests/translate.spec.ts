@@ -1,13 +1,19 @@
 import { expect, test } from '@playwright/test';
 import { login } from './utils/roles';
-import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Translation', () => {
   test('can be switched to French', async ({
     page,
-  }) => {
+  }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
     await page.goto(
-      `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json?phaserMode=${RENDERER_MODE}`
+      publicTestMapUrl("tests/mousewheel.json", "translate")
     );
 
     await login(page);

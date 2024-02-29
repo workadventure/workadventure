@@ -1105,6 +1105,26 @@ export class SocketManager implements ZoneEventListener {
         socketData.backConnection.write(pusherToBackMessage);
     }
 
+    forwardAdminMessageToBack(client: Socket, message: PusherToBackMessage["message"]): void {
+        const socketData = client.getUserData();
+        if (!socketData.canEdit) {
+            Sentry.captureException(
+                new Error(`Security esception, the client try to update the map: ${JSON.stringify(socketData)}`)
+            );
+            // Emit error message
+            socketData.emitInBatch({
+                message: {
+                    $case: "errorMessage",
+                    errorMessage: {
+                        message: "You are not allowed to edit the map",
+                    },
+                },
+            });
+            return;
+        }
+        this.forwardMessageToBack(client, message);
+    }
+
     emitXMPPSettings(client: Socket): void {
         const socketData = client.getUserData();
         const xmppSettings: XmppSettingsMessage = {
@@ -1296,11 +1316,11 @@ export class SocketManager implements ZoneEventListener {
     async handleRoomsFromSameWorldQuery(client: Socket, queryMessage: QueryMessage) {
         let roomDescriptions: ShortMapDescription[];
         try {
-            roomDescriptions = await adminService.getUrlRoomsFromSameWorld(client.getUserData().roomId);
-        } catch (e) {
-            console.warn("SocketManager => handleRoomsFromSameWorldQuery => error while getting other rooms list", e);
-            // Nothing to do with the error
-            Sentry.captureException(e);
+            roomDescriptions = await adminService.getUrlRoomsFromSameWorld(
+                client.getUserData().roomId,
+                undefined,
+                client.getUserData().tags
+            );
             client.send(
                 ServerToClientMessage.encode({
                     message: {
@@ -1308,9 +1328,19 @@ export class SocketManager implements ZoneEventListener {
                         answerMessage: {
                             id: queryMessage.id,
                             answer: {
-                                $case: "error",
-                                error: {
-                                    message: e instanceof Error ? e.message + e.stack : "Unknown error",
+                                $case: "roomsFromSameWorldAnswer",
+                                roomsFromSameWorldAnswer: {
+                                    roomDescriptions: roomDescriptions.map((room) => ({
+                                        ...room,
+                                        name: room.name ?? "",
+                                        roomUrl: room.roomUrl ?? "",
+                                        description: room.description ?? undefined, // Add this line to ensure description is not null
+                                        wamUrl: room.wamUrl ?? undefined, // Add this line to ensure wamUrl is not null
+                                        copyright: room.copyright ?? undefined, // Add this line to ensure copyright is not null
+                                        thumbnail: room.thumbnail ?? undefined, // Add this line to ensure thumbnail is not null
+                                        areasSearchable: room.areasSearchable ?? undefined, // Add this line to ensure areasSearchable is not null
+                                        entitiesSearchable: room.entitiesSearchable ?? undefined, // Add this line to ensure entitiesSearchable is not null
+                                    })),
                                 },
                             },
                         },
@@ -1318,25 +1348,34 @@ export class SocketManager implements ZoneEventListener {
                 }).finish(),
                 true
             );
-            return;
-        }
-        client.send(
-            ServerToClientMessage.encode({
-                message: {
-                    $case: "answerMessage",
-                    answerMessage: {
-                        id: queryMessage.id,
-                        answer: {
-                            $case: "roomsFromSameWorldAnswer",
-                            roomsFromSameWorldAnswer: {
-                                roomDescriptions,
+        } catch (e) {
+            console.warn("SocketManager => handleRoomsFromSameWorldQuery => error while getting other rooms list", e);
+            try {
+                client.send(
+                    ServerToClientMessage.encode({
+                        message: {
+                            $case: "answerMessage",
+                            answerMessage: {
+                                id: queryMessage.id,
+                                answer: {
+                                    $case: "error",
+                                    error: {
+                                        message: e instanceof Error ? e.message + e.stack : "Unknown error",
+                                    },
+                                },
                             },
                         },
-                    },
-                },
-            }).finish(),
-            true
-        );
+                    }).finish(),
+                    true
+                );
+                // Nothing to do with the error
+                Sentry.captureException(e);
+                return;
+            } catch (e) {
+                Sentry.captureException(e);
+                console.warn("SocketManager => handleRoomsFromSameWorldQuery => error while sending error message", e);
+            }
+        }
     }
 
     handleLeaveSpace(client: Socket, spaceName: string) {

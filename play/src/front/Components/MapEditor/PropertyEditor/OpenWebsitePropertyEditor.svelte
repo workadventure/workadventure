@@ -437,7 +437,7 @@
     <span slot="content">
         {#if property.poster}
             <div class="tw-text-center">
-                <img class="tw-w-20  tw-mr-1" src={property.poster} alt="" />
+                <img class="tw-w-20 tw-mr-1" src={property.poster} alt="" />
             </div>
         {/if}
         {#if isArea}
@@ -557,7 +557,7 @@
                     <input
                         id="websiteWidth"
                         type="range"
-                        min="0"
+                        min="1"
                         max="100"
                         placeholder="50"
                         bind:value={property.width}

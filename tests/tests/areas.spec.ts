@@ -3,17 +3,23 @@ import {} from "../../play/packages/iframe-api-typings/iframe_api";
 import {expect, test} from '@playwright/test';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
-import {RENDERER_MODE} from "./utils/environment";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Areas', () => {
-    test('can edit Tiled area from scripting API', async ({ page, browser }) => {
-
+    test('can edit Tiled area from scripting API', async ({ page, browser }, { project }) => {
+        // Skip test for mobile device
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+      
         // This tests connects on a map with an area named "silent".
         // The Woka is out of the zone, but we move the zone to cover the Woka.
         // We check the silent zone applies to the Woka.
 
         await page.goto(
-            `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Areas/AreaFromTiledMap/map.json?phaserMode=${RENDERER_MODE}`
+            publicTestMapUrl("tests/Areas/AreaFromTiledMap/map.json", "areas")
         );
         await login(page, 'Alice');
 

@@ -78,8 +78,11 @@ import {
 import {
     activeSubMenuStore,
     contactPageStore,
+    inviteUserActivated,
     mapEditorActivated,
+    mapManagerActivated,
     menuVisiblilityStore,
+    screenSharingActivatedStore,
     SubMenusInterface,
     subMenusStore,
 } from "../../Stores/MenuStore";
@@ -116,13 +119,14 @@ import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInt
 import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
-import { modalVisibilityStore } from "../../Stores/ModalStore";
+import { modalPopupVisibilityStore, modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
     mapEditorWamSettingsEditorToolCurrentMenuItemStore,
     mapEditorModeStore,
     mapEditorSelectedToolStore,
+    mapExplorationModeStore,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer } from "../../Utils/Debuggers";
@@ -138,6 +142,7 @@ import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { askDialogStore } from "../../Stores/MeetingStore";
 import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChangerFunctions";
 import { StatusChangerStore } from "../../Stores/statusChangerStore";
+import { warningMessageStore } from "../../Stores/ErrorStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -231,6 +236,7 @@ export class GameScene extends DirtyScene {
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
     private mapEditorModeStoreUnsubscriber!: Unsubscriber;
     private refreshPromptStoreStoreUnsubscriber!: Unsubscriber;
+    private mapExplorationStoreUnsubscriber!: Unsubscriber;
 
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
     private unsubscribers: Unsubscriber[] = [];
@@ -341,6 +347,7 @@ export class GameScene extends DirtyScene {
         this.load.audio("audio-webrtc-out", "/resources/objects/webrtc-out.mp3");
         this.load.audio("audio-report-message", "/resources/objects/report-message.mp3");
         this.load.audio("audio-megaphone", "/resources/objects/megaphone.mp3");
+        this.load.audio("audio-cloud", "/resources/objects/cloud.mp3");
         this.sound.pauseOnBlur = false;
 
         this.load.on(FILE_LOAD_ERROR, (file: { src: string }) => {
@@ -1311,6 +1318,12 @@ export class GameScene extends DirtyScene {
                     );
                 });
 
+                // The errorMessageStream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.errorMessageStream.subscribe((errorMessage) => {
+                    warningMessageStore.addWarningMessage(errorMessage.message);
+                });
+
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
 
@@ -1382,7 +1395,8 @@ export class GameScene extends DirtyScene {
             this.followUsersColorStoreUnsubscriber != undefined ||
             this.peerStoreUnsubscriber != undefined ||
             this.mapEditorModeStoreUnsubscriber != undefined ||
-            this.refreshPromptStoreStoreUnsubscriber != undefined
+            this.refreshPromptStoreStoreUnsubscriber != undefined ||
+            this.mapExplorationStoreUnsubscriber != undefined
         ) {
             console.error(
                 "subscribeToStores => Check all subscriber undefined ",
@@ -1394,7 +1408,8 @@ export class GameScene extends DirtyScene {
                 this.followUsersColorStoreUnsubscriber,
                 this.peerStoreUnsubscriber,
                 this.mapEditorModeStoreUnsubscriber,
-                this.refreshPromptStoreStoreUnsubscriber
+                this.refreshPromptStoreStoreUnsubscriber,
+                this.mapExplorationStoreUnsubscriber
             );
 
             throw new Error("One store is already subscribed.");
@@ -1635,6 +1650,14 @@ export class GameScene extends DirtyScene {
                 this.userInputManager.disableControls();
             } else {
                 this.userInputManager.restoreControls();
+            }
+        });
+
+        this.mapExplorationStoreUnsubscriber = mapExplorationModeStore.subscribe((exploration) => {
+            if (exploration) {
+                this.cameraManager.setExplorationMode();
+            } else {
+                this.input.keyboard?.enableGlobalCapture();
             }
         });
     }
@@ -2047,6 +2070,38 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.banPlayerIframeEvent.subscribe((banPlayerEvent) => {
                 this.connection?.emitBanPlayerMessage(banPlayerEvent.uuid, banPlayerEvent.name);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.mapEditorStream.subscribe((isActivated: boolean) => {
+                mapManagerActivated.set(isActivated);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.screenSharingStream.subscribe((isActivated: boolean) => {
+                screenSharingActivatedStore.set(isActivated);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.rightClickStream.subscribe((isRestore: boolean) => {
+                if (isRestore) this.userInputManager.restoreRightClick();
+                else this.userInputManager.disableRightClick();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.wheelZoomStream.subscribe((isRestore: boolean) => {
+                if (isRestore) this.cameraManager.unlockZoom();
+                else this.cameraManager.lockZoom();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.inviteUserButtonStream.subscribe((isActivated: boolean) => {
+                inviteUserActivated.set(isActivated);
             })
         );
 
@@ -2544,6 +2599,7 @@ ${escapedMessage}
         this.userIsJitsiDominantSpeakerStoreUnsubscriber?.();
         this.jitsiParticipantsCountStoreUnsubscriber?.();
         this.availabilityStatusStoreUnsubscriber?.();
+        this.mapExplorationStoreUnsubscriber?.();
         for (const unsubscriber of this.unsubscribers) {
             unsubscriber();
         }
@@ -2726,9 +2782,14 @@ ${escapedMessage}
         }
     }
 
-    public moveTo(position: { x: number; y: number }) {
+    public moveTo(position: { x: number; y: number }, measuredInPixels = true, tryFindingNearestAvailable = false) {
         this.pathfindingManager
-            .findPath(this.gameMapFrontWrapper.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), position)
+            .findPath(
+                this.gameMapFrontWrapper.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y),
+                position,
+                measuredInPixels,
+                tryFindingNearestAvailable
+            )
             .then((path) => {
                 if (path && path.length > 0) {
                     this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
@@ -3351,12 +3412,32 @@ ${escapedMessage}
         });
     }
 
-    zoomByFactor(zoomFactor: number) {
-        if (this.cameraManager.isCameraLocked()) {
+    zoomByFactor(zoomFactor: number, velocity?: number) {
+        if (this.cameraManager.isZoomLocked()) {
             return;
         }
-        waScaleManager.handleZoomByFactor(zoomFactor);
-        // biggestAvailableAreaStore.recompute();
+        // If the zoom modifier is over the max zoom out, we propose to the user to switch to the explorer mode
+        // Rule: if the velocity is over 1, we could imagine that the user force to switch on the explorer mode
+        if (
+            velocity &&
+            velocity > 2 &&
+            zoomFactor < 1 &&
+            waScaleManager.isMaximumZoomReached &&
+            !get(mapEditorModeStore)
+        ) {
+            const askAgainPopup = localStorage.getItem("notAskAgainPopupExplorerMode");
+            if (askAgainPopup == undefined || localStorage.getItem("notAskAgainPopupExplorerMode") === "false") {
+                modalPopupVisibilityStore.set(true);
+            } else {
+                const matEditoreModeState = get(mapEditorModeStore);
+                analyticsClient.toggleMapEditor(!matEditoreModeState);
+                mapEditorModeStore.switchMode(!matEditoreModeState);
+                this.mapEditorModeManager.equipTool(EditorToolName.ExploreTheRoom);
+            }
+            return;
+        }
+
+        waScaleManager.handleZoomByFactor(zoomFactor, this.cameras.main);
     }
 
     public createSuccessorGameScene(autostart: boolean, reconnecting: boolean) {

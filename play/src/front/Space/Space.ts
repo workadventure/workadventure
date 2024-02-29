@@ -97,7 +97,6 @@ export class Space {
                             newUser: user,
                             changes: partialUser,
                         });
-                        console.log("updateSpaceUserMessageStream", user);
                         this._users.set(partialUser.id, user);
                     }
                 }

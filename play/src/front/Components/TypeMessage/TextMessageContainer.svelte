@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { flip } from "svelte/animate";
     import { textMessageStore } from "../../Stores/TypeMessageStore/TextMessageStore";
     import TextMessage from "./TextMessage.svelte";
 
@@ -8,7 +7,7 @@
 
 <div class="main-text-message-container tw-flex">
     {#each $textMessageStore.slice(0, MAX_MESSAGES) as message (message.id)}
-        <div animate:flip={{ duration: 250 }} class="tw-flex">
+        <div class="tw-flex">
             <TextMessage {message} />
         </div>
     {/each}

@@ -5,13 +5,17 @@ import { resetWamMaps } from './utils/map-editor/uploader';
 import Menu from "./utils/menu";
 import MapEditor from "./utils/mapeditor";
 import AreaEditor from "./utils/map-editor/areaEditor";
-
-test.use({
-  baseURL: (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://john.doe:password@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost'),
-})
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Meeting actions test', () => {
-  test('Meeting action to mute microphone & video', async ({page, browser}) => {
+  test('Meeting action to mute microphone & video', async ({page, browser}, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     // Because webkit in playwright does not support Camera/Microphone Permission by settings
     if(browser.browserType() === webkit) {
       //eslint-disable-next-line playwright/no-skipped-test
@@ -20,7 +24,7 @@ test.describe('Meeting actions test', () => {
     }
 
     // Go to the empty map
-    await page.goto(`http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json`);
+    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     // Login user "Alice"
     await login(page, 'Alice');
 
@@ -30,7 +34,7 @@ test.describe('Meeting actions test', () => {
     const newBrowser = await browser.browserType().launch();
     const userBob = await newBrowser.newPage();
     // Go to the empty map
-    await userBob.goto(`http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json`);
+    await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     // Login user "Bob"
     await login(userBob, 'Bob');
     // Move user
@@ -68,7 +72,14 @@ test.describe('Meeting actions test', () => {
     userBob.close();
   });
 
-  test('Jitsi meeting action to mute microphone & video', async ({ page, browser, request }) => {
+  test('Jitsi meeting action to mute microphone & video', async ({ page, browser, request }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     if(browser.browserType() === webkit) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
@@ -87,7 +98,7 @@ test.describe('Meeting actions test', () => {
     // Create a new area
     await MapEditor.openAreaEditor(page);
     // Draw the area
-    await AreaEditor.drawArea(page, {x: 1*32*1.5, y: 5}, {x: 9*32*1.5, y: 4*32*1.5});
+    await AreaEditor.drawArea(page, {x: 0*32*1.5, y: 5}, {x: 9*32*1.5, y: 4*32*1.5});
     // Add a property Speaker zone to create new Jitsi meeting zone
     await AreaEditor.addProperty(page, 'Speaker zone');
     // Set the speaker zone property
@@ -96,7 +107,8 @@ test.describe('Meeting actions test', () => {
     await Menu.closeMapEditor(page);
 
     // Move user "Alice" to the new area
-    await Map.teleportToPosition(page, 4*32, 2*32);
+    //await Map.teleportToPosition(page, 4*32, 2*32);
+    await Map.walkTo(page, 'ArrowUp', 2000);
 
     // Add a second user "Bob"
     const newBrowser = await browser.browserType().launch();
@@ -105,7 +117,9 @@ test.describe('Meeting actions test', () => {
     // Login user "Bob"
     await login(userBob, "Bob", 3);
     // Move user "Bob" to the new area
-    await Map.teleportToPosition(userBob, 4*32, 2*32);
+    // FIME: the teleportToPosition does not work ??
+    //await Map.teleportToPosition(userBob, 4*32, 2*32);
+    await Map.walkTo(userBob, 'ArrowUp', 2000);
 
     // The user in the bubble meeting should be visible
     await expect(page.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 20_000});
