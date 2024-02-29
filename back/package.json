@@ -11,8 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config vitest.config.ts ",
     "test:coverage": "PLAY_URL=http://play.workadventure.localhost ADMIN_URL= vitest --config vitest.config.ts --coverage -- --verbose=true",
-    "lint": "DEBUG= eslint src/ . --ext .ts",
-    "fix": "DEBUG= eslint --fix src/ . --ext .ts",
+    "lint": "DEBUG= eslint-baseline src/ . --ext .ts",
+    "fix": "DEBUG= eslint-baseline --fix src/ . --ext .ts",
     "precommit": "lint-staged",
     "pretty": "prettier --write 'src/**/*.{ts,tsx}'",
     "pretty-check": "prettier --check 'src/**/*.{ts,tsx}'",
@@ -68,6 +68,7 @@
     "zod": "^3.19.1"
   },
   "devDependencies": {
+    "@luminateone/eslint-baseline": "^1.0.6",
     "@sentry/cli": "^2.17.2",
     "@types/bigbluebutton-js": "^0.2.1",
     "@types/busboy": "^0.2.3",
@@ -92,7 +93,7 @@
   },
   "lint-staged": {
     "*.ts": [
-      "eslint --fix",
+      "eslint-baseline --fix",
       "prettier --write"
     ]
   }

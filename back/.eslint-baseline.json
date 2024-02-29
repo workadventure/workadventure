@@ -1,0 +1,282 @@
+[
+    {
+        "path": "src/Model/GameRoom.ts",
+        "line": 308,
+        "column": 13,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, the types have no overlap.",
+        "hash": "efce2b88021389f838f1af062a24c8c89b1b5d97"
+    },
+    {
+        "path": "src/Model/GameRoom.ts",
+        "line": 382,
+        "column": 18,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, value is always falsy.",
+        "hash": "24f973ada714ea116eec17f704eb6ee9b10c95ed"
+    },
+    {
+        "path": "src/Model/GameRoom.ts",
+        "line": 882,
+        "column": 52,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, expected left-hand side of `??` operator to be possibly null or undefined.",
+        "hash": "e487a0a9f48ea3b6ff8a17926330c569cd0c25a4"
+    },
+    {
+        "path": "src/Model/GameRoom.ts",
+        "line": 895,
+        "column": 56,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, expected left-hand side of `??` operator to be possibly null or undefined.",
+        "hash": "8bd8b6a0b71cb8995c60b19856c57c0cea03dffe"
+    },
+    {
+        "path": "src/Model/GameRoom.ts",
+        "line": 968,
+        "column": 52,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, expected left-hand side of `??` operator to be possibly null or undefined.",
+        "hash": "eab1da8a3763a08a9a00a62de639496d0a474a81"
+    },
+    {
+        "path": "src/Model/PositionNotifier.ts",
+        "line": 104,
+        "column": 13,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, the types have no overlap.",
+        "hash": "b30cb82a8e462440418ac8d7bcdaa144dc63d643"
+    },
+    {
+        "path": "src/Model/PositionNotifier.ts",
+        "line": 110,
+        "column": 13,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, the types have no overlap.",
+        "hash": "93b58be6d9330bccc373d86dd4ee2070189a4c42"
+    },
+    {
+        "path": "src/Model/User.ts",
+        "line": 263,
+        "column": 24,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, both sides of the expression are literal values.",
+        "hash": "8d3c1e38e207242f009d58ed39ed48d92709a43a"
+    },
+    {
+        "path": "src/RoomManager.ts",
+        "line": 231,
+        "column": 17,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, value is always truthy.",
+        "hash": "b0965685b9822f2b4182168a09cb025364811c44"
+    },
+    {
+        "path": "src/RoomManager.ts",
+        "line": 400,
+        "column": 25,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, both sides of the expression are literal values.",
+        "hash": "feaf483847226685943e67b427d3594f2b01f5b3"
+    },
+    {
+        "path": "src/Services/MapStorageClient.ts",
+        "line": 8,
+        "column": 10,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, value is always falsy.",
+        "hash": "8595a20267e3524f26aff1f3bb46ccedb1489a5e"
+    },
+    {
+        "path": "src/Services/MucManager.ts",
+        "line": 27,
+        "column": 27,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary optional chain on a non-nullish value.",
+        "hash": "bd5033fdd7ef3ff83052eca18d827dee059237de"
+    },
+    {
+        "path": "src/Services/MucManager.ts",
+        "line": 28,
+        "column": 62,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary optional chain on a non-nullish value.",
+        "hash": "3e7f06030f35cfde0aeabe5cd05d8b9efed94d4b"
+    },
+    {
+        "path": "src/Services/MucManager.ts",
+        "line": 42,
+        "column": 17,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, value is always truthy.",
+        "hash": "80e46472c37abda296cdb5e3b2151d1e2f4bc308"
+    },
+    {
+        "path": "src/Services/MucManager.ts",
+        "line": 46,
+        "column": 32,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary optional chain on a non-nullish value.",
+        "hash": "c8e8d842c28a51e5e4467b6c0b6f48fd42b95747"
+    },
+    {
+        "path": "src/Services/MucManager.ts",
+        "line": 52,
+        "column": 17,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, value is always truthy.",
+        "hash": "9ec922d1ea14181d38166ebacf4804c58fe3fe87"
+    },
+    {
+        "path": "src/Services/MucManager.ts",
+        "line": 64,
+        "column": 26,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, value is always truthy.",
+        "hash": "01a10fe1559e01bac592c2617652b808e530a989"
+    },
+    {
+        "path": "src/Services/PlayersRepository/RedisPlayersVariablesRepository.ts",
+        "line": 34,
+        "column": 44,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, expected left-hand side of `??` operator to be possibly null or undefined.",
+        "hash": "05e0c96f6d7de3cb0e23ddfe1fd0b070fe61b314"
+    },
+    {
+        "path": "src/Services/PlayersRepository/RedisPlayersVariablesRepository.ts",
+        "line": 38,
+        "column": 17,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, the types have no overlap.",
+        "hash": "e76685fe6fd4506c81f8fe2764fcd0b787da4751"
+    },
+    {
+        "path": "src/Services/PlayersRepository/RedisPlayersVariablesRepository.ts",
+        "line": 38,
+        "column": 46,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, the types have no overlap.",
+        "hash": "0b76fc768d2f21a06e81a022dc02fc96c2bb3217"
+    },
+    {
+        "path": "src/Services/PlayersRepository/RedisPlayersVariablesRepository.ts",
+        "line": 80,
+        "column": 21,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, the types have no overlap.",
+        "hash": "cb3797b03bab4cc5042eda147d38a0e00f36c0b3"
+    },
+    {
+        "path": "src/Services/SocketManager.ts",
+        "line": 1022,
+        "column": 14,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, value is always falsy.",
+        "hash": "522a5199ac910fed4e5be6865734e55b85c99a05"
+    },
+    {
+        "path": "src/Services/SocketManager.ts",
+        "line": 1044,
+        "column": 14,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, value is always falsy.",
+        "hash": "c72f123a7050fb94518d9243523f36620f85ca97"
+    },
+    {
+        "path": "src/Services/SocketManager.ts",
+        "line": 1282,
+        "column": 17,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary optional chain on a non-nullish value.",
+        "hash": "85cd2fc92bab40b80787045acdda5a495ff71421"
+    },
+    {
+        "path": "src/Services/SocketManager.ts",
+        "line": 1282,
+        "column": 40,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary optional chain on a non-nullish value.",
+        "hash": "2c891055d491b44169c0e6527fb4bc21ddecf146"
+    },
+    {
+        "path": "src/Services/SocketManager.ts",
+        "line": 1282,
+        "column": 47,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary optional chain on a non-nullish value.",
+        "hash": "99eaf767e4fe5a1ab87b6eaf2629225ceb3f4990"
+    },
+    {
+        "path": "src/Services/SocketManager.ts",
+        "line": 1283,
+        "column": 17,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary optional chain on a non-nullish value.",
+        "hash": "5aecaf99897316a3270183415059478bfbc325fa"
+    },
+    {
+        "path": "src/Services/SocketManager.ts",
+        "line": 1283,
+        "column": 24,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary optional chain on a non-nullish value.",
+        "hash": "04cdc4298667429c8f4087e4beac7d5a609e3914"
+    },
+    {
+        "path": "src/Services/SocketManager.ts",
+        "line": 1283,
+        "column": 32,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary optional chain on a non-nullish value.",
+        "hash": "b2dc6f63768c08906cd7002d774ae5b1cc2ce46f"
+    },
+    {
+        "path": "src/Services/SocketManager.ts",
+        "line": 1291,
+        "column": 17,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary optional chain on a non-nullish value.",
+        "hash": "07375e559e1019bd76a1ffd09c52aeca78403168"
+    },
+    {
+        "path": "src/Services/SocketManager.ts",
+        "line": 1347,
+        "column": 13,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, value is always truthy.",
+        "hash": "e7e07ef1e4f5d6889e6a250ec55e4ccb180e7b50"
+    },
+    {
+        "path": "src/Services/SocketManager.ts",
+        "line": 1480,
+        "column": 14,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, value is always falsy.",
+        "hash": "3af2d360c2b3d0997a7b619d46f341f1f4c1aff7"
+    },
+    {
+        "path": "tests/SpacesWatcher.test.ts",
+        "line": 26,
+        "column": 55,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary optional chain on a non-nullish value.",
+        "hash": "2479ac17c70bc0d6a10ce8a853238bd26e28409a"
+    },
+    {
+        "path": "tests/SpacesWatcher.test.ts",
+        "line": 47,
+        "column": 26,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary optional chain on a non-nullish value.",
+        "hash": "09e1812e5e4f5150fcca35f6ed64c5e771e4fafa"
+    },
+    {
+        "path": "tests/SpacesWatcher.test.ts",
+        "line": 48,
+        "column": 45,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary optional chain on a non-nullish value.",
+        "hash": "bf684c16aaa8c406681d4b9e708cbd1e72c28f5a"
+    }
+]

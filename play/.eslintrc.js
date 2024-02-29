@@ -46,8 +46,8 @@ module.exports = {
         "@typescript-eslint/no-explicit-any": "error",
         "no-throw-literal": "error",
         "@typescript-eslint/no-unused-vars": ["error", { "args": "none", "caughtErrors": "all", "varsIgnorePattern": "_exhaustiveCheck" }],
-        // TODO: remove those ignored rules and write a stronger code!
-        "@typescript-eslint/no-unsafe-call": "off",
+        // The following rules are in the baseline, and should be treated at some point
+        /*"@typescript-eslint/no-unsafe-call": "off",
         "@typescript-eslint/restrict-plus-operands": "off",
         "@typescript-eslint/no-unsafe-assignment": "off",
         "@typescript-eslint/no-unsafe-return": "off",
@@ -56,7 +56,8 @@ module.exports = {
         "@typescript-eslint/no-unsafe-argument": "off",
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/ban-ts-comment": "off",
-        "@typescript-eslint/ban-ts-ignore": "off",
+        "@typescript-eslint/ban-ts-ignore": "off",*/
+        "@typescript-eslint/no-unnecessary-condition": "error",
         "import/order": "error",
 
         "no-async-promise-executor": "error",

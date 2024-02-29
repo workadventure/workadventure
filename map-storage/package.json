@@ -29,7 +29,7 @@
     "format": "prettier --write \"src/**/*.ts\" vite.config.ts",
     "start": "if [ $PATH_PREFIX ]; then npm run front:build; fi && ESBK_TSCONFIG_PATH=tsconfig-node.json tsx ./src/index.ts",
     "back:start:dev": "ESBK_TSCONFIG_PATH=tsconfig-node.json tsx watch --clear-screen=false --inspect=0.0.0.0:9229 ./src/index.ts",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "lint": "eslint-baseline \"{src,apps,libs,test}/**/*.ts\" --fix",
     "precommit": "lint-staged",
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
@@ -86,6 +86,7 @@
     "zod-to-json-schema": "^3.20.4"
   },
   "devDependencies": {
+    "@luminateone/eslint-baseline": "^1.0.6",
     "@sentry/cli": "^2.17.2",
     "@sveltejs/vite-plugin-svelte": "^1.4.0",
     "@tsconfig/svelte": "^3.0.0",
@@ -147,7 +148,7 @@
   },
   "lint-staged": {
     "*.ts": [
-      "eslint --fix",
+      "eslint-baseline --fix",
       "prettier --write"
     ]
   }

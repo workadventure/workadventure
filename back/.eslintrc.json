@@ -40,7 +40,8 @@
         "no-await-in-loop": "error",
         "no-promise-executor-return": "error",
         "require-atomic-updates": "error",
-        "prefer-promise-reject-errors": "error"
+        "prefer-promise-reject-errors": "error",
+        "@typescript-eslint/no-unnecessary-condition": "error"
     },
     "settings": {
         "typescript": true,

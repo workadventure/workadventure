@@ -1,0 +1,26 @@
+[
+    {
+        "path": "src/Upload/DiskFileSystem.ts",
+        "line": 96,
+        "column": 25,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, value is always truthy.",
+        "hash": "45a1820d86adbd732ef57d8a6508e731c4ff2c26"
+    },
+    {
+        "path": "src/Upload/DiskFileSystem.ts",
+        "line": 149,
+        "column": 21,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, value is always truthy.",
+        "hash": "ff27b8922c705e118ecb2ccb5b7901e902e1084b"
+    },
+    {
+        "path": "src/Upload/S3FileSystem.ts",
+        "line": 243,
+        "column": 40,
+        "ruleId": "@typescript-eslint/no-unnecessary-condition",
+        "message": "Unnecessary conditional, expected left-hand side of `??` operator to be possibly null or undefined.",
+        "hash": "dc06bb6edf0b3205eb74bc91126019d06369e6fb"
+    }
+]
