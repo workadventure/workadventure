@@ -1,5 +1,5 @@
-import { NextFunction, Response } from "express";
 import { Archiver } from "archiver";
+import { NextFunction, Response } from "express";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
 
 export interface FileSystemInterface {
@@ -25,5 +25,5 @@ export interface FileSystemInterface {
 
     archiveDirectory(archiver: Archiver, virtualPath: string): Promise<void>;
 
-    writeByteAsFile(virtualPath: string, content: Uint8Array): Promise<void>;
+    writeByteArrayAsFile(virtualPath: string, content: Uint8Array): Promise<void>;
 }

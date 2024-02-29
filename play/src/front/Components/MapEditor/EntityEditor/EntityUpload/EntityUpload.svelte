@@ -12,6 +12,7 @@
     let dropZoneRef: HTMLDivElement;
     let customEntityToUpload: EntityPrefab | undefined = undefined;
     const allowedImageFormats = ["image/png", "image/jpeg", "image/webp"];
+    let errorOnFile: string | undefined;
 
     $: {
         if (files) {
@@ -64,6 +65,7 @@
         files = undefined;
         customEntityToUpload = undefined;
         mapEditorEntityUploadEventStore.set(undefined);
+        errorOnFile = undefined;
     }
 
     function dropHandler(event: DragEvent) {
@@ -71,11 +73,13 @@
         if (filesFromDropEvent) {
             if (filesFromDropEvent.length > 1) {
                 console.error("Only one file is permitted");
+                errorOnFile = $LL.mapEditor.entityEditor.uploadEntity.errorOnFileNumber();
             } else {
                 if (allowedImageFormats.includes(filesFromDropEvent.item(0)?.type ?? "")) {
                     files = filesFromDropEvent;
                 } else {
                     console.error("File format not supported");
+                    errorOnFile = $LL.mapEditor.entityEditor.uploadEntity.errorOnFileFormat();
                 }
             }
         }
@@ -132,6 +136,9 @@
                         >
                     </span>
                     <span class="tw-text-xs tw-m-0 tw-opacity-50">PNG, JPG, WebP</span>
+                    {#if errorOnFile}
+                        <span class="tw-text-xx tw-text-red-500">{errorOnFile}</span>
+                    {/if}
                 </span></label
             >
         </div>

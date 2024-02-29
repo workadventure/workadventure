@@ -1,4 +1,5 @@
 import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
+import * as Sentry from "@sentry/node";
 import {
     AreaData,
     AtLeast,
@@ -9,9 +10,9 @@ import {
     EntityDataProperties,
     UpdateAreaCommand,
     UpdateEntityCommand,
+    UpdateWAMMetadataCommand,
     UpdateWAMSettingCommand,
     WAMEntityData,
-    UpdateWAMMetadataCommand,
 } from "@workadventure/map-editor";
 import {
     EditMapCommandMessage,
@@ -21,15 +22,14 @@ import {
     PingMessage,
     UpdateMapToNewestWithKeyMessage,
 } from "@workadventure/messages";
-import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
-import * as Sentry from "@sentry/node";
+import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
+import { DeleteCustomEntityMapStorageCommand } from "./Commands/DeleteCustomEntityMapStorageCommand";
+import { ModifyCustomEntityMapStorageCommand } from "./Commands/ModifyCustomEntityMapStorageCommand";
+import { UploadEntityMapStorageCommand } from "./Commands/UploadEntityMapStorageCommand";
+import { entitiesManager } from "./EntitiesManager";
 import { mapsManager } from "./MapsManager";
 import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
-import { entitiesManager } from "./EntitiesManager";
-import { UploadEntityMapStorageCommand } from "./Commands/UploadEntityMapStorageCommand";
-import { ModifyCustomEntityMapStorageCommand } from "./Commands/ModifyCustomEntityMapStorageCommand";
-import { DeleteCustomEntityMapStorageCommand } from "./Commands/DeleteCustomEntityMapStorageCommand";
 
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
@@ -210,7 +210,6 @@ const mapStorageServer: MapStorageServer = {
                 case "uploadEntityMessage": {
                     const uploadEntityMessage = editMapMessage.uploadEntityMessage;
                     await entitiesManager.executeCommand(
-                        mapKey,
                         new UploadEntityMapStorageCommand(uploadEntityMessage, mapUrl.hostname)
                     );
                     break;
@@ -218,7 +217,6 @@ const mapStorageServer: MapStorageServer = {
                 case "modifyCustomEntityMessage": {
                     const modifyCustomEntityMessage = editMapMessage.modifyCustomEntityMessage;
                     await entitiesManager.executeCommand(
-                        mapKey,
                         new ModifyCustomEntityMapStorageCommand(modifyCustomEntityMessage, mapUrl.hostname)
                     );
                     break;
@@ -226,7 +224,6 @@ const mapStorageServer: MapStorageServer = {
                 case "deleteCustomEntityMessage": {
                     const deleteCustomEntityMessage = editMapMessage.deleteCustomEntityMessage;
                     await entitiesManager.executeCommand(
-                        mapKey,
                         new DeleteCustomEntityMapStorageCommand(deleteCustomEntityMessage, gameMap, mapUrl.hostname)
                     );
                     break;

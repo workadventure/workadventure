@@ -29,7 +29,7 @@ export class GameMapEntities {
     }
 
     public deleteCustomEntities(id: string): boolean {
-        const customEntitiesOnMapKeysToRemove = this.getCustomEntitiesKeysByCustomEntityId(id);
+        const customEntitiesOnMapKeysToRemove = this.findEntitiesByPrefabId(id);
         if (customEntitiesOnMapKeysToRemove.length === 0) {
             return false;
         }
@@ -55,7 +55,7 @@ export class GameMapEntities {
         return this.wam.entities;
     }
 
-    public getCustomEntitiesKeysByCustomEntityId(customEntityId: string): string[] {
+    public findEntitiesByPrefabId(customEntityId: string): string[] {
         return Object.keys(this.wam.entities).filter(
             (entityMapKey) => this.wam.entities[entityMapKey].prefabRef.id === customEntityId
         );

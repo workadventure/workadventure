@@ -202,6 +202,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Glissez-déposer ou choisissez votre image afin de l'ajouter sur la carte",
             dragDrop: "Glissez-déposer ou",
             chooseFile: "Choisir ",
+            errorOnFileFormat: "Format du fichier non supporté",
+            errorOnFileNumber: "Dépot multiple de fichier non supporté",
         },
         images: "Image{{s}}",
         noImage: "Aucune image",

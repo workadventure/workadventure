@@ -204,6 +204,8 @@ const mapEditor: BaseTranslation = {
             description: "Drag and drop or choose your image to add it in the map",
             dragDrop: "Drag and Drop or",
             chooseFile: "Choose file",
+            errorOnFileFormat: "File format not supported",
+            errorOnFileNumber: "Multiple file drop is not supported",
         },
         images: "Image{{s}}",
         noImage: "No image",

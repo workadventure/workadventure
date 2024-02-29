@@ -1,7 +1,7 @@
 import { Command } from "@workadventure/map-editor";
 
 class EntitiesManager {
-    public async executeCommand(mapKey: string, command: Command): Promise<void> {
+    public async executeCommand(command: Command): Promise<void> {
         await command.execute();
     }
 }

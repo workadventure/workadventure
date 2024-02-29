@@ -8,7 +8,10 @@ import { EntityCollectionRaw } from "../types";
 export interface Migrations {
     [migrationVersionKey: string]: (fileContent: any) => any;
 }
-
+/**
+ * This class takes a representation of any entity collection file (whatever the version of the file)
+ * and will return a version of that file updated to the latest version.
+ */
 class EntitiesFileMigration {
     private readonly migrations: Migrations;
 
@@ -26,7 +29,14 @@ class EntitiesFileMigration {
                 entitiesFileContent = migrationFunction(entitiesFileContent);
             }
         }
-        return EntityCollectionRaw.parse(entitiesFileContent);
+        try {
+            return EntityCollectionRaw.parse(entitiesFileContent);
+        } catch (error) {
+            // Remove this when tsconfig target is ES2022 (only supported on ES2022)
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            //@ts-ignore
+            throw new Error(`Unable to parse entity file content in EntityCollectionRaw format`, { cause: error });
+        }
     }
 
     private migrate_v0_to_v1(fileContent: any): any {

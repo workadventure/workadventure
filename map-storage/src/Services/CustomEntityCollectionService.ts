@@ -1,3 +1,5 @@
+import path from "path";
+import * as Sentry from "@sentry/browser";
 import {
     CollisionGrid,
     ENTITIES_FOLDER_PATH,
@@ -13,8 +15,11 @@ import { mapPathUsingDomainWithPrefix } from "./PathMapper";
 export class CustomEntityCollectionService {
     private readonly hostname: string;
 
+    private lock: Promise<void>;
+
     constructor(hostname: string) {
         this.hostname = hostname;
+        this.lock = Promise.resolve();
     }
 
     private getEntityCollectionFileVirtualPath() {
@@ -22,12 +27,17 @@ export class CustomEntityCollectionService {
     }
 
     private getEntityToUploadVirtualPath(fileName: string) {
-        return mapPathUsingDomainWithPrefix(`${ENTITIES_FOLDER_PATH}/${fileName}`, this.hostname);
+        const { base: filenameWithoutPotentialPath, ext: fileExtension } = path.parse(fileName);
+
+        if (fileExtension.match(/\.(jpg|jpeg|png|webp)$/i) === null) {
+            throw new Error("File extension is not a supported image");
+        }
+        return mapPathUsingDomainWithPrefix(`${ENTITIES_FOLDER_PATH}/${filenameWithoutPotentialPath}`, this.hostname);
     }
 
     public async uploadEntity(uploadEntityMessage: UploadEntityMessage) {
         const { imagePath, file } = uploadEntityMessage;
-        await fileSystem.writeByteAsFile(this.getEntityToUploadVirtualPath(imagePath), file);
+        await fileSystem.writeByteArrayAsFile(this.getEntityToUploadVirtualPath(imagePath), file);
         await this.addEntityInEntityCollectionFile(
             this.mapEntityFromUploadEntityMessageToEntityRawPrefab(uploadEntityMessage)
         );
@@ -56,6 +66,9 @@ export class CustomEntityCollectionService {
                 this.getEntityCollectionFileVirtualPath(),
                 JSON.stringify(customEntityCollection)
             );
+        } else {
+            console.error("Unable to find the entity to modify in custom entities file");
+            Sentry.captureException("Unable to find the entity to modify in custom entities file for entity");
         }
     }
 
@@ -67,13 +80,15 @@ export class CustomEntityCollectionService {
         customEntityCollection.collection = customEntityCollection.collection.filter(
             (customEntity) => customEntity.id !== id
         );
-        await fileSystem.writeStringAsFile(
-            this.getEntityCollectionFileVirtualPath(),
-            JSON.stringify(customEntityCollection)
-        );
-        if (customEntityToDelete) {
-            await fileSystem.deleteFiles(this.getEntityToUploadVirtualPath(customEntityToDelete.imagePath));
-        }
+        this.lock = this.lock.then(async () => {
+            await fileSystem.writeStringAsFile(
+                this.getEntityCollectionFileVirtualPath(),
+                JSON.stringify(customEntityCollection)
+            );
+            if (customEntityToDelete) {
+                await fileSystem.deleteFiles(this.getEntityToUploadVirtualPath(customEntityToDelete.imagePath));
+            }
+        });
     }
 
     private async readOrCreateEntitiesCollectionFile() {
@@ -105,9 +120,11 @@ export class CustomEntityCollectionService {
         const customEntityCollectionFileContent = await this.readOrCreateEntitiesCollectionFile();
         const customEntityCollection = EntityCollectionRaw.parse(JSON.parse(customEntityCollectionFileContent));
         customEntityCollection.collection.push(entityToAddInCollection);
-        await fileSystem.writeStringAsFile(
-            this.getEntityCollectionFileVirtualPath(),
-            JSON.stringify(customEntityCollection)
-        );
+        this.lock = this.lock.then(async () => {
+            await fileSystem.writeStringAsFile(
+                this.getEntityCollectionFileVirtualPath(),
+                JSON.stringify(customEntityCollection)
+            );
+        });
     }
 }
