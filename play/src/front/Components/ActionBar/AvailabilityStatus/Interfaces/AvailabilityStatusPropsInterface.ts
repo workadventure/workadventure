@@ -1,8 +1,8 @@
 import { AvailabilityStatus } from "@workadventure/messages";
-
+import { LocalizedString } from "typesafe-i18n";
 export interface StatusInformationInterface {
     AvailabilityStatus: AvailabilityStatus;
-    label: string;
+    label: LocalizedString | string;
     colorHex: string;
 }
 

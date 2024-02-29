@@ -1,6 +1,8 @@
-import { AvailabilityStatus } from "@workadventure/messages";
 import { get } from "svelte/store";
+import { AvailabilityStatus } from "@workadventure/messages";
+import { LocalizedString } from "typesafe-i18n";
 import LL from "../../i18n/i18n-svelte";
+import { StatusInformationInterface } from "../Components/ActionBar/AvailabilityStatus/Interfaces/AvailabilityStatusPropsInterface";
 
 const COLORS: Record<AvailabilityStatus, { filling: number; outline: number }> = {
     [AvailabilityStatus.AWAY]: { filling: 0xf5931e, outline: 0x875d13 },
@@ -25,13 +27,18 @@ export const getColorHexOfStatus = (status: AvailabilityStatus): string => {
     return `#${COLORS[status].filling.toString(16)}`;
 };
 
-export const getStatusInformation = (
-    statusToShow: Array<AvailabilityStatus>
-): Array<{ AvailabilityStatus: AvailabilityStatus; label: string; colorHex: string }> => {
-    return statusToShow.map((status) => {
+export const getStatusInformation = (statusToShow: Array<AvailabilityStatus>): Array<StatusInformationInterface> => {
+    const labelStatusMap: Map<AvailabilityStatus, LocalizedString> = new Map([
+        [AvailabilityStatus.BACK_IN_A_MOMENT, get(LL).actionbar.status.BACK_IN_A_MOMENT()],
+        [AvailabilityStatus.BUSY, get(LL).actionbar.status.BUSY()],
+        [AvailabilityStatus.DO_NOT_DISTURB, get(LL).actionbar.status.DO_NOT_DISTURB()],
+        [AvailabilityStatus.ONLINE, get(LL).actionbar.status.ONLINE()],
+    ]);
+
+    return statusToShow.map((status: AvailabilityStatus) => {
         return {
             AvailabilityStatus: status,
-            label: get(LL).actionbar.status[AvailabilityStatus[status]](),
+            label: labelStatusMap.get(status) || "",
             colorHex: getColorHexOfStatus(status),
         };
     });

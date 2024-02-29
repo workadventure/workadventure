@@ -58,11 +58,7 @@
     } from "../../Stores/MyMediaStore";
     import {
         activeSubMenuStore,
-        addActionButtonActionBarEvent,
-        addClassicButtonActionBarEvent,
-        additionnalButtonsMenu,
         inviteUserActivated,
-        mapEditorActivated,
         menuVisiblilityStore,
         SubMenusInterface,
         subMenusStore,

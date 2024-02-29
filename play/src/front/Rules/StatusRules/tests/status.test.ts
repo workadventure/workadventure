@@ -4,6 +4,7 @@ import { StatusRules, StatusRulesVerificationInterface, TimedRules } from "../st
 import { BasicStatusStrategy } from "../StatusStrategy/BasicStatusStrategy";
 import { UnvalidStatusTransitionError } from "../Errors/UnvalidStatusTransitionError";
 import { StatusChanger, StatusStrategyFactoryInterface } from "../StatusChanger";
+import { StatusStrategyInterface } from "../../StatusStrategyInterface";
 
 describe("Verify Rules Transition", () => {
     test.each([
@@ -144,22 +145,32 @@ describe("Status Rules", () => {
                     };
                 },
             };
-            vi.spyOn(BasicStatusStrategy.prototype, "applyAllRules");
-            const mockOldBasicStatusStrategy = {
-                applyAllRules: vi.fn(),
+
+            const applyAllRulesOld = vi.fn();
+            const cleanTimedRulesOld = vi.fn();
+
+            const mockOldBasicStatusStrategy: StatusStrategyInterface = {
+                applyAllRules: applyAllRulesOld,
                 applyBasicRules: vi.fn(),
                 applyTimedRules: vi.fn(),
                 getActualStatus: vi.fn(),
-                cleanTimedRules: vi.fn(),
+                cleanTimedRules: cleanTimedRulesOld,
+                applyInteractionRules: vi.fn(),
+                setUserNameInteraction: vi.fn(),
+                allowNotificationSound: vi.fn(),
             };
 
             const newStatus = AvailabilityStatus.BBB;
+            const applyAllRulesNew = vi.fn();
             const mockNewBasicStatusStrategy = {
-                applyAllRules: vi.fn(),
+                applyAllRules: applyAllRulesNew,
                 applyBasicRules: vi.fn(),
                 applyTimedRules: vi.fn(),
                 getActualStatus: vi.fn().mockReturnValueOnce(AvailabilityStatus.BBB),
                 cleanTimedRules: vi.fn(),
+                applyInteractionRules: vi.fn(),
+                setUserNameInteraction: vi.fn(),
+                allowNotificationSound: vi.fn(),
             };
 
             const mockCreateStrategy = vi.fn().mockReturnValueOnce(mockNewBasicStatusStrategy);
@@ -174,17 +185,17 @@ describe("Status Rules", () => {
                 mockOldBasicStatusStrategy
             );
 
-            expect(mockOldBasicStatusStrategy.applyAllRules).toHaveBeenCalledOnce();
-            expect(mockOldBasicStatusStrategy.cleanTimedRules).not.toHaveBeenCalled();
-            expect(mockNewBasicStatusStrategy.applyAllRules).not.toHaveBeenCalled();
+            expect(applyAllRulesOld).toHaveBeenCalledOnce();
+            expect(cleanTimedRulesOld).not.toHaveBeenCalled();
+            expect(applyAllRulesNew).not.toHaveBeenCalled();
             //Act
             statusStrategy.changeStatusTo(newStatus);
-            expect(mockOldBasicStatusStrategy.cleanTimedRules).toHaveBeenCalledOnce();
+            expect(cleanTimedRulesOld).toHaveBeenCalledOnce();
             const result: AvailabilityStatus = statusStrategy.getActualStatus();
 
             //Assert
             expect(result).toBe(newStatus);
-            expect(mockNewBasicStatusStrategy.applyAllRules).toHaveBeenCalledOnce();
+            expect(applyAllRulesNew).toHaveBeenCalledOnce();
         });
     });
     describe("StatusStrategy", () => {
