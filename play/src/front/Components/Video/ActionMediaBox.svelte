@@ -13,6 +13,8 @@
     import { VideoPeer } from "../../WebRtc/VideoPeer";
     import { userIsAdminStore } from "../../Stores/GameStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+    import { LayoutMode } from "../../WebRtc/LayoutManager";
     import reportImg from "./images/report.svg";
 
     export let embedScreen: EmbedScreen;
@@ -51,6 +53,7 @@
     function pin() {
         if (!videoEnabled) return;
         highlightedEmbedScreen.toggleHighlight(embedScreen);
+        embedScreenLayoutStore.set(LayoutMode.Presentation);
     }
 
     function sendPrivateMessage() {
