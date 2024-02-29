@@ -238,13 +238,19 @@ test.describe('Availability Status', () => {
     
             await login(page, 'Alice');
             
-            await expect(page.getByAltText('Turn on webcam')).toBeVisible();
-            await expect(page.getByAltText('Turn on microphone')).toBeVisible();
+
+            await Menu.turnOnCamera(page);
+            await Menu.turnOnMicrophone(page);
+
+            await Menu.closeNotificationPopUp(page);
 
             await Menu.clickOnStatus(page,statusName); 
+            await Menu.closeNotificationPopUp(page);
 
-            await expect(page.getByAltText('Turn on webcam')).toBeHidden();
-            await expect(page.getByAltText('Turn on microphone')).toBeHidden();
+            await expect(page.getByAltText('Turn off webcam')).toBeHidden();
+            await expect(page.getByAltText('Turn off microphone')).toBeHidden();
+            
+
             
 
         })
@@ -273,7 +279,7 @@ test.describe('Availability Status', () => {
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
         })
         test.describe('Back in a moment interaction',async()=>{
-            test('should open a popup when a bubble is create...',async({ page, browser,context})=>{
+            test('should not create a bubble',async({ page, browser,context})=>{
                 const statusName = "Back in a moment";
                 const map_URL =  `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`;
                 await page.goto(map_URL);
@@ -330,14 +336,18 @@ test.describe('Availability Status', () => {
             await login(page, 'Alice');
             
 
-            await expect(page.getByAltText('Turn on webcam')).toBeVisible();
-            await expect(page.getByAltText('Turn on microphone')).toBeVisible();
+            await Menu.turnOnCamera(page);
+            await Menu.turnOnMicrophone(page);
+
+            await Menu.closeNotificationPopUp(page);
 
             await Menu.clickOnStatus(page,statusName); 
+            await Menu.closeNotificationPopUp(page);
+
+            await expect(page.getByAltText('Turn off webcam')).toBeHidden();
+            await expect(page.getByAltText('Turn off microphone')).toBeHidden();
             
 
-            await expect(page.getByAltText('Turn on webcam')).toBeHidden();
-            await expect(page.getByAltText('Turn on microphone')).toBeHidden();
             
 
         })
@@ -366,7 +376,7 @@ test.describe('Availability Status', () => {
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
         })
         test.describe('Do not disturb interaction',async()=>{
-            test('should open a popup when a bubble is create...',async({ page, browser,context})=>{
+            test('should not create a bubble ',async({ page, browser,context})=>{
                 const statusName = "Do not disturb";
                 const map_URL =  `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`;
                 await page.goto(map_URL);
