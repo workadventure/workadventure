@@ -508,7 +508,7 @@
                         {#if $requestedScreenSharingState && !$silentStore}
                             <img
                                 draggable="false"
-                                class:border-top-light={$screenSharingActivatedStore}
+                                class:disable-opacity={!$screenSharingActivatedStore}
                                 src={screenshareOn}
                                 style="padding: 2px;"
                                 alt="Stop screen sharing"
@@ -516,7 +516,7 @@
                         {:else}
                             <img
                                 draggable="false"
-                                class:border-top-light={$screenSharingActivatedStore}
+                                class:disable-opacity={!$screenSharingActivatedStore}
                                 src={screenshareOff}
                                 style="padding: 2px;"
                                 alt="Start screen sharing"

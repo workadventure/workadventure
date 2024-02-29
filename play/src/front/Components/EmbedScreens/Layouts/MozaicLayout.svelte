@@ -26,7 +26,7 @@
     bind:this={layoutDom}
 >
     <div
-        class="media-container tw-grid mozaic-grid tw-content-start tw-backdrop-blur-sm tw-bg-black/20 tw-overflow-y-auto tw-pointer-events-auto"
+        class="media-container tw-grid mozaic-grid tw-content-start tw-backdrop-blur-sm tw-bg-black/20 tw-pointer-events-auto tw-max-h-full tw-overflow-y-auto"
         class:tw-grid-cols-1={$streamableCollectionStore.size === 1}
         class:tw-grid-cols-2={$streamableCollectionStore.size >= 2}
     >
