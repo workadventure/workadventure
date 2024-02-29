@@ -2,7 +2,7 @@ import {expect, test} from '@playwright/test';
 import Menu from "./utils/menu";
 import {login} from "./utils/roles";
 import Map from "./utils/map";
-import {play_url} from "./utils/urls";
+import {play_url, publicTestMapUrl} from "./utils/urls";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -91,7 +91,9 @@ test.describe('Mobile', () => {
             test.skip();
             return;
         }
-        page.goto('/_/global/maps.workadventure.localhost/tests/CoWebsite/cowebsite_jitsiroom.json');
+        page.goto(
+            publicTestMapUrl('tests/CoWebsite/cowebsite_jitsiroom.json', 'mobile')
+        );
         await login(page, "Bob", 3);
 
         // Move to open a cowebsite

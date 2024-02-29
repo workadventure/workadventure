@@ -135,7 +135,7 @@ test.describe('Iframe API', () => {
       }
 
       await page.goto(
-          `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+          publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
       );
 
       await login(page);
@@ -167,7 +167,7 @@ test.describe('Iframe API', () => {
 
   test('test disable invite user button', async ({ page }) => {
     await page.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
 
     await page.evaluate(() => localStorage.setItem('debug', '*'));
@@ -207,7 +207,7 @@ test.describe('Iframe API', () => {
     }
     
     await page.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
 
     await page.evaluate(() => localStorage.setItem('debug', '*'));
@@ -225,7 +225,7 @@ test.describe('Iframe API', () => {
     const newBrowser = await browser.browserType().launch();
     const pageBob = await newBrowser.newPage();
     await pageBob.goto(
-      `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
     await pageBob.evaluate(() => localStorage.setItem('debug', '*'));
     await login(pageBob, "Bob", 5);
@@ -258,7 +258,7 @@ test.describe('Iframe API', () => {
   
 
     await page.goto(
-        `/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
+        publicTestMapUrl("tests/E2E/empty.json", "iframe_script")
     );
 
     await page.evaluate(() => localStorage.setItem('debug', '*'));
