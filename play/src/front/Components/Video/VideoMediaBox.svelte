@@ -234,8 +234,8 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     class="video-container"
+    class:tw-h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
     class:video-off={!videoEnabled}
-    class:tw-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
     bind:this={videoContainer}
     on:click={() => analyticsClient.pinMeetingAction()}
     on:click={() => hightlight()}
@@ -245,12 +245,13 @@
     <div
         style={videoEnabled
             ? ""
-            : `border: solid 2px ${backGroundColor}; color: ${textColor}; background-color: ${backGroundColor}; color: ${textColor}`}
+            : `border: solid 2px ${backGroundColor}; color: ${textColor}; background-color: ${backGroundColor}; color: ${textColor};`}
         class="tw-flex tw-w-full"
         class:tw-flex-col={videoEnabled}
         class:tw-h-full={videoEnabled}
         class:tw-items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
-        class:tw-px-7={!videoEnabled}
+        class:tw-pl-7={!videoEnabled}
+        class:tw-pr-2={!videoEnabled}
         class:tw-rounded={!videoEnabled}
         class:tw-flex-row={!videoEnabled}
         class:tw-relative={!videoEnabled}
@@ -260,8 +261,6 @@
             <div class="connecting-spinner" />
         {:else if $statusStore === "error"}
             <div class="rtc-error" />
-        {:else if !videoEnabled}
-            <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
         {/if}
         <!-- svelte-ignore a11y-media-has-caption -->
         <video
@@ -320,14 +319,41 @@
                     <img draggable="false" src={microphoneOffImg} class="tw-flex tw-p-1 tw-h-8 tw-w-8" alt="Mute" />
                 </div>
             {/if}
-        {:else}
-            <span
-                style={$embedScreenLayoutStore === LayoutMode.VideoChat
-                    ? `background-color: ${backGroundColor}; color: ${textColor}`
-                    : ""}
-                class="tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10"
-                >{name}</span
+        {:else if $embedScreenLayoutStore === LayoutMode.VideoChat}
+            <div
+                class="tw-flex tw-flex-col tw-justify-center tw-items-center tw-content-center tw-h-full tw-w-full tw-gap-2"
             >
+                <Woka userId={peer.userId} placeholderSrc={""} customHeight="100px" customWidth="100px" />
+                <span
+                    style={`background-color: ${backGroundColor}; color: ${textColor}`}
+                    class="tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10"
+                >
+                    {name}
+                </span>
+            </div>
+            {#if $constraintStore && $constraintStore.audio !== false}
+                <SoundMeterWidget
+                    volume={$volumeStore}
+                    classcss="voice-meter-cam-off tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform tw-absolute tw-top-2 tw-right-4"
+                    barColor={textColor}
+                />
+            {:else}
+                <img
+                    draggable="false"
+                    src={microphoneOffImg}
+                    class="tw-flex tw-p-1 tw-h-8 tw-w-8 voice-meter-cam-off tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform tw-absolute tw-top-2 tw-right-2"
+                    alt="Mute"
+                    class:tw-brightness-0={textColor === "black"}
+                    class:tw-brightness-100={textColor === "white"}
+                />
+            {/if}
+        {:else}
+            <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
+            <span
+                class="tw-font-semibold tw-text-sm tw-not-italic tw-break-words tw-px-2 tw-overflow-y-auto tw-max-h-10"
+            >
+                {name}
+            </span>
             {#if $constraintStore && $constraintStore.audio !== false}
                 <SoundMeterWidget
                     volume={$volumeStore}
