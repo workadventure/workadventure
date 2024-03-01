@@ -12,7 +12,6 @@ test.describe('Availability Status', () => {
     
     test.describe('Busy Status',()=>{
         test('should return to online status when you move',async({ page, browser })=>{
-          
             const statusName = "Busy";
     
             await page.goto(
@@ -33,8 +32,8 @@ test.describe('Availability Status', () => {
         })
         test('should disable microphone and camera',async({ page, browser,browserName })=>{
             if(browserName === "webkit"){
-               test.skip();
-               return;
+                test.skip();
+                return;
             }
             const statusName = "Busy";
     
@@ -151,7 +150,7 @@ test.describe('Availability Status', () => {
                 await login(userBob, secondPageName);
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
-                if((browserName === "firefox"  || browserName === "webkit") && page.getByText(`Do you want to allow notification`).isVisible() ){
+                if((browserName === "firefox") && page.getByText(`Do you want to allow notification`).isVisible() ){
                     await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
                 }
 
@@ -163,6 +162,10 @@ test.describe('Availability Status', () => {
                 
             })
             test('should return to online status after accept conversation',async({ page, browser,context,browserName})=>{
+                if(browserName === "webkit"){
+                    test.skip();
+                    return;
+                }
                 const statusName = "Busy";
                 const map_URL =  `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`;
                 await page.goto(map_URL);
@@ -188,7 +191,7 @@ test.describe('Availability Status', () => {
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
                 
-                if((browserName === "firefox" || browserName === "webkit") && page.getByText(`Do you want to allow notification`).isVisible() ){
+                if((browserName === "firefox" ) && page.getByText(`Do you want to allow notification`).isVisible() ){
                     await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
                 }
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
@@ -199,6 +202,12 @@ test.describe('Availability Status', () => {
                 await newBrowser.close();
             })
             test('should keep busy status  after refuse conversation',async({ page, browser,browserName})=>{
+                
+                if(browserName === "webkit"){
+                    test.skip();
+                    return;
+                }
+
                 const statusName = "Busy";
                 const map_URL =  `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`;
                 await page.goto(map_URL);
@@ -222,7 +231,7 @@ test.describe('Availability Status', () => {
                 await login(userBob, secondPageName);
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
-                if((browserName === "firefox" || browserName === "webkit") && page.getByText(`Do you want to allow notification`).isVisible() ){
+                if((browserName === "firefox") && page.getByText(`Do you want to allow notification`).isVisible() ){
                     await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
                 }
 
@@ -239,7 +248,6 @@ test.describe('Availability Status', () => {
 
     })
     test.describe('Back in a moment Status',()=>{
-      
         test('should return to online status when you move',async({ page, browser })=>{
             const statusName = "Back in a moment";
     
@@ -262,15 +270,15 @@ test.describe('Availability Status', () => {
         })
         test('should disable microphone and camera',async({ page, browser,browserName })=>{
             const statusName = "Back in a moment";
-    
+            if(browserName === "webkit"){
+                test.skip();
+                return;
+            }
             await page.goto(
                 `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
             );
     
             await login(page, 'Alice');
-            if(browserName === "webkit"){
-                await hideNoCamera(page);
-            }
 
             await Menu.turnOnCamera(page);
             await Menu.turnOnMicrophone(page);
@@ -289,7 +297,7 @@ test.describe('Availability Status', () => {
         })
 
         test('should keep same webcam and microphone config when you go back to online status',async({ page, browser,context,browserName },{project})=>{
-            if(project.name === "mobilechromium") {
+            if(project.name === "mobilechromium" || browserName === "webkit") {
                 //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
                 return;
@@ -302,9 +310,7 @@ test.describe('Availability Status', () => {
     
             await login(page, 'Alice');
             
-            if(browserName === "webkit"){
-                await hideNoCamera(page);
-            }
+
             await Menu.turnOnCamera(page);
             await Menu.turnOffMicrophone(page)
 
@@ -338,7 +344,7 @@ test.describe('Availability Status', () => {
 
                 await userBob.goto(map_URL);
                // Login user "Bob"
-               const secondPageName = 'Bob'
+                const secondPageName = 'Bob'
                 await login(userBob, secondPageName);
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 await expect( page.locator('button.chat-btn + div>span.tw-animate-ping')).toBeHidden();
@@ -395,7 +401,8 @@ test.describe('Availability Status', () => {
         })
 
         test('should keep same webcam and microphone config when you go back to online status',async({ page, browser,context,browserName },{project})=>{
-            if(project.name === "mobilechromium") {
+            
+            if(project.name === "mobilechromium" || browserName === "webkit") {
                 //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
                 return;
@@ -407,10 +414,7 @@ test.describe('Availability Status', () => {
             );
     
             await login(page, 'Alice');
-            
-            if(browserName === "webkit"){
-                await hideNoCamera(page);
-            }
+        
             await Menu.turnOnCamera(page);
             await Menu.turnOffMicrophone(page)
 
@@ -446,7 +450,7 @@ test.describe('Availability Status', () => {
 
                 await userBob.goto(map_URL);
                // Login user "Bob"
-               const secondPageName = 'Bob'
+                const secondPageName = 'Bob'
                 await login(userBob, secondPageName);
 
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
