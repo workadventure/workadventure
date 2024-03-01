@@ -23,7 +23,7 @@ export class DeleteCustomEntityFrontCommand extends DeleteCustomEntityCommand im
         const { id } = this.deleteCustomEntityMessage;
         this.entitiesCollectionManager.deleteCustomEntity(id);
         const gameMapEntitiesIdToRemove =
-            this.gameMap?.getGameMapEntities()?.getCustomEntitiesKeysByCustomEntityId(id) ?? [];
+            this.gameMap?.getGameMapEntities()?.findEntitiesByPrefabId(id) ?? [];
         this.entitiesManager.deleteEntities(gameMapEntitiesIdToRemove);
         return super.execute();
     }
