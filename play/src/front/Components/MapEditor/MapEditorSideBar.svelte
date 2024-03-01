@@ -36,7 +36,7 @@
         tooltiptext: $LL.mapEditor.sideBar.trashEditor(),
     };
 
-    if ($mapEditorActivatedForThematics) {
+    if ($mapEditorActivatedForThematics && !$mapEditorActivated) {
         availableTools.push(entityEditorTool);
         availableTools.push(trashEditorTool);
     }
