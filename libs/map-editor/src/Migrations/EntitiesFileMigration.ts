@@ -26,17 +26,20 @@ class EntitiesFileMigration {
         for (const [version, migrationFunction] of Object.entries(this.migrations)) {
             const fileVersion = entitiesFileContent.version ?? "0.0";
             if (fileVersion === version) {
-                entitiesFileContent = migrationFunction(entitiesFileContent);
+                try {
+                    entitiesFileContent = migrationFunction(entitiesFileContent);
+                } catch (error) {
+                    // Remove this when tsconfig target is ES2022 (only supported on ES2022)
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    //@ts-ignore
+                    throw new Error(`Unable to parse entity file content in EntityCollectionRaw format`, {
+                        cause: error,
+                    });
+                }
             }
         }
-        try {
-            return EntityCollectionRaw.parse(entitiesFileContent);
-        } catch (error) {
-            // Remove this when tsconfig target is ES2022 (only supported on ES2022)
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            //@ts-ignore
-            throw new Error(`Unable to parse entity file content in EntityCollectionRaw format`, { cause: error });
-        }
+
+        return EntityCollectionRaw.parse(entitiesFileContent);
     }
 
     private migrate_v0_to_v1(fileContent: any): any {
