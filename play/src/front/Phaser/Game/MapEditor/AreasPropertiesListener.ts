@@ -61,8 +61,6 @@ export class AreasPropertiesListener {
                 continue;
             }
 
-            //this.setAreaWithAccessRightsOnUserPosition(area);
-
             // Add new notification to show at the user that he entered a new area
             if (area.name && area.name !== "") {
                 notificationPlayingStore.playNotification(area.name);
@@ -71,43 +69,6 @@ export class AreasPropertiesListener {
                 this.addPropertyFilter(property, area);
             }
         }
-    }
-
-    private setAreaWithAccessRightsOnUserPosition(area: AreaData) {
-        // Get area right properties
-        const areaRight = area.properties.find((property) => property.type === "areaRightPropertyData") as
-            | AreaRightPropertyData
-            | undefined;
-
-        const isAreaHasRightPropertyData =
-            areaRight !== undefined && (areaRight.readTags.length > 0 || areaRight.writeTags.length > 0);
-        const isAdmin = get(userIsAdminStore);
-        const userTags = gameManager.getCurrentGameScene().connection?.getTags() ?? [];
-        if (isAdmin) {
-            mapEditorAreaOnUserPositionStore.set({ id: area.id, accessRights: "full" });
-        } else if (isAreaHasRightPropertyData) {
-            const writeAccess = areaRight?.writeTags?.find((tag) => userTags.includes(tag));
-            const readAccess = areaRight?.readTags?.find((tag) => userTags.includes(tag));
-            if (writeAccess) {
-                this.allowEntityEditorToolOnArea();
-                if (readAccess) {
-                    mapEditorAreaOnUserPositionStore.set({ id: area.id, accessRights: "full" });
-                } else {
-                    mapEditorAreaOnUserPositionStore.set({ id: area.id, accessRights: "write" });
-                }
-            } else if (readAccess) {
-                mapEditorAreaOnUserPositionStore.set({ id: area.id, accessRights: "read" });
-            }
-        }
-    }
-
-    private allowEntityEditorToolOnArea() {
-        mapEditorActivatedForThematics.set(true);
-    }
-    private disableAndCloseMapEntityEditorTool() {
-        mapEditorActivatedForThematics.set(false);
-        this.scene.getMapEditorModeManager().equipTool(undefined);
-        mapEditorModeStore.switchMode(false);
     }
 
     public onUpdateAreasHandler(
