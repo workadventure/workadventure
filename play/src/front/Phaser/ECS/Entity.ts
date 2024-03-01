@@ -7,6 +7,7 @@ import {
     EntityPrefab,
     GameMapProperties,
     WAMEntityData,
+    EntityPermissions,
 } from "@workadventure/map-editor";
 import * as _ from "lodash";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
@@ -19,7 +20,6 @@ import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
 import { GameScene } from "../Game/GameScene";
 import { OutlineableInterface } from "../Game/OutlineableInterface";
-import { EntityPermissions } from "../Permissions/EntityPermissions";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
@@ -52,7 +52,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
         this.oldPosition = this.getPosition();
 
-        this.entityPermissions = new EntityPermissions(scene);
+        this.entityPermissions = scene.getEntityPermissions();
 
         this.entityData = {
             ...data,
@@ -390,8 +390,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public get userHasAccess(): boolean {
-        return this.entityPermissions.isAllowedToPlaceEntityOnMap(this.getCenter());
-
-        //return this.userHasAccessInCurrentArea;
+        return this.entityPermissions.canEdit(this.getCenter());
     }
 }
