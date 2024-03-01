@@ -1,4 +1,4 @@
-import type { AreaChangeCallback, AreaData, AtLeast, GameMap } from "@workadventure/map-editor";
+import type { AreaChangeCallback, AreaData, AtLeast, EntityPermissions, GameMap } from "@workadventure/map-editor";
 import { AreaCoordinates, AreaDataProperties, AreaUpdateCallback, GameMapProperties } from "@workadventure/map-editor";
 import { MathUtils } from "@workadventure/math-utils";
 import type {
@@ -14,7 +14,6 @@ import { Subject } from "rxjs";
 import { Deferred } from "ts-deferred";
 import { PathTileType } from "../../../Utils/PathfindingManager";
 import { Entity } from "../../ECS/Entity";
-import { EntityPermissions } from "../../Permissions/EntityPermissions";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 import { ITiledPlace } from "../GameMapPropertiesListener";
 import type { GameScene } from "../GameScene";
@@ -98,8 +97,6 @@ export class GameMapFrontWrapper {
     private enterDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
     private leaveDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
 
-    private entityPermissions: EntityPermissions;
-
     /**
      * Firing on map change, containing newest collision grid array
      */
@@ -128,11 +125,9 @@ export class GameMapFrontWrapper {
 
         this.entitiesManager = new EntitiesManager(this.scene, this);
 
-        this.gameMap.initialize();
-
         this.updateCollisionGrid(undefined, false);
 
-        this.entityPermissions = new EntityPermissions(scene);
+        this.gameMap.getGameMapAreas();
 
         let depth = -2;
         for (const layer of this.gameMap.flatLayers) {
@@ -546,7 +541,7 @@ export class GameMapFrontWrapper {
             y: Math.ceil(topLeftPos.y + height / 2),
         };
 
-        return canEntityBePlaced && this.entityPermissions.isAllowedToPlaceEntityOnMap(entityCenterCoordinates);
+        return canEntityBePlaced && this.scene.getEntityPermissions().canEdit(entityCenterCoordinates);
     }
 
     private canEntityBePlaced(
