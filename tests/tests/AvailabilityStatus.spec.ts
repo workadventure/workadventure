@@ -2,15 +2,17 @@
 import {expect, test} from '@playwright/test';
 import {RENDERER_MODE} from "./utils/environment";
 import { evaluateScript } from './utils/scripting';
-import { login } from './utils/roles';
+import { hideNoCamera, login } from './utils/roles';
 import Menu  from './utils/menu';
 import Map  from './utils/map';
 
 test.describe('Availability Status', () => {
 
     
+    
     test.describe('Busy Status',()=>{
         test('should return to online status when you move',async({ page, browser })=>{
+          
             const statusName = "Busy";
     
             await page.goto(
@@ -29,7 +31,7 @@ test.describe('Availability Status', () => {
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
         })
-        test('should disable microphone and camera',async({ page, browser })=>{
+        test('should disable microphone and camera',async({ page, browser,browserName })=>{
             const statusName = "Busy";
     
             await page.goto(
@@ -38,7 +40,11 @@ test.describe('Availability Status', () => {
     
             await login(page, 'Alice');
             
-
+              // Because webkit in playwright does not support Camera/Microphone Permission by settings
+            if(browserName === "webkit"){
+                await hideNoCamera(page);
+            }
+            
             await Menu.turnOnCamera(page);
             await Menu.turnOnMicrophone(page);
 
@@ -53,7 +59,7 @@ test.describe('Availability Status', () => {
 
         })
 
-        test('should keep same webcam and microphone config when you go back to online status',async({ page, browser,context },{project})=>{
+        test('should keep same webcam and microphone config when you go back to online status',async({ page, browser,context,browserName },{project})=>{
             if(project.name === "mobilechromium") {
                 //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
@@ -66,7 +72,9 @@ test.describe('Availability Status', () => {
             );
     
             await login(page, 'Alice');
-
+            if(browserName === "webkit"){
+                await hideNoCamera(page);
+            }
             await Menu.turnOnCamera(page);
             await Menu.turnOffMicrophone(page)
 
@@ -135,7 +143,7 @@ test.describe('Availability Status', () => {
             
                 await userBob.goto(map_URL);
                // Login user "Bob"
-               const secondPageName = 'Bob'
+                const secondPageName = 'Bob'
                 await login(userBob, secondPageName);
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
@@ -248,7 +256,7 @@ test.describe('Availability Status', () => {
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
         })
-        test('should disable microphone and camera',async({ page, browser })=>{
+        test('should disable microphone and camera',async({ page, browser,browserName })=>{
             const statusName = "Back in a moment";
     
             await page.goto(
@@ -256,7 +264,9 @@ test.describe('Availability Status', () => {
             );
     
             await login(page, 'Alice');
-            
+            if(browserName === "webkit"){
+                await hideNoCamera(page);
+            }
 
             await Menu.turnOnCamera(page);
             await Menu.turnOnMicrophone(page);
@@ -274,7 +284,7 @@ test.describe('Availability Status', () => {
 
         })
 
-        test('should keep same webcam and microphone config when you go back to online status',async({ page, browser,context },{project})=>{
+        test('should keep same webcam and microphone config when you go back to online status',async({ page, browser,context,browserName },{project})=>{
             if(project.name === "mobilechromium") {
                 //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
@@ -288,7 +298,9 @@ test.describe('Availability Status', () => {
     
             await login(page, 'Alice');
             
-
+            if(browserName === "webkit"){
+                await hideNoCamera(page);
+            }
             await Menu.turnOnCamera(page);
             await Menu.turnOffMicrophone(page)
 
@@ -350,7 +362,7 @@ test.describe('Availability Status', () => {
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
         })
-        test('should disable microphone and camera',async({ page, browser })=>{
+        test('should disable microphone and camera',async({ page, browser,browserName })=>{
             const statusName = "Do not disturb";
     
             await page.goto(
@@ -358,7 +370,9 @@ test.describe('Availability Status', () => {
             );
     
             await login(page, 'Alice');
-            
+            if(browserName === "webkit"){
+                await hideNoCamera(page);
+            }
 
             await Menu.turnOnCamera(page);
             await Menu.turnOnMicrophone(page);
@@ -376,7 +390,7 @@ test.describe('Availability Status', () => {
 
         })
 
-        test('should keep same webcam and microphone config when you go back to online status',async({ page, browser,context },{project})=>{
+        test('should keep same webcam and microphone config when you go back to online status',async({ page, browser,context,browserName },{project})=>{
             if(project.name === "mobilechromium") {
                 //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
@@ -390,7 +404,9 @@ test.describe('Availability Status', () => {
     
             await login(page, 'Alice');
             
-
+            if(browserName === "webkit"){
+                await hideNoCamera(page);
+            }
             await Menu.turnOnCamera(page);
             await Menu.turnOffMicrophone(page)
 

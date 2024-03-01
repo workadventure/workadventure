@@ -72,6 +72,7 @@ const config: PlaywrightTestConfig = {
             "media.navigator.streams.fake": true,
             "permissions.default.microphone": 1,
             "permissions.default.camera": 1,
+
           },
         },
         ignoreHTTPSErrors: true,
