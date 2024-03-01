@@ -32,9 +32,12 @@ class EntitiesFileMigration {
                     // Remove this when tsconfig target is ES2022 (only supported on ES2022)
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     //@ts-ignore
-                    throw new Error(`Unable to parse entity file content in EntityCollectionRaw format migration version : ${version}`, {
-                        cause: error,
-                    });
+                    throw new Error(
+                        `Unable to parse entity file content in EntityCollectionRaw format migration version : ${version}`,
+                        {
+                            cause: error,
+                        }
+                    );
                 }
             }
         }
