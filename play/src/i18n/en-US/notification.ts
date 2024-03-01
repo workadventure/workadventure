@@ -7,7 +7,7 @@ const notification: BaseTranslation = {
     askToMuteMicrophone: "Ask to mute your Microphone 🙏",
     askToMuteCamera: "Ask to mute your Camera 🙏",
     help: {
-        title: "Notification access needed",
+        title: "Notifications access denied",
         permissionDenied: "Permission denied",
         content: "Do not miss any discussion. Enable notifications to be notified someone wants to talk to you, even you are not on the WorkAdventure tab.",
         firefoxContent:
