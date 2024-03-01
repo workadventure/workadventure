@@ -2,7 +2,7 @@
 import {expect, test} from '@playwright/test';
 import {RENDERER_MODE} from "./utils/environment";
 import { evaluateScript } from './utils/scripting';
-import { hideNoCamera, login } from './utils/roles';
+import { login } from './utils/roles';
 import Menu  from './utils/menu';
 import Map  from './utils/map';
 
@@ -32,6 +32,7 @@ test.describe('Availability Status', () => {
         })
         test('should disable microphone and camera',async({ page, browser,browserName })=>{
             if(browserName === "webkit"){
+                 //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
                 return;
             }
@@ -116,6 +117,7 @@ test.describe('Availability Status', () => {
         test.describe('busy interaction',async()=>{
             test('should open a popup when a bubble is create...',async({ page, browserName,browser,context})=>{
                 if(browserName === "webkit"){
+                     //eslint-disable-next-line playwright/no-skipped-test
                     test.skip();
                     return;
                 }
@@ -163,6 +165,7 @@ test.describe('Availability Status', () => {
             })
             test('should return to online status after accept conversation',async({ page, browser,context,browserName})=>{
                 if(browserName === "webkit"){
+                     //eslint-disable-next-line playwright/no-skipped-test
                     test.skip();
                     return;
                 }
@@ -204,6 +207,7 @@ test.describe('Availability Status', () => {
             test('should keep busy status  after refuse conversation',async({ page, browser,browserName})=>{
                 
                 if(browserName === "webkit"){
+                     //eslint-disable-next-line playwright/no-skipped-test
                     test.skip();
                     return;
                 }
@@ -271,6 +275,7 @@ test.describe('Availability Status', () => {
         test('should disable microphone and camera',async({ page, browser,browserName })=>{
             const statusName = "Back in a moment";
             if(browserName === "webkit"){
+                 //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
                 return;
             }
@@ -373,16 +378,19 @@ test.describe('Availability Status', () => {
 
         })
         test('should disable microphone and camera',async({ page, browser,browserName })=>{
+            if(browserName === "webkit"){
+                 //eslint-disable-next-line playwright/no-skipped-test
+                test.skip();
+                return;
+            }
             const statusName = "Do not disturb";
-    
+
             await page.goto(
                 `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
             );
     
             await login(page, 'Alice');
-            if(browserName === "webkit"){
-                await hideNoCamera(page);
-            }
+
 
             await Menu.turnOnCamera(page);
             await Menu.turnOnMicrophone(page);
