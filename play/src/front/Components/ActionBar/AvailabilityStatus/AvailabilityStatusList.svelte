@@ -2,6 +2,7 @@
     import { fly } from "svelte/transition";
     import { AvailabilityStatus } from "@workadventure/messages";
     import { resetAllStatusStoreExcept } from "../../../Rules/StatusRules/statusChangerFunctions";
+    import { availabilityStatusMenuStore } from "../../../Stores/AvailabilityStatusMenuStore";
     import { AvailabilityStatusListPropsInterface } from "./Interfaces/AvailabilityStatusPropsInterface";
     import AvailabilityStatusCircle from "./AvailabilityStatusCircle.svelte";
 
@@ -12,15 +13,22 @@
     const handleKeyPress = (e: KeyboardEvent, newStatus: AvailabilityStatus) => {
         if (e.key === "Enter") {
             resetAllStatusStoreExcept(newStatus);
+            availabilityStatusMenuStore.closeAvailabilityStatusMenu();
         }
     };
     const handleClick = (newStatus: AvailabilityStatus) => {
         resetAllStatusStoreExcept(newStatus);
+        availabilityStatusMenuStore.closeAvailabilityStatusMenu();
+    };
+    const handleOutsideClick = () => {
+        if ($availabilityStatusMenuStore) availabilityStatusMenuStore.closeAvailabilityStatusMenu();
     };
 </script>
 
+<svelte:window on:click={handleOutsideClick} on:touchend={handleOutsideClick} />
+
 <div
-    class="tw-absolute tw-mt-2 sm:tw-bottom-16 tw-bottom-24 tw-bg-dark-purple/75 tw-backdrop-blur tw-rounded-lg tw-py-2 tw-w-52  tw-text-white
+    class="tw-absolute tw-mt-2 sm:tw-bottom-16 tw-bottom-2' tw-bg-dark-purple/75 tw-backdrop-blur tw-rounded-lg tw-py-2 tw-w-52  tw-text-white
             before:tw-content-[''] before:tw-absolute before:tw-w-0 before:tw-h-0 before:tw--bottom-[14px] before:tw-left-8
             before:tw-border-solid before:tw-border-8 before:tw-border-transparent
             before:tw-border-b-contrast/80 tw-transition-all before:tw-rotate-180"
@@ -50,14 +58,14 @@
             on:keyup={(e) => {
                 handleKeyPress(e, statusInformation.AvailabilityStatus);
             }}
-            on:click={() => handleClick(statusInformation.AvailabilityStatus)}
+            on:click|stopPropagation={() => handleClick(statusInformation.AvailabilityStatus)}
         >
             <div class="tw-flex tw-justify-start tw-my-1 tw-py-1.5">
                 <AvailabilityStatusCircle position="relative" colorHex={statusInformation.colorHex} />
                 <div class="tw-px-4 {currentStatus !== statusInformation.AvailabilityStatus ? '' : 'tw-opacity-50'}">
                     {statusInformation.label}
                 </div>
-                {#if AvailabilityStatus[currentStatus] === statusInformation.label}
+                {#if currentStatus === statusInformation.AvailabilityStatus}
                     <div>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                             <path

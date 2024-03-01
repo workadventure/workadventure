@@ -410,9 +410,13 @@
 
         roomListVisibilityStore.set(true);
     }
+
+    const onClickOutside = () => {
+        if ($emoteMenuSubStore) emoteMenuSubStore.closeEmoteMenu();
+    };
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window on:keydown={onKeyDown} on:click={onClickOutside} on:touchend={onClickOutside} />
 
 <div
     class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
@@ -791,7 +795,7 @@
                     {/if}
                 </div>
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div on:click={toggleEmojiPicker} class="bottom-action-button">
+                <div on:click|stopPropagation={toggleEmojiPicker} class="bottom-action-button">
                     <Tooltip text={$LL.actionbar.emoji()} />
 
                     <button class:border-top-light={$emoteMenuSubStore}>
