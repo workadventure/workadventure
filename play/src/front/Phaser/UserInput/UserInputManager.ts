@@ -52,6 +52,9 @@ export class ActiveEventList {
 
 //this class is responsible for catching user inputs and listing all active user actions at every game tick events.
 export class UserInputManager {
+    static addSpaceEventListener(click: () => void) {
+        throw new Error('Method not implemented.');
+    }
     private keysCode!: UserInputManagerDatum[];
     private scene: Phaser.Scene;
     private isInputDisabled: boolean;

@@ -6,9 +6,9 @@
 
     export let hasImage = true;
     export let hasDesc = true;
-    export let image = "./static/images/tooltip-exemple.gif";
-    export let title = "Find people and navigate to them";
-    export let desc = "Lorebbb eque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit..";
+    export let image = "";
+    export let title = "";
+    export let desc = "";
     export let delayBeforeAppear = 500;
 </script>
 
@@ -17,16 +17,16 @@
     <img loading="eager" src="{tooltipArrow}" class="content-[''] absolute -top-1 left-9 m-auto w-2 h-1" />
 
     <div class="relative z-10 pb-4 rounded-lg overflow-hidden">
-      {#if hasImage}
-          <img src="{image}" class="w-full -mt-[2px]" loading="lazy" />
-      {/if}
-      <div class="font-lg bold px-4 pt-3 text-center {hasImage && hasDesc ? 'pb-1' : '' }">
-          {title}
-      </div>
+        {#if hasImage}
+            <img src="{image}" class="w-full -mt-[2px]" loading="lazy" />
+        {/if}
+        <div class="font-lg bold px-4 pt-3 text-center {hasImage && hasDesc ? 'pb-1' : '' }">
+            {title}
+        </div>
         {#if hasDesc}
-          <div class="text-xxs opacity-50 px-4">
-              {desc}
-          </div>
+            <div class="text-xxs opacity-50 px-4">
+                {desc}
+            </div>
         {/if}
     </div>
 </div>

@@ -7,13 +7,15 @@
     import MozaicLayout from "./Layouts/MozaicLayout.svelte";
     import "../../style/wa-theme/video-ui.scss";
 
+
     export let y = 20
 
-    let expanding = null
-    let start = null, initial = null
+    let expanding: `top` | "bottom" | undefined | null;
+    let start: number | null, initial: { y: number, height: number } | null;
     let height = get(heightCamWrapper);
 
-    function startExpand(type, event) {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    function startExpand(type: any, event: any): void { // eslint-disable-line @typescript-eslint/no-unused-vars
         expanding = type
         start = event.pageY
         initial = { y, height }
@@ -24,21 +26,24 @@
         start = null
         initial = null
     }
-
-    function expand(event) {
+    
+/* eslint-disable @typescript-eslint/no-explicit-any */
+    function expand(event: any) { // eslint-disable-line @typescript-eslint/no-unused-vars
         if (!expanding) return
         if (expanding == 'top') {
-            const delta = start - event.pageY
+            const delta = start !== null ? start - event.pageY : 0;
             console.log(event.pageY);
-            y = initial.y - delta
-            $heightCamWrapper = initial.height + delta
+            if (initial) {
+                y = initial.y - delta;
+            }
+            $heightCamWrapper = initial ? initial.height + delta : $heightCamWrapper;
             return
         }
 
         if (expanding == 'bottom') {
-            const delta = event.pageY - start
+            const delta = start !== null ? event.pageY - start : 0;
             console.log(event.pageY);
-            $heightCamWrapper = initial.height + delta
+            $heightCamWrapper = initial ? initial.height + delta : $heightCamWrapper;
             return
         }
     }

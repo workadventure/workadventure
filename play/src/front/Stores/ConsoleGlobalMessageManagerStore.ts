@@ -1,16 +1,20 @@
 import { writable } from "svelte/store";
-import { PopUpMessage } from "../Components/PopUp/PopUpMessage.svelte";
+import PopUpMessage from "../Components/PopUp/PopUpMessage.svelte";
 import { popupStore } from "./PopupStore";
 
+let message: string;
 
 export const consoleGlobalMessageManagerVisibleStore = writable(false);
-consoleGlobalMessageManagerVisibleStore.subscribe((globalMessage) => {
-  if (globalMessage === true) {
-    popupStore.addPopup(PopUpMessage);
-  } else {
-    popupStore.removePopup(PopUpMessage);
-  }
 
+export const consoleGlobalMessageManagerVisibleStorePopup = consoleGlobalMessageManagerVisibleStore.subscribe((globalMessage) => {
+  if (globalMessage === true) {
+    popupStore.addPopup(PopUpMessage, {
+      message: message
+    },
+    "message");
+  } else {
+    popupStore.removePopup("message");
+  }
 });
 
 export const consoleGlobalMessageManagerFocusStore = writable(false);

@@ -5,29 +5,35 @@
   // import LayoutActionManager from "../LayoutActionManager/LayoutActionManager.svelte";
   import { UserInputManager } from "../../Phaser/UserInput/UserInputManager";
 
-
+  export let popupJitsi;
+  export let priority: number;
   export let message: string;
   export let click: () => void;
   export let userInputManager: UserInputManager;
 
+
   onMount(() => {
-    userInputManager.addSpaceEventListener(click);
+      userInputManager.addSpaceEventListener(click);
   })
 
   onDestroy(() => {
-    userInputManager.removeSpaceEventListener(click);
+      userInputManager.removeSpaceEventListener(click);
   })
+
+  export function definePriority() {
+    popupJitsi = document.getElementById("popupjitsi")
+  }
 
 </script>
 
-<div class="fixed bottom-2 left-0 right-0 m-auto bg-contrast/80 backdrop-blur text-white w-[500px] h-[200px] rounded-lg overflow-hidden z-[210] animation">
+<div class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[300px] rounded-lg overflow-hidden animation" id="popupjitsi">
   <div class="flex p-4 space-x-4 pointer-events-auto">
       <div class="grow">
       </div>
-      <div class="mt-6">
+      <div class="p-4 mt-16 -mb-6 text-center leading-6">
+        { message }
       </div>
   </div>
-
   <div class="flex flex-col items-center p-4 space-x-4 mt-16 bg-contrast pointer-events-auto">
     <button class="btn btn-secondary w-1/2 justify-center" on:click={click}>Open Popup Jitsi</button>
   </div>

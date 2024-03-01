@@ -78,12 +78,12 @@
     // import Tooltip from "../Util/Tooltip.svelte";
     import {//bannerStore,
              userHasAccessToBackOfficeStore} from "../../Stores/GameStore";
-    import Tooltip from "../Util/Tooltip.svelte";
+    // import Tooltip from "../Util/Tooltip.svelte";
     import {
         modalIframeStore,
         modalVisibilityStore,
         showModalGlobalComminucationVisibilityStore,
-        roomListVisibilityStore,
+        // roomListVisibilityStore,
     } from "../../Stores/ModalStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
@@ -132,20 +132,20 @@
     import ChevronUpIcon from "../Icons/ChevronUpIcon.svelte";
     import {StringUtils} from "../../Utils/StringUtils";
     import CheckIcon from "../Icons/CheckIcon.svelte";
-    // import PlusIcon from "../Icons/PlusIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
-    import speakerAudio from "../../../../../maps/tests/webrtc-out.mp3"
-    // import { popupStore } from "../../Stores/PopupStore";
-    // import { popUpFollowVisibility } from "../../Stores/PopUpBanner";
-    // import PopUpFollow from "../PopUp/PopUpFollow.svelte";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
-    // import { openComponent } from "../../Stores/TutorialBanner";
+    import { consoleGlobalMessageManagerVisibleStore } from '../../Stores/ConsoleGlobalMessageManagerStore';
+    // import { popupStore } from "../../Stores/PopupStore";
+    // import PopUpMessage from '../PopUp/PopUpMessage.svelte';
+
+
+
 
     gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
-    const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
+    gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
 
     // let selectedMicrophone: string | undefined = undefined;
@@ -154,6 +154,7 @@
     let adminMenuIsDropped = false;
     let burgerOpen = false;
     let helpActive = false, navigating = false;
+    const sound = new Audio("/resources/objects/webrtc-out-button.mp3");
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -240,7 +241,8 @@
         }
     }
 
-    function toggleGlobalMessage() {
+
+    function toggleGlobalMessage() { // eslint-disable-line @typescript-eslint/no-unused-vars
         if ($requestedMegaphoneStore || $liveStreamingEnabledStore || $streamingMegaphoneStore) {
             analyticsClient.stopMegaphone();
             requestedMegaphoneStore.set(false);
@@ -443,6 +445,7 @@
         const unsubscriber = () => subscription.unsubscribe();
         subscribers.push(unsubscriber);
         //resizeObserver.observe(mainHtmlDiv);
+        sound.load();
     });
 
     onDestroy(() => {
@@ -466,47 +469,24 @@
         }
     });
 
-    let sound = new Audio(speakerAudio)
     function playSoundClick() {
-      sound.load();
       sound.play().catch(e => console.error(e));
     }
 
 
-// on:mouseenter={() => { !navigating ? helpActive = "chat" : '' }}
-// on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+    // function showRoomList() {
+    //     resetChatVisibility();
+    //     resetModalVisibility();
+    //     roomListVisibilityStore.set(true);
+    // }
 
-// on:mouseenter={() => { !navigating ? helpActive = "users" : '' }}
-// on:mouseleave={() => { !navigating ? helpActive = false : '' }}
-
-// on:mouseenter={() => { !navigating ? helpActive = "follow" : '' }}
-// on:mouseleave={() => { !navigating ? helpActive = false : '' }}
-
-// on:mouseenter={() => { !navigating ? helpActive = "lock" : '' }}
-// on:mouseleave={() => { !navigating ? helpActive = false : '' }}
-
-// on:mouseleave={() => { !navigating ? helpActive = false : '' }}
-// on:mouseenter={() => { !navigating ? helpActive = "emoji" : '' }}
-
-// on:mouseenter={() => { !navigating ? helpActive = "mic" : '' }}
-// on:mouseleave={() => { !navigating ? helpActive = false : '' }}
-
-// on:mouseenter={() => { !navigating ? helpActive = "cam" : '' }}
-// on:mouseleave={() => { !navigating ? helpActive = false : '' }}
-
-    function showRoomList() {
-        resetChatVisibility();
-        resetModalVisibility();
-
-        roomListVisibilityStore.set(true);
-    }
 </script>
 <svelte:window on:keydown={onKeyDown} />
 {#if !$chatVisibilityStore}
     <ChatOverlay />
 {/if}
 <div class="@container/actions grid grid-cols-3 justify-items-stretch absolute w-full p-2 xl:p-4 pointer-events-none bp-menu z-[301] @container top-0">
-    <div class="@lg/actions:bg-white justify-self-start pointer-events-auto" transition:fly={{delay: 500, y: -200, duration: 750 }}>
+    <div class="@lg/actions: justify-self-start pointer-events-auto" transition:fly={{delay: 500, y: -200, duration: 750 }}>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
                 class="flex relative transition-all duration-150 z-[2]"
@@ -524,7 +504,7 @@
                     <MessageCircleIcon />
                 </div>
 
-                {#if helpActive === "chat"}
+                {#if helpActive === !!"chat"} <!-- helpActive === "chat" -->
                     <HelpTooltip title="Send text message with chat"/>
                 {/if}
                 {#if $chatZoneLiveStore || $peerStore.size > 0}
@@ -548,7 +528,7 @@
                 >
                     <UsersIcon />
                 </div>
-                {#if helpActive === "users"}
+                {#if helpActive === !!"users"} <!-- helpActive === "users" -->
                     <HelpTooltip />
                 {/if}
             </div>
@@ -563,7 +543,7 @@
                     <div
                         class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
                         on:click={toggleEmojiPicker}
-                        on:click={helpActive = false}
+                        on:click={() => helpActive = false}
                         on:mouseenter={playSoundClick}
                     >
                         <div
@@ -571,7 +551,7 @@
                         >
                             <EmojiIcon color="{$emoteMenuSubStore ? 'stroke-white fill-white' : 'stroke-white fill-transparent'}" hover="group-hover/btn-emoji:fill-white" />
                         </div>
-                        {#if helpActive === "emoji" && !$emoteMenuSubStore}
+                        {#if helpActive === !!"emoji" && !$emoteMenuSubStore}
                             <HelpTooltip title="Display an emoji above your Woka" />
                         {/if}
                         {#if $emoteMenuSubStore}
@@ -579,6 +559,7 @@
                                     class="flex justify-center m-auto absolute left-0 right-0 top-[70px] w-auto z-[500]"
                                     transition:fly={{y: 20, duration: 150 }}
                             >
+                                <!-- svelte-ignore a11y-missing-attribute -->
                                 <img loading="eager" src="{tooltipArrow}" class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1" />
                                 <div class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg px-3 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 sm:flex-row">
                                     <div class="flex animate flex-row flex items-center">
@@ -682,7 +663,7 @@
                             >
                                 <FollowIcon />
                             </div>
-                            {#if helpActive === "follow" || !emoteMenuSubStore}
+                            {#if helpActive === !!"follow" || !emoteMenuSubStore}
                                 <HelpTooltip title="Ask to someone to follow you" />
                             {/if}
                         </div>
@@ -700,7 +681,7 @@
                                     <LockOpenIcon />
                                 {/if}
                             </div>
-                            {#if helpActive === "lock" || !emoteMenuSubStore}
+                            {#if helpActive === !!"lock" || !emoteMenuSubStore} <!-- helpActive === "lock" -->
                                 <HelpTooltip title="Lock and start a private discussion" />
                             {/if}
                         </div>
@@ -731,7 +712,7 @@
                                         <MicOffIcon />
                                     {/if}
                                 </div>
-                                {#if helpActive === "mic" || !emoteMenuSubStore}
+                                {#if helpActive === !!"mic" || !emoteMenuSubStore} <!-- helpActive === "mic" -->
                                     <HelpTooltip title="Set mic ON/OFF" />
                                 {/if}
                             </div>
@@ -889,7 +870,7 @@
                                     <CamOffIcon />
                                 {/if}
                             </div>
-                            {#if helpActive === "cam" || !emoteMenuSubStore}
+                            {#if helpActive === !!"cam" || !emoteMenuSubStore} <!-- helpActive === "cam" -->
                                 <HelpTooltip title="Set camera ON/OFF" />
                             {/if}
                         </div>
@@ -902,9 +883,10 @@
                     <div class="group/btn-screen-share relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
                          on:click={() =>analyticsClient.screenSharing()}
                          on:click={screenSharingClick}
-                         on:mouseenter={() => { !navigating ? helpActive = "share" : '' }}
+                         on:mouseenter={() => { !navigating ? helpActive = true : '' }}
                          on:mouseleave={() => { !navigating ? helpActive = false : '' }}
-                    >
+                    >  <!-- helpActive === "share" -->
+
                         <div class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-screen-share:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all {$requestedScreenSharingState && !$silentStore ? 'bg-secondary hover:bg-danger' : ''}">
                             {#if $requestedScreenSharingState && !$silentStore}
                                 <ScreenShareOffIcon />
@@ -912,7 +894,7 @@
                                 <ScreenShareIcon />
                             {/if}
                         </div>
-                        {#if helpActive === "share" || !emoteMenuSubStore}
+                        {#if helpActive === !!"share" || !emoteMenuSubStore} <!-- helpActive === "share" -->
                             <HelpTooltip title="Share your screen" />
                         {/if}
                     </div>
@@ -942,13 +924,13 @@
                                     on:click={() => {
                                         buttonActionBarTrigger(button.id);
                                     }}
-                                    on:mouseenter={() => { !navigating ? helpActive = button.id : '' }}
+                                    on:mouseenter={() => { !navigating ? helpActive = !!button.id : '' }}
                                     on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                                     class="h-12 min-w-[48px] p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
                             >
                                 {#if button.toolTip}
-                                    {#if helpActive === button.id}
-                                        <HelpTooltip delayBeforeAppear="0" hasDesc="{false}" hasImage="{false}" title={button.toolTip} />
+                                    {#if helpActive === !!button.id}
+                                        <HelpTooltip delayBeforeAppear={0} hasDesc={false} hasImage={false} title={button.toolTip} />
                                     {/if}
                                 {/if}
                                 <div id={button.id} class="h-6">
@@ -1035,6 +1017,7 @@
                                     <div>Map editor<!-- trad --></div>
                                 </li>
                             {/if}
+
                             {#if $userHasAccessToBackOfficeStore}
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openBo()}>
@@ -1044,15 +1027,22 @@
                                     <div>Back-office<!-- trad --></div>
                                 </li>
                             {/if}
-                            <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
-                                <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
-                                    <MessageGlobalIcon />
-                                </div>
-                                <div>Envoyer message global<!-- trad --></div>
-                            </li>
+
+
+
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+
+                                <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => consoleGlobalMessageManagerVisibleStore.set(true)}>
+                                    <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
+                                        <MessageGlobalIcon />
+                                    </div>
+                                    <div>Envoyer message global<!-- trad --></div>
+                                </li>
+
+
+
                             {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
-                            <!-- svelte-ignore a11y-click-events-have-key-events -->
-                            <li on:click={toggleMegaphone} class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
+                            <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"> <!--on:click={toggleMegaphone}-->
                                 <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
                                     <MegaphoneIcon />
                                 </div>

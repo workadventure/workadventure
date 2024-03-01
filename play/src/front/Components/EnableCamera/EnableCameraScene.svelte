@@ -78,8 +78,8 @@
     }
 
     function submit() {
-        selectCamera();
-        selectMicrophone();
+        selectCamera(selectedCamera);
+        selectMicrophone(selectedMicrophone);
         enableCameraScene.login();
     }
 
@@ -129,11 +129,10 @@
         requestedCameraState.enableWebcam();
         requestedMicrophoneState.enableMicrophone();
         batchGetUserMediaStore.commitChanges();
-
         sound.load();
     });
 
-    function selectCamera(selectedCamera) {
+    function selectCamera(selectedCamera: string | undefined) {
         if (selectedCamera == undefined) {
             localUserStore.setPreferredVideoInputDevice("");
             requestedCameraState.disableWebcam();
@@ -144,7 +143,7 @@
         localUserStore.setPreferredVideoInputDevice(selectedCamera);
     }
 
-    function selectMicrophone(selectedMicrophone) {
+    function selectMicrophone(selectedMicrophone: string | undefined) {
         if (selectedMicrophone == undefined) {
             localUserStore.setPreferredAudioInputDevice("");
             requestedMicrophoneState.disableMicrophone();
@@ -155,8 +154,8 @@
         localUserStore.setPreferredAudioInputDevice(selectedMicrophone);
     }
 
-    function selectSpeaker(deviceId) {
-        localUserStore.setSpeakerDeviceId(deviceId);
+    function selectSpeaker(deviceId: string | undefined) {
+        localUserStore.setSpeakerDeviceId(deviceId ?? "");
         speakerSelectedStore.set(deviceId);
     }
 
@@ -193,7 +192,7 @@
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div class="border border-solid border-white rounded-lg pr-8 pl-6 pb-4 m-2 items-center justify-center space-x-4 transition-all cursor-pointer relative {selectedMicrophone == undefined ? 'bg-white text-secondary pt-12' : 'over:bg-white/10 pt-4'} {(microphoneEdit && selectedMicrophone != undefined) || (!microphoneEdit && selectedMicrophone == undefined) ? 'flex' : 'hidden'}"
                                  on:click={() => {
-                        selectMicrophone(null);
+                        selectMicrophone(undefined);
                         microphoneEdit = false;
                     }}
                             >
@@ -273,7 +272,7 @@
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div class="border border-solid border-white rounded-lg items-center justify-start m-2 space-x-4 transition-all cursor-pointer overflow-hidden {selectedCamera == undefined ? 'bg-white/10' : 'hover:bg-white/10'} {(cameraEdit && selectedCamera != undefined) || (!cameraEdit && selectedCamera == undefined) ? 'flex flex-col' : 'hidden'}"
                                  on:click={() => {
-                        selectCamera(null);
+                        selectCamera(undefined);
                         cameraEdit = false;
                     }}
                             >

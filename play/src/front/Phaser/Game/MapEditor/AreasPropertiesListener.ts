@@ -33,6 +33,8 @@ import { gameManager } from "../GameManager";
 import { iframeListener } from "../../../Api/IframeListener";
 import { chatZoneLiveStore } from "../../../Stores/ChatStore";
 import { Room } from "../../../Connection/Room";
+import { popupStore } from "../../../Stores/PopupStore";
+import JitsiPopup from '../../../Components/PopUp/PopUpJitsi.svelte';
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -400,7 +402,8 @@ export class AreasPropertiesListener {
 
             analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
-            layoutManagerActionStore.removeAction("jitsi");
+            // layoutManagerActionStore.removeAction("jitsi");
+            popupStore.removePopup("jitsi");
         };
 
         const jitsiTriggerValue = property.trigger;
@@ -408,17 +411,25 @@ export class AreasPropertiesListener {
         if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
             let message = property.triggerMessage;
             if (message === undefined) {
-                message = get(LL).trigger.jitsiRoom();
+              message = get(LL).trigger.jitsiRoom();
             }
-            layoutManagerActionStore.addAction({
-                uuid: "jitsi",
-                type: "message",
+            // layoutManagerActionStore.addAction({
+              //     uuid: "jitsi",
+              //     type: "message",
+              //     message: message,
+              //     callback: () => {
+                //         openJitsiRoomFunction().catch((e) => console.error(e));
+                //     },
+                //     userInputManager: this.scene.userInputManager,
+                // });
+              popupStore.addPopup(JitsiPopup, {
                 message: message,
                 callback: () => {
-                    openJitsiRoomFunction().catch((e) => console.error(e));
+                  openJitsiRoomFunction().catch((e) => console.error(e));
                 },
                 userInputManager: this.scene.userInputManager,
-            });
+              },
+              "jitsi");
         } else {
             openJitsiRoomFunction().catch((e) => console.error(e));
         }

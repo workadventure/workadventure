@@ -1,21 +1,22 @@
 <script lang="ts">
-    import { onMount , onDestroy, onMount } from "svelte";
-    import { Color } from "@workadventure/shared-utils";
+    import { onMount , onDestroy } from "svelte";
+    // import { Color } from "@workadventure/shared-utils";
     import { Readable, Unsubscriber } from "svelte/store";
     import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-        import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+    // import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 
-    import { isMediaBreakpointUp , isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { LayoutMode } from "../../WebRtc/LayoutManager";
+    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+    // import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { Streamable, myJitsiCameraStore } from "../../Stores/StreamableCollectionStore";
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
-        import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import UserTag from "./UserTag.svelte";
     import JitsiVideoElement from "./JitsiVideoElement.svelte";
     import JitsiAudioElement from "./JitsiAudioElement.svelte";
     import ActionMediaBox from "./ActionMediaBox.svelte";
+    // import { boolean } from "zod";
 
     export let clickable = true;
     export let isHightlighted = false;
@@ -25,12 +26,12 @@
     const audioTrackStore: Readable<JitsiTrack | undefined> = peer.audioTrackStore;
 
     let embedScreen: EmbedScreen;
-    let videoContainer: HTMLDivElement;
+    // let videoContainer: HTMLDivElement;
     //let minimized: boolean;
     let isMobile: boolean;
 
-    let backGroundColor = Color.getColorByString(peer.jitsiTrackWrapper.spaceUser?.name ?? "");
-    let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
+    // let backGroundColor = Color.getColorByString(peer.jitsiTrackWrapper.spaceUser?.name ?? "");
+    // let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
 
     if (peer) {
         embedScreen = {
@@ -83,8 +84,9 @@
             <JitsiVideoElement
                 jitsiTrack={$videoTrackStore}
                 isLocal={$videoTrackStore?.isLocal()}
-                {isHightlighted}
-                {isMobileFormat}
+                isHightlighted={isHightlighted}
+                isMobile={isMobile}
+                isMobileFormat={isMobileFormat}
             />
         </div>
     {/if}

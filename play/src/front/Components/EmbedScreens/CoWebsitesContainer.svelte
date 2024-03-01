@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { coWebsites } from "../../Stores/CoWebsiteStore";
+    // import { coWebsites } from "../../Stores/CoWebsiteStore";
     import XIcon from "../Icons/XIcon.svelte";
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
@@ -21,8 +21,8 @@
                 <CoWebsiteTab title="Hello world !" link="https://google.fr" active="true" />
             {/each}
             -->
-            <CoWebsiteTab title="Hello world !" link="https://google.fr" active="false" />
-            <CoWebsiteTab title="Hello world !" link="https://google.fr" isLoading="false" active="true"/>
+            <CoWebsiteTab title="Hello world !" url="https://google.fr" active={false} />
+            <CoWebsiteTab title="Hello world !" url="https://google.fr" isLoading={false} active={true}/>
         </div>
         <div class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer">
             <FullScreenIcon />
@@ -32,10 +32,11 @@
         </div>
     </div>
     <div class="h-full ml-3">
+        <!-- svelte-ignore a11y-missing-attribute -->
         <iframe
-                src="https://www.rum-x.com/search/"
-                class="h-full w-full border-none"
-                loading="lazy"
+            src="https://www.rum-x.com/search/"
+            class="h-full w-full border-none"
+            loading="lazy"
         ></iframe>
     </div>
     <div class="absolute left-1 top-0 bottom-0 m-auto w-0.5 h-40 bg-white rounded cursor-col-resize"></div>

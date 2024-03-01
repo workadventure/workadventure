@@ -6,12 +6,13 @@ export const bannerVisible = writable(true);
 export const currentBannerIndex = writable(0);
 
 interface Popup {
-  uuid: string;
-  component: typeof SvelteComponent;
-  props: Props;
+    uuid: string;
+    component: typeof SvelteComponent;
+    props: Props;
 }
 
-type Props = Record<string, any>
+type Props = Record<string, any>;
+
 type SvelteComponentType = typeof SvelteComponent;
 
 
@@ -20,19 +21,20 @@ function createPopupStore() {
 
   return {
       subscribe,
-      addPopup: (popup: SvelteComponentType, props: Props, uuid: string | undefined): void => {
-          update((list: Popup[]) => {
-              if (uuid === undefined) {
-                uuid = v4();
-              }
-              list.push({
-                uuid,
-                component: popup,
-                props,
-              });
-              return list;
-          });
-      },
+    addPopup: (popup: SvelteComponentType, props: Props, uuid: string | undefined): void => {
+            update((list: Popup[]) => {
+                    if (uuid === undefined) {
+                        uuid = v4();
+                    }
+
+                    list.push({
+                        uuid,
+                        component: popup,
+                        props,
+                    });
+                    return list;
+            });
+    },
       removePopup: (uuid: string): void => {
         update((list: Popup[]) => {
           const index = list.findIndex((item) => item.uuid === uuid);

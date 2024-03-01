@@ -1,6 +1,7 @@
 <script lang="ts">
     export let text: string;
     export let height: string = "h-screen";
+    export let className: string = "";
 </script>
 
 <div class="grid place-items-center {height} loader">

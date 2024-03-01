@@ -1,6 +1,7 @@
 <script lang="ts">
     export let height = "h-6";
     export let width = "w-6";
+    export let color = "";
     export let strokeColor = "stroke-white";
     export let fillColor = "fill-transparent";
     export let hover = "group-hover/btn-valid:fill-white";

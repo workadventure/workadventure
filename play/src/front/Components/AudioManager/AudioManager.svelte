@@ -17,7 +17,7 @@
     let audioPlayerVol: HTMLInputElement;
     let unsubscriberFileStore: Unsubscriber | null = null;
     let unsubscriberVolumeStore: Unsubscriber | null = null;
-  
+
 
 
     let state: "loading" | "playing" | "not_allowed" | "error" = "loading";
@@ -137,12 +137,13 @@
 
 
 
-<div class="main-audio-manager absolute bottom-4 w-[500px] left-0 right-0 m-auto rounded-lg p-4">
+<div class="main-audio-manager absolute bottom-4 w-[500px] left-0 right-0 m-auto rounded-lg p-4 mb-7">
     <div class:hidden={state !== "playing"} class="">
         <div class="font-lg text-center text-white mb-7">
             Manage background music<!-- Trad -->
         </div>
         <div class="audio-manager-player-volume flex items-center justify-center">
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div id="audioplayer_volume_icon_playing" bind:this={audioPlayerVolumeIcon} on:click={onMute} class="pr-4 flex items-center">
                 <svg
                     viewBox="0 0 19.54 18.03"
