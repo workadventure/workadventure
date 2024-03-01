@@ -863,7 +863,7 @@ export class IoSocketController {
                             break;
                         }
                         case "editMapCommandMessage": {
-                            socketManager.forwardAdminMessageToBack(socket, message.message);
+                            socketManager.forwardMessageToBack(socket, message.message);
                             break;
                         }
                         case "muteParticipantIdMessage": {
