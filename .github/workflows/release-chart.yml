@@ -30,7 +30,6 @@ jobs:
                 echo "GITHUB_REF is not set. Exiting."
                 exit 1
             fi
-            # Remove the helm-chart branch check when it is merged
             if [ "$GITHUB_REF" != "refs/heads/master" ]; then
                 echo "Setting version to $GITHUB_REF"
                 sed -i "s/version: 0.0.9-dev1/version: $GITHUB_REF/g" Chart.yaml

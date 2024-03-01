@@ -63,6 +63,9 @@ spec:
                 secretKeyRef:
                   name: {{ include "workadventure.fullname" . }}-secret-env-shared
                   key: EJABBERD_JWT_SECRET
+            {{- if .Values.ejabberd.extraEnvVars }}
+            {{- include "common.tplvalues.render" (dict "value" .Values.ejabberd.extraEnvVars "context" $) | nindent 12 }}
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.ejabberd.service.port }}

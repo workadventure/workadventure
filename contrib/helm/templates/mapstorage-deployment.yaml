@@ -72,6 +72,10 @@ spec:
             - secretRef:
                 name: {{ .Values.mapstorage.externalSecretName }}
             {{- end }}
+          {{- if .Values.mapstorage.extraEnvVars }}
+          env:
+            {{- include "common.tplvalues.render" (dict "value" .Values.mapstorage.extraEnvVars "context" $) | nindent 12 }}
+          {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.mapstorage.service.port }}
