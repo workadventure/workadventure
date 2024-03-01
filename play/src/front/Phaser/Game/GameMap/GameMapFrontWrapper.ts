@@ -127,8 +127,6 @@ export class GameMapFrontWrapper {
 
         this.updateCollisionGrid(undefined, false);
 
-        this.gameMap.getGameMapAreas();
-
         let depth = -2;
         for (const layer of this.gameMap.flatLayers) {
             if (layer.type === "tilelayer") {
