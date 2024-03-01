@@ -3,7 +3,7 @@
     import { CustomEntityDirection, UploadEntityMessage } from "@workadventure/messages";
     import { onDestroy } from "svelte";
     import { v4 as uuidv4 } from "uuid";
-    import { Direction, EntityPrefab } from "@workadventure/map-editor";
+    import { Direction, EntityPrefab, ENTITY_UPLOAD_SUPPORTED_FORMATS_FRONT } from "@workadventure/map-editor";
     import LL from "../../../../../i18n/i18n-svelte";
     import { mapEditorEntityUploadEventStore } from "../../../../Stores/MapEditorStore";
     import CustomEntityEditionForm from "../CustomEntityEditionForm/CustomEntityEditionForm.svelte";
@@ -11,7 +11,6 @@
     let files: FileList | undefined = undefined;
     let dropZoneRef: HTMLDivElement;
     let customEntityToUpload: EntityPrefab | undefined = undefined;
-    const allowedImageFormats = ["image/png", "image/jpeg", "image/webp"];
     let errorOnFile: string | undefined;
 
     $: {
@@ -75,7 +74,7 @@
                 console.error("Only one file is permitted");
                 errorOnFile = $LL.mapEditor.entityEditor.uploadEntity.errorOnFileNumber();
             } else {
-                if (allowedImageFormats.includes(filesFromDropEvent.item(0)?.type ?? "")) {
+                if (ENTITY_UPLOAD_SUPPORTED_FORMATS_FRONT.includes(filesFromDropEvent.item(0)?.type ?? "")) {
                     files = filesFromDropEvent;
                 } else {
                     console.error("File format not supported");
@@ -118,7 +117,7 @@
                 id="upload"
                 class="tw-hidden"
                 type="file"
-                accept={allowedImageFormats.join(",")}
+                accept={ENTITY_UPLOAD_SUPPORTED_FORMATS_FRONT}
                 bind:files
                 data-testid="uploadCustomAsset"
             />

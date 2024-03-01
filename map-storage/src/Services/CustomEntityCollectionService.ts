@@ -6,6 +6,7 @@ import {
     ENTITY_COLLECTION_FILE,
     EntityCollectionRaw,
     EntityRawPrefab,
+    entityUploadSupportedFormatForMapStorage,
     mapCustomEntityDirectionToDirection,
 } from "@workadventure/map-editor";
 import { DeleteCustomEntityMessage, ModifyCustomEntityMessage, UploadEntityMessage } from "@workadventure/messages";
@@ -29,7 +30,7 @@ export class CustomEntityCollectionService {
     private getEntityToUploadVirtualPath(fileName: string) {
         const { base: filenameWithoutPotentialPath, ext: fileExtension } = path.parse(fileName);
 
-        if (fileExtension.match(/\.(jpg|jpeg|png|webp)$/i) === null) {
+        if (fileExtension.match(entityUploadSupportedFormatForMapStorage) === null) {
             throw new Error("File extension is not a supported image");
         }
         return mapPathUsingDomainWithPrefix(`${ENTITIES_FOLDER_PATH}/${filenameWithoutPotentialPath}`, this.hostname);

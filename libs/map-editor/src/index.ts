@@ -19,3 +19,4 @@ export * from "./types";
 export * from "./Constants/CustomEntityCollectionConstants";
 export * from "./FunctionalTypes/Result";
 export * from "./WAMSettingsUtils";
+export * from "./Constants/EntityUploadSupportedFormats";
