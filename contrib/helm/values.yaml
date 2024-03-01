@@ -131,7 +131,7 @@ play:
     DISABLE_NOTIFICATIONS: "false"
 
   # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
-  extraEnvVars: {}
+  extraEnvVars: []
 
   secretEnv:
     ROOM_API_SECRET_KEY: myRoomApiSecretKey
@@ -222,7 +222,7 @@ chat:
   env: {}
 
   # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
-  extraEnvVars: {}
+  extraEnvVars: []
 
   secretEnv: {}
 
@@ -297,7 +297,7 @@ back:
     PLAYER_VARIABLES_MAX_TTL: "-1"
 
   # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
-  extraEnvVars: {}
+  extraEnvVars: []
 
   secretEnv: {}
 
@@ -371,7 +371,7 @@ uploader:
     # REDIS_PORT:
 
   # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
-  extraEnvVars: {}
+  extraEnvVars: []
 
   secretEnv: {}
     # AWS_ACCESS_KEY_ID:
@@ -462,7 +462,7 @@ maps:
   # REDIS_PORT:
 
   # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
-  extraEnvVars: {}
+  extraEnvVars: []
 
   secretEnv: {}
     # AWS_ACCESS_KEY_ID:
@@ -604,7 +604,7 @@ ejabberd:
   env: {}
 
   # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
-  extraEnvVars: {}
+  extraEnvVars: []
 
   secretEnv: {}
 
@@ -710,7 +710,7 @@ mapstorage:
     ENABLE_DIGEST_AUTHENTICATION: "false"
 
   # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
-  extraEnvVars: {}
+  extraEnvVars: []
 
   secretEnv:
     AUTHENTICATION_PASSWORD: ""
