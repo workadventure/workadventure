@@ -130,6 +130,9 @@ play:
     DISABLE_ANONYMOUS: "false"
     DISABLE_NOTIFICATIONS: "false"
 
+  # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
+  extraEnvVars: {}
+
   secretEnv:
     ROOM_API_SECRET_KEY: myRoomApiSecretKey
 
@@ -218,6 +221,9 @@ chat:
   # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
   env: {}
 
+  # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
+  extraEnvVars: {}
+
   secretEnv: {}
 
   # The name of a configMap that should be added to the service.
@@ -290,6 +296,9 @@ back:
     STORE_VARIABLES_FOR_LOCAL_MAPS: "true"
     PLAYER_VARIABLES_MAX_TTL: "-1"
 
+  # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
+  extraEnvVars: {}
+
   secretEnv: {}
 
   # The name of a configMap that should be added to the service.
@@ -360,6 +369,9 @@ uploader:
     # # or
     # REDIS_HOST:
     # REDIS_PORT:
+
+  # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
+  extraEnvVars: {}
 
   secretEnv: {}
     # AWS_ACCESS_KEY_ID:
@@ -448,6 +460,9 @@ maps:
     # # or
     # REDIS_HOST:
   # REDIS_PORT:
+
+  # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
+  extraEnvVars: {}
 
   secretEnv: {}
     # AWS_ACCESS_KEY_ID:
@@ -588,6 +603,9 @@ ejabberd:
   # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
   env: {}
 
+  # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
+  extraEnvVars: {}
+
   secretEnv: {}
 
   # The name of a configMap that should be added to the service.
@@ -691,6 +709,8 @@ mapstorage:
     AUTHENTICATION_VALIDATOR_URL: ""
     ENABLE_DIGEST_AUTHENTICATION: "false"
 
+  # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
+  extraEnvVars: {}
 
   secretEnv:
     AUTHENTICATION_PASSWORD: ""

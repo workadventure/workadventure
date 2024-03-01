@@ -66,6 +66,9 @@ spec:
                 secretKeyRef:
                   name: {{ include "workadventure.fullname" . }}-secret-env-shared
                   key: SECRET_KEY
+            {{- if .Values.back.extraEnvVars }}
+            {{- include "common.tplvalues.render" (dict "value" .Values.back.extraEnvVars "context" $) | nindent 12 }}
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.back.service.port }}

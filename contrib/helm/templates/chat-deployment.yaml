@@ -54,6 +54,10 @@ spec:
             - secretRef:
                 name: {{ .Values.chat.externalSecretName }}
             {{- end }}
+          {{- if .Values.chat.extraEnvVars }}
+          env:
+            {{- include "common.tplvalues.render" (dict "value" .Values.chat.extraEnvVars "context" $) | nindent 12 }}
+          {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.chat.service.port }}
