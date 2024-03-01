@@ -305,7 +305,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     !this.scene
                         .getGameMapFrontWrapper()
                         .canEntityBePlacedOnMap(
-                            entity.getPosition(),
+                            entity.getTopLeft(),
                             entity.displayWidth,
                             entity.displayHeight,
                             entity.getCollisionGrid(),
@@ -399,7 +399,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             !this.scene
                 .getGameMapFrontWrapper()
                 .canEntityBePlacedOnMap(
-                    entity.getPosition(),
+                    entity.getTopLeft(),
                     entity.displayWidth,
                     entity.displayHeight,
                     entity.getCollisionGrid(),
