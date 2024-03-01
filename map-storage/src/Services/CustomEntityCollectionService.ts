@@ -1,5 +1,4 @@
 import path from "path";
-import * as Sentry from "@sentry/browser";
 import {
     CollisionGrid,
     ENTITIES_FOLDER_PATH,
@@ -69,7 +68,6 @@ export class CustomEntityCollectionService {
             );
         } else {
             console.error("Unable to find the entity to modify in custom entities file");
-            Sentry.captureException("Unable to find the entity to modify in custom entities file for entity");
         }
     }
 
