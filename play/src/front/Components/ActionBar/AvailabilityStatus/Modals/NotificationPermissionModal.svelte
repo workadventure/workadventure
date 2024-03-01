@@ -30,7 +30,7 @@
 </script>
 
 <ConfirmationModal props={confirmationModalProps}>
-    <div class="tw-grow tw-text-center tw-text-xl ">
+    <div id="notificationPermission" class="tw-grow tw-text-center tw-text-xl ">
         {$LL.statusModal.allowNotification()}
     </div>
 </ConfirmationModal>

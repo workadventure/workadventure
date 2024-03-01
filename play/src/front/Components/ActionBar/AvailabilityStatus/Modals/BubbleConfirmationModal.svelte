@@ -22,7 +22,7 @@
 </script>
 
 <ConfirmationModal props={confirmationModalProps}>
-    <div class="tw-grow tw-text-center tw-text-xl ">
+    <div id="acceptDiscussion" class="tw-grow tw-text-center tw-text-xl ">
         {`${$namePlayerInBubbleModalStore} `}{$LL.notification.discussion()}
     </div>
 </ConfirmationModal>
