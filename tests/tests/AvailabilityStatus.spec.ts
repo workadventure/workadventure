@@ -82,7 +82,7 @@ test.describe('Availability Status', () => {
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
         })
         test('should ask to change notification permission when you pass in Busy status and your browser notification permission is denied',async({ page, browser,context,browserName})=>{
-            if(browserName === "firefox"){
+            if(browserName === "firefox" || browserName === "webkit"){
                 //skip for firefox because of notification permission management
                 test.skip();
                 return;
@@ -139,7 +139,7 @@ test.describe('Availability Status', () => {
                 await login(userBob, secondPageName);
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
-                if(browserName === "firefox" && page.getByText(`Do you want to allow notification`).isVisible() ){
+                if((browserName === "firefox"  || browserName === "webkit") && page.getByText(`Do you want to allow notification`).isVisible() ){
                     await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
                 }
 
@@ -176,7 +176,7 @@ test.describe('Availability Status', () => {
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
                 
-                if(browserName === "firefox" && page.getByText(`Do you want to allow notification`).isVisible() ){
+                if((browserName === "firefox" || browserName === "webkit") && page.getByText(`Do you want to allow notification`).isVisible() ){
                     await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
                 }
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
@@ -210,7 +210,7 @@ test.describe('Availability Status', () => {
                 await login(userBob, secondPageName);
                 await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
                 
-                if(browserName === "firefox" && page.getByText(`Do you want to allow notification`).isVisible() ){
+                if((browserName === "firefox" || browserName === "webkit") && page.getByText(`Do you want to allow notification`).isVisible() ){
                     await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
                 }
 
