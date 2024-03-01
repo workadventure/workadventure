@@ -97,14 +97,47 @@ export class GameMapAreas {
         return true;
     }
 
-    public isUserHasWriteAccessOnAreaByTags(area: AreaData, userTags: string[]): boolean {
-        const areaRights = area.properties.find(
-            (property) => property.type === "areaRightPropertyData"
-        ) as AreaRightPropertyData;
+    public isUserHasWriteAccessOnAreaForEntityCoordinates(
+        entityCenterCoordinates: { x: number; y: number },
+        userConnectedTags: string[]
+    ): boolean {
+        const areas = this.getAreasOnPosition(entityCenterCoordinates);
+        if (areas?.length === 0) {
+            return false;
+        }
+        return areas.some((area) => this.isUserHasWriteAccessOnAreaByUserTags(area, userConnectedTags));
+    }
+
+    public isUserHasReadAccessOnAreaForEntityCoordinates(
+        entityCenterCoordinates: { x: number; y: number },
+        userConnectedTags: string[]
+    ): boolean {
+        const areas = this.getAreasOnPosition(entityCenterCoordinates);
+        if (areas?.length === 0) {
+            return false;
+        }
+        return areas.some((area) => this.isUserHasReadAccessOnAreaByTags(area, userConnectedTags));
+    }
+
+    private isUserHasWriteAccessOnAreaByUserTags(area: AreaData, userTags: string[]): boolean {
+        const areaRights = this.getAreaRightPropertyData(area);
         if (areaRights === undefined) {
             return false;
         }
         return areaRights.writeTags.some((tag) => userTags.includes(tag));
+    }
+
+    private isUserHasReadAccessOnAreaByTags(area: AreaData, userTags: string[]): boolean {
+        const areaRights = this.getAreaRightPropertyData(area);
+        if (areaRights === undefined) {
+            return false;
+        }
+        return areaRights.readTags.some((tag) => userTags.includes(tag));
+    }
+
+    private getAreaRightPropertyData(area: AreaData): AreaRightPropertyData | undefined {
+        const areaRightPropertyData = area.properties.find((property) => property.type === "areaRightPropertyData");
+        return areaRightPropertyData ? AreaRightPropertyData.parse(areaRightPropertyData) : undefined;
     }
 
     public isGameMapContainsThematics(): boolean {
