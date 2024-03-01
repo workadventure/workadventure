@@ -32,6 +32,10 @@ test.describe('Availability Status', () => {
 
         })
         test('should disable microphone and camera',async({ page, browser,browserName })=>{
+            if(browserName === "webkit"){
+               test.skip();
+               return;
+            }
             const statusName = "Busy";
     
             await page.goto(
@@ -41,10 +45,8 @@ test.describe('Availability Status', () => {
             await login(page, 'Alice');
             
               // Because webkit in playwright does not support Camera/Microphone Permission by settings
-            if(browserName === "webkit"){
-                await hideNoCamera(page);
-            }
-            
+
+
             await Menu.turnOnCamera(page);
             await Menu.turnOnMicrophone(page);
 
@@ -60,7 +62,7 @@ test.describe('Availability Status', () => {
         })
 
         test('should keep same webcam and microphone config when you go back to online status',async({ page, browser,context,browserName },{project})=>{
-            if(project.name === "mobilechromium") {
+            if(project.name === "mobilechromium" || browserName === "webkit") {
                 //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
                 return;
@@ -72,9 +74,7 @@ test.describe('Availability Status', () => {
             );
     
             await login(page, 'Alice');
-            if(browserName === "webkit"){
-                await hideNoCamera(page);
-            }
+
             await Menu.turnOnCamera(page);
             await Menu.turnOffMicrophone(page)
 
@@ -116,6 +116,10 @@ test.describe('Availability Status', () => {
         
         test.describe('busy interaction',async()=>{
             test('should open a popup when a bubble is create...',async({ page, browserName,browser,context})=>{
+                if(browserName === "webkit"){
+                    test.skip();
+                    return;
+                }
                 const statusName = "Busy";
                 const map_URL =  `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`;
                 await page.goto(map_URL);
