@@ -251,7 +251,9 @@ export class GameScene extends DirtyScene {
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
     private unsubscribers: Unsubscriber[] = [];
 
-    private entityPermissions!: EntityPermissions;
+    private entityPermissions: EntityPermissions | undefined;
+
+    private entityPermissionsDeferred: Deferred<EntityPermissions> = new Deferred();
 
     mapUrlFile!: string;
     wamUrlFile?: string;
@@ -943,6 +945,7 @@ export class GameScene extends DirtyScene {
             this.connection?.getAllTags() ?? [],
             userCanEdit
         );
+        this.entityPermissionsDeferred.resolve(this.entityPermissions);
     }
 
     private initMapEditorForThematics() {
@@ -2525,7 +2528,14 @@ ${escapedMessage}
     }
 
     public getEntityPermissions(): EntityPermissions {
+        if (this.entityPermissions === undefined) {
+            throw new Error("EntityPermissions not instanciated yet");
+        }
         return this.entityPermissions;
+    }
+
+    public getEntityPermissionsPromise(): Promise<EntityPermissions> {
+        return this.entityPermissionsDeferred.promise;
     }
 
     public async onMapExit(roomUrl: URL) {

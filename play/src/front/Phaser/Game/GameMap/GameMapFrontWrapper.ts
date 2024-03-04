@@ -1,4 +1,4 @@
-import type { AreaChangeCallback, AreaData, AtLeast, EntityPermissions, GameMap } from "@workadventure/map-editor";
+import type { AreaChangeCallback, AreaData, AtLeast, GameMap } from "@workadventure/map-editor";
 import { AreaCoordinates, AreaDataProperties, AreaUpdateCallback, GameMapProperties } from "@workadventure/map-editor";
 import { MathUtils } from "@workadventure/math-utils";
 import type {
@@ -205,7 +205,12 @@ export class GameMapFrontWrapper {
             // OTHERWISE, delete commands might pass FIRST!
         }
 
-        return Promise.allSettled(addEntityPromises).then(() => {
+        return Promise.allSettled(addEntityPromises).then((promiseResults) => {
+            promiseResults.forEach((result) => {
+                if (result.status === "rejected") {
+                    console.error(result.reason);
+                }
+            });
             this.updateCollisionGrid(this.entitiesCollisionLayer, false);
             this.initializedPromise.resolve();
         });

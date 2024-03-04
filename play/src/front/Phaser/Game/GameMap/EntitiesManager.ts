@@ -214,7 +214,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     public makeAllEntitiesInteractive(activatableOnly = false): void {
         const entities = activatableOnly
-            ? Array.from(this.entities.values()).filter((entity) => entity.isActivatable() && entity.userHasAccess)
+            ? Array.from(this.entities.values()).filter((entity) => entity.isActivatable())
             : this.entities;
         entities.forEach((entity) => {
             entity.setInteractive({ pixelPerfect: true, cursor: "pointer" });
@@ -270,7 +270,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.emit(EntitiesManagerEvent.UpdateEntity, data);
         });
         entity.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (!entity.userHasAccess) {
+            if (!entity.userCanEdit) {
                 return;
             }
             if (
@@ -336,6 +336,10 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 return;
             }
 
+            if (!entity.userCanEdit) {
+                return;
+            }
+
             if (
                 get(mapEditorModeStore) &&
                 this.isEntityEditorToolActive() &&
@@ -349,7 +353,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     return;
                 }
 
-                if (!entity.userHasAccess) {
+                if (!entity.userCanEdit) {
                     return;
                 }
 
@@ -361,7 +365,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         entity.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
             this.pointerOverEntitySubject.next(entity);
             if (get(mapEditorModeStore) && this.isEntityEditorToolActive()) {
-                if (!entity.userHasAccess) {
+                if (!entity.userCanEdit) {
                     return;
                 }
                 entity.setPointedToEditColor(this.isTrashEditorToolActive() ? 0xff0000 : 0x00ff00);
@@ -451,6 +455,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     public close() {
         this.actionsMenuStoreUnsubscriber();
+        this.gameSceneIsLoadedStoreUnsubscriber();
     }
 
     public setAllEntitiesPointedToEditColor(color: number) {

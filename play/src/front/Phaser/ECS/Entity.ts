@@ -41,7 +41,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     private entityData: Required<WAMEntityData>;
     private prefab: EntityPrefab;
 
-    private activatable: boolean;
+    private activatable!: boolean;
     private oldPosition: { x: number; y: number };
 
     constructor(scene: GameScene, public readonly entityId: string, data: WAMEntityData, prefab: EntityPrefab) {
@@ -58,11 +58,13 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         };
         this.prefab = prefab;
 
-        this.activatable = this.hasAnyPropertiesSet();
-        if (this.activatable) {
-            this.setInteractive({ pixelPerfect: true, cursor: "pointer" });
-            this.scene.input.setDraggable(this);
-        }
+        scene.getEntityPermissionsPromise().then(() => {
+            this.activatable = this.hasAnyPropertiesSet();
+            if (this.activatable) {
+                this.setInteractive({ pixelPerfect: true, cursor: "pointer" });
+                this.scene.input.setDraggable(this);
+            }
+        });
 
         this.setDepth(this.y + this.displayHeight + (this.prefab.depthOffset ?? 0));
 
@@ -89,7 +91,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.setPosition(this.entityData.x, this.entityData.y);
         this.oldPosition = this.getPosition();
         this.activatable = this.hasAnyPropertiesSet();
-        if (this.activatable && this.userHasAccess) {
+        if (this.activatable) {
             this.setInteractive({ pixelPerfect: true, cursor: "pointer" });
             this.scene.input.setDraggable(this);
         } else if (!get(mapEditorModeStore)) {
@@ -107,6 +109,9 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public activate(): void {
+        if (!this.userCanEdit && !this.userCanRead) {
+            return;
+        }
         if (get(mapEditorModeStore)) {
             actionsMenuStore.clear();
             return;
@@ -187,6 +192,9 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     private hasAnyPropertiesSet(): boolean {
+        if (!this.userCanEdit && !this.userCanRead) {
+            return false;
+        }
         if (!this.entityData.properties) {
             return false;
         }
@@ -385,7 +393,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         return descriptionProperty?.searchable;
     }
 
-    public get userHasAccess(): boolean {
+    public get userCanEdit(): boolean {
         return (this.scene as GameScene).getEntityPermissions().canEdit(this.getCenter());
+    }
+
+    public get userCanRead(): boolean {
+        return (this.scene as GameScene).getEntityPermissions().canRead(this.getCenter());
     }
 }
