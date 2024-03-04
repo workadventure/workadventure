@@ -11,7 +11,7 @@ test.describe('Availability Status', () => {
     
     
     test.describe('Busy Status',()=>{
-        test('should return to online status when you move',async({ page, browser,browserName })=>{
+        test('should return to online status when you move',async({ page, browser,browserName },{project})=>{
             const statusName = "Busy";
     
             await page.goto(
@@ -31,17 +31,17 @@ test.describe('Availability Status', () => {
         
         
             //move
-            /*
+ 
             const positionToDiscuss = {
                 x: 3 * 32,
                 y: 4 * 32
             };
-            */
-            
-            //await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
+            if(project.name === "mobilechromium" ) {
+                await page.touchscreen.tap(positionToDiscuss.x,positionToDiscuss.y)
+            }else{
+                await Map.walkTo(page,'ArrowRight',100)
+            }
 
-
-            await Map.walkTo(page,'ArrowRight')
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
         })
@@ -274,7 +274,7 @@ test.describe('Availability Status', () => {
 
     })
     test.describe('Back in a moment Status',()=>{
-        test('should return to online status when you move',async({ page, browser,browserName })=>{
+        test('should return to online status when you move',async({ page, browser,browserName },{project})=>{
             const statusName = "Back in a moment";
     
     
@@ -294,17 +294,18 @@ test.describe('Availability Status', () => {
             await Menu.openStatusList(page);
             
             await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
-        
-        
-            //move
-            /*
             const positionToDiscuss = {
                 x: 3 * 32,
                 y: 4 * 32
             };
-            */
-            //await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
-            await Map.walkTo(page,'ArrowRight')
+
+            if(project.name === "mobilechromium" ) {
+                await page.touchscreen.tap(positionToDiscuss.x,positionToDiscuss.y)
+            }else{
+                await Map.walkTo(page,'ArrowRight',100)
+            }
+
+            
 
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
@@ -402,7 +403,7 @@ test.describe('Availability Status', () => {
 
     })
     test.describe('Do not disturb Status',()=>{
-        test('should return to online status when you move',async({ page, browser,browserName })=>{
+        test('should return to online status when you move',async({ page, browser,browserName },{project})=>{
             const statusName = "Do not disturb";
     
             await page.goto(
@@ -421,14 +422,18 @@ test.describe('Availability Status', () => {
         
         
             //move
-            /*
+            
             const positionToDiscuss = {
                 x: 3 * 32,
                 y: 4 * 32
-            };*/
-           // await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
+            };
 
-            await Map.walkTo(page,'ArrowRight')
+            if(project.name === "mobilechromium" ) {
+                await page.touchscreen.tap(positionToDiscuss.x,positionToDiscuss.y)
+            }else{
+                await Map.walkTo(page,'ArrowRight',100)
+            }
+
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
         })
