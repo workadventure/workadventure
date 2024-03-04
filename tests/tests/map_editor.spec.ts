@@ -16,19 +16,30 @@ test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
   baseURL: map_storage_url,
 });
-test.describe("Map editor", () => {
-  test("Successfully set the megaphone feature", async ({
-    page,
-    browser,
-    request,
-    browserName,
-  }, { project }) => {
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
+
+test.beforeAll(
+  "Ignore tests on mobilechromium because map editor not available for mobile devices",
+  ({}, { project }) => {
+    //Map Editor not available on mobile
+    if (project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
     }
+  }
+);
+
+test.beforeAll("Ignore tests on webkit because of issue with camera and microphone", ({ browserName }) => {
+  //WebKit has issue with camera
+  if (browserName === "webkit") {
+    //eslint-disable-next-line playwright/no-skipped-test
+    test.skip();
+    return;
+  }
+});
+
+test.describe("Map editor", () => {
+  test("Successfully set the megaphone feature", async ({ page, browser, request, browserName }) => {
     await resetWamMaps(request);
     await page.goto(Map.url("empty"));
     //await page.evaluate(() => localStorage.setItem('debug', '*'));
@@ -59,10 +70,7 @@ test.describe("Map editor", () => {
     await Megaphone.megaphoneSave(page);
     await Megaphone.isNotCorrectlySaved(page);
 
-    await Megaphone.megaphoneInputNameSpace(
-      page,
-      `${browser.browserType().name()}MySpace`
-    );
+    await Megaphone.megaphoneInputNameSpace(page, `${browser.browserType().name()}MySpace`);
     await Megaphone.megaphoneSelectScope(page);
     await Megaphone.megaphoneAddNewRights(page, "example");
     await Megaphone.megaphoneSave(page);
@@ -79,24 +87,22 @@ test.describe("Map editor", () => {
     await Menu.isThereMegaphoneButton(page2);
     await Menu.closeMapEditor(page);
 
-    // Play a sound using the megaphone
-    if (browser.browserType() === webkit) {
-      await page2.close();
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
     await Menu.toggleMegaphoneButton(page);
 
     // Check that the live message is displayed
     //await expect(page.locator('.menu-container #content-liveMessage h3')).toContainText('Live message', {timeout: 5_000});
     // Click on the button to start live message
-    await page.locator('.menu-container #content-liveMessage').getByRole('button', {name: 'Start a live message'}).click({timeout: 10_000});
-    await page.locator('.menu-container #active-liveMessage').getByRole('button', {name: 'Start live message'}).click({timeout: 10_000});
+    await page
+      .locator(".menu-container #content-liveMessage")
+      .getByRole("button", { name: "Start a live message" })
+      .click({ timeout: 10_000 });
+    await page
+      .locator(".menu-container #active-liveMessage")
+      .getByRole("button", { name: "Start live message" })
+      .click({ timeout: 10_000 });
 
     // click on the megaphone button to start the streaming session
-    await expect(page2.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 15_000});
+    await expect(page2.locator(".cameras-container .other-cameras .jitsi-video")).toBeVisible({ timeout: 15_000 });
 
     await Menu.toggleMegaphoneButton(page);
 
@@ -105,24 +111,7 @@ test.describe("Map editor", () => {
     // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
   });
 
-  test('Successfully set "SpeakerZone" in the map editor', async ({
-    page,
-    browser,
-    request,
-  }, { project }) => {
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
-    if (browser.browserType() === webkit) {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
+  test('Successfully set "SpeakerZone" in the map editor', async ({ page, browser, request }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
@@ -132,26 +121,12 @@ test.describe("Map editor", () => {
 
     await Menu.openMapEditor(page);
     await MapEditor.openAreaEditor(page);
-    await AreaEditor.drawArea(
-      page,
-      { x: 1 * 32 * 1.5, y: 5 },
-      { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 }
-    );
+    await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
     await AreaEditor.addProperty(page, "Speaker zone");
-    await AreaEditor.setSpeakerMegaphoneProperty(
-      page,
-      `${browser.browserType().name()}SpeakerZone`
-    );
-    await AreaEditor.drawArea(
-      page,
-      { x: 1 * 32 * 1.5, y: 6 * 32 * 1.5 },
-      { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 }
-    );
+    await AreaEditor.setSpeakerMegaphoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
+    await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 6 * 32 * 1.5 }, { x: 9 * 32 * 1.5, y: 9 * 32 * 1.5 });
     await AreaEditor.addProperty(page, "Attendees zone");
-    await AreaEditor.setListenerZoneProperty(
-      page,
-      `${browser.browserType().name()}SpeakerZone`
-    );
+    await AreaEditor.setListenerZoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
     await Menu.closeMapEditor(page);
     await Map.teleportToPosition(page, 4 * 32, 2 * 32);
     await expect(await page.locator(".jitsi-video")).toBeVisible({
@@ -168,13 +143,11 @@ test.describe("Map editor", () => {
     await Map.teleportToPosition(page2, 4 * 32, 7 * 32);
 
     // The user in the listener zone can see the speaker
-    await expect(
-      await page2.locator(".cameras-container .other-cameras .jitsi-video")
-    ).toBeVisible({ timeout: 20_000 });
+    await expect(await page2.locator(".cameras-container .other-cameras .jitsi-video")).toBeVisible({
+      timeout: 20_000,
+    });
     // The speaker cannot see the listener
-    await expect(
-      await page.locator(".cameras-container .other-cameras .jitsi-video")
-    ).toBeHidden({ timeout: 20_000 });
+    await expect(await page.locator(".cameras-container .other-cameras .jitsi-video")).toBeHidden({ timeout: 20_000 });
 
     // Now, let's move player 2 to the speaker zone
     await Map.walkToPosition(page2, 4 * 32, 2 * 32);
@@ -182,81 +155,37 @@ test.describe("Map editor", () => {
     //await Map.teleportToPosition(page2, 4*32, 2*32);
 
     // The first speaker (player 1) can now see player2
-    await expect(
-      await page.locator(".cameras-container .other-cameras .jitsi-video")
-    ).toBeVisible({ timeout: 20_000 });
+    await expect(await page.locator(".cameras-container .other-cameras .jitsi-video")).toBeVisible({ timeout: 20_000 });
     // And the opposite is still true (player 2 can see player 1)
-    await expect(
-      await page2.locator(".cameras-container .other-cameras .jitsi-video")
-    ).toBeVisible({ timeout: 20_000 });
+    await expect(await page2.locator(".cameras-container .other-cameras .jitsi-video")).toBeVisible({
+      timeout: 20_000,
+    });
   });
 
-  test("Successfully set start area in the map editor", async ({
-    page,
-    browser,
-    request,
-    browserName,
-  }, { project }) => {
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+  test("Successfully set start area in the map editor", async ({ page, request }) => {
     await resetWamMaps(request);
     await page.goto(Map.url("start"));
     await login(page, "test", 3);
-    if (browserName === "webkit") {
-      // Because webkit in playwright does not support Camera/Microphone Permission by settings
-      await hideNoCamera(page);
-    }
 
     await Menu.openMapEditor(page);
     await MapEditor.openAreaEditor(page);
-    await AreaEditor.drawArea(
-      page,
-      { x: 13 * 32, y: 0 },
-      { x: 15 * 32, y: 2 * 32 }
-    );
+    await AreaEditor.drawArea(page, { x: 13 * 32, y: 0 }, { x: 15 * 32, y: 2 * 32 });
     await AreaEditor.setAreaName(page, "MyStartZone");
     await AreaEditor.addProperty(page, "Start area");
     await Menu.closeMapEditor(page);
   });
 
-  test("Successfully set and working exit area in the map editor", async ({
-    page,
-    browser,
-    request,
-    browserName,
-  }, { project }) => {
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+  test("Successfully set and working exit area in the map editor", async ({ page, request }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("exit"));
     await login(page, "test", 3);
-    if (browserName === "webkit") {
-      // Because webkit in playwright does not support Camera/Microphone Permission by settings
-      await hideNoCamera(page);
-    }
 
     await Menu.openMapEditor(page);
     await MapEditor.openAreaEditor(page);
-    await AreaEditor.drawArea(
-      page,
-      { x: 13 * 32, y: 13 * 32 },
-      { x: 15 * 32, y: 15 * 32 }
-    );
+    await AreaEditor.drawArea(page, { x: 13 * 32, y: 13 * 32 }, { x: 15 * 32, y: 15 * 32 });
     await AreaEditor.addProperty(page, "Exit area");
-    await AreaEditor.setExitProperty(
-      page,
-      "maps/start_defined.wam",
-      "MyStartZone"
-    );
+    await AreaEditor.setExitProperty(page, "maps/start_defined.wam", "MyStartZone");
     await Menu.closeMapEditor(page);
 
     try {
@@ -265,67 +194,36 @@ test.describe("Map editor", () => {
     } catch (_) {
       // evaluateScript will throw an error if the script frame unloaded because of page change
     }
-    await expect
-      .poll(() => page.url())
-      .toContain("start_defined.wam#MyStartZone");
+    await expect.poll(() => page.url()).toContain("start_defined.wam#MyStartZone");
 
     await evaluateScript(page, async () => {
       await WA.onInit();
       const position = await WA.player.getPosition();
-      if (
-        position.x >= 290 &&
-        position.x <= 310 &&
-        position.y >= 15 &&
-        position.y <= 35
-      ) {
+      if (position.x >= 290 && position.x <= 310 && position.y >= 15 && position.y <= 35) {
         return;
       }
-      throw new Error(
-        `Player is not at the correct position : ${position.x} ${position.y}`
-      );
+      throw new Error(`Player is not at the correct position : ${position.x} ${position.y}`);
     });
   });
 
   // Test to set Klaxoon application in the area with the map editor
-  test("Successfully set Klaxoon's application in the area in the map editor", async ({
-    page,
-    browser,
-    request,
-    browserName,
-  }, { project }) => {
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+  test("Successfully set Klaxoon's application in the area in the map editor", async ({ page, browser, request }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
-    if (browserName === "webkit") {
-      // Because webkit in playwright does not support Camera/Microphone Permission by settings
-      await hideNoCamera(page);
-    }
 
     //await Menu.openMapEditor(page);
     await page.getByRole("button", { name: "toggle-map-editor" }).click();
     await MapEditor.openAreaEditor(page);
-    await AreaEditor.drawArea(
-      page,
-      { x: 13 * 32, y: 13 * 32 },
-      { x: 15 * 32, y: 15 * 32 }
-    );
+    await AreaEditor.drawArea(page, { x: 13 * 32, y: 13 * 32 }, { x: 15 * 32, y: 15 * 32 });
     await AreaEditor.setAreaName(page, "My app zone");
 
     // add property Klaxoon
     await AreaEditor.addProperty(page, "Open Klaxoon");
 
     // insert klaxoon link
-    await page
-      .getByPlaceholder("https://app.klaxoon.com/")
-      .first()
-      .fill("https://app.klaxoon.com/join/KXEWMSE3NF2M");
+    await page.getByPlaceholder("https://app.klaxoon.com/").first().fill("https://app.klaxoon.com/join/KXEWMSE3NF2M");
     await page.locator(".map-editor").click();
 
     if (browser.browserType() === webkit) {
@@ -343,42 +241,16 @@ test.describe("Map editor", () => {
     // TODO make same test with object editor
   });
 
-  test("Successfully set GoogleWorkspace's applications in the area in the map editor", async ({
-    page,
-    browser,
-    request,
-    browserName,
-  }, { project }) => {
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-    if (browser.browserType() === webkit) {
-      // Webkit is somehow failing on this, maybe it is too slow
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
+  test("Successfully set GoogleWorkspace's applications in the area in the map editor", async ({ page, request }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
-    if (browserName === "webkit") {
-      // Because webkit in playwright does not support Camera/Microphone Permission by settings
-      await hideNoCamera(page);
-    }
 
     //await Menu.openMapEditor(page);
     await page.getByRole("button", { name: "toggle-map-editor" }).click();
     await MapEditor.openAreaEditor(page);
-    await AreaEditor.drawArea(
-      page,
-      { x: 13 * 32, y: 13 * 32 },
-      { x: 15 * 32, y: 15 * 32 }
-    );
+    await AreaEditor.drawArea(page, { x: 13 * 32, y: 13 * 32 }, { x: 15 * 32, y: 15 * 32 });
 
     await AreaEditor.setAreaName(page, "My app zone");
 
@@ -386,49 +258,33 @@ test.describe("Map editor", () => {
     await AreaEditor.addProperty(page, "Open Google Docs");
     // fill Google Docs link
     await page
-      .getByPlaceholder(
-        "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit"
-      )
+      .getByPlaceholder("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit")
       .first()
-      .fill(
-        "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit"
-      );
+      .fill("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit");
 
     // add property Google Sheets
     await AreaEditor.addProperty(page, "Open Google Sheets");
     // fill Google Sheets link
     await page
-      .getByPlaceholder(
-        "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit"
-      )
+      .getByPlaceholder("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit")
       .first()
-      .fill(
-        "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit"
-      );
+      .fill("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit");
 
     // add property Google Slides
     await AreaEditor.addProperty(page, "Open Google Slides");
     // fill Google Slides link
     await page
-      .getByPlaceholder(
-        "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit"
-      )
+      .getByPlaceholder("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit")
       .first()
-      .fill(
-        "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit"
-      );
+      .fill("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit");
 
     // add property Google Slides
     await AreaEditor.addProperty(page, "Open Google Drive");
     // fill Google Slides link
     await page
-      .getByPlaceholder(
-        "https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview"
-      )
+      .getByPlaceholder("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview")
       .first()
-      .fill(
-        "https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview"
-      );
+      .fill("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview");
 
     await Menu.closeMapEditor(page);
 
@@ -441,33 +297,11 @@ test.describe("Map editor", () => {
     await expect(page.locator("#cowebsite-thumbnail-2")).toBeVisible();
   });
 
-  test("Successfully set GoogleWorkspace's application entity in the map editor", async ({
-    page,
-    browser,
-    request,
-    browserName,
-  }, { project }) => {
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-    if (browser.browserType() === webkit) {
-      // Webkit is somehow failing on this, maybe it is too slow
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
+  test("Successfully set GoogleWorkspace's application entity in the map editor", async ({ page, request }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
-    if (browserName === "webkit") {
-      // Because webkit in playwright does not support Camera/Microphone Permission by settings
-      await hideNoCamera(page);
-    }
 
     // open map editor
     await page.getByRole("button", { name: "toggle-map-editor" }).click();
@@ -485,49 +319,33 @@ test.describe("Map editor", () => {
     await EntityEditor.addProperty(page, "Open Google Docs");
     // fill Google Docs link
     await page
-      .getByPlaceholder(
-        "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit"
-      )
+      .getByPlaceholder("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit")
       .first()
-      .fill(
-        "https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit"
-      );
+      .fill("https://docs.google.com/document/d/1iFHmKL4HJ6WzvQI-6FlyeuCy1gzX8bWQ83dNlcTzigk/edit");
 
     // add property Google Sheets
     await EntityEditor.addProperty(page, "Open Google Sheets");
     // fill Google Sheets link
     await page
-      .getByPlaceholder(
-        "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit"
-      )
+      .getByPlaceholder("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit")
       .first()
-      .fill(
-        "https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit"
-      );
+      .fill("https://docs.google.com/spreadsheets/d/1SBIn3IBG30eeq944OhT4VI_tSg-b1CbB0TV0ejK70RA/edit");
 
     // add property Google Slides
     await EntityEditor.addProperty(page, "Open Google Slides");
     // fill Google Slides link
     await page
-      .getByPlaceholder(
-        "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit"
-      )
+      .getByPlaceholder("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit")
       .first()
-      .fill(
-        "https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit"
-      );
+      .fill("https://docs.google.com/presentation/d/1fU4fOnRiDIvOoVXbksrF2Eb0L8BYavs7YSsBmR_We3g/edit");
 
     // add property Google Drive
     await EntityEditor.addProperty(page, "Open Google Drive");
     // fill Google Drive link
     await page
-      .getByPlaceholder(
-        "https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview"
-      )
+      .getByPlaceholder("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview")
       .first()
-      .fill(
-        "https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview"
-      );
+      .fill("https://drive.google.com/file/d/1DjNjZVbVeQO9EvgONLzCtl6wG-kxSr9Z/preview");
 
     // close object selector
     await Menu.closeMapEditor(page);
@@ -536,42 +354,17 @@ test.describe("Map editor", () => {
     await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
 
     // check if the popup with application is opened
-    await expect(
-      page.locator(".actions-menu .actions button").nth(0)
-    ).toContainText("Open Google Docs");
-    await expect(
-      page.locator(".actions-menu .actions button").nth(1)
-    ).toContainText("Open Google Sheets");
-    await expect(
-      page.locator(".actions-menu .actions button").nth(2)
-    ).toContainText("Open Google Slides");
-    await expect(
-      page.locator(".actions-menu .actions button").nth(3)
-    ).toContainText("Open Google Drive");
+    await expect(page.locator(".actions-menu .actions button").nth(0)).toContainText("Open Google Docs");
+    await expect(page.locator(".actions-menu .actions button").nth(1)).toContainText("Open Google Sheets");
+    await expect(page.locator(".actions-menu .actions button").nth(2)).toContainText("Open Google Slides");
+    await expect(page.locator(".actions-menu .actions button").nth(3)).toContainText("Open Google Drive");
   });
 
-  test('Successfully set Klaxoon\'s application entity in the map editor @local', async ({ page, browser, request, browserName }, { project }) => {
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-    if (browser.browserType() === webkit) {
-      // Webkit is somehow failing on this, maybe it is too slow
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
+  test("Successfully set Klaxoon's application entity in the map editor @local", async ({ page, request }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
-    if (browserName === "webkit") {
-      // Because webkit in playwright does not support Camera/Microphone Permission by settings
-      await hideNoCamera(page);
-    }
 
     // open map editor
     await page.getByRole("button", { name: "toggle-map-editor" }).click();
@@ -589,10 +382,7 @@ test.describe("Map editor", () => {
     await EntityEditor.addProperty(page, "Open Klaxoon");
 
     // fill Klaxoon link
-    await page
-      .getByPlaceholder("https://app.klaxoon.com/")
-      .first()
-      .fill("https://app.klaxoon.com/join/KXEWMSE3NF2M");
+    await page.getByPlaceholder("https://app.klaxoon.com/").first().fill("https://app.klaxoon.com/join/KXEWMSE3NF2M");
 
     // close object selector
     await Menu.closeMapEditor(page);
@@ -601,9 +391,7 @@ test.describe("Map editor", () => {
     await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
 
     // check if the popup with application is opened
-    await expect(
-      page.locator(".actions-menu .actions button").nth(0)
-    ).toContainText("Open Klaxoon");
+    await expect(page.locator(".actions-menu .actions button").nth(0)).toContainText("Open Klaxoon");
   });
 
   // Create test for Google picker docs
@@ -612,18 +400,7 @@ test.describe("Map editor", () => {
   // Create test fir Google picker presentation
   // Create test for Google picker drive
 
-  test("Successfully upload a custom entity", async ({
-    page,
-    browser,
-    request,
-  }) => {
-    if (browser.browserType() === webkit) {
-      // Webkit is somehow failing on this, maybe it is too slow
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
+  test("Successfully upload a custom entity", async ({ page, request }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
@@ -637,26 +414,12 @@ test.describe("Map editor", () => {
     await EntityEditor.uploadTestAsset(page);
 
     // Search uploaded asset
-    const uploadedEntityLocator = await EntityEditor.searchEntity(
-      page,
-      EntityEditor.getTestAssetName()
-    );
+    const uploadedEntityLocator = await EntityEditor.searchEntity(page, EntityEditor.getTestAssetName());
     const uploadedEntityElement = await uploadedEntityLocator.innerHTML();
     expect(uploadedEntityElement).toContain(EntityEditor.getTestAssetName());
   });
 
-  test("Successfully upload and use custom entity in the map", async ({
-    page,
-    browser,
-    request,
-  }) => {
-    if (browser.browserType() === webkit) {
-      // Webkit is somehow failing on this, maybe it is too slow
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
+  test("Successfully upload and use custom entity in the map", async ({ page, browser, request }) => {
     await resetWamMaps(request);
 
     // First browser + moved woka
@@ -687,10 +450,7 @@ test.describe("Map editor", () => {
     await EntityEditor.addProperty(page, "Open Link");
 
     // fill link
-    await page
-      .getByPlaceholder("https://workadventu.re")
-      .first()
-      .fill("https://workadventu.re");
+    await page.getByPlaceholder("https://workadventu.re").first().fill("https://workadventu.re");
 
     // close object selector
     await Menu.closeMapEditor(page);
@@ -700,26 +460,11 @@ test.describe("Map editor", () => {
     await EntityEditor.moveAndClick(page2, 14 * 32, 13 * 32);
 
     // check if the popup with application is opened on both pages
-    await expect(
-      page.locator(".actions-menu .actions button").nth(0)
-    ).toContainText("Open Link");
-    await expect(
-      page2.locator(".actions-menu .actions button").nth(0)
-    ).toContainText("Open Link");
+    await expect(page.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
+    await expect(page2.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
   });
 
-  test("Successfully upload and edit asset name", async ({
-    page,
-    browser,
-    request,
-  }) => {
-    if (browser.browserType() === webkit) {
-      // Webkit is somehow failing on this, maybe it is too slow
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
+  test("Successfully upload and edit asset name", async ({ page, browser, request }) => {
     // Init wam file
     await resetWamMaps(request);
 
@@ -751,14 +496,8 @@ test.describe("Map editor", () => {
     await EntityEditor.applyEntityModifications(page);
 
     // Search uploaded entity on both pages
-    const uploadedEntityLocator = await EntityEditor.searchEntity(
-      page,
-      newEntityName
-    );
-    const uploadedEntityLocator2 = await EntityEditor.searchEntity(
-      page2,
-      newEntityName
-    );
+    const uploadedEntityLocator = await EntityEditor.searchEntity(page, newEntityName);
+    const uploadedEntityLocator2 = await EntityEditor.searchEntity(page2, newEntityName);
 
     // Get inner html on both pages
     const uploadedEntityElement = await uploadedEntityLocator.innerHTML();
@@ -769,18 +508,7 @@ test.describe("Map editor", () => {
     expect(uploadedEntityElement2).toContain(newEntityName);
   });
 
-  test("Successfully upload and remove custom entity", async ({
-    page,
-    browser,
-    request,
-  }) => {
-    if (browser.browserType() === webkit) {
-      // Webkit is somehow failing on this, maybe it is too slow
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
+  test("Successfully upload and remove custom entity", async ({ page, browser, request }) => {
     await resetWamMaps(request);
 
     // First browser + moved woka
@@ -817,36 +545,17 @@ test.describe("Map editor", () => {
     await expect(page2.getByTestId("entity-item")).toHaveCount(0);
   });
 
-  test("Successfully set searchable processus for entity and zone", async ({
-    page,
-    browser,
-    request,
-    browserName,
-  }, { project }) => {
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
+  test("Successfully set searchable processus for entity and zone", async ({ page, browser, request }) => {
     await resetWamMaps(request);
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
-    // Because webkit in playwright does not support Camera/Microphone Permission by settings
-    if (browserName === "webkit") {
-      await hideNoCamera(page);
-    }
 
     // Open the map editor
     await Menu.openMapEditor(page);
 
     // Area
     await MapEditor.openAreaEditor(page);
-    await AreaEditor.drawArea(
-      page,
-      { x: 1 * 32 * 1.5, y: 5 },
-      { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 }
-    );
+    await AreaEditor.drawArea(page, { x: 1 * 32 * 1.5, y: 5 }, { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 });
     await AreaEditor.setAreaName(page, "My Focusable Zone");
     await AreaEditor.setAreaDescription(
       page,
@@ -881,55 +590,34 @@ test.describe("Map editor", () => {
     // With webkit, something wrong to put an object and clik on it, so in this case, we don't have an object
     if (browser.browserType() !== webkit) {
       // Test if the entity is searchable
-      await expect(
-        page.locator(".map-editor .sidebar .entities")
-      ).toContainText("1 objects found");
+      await expect(page.locator(".map-editor .sidebar .entities")).toContainText("1 objects found");
       await page.locator(".map-editor .sidebar .entities").click();
-      expect(
-        await page.locator(".map-editor .sidebar .entity-items .item").count()
-      ).toBe(1);
+      expect(await page.locator(".map-editor .sidebar .entity-items .item").count()).toBe(1);
     } else {
       // For webkit, we don't have an object
-      await expect(
-        page.locator(".map-editor .sidebar .entities")
-      ).toContainText("No entity found in the room 🙅‍♂️");
+      await expect(page.locator(".map-editor .sidebar .entities")).toContainText("No entity found in the room 🙅‍♂️");
     }
 
     // Test if the area is searchable
-    await expect(page.locator(".map-editor .sidebar .areas")).toContainText(
-      "1 areas found"
-    );
+    await expect(page.locator(".map-editor .sidebar .areas")).toContainText("1 areas found");
     await page.locator(".map-editor .sidebar .areas").click();
-    expect(
-      await page.locator(".map-editor .sidebar .area-items .item").count()
-    ).toBe(1);
+    expect(await page.locator(".map-editor .sidebar .area-items .item").count()).toBe(1);
   });
 
-  test('Successfully test global message text and sound feature', async ({ page, browser, request, browserName }, { project }) => {
-    // Skip test for mobile device
-    if(project.name === "mobilechromium") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-
+  test("Successfully test global message text and sound feature", async ({ page, browser, request }) => {
     await resetWamMaps(request);
     await page.goto(Map.url("empty"));
 
     await login(page, "test", 3);
-    // Because webkit in playwright does not support Camera/Microphone Permission by settings
-    if(browserName === "webkit"){
-      await hideNoCamera(page);
-    }
 
     // Move user and not create discussion with the second user
-    await Map.teleportToPosition(page, 5*32, 5*32);
+    await Map.teleportToPosition(page, 5 * 32, 5 * 32);
 
     // Second browser
     const newBrowser = await browser.browserType().launch();
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
-    await page2.evaluate(() => localStorage.setItem('debug', '*'));
+    await page2.evaluate(() => localStorage.setItem("debug", "*"));
     await login(page2, "test2", 5);
 
     // Open the map editor and configure the megaphone to have accès to the global message
@@ -942,20 +630,20 @@ test.describe("Map editor", () => {
     await Megaphone.isMegaphoneEnabled(page);
 
     // Testing if no input is set, megaphone should not be usable but WA should not crash
-    await Megaphone.megaphoneInputNameSpace(page, '');
+    await Megaphone.megaphoneInputNameSpace(page, "");
     await Megaphone.megaphoneSave(page);
     await Megaphone.isNotCorrectlySaved(page);
 
     await Megaphone.megaphoneInputNameSpace(page, `${browser.browserType().name()}MySpace`);
     await Megaphone.megaphoneSelectScope(page);
-    await Megaphone.megaphoneAddNewRights(page, 'example');
+    await Megaphone.megaphoneAddNewRights(page, "example");
     await Megaphone.megaphoneSave(page);
     await Megaphone.isCorrectlySaved(page);
     // Test if tags are working correctly, all current users doesn't have the tag "example" to use megaphone
     await Menu.isNotThereMegaphoneButton(page);
     await Menu.isNotThereMegaphoneButton(page2);
     // Remove rights
-    await Megaphone.megaphoneRemoveRights(page, 'example');
+    await Megaphone.megaphoneRemoveRights(page, "example");
     await Megaphone.megaphoneSave(page);
     await Megaphone.isCorrectlySaved(page);
     // Megaphone should be displayed and usable by all the current users
