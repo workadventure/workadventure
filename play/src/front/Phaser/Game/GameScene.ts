@@ -90,6 +90,7 @@ import {
     inviteUserActivated,
     mapEditorActivated,
     mapManagerActivated,
+    mapEditorActivatedForThematics,
     menuVisiblilityStore,
     screenSharingActivatedStore,
     SubMenusInterface,
@@ -917,6 +918,7 @@ export class GameScene extends DirtyScene {
         ])
             .then(() => {
                 this.initEntityPermissions();
+                this.initMapEditorForThematics();
                 this.hide(false);
                 this.sceneReadyToStartDeferred.resolve();
             })
@@ -941,6 +943,11 @@ export class GameScene extends DirtyScene {
             this.connection?.getAllTags() ?? [],
             userCanEdit
         );
+    }
+
+    private initMapEditorForThematics() {
+        const isGameMapHasThematics = this.getGameMap().getGameMapAreas()?.isGameMapContainsThematics() ? true : false;
+        mapEditorActivatedForThematics.set(isGameMapHasThematics);
     }
 
     private hide(hide = true): void {
