@@ -34,6 +34,8 @@ class EntitiesFileMigration {
                     //@ts-ignore
                     throw new Error(
                         `Unable to parse entity file content in EntityCollectionRaw format migration version : ${version}`,
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        //@ts-ignore
                         {
                             cause: error,
                         }
