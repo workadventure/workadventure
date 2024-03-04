@@ -141,10 +141,14 @@ export class GameMapAreas {
     }
 
     public isGameMapContainsThematics(): boolean {
-        return Object.values(this.areas).some(
-            (area: AreaData) =>
-                area.properties.find((property) => property.type === "areaRightPropertyData") !== undefined
-        );
+        let hasThematics = false;
+        this.areas.forEach((area) => {
+            if (area.properties.find((property) => property.type === "areaRightPropertyData") !== undefined) {
+                hasThematics = true;
+                return;
+            }
+        });
+        return hasThematics;
     }
 
     public isPlayerInsideArea(id: string, playerPosition: { x: number; y: number }): boolean {
