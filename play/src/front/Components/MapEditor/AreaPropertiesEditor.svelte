@@ -365,279 +365,281 @@
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
     {$LL.mapEditor.areaEditor.editInstructions()}
 {:else}
-    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
-        {#if !hasFocusableProperty}
-            <AddPropertyButtonWrapper
-                property="focusable"
-                on:click={() => {
-                    onAddProperty("focusable");
-                }}
-            />
-        {/if}
-        {#if !hasSilentProperty}
-            <AddPropertyButtonWrapper
-                property="silent"
-                on:click={() => {
-                    onAddProperty("silent");
-                }}
-            />
-        {/if}
-        {#if !hasJitsiRoomProperty}
-            <AddPropertyButtonWrapper
-                property="jitsiRoomProperty"
-                on:click={() => {
-                    onAddProperty("jitsiRoomProperty");
-                }}
-            />
-        {/if}
-        {#if FEATURE_FLAG_BROADCAST_AREAS}
-            {#if !hasSpeakerMegaphoneProperty}
+    <div class="tw-overflow-auto">
+        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+            {#if !hasFocusableProperty}
                 <AddPropertyButtonWrapper
-                    property="speakerMegaphone"
+                    property="focusable"
                     on:click={() => {
-                        onAddProperty("speakerMegaphone");
+                        onAddProperty("focusable");
                     }}
                 />
             {/if}
-            {#if !hasListenerMegaphoneProperty}
+            {#if !hasSilentProperty}
                 <AddPropertyButtonWrapper
-                    property="listenerMegaphone"
+                    property="silent"
                     on:click={() => {
-                        onAddProperty("listenerMegaphone");
+                        onAddProperty("silent");
                     }}
                 />
             {/if}
-        {/if}
-        {#if !hasStartProperty}
-            <AddPropertyButtonWrapper
-                property="start"
-                on:click={() => {
-                    onAddProperty("start");
-                }}
-            />
-        {/if}
-        {#if !hasExitProperty}
-            <AddPropertyButtonWrapper
-                property="exit"
-                on:click={() => {
-                    onAddProperty("exit");
-                }}
-            />
-        {/if}
-        {#if !hasplayAudioProperty}
-            <AddPropertyButtonWrapper
-                property="playAudio"
-                on:click={() => {
-                    onAddProperty("playAudio");
-                }}
-            />
-        {/if}
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            on:click={() => {
-                onAddProperty("openWebsite");
-            }}
-        />
-    </div>
-    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="klaxoon"
-            on:click={() => {
-                onAddProperty("openWebsite", "klaxoon");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="youtube"
-            on:click={() => {
-                onAddProperty("openWebsite", "youtube");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="googleDrive"
-            on:click={() => {
-                onAddProperty("openWebsite", "googleDrive");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="googleDocs"
-            on:click={() => {
-                onAddProperty("openWebsite", "googleDocs");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="googleSheets"
-            on:click={() => {
-                onAddProperty("openWebsite", "googleSheets");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="googleSlides"
-            on:click={() => {
-                onAddProperty("openWebsite", "googleSlides");
-            }}
-        />
-        <AddPropertyButtonWrapper
-            property="openWebsite"
-            subProperty="eraser"
-            on:click={() => {
-                onAddProperty("openWebsite", "eraser");
-            }}
-        />
-    </div>
-    <div class="area-name-container">
-        <label for="objectName">{$LL.mapEditor.areaEditor.nameLabel()}</label>
-        <input
-            id="objectName"
-            type="text"
-            placeholder={$LL.mapEditor.areaEditor.nameLabelPlaceholder()}
-            bind:value={areaName}
-            on:change={onUpdateName}
-        />
-    </div>
-    <div class="area-name-container">
-        {#if !showDescriptionField}
-            <a href="#addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
-                >+ {$LL.mapEditor.areaEditor.addDescriptionField()}</a
-            >
-        {:else}
-            <a href="#addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
-                >- {$LL.mapEditor.areaEditor.addDescriptionField()}</a
-            >
-            <label for="objectDescription">{$LL.mapEditor.areaEditor.areaDescription()}</label>
-            <textarea
-                id="objectDescription"
-                placeholder={$LL.mapEditor.areaEditor.areaDescriptionPlaceholder()}
-                bind:value={areaDescription}
-                on:change={onUpdateAreaDescription}
-            />
-        {/if}
-    </div>
-    <div class="value-switch">
-        <label for="searchable">{$LL.mapEditor.areaEditor.areaSerchable()}</label>
-        <input
-            id="searchable"
-            type="checkbox"
-            class="input-switch"
-            bind:checked={areaSearchable}
-            on:change={onUpdateAreaSearchable}
-        />
-    </div>
-    <div class="properties-container">
-        {#if !addRights}
-            <a href="#toggleRight" on:click|preventDefault|stopPropagation={toggleRight}
-                >+ {$LL.mapEditor.areaEditor.addRight()} ({writeTags.length + readTags.length})</a
-            >
-        {:else}
-            <a href="#toggleRight" class="tw-cursor-pointer" on:click|preventDefault|stopPropagation={toggleRight}
-                >- {$LL.mapEditor.areaEditor.rightTitle()}</a
-            >
-            <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.areaEditor.rightWriteDescription()}</p>
-            <InputTags
-                label={$LL.mapEditor.areaEditor.rightWriteTitle()}
-                options={_tag}
-                on:change={onChangeWriteReadTags}
-                bind:value={writeTags}
-            />
-            <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.areaEditor.rightReadDescription()}</p>
-            <InputTags
-                label={$LL.mapEditor.areaEditor.rightReadTitle()}
-                options={_tag}
-                on:change={onChangeWriteReadTags}
-                bind:value={readTags}
-            />
-            {#if writeTags != undefined && writeTags.length > 0}
-                <div class="tw-flex tw-flex-wrap tw-gap-1">
-                    {#each writeTags as tag, index (`${index}-${tag.value}`)}
-                        <span class="tw-py-1 tw-px-2 tw-bg-gray-400 tw-text-black tw-rounded-lg">{tag.label}</span>
-                    {/each}
-                </div>
+            {#if !hasJitsiRoomProperty}
+                <AddPropertyButtonWrapper
+                    property="jitsiRoomProperty"
+                    on:click={() => {
+                        onAddProperty("jitsiRoomProperty");
+                    }}
+                />
             {/if}
-        {/if}
-    </div>
-    <div class="properties-container">
-        {#each properties as property (property.id)}
-            <div class="property-box">
-                {#if property.type === "focusable"}
-                    <FocusablePropertyEditor
-                        {property}
-                        on:close={() => {
-                            onDeleteProperty(property.id);
+            {#if FEATURE_FLAG_BROADCAST_AREAS}
+                {#if !hasSpeakerMegaphoneProperty}
+                    <AddPropertyButtonWrapper
+                        property="speakerMegaphone"
+                        on:click={() => {
+                            onAddProperty("speakerMegaphone");
                         }}
-                        on:change={() => onUpdateProperty(property)}
-                    />
-                {:else if property.type === "silent"}
-                    <SilentPropertyEditor
-                        on:close={() => {
-                            onDeleteProperty(property.id);
-                        }}
-                        on:change={() => onUpdateProperty(property)}
-                    />
-                {:else if property.type === "jitsiRoomProperty"}
-                    <JitsiRoomPropertyEditor
-                        {property}
-                        on:close={() => {
-                            onDeleteProperty(property.id);
-                        }}
-                        on:change={() => onUpdateProperty(property)}
-                    />
-                {:else if property.type === "playAudio"}
-                    <PlayAudioPropertyEditor
-                        property={{ ...property, hideButtonLabel: true }}
-                        on:close={() => {
-                            onDeleteProperty(property.id);
-                        }}
-                        on:audioLink={onUpdateAudioProperty}
-                    />
-                {:else if property.type === "openWebsite"}
-                    <OpenWebsitePropertyEditor
-                        {property}
-                        isArea={true}
-                        on:close={() => {
-                            onDeleteProperty(property.id);
-                        }}
-                        on:change={() => onUpdateProperty(property)}
-                    />
-                {:else if property.type === "speakerMegaphone"}
-                    <SpeakerMegaphonePropertyEditor
-                        {property}
-                        on:close={() => {
-                            onDeleteProperty(property.id);
-                        }}
-                        on:change={() => onUpdateProperty(property)}
-                    />
-                {:else if property.type === "listenerMegaphone"}
-                    <ListenerMegaphonePropertyEditor
-                        {property}
-                        on:close={() => {
-                            onDeleteProperty(property.id);
-                        }}
-                        on:change={() => onUpdateProperty(property)}
-                    />
-                {:else if property.type === "start"}
-                    <StartPropertyEditor
-                        {property}
-                        on:close={() => {
-                            onDeleteProperty(property.id);
-                        }}
-                        on:change={() => onUpdateProperty(property)}
-                    />
-                {:else if property.type === "exit"}
-                    <ExitPropertyEditor
-                        {property}
-                        on:close={() => {
-                            onDeleteProperty(property.id);
-                        }}
-                        on:change={() => onUpdateProperty(property)}
                     />
                 {/if}
-            </div>
-        {/each}
+                {#if !hasListenerMegaphoneProperty}
+                    <AddPropertyButtonWrapper
+                        property="listenerMegaphone"
+                        on:click={() => {
+                            onAddProperty("listenerMegaphone");
+                        }}
+                    />
+                {/if}
+            {/if}
+            {#if !hasStartProperty}
+                <AddPropertyButtonWrapper
+                    property="start"
+                    on:click={() => {
+                        onAddProperty("start");
+                    }}
+                />
+            {/if}
+            {#if !hasExitProperty}
+                <AddPropertyButtonWrapper
+                    property="exit"
+                    on:click={() => {
+                        onAddProperty("exit");
+                    }}
+                />
+            {/if}
+            {#if !hasplayAudioProperty}
+                <AddPropertyButtonWrapper
+                    property="playAudio"
+                    on:click={() => {
+                        onAddProperty("playAudio");
+                    }}
+                />
+            {/if}
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                on:click={() => {
+                    onAddProperty("openWebsite");
+                }}
+            />
+        </div>
+        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="klaxoon"
+                on:click={() => {
+                    onAddProperty("openWebsite", "klaxoon");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="youtube"
+                on:click={() => {
+                    onAddProperty("openWebsite", "youtube");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="googleDrive"
+                on:click={() => {
+                    onAddProperty("openWebsite", "googleDrive");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="googleDocs"
+                on:click={() => {
+                    onAddProperty("openWebsite", "googleDocs");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="googleSheets"
+                on:click={() => {
+                    onAddProperty("openWebsite", "googleSheets");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="googleSlides"
+                on:click={() => {
+                    onAddProperty("openWebsite", "googleSlides");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="eraser"
+                on:click={() => {
+                    onAddProperty("openWebsite", "eraser");
+                }}
+            />
+        </div>
+        <div class="area-name-container">
+            <label for="objectName">{$LL.mapEditor.areaEditor.nameLabel()}</label>
+            <input
+                id="objectName"
+                type="text"
+                placeholder={$LL.mapEditor.areaEditor.nameLabelPlaceholder()}
+                bind:value={areaName}
+                on:change={onUpdateName}
+            />
+        </div>
+        <div class="area-name-container">
+            {#if !showDescriptionField}
+                <a href="#addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
+                    >+ {$LL.mapEditor.areaEditor.addDescriptionField()}</a
+                >
+            {:else}
+                <a href="#addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
+                    >- {$LL.mapEditor.areaEditor.addDescriptionField()}</a
+                >
+                <label for="objectDescription">{$LL.mapEditor.areaEditor.areaDescription()}</label>
+                <textarea
+                    id="objectDescription"
+                    placeholder={$LL.mapEditor.areaEditor.areaDescriptionPlaceholder()}
+                    bind:value={areaDescription}
+                    on:change={onUpdateAreaDescription}
+                />
+            {/if}
+        </div>
+        <div class="value-switch">
+            <label for="searchable">{$LL.mapEditor.areaEditor.areaSerchable()}</label>
+            <input
+                id="searchable"
+                type="checkbox"
+                class="input-switch"
+                bind:checked={areaSearchable}
+                on:change={onUpdateAreaSearchable}
+            />
+        </div>
+        <div class="properties-container">
+            {#if !addRights}
+                <a href="#toggleRight" on:click|preventDefault|stopPropagation={toggleRight}
+                    >+ {$LL.mapEditor.areaEditor.addRight()} ({writeTags.length + readTags.length})</a
+                >
+            {:else}
+                <a href="#toggleRight" class="tw-cursor-pointer" on:click|preventDefault|stopPropagation={toggleRight}
+                    >- {$LL.mapEditor.areaEditor.rightTitle()}</a
+                >
+                <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.areaEditor.rightWriteDescription()}</p>
+                <InputTags
+                    label={$LL.mapEditor.areaEditor.rightWriteTitle()}
+                    options={_tag}
+                    on:change={onChangeWriteReadTags}
+                    bind:value={writeTags}
+                />
+                <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.areaEditor.rightReadDescription()}</p>
+                <InputTags
+                    label={$LL.mapEditor.areaEditor.rightReadTitle()}
+                    options={_tag}
+                    on:change={onChangeWriteReadTags}
+                    bind:value={readTags}
+                />
+                {#if writeTags != undefined && writeTags.length > 0}
+                    <div class="tw-flex tw-flex-wrap tw-gap-1">
+                        {#each writeTags as tag, index (`${index}-${tag.value}`)}
+                            <span class="tw-py-1 tw-px-2 tw-bg-gray-400 tw-text-black tw-rounded-lg">{tag.label}</span>
+                        {/each}
+                    </div>
+                {/if}
+            {/if}
+        </div>
+        <div class="properties-container">
+            {#each properties as property (property.id)}
+                <div class="property-box">
+                    {#if property.type === "focusable"}
+                        <FocusablePropertyEditor
+                            {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "silent"}
+                        <SilentPropertyEditor
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "jitsiRoomProperty"}
+                        <JitsiRoomPropertyEditor
+                            {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "playAudio"}
+                        <PlayAudioPropertyEditor
+                            property={{ ...property, hideButtonLabel: true }}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:audioLink={onUpdateAudioProperty}
+                        />
+                    {:else if property.type === "openWebsite"}
+                        <OpenWebsitePropertyEditor
+                            {property}
+                            isArea={true}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "speakerMegaphone"}
+                        <SpeakerMegaphonePropertyEditor
+                            {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "listenerMegaphone"}
+                        <ListenerMegaphonePropertyEditor
+                            {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "start"}
+                        <StartPropertyEditor
+                            {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "exit"}
+                        <ExitPropertyEditor
+                            {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {/if}
+                </div>
+            {/each}
+        </div>
     </div>
 {/if}
 
