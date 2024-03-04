@@ -54,6 +54,7 @@
         showChevron={true}
         --icons-color="var(--brand-blue)"
         --text-color="var(--brand-blue)"
+        listAutoWidth={false}
     >
         <div slot="item" let:item>
             {item.created ? "Add new : " : ""}
