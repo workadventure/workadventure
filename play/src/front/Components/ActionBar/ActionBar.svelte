@@ -412,12 +412,34 @@
         const button = $additionnalButtonsMenu.get(id) as AddButtonActionBarEvent;
         return iframeListener.sendButtonActionBarTriggered(button);
     }
+
+
+
+
+    let adminElt = true;
+    let userElt = true;
+    let inviteElt = true;
     window.addEventListener("resize", () => {
-        colWidth = Math.round(window.innerWidth/3);
+        const mainAction = document.getElementById('main-action').getBoundingClientRect();
+        const wrapperAction = document.getElementById('action-wrapper').getBoundingClientRect();
+
+        if(parseInt(wrapperAction.x) <= parseInt(mainAction.x + mainAction.width)) {
+            if(adminElt) {
+                adminElt = false;
+                console.log("Collide append : hide ADMIN elt");
+            } else if (userElt) {
+                userElt = false;
+                console.log("Collide append : hide USER elt");
+            } else if (inviteElt) {
+                inviteElt = false;
+                console.log("Collide append : hide INVITE elt");
+            }
+        }
     });
 
     let isMobile = isMediaBreakpointUp("md");
     new ResizeObserver(() => {
+        console.log("ResizeObserver");
         isMobile = isMediaBreakpointUp("md");
         if (isMobile) {
             mapEditorModeStore.set(false);
@@ -439,7 +461,7 @@
     <ChatOverlay />
 {/if}
 <div class="flex absolute w-full p-2 xl:p-4 pointer-events-none bp-menu z-[301] top-0">
-    <div class="justify-start w-full pointer-events-auto w-32" transition:fly={{delay: 500, y: -200, duration: 750 }}>
+    <div class="justify-start flex-1 pointer-events-auto w-32" transition:fly={{delay: 500, y: -200, duration: 750 }}>
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
                 class="flex relative transition-all duration-150 z-[2]"
@@ -489,7 +511,7 @@
             </div>
         </div>
     </div>
-    <div class="justify-center w-full pointer-events-auto min-w-[200px] max-w-[424px]">
+    <div id="main-action" class="absolute left-0 right-0 m-auto pointer-events-auto w-[200px]">
         <div class="flex justify-center relative space-x-2 xl:space-x-4">
             {#if !$silentStore}
             <div in:fly={{delay: 750, y: -200, duration: 750 }}>
@@ -859,7 +881,7 @@
             </div>
         </div>
     </div>
-    <div class="justify-end w-full pointer-events-auto menu-right @6xl:text-danger" bind:clientWidth={elementsWidth}>
+    <div id="action-wrapper" class="absolute right-0 pointer-events-auto menu-right @6xl:text-danger" bind:clientWidth={elementsWidth}>
         <div class="flex justify-end space-x-2 xl:space-x-4">
             {#if $addActionButtonActionBarEvent.length > 0}
                 <div class="flex items-center relative">
@@ -902,104 +924,109 @@
                     {/each}
                 </div>
             {/if}
-            {#if $inviteUserActivated}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div transition:fly={{delay: 1250, y: -200, duration: 750 }}>
-                    <div class="flex items-center hidden xl:block">
-                        <div class="bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg flex">
-                            {#each $addClassicButtonActionBarEvent as button}
-                                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                                <div
-                                        class="flex flex-initial"
+            {#if $inviteUserActivated }
+                {#if inviteElt}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div id="action-invite">
+                        <div class="flex items-center">
+                            <div class="bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg flex">
+                                {#each $addClassicButtonActionBarEvent as button}
+                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                                    <div
+                                            class="flex flex-initial"
+                                            in:fly={{}}
+                                            on:dragstart|preventDefault={noDrag}
+                                            on:click={() => analyticsClient.clickOnCustomButton(button.id, button.label)}
+                                            on:click={() => {
+                                                buttonActionBarTrigger(button.id);
+                                            }}
+                                    >
+                                        <button class="btn btn-light rounded h-12 mr-2 select-none !px-4" id={button.id}>
+                                            {button.label}
+                                        </button>
+                                    </div>
+                                {/each}
+                                {#if $inviteUserActivated}
+                                <button
                                         in:fly={{}}
                                         on:dragstart|preventDefault={noDrag}
-                                        on:click={() => analyticsClient.clickOnCustomButton(button.id, button.label)}
-                                        on:click={() => {
-                                            buttonActionBarTrigger(button.id);
-                                        }}
+                                        on:click={() => analyticsClient.openInvite()}
+                                        on:click={() => showMenuItem(SubMenusInterface.invite)}
+                                        class="btn rounded h-12 select-none !px-4 {!$userIsConnected && ENABLE_OPENID ? 'btn-ghost btn-light' : 'btn-secondary' }"
                                 >
-                                    <button class="btn btn-light rounded h-12 mr-2 select-none !px-4" id={button.id}>
-                                        {button.label}
-                                    </button>
-                                </div>
-                            {/each}
-                            {#if $inviteUserActivated}
-                            <button
-                                    in:fly={{}}
-                                    on:dragstart|preventDefault={noDrag}
-                                    on:click={() => analyticsClient.openInvite()}
-                                    on:click={() => showMenuItem(SubMenusInterface.invite)}
-                                    class="btn rounded h-12 select-none !px-4 {!$userIsConnected && ENABLE_OPENID ? 'btn-ghost btn-light' : 'btn-secondary' }"
-                            >
-                                {$LL.menu.sub.invite()}
-                            </button>
-                            {/if}
-                            {#if !$userIsConnected && ENABLE_OPENID}
-                                <a href="/login"
-                                   on:click={() => analyticsClient.login()}
-                                   class="btn btn-secondary rounded h-12 select-none ml-2 !px-4">
-                                    Login <!-- trad -->
-                                </a>
-                            {/if}
-                        </div>
-                    </div>
-                </div>
-            {/if}
-            {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
-                <div class="items-center relative hidden xl:block" transition:fly={{delay: 1500, y: -200, duration: 750 }}>
-                    <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false } tabindex="0">
-                        <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-4 pr-3">
-                            <AdminPanIcon />
-                            <div class="pr-2">
-                                <div class="font-bold text-white leading-3 whitespace-nowrap select-none">Admin<!-- trad --></div>
+                                    {$LL.menu.sub.invite()}
+                                </button>
+                                {/if}
+                                {#if !$userIsConnected && ENABLE_OPENID}
+                                    <a href="/login"
+                                       on:click={() => analyticsClient.login()}
+                                       class="btn btn-secondary rounded h-12 select-none ml-2 !px-4">
+                                        Login <!-- trad -->
+                                    </a>
+                                {/if}
                             </div>
-                            <ChevronDownIcon strokeWidth="2" classList="h-4 w-4 aspect-ratio transition-all opacity-50 {adminMenuIsDropped ? 'rotate-180' : '' }" height="16px" width="16px"  />
                         </div>
                     </div>
-                    {#if adminMenuIsDropped}
-                    <div class="absolute mt-2 top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all" transition:fly={{y: 40, duration: 150 }}>
-                        <ul class="p-0 m-0">
-                            {#if $mapEditorActivated}
-                                <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => toggleMapEditorMode()}>
-                                    <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
-                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </div>
-                                    <div>Map editor<!-- trad --></div>
-                                </li>
-                            {/if}
-                            {#if $userHasAccessToBackOfficeStore}
-                                <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openBo()}>
-                                    <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
-                                        <AdjustmentsIcon />
-                                    </div>
-                                    <div>Back-office<!-- trad --></div>
-                                </li>
-                            {/if}
-                            <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
-                                <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
-                                    <MessageGlobalIcon />
+                {/if}
+            {/if}
+            {#if adminElt}
+                {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
+                    <div id="action-admin" class="items-center relative">
+                        <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false } tabindex="0">
+                            <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-4 pr-3">
+                                <AdminPanIcon />
+                                <div class="pr-2">
+                                    <div class="font-bold text-white leading-3 whitespace-nowrap select-none">Admin<!-- trad --></div>
                                 </div>
-                                <div>Envoyer message global<!-- trad --></div>
-                            </li>
-                            {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
-                            <li  class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
-                                <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
-                                    <MegaphoneIcon />
-                                </div>
-                                <div>Utiliser le mégaphone<!-- trad --></div>
-                            </li>
+                                <ChevronDownIcon strokeWidth="2" classList="h-4 w-4 aspect-ratio transition-all opacity-50 {adminMenuIsDropped ? 'rotate-180' : '' }" height="16px" width="16px"  />
+                            </div>
+                        </div>
+                        {#if adminMenuIsDropped}
+                        <div class="absolute mt-2 top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all" transition:fly={{y: 40, duration: 150 }}>
+                            <ul class="p-0 m-0">
+                                {#if $mapEditorActivated}
+                                    <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => toggleMapEditorMode()}>
+                                        <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
+                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M12.5 3.5L16.5 7.5M10 6L5 1L1 5L6 10M5 6L3.5 7.5M14 10L19 15L15 19L10 14M14 15L12.5 16.5M1 19H5L18 6C18.5304 5.46957 18.8284 4.75015 18.8284 4C18.8284 3.24985 18.5304 2.53043 18 2C17.4696 1.46957 16.7501 1.17157 16 1.17157C15.2499 1.17157 14.5304 1.46957 14 2L1 15V19Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </div>
+                                        <div>Map editor<!-- trad --></div>
+                                    </li>
+                                {/if}
+                                {#if $userHasAccessToBackOfficeStore}
+                                    <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => openBo()}>
+                                        <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
+                                            <AdjustmentsIcon />
+                                        </div>
+                                        <div>Back-office<!-- trad --></div>
+                                    </li>
+                                {/if}
+                                <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
+                                    <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
+                                        <MessageGlobalIcon />
+                                    </div>
+                                    <div>Envoyer message global<!-- trad --></div>
+                                </li>
+                                {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
+                                <li  class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold">
+                                    <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-ratio mr-3 text-center">
+                                        <MegaphoneIcon />
+                                    </div>
+                                    <div>Utiliser le mégaphone<!-- trad --></div>
+                                </li>
+                                {/if}
+                            </ul>
+                            {#if $streamingMegaphoneStore}
+                                <MegaphoneConfirm />
                             {/if}
-                        </ul>
-                        {#if $streamingMegaphoneStore}
-                            <MegaphoneConfirm />
+                        </div>
                         {/if}
                     </div>
-                    {/if}
-                </div>
+                {/if}
             {/if}
-            <div class="flex items-center relative hidden xl:block min-w-40" transition:fly={{delay: 1750, y: -200, duration: 750 }}>
+            {#if userElt}
+            <div id="action-user" class="flex items-center relative min-w-40">
                 <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 p-2" on:click={() => profileMenuIsDropped = !profileMenuIsDropped} on:click={close} tabindex="0">
                     <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-2 pr-3">
                         <Woka userId={-1} placeholderSrc="" customWidth="32px" customHeight="32px" />
@@ -1117,6 +1144,7 @@
                 </div>
                 {/if}
             </div>
+            {/if}
             <div class="group/btn-burger relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 rounded-l-lg rounded-r-lg aspect-square block xl:hidden">
                 <div
                     on:click={() => burgerOpen = !burgerOpen}
