@@ -19,7 +19,7 @@ test.use({
 
 test.describe("Map editor", () => {
 
-  test.beforeAll(
+  test.beforeEach(
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
     ({}, { project }) => {
       //Map Editor not available on mobile
@@ -31,7 +31,7 @@ test.describe("Map editor", () => {
     }
   );
   
-  test.beforeAll("Ignore tests on webkit because of issue with camera and microphone", ({ browserName }) => {
+  test.beforeEach("Ignore tests on webkit because of issue with camera and microphone", ({ browserName }) => {
     //WebKit has issue with camera
     if (browserName === "webkit") {
       //eslint-disable-next-line playwright/no-skipped-test
