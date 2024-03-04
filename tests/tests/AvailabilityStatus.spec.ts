@@ -35,7 +35,14 @@ test.describe('Availability Status', () => {
                 x: 3 * 32,
                 y: 4 * 32
             };
-            await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
+            
+            //await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
+
+            await page.evaluate(()=>{
+                WA.player.moveTo(positionToDiscuss.x, positionToDiscuss.y, 3);
+                return;
+            });
+
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
         })
@@ -284,6 +291,7 @@ test.describe('Availability Status', () => {
             await Menu.closeNotificationPopUp(page);
             
             await page.waitForTimeout(500);
+
             await Menu.openStatusList(page);
             
             await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
@@ -294,7 +302,11 @@ test.describe('Availability Status', () => {
                 x: 3 * 32,
                 y: 4 * 32
             };
-            await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
+            //await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
+            await page.evaluate(()=>{
+                WA.player.moveTo(positionToDiscuss.x, positionToDiscuss.y, 3);
+                return;
+            });
 
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
@@ -415,8 +427,13 @@ test.describe('Availability Status', () => {
                 x: 3 * 32,
                 y: 4 * 32
             };
-            await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
-            await Map.walkTo(page,'ArrowRight')
+           // await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
+            await page.evaluate(()=>{
+                WA.player.moveTo(positionToDiscuss.x, positionToDiscuss.y, 3);
+                return;
+            });
+
+            //await Map.walkTo(page,'ArrowRight')
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
         })
