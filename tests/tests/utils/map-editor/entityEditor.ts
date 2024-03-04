@@ -18,6 +18,7 @@ class EntityEditor {
   }
   async moveAndClick(page: Page, x: number, y: number) {
     await page.mouse.move(x, y);
+    await page.mouse.move(x, y);
     await page.mouse.down();
     await page.mouse.up();
   }
