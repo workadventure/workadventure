@@ -33,11 +33,12 @@ test.describe('Availability Status', () => {
             //move
  
             const positionToDiscuss = {
-                x: 3 * 32,
-                y: 4 * 32
+                x: 2 * 32,
+                y: 2 * 32
             };
             if(project.name === "mobilechromium" ) {
-                await page.touchscreen.tap(positionToDiscuss.x,positionToDiscuss.y)
+                await Menu.closeNotificationPopUp
+                await Map.walkToPosition(page,positionToDiscuss.x,positionToDiscuss.y)
             }else{
                 await Map.walkTo(page,'ArrowRight',100)
             }
@@ -295,12 +296,13 @@ test.describe('Availability Status', () => {
             
             await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
             const positionToDiscuss = {
-                x: 3 * 32,
-                y: 4 * 32
+                x: 2 * 32,
+                y: 2 * 32
             };
 
             if(project.name === "mobilechromium" ) {
-                await page.touchscreen.tap(positionToDiscuss.x,positionToDiscuss.y)
+                await Menu.closeNotificationPopUp(page)
+                await Map.walkToPosition(page,positionToDiscuss.x,positionToDiscuss.y)
             }else{
                 await Map.walkTo(page,'ArrowRight',100)
             }
@@ -424,12 +426,12 @@ test.describe('Availability Status', () => {
             //move
             
             const positionToDiscuss = {
-                x: 3 * 32,
-                y: 4 * 32
+                x: 2 * 32,
+                y: 2 * 32
             };
 
             if(project.name === "mobilechromium" ) {
-                await page.touchscreen.tap(positionToDiscuss.x,positionToDiscuss.y)
+                await Map.walkToPosition(page,positionToDiscuss.x,positionToDiscuss.y)
             }else{
                 await Map.walkTo(page,'ArrowRight',100)
             }
