@@ -66,6 +66,9 @@
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
     import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
+    // import { displayMain } from "../Stores/CoWebsiteStore";
+    // import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
+    // import { EmbedScreensContainer } from '../Stores/EmbedScreensStore';
     // import PopUpMessage from "./PopUp/PopUpMessage.svelte";
     // import PopUpTutorial from "./PopUp/PopUpTutorial.svelte";
     // import PopUpSound from "./PopUp/PopUpSound.svelte";
@@ -76,6 +79,7 @@
     // import { pop } from "@sentry/browser/types/transports/offline";
     // import { log } from "console";
     // import { UserInputManager } from "../Phaser/UserInput/UserInputManager";
+    // import { length } from 'svelte/store';
 
 
 
@@ -93,8 +97,6 @@
         resizeObserver.observe(mainLayout);
         // ...
     });
-
-
 
 
 </script>
@@ -136,7 +138,6 @@
         {/if}
 
 
-
         {#if $warningContainerStore}
             <WarningContainer />
         {/if}
@@ -172,8 +173,8 @@
         {/if}
 
         <!-- {#if hasEmbedScreen}
-            <EmbedScreensContainer />
-        {/if} -->
+                <EmbedScreensContainer />
+            {/if} -->
 
         {#if $uiWebsitesStore}
             <UiWebsiteContainer />
@@ -196,32 +197,64 @@
         <LayoutActionManager />
     {/if}
 
+    <!-- Code qui marche mais avec mauvais empilement -->
 
-    <div class="popups">
+    <!-- <div class="popups">
         {#each $popupStore as popup, index (popup.uuid)}
             <div class="popupwrapper {index === 0 ? 'popup1' : index === 1 ? 'popup2' : index === 2 ? 'popup3' : index === 3 ? 'popup4' : index === 4 ? 'popup5' : ''}">
                 <svelte:component this={popup.component} {...popup.props} on:close={() => popupStore.removePopup(popup.uuid)} />
-                <!--{#if index === 3}
+                {#if index === 3}
                     <button class="btn btn-secondary w-1/2 justify-center" on:click={() => popupStore.removePopup(popup.uuid)}>Close</button>
                 {/if}
                 {#if index === 4}
                     <button class="btn btn-secondary w-1/2 justify-center" on:click={() => popupStore.removePopup(popup.uuid)}>Close</button>
 
-                {/if} -->
+                {/if}
+            </div>
+        {/each}
+    </div> -->
+
+    <!-- Code qui marche mais avec mauvais empilement -->
+
+
+
+    <!-- <div class="popups">
+        {#each $popupStore as popup, index (popup.uuid)}
+            <div class="popupwrapper {index === 0 ? 'popup1' : index === 1 ? 'popup2' : index === 2 ? 'popup3' : index === 3 ? 'popup4' : index === 4 ? 'popup5' : ''}">
+                <svelte:component this={popup.component} {...popup.props} on:close={() => popupStore.removePopup(popup.uuid)} class="popup"/>
+            </div>
+        {/each}
+    </div> -->
+
+
+
+
+    {#if $actionsMenuStore}
+    <ActionsMenu />
+    {/if}
+
+
+    <ActionBar />
+
+    <div class="popups">
+        {#each $popupStore as popup, index (popup.uuid)}
+            <div class="popupwrapper {index === 0 ? 'popup1' : index === 1 ? 'popup2' : index === 2 ? 'popup3' : index === 3 ? 'popup4' : index === 4 ? 'popup5' : ''}">
+                <svelte:component this={popup.component} {...popup.props} on:close={() => popupStore.removePopup(popup.uuid)} />
             </div>
         {/each}
     </div>
 
-          {#if $actionsMenuStore}
-              <ActionsMenu />
-          {/if}
 
+    <!-- <div class="popups">
+        {#each $popupStore as popup, index (popup.uuid)}
+            <div class="popupwrapper {index === 0 ? 'popup1' : index === 1 ? 'popup2' : index === 2 ? 'popup3' : index === 3 ? 'popup4' : index === 4 ? 'popup5' : ''}">
+                <svelte:component this={popup.component} {...popup.props} on:close={() => popupStore.removePopup(popup.uuid)}/>
+                {index}
+            </div>
+        {/each}
+    </div> -->
 
-          <ActionBar />
-
-
-
-
+<!--<div class="popupwrapper {index === 0 ? 'popup1' : index === 1 ? 'popup2' : index === 2 ? 'popup3' : index === 3 ? 'popup4' : index === 4 ? 'popup5' : ''}">-->
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 
@@ -238,48 +271,294 @@
 <style lang="scss">
     @import "../style/breakpoints.scss";
 
-    .popups {
-        position: relative;
-        width: 100%;
-        height: 100%;
-    }
 
-    .popupwrapper {
-        position: absolute;
-        top: 80%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
+.popups {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+.popupwrapper {
+    position: absolute;
+    top: 80%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+.popup1 {
+    z-index: 505;
+}
+.popup2 {
+    top: 77%;
+    z-index: 504;
+    transform: translate(-50%, -50%) scale(0.95);
+    filter: blur(2px);
+}
+.popup3 {
+    top: 74%;
+    z-index: 503;
+    transform: translate(-50%, -50%) scale(0.9);
+    filter: blur(4px);
+}
+.popup4 {
+    top: 77%; // voir pour les popups plus grandes
+    z-index: 502;
+    transform: translate(-50%, -50%) scale(0.9);
+    filter: blur(4px);
+}
+.popup5 {
+    top: 72%; // voir pour les popups plus grandes
+    z-index: 501;
+    transform: translate(-50%, -50%) scale(0.9);
+    filter: blur(4px);
+}
 
-    .popup1 {
-        z-index: 505;
-    }
 
-    .popup2 {
-        top: 77%;
-        z-index: 504;
-        transform: translate(-50%, -50%) scale(0.95);
-        filter: blur(2px);
-    }
+// .popups {
+//     position: relative;
+//     width: 100%;
+//     height: 100%;
+// }
 
-    .popup3 {
-        top: 74%;
-        z-index: 503;
-        transform: translate(-50%, -50%) scale(0.9);
-        filter: blur(4px);
-    }
+// .popupwrapper {
+//     position: absolute;
+//     top: 80%;
+//     left: 50%;
+//     transform: translate(-50%, -50%);
+//     transition: transform 0.3s ease, filter 0.3s ease;
+// }
 
-    .popup4 {
-        top: 77%; // voir pour les popups plus grandes
-        z-index: 502;
-        transform: translate(-50%, -50%) scale(0.9);
-        filter: blur(4px);
-    }
+// .popup1 {
+//     z-index: 505;
+// }
 
-    .popup5 {
-        top: 72%; // voir pour les popups plus grandes
-        z-index: 501;
-        transform: translate(-50%, -50%) scale(0.9);
-        filter: blur(4px);
-    }
+// .popup2 {
+//     top: 77%;
+//     z-index: 504;
+//     transform: translate(-50%, -50%) scale(0.95);
+//     filter: blur(2px);
+// }
+
+// .popup3 {
+//     top: 74%;
+//     z-index: 503;
+//     transform: translate(-50%, -50%) scale(0.9);
+//     filter: blur(4px);
+// }
+
+// .popup4 {
+//     top: 71%;
+//     z-index: 502;
+//     transform: translate(-50%, -50%) scale(0.85);
+//     filter: blur(6px);
+// }
+
+// .popup5 {
+//     top: 68%;
+//     z-index: 501;
+//     transform: translate(-50%, -50%) scale(0.8);
+//     filter: blur(8px);
+// }
+
+// @if popup1 popup2 {
+//     .popup2 {
+//         z-index: 506;
+//         filter: none;
+//         transform: translate(-50%, -50%) scale(1);
+//         top: 80%;
+//     }
+//     .popup1 {
+//         z-index: 505;
+//         filter: blur(2px);
+//         transform: translate(-50%, -50%) scale(0.95);
+//         top: 77%;
+//     }
+// }
+// $popupStore: 1 throught 5;
+// $index: 1 throught 5;
+
+// @if length($popupStore) == 0 {
+//     .popup {
+//         z-index: 1;
+//         filter: none;
+//         transform: translate(-50%, -50%) scale(1);
+//     }
+
+// } @else if length($popupStore) > 1 {
+       // $prevIndex: $index - 1;
+        // $currentIndex: $index;
+
+//     @for $popupStore from 1 through 5 {
+//         $prevIndex: $index - 1;
+
+//         @if $index == 1 {
+
+//         .popup {
+//             z-index: $index;
+//             transform: translate(-50%, -50%) scale(1);
+//             transition: transform 0.3s ease, filter 0.3s ease;
+//             filter: blur(2px);
+//             top: 77%;
+//         }
+
+//         } @else if $popupStore > 1 {
+//         .popup2 {
+//             top: 80%;
+//             z-index: 504;
+//             transform: translate(-50%, -50%) scale(1);
+//         }
+//     }
+// }
+
+
+
+
+
+
+            // .popup1 {
+            //     z-index: 505;
+            // }
+
+            // .popup2 {
+            //     top: 77%;
+            //     z-index: 504;
+            //     transform: translate(-50%, -50%) scale(0.95);
+            //     filter: blur(2px);
+            // }
+
+            // .popup3 {
+            //     top: 74%;
+            //     z-index: 503;
+            //     transform: translate(-50%, -50%) scale(0.9);
+            //     filter: blur(4px);
+            // }
+
+            // .popup4 {
+            //     top: 77%;
+            //     z-index: 502;
+            //     transform: translate(-50%, -50%) scale(0.9);
+            //     filter: blur(4px);
+            // }
+
+            // .popup5 {
+            //     top: 72%;
+            //     z-index: 501;
+            //     transform: translate(-50%, -50%) scale(0.9);
+            //     filter: blur(4px);
+            // }
+
+
+
+        // .popup#{$previousIndex} {
+        //     z-index: 1;
+        //     filter: blur(2px);
+        //     background-color: pink;
+        //     transform: translate(-50%, -50%) scale(0.9);
+        //     margin-bottom: 12px;
+        // }
+
+        // .popup#{$previousIndex} {
+        //     z-index: $index;
+        //     filter: none;
+        //     transform: translate(-50%, -50%) scale($previousIndex * 1);
+        //     transition: transform 0.3s ease, filter 0.3s ease;
+        // }
+
+        // .popup#{$prevIndex} {
+        //     z-index: $index;
+        //     filter: blur(($index - 1) * 2px);
+        //     transform: translate(-50%, -50%) scale(1 - (($index - 1) * 0.05));
+        //     transition: transform 0.3s ease, filter 0.3s ease;
+        // }
+
+
+
+
+    // .popups {
+    //     position: relative;
+    //     width: 100%;
+    //     height: 100%;
+    // }
+
+    // .popupwrapper {
+    //     position: absolute;
+    //     top: 80%;
+    //     left: 50%;
+    //     transform: translate(-50%, -50%);
+    //     transition: transform 0.3s ease, filter 0.3s ease;
+    // }
+
+    // $popup-count: 5;
+
+    // @if length($popup-count) == 1 {
+
+    //     .popup1 {
+    //         z-index: 1;
+    //         filter: none;
+    //         transform: translate(-50%, -50%) scale(1);
+    //     }
+
+    // } @else if length($popup-count) > 1 {
+
+    //     @for $index from 2 through length($popup-count) {
+    //         $prevIndex: $index - 1;
+
+    //         .popup#{$prevIndex} {
+    //             z-index: $index;
+    //             filter: blur(($index - 1) * 2px);
+    //             transform: translate(-50%, -50%) scale(1 - (($index - 1) * 0.1));
+
+    //         }
+    //     }
+    // }
+
+// test autre
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // $popup-count: ();
+
+    // @if length($popup-count) == 1 {
+    //     .popup1 {
+
+    //         z-index: 1;
+    //         filter: none;
+    //         transform: translate(-50%, -50%) scale(1);
+    //         transition: transform 0.3s ease, filter 0.3s ease;
+    //     }
+    // } @else if length($popup-count) > 1 {
+    //     @for $index from 2 through $popup-count {
+    //         $prevIndex: $index - 1;
+
+    //         .popup-unique#{$prevIndex} {
+    //             z-index: $index;
+    //             filter: blur($prevIndex * 2px);
+    //             transform: translate(-50%, -50%) scale(1 - ($prevIndex * 0.1));
+    //         }
+    //     }
+    // }
+
+
+
+
+
+
+
+
+
 </style>

@@ -104,6 +104,7 @@
     import {selectCompanionSceneVisibleStore} from "../../Stores/SelectCompanionStore";
     import {SelectCompanionScene, SelectCompanionSceneName} from "../../Phaser/Login/SelectCompanionScene";
     import {EnableCameraScene, EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
+    import Tooltip from "../Util/Tooltip.svelte";
 
     // import { availabilityStatusStore } from "../../Stores/MediaStore";
     // import HorizontalSoundMeterWidget from "../EnableCamera/HorizontalSoundMeterWidget.svelte";
@@ -480,6 +481,10 @@
     //     roomListVisibilityStore.set(true);
     // }
 
+
+    // on:mouseenter={() => { if (!navigating) helpActive = !!"chat"; }}
+    // on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+
 </script>
 <svelte:window on:keydown={onKeyDown} />
 {#if !$chatVisibilityStore}
@@ -498,7 +503,10 @@
                     on:click={() =>analyticsClient.openedChat()}
                     on:click={toggleChat}
                     on:mouseenter={playSoundClick}
+
             >
+
+
                 <div class="h-12 w-12 rounded group-hover/btn-message-circle:bg-white/10 aspect-square flex items-center justify-center transition-all"
                 >
                     <MessageCircleIcon />
@@ -525,6 +533,8 @@
                 >
                 <div class="h-12 w-12 rounded group-hover/btn-users:bg-white/10 aspect-square flex items-center justify-center transition-all"
                      on:mouseenter={playSoundClick}
+                     on:mouseenter={() => { !navigating ? helpActive = !!"users" : '' }}
+                     on:mouseleave={() => { !navigating ? helpActive = false : '' }}
                 >
                     <UsersIcon />
                 </div>
@@ -883,9 +893,10 @@
                     <div class="group/btn-screen-share relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square"
                          on:click={() =>analyticsClient.screenSharing()}
                          on:click={screenSharingClick}
-                         on:mouseenter={() => { !navigating ? helpActive = true : '' }}
-                         on:mouseleave={() => { !navigating ? helpActive = false : '' }}
-                    >  <!-- helpActive === "share" -->
+                         on:mouseenter={playSoundClick}
+                    >  <!-- helpActive === "share"
+                        on:mouseenter={() => { !navigating ? helpActive = true : '' }}
+                        on:mouseleave={() => { !navigating ? helpActive = false : '' }}-->
 
                         <div class="h-12 w-12 p-1 m-0 rounded group-[.disabled]/btn-screen-share:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all {$requestedScreenSharingState && !$silentStore ? 'bg-secondary hover:bg-danger' : ''}">
                             {#if $requestedScreenSharingState && !$silentStore}
@@ -1181,6 +1192,7 @@
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     on:click={() => burgerOpen = !burgerOpen}
+                    on:mouseenter={playSoundClick}
                     class="h-12 min-w-[48px] p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
                 >
                     {#if !burgerOpen}

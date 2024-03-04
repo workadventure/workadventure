@@ -45,12 +45,12 @@ class CoWebsiteManager {
     private _onResize: Subject<void> = new Subject();
     public onResize = this._onResize.asObservable();
 
-/*    private cowebsiteDom: HTMLDivElement;
-    private resizing = false;
-    private gameOverlayDom: HTMLDivElement;
-    private cowebsiteBufferDom: HTMLDivElement;
-    private cowebsiteAsideHolderDom: HTMLDivElement;
-    private cowebsiteLoaderDom: HTMLDivElement;*/
+    // private cowebsiteDom: HTMLDivElement;
+    // private resizing = false;
+    // private gameOverlayDom: HTMLDivElement;
+    // private cowebsiteBufferDom: HTMLDivElement;
+    // private cowebsiteAsideHolderDom: HTMLDivElement;
+    // private cowebsiteLoaderDom: HTMLDivElement;
     private previousTouchMoveCoordinates: TouchMoveCoordinates | null = null; //only use on touchscreens to track touch movement
     private coWebsiteResizeSize = 50;
 
@@ -125,13 +125,13 @@ class CoWebsiteManager {
     }*/
 
     constructor() {
-        /*this.cowebsiteDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDomId);
-        this.gameOverlayDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(gameOverlayDomId);
-        this.cowebsiteBufferDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteBufferDomId);
-        this.cowebsiteAsideHolderDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteAsideHolderDomId);
-        this.cowebsiteLoaderDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteLoaderDomId);
+        // this.cowebsiteDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDomId);
+        // this.gameOverlayDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(gameOverlayDomId);
+        // this.cowebsiteBufferDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteBufferDomId);
+        // this.cowebsiteAsideHolderDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteAsideHolderDomId);
+        // this.cowebsiteLoaderDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteLoaderDomId);
 
-        this.buttonCloseCoWebsite = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);*/
+        // this.buttonCloseCoWebsite = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
 
         this.loaderAnimationInterval = {
             interval: undefined,
@@ -209,7 +209,7 @@ class CoWebsiteManager {
 
     public getCoWebsiteBuffer(): HTMLDivElement {
         throw new Error("To be reimplemented");
-        //return this.cowebsiteBufferDom;
+        return this.cowebsiteBufferDom;
     }
 
     public getDevicePixelRatio(): number {

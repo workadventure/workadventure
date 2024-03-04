@@ -121,6 +121,7 @@
         <div class="bold text-lg">{cowebsiteName}</div>
         <div class="italic text-xs opacity-50 -mt-1">{cowebsiteName}</div>
     </div>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
         on:click={() => analyticsClient.stackOpenCloseMultiIframe()}
         on:click={onClick}
