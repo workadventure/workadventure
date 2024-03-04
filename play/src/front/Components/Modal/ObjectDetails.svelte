@@ -129,7 +129,7 @@
             <img
                 src={$mapExplorationObjectSelectedStore?.getPrefab().imagePath}
                 alt="Object"
-                class="tw-w-32 tw-h-32 tw-mb-4"
+                class="tw-w-32 tw-h-32 tw-mb-4 tw-object-contain"
             />
             <p class="tw-p-0 tw-m-0">
                 {description ?? $LL.mapEditor.explorer.noDescriptionFound()}
