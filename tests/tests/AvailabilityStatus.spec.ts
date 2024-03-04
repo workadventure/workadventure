@@ -25,8 +25,7 @@ test.describe('Availability Status', () => {
             if((browserName === "firefox") && page.getByText(`Do you want to allow notification`).isVisible() ){
                 await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
             }
-            //await Menu.closeNotificationPopUp(page);
-            //await page.waitForTimeout(500);
+            await page.waitForTimeout(500);
             await Menu.openStatusList(page);
             await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
         
@@ -284,7 +283,7 @@ test.describe('Availability Status', () => {
 
             await Menu.closeNotificationPopUp(page);
             
-            //await page.waitForTimeout(500);
+            await page.waitForTimeout(500);
             await Menu.openStatusList(page);
             
             await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
@@ -406,7 +405,7 @@ test.describe('Availability Status', () => {
   
             await Menu.closeNotificationPopUp(page);
             await Menu.clickOnStatus(page,statusName);
-            //await page.waitForTimeout(500);
+            await page.waitForTimeout(500);
             await Menu.openStatusList(page);
             await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
         
