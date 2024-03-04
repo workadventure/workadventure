@@ -31,18 +31,17 @@ test.describe('Availability Status', () => {
         
         
             //move
+            /*
             const positionToDiscuss = {
                 x: 3 * 32,
                 y: 4 * 32
             };
+            */
             
             //await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
 
-            await page.evaluate(()=>{
-                WA.player.moveTo(positionToDiscuss.x, positionToDiscuss.y, 3);
-                return;
-            });
 
+            await Map.walkTo(page,'ArrowRight')
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
         })
@@ -298,15 +297,14 @@ test.describe('Availability Status', () => {
         
         
             //move
+            /*
             const positionToDiscuss = {
                 x: 3 * 32,
                 y: 4 * 32
             };
+            */
             //await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
-            await page.evaluate(()=>{
-                WA.player.moveTo(positionToDiscuss.x, positionToDiscuss.y, 3);
-                return;
-            });
+            await Map.walkTo(page,'ArrowRight')
 
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
@@ -423,17 +421,14 @@ test.describe('Availability Status', () => {
         
         
             //move
+            /*
             const positionToDiscuss = {
                 x: 3 * 32,
                 y: 4 * 32
-            };
+            };*/
            // await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
-            await page.evaluate(()=>{
-                WA.player.moveTo(positionToDiscuss.x, positionToDiscuss.y, 3);
-                return;
-            });
 
-            //await Map.walkTo(page,'ArrowRight')
+            await Map.walkTo(page,'ArrowRight')
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
         })
