@@ -230,7 +230,7 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
     }
 
     private isAllowedToRemoveGameObject(gameObject: Entity) {
-        return gameObject.userHasAccess;
+        return gameObject.userCanEdit;
     }
 
     public clear() {
