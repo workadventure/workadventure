@@ -17,28 +17,29 @@ test.use({
   baseURL: map_storage_url,
 });
 
-test.beforeAll(
-  "Ignore tests on mobilechromium because map editor not available for mobile devices",
-  ({}, { project }) => {
-    //Map Editor not available on mobile
-    if (project.name === "mobilechromium") {
+test.describe("Map editor", () => {
+
+  test.beforeAll(
+    "Ignore tests on mobilechromium because map editor not available for mobile devices",
+    ({}, { project }) => {
+      //Map Editor not available on mobile
+      if (project.name === "mobilechromium") {
+        //eslint-disable-next-line playwright/no-skipped-test
+        test.skip();
+        return;
+      }
+    }
+  );
+  
+  test.beforeAll("Ignore tests on webkit because of issue with camera and microphone", ({ browserName }) => {
+    //WebKit has issue with camera
+    if (browserName === "webkit") {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();
       return;
     }
-  }
-);
+  });
 
-test.beforeAll("Ignore tests on webkit because of issue with camera and microphone", ({ browserName }) => {
-  //WebKit has issue with camera
-  if (browserName === "webkit") {
-    //eslint-disable-next-line playwright/no-skipped-test
-    test.skip();
-    return;
-  }
-});
-
-test.describe("Map editor", () => {
   test("Successfully set the megaphone feature", async ({ page, browser, request, browserName }) => {
     await resetWamMaps(request);
     await page.goto(Map.url("empty"));
