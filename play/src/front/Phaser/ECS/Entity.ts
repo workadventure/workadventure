@@ -44,15 +44,11 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     private activatable: boolean;
     private oldPosition: { x: number; y: number };
 
-    private entityPermissions: EntityPermissions;
-
     constructor(scene: GameScene, public readonly entityId: string, data: WAMEntityData, prefab: EntityPrefab) {
         super(scene, data.x, data.y, prefab.imagePath);
         this.setOrigin(0);
 
         this.oldPosition = this.getPosition();
-
-        this.entityPermissions = scene.getEntityPermissions();
 
         this.entityData = {
             ...data,
@@ -390,6 +386,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public get userHasAccess(): boolean {
-        return this.entityPermissions.canEdit(this.getCenter());
+        return (this.scene as GameScene).getEntityPermissions().canEdit(this.getCenter());
     }
 }
