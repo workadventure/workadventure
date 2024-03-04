@@ -5,7 +5,6 @@ import { MobileJoystick } from "../Components/MobileJoystick";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
-import { passStatusToOnlineWhenUserIsInSetableStatus } from "../../Rules/StatusRules/statusChangerFunctions";
 
 interface UserInputManagerDatum {
     keyInstance?: Phaser.Input.Keyboard.Key;
@@ -346,9 +345,6 @@ export class UserInputManager {
         this.scene.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
             if (this.isInputDisabled) {
                 return;
-            }
-            if (this.isMoveKey(event.keyCode)) {
-                passStatusToOnlineWhenUserIsInSetableStatus();
             }
             this.userInputHandler.handleKeyDownEvent(event);
         });

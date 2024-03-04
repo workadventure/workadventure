@@ -19,13 +19,19 @@ const basicStatus: Array<AvailabilityStatus> = [
     AvailabilityStatus.BBB,
     AvailabilityStatus.DENY_PROXIMITY_MEETING,
 ];
+
+export type RequestedStatus =
+    | AvailabilityStatus.DO_NOT_DISTURB
+    | AvailabilityStatus.BACK_IN_A_MOMENT
+    | AvailabilityStatus.BUSY;
+
 export const setableStatus: Array<AvailabilityStatus> = [
     AvailabilityStatus.BUSY,
     AvailabilityStatus.DO_NOT_DISTURB,
     AvailabilityStatus.BACK_IN_A_MOMENT,
 ];
 
-const unvalidTransition: Map<AvailabilityStatus, Array<AvailabilityStatus>> = new Map([
+const invalidTransition: Map<AvailabilityStatus, Array<AvailabilityStatus>> = new Map([
     [AvailabilityStatus.UNCHANGED, [...setableStatus]],
     [AvailabilityStatus.ONLINE, []],
     [AvailabilityStatus.SILENT, [...setableStatus]],
@@ -42,10 +48,10 @@ const unvalidTransition: Map<AvailabilityStatus, Array<AvailabilityStatus>> = ne
 
 export const StatusRules = {
     canChangeStatus: (actualStatus: AvailabilityStatus) => {
-        const listOfUnvalidTransition: Array<AvailabilityStatus> = unvalidTransition.get(actualStatus) || [];
+        const listOfInvalidTransition: Array<AvailabilityStatus> = invalidTransition.get(actualStatus) || [];
         return {
             to: (futureStatus: AvailabilityStatus): boolean => {
-                return !listOfUnvalidTransition.includes(futureStatus);
+                return !listOfInvalidTransition.includes(futureStatus);
             },
         };
     },

@@ -3,6 +3,7 @@
     import { AvailabilityStatus } from "@workadventure/messages";
     import { resetAllStatusStoreExcept } from "../../../Rules/StatusRules/statusChangerFunctions";
     import { availabilityStatusMenuStore } from "../../../Stores/AvailabilityStatusMenuStore";
+    import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
     import { AvailabilityStatusListPropsInterface } from "./Interfaces/AvailabilityStatusPropsInterface";
     import AvailabilityStatusCircle from "./AvailabilityStatusCircle.svelte";
 
@@ -10,13 +11,15 @@
 
     $: ({ listStatusTitle, statusInformations, currentStatus } = props);
 
-    const handleKeyPress = (e: KeyboardEvent, newStatus: AvailabilityStatus) => {
+    const handleKeyPress = (e: KeyboardEvent, newStatus: RequestedStatus | AvailabilityStatus.ONLINE | null) => {
+        if (newStatus === AvailabilityStatus.ONLINE) newStatus = null;
         if (e.key === "Enter") {
             resetAllStatusStoreExcept(newStatus);
             availabilityStatusMenuStore.closeAvailabilityStatusMenu();
         }
     };
-    const handleClick = (newStatus: AvailabilityStatus) => {
+    const handleClick = (newStatus: RequestedStatus | AvailabilityStatus.ONLINE | null) => {
+        if (newStatus === AvailabilityStatus.ONLINE) newStatus = null;
         resetAllStatusStoreExcept(newStatus);
         availabilityStatusMenuStore.closeAvailabilityStatusMenu();
     };
@@ -28,7 +31,7 @@
 <svelte:window on:click={handleOutsideClick} on:touchend={handleOutsideClick} />
 
 <div
-    class="tw-absolute tw-mt-2 sm:tw-bottom-16 tw-bottom-2' tw-bg-dark-purple/75 tw-backdrop-blur tw-rounded-lg tw-py-2 tw-w-52  tw-text-white
+    class="tw-absolute tw-mt-2 tw-bottom-24 tw-mx-auto  sm:tw-bottom-16 tw-bottom-2' tw-bg-dark-purple/75 tw-backdrop-blur tw-rounded-lg tw-py-2 tw-w-48  tw-text-white
             before:tw-content-[''] before:tw-absolute before:tw-w-0 before:tw-h-0 before:tw--bottom-[14px] before:tw-left-8
             before:tw-border-solid before:tw-border-8 before:tw-border-transparent
             before:tw-border-b-contrast/80 tw-transition-all before:tw-rotate-180"

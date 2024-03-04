@@ -8,6 +8,7 @@ import { isIOS } from "../WebRtc/DeviceUtils";
 import { ObtainedMediaStreamConstraints } from "../WebRtc/P2PMessages/ConstraintMessage";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
+import { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { userMovingStore } from "./GameStore";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
 import { errorStore } from "./ErrorStore";
@@ -324,9 +325,7 @@ export const inJitsiStore = writable(false);
 export const inBbbStore = writable(false);
 export const isSpeakerStore = writable(false);
 
-export const doNotDisturbStore = writable(false);
-export const backInAMomentStore = writable(false);
-export const busyStore = writable(false);
+export const requestedStatusStore: Writable<RequestedStatus | null> = writable(localUserStore.getRequestedStatus());
 
 export const inCowebsiteZone = derived(
     [inJitsiStore, inBbbStore, inOpenWebsite],
@@ -346,9 +345,7 @@ export const availabilityStatusStore = derived(
         privacyShutdownStore,
         proximityMeetingStore,
         isSpeakerStore,
-        doNotDisturbStore,
-        backInAMomentStore,
-        busyStore,
+        requestedStatusStore,
     ],
     ([
         $inJitsiStore,
@@ -357,18 +354,14 @@ export const availabilityStatusStore = derived(
         $privacyShutdownStore,
         $proximityMeetingStore,
         $isSpeakerStore,
-        $doNotDisturbStore,
-        $backInAMomentStore,
-        $busyStore,
+        $requestedStatusStore,
     ]) => {
         if ($inJitsiStore) return AvailabilityStatus.JITSI;
         if ($inBbbStore) return AvailabilityStatus.BBB;
         if (!$proximityMeetingStore) return AvailabilityStatus.DENY_PROXIMITY_MEETING;
         if ($isSpeakerStore) return AvailabilityStatus.SPEAKER;
         if ($silentStore) return AvailabilityStatus.SILENT;
-        if ($doNotDisturbStore) return AvailabilityStatus.DO_NOT_DISTURB;
-        if ($backInAMomentStore) return AvailabilityStatus.BACK_IN_A_MOMENT;
-        if ($busyStore) return AvailabilityStatus.BUSY;
+        if ($requestedStatusStore) return $requestedStatusStore;
         if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
         return AvailabilityStatus.ONLINE;
     },

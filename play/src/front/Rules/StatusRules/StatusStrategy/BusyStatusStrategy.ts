@@ -35,8 +35,30 @@ export class BusyStatusStrategy extends BasicStatusStrategy {
         return Notification.permission === permission;
     };
 
+    private lastNotificationPermissionRequestMoreThanTwoWeeks = (d1: Date): boolean => {
+        const diffTime = Math.abs(new Date().getTime() - d1.getTime());
+        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+        const diffWeeks = Math.floor(diffDays / 7);
+        return diffWeeks >= 2;
+    };
+
     private showNotificationPermissionModal = () => {
+        const localStoragelastNotificationPermissionRequest: string | null = localStorage.getItem(
+            "lastNotificationPermissionRequest"
+        );
+        const lastNotificationPermissionRequest = localStoragelastNotificationPermissionRequest
+            ? new Date(localStoragelastNotificationPermissionRequest)
+            : new Date();
+
         if (this.NotificationPermissionIs("default")) notificationPermissionModalVisibility.open();
-        if (this.NotificationPermissionIs("denied")) helpNotificationSettingsVisibleStore.set(true);
+
+        if (
+            (this.NotificationPermissionIs("denied") &&
+                this.lastNotificationPermissionRequestMoreThanTwoWeeks(lastNotificationPermissionRequest)) ||
+            localStoragelastNotificationPermissionRequest === null
+        ) {
+            helpNotificationSettingsVisibleStore.set(true);
+            localStorage.setItem("lastNotificationPermissionRequest", new Date().toString());
+        }
     };
 }

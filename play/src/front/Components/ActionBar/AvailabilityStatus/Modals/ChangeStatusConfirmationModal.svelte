@@ -3,7 +3,7 @@
     import { changeStatusConfirmationModalVisibility } from "../../../../Stores/AvailabilityStatusModalsStore";
     import LL from "../../../../../i18n/i18n-svelte";
     import { resetAllStatusStoreExcept } from "../../../../Rules/StatusRules/statusChangerFunctions";
-    import { StatusChangerStore } from "../../../../Stores/statusChangerStore";
+    import { statusChanger } from "../statusChanger";
     import ConfirmationModal from "./ConfirmationModal.svelte";
 
     const confirmationModalProps: ConfirmationModalPropsInterface = {
@@ -12,7 +12,7 @@
             changeStatusConfirmationModalVisibility.close();
         },
         handleClose: () => {
-            $StatusChangerStore.applyTimedRules();
+            statusChanger.applyTimedRules();
             changeStatusConfirmationModalVisibility.close();
         },
         acceptLabel: $LL.statusModal.confirm(),

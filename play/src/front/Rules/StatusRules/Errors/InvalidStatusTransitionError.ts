@@ -1,4 +1,4 @@
-export class UnvalidStatusTransitionError extends Error {
+export class InvalidStatusTransitionError extends Error {
     constructor(msg: string) {
         super(msg);
     }

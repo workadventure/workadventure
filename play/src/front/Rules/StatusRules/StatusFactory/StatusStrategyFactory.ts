@@ -1,10 +1,10 @@
 import { AvailabilityStatus } from "@workadventure/messages";
 import { StatusStrategyInterface } from "../StatusStrategyInterface";
-import { BusyStatusStrategy } from "./StatusStrategy/BusyStatusStrategy";
-import { BackInAMomentStatusStrategy } from "./StatusStrategy/BackInAMomentStatusStrategy";
-import { BasicStatusStrategy } from "./StatusStrategy/BasicStatusStrategy";
-import { StatusStrategyFactoryInterface } from "./StatusChanger";
-import { DoNotDisturbStatusStrategy } from "./StatusStrategy/DoNotDisturbStatusStrategy";
+import { BusyStatusStrategy } from "../StatusStrategy/BusyStatusStrategy";
+import { BackInAMomentStatusStrategy } from "../StatusStrategy/BackInAMomentStatusStrategy";
+import { BasicStatusStrategy } from "../StatusStrategy/BasicStatusStrategy";
+import { StatusStrategyFactoryInterface } from "../StatusChanger";
+import { DoNotDisturbStatusStrategy } from "../StatusStrategy/DoNotDisturbStatusStrategy";
 
 export const StatusStrategyFactory: StatusStrategyFactoryInterface = {
     createStrategy(newStatus: AvailabilityStatus): StatusStrategyInterface {

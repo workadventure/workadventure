@@ -1,11 +1,11 @@
 import { get } from "svelte/store";
-import { AvailabilityStatus } from "@workadventure/messages";
 import {
     bubbleModalVisibility,
     changeStatusConfirmationModalVisibility,
 } from "../../Stores/AvailabilityStatusModalsStore";
-import { availabilityStatusStore, backInAMomentStore, busyStore, doNotDisturbStore } from "../../Stores/MediaStore";
-import { setableStatus } from "./statusRules";
+import { availabilityStatusStore, requestedStatusStore } from "../../Stores/MediaStore";
+import { localUserStore } from "../../Connection/LocalUserStore";
+import { RequestedStatus, setableStatus } from "./statusRules";
 
 export const askToChangeStatus = () => {
     changeStatusConfirmationModalVisibility.open();
@@ -14,10 +14,9 @@ export const hideBubbleConfirmationModal = () => {
     bubbleModalVisibility.close();
 };
 
-export const resetAllStatusStoreExcept = (status?: AvailabilityStatus) => {
-    doNotDisturbStore.set(status === AvailabilityStatus.DO_NOT_DISTURB);
-    backInAMomentStore.set(status === AvailabilityStatus.BACK_IN_A_MOMENT);
-    busyStore.set(status === AvailabilityStatus.BUSY);
+export const resetAllStatusStoreExcept = (status: RequestedStatus | null = null) => {
+    requestedStatusStore.set(status);
+    localUserStore.setRequestedStatus(status);
 };
 
 const isInSetableStatus = () => {

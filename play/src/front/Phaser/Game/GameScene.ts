@@ -141,7 +141,7 @@ import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { askDialogStore } from "../../Stores/MeetingStore";
 import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChangerFunctions";
-import { StatusChangerStore } from "../../Stores/statusChangerStore";
+import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
@@ -1527,9 +1527,8 @@ export class GameScene extends DirtyScene {
                 // So we know for sure that there is only one new user.
                 const peer = Array.from(peers.values())[0];
                 //askIfUserWantToJoinBubbleOf(peer.userName);
-                const statusChangerStore = get(StatusChangerStore);
-                statusChangerStore.setUserNameInteraction(peer.userName);
-                statusChangerStore.applyInteractionRules();
+                statusChanger.setUserNameInteraction(peer.userName);
+                statusChanger.applyInteractionRules();
 
                 pendingConnects.add(peer.userId);
                 peer.once("connect", () => {
@@ -1590,8 +1589,6 @@ export class GameScene extends DirtyScene {
                     iframeListener.sendParticipantLeaveProximityMeetingEvent(oldUser);
                 }
             }
-
-            const statusChanger = get(StatusChangerStore);
 
             if (newPeerNumber > oldPeersNumber) {
                 if (statusChanger.allowNotificationSound()) this.playSound("audio-webrtc-in");

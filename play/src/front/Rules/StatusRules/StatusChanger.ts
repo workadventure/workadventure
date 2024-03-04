@@ -1,8 +1,8 @@
 import { AvailabilityStatus } from "@workadventure/messages";
-import { StatusStrategyInterface } from "../StatusStrategyInterface";
+import { StatusStrategyInterface } from "./StatusStrategyInterface";
 import { BasicStatusStrategy } from "./StatusStrategy/BasicStatusStrategy";
 import { StatusRulesVerificationInterface } from "./statusRules";
-import { UnvalidStatusTransitionError } from "./Errors/UnvalidStatusTransitionError";
+import { InvalidStatusTransitionError } from "./Errors/InvalidStatusTransitionError";
 
 export interface StatusStrategyFactoryInterface {
     createStrategy: (newStatus: AvailabilityStatus) => StatusStrategyInterface;
@@ -21,7 +21,7 @@ export class StatusChanger {
     }
     changeStatusTo(newStatus: AvailabilityStatus) {
         if (!this.rulesVerification.canChangeStatus(this.statusStrategy.getActualStatus()).to(newStatus)) {
-            throw new UnvalidStatusTransitionError("");
+            throw new InvalidStatusTransitionError("");
         }
         this.statusStrategy.cleanTimedRules();
         this.setStrategy(newStatus);

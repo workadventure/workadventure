@@ -6,13 +6,14 @@ const notification: DeepPartial<Translation["notification"]> = {
     message: "a envoyé un message",
     forum: "sur le forum",
     help: {
-        title: "Accès aux notifications nécessaire",
+        title: "Accès aux notifications refusé",
         permissionDenied: "Permission refusée",
-        content: "Vous devez autoriser les notifications dans votre navigateur.",
+        content:
+            "Ne manquez aucune discussion. Activez les notifications pour être informé(e) lorsque quelqu'un souhaite vous parler, même si vous n'êtes pas sur l'onglet WorkAdventure.",
         firefoxContent:
             'Veuillez cocher la case "Se souvenir de cette décision" si vous ne voulez pas que Firefox vous demande sans cesse l\'autorisation.',
         refresh: "Rafraîchir",
-        continue: "Continuer sans webcam",
+        continue: "Continuer sans les notifications",
         screen: {
             firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",

@@ -73,9 +73,15 @@ class Menu {
     }
 
     async closeNotificationPopUp(page:Page){
-        if(await page.getByText('Continue without notification').isHidden())return;
-        await page.getByText('Continue without notification').click();
-        await expect(page.getByText('Continue without notification')).toBeVisible();
+        if(await page.getByRole('button',{name:'Continue without notification'}).isHidden())return;
+        await page.getByRole('button',{name:'Continue without notification'}).click();
+        await expect(page.getByRole('button',{name:'Continue without notification'})).toBeVisible();
+
+    }
+    async closeCameraPopUp(page:Page){
+        if(await page.getByRole('button',{name:'Continue without webcam'}).isHidden())return;
+        await page.getByRole('button',{name:'Continue without webcam'}).click();
+        await expect(page.getByRole('button',{name:'Continue without webcam'})).toBeVisible();
 
     }
 }

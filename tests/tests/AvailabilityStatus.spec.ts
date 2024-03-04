@@ -11,7 +11,7 @@ test.describe('Availability Status', () => {
     
     
     test.describe('Busy Status',()=>{
-        test('should return to online status when you move',async({ page, browser })=>{
+        test('should return to online status when you move',async({ page, browser,browserName })=>{
             const statusName = "Busy";
     
             await page.goto(
@@ -22,11 +22,21 @@ test.describe('Availability Status', () => {
             
 
             await Menu.clickOnStatus(page,statusName); 
-            
+            if((browserName === "firefox") && page.getByText(`Do you want to allow notification`).isVisible() ){
+                await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
+            }
+            //await Menu.closeNotificationPopUp(page);
+            //await page.waitForTimeout(500);
             await Menu.openStatusList(page);
             await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
+        
+        
             //move
-            await Map.walkTo(page,'ArrowRight')
+            const positionToDiscuss = {
+                x: 3 * 32,
+                y: 4 * 32
+            };
+            await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
         })
@@ -50,10 +60,10 @@ test.describe('Availability Status', () => {
             await Menu.turnOnCamera(page);
             await Menu.turnOnMicrophone(page);
 
-            await Menu.closeNotificationPopUp(page);
+            //await Menu.closeNotificationPopUp(page);
 
             await Menu.clickOnStatus(page,statusName); 
-            await Menu.closeNotificationPopUp(page);
+            //await Menu.closeNotificationPopUp(page);
 
             await expect(page.getByAltText('Turn off webcam')).toBeHidden();
             await expect(page.getByAltText('Turn off microphone')).toBeHidden();
@@ -83,8 +93,12 @@ test.describe('Availability Status', () => {
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
 
             await Menu.clickOnStatus(page,statusName);
-            await Menu.closeNotificationPopUp(page);
-            await Map.walkTo(page,'ArrowRight');
+            //await Menu.closeNotificationPopUp(page);
+            const positionToDiscuss = {
+                x: 3 * 32,
+                y: 4 * 32
+            };
+            await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
 
             await expect(page.getByAltText('Turn off webcam')).toBeVisible();
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
@@ -131,8 +145,17 @@ test.describe('Availability Status', () => {
                     y: 4 * 32
                 };
                 await Map.teleportToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
+                
+                const newBrowser = await browser.browserType().launch();
+                const userBob = await newBrowser.newPage();
+            
+                await userBob.goto(map_URL);
+               // Login user "Bob"
+                const secondPageName = 'Bob'
+                await login(userBob, secondPageName);
+                
                 await Menu.clickOnStatus(page,statusName); 
-                await Menu.closeNotificationPopUp(page);
+               // await Menu.closeNotificationPopUp(page);
 
                 const isInBubble = evaluateScript(page, async () => {
                     return new Promise((resolve) => {
@@ -143,21 +166,15 @@ test.describe('Availability Status', () => {
                     });
                 });
 
-                const newBrowser = await browser.browserType().launch();
-                const userBob = await newBrowser.newPage();
-            
-                await userBob.goto(map_URL);
-               // Login user "Bob"
-                const secondPageName = 'Bob'
-                await login(userBob, secondPageName);
-                await Map.teleportToPosition(userBob, positionToDiscuss.x, positionToDiscuss.y);
+
+                await Map.teleportToPosition(userBob, positionToDiscuss.x+10, positionToDiscuss.y);
                 
                 if((browserName === "firefox") && page.getByText(`Do you want to allow notification`).isVisible() ){
                     await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
                 }
 
                 await expect(page.getByText(`${secondPageName} wants to discuss with you`)).toBeVisible();
-                expect(await isInBubble).toBeTruthy();
+                await expect(await isInBubble).toBeTruthy();
                 
                 await newBrowser.close();
 
@@ -182,7 +199,7 @@ test.describe('Availability Status', () => {
                 await Map.teleportToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
 
                 await Menu.clickOnStatus(page,statusName);
-                await Menu.closeNotificationPopUp(page);
+                //await Menu.closeNotificationPopUp(page);
 
                 const newBrowser = await browser.browserType().launch();
                 const userBob = await newBrowser.newPage();
@@ -224,7 +241,7 @@ test.describe('Availability Status', () => {
                 await Map.teleportToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
 
                 await Menu.clickOnStatus(page,statusName); 
-                await Menu.closeNotificationPopUp(page);
+               // await Menu.closeNotificationPopUp(page);
 
                 const newBrowser = await browser.browserType().launch();
                 const userBob = await newBrowser.newPage();
@@ -252,8 +269,9 @@ test.describe('Availability Status', () => {
 
     })
     test.describe('Back in a moment Status',()=>{
-        test('should return to online status when you move',async({ page, browser })=>{
+        test('should return to online status when you move',async({ page, browser,browserName })=>{
             const statusName = "Back in a moment";
+    
     
             await page.goto(
                 `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
@@ -263,11 +281,21 @@ test.describe('Availability Status', () => {
             
 
             await Menu.clickOnStatus(page,statusName); 
+
+            await Menu.closeNotificationPopUp(page);
             
+            //await page.waitForTimeout(500);
             await Menu.openStatusList(page);
+            
             await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
+        
+        
             //move
-            await Map.walkTo(page,'ArrowRight');
+            const positionToDiscuss = {
+                x: 3 * 32,
+                y: 4 * 32
+            };
+            await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
 
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
@@ -288,10 +316,10 @@ test.describe('Availability Status', () => {
             await Menu.turnOnCamera(page);
             await Menu.turnOnMicrophone(page);
 
-            await Menu.closeNotificationPopUp(page);
+            //await Menu.closeNotificationPopUp(page);
 
             await Menu.clickOnStatus(page,statusName); 
-            await Menu.closeNotificationPopUp(page);
+            //await Menu.closeNotificationPopUp(page);
 
             await expect(page.getByAltText('Turn off webcam')).toBeHidden();
             await expect(page.getByAltText('Turn off microphone')).toBeHidden();
@@ -324,7 +352,13 @@ test.describe('Availability Status', () => {
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
 
             await Menu.clickOnStatus(page,statusName); 
-            await Map.walkTo(page,'ArrowRight');
+                        //move
+            const positionToDiscuss = {
+                x: 3 * 32,
+                y: 4 * 32
+            };
+            await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
+                        
 
             await expect(page.getByAltText('Turn off webcam')).toBeVisible();
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
@@ -359,7 +393,7 @@ test.describe('Availability Status', () => {
 
     })
     test.describe('Do not disturb Status',()=>{
-        test('should return to online status when you move',async({ page, browser })=>{
+        test('should return to online status when you move',async({ page, browser,browserName })=>{
             const statusName = "Do not disturb";
     
             await page.goto(
@@ -367,13 +401,23 @@ test.describe('Availability Status', () => {
             );
     
             await login(page, 'Alice');
-
-            await Menu.clickOnStatus(page,statusName); 
             
+
+  
+            await Menu.closeNotificationPopUp(page);
+            await Menu.clickOnStatus(page,statusName);
+            //await page.waitForTimeout(500);
             await Menu.openStatusList(page);
             await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
+        
+        
             //move
-            await Map.walkTo(page,'ArrowRight');
+            const positionToDiscuss = {
+                x: 3 * 32,
+                y: 4 * 32
+            };
+            await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
+            await Map.walkTo(page,'ArrowRight')
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
         })
@@ -395,10 +439,10 @@ test.describe('Availability Status', () => {
             await Menu.turnOnCamera(page);
             await Menu.turnOnMicrophone(page);
 
-            await Menu.closeNotificationPopUp(page);
+            //await Menu.closeNotificationPopUp(page);
 
             await Menu.clickOnStatus(page,statusName); 
-            await Menu.closeNotificationPopUp(page);
+            //await Menu.closeNotificationPopUp(page);
 
             await expect(page.getByAltText('Turn off webcam')).toBeHidden();
             await expect(page.getByAltText('Turn off microphone')).toBeHidden();
@@ -432,7 +476,13 @@ test.describe('Availability Status', () => {
 
             await Menu.clickOnStatus(page,statusName); 
 
-            await Map.walkTo(page,'ArrowRight');
+                        //move
+            const positionToDiscuss = {
+                x: 3 * 32,
+                y: 4 * 32
+            };
+            await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
+                        
 
             await expect(page.getByAltText('Turn off webcam')).toBeVisible();
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();

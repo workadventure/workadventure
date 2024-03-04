@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, test, vi } from "vitest";
 import { AvailabilityStatus } from "@workadventure/messages";
 import { StatusRules, StatusRulesVerificationInterface, TimedRules } from "../statusRules";
 import { BasicStatusStrategy } from "../StatusStrategy/BasicStatusStrategy";
-import { UnvalidStatusTransitionError } from "../Errors/UnvalidStatusTransitionError";
+import { InvalidStatusTransitionError } from "../Errors/InvalidStatusTransitionError";
 import { StatusChanger, StatusStrategyFactoryInterface } from "../StatusChanger";
-import { StatusStrategyInterface } from "../../StatusStrategyInterface";
+import { StatusStrategyInterface } from "../StatusStrategyInterface";
 
 describe("Verify Rules Transition", () => {
     test.each([
@@ -94,7 +94,7 @@ describe("Status Rules", () => {
             //Assert
             expect(result).toBe(newStatus);
         });
-        it("should return UnvalidStatusTransitionError and leave the actual status when statusVerificator return false", () => {
+        it("should return InvalidStatusTransitionError and leave the actual status when statusVerificator return false", () => {
             //Arrange
             const mockTo = vi.fn().mockReturnValueOnce(false);
             const mockRulesVerificator: StatusRulesVerificationInterface = {
@@ -125,7 +125,7 @@ describe("Status Rules", () => {
             //Act
             expect(() => {
                 statusStrategy.changeStatusTo(newStatus);
-            }).toThrow(UnvalidStatusTransitionError);
+            }).toThrow(InvalidStatusTransitionError);
 
             const result = statusStrategy.getActualStatus();
 

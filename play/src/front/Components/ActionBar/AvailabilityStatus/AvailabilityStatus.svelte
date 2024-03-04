@@ -6,7 +6,8 @@
     import { menuVisiblilityStore } from "../../../Stores/MenuStore";
     import { getColorHexOfStatus, getStatusInformation } from "../../../Utils/AvailabilityStatus";
     import { availabilityStatusStore } from "../../../Stores/MediaStore";
-    import { StatusChangerStore } from "../../../Stores/statusChangerStore";
+    import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
+    import { statusChanger } from "./statusChanger";
     import AvailabilityStatusList from "./AvailabilityStatusList.svelte";
     import AvailabilityStatusButton from "./AvailabilityStatusButton.svelte";
     import {
@@ -14,14 +15,14 @@
         AvailabilityStatusListPropsInterface,
     } from "./Interfaces/AvailabilityStatusPropsInterface";
 
-    const statusToShow = [
+    const statusToShow: Array<RequestedStatus | AvailabilityStatus.ONLINE> = [
         AvailabilityStatus.ONLINE,
         AvailabilityStatus.BUSY,
         AvailabilityStatus.BACK_IN_A_MOMENT,
         AvailabilityStatus.DO_NOT_DISTURB,
     ];
 
-    const listProps: AvailabilityStatusListPropsInterface = {
+    let listProps: AvailabilityStatusListPropsInterface = {
         currentStatus: $availabilityStatusStore,
         listStatusTitle: $LL.actionbar.listStatusTitle(),
         statusInformations: getStatusInformation(statusToShow),
@@ -43,9 +44,12 @@
     };
 
     const unsubcribeToAvailabilityStatusStore = availabilityStatusStore.subscribe((newStatus: AvailabilityStatus) => {
-        $StatusChangerStore.changeStatusTo(newStatus);
+        statusChanger.changeStatusTo(newStatus);
         buttonProps.statusColorHex = getColorHexOfStatus($availabilityStatusStore);
-        listProps.currentStatus = $availabilityStatusStore;
+        listProps = {
+            ...listProps,
+            currentStatus: $availabilityStatusStore,
+        };
     });
 
     onDestroy(() => {

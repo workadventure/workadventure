@@ -1,5 +1,5 @@
 import { AvailabilityStatus } from "@workadventure/messages";
-import { StatusStrategyInterface } from "../../StatusStrategyInterface";
+import { StatusStrategyInterface } from "../StatusStrategyInterface";
 import { TimedRules } from "../statusRules";
 
 export abstract class StatusStrategy implements StatusStrategyInterface {
