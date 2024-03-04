@@ -11,6 +11,7 @@
     export let options: Option[];
     export let onFocus = () => {};
     export let onBlur = () => {};
+    export let handleChange = () => {};
 
     let filterText = "";
 
@@ -22,11 +23,12 @@
         }
     }
 
-    function handleChange() {
+    function _handleChange() {
         options = options.map((i) => {
             delete i.created;
             return { ...i, label: i.label.toLowerCase() };
         });
+        handleChange();
     }
 </script>
 
@@ -38,7 +40,9 @@
         id="selector"
         on:filter={handleFilter}
         bind:filterText
-        on:change={handleChange}
+        on:change={_handleChange}
+        on:input={handleChange}
+        on:select={handleChange}
         items={options}
         bind:value
         multiple={true}
