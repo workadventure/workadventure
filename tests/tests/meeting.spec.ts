@@ -139,6 +139,7 @@ test.describe('Meeting actions test', () => {
     // Check if the user has been muted
     await expect(page.locator('.cameras-container .other-cameras .jitsi-video .voice-meter-cam-off')).toBeVisible({timeout: 20_000});
     // Click on the mute video button
+    await page.waitForTimeout(500);
     await page.click('.cameras-container .other-cameras .jitsi-video .action-button#mute-video-user');
 
     // Check if "Bob" user receive the request to be metued
