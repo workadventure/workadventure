@@ -24,18 +24,62 @@
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
     import Tooltip from "../../Util/Tooltip.svelte";
+    import InputTags from "../../Input/InputTags.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenWebsitePropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
     export let icon = "resources/icons/icon_link.png";
     export let isArea = false;
+
+    type Option = {
+        value: string;
+        label: string;
+        created: boolean | undefined;
+    };
+
     let optionAdvancedActivated = shouldDisplayAdvancedOption();
     let embeddable = true;
     let embeddableLoading = false;
     let error = "";
     let oldNewTabValue = property.newTab;
     let linkElement: HTMLInputElement;
+    let policy: Option[] | undefined = undefined;
+    let policyOption: Option[] = [
+        { value: "accelerometer", label: "accelerometer", created: undefined },
+        { value: "ambient-light-sensor", label: "ambient-light-sensor", created: undefined },
+        { value: "autoplay", label: "autoplay", created: undefined },
+        { value: "battery", label: "battery", created: undefined },
+        { value: "browsing-topics", label: "browsing-topics", created: undefined },
+        { value: "camera", label: "camera", created: undefined },
+        { value: "document-domain", label: "document-domain", created: undefined },
+        { value: "encrypted-media", label: "encrypted-media", created: undefined },
+        { value: "execution-while-not-rendered", label: "execution-while-not-rendered", created: undefined },
+        { value: "execution-while-out-of-viewport", label: "execution-while-out-of-viewport", created: undefined },
+        { value: "fullscreen", label: "fullscreen", created: undefined },
+        { value: "gamepad", label: "gamepad", created: undefined },
+        { value: "geolocation", label: "geolocation", created: undefined },
+        { value: "gyroscope", label: "gyroscope", created: undefined },
+        { value: "hid", label: "hid", created: undefined },
+        { value: "identity-credentials-get", label: "identity-credentials-get", created: undefined },
+        { value: "idle-detection", label: "idle-detection", created: undefined },
+        { value: "local-fonts ", label: "local-fonts", created: undefined },
+        { value: "magnetometer", label: "magnetometer", created: undefined },
+        { value: "microphone", label: "microphone", created: undefined },
+        { value: "midi", label: "midi", created: undefined },
+        { value: "otp-credentials", label: "otp-credentials", created: undefined },
+        { value: "payment", label: "payment", created: undefined },
+        { value: "picture-in-picture", label: "picture-in-picture", created: undefined },
+        { value: "publickey-credentials-get", label: "publickey-credentials-get", created: undefined },
+        { value: "screen-wake-lock", label: "screen-wake-lock", created: undefined },
+        { value: "serial", label: "serial", created: undefined },
+        { value: "speaker-selection", label: "speaker-selection", created: undefined },
+        { value: "storage-access", label: "storage-access", created: undefined },
+        { value: "usb", label: "usb", created: undefined },
+        { value: "web-share", label: "web-share", created: undefined },
+        { value: "window-management", label: "window-management", created: undefined },
+        { value: "xr-spatial-tracking", label: "xr-spatial-tracking", created: undefined },
+    ];
 
     const dispatch = createEventDispatcher();
 
@@ -53,6 +97,15 @@
         checkWebsiteProperty().catch((e) => {
             console.error("Error checking embeddable website", e);
         });
+
+        // Format policy for input tag policy
+        policy = property.policy
+            ?.split(";")
+            .reduce(
+                (options: Option[], value) =>
+                    value != "" ? [...options, { value, label: value, created: undefined }] : options,
+                []
+            ) as Option[];
     });
 
     function onTriggerValueChange() {
@@ -382,6 +435,14 @@
             }
         }
     }
+
+    function handlePolicyChange() {
+        if (policy == undefined) {
+            policy = [];
+        }
+        property.policy = policy?.reduce((policyStr, policy) => `${policyStr}${policy.value};`, "");
+        onValueChange();
+    }
 </script>
 
 <PropertyEditorBase
@@ -558,7 +619,7 @@
                         id="websiteWidth"
                         type="range"
                         min="1"
-                        max="100"
+                        max="75"
                         placeholder="50"
                         bind:value={property.width}
                         on:change={onValueChange}
@@ -584,16 +645,16 @@
                         on:change={onValueChange}
                     />
                 </div>
-                <div class="value-input tw-flex tw-flex-col">
-                    <label for="policy">{$LL.mapEditor.properties.linkProperties.policy()}</label>
-                    <input
-                        id="policy"
-                        type="text"
-                        placeholder={$LL.mapEditor.properties.linkProperties.policyPlaceholder()}
-                        bind:value={property.policy}
-                        on:change={onValueChange}
-                    />
-                </div>
+                {#if policy != undefined}
+                    <div class="value-input tw-flex tw-flex-col">
+                        <InputTags
+                            label={$LL.mapEditor.properties.linkProperties.policy()}
+                            options={policyOption}
+                            bind:value={policy}
+                            handleChange={handlePolicyChange}
+                        />
+                    </div>
+                {/if}
             {/if}
         </div>
     </span>
