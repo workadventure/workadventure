@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { get, writable } from "svelte/store";
+    import { writable } from "svelte/store";
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import MoreActionSvg from "../images/ellipsis.svg";
     import MicrophoneCloseSvg from "../images/microphone-close.svg";
