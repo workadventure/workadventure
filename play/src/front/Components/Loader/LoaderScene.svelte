@@ -18,7 +18,7 @@
             {/if}
             -->
             <div class="text-center mb-4 w-full">
-                <img src={logo} class="max-h-10 px-4" />
+                <img src={logo} class="max-h-10 px-4" alt="Logo loading screen" />
             </div>
             <div class="absolute w-full h-3 bg-contrast py-[2px]">
                 <div

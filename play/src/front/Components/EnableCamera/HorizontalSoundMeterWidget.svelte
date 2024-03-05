@@ -28,9 +28,6 @@
 </div>
 
 <style lang="scss">
-    .horizontal-sound-meter {
-    }
-
     .horizontal-sound-meter div {
         flex-grow: 1;
     }
