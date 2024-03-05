@@ -9,11 +9,13 @@
     $: ({ listStatusTitle, menuVisibility, statusColorHex, currentPlayerName } = props);
 </script>
 
-<Tooltip text={listStatusTitle} />
-<button class=" large tw-flex tw-justify-around  tw-mx-1 " class:border-top-light={menuVisibility}>
-    <AvailabilityStatusCircle position="absolute" colorHex={statusColorHex} />
-    <WokaFromUserId userId={-1} customWidth="32px" customHeight="32px" placeholderSrc="" />
-    <div class=" tw-overflow-ellipsis tw-font-bold tw-text-white tw-leading-5 tw-whitespace-nowrap tw-select-none">
-        {currentPlayerName}
-    </div>
-</button>
+<div>
+    <Tooltip text={listStatusTitle} />
+    <button class=" large tw-flex tw-justify-around  tw-mx-1 " class:border-top-light={menuVisibility}>
+        <AvailabilityStatusCircle position="absolute" colorHex={statusColorHex} />
+        <WokaFromUserId userId={-1} customWidth="32px" customHeight="32px" placeholderSrc="" />
+        <div class=" tw-overflow-ellipsis tw-font-bold tw-text-white tw-leading-5 tw-whitespace-nowrap tw-select-none">
+            {currentPlayerName}
+        </div>
+    </button>
+</div>
