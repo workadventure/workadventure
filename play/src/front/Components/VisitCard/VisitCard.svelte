@@ -42,7 +42,7 @@
     {#if !hidden}
         <div class="buttonContainer">
             <button
-                class="btn danger light tw-justify-center tw-font-bold tw-text-xs sm:tw-text-base tw-text-center tw-h-fit"
+                class="btn danger light justify-center font-bold text-xs sm:text-base text-center h-fit"
                 on:click={closeCard}>{$LL.menu.visitCard.close()}</button
             >
         </div>

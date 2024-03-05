@@ -7,7 +7,7 @@
     import { helpCameraSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
-    import { menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
+    import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import { followStateStore } from "../Stores/FollowStore";
     import { peerStore } from "../Stores/PeerStore";
@@ -30,6 +30,7 @@
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { askDialogStore } from "../Stores/MeetingStore";
     import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
+    import { warningMessageStore } from "../Stores/ErrorStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
@@ -39,7 +40,7 @@
     import Menu from "./Menu/Menu.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
-    import WarningContainer from "./WarningContainer/WarningContainer.svelte";
+    import WarningBanner from "./WarningContainer/WarningBanner.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import FollowMenu from "./FollowMenu/FollowMenu.svelte";
     import BanMessageContainer from "./TypeMessage/BanMessageContainer.svelte";
@@ -52,14 +53,15 @@
     import Modal from "./Modal/Modal.svelte";
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import XIcon from "./Icons/XIcon.svelte";
+    import Notification from "./UI/Notification.svelte";
+    import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
     import ChevronLeftIcon from "./Icons/ChevronLeftIcon.svelte";
     import ChevronRightIcon from "./Icons/ChevronRightIcon.svelte";
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
     import ObjectDetails from "./Modal/ObjectDetails.svelte";
     import Popup from "./Modal/Popup.svelte";
     import MapList from "./Exploration/MapList.svelte";
-    import Notification from "./UI/Notification.svelte";
-    import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
+    import WarningToast from "./WarningContainer/WarningToast.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -102,7 +104,7 @@
         {/if}
 
         {#if $notificationPlayingStore}
-            <div class="tw-flex tw-flex-col tw-absolute tw-w-auto tw-right-0">
+            <div class="flex flex-col absolute w-auto right-0">
                 {#each [...$notificationPlayingStore.values()] as notification (notification.id)}
                     <Notification {notification} />
                 {/each}
@@ -113,8 +115,8 @@
             <AudioPlaying url={$soundPlayingStore} />
         {/if}
 
-        {#if $warningContainerStore}
-            <WarningContainer />
+        {#if $warningBannerStore}
+            <WarningBanner />
         {/if}
 
         {#if $showReportScreenStore !== userReportEmpty}
@@ -157,15 +159,32 @@
             <UiWebsiteContainer />
         {/if}
 
+        {#if $modalVisibilityStore}
+            <Modal />
+        {/if}
+
+        {#if $askDialogStore}
+            <MuteDialogBox />
+        {/if}
+
+        {#if $showModalGlobalComminucationVisibilityStore}
+            <GlobalCommunicationModal />
+        {/if}
+
+        {#if $mapExplorationObjectSelectedStore}
+            <ObjectDetails />
+        {/if}
+
+        {#if $modalPopupVisibilityStore}
+            <Popup />
+        {/if}
+        {#if $roomListVisibilityStore}
+            <MapList />
+        {/if}
+        {#if $warningMessageStore.length > 0}
+            <WarningToast />
+        {/if}
     </section>
-
-    {#if $modalVisibilityStore}
-        <Modal />
-    {/if}
-
-    {#if $askDialogStore}
-        <MuteDialogBox />
-    {/if}
 
     {#if $layoutManagerActionVisibilityStore}
         <LayoutActionManager />
@@ -180,6 +199,7 @@
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 
+    <!--
     <div class="fixed bottom-16 scale-[80%] blur-[4px] opacity-50 left-0 right-0 m-auto bg-contrast/80 backdrop-blur text-white w-[500px] rounded-lg overflow-hidden z-[201]">
         <div class="flex p-4 space-x-4 pointer-events-auto">
             <div class="">
@@ -222,19 +242,13 @@
             </div>
             <div class="flex flex-col">
                 <div class="text-xs uppercase opacity-50">
-                    Move your woka and discover world <!-- Trad -->
+                    Move your woka and discover world
                 </div>
                 <div class="text-lg">
-                    Use your keyboard to move and meet people! <!-- Trad -->
+                    Use your keyboard to move and meet people!
                 </div>
             </div>
         </div>
-        <!--
-        <div class="flex p-4 space-x-4 bg-contrast mt-4 pointer-events-auto">
-            <button class="btn btn-light btn-ghost w-1/2 justify-center">View full tutorial</button>
-            <button class="btn btn-secondary w-1/2 justify-center">Close</button>
-        </div>
-        -->
     </div>
 
     <div class="fixed bottom-10 scale-[90%] blur-[2px] opacity-75 left-0 right-0 m-auto bg-contrast/80 backdrop-blur text-white w-[500px] rounded-lg overflow-hidden z-[202]">
@@ -279,19 +293,13 @@
             </div>
             <div class="flex flex-col">
                 <div class="text-xs uppercase opacity-50">
-                    Move your woka and discover world <!-- Trad -->
+                    Move your woka and discover world
                 </div>
                 <div class="text-lg">
-                    Use your keyboard to move and meet people! <!-- Trad -->
+                    Use your keyboard to move and meet people!
                 </div>
             </div>
         </div>
-        <!--
-        <div class="flex p-4 space-x-4 bg-contrast mt-4 pointer-events-auto">
-            <button class="btn btn-light btn-ghost w-1/2 justify-center">View full tutorial</button>
-            <button class="btn btn-secondary w-1/2 justify-center">Close</button>
-        </div>
-        -->
     </div>
     <div class="fixed bottom-4 left-0 right-0 m-auto bg-contrast/80 backdrop-blur text-white w-[500px] rounded-lg overflow-hidden z-[203]">
         <div class="flex p-4 space-x-4 pointer-events-auto">
@@ -335,21 +343,20 @@
             </div>
             <div class="flex flex-col">
                 <div class="text-xs uppercase opacity-50">
-                    Move your woka and discover world <!-- Trad -->
+                    Move your woka and discover world
                 </div>
                 <div class="text-lg">
-                    Use your keyboard to move and meet people! <!-- Trad -->
+                    Use your keyboard to move and meet people!
                 </div>
             </div>
         </div>
-        <!--
         <div class="flex p-4 space-x-4 bg-contrast mt-4 pointer-events-auto">
             <button class="btn btn-light btn-ghost w-1/2 justify-center">View full tutorial</button>
             <button class="btn btn-secondary w-1/2 justify-center">Close</button>
         </div>
-        -->
     </div>
 
+        -->
     <Lazy
         on:onload={() => emoteDataStoreLoading.set(true)}
         on:loaded={() => emoteDataStoreLoading.set(false)}

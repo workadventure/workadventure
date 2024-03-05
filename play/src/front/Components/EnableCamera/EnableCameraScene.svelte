@@ -16,17 +16,12 @@
         speakerSelectedStore
     } from "../../Stores/MediaStore";
     import type { Game } from "../../Phaser/Game/Game";
-    import cinemaCloseImg from "../images/no-video.svg";
-    import cinemaImg from "../images/cinema.svg";
-    import microphoneImg from "../images/microphone.svg";
     import {LL, locale} from "../../../i18n/i18n-svelte";
     import { StringUtils } from "../../Utils/StringUtils";
     import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
-    import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
 
     export let game: Game;
-    import bgMap from "../images/map-exemple.png";
     import {gameManager} from "../../Phaser/Game/GameManager";
     import CamOnIcon from "../Icons/CamOnIcon.svelte";
     import CamOffIcon from "../Icons/CamOffIcon.svelte";
@@ -34,6 +29,9 @@
     import CheckIcon from "../Icons/CheckIcon.svelte";
     import MicOffIcon from "../Icons/MicOffIcon.svelte";
     import VolumeIcon from "../Icons/VolumeIcon.svelte";
+    import bgMap from "../images/map-exemple.png";
+    import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
+
 
     const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
     const bgColor = gameManager.currentStartedRoom.backgroundColor ?? "#1B2A41";
@@ -44,7 +42,6 @@
     let speakerEdit = false;
     let selectedCamera: string | undefined = undefined;
     let selectedMicrophone: string | undefined = undefined;
-    let selectedSpeaker: string | undefined = undefined;
 
     let legalStrings: string[] = [];
     if (legals?.termsOfUseUrl) {
@@ -128,7 +125,7 @@
         batchGetUserMediaStore.commitChanges();
     });
 
-    function selectCamera(selectedCamera) {
+    function selectCamera(selectedCamera: string | undefined = undefined) {
         if (selectedCamera == undefined) {
             localUserStore.setPreferredVideoInputDevice("");
             requestedCameraState.disableWebcam();
@@ -139,7 +136,7 @@
         localUserStore.setPreferredVideoInputDevice(selectedCamera);
     }
 
-    function selectMicrophone(selectedMicrophone) {
+    function selectMicrophone(selectedMicrophone: string | undefined = undefined) {
         if (selectedMicrophone == undefined) {
             localUserStore.setPreferredAudioInputDevice("");
             requestedMicrophoneState.disableMicrophone();
@@ -150,7 +147,7 @@
         localUserStore.setPreferredAudioInputDevice(selectedMicrophone);
     }
 
-    function selectSpeaker(deviceId) {
+    function selectSpeaker(deviceId: string) {
         localUserStore.setSpeakerDeviceId(deviceId);
         speakerSelectedStore.set(deviceId);
     }
@@ -182,7 +179,7 @@
                         <div class="flex flex-wrap items-center justify-center min-h-[129px]">
                             <div class="border border-solid border-white rounded-lg pr-8 pl-6 pb-4 m-2 items-center justify-center space-x-4 transition-all cursor-pointer relative {selectedMicrophone == undefined ? 'bg-white text-secondary pt-12' : 'over:bg-white/10 pt-4'} {(microphoneEdit && selectedMicrophone != undefined) || (!microphoneEdit && selectedMicrophone == undefined) ? 'flex' : 'hidden'}"
                                  on:click={() => {
-                        selectMicrophone(null);
+                        selectMicrophone(undefined);
                         microphoneEdit = false;
                     }}
                             >
@@ -260,7 +257,7 @@
                         <div class="flex items-center justify-center min-h-[294px]">
                             <div class="border border-solid border-white rounded-lg items-center justify-start m-2 space-x-4 transition-all cursor-pointer overflow-hidden {selectedCamera == undefined ? 'bg-white/10' : 'hover:bg-white/10'} {(cameraEdit && selectedCamera != undefined) || (!cameraEdit && selectedCamera == undefined) ? 'flex flex-col' : 'hidden'}"
                                  on:click={() => {
-                        selectCamera(null);
+                        selectCamera(undefined);
                         cameraEdit = false;
                     }}
                             >

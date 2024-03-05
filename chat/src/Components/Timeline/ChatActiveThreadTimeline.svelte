@@ -711,7 +711,7 @@
                         on:blur={() => checkWebsiteProperty(app)}
                     />
                     {#if app.image}
-                        <img class="tw-m-4" src={app.image} alt={app.name} width="100px" />
+                        <img class="m-4" src={app.image} alt={app.name} width="100px" />
                     {/if}
                     {#if app.error}
                         <p class="text-pop-red text-xs px-2 mt-2 my-0">{app.error}</p>

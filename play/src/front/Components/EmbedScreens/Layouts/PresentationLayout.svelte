@@ -8,7 +8,6 @@
     import { myCameraStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import MyCamera from "../../MyCamera.svelte";
     import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
-    import { liveStreamingEnabledStore } from "../../../Stores/MegaphoneStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
 
@@ -123,7 +122,7 @@
                 {/if}
             </div>
         </div>
-        <!--
+        <!-- TODO HUGO Commented Why ?
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div
                 class="relative self-end z-[300] bottom-6 md:bottom-4 max-w-[25%] w-full"

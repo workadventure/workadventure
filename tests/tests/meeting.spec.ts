@@ -5,9 +5,17 @@ import { resetWamMaps } from './utils/map-editor/uploader';
 import Menu from "./utils/menu";
 import MapEditor from "./utils/mapeditor";
 import AreaEditor from "./utils/map-editor/areaEditor";
+import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Meeting actions test', () => {
-  test('Meeting action to mute microphone & video', async ({page, browser}) => {
+  test('Meeting action to mute microphone & video', async ({page, browser}, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     // Because webkit in playwright does not support Camera/Microphone Permission by settings
     if(browser.browserType() === webkit) {
       //eslint-disable-next-line playwright/no-skipped-test
@@ -16,7 +24,7 @@ test.describe('Meeting actions test', () => {
     }
 
     // Go to the empty map
-    await page.goto(`/_/global/maps.workadventure.localhost/tests/E2E/empty.json`);
+    await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     // Login user "Alice"
     await login(page, 'Alice');
 
@@ -26,7 +34,7 @@ test.describe('Meeting actions test', () => {
     const newBrowser = await browser.browserType().launch();
     const userBob = await newBrowser.newPage();
     // Go to the empty map
-    await userBob.goto(`/_/global/maps.workadventure.localhost/tests/E2E/empty.json`);
+    await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     // Login user "Bob"
     await login(userBob, 'Bob');
     // Move user
@@ -64,7 +72,14 @@ test.describe('Meeting actions test', () => {
     userBob.close();
   });
 
-  test('Jitsi meeting action to mute microphone & video', async ({ page, browser, request }) => {
+  test('Jitsi meeting action to mute microphone & video', async ({ page, browser, request }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+
     if(browser.browserType() === webkit) {
       //eslint-disable-next-line playwright/no-skipped-test
       test.skip();

@@ -9,8 +9,6 @@ import { playersStore } from "./PlayersStore";
 export const chatZoneLiveStore = writable(false);
 export const chatVisibilityStore = writable(false);
 
-export const chatInputFocusStore = writable(false);
-
 export const _newChatMessageSubject = new Subject<string>();
 export const newChatMessageSubject = _newChatMessageSubject.asObservable();
 

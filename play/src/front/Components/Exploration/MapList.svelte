@@ -80,7 +80,7 @@
 </script>
 
 <div
-    class="menu-container tw-bg-dark-purple/80 tw-backdrop-blur-sm tw-flex tw-flex-col tw-items-center tw-absolute tw-left-0 tw-top-0 tw-h-screen tw-w-screen tw-p-3"
+    class="menu-container bg-dark-purple/80 backdrop-blur-sm flex flex-col items-center absolute left-0 top-0 h-screen w-screen p-3"
     transition:fly={{ x: 1000, duration: 500 }}
 >
     {#if $isMoving}
@@ -95,7 +95,7 @@
             on:input={onUpdateSearch}
         />
         <!-- room card -->
-        <div class="tw-flex tw-flex-wrap tw-justify-center tw-overflow-auto">
+        <div class="flex flex-wrap justify-center overflow-auto">
             {#if $isFetching}
                 <h3>{$LL.mapEditor.listRoom.isFetching()}</h3>
             {/if}
@@ -107,17 +107,17 @@
                 <div
                     id={roomUrl}
                     class:active={currentRoomUrl == roomData.roomUrl}
-                    class="room-card tw-flex tw-flex-col tw-items-center tw-justify-center tw-cursor-pointer tw-rounded-xl tw-m-12 tw-p-12"
+                    class="room-card flex flex-col items-center justify-center cursor-pointer rounded-xl m-12 p-12"
                     on:click={() => clickRoom(roomData.roomUrl, roomData.name)}
                 >
                     <img
-                        class="tw-pointer-events-none tw-rounded-full tw-h-56 tw-w-56 tw-mb-3"
+                        class="pointer-events-none rounded-full h-56 w-56 mb-3"
                         src={roomData.thumbnail ?? defaultMapImg}
                         alt={roomData.name}
                     />
-                    <span class="tw-pointer-events-none tw-text-2xl tw-font-bold tw-m-0">{roomData.name}</span>
+                    <span class="pointer-events-none text-2xl font-bold m-0">{roomData.name}</span>
                     {#if roomData.areasSearchable || roomData.entitiesSearchable}
-                        <span class="tw-pointer-events-none tw-m-0">
+                        <span class="pointer-events-none m-0">
                             {$LL.mapEditor.listRoom.items({
                                 countEntity: roomData.entitiesSearchable ?? 0,
                                 countArea: roomData.areasSearchable ?? 0,
@@ -128,7 +128,7 @@
             {/each}
         </div>
         <div
-            class="tw-bg-dark-purple/90 tw-backdrop-blur-sm tw-absolute tw-bottom-0 tw-left-0 tw-h-16 tw-w-screen tw-flex tw-justify-center tw-content-center tw-items-center"
+            class="bg-dark-purple/90 backdrop-blur-sm absolute bottom-0 left-0 h-16 w-screen flex justify-center content-center items-center"
         >
             <button class="light" on:click={close}>{$LL.mapEditor.listRoom.close()}</button>
         </div>

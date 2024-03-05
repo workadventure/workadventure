@@ -1,0 +1,36 @@
+{{- if and (or .Values.ingress.enabled .Values.icon.ingress.enabled) (not .Values.singleDomain) -}}
+{{- $fullName := include "workadventure.fullname" . -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}-icon
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotationsRoot }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- $ingressClassName := coalesce .Values.icon.ingress.className .Values.ingress.className -}}
+  {{- if $ingressClassName }}
+  ingressClassName: {{ $ingressClassName }}
+  {{- end }}
+  {{- $tls := coalesce .Values.icon.ingress.tls .Values.ingress.tls false -}}
+  {{- if $tls }}
+  tls:
+    - hosts:
+        - {{ (include "workadventure.iconDomainName" .) | quote }}
+      secretName: {{ .Values.icon.ingress.secretName | default (printf "%s-icon-cert" (include "workadventure.fullname" .)) }}
+  {{- end }}
+  rules:
+    - host: {{ (include "workadventure.iconDomainName" .) | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-icon
+                port:
+                  number: {{ .Values.icon.service.port }}
+{{- end }}

@@ -1,6 +1,6 @@
 <script lang="ts">
 
-    import { fly, fade } from "svelte/transition";
+    import { fade } from "svelte/transition";
     import {loaderProgressStore} from "../../Stores/LoaderStore";
     import {gameManager} from "../../Phaser/Game/GameManager";
     import bgMap from "../images/map-exemple.png";

@@ -35,6 +35,7 @@ const megaphone: BaseTranslation = {
             An example of a message: "The conference in room 3 starts in 2 minutes 🎉. You can go to conference area 3 and open the video app 🚀"
             `,
             button: "Send a text message",
+            noAccess: "You don't have access to this feature 😱 Please contact the administrator 🙏",
         },
         audioMessage: {
             title: "Audio message",
@@ -46,6 +47,7 @@ const megaphone: BaseTranslation = {
             An audio message can consist of an audio recording that indicates a conference will begin in a few minutes.
             `,
             button: "Send an audio message",
+            noAccess: "You don't have access to this feature 😱 Please contact the administrator 🙏",
         },
     },
 };

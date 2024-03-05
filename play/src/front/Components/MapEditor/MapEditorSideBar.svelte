@@ -63,7 +63,7 @@
     }
 </script>
 
-<section class="side-bar-container" class:!tw-right-20={!$mapEditorVisibilityStore}>
+<section class="side-bar-container" class:!right-20={!$mapEditorVisibilityStore}>
     <!--put a section to avoid lower div to be affected by some css-->
     <div class="side-bar">
         {#each availableTools as tool (tool.toolName)}

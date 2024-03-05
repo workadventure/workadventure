@@ -2,12 +2,12 @@
     import { fly } from "svelte/transition";
 
     import tooltipArrow from "../images/arrow-top.svg";
-    export let hasImage: boolean = true;
-    export let hasDesc: boolean = true;
-    export let image: string = "./static/images/tooltip-exemple.gif";
-    export let title: string = "Find people and navigate to them";
-    export let desc: string = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
-    export let delayBeforeAppear: number = 500;
+    export let hasImage = true;
+    export let hasDesc = true;
+    export let image = "./static/images/tooltip-exemple.gif";
+    export let title = "Find people and navigate to them";
+    export let desc = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+    export let delayBeforeAppear = 500;
 </script>
 
 <link rel="preload" as="image" href="{tooltipArrow}" />

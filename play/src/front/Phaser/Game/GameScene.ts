@@ -78,8 +78,11 @@ import {
 import {
     activeSubMenuStore,
     contactPageStore,
+    inviteUserActivated,
     mapEditorActivated,
+    mapManagerActivated,
     menuVisiblilityStore,
+    screenSharingActivatedStore,
     SubMenusInterface,
     subMenusStore,
 } from "../../Stores/MenuStore";
@@ -137,6 +140,7 @@ import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { askDialogStore } from "../../Stores/MeetingStore";
+import { warningMessageStore } from "../../Stores/ErrorStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -161,7 +165,6 @@ import { RemotePlayersRepository } from "./RemotePlayersRepository";
 import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
 import { IframeEventDispatcher } from "./IframeEventDispatcher";
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
-import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
@@ -174,6 +177,7 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import {UIWebsiteManager} from "./UI/UIWebsiteManager";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -290,6 +294,7 @@ export class GameScene extends DirtyScene {
     private playersDebugLogAlreadyDisplayed = false;
     private _broadcastService: BroadcastService | undefined;
     private hideTimeout: ReturnType<typeof setTimeout> | undefined;
+    private uiWebsiteManager: UIWebsiteManager;
 
     constructor(private _room: Room, customKey?: string | undefined) {
         super({
@@ -313,6 +318,7 @@ export class GameScene extends DirtyScene {
         this.connectionAnswerPromiseDeferred = new Deferred<RoomJoinedMessageInterface>();
         this.loader = new Loader(this);
         this.superLoad = new SuperLoaderPlugin(this);
+        this.uiWebsiteManager = new UIWebsiteManager();
     }
 
     //hook preload scene
@@ -1309,6 +1315,12 @@ export class GameScene extends DirtyScene {
                     );
                 });
 
+                // The errorMessageStream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.errorMessageStream.subscribe((errorMessage) => {
+                    warningMessageStore.addWarningMessage(errorMessage.message);
+                });
+
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
 
@@ -1711,19 +1723,19 @@ export class GameScene extends DirtyScene {
                     );
                     return;
                 }
-                const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
-                let html = '<div id="container" hidden>';
+                const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);Œ
+                let html = '<div id="container" class="relative bg-contrast/50 backdrop-blur pt-4 overflow-hidden rounded-lg text-white" hidden>';
                 if (escapedMessage) {
-                    html += `<div class="relative bg-contrast/80 backdrop-blur p-2 rounded-lg last:rounded-r-lg">
+                    html += `<div class="text-xxs text-center px-4">
 ${escapedMessage}
  </div> `;
                 }
 
-                const buttonContainer = '<div class="buttonContainer"</div>';
+                const buttonContainer = '<div class="buttonContainer bg-contrast/50 py-4 px-4 mt-2"</div>';
                 html += buttonContainer;
                 let id = 0;
                 for (const button of openPopupEvent.buttons) {
-                    html += `<button type="button" class="is-${HtmlUtils.escapeHtml(
+                    html += `<button type="button" class="btn btn-xs justify-center w-full pb-4 ${HtmlUtils.escapeHtml(
                         button.className ?? ""
                     )}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
                     id++;
@@ -2050,6 +2062,38 @@ ${escapedMessage}
             })
         );
 
+        this.iframeSubscriptionList.push(
+            iframeListener.mapEditorStream.subscribe((isActivated: boolean) => {
+                mapManagerActivated.set(isActivated);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.screenSharingStream.subscribe((isActivated: boolean) => {
+                screenSharingActivatedStore.set(isActivated);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.rightClickStream.subscribe((isRestore: boolean) => {
+                if (isRestore) this.userInputManager.restoreRightClick();
+                else this.userInputManager.disableRightClick();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.wheelZoomStream.subscribe((isRestore: boolean) => {
+                if (isRestore) this.cameraManager.unlockZoom();
+                else this.cameraManager.lockZoom();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.inviteUserButtonStream.subscribe((isActivated: boolean) => {
+                inviteUserActivated.set(isActivated);
+            })
+        );
+
         iframeListener.registerAnswerer("openCoWebsite", async (openCoWebsite, source) => {
             if (!source) {
                 throw new Error("Unknown query source");
@@ -2099,15 +2143,15 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("openUIWebsite", (websiteConfig) => {
-            return uiWebsiteManager.open(websiteConfig);
+            return this.uiWebsiteManager.open(websiteConfig);
         });
 
         iframeListener.registerAnswerer("getUIWebsites", () => {
-            return uiWebsiteManager.getAll();
+            return this.uiWebsiteManager.getAll();
         });
 
         iframeListener.registerAnswerer("getUIWebsiteById", (websiteId) => {
-            const website = uiWebsiteManager.getById(websiteId);
+            const website = this.uiWebsiteManager.getById(websiteId);
             if (!website) {
                 throw new Error("Unknown ui-website");
             }
@@ -2115,7 +2159,7 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("closeUIWebsite", (websiteId) => {
-            return uiWebsiteManager.close(websiteId);
+            return this.uiWebsiteManager.close(websiteId);
         });
 
         iframeListener.registerAnswerer("getMapData", () => {
@@ -2515,7 +2559,7 @@ ${escapedMessage}
         }
 
         iframeListener.cleanup();
-        uiWebsiteManager.closeAll();
+        this.uiWebsiteManager.closeAll();
         followUsersStore.stopFollowing();
 
         audioManagerFileStore.unloadAudio();
@@ -3358,7 +3402,7 @@ ${escapedMessage}
     }
 
     zoomByFactor(zoomFactor: number, velocity?: number) {
-        if (this.cameraManager.isCameraLocked()) {
+        if (this.cameraManager.isZoomLocked()) {
             return;
         }
         // If the zoom modifier is over the max zoom out, we propose to the user to switch to the explorer mode

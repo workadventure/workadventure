@@ -1,18 +1,14 @@
 <script lang="ts">
-    import { onMount } from "svelte";
     import { Color } from "@workadventure/shared-utils";
     import { Readable, Unsubscriber } from "svelte/store";
     import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
     import { onDestroy, onMount } from "svelte";
-    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { Streamable, myJitsiCameraStore } from "../../Stores/StreamableCollectionStore";
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
-    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import UserTag from "./UserTag.svelte";
     import JitsiVideoElement from "./JitsiVideoElement.svelte";
@@ -27,12 +23,12 @@
     const audioTrackStore: Readable<JitsiTrack | undefined> = peer.audioTrackStore;
 
     let embedScreen: EmbedScreen;
-    let videoContainer: HTMLDivElement;
+    //let videoContainer: HTMLDivElement;
     //let minimized: boolean;
-    let isMobile: boolean;
+    //let isMobile: boolean;
 
     let backGroundColor = Color.getColorByString(peer.jitsiTrackWrapper.spaceUser?.name ?? "");
-    let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
+    //let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
 
     if (peer) {
         embedScreen = {
@@ -95,7 +91,7 @@
             {#if $audioTrackStore}
                 <JitsiAudioElement jitsiTrack={$audioTrackStore} />
                 <SoundMeterWidgetWrapper
-                    classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                    classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
                     barColor={$videoTrackStore ? "blue" : "black"}
                     volume={peer.jitsiTrackWrapper.volumeStore}
                 />

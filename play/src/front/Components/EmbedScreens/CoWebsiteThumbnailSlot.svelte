@@ -12,7 +12,6 @@
     import jitsiIcon from "../images/jitsi.png";
     import meetingIcon from "../images/meeting.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { LL } from "../../../i18n/i18n-svelte";
     import loaderImg from "../images/loader.svg";
 
     export let index: number;

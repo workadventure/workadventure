@@ -13,6 +13,7 @@
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { refreshPromptStore } from "../Stores/RefreshPromptStore";
     import { forceRefreshChatStore } from "../Stores/ChatStore";
+    import {loaderVisibleStore} from "../Stores/LoaderStore";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
@@ -23,7 +24,6 @@
     import Chat from "./Chat/Chat.svelte";
     import MapEditor from "./MapEditor/MapEditor.svelte";
     import RefreshPrompt from "./RefreshPrompt.svelte";
-    import {loaderVisibleStore} from "../Stores/LoaderStore";
     import LoaderScene from "./Loader/LoaderScene.svelte";
 
     import bgMap from "./images/map-exemple.png";

@@ -41,3 +41,12 @@ export function emptyStringToUndefined(value: string | undefined): string | unde
     }
     return value;
 }
+
+export function emptyStringToDefault(defaultValue: string): (value: string | undefined) => string {
+    return (value: string | undefined) => {
+        if (value === "" || value === undefined) {
+            return defaultValue;
+        }
+        return value;
+    };
+}

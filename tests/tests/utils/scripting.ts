@@ -63,12 +63,26 @@ export async function getScriptFrame(page: Page, title: string) : Promise<Frame>
 }
 
 async function getFrameWithTitle(page: Page, searchedTitle: string) : Promise<Frame | undefined> {
-    for (const frame of page.frames()) {
-        await frame.waitForLoadState("domcontentloaded");
-        const title = await frame.title();
-        if (title === searchedTitle) {
-            return frame;
+    if (searchedTitle === "") {
+        for (const frame of page.frames()) {
+            await frame.waitForLoadState("domcontentloaded");
+
+            // Let's only select the frames that are part of the play domain.
+            const url = frame.url();
+            if (url === "about:srcdoc") {
+                return frame;
+            }
+        }
+    } else {
+        for (const frame of page.frames()) {
+            await frame.waitForLoadState("domcontentloaded");
+            const title = await frame.title();
+
+            if (title === searchedTitle) {
+                return frame;
+            }
         }
     }
+
     return undefined;
 }

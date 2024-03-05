@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { coWebsites } from "../../Stores/CoWebsiteStore";
     import { fly } from "svelte/transition";
     import XIcon from "../Icons/XIcon.svelte";
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
@@ -21,8 +20,8 @@
                 <CoWebsiteTab title="Hello world !" link="https://google.fr" active="true" />
             {/each}
             -->
-            <CoWebsiteTab title="Hello world !" link="https://google.fr" active="false" />
-            <CoWebsiteTab title="Hello world !" link="https://google.fr" isLoading="false" active="true"/>
+            <CoWebsiteTab title="Hello world !" active="false" />
+            <CoWebsiteTab title="Hello world !" url="https://google.fr" isLoading="false" active="true" />
         </div>
         <div class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer">
             <FullScreenIcon />
