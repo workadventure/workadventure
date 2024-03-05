@@ -65,7 +65,6 @@
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
     import { iframeListener } from "../../Api/IframeListener";
     import { peerStore } from "../../Stores/PeerStore";
-    //import { StringUtils } from "../../Utils/StringUtils";
     import {
         modalIframeStore,
         modalVisibilityStore,
