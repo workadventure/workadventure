@@ -41,7 +41,7 @@
 }
 
 .media-container {
-    @apply tw-max-w-full tw-h-auto;
+    @apply tw-max-w-full tw-h-auto tw-w-full;
 
     &.hightlighted {
         @apply tw-pointer-events-auto tw-h-full;
@@ -199,7 +199,7 @@
 }
 
 .mozaic-full-size {
-    @apply md:tw-h-[60vh] md:tw-w-[60vw];
+    @apply md:tw-h-[60vh] md:tw-w-[75vw];
     &.media-box-camera-off-size{
         @apply md:tw-h-[4vh];
     }
