@@ -23,11 +23,11 @@
     });
 </script>
 
-<div class="notification-playing tw-bg-dark-blue/95 tw-mt-1" transition:fly={{ x: 210, duration: 500 }}>
+<div class="notification-playing bg-dark-blue/95 mt-1" transition:fly={{ x: 210, duration: 500 }}>
     <img
         src={icons.get(notification.icon) ?? waImg}
         alt="Audio playing"
-        class="tw-bg-medium-purple tw-rounded-full tw-h-14"
+        class="bg-medium-purple rounded-full h-14"
     />
     <p>{notification.text}</p>
 </div>

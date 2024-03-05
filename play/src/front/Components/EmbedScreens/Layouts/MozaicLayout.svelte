@@ -24,11 +24,11 @@
 
 <div
     id="mozaic-layout"
-    class="flex justify-center tw-content-center tw-items-center lg:pt-9 tw-pb-16"
+    class="flex justify-center content-center items-center lg:pt-9 pb-16"
     bind:this={layoutDom}
 >
     <div
-        class="media-container grid mozaic-grid content-start tw-backdrop-blur-sm tw-bg-black/20 tw-pointer-events-auto tw-max-h-full tw-overflow-y-auto"
+        class="media-container grid mozaic-grid content-start backdrop-blur-sm bg-black/20 pointer-events-auto max-h-full overflow-y-auto"
         class:grid-cols-1={$streamableCollectionStore.size === 1}
         class:grid-cols-2={$streamableCollectionStore.size >= 2}
     >

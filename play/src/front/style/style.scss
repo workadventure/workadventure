@@ -71,7 +71,7 @@ body {
 }
 
 .chat-mode > div:hover {
-    margin: 0%;
+    margin: 0;
 }
 
 .chat-mode.one-col {
@@ -279,7 +279,7 @@ div.modal-report-user {
 .discussion {
     position: fixed;
     left: -300px;
-    top: 0px;
+    top: 0;
     width: 220px;
     height: 100%;
     background-color: #333333;
@@ -383,12 +383,12 @@ div.modal-report-user {
     position: absolute;
     background-color: #2d2d2dba;
     right: 34px;
-    margin: 0px;
-    padding: 2px 0px;
+    margin: 0;
+    padding: 2px 0;
     border-radius: 15px;
     border: none;
     color: white;
-    width: 0px;
+    width: 0;
     overflow: hidden;
     transition: all 0.5s ease;
 }
