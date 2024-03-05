@@ -20,10 +20,14 @@ class EntityEditor {
     return page.getByTestId("entity-item").nth(0);
   }
   async moveAndClick(page: Page, x: number, y: number) {
+    await page.evaluate(async () => {
+      await window.e2eHooks.waitForNextFrame();
+      await window.e2eHooks.waitForNextFrame();
+    });
     await page.mouse.move(x, y);
     await page.mouse.move(x, y);
-    await page.mouse.down();
-    await page.mouse.up();
+    await page.mouse.down({ button: "left" });
+    await page.mouse.up({ button: "left" });
     await page.evaluate(async () => {
       await window.e2eHooks.waitForNextFrame();
       await window.e2eHooks.waitForNextFrame();
