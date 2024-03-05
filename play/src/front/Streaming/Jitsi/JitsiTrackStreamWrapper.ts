@@ -2,13 +2,23 @@ import { get, Readable, writable, Writable } from "svelte/store";
 import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import { TrackStreamWrapperInterface } from "../Contract/TrackStreamWrapperInterface";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
+
+export interface JitsiTrackExt extends JitsiTrack {
+    mute(): void;
+    unmute(): void;
+}
+
 /**
  * An object that wraps a JitsiTrackWrapper and points only to "video/audio" or "desktop" track
  */
 export class JitsiTrackStreamWrapper implements TrackStreamWrapperInterface {
     //public readonly uniqueId: string;
-    private readonly _audioTrackStore: Writable<JitsiTrack | undefined> = writable<JitsiTrack | undefined>(undefined);
-    private readonly _videoTrackStore: Writable<JitsiTrack | undefined> = writable<JitsiTrack | undefined>(undefined);
+    private readonly _audioTrackStore: Writable<JitsiTrack | JitsiTrackExt | undefined> = writable<
+        JitsiTrack | JitsiTrackExt | undefined
+    >(undefined);
+    private readonly _videoTrackStore: Writable<JitsiTrack | JitsiTrackExt | undefined> = writable<
+        JitsiTrack | JitsiTrackExt | undefined
+    >(undefined);
 
     constructor(
         public readonly jitsiTrackWrapper: JitsiTrackWrapper,
@@ -29,7 +39,7 @@ export class JitsiTrackStreamWrapper implements TrackStreamWrapperInterface {
         return this._audioTrackStore;
     }
 
-    public getVideoTrack(): JitsiTrack | undefined {
+    public getVideoTrack(): JitsiTrack | JitsiTrackExt | undefined {
         return get(this._videoTrackStore);
     }
 
@@ -37,11 +47,11 @@ export class JitsiTrackStreamWrapper implements TrackStreamWrapperInterface {
         return get(this._audioTrackStore);
     }
 
-    public setAudioTrack(jitsiTrack: JitsiTrack | undefined) {
+    public setAudioTrack(jitsiTrack: JitsiTrack | JitsiTrackExt | undefined) {
         this._audioTrackStore.set(jitsiTrack);
     }
 
-    public setVideoTrack(jitsiTrack: JitsiTrack | undefined) {
+    public setVideoTrack(jitsiTrack: JitsiTrack | JitsiTrackExt | undefined) {
         this._videoTrackStore.set(jitsiTrack);
     }
 

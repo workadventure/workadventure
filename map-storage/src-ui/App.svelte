@@ -52,17 +52,17 @@
         });
     }
 
-    let dialog; // Reference to the dialog tag
+    let dialog: HTMLDialogElement|null; // Reference to the dialog tag
     onMount(() => {
-        dialog = document.getElementById('add-tmj-dialog');
+        dialog = document.getElementById('add-tmj-dialog') as HTMLDialogElement|null;
     })
 
     function showDialogClick() {
-        dialog.showModal();
+        dialog?.showModal();
     };
 
     function closeTmjDialog() {
-        dialog.close();
+        dialog?.close();
     }
 
     let newTmjUrl: string = "";
