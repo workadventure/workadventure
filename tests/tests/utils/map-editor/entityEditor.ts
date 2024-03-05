@@ -7,6 +7,8 @@ class EntityEditor {
       await page.getByPlaceholder("Search").click();
       await page.getByPlaceholder("Search").fill(search);
     }
+    await expect(page.getByTestId("entityImageLoader")).toHaveCount(0);
+    await expect(page.getByTestId("entityImageError")).toHaveCount(0);
     await page.getByTestId("entity-item").nth(nb).click();
   }
 
@@ -33,12 +35,7 @@ class EntityEditor {
   }
 
   async addProperty(page: Page, property: string) {
-    await page
-      .locator(
-        ".map-editor .sidebar .properties-buttons .add-property-button",
-        { hasText: property }
-      )
-      .click();
+    await page.locator(".map-editor .sidebar .properties-buttons .add-property-button", { hasText: property }).click();
   }
 
   async setEntityName(page: Page, name: string) {
@@ -55,17 +52,13 @@ class EntityEditor {
   }
 
   async setEntitySearcheable(page: Page, value: boolean) {
-    await page
-      .locator(".map-editor .sidebar input#searchable")
-      .setChecked(value);
+    await page.locator(".map-editor .sidebar input#searchable").setChecked(value);
   }
 
   async uploadTestAsset(page: Page) {
     await page
       .getByTestId("uploadCustomAsset")
-      .setInputFiles(
-        path.join(__dirname, `../../assets/${this.getTestAssetName()}`)
-      );
+      .setInputFiles(path.join(__dirname, `../../assets/${this.getTestAssetName()}`));
     await page.getByTestId("floatingObject").check();
     await this.applyEntityModifications(page);
   }
