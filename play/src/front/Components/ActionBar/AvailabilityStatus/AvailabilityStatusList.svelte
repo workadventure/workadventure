@@ -57,20 +57,28 @@
     </div>
     {#each statusInformations as statusInformation (statusInformation.AvailabilityStatus)}
         <div
-            class="tw-px-5 tw-py-10px tw-m-0 tw-list-none hover:tw-bg-dark-purple/80"
+            class="changeStatusButton tw-px-5 tw-py-10px tw-h-full tw-m-0 tw-cursor-pointer tw-list-none hover:tw-bg-dark-purple/80 "
             on:keyup={(e) => {
                 handleKeyPress(e, statusInformation.AvailabilityStatus);
             }}
             on:click|stopPropagation={() => handleClick(statusInformation.AvailabilityStatus)}
         >
-            <div class="tw-flex tw-justify-start tw-my-1 tw-py-1.5">
-                <AvailabilityStatusCircle position="relative" colorHex={statusInformation.colorHex} />
-                <div class="tw-px-4 {currentStatus !== statusInformation.AvailabilityStatus ? '' : 'tw-opacity-50'}">
+            <div class="tw-flex tw-justify-start tw-my-1 tw-py-1.5 tw-cursor-pointer">
+                <AvailabilityStatusCircle
+                    cursorType="pointer"
+                    position="relative"
+                    colorHex={statusInformation.colorHex}
+                />
+                <div
+                    class="tw-px-4 tw-cursor-pointer {currentStatus !== statusInformation.AvailabilityStatus
+                        ? ''
+                        : 'tw-opacity-50'}"
+                >
                     {statusInformation.label}
                 </div>
                 {#if currentStatus === statusInformation.AvailabilityStatus}
                     <div>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <svg class="tw-cursor-pointer" width="24" height="24" viewBox="0 0 24 24" fill="none">
                             <path
                                 d="M10.5858 13.4142L7.75735 10.5858L6.34314 12L10.5858 16.2427L17.6568 9.1716L16.2426 7.75739L10.5858 13.4142Z"
                                 xmlns="http://www.w3.org/2000/svg"
