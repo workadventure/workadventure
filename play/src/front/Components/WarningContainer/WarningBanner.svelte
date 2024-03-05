@@ -3,14 +3,14 @@
     import { userIsAdminStore, limitMapStore, bannerStore } from "../../Stores/GameStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { warningContainerStore } from "../../Stores/MenuStore";
+    import { warningBannerStore } from "../../Stores/MenuStore";
 
     /* eslint-disable svelte/no-at-html-tags */
 
     const registerLink = ADMIN_URL + "/second-step-register";
 
     function closeBanner() {
-        warningContainerStore.set(false);
+        warningBannerStore.set(false);
         bannerStore.set(null);
     }
 </script>

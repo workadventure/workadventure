@@ -15,7 +15,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
 
     import Woka from "../Woka/WokaFromUserId.svelte";
-    import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+    import { isMediaBreakpointOnly } from "../../Utils/BreakpointsUtils";
     // @ts-ignore
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
@@ -41,8 +41,8 @@
 
     export let clickable = false;
     export let isHightlighted = false;
-
     export let peer: VideoPeer;
+
     let streamStore = peer.streamStore;
     let volumeStore = peer.volumeStore;
     let name = peer.userName;
@@ -58,7 +58,6 @@
     let videoContainer: HTMLDivElement;
     let videoElement: HTMLVideoElementExt;
     let minimized = isMediaBreakpointOnly("md");
-    let isMobile = isMediaBreakpointUp("md");
     let noVideoTimeout: ReturnType<typeof setTimeout> | undefined;
 
     let destroyed = false;
@@ -83,7 +82,6 @@
 
     const resizeObserver = new ResizeObserver(() => {
         minimized = isMediaBreakpointOnly("md");
-        isMobile = isMediaBreakpointUp("md");
     });
 
     // TODO: check the race condition when setting sinkId is solved.
@@ -145,11 +143,10 @@
                 if ("requestVideoFrameCallback" in videoElement) {
                     // Let's wait 3 seconds before displaying a warning.
                     noVideoTimeout = setTimeout(() => {
-                            displayNoVideoWarning = true;
-                            noVideoTimeout = undefined;
-                            analyticsClient.noVideoStreamReceived();
-                        },
-                        3000);
+                        displayNoVideoWarning = true;
+                        noVideoTimeout = undefined;
+                        analyticsClient.noVideoStreamReceived();
+                    }, 3000);
 
                     videoElement.requestVideoFrameCallback(() => {
                         // A video frame was displayed. No need to display a warning.
@@ -249,7 +246,7 @@
 <div
     class="video-container transition-all relative h-full aspect-video"
     class:video-off={!videoEnabled}
-    class:h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
+    class:h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
     bind:this={videoContainer}
     on:click={() => analyticsClient.pinMeetingAction()}
     on:click={() => hightlight()}
@@ -354,28 +351,17 @@
                     </div>
                 </div>
             </div>
-            {#if videoEnabled}
-                <div class="z-[251] absolute aspect-ratio right-3 w-8 p-1 flex items-center justify-center {$constraintStore && $constraintStore.audio !== false ? 'bottom-4' : 'bottom-3' }">
-                    {#if $constraintStore && $constraintStore.audio !== false}
-                        <SoundMeterWidget volume={$volumeStore} classcss="absolute" barColor="blue" />
-                    {:else}
-                        <MicOffIcon />
-                    {/if}
-                </div>
-            {:else}
+            <div class="z-[251] absolute aspect-ratio right-3 w-8 p-1 flex items-center justify-center {$constraintStore && $constraintStore.audio !== false ? 'bottom-4' : 'bottom-3' }">
                 {#if $constraintStore && $constraintStore.audio !== false}
                     <SoundMeterWidget
-                        volume={$volumeStore}
-                        classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
-                        barColor={textColor}
+                            volume={$volumeStore}
+                            classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
+                            barColor={textColor}
                     />
                 {:else}
                     <MicOffIcon />
                 {/if}
-                <div class="w-full flex report-ban-container-cam-off opacity-0 h-10">
-                    <BanReportBox {peer} />
-                </div>
-            {/if}
+            </div>
         {/if}
     </div>
 </div>

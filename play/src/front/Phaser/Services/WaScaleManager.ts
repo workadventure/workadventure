@@ -129,10 +129,10 @@ export class WaScaleManager {
     }
 
     public handleZoomByFactor(zoomFactor: number, camera: Phaser.Cameras.Scene2D.Camera): void {
-        if (zoomFactor > 1 && this.zoomModifier * zoomFactor - this.zoomModifier > 0.02)
-            this.setZoomModifier(this.zoomModifier * 1.02, camera);
-        else if (zoomFactor < 1 && this.zoomModifier - this.zoomModifier * zoomFactor > 0.02)
-            this.setZoomModifier(this.zoomModifier * 0.98, camera);
+        if (zoomFactor > 1 && this.zoomModifier * zoomFactor - this.zoomModifier > 0.1)
+            this.setZoomModifier(this.zoomModifier * 1.1, camera);
+        else if (zoomFactor < 1 && this.zoomModifier - this.zoomModifier * zoomFactor > 0.1)
+            this.setZoomModifier(this.zoomModifier * 0.9, camera);
         else this.setZoomModifier(this.zoomModifier * zoomFactor, camera);
 
         if (this.focusTarget) {

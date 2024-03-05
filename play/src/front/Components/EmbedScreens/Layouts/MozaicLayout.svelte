@@ -22,9 +22,13 @@
     $:console.log(cardHeight);
 </script>
 
-<div id="mozaic-layout" class="flex justify-center lg:pt-9" bind:this={layoutDom}>
+<div
+    id="mozaic-layout"
+    class="flex justify-center tw-content-center tw-items-center lg:pt-9 tw-pb-16"
+    bind:this={layoutDom}
+>
     <div
-        class="media-container grid mozaic-grid content-start"
+        class="media-container grid mozaic-grid content-start tw-backdrop-blur-sm tw-bg-black/20 tw-pointer-events-auto tw-max-h-full tw-overflow-y-auto"
         class:grid-cols-1={$streamableCollectionStore.size === 1}
         class:grid-cols-2={$streamableCollectionStore.size >= 2}
     >

@@ -6,6 +6,8 @@ interface ErrorMessage {
     message: string | number | boolean | undefined;
 }
 
+type WarningMessage = ErrorMessage;
+
 /**
  * A store that contains a list of error messages to be displayed.
  */
@@ -59,3 +61,53 @@ export const hasClosableMessagesInErrorStore = derived(errorStore, ($errorStore)
     const closableMessage = $errorStore.find((errorMessage) => errorMessage.closable);
     return !!closableMessage;
 });
+
+function createWarningMessageStore() {
+    const { subscribe, update } = writable<WarningMessage[]>([]);
+
+    return {
+        subscribe,
+        addWarningMessage: (
+            e: string | Error,
+            options?: {
+                closable?: boolean;
+                id?: string;
+            }
+        ): void => {
+            update((messages: WarningMessage[]) => {
+                let message: string;
+                if (e instanceof Error) {
+                    message = e.message;
+                } else {
+                    message = e;
+                }
+
+                const newWarningMessage = {
+                    message,
+                    closable: options?.closable ?? true,
+                    id: options?.id ?? crypto.randomUUID(),
+                };
+                if (
+                    !messages.find(
+                        (errorMessage) =>
+                            errorMessage.message === newWarningMessage.message ||
+                            (errorMessage.id != undefined &&
+                                newWarningMessage.id != undefined &&
+                                errorMessage.id === newWarningMessage.id)
+                    )
+                ) {
+                    messages.push(newWarningMessage);
+
+                    setTimeout(() => {
+                        update((messages: WarningMessage[]) => {
+                            return messages.filter((message) => message.id !== newWarningMessage.id);
+                        });
+                    }, 10000);
+                }
+
+                return messages;
+            });
+        },
+    };
+}
+export const warningMessageStore = createWarningMessageStore();

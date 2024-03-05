@@ -122,7 +122,7 @@
                 {/if}
             </div>
         </div>
-        <!--
+        <!-- TODO HUGO Commented Why ?
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div
                 class="relative self-end z-[300] bottom-6 md:bottom-4 max-w-[25%] w-full"

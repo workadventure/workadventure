@@ -581,49 +581,65 @@ jobs:
       matrix:
         include:
           - browser: chromium
+            project: chromium
             shard: 1
             nbShards: 3
             renderer: auto
           - browser: chromium
+            project: chromium
             shard: 2
             nbShards: 3
             renderer: auto
           - browser: chromium
+            project: chromium
             shard: 3
             nbShards: 3
             renderer: auto
           - browser: firefox
+            project: firefox
             shard: 1
             nbShards: 3
             renderer: auto
           - browser: firefox
+            project: firefox
             shard: 2
             nbShards: 3
             renderer: auto
           - browser: firefox
+            project: firefox
             shard: 3
             nbShards: 3
             renderer: auto
           - browser: webkit
+            project: webkit
             shard: 1
             nbShards: 5
             renderer: headless
           - browser: webkit
+            project: webkit
             shard: 2
             nbShards: 5
             renderer: headless
           - browser: webkit
+            project: webkit
             shard: 3
             nbShards: 5
             renderer: headless
           - browser: webkit
+            project: webkit
             shard: 4
             nbShards: 5
             renderer: headless
           - browser: webkit
+            project: webkit
             shard: 5
             nbShards: 5
             renderer: headless
+          - browser: chromium
+            project: mobilechromium
+            shard: 1
+            nbShards: 1
+            renderer: auto
     needs:
       - build-play
       - build-chat
@@ -726,7 +742,7 @@ jobs:
         run: sleep 30 && npm run upload-test-map
         working-directory: map-storage
       - name: Run Playwright tests
-        run: npm run test-prod-like -- --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }}
+        run: npm run test-prod-like -- --project=${{ matrix.project }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }}
         working-directory: tests
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
@@ -860,7 +876,8 @@ jobs:
           path: tests/playwright-report/
           retention-days: 30
 
-  deeploy:
+  helm-deploy:
+    name: "Deploy in Kubernetes"
     needs:
       - build-play
       - build-chat
@@ -883,39 +900,99 @@ jobs:
         run: echo "ADMIN_API_URL=https://admin-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re" >> $GITHUB_ENV
         if: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin')) || env.GITHUB_REF_SLUG == 'develop'  }}
 
-      - name: Write certificate
-        run: echo "${CERTS_PRIVATE_KEY}" > secret.key && chmod 0600 secret.key
-        env:
-          CERTS_PRIVATE_KEY: ${{ secrets.CERTS_PRIVATE_KEY }}
+#      - name: Write certificate
+#        run: echo "${CERTS_PRIVATE_KEY}" > secret.key && chmod 0600 secret.key
+#        env:
+#          CERTS_PRIVATE_KEY: ${{ secrets.CERTS_PRIVATE_KEY }}
 
-      - name: Download certificate
-        run: mkdir secrets && scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i secret.key ubuntu@cert.workadventu.re:./config/live/workadventu.re/* secrets/
+#      - name: Download certificate
+#        run: mkdir secrets && scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i secret.key ubuntu@cert.workadventu.re:./config/live/workadventu.re/* secrets/
 
-      - name: Create namespace
-        uses: steebchen/kubectl@v1.0.0
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+#      - name: Create namespace
+#        uses: steebchen/kubectl@v1.0.0
+#        env:
+#          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+#        with:
+#          args: create namespace workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+#        continue-on-error: true
+
+#      - name: Delete old certificates in namespace
+#        uses: steebchen/kubectl@v1.0.0
+#        env:
+#          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+#        with:
+#          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} delete secret certificate-tls
+#        continue-on-error: true
+#
+#      - name: Install certificates in namespace
+#        uses: steebchen/kubectl@v1.0.0
+#        env:
+#          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+#        with:
+#          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} create secret tls certificate-tls --key="secrets/privkey.pem" --cert="secrets/fullchain.pem"
+
+      - uses: azure/setup-helm@v4.0.0
         with:
-          args: create namespace workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-        continue-on-error: true
+          #version: '<version>' # default is latest (stable)
+          token: ${{ secrets.GITHUB_TOKEN }} # only needed if version is 'latest'
+        id: install
 
-      - name: Delete old certificates in namespace
-        uses: steebchen/kubectl@v1.0.0
+      - name: "Install kubeconfig file"
+        run: mkdir ~/.kube && echo "${KUBE_CONFIG_FILE}" > ~/.kube/config && chmod 0600 ~/.kube/config
         env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
-        with:
-          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} delete secret certificate-tls
-        continue-on-error: true
+          KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
 
-      - name: Install certificates in namespace
-        uses: steebchen/kubectl@v1.0.0
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
-        with:
-          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} create secret tls certificate-tls --key="secrets/privkey.pem" --cert="secrets/fullchain.pem"
+      - name: 'Dependencies install'
+        run: "helm dependencies update"
+        working-directory: contrib/helm
 
-      - name: Deploy with deeployer
-        uses: thecodingmachine/deeployer-action@master
+      - name: 'Generate values file'
+        run: |
+          echo "
+          appVersion: \"${DEPLOY_REF}\"
+          domainName: ${DEPLOY_REF}.test.workadventu.re
+          ejabberdJwtSecret: \"${EJABBERD_JWT_SECRET}\"
+          forceRedeploy: true
+          play:
+            secretEnv:
+              ROOM_API_SECRET_KEY: \"password\"
+          mapstorage:
+            env:
+              AUTHENTICATION_USER: \"john.doe\"
+            secretEnv:
+              AUTHENTICATION_PASSWORD: \"password\"
+          maps:
+            enabled: true
+          commonEnv:
+            ENABLE_MAP_EDITOR: true
+            KLAXOON_ENABLED: true
+            JITSI_DOMAIN: coremeet.workadventu.re
+            JITSI_MUC_DOMAIN: muc.prosody.workadventu.re
+            JITSI_XMPP_DOMAIN: prosody.workadventu.re
+            FEATURE_FLAG_BROADCAST_AREAS: true
+            YOUTUBE_ENABLED: true
+            GOOGLE_DRIVE_ENABLED: true
+            GOOGLE_DOCS_ENABLED: true
+            GOOGLE_SHEETS_ENABLED: true
+            GOOGLE_SLIDES_ENABLED: true
+          commonSecretEnv:
+            ADMIN_API_TOKEN: \"${ADMIN_API_TOKEN}\"
+            ADMIN_SOCKETS_TOKEN: \"${ADMIN_SOCKETS_TOKEN}\"
+            JITSI_ISS: \"${JITSI_ISS}\"
+            JITSI_URL: \"${JITSI_URL}\"
+            SECRET_JITSI_KEY: \"${SECRET_JITSI_KEY}\"
+            TURN_STATIC_AUTH_SECRET: \"${TURN_STATIC_AUTH_SECRET}\"
+            DEPLOY_REF: \"${DEPLOY_REF}\"
+            POSTHOG_API_KEY: \"${POSTHOG_API_KEY}\"
+            POSTHOG_URL: \"${POSTHOG_URL}\"
+            ENABLE_REPORT_ISSUES_MENU: \"${ENABLE_REPORT_ISSUES_MENU}\"
+            REPORT_ISSUES_URL: \"${REPORT_ISSUES_URL}\"
+            LOGROCKET_ID: \"${LOGROCKET_ID}\"
+            KLAXOON_CLIENT_ID: \"${KLAXOON_CLIENT_ID}\"
+            GOOGLE_DRIVE_PICKER_CLIENT_ID: \"${GOOGLE_DRIVE_PICKER_CLIENT_ID}\"
+            GOOGLE_DRIVE_PICKER_APP_ID: \"${GOOGLE_DRIVE_PICKER_APP_ID}\"
+            " > values-cd.yaml
+        working-directory: contrib/helm
         env:
           KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
           ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
@@ -934,22 +1011,34 @@ jobs:
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
           GOOGLE_DRIVE_PICKER_CLIENT_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_CLIENT_ID }}
           GOOGLE_DRIVE_PICKER_APP_ID: ${{ secrets.GOOGLE_DRIVE_PICKER_APP_ID }}
-        with:
-          namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
-      - name: Perform environment substitution in K8S files
-        run: envsubst < cd/map-storage-traefik-ingress-route.tmpl.yaml > cd/map-storage-traefik-ingress-route.yaml
-        if: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin')) || env.GITHUB_REF_SLUG == 'develop'  }}
+#      - name: "Printing values file"
+#        working-directory: contrib/helm
+#        run: "cat values-cd.yaml"
+      - name: "Delete stuck releases"
+        run: |
+          if [[ $(helm list -n ${NAMESPACE} --pending | grep pending-upgrade) ]]; then
+            echo "Found releases in 'pending-upgrade' state in namespace $NAMESPACE. Deleting namespace..."
+            # Delete the namespace
+            kubectl delete namespace "$NAMESPACE"
+            echo "Namespace $NAMESPACE deleted."
+          else
+                echo "No releases in 'pending-upgrade' state found in namespace $NAMESPACE."
+          fi
         env:
-          DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
-      - name: Deploy custom K8S files
-        uses: steebchen/kubectl@v1.0.0
+      - name: 'Deploy'
+        run: "helm upgrade --install --create-namespace -n ${NAMESPACE} --wait -f values.yaml -f values-cd.yaml test ."
+        working-directory: contrib/helm
         env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
-        with:
-          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} apply -f cd/map-storage-traefik-ingress-route.yaml
-        if: ${{ (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin')) || env.GITHUB_REF_SLUG == 'develop'  }}
+          NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+
+      - name: "Fix path to assets in WAM test files"
+        run: find "." -type f -name "*.wam" -exec sed -i "s|http://play.workadventure.localhost|${PLAY_URL}|g" {} \;
+        working-directory: map-storage/tests
+        env:
+          PLAY_URL: "https://play-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
 
       - name: Upload demo maps in map-storage
         run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip * && curl -F 'file=@../assets.zip' https://map-storage-${DEPLOY_REF}.test.workadventu.re/upload --basic -u john.doe:password
@@ -965,3 +1054,68 @@ jobs:
         with:
           msg: "Environment deployed at https://play-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re \nTests available at https://maps-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re/tests"
           check_for_duplicate_msg: true
+
+  helm-test:
+    name: "End to end tests in Kubernetes (${{ matrix.shard }}/${{ matrix.nbShards }})"
+    needs:
+      - helm-deploy
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: 1
+            nbShards: 2
+          - shard: 2
+            nbShards: 2
+    steps:
+      - uses: actions/checkout@v2
+
+      # Create a slugified value of the branch
+      - uses: rlespinasse/github-slug-action@4.2.3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: npm ci
+        working-directory: tests
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+        working-directory: tests
+
+      - name: "Install Room Api client dependencies"
+        run: npm ci
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Build Room Api client proto files"
+        run: npm run ts-proto
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Fix path to assets in WAM test files"
+        run: find "." -type f -name "*.wam" -exec sed -i "s|http://play.workadventure.localhost|${PLAY_URL}|g" {} \;
+        working-directory: map-storage/tests
+        env:
+          PLAY_URL: "https://play-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
+
+      - name: Create assets.zip needed by the tests
+        run: rm -f tests/assets.zip && cd tests/assets && zip -r ../assets.zip *
+        working-directory: map-storage
+
+      - name: Run Playwright tests
+        # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
+        run: npm run test-helm-install -- --shard ${{ matrix.shard }}/${{ matrix.nbShards }}
+        working-directory: tests
+        env:
+          PLAY_URL: "https://play-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
+          ROOM_API_HOSTNAME: "room-api-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
+          MAP_STORAGE_ENDPOINT: "map-storage-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
+          MAPS_DOMAIN: "maps-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re"
+          ROOM_API_SECRET_KEY: "password"
+          ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: playwright-report-helm-${{ matrix.shard }}-${{ matrix.nbShards }}
+          path: tests/playwright-report/
+          retention-days: 30

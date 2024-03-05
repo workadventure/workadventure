@@ -250,7 +250,7 @@
                     <div class="tw-flex tw-flex-col tw-p-5 tw-w-1/3">
                         <div class="tw-flex tw-align-middle tw-justify-center tw-p-5">
                             <video
-                                src="/resources/videos/global_text_message.mp4"
+                                src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_live_message.mp4"
                                 class="tw-w-full tw-cursor-pointer tw-rounded-xl"
                                 controls
                                 muted
@@ -263,7 +263,7 @@
                     <div class="tw-flex tw-flex-col tw-p-5 tw-w-1/3">
                         <div class="tw-flex tw-align-middle tw-justify-center tw-p-5">
                             <video
-                                src="/resources/videos/global_text_message.mp4"
+                                src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_text_message.mp4"
                                 class="tw-w-full tw-cursor-pointer tw-rounded-xl"
                                 controls
                                 muted
@@ -276,7 +276,7 @@
                     <div class="tw-flex tw-flex-col tw-p-5 tw-w-1/3">
                         <div class="tw-flex tw-align-middle tw-justify-center tw-p-5">
                             <video
-                                src="/resources/videos/global_audio_message.mp4"
+                                src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_audio_message.mp4"
                                 class="tw-w-full tw-cursor-pointer tw-rounded-xl"
                                 controls
                                 muted
