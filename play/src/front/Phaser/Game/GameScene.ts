@@ -1724,7 +1724,6 @@ export class GameScene extends DirtyScene {
                     return;
                 }
                 const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
-                Œ;
                 let html =
                     '<div id="container" class="relative bg-contrast/50 backdrop-blur pt-4 overflow-hidden rounded-lg text-white" hidden>';
                 if (escapedMessage) {

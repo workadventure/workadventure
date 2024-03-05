@@ -177,12 +177,13 @@
                 {#if $showPart === "connectionNotAuthorized"}
                     <NeedRefresh />
                 {:else if $showPart === "loading"}
-                    <Loader text={loadingText} class="h-full bg-contrast/80" />
+                    <Loader text={loadingText} className="h-full bg-contrast/80" />
                 {:else}
                     {#if $enableChatOnlineListStore}
                         <nav class="nav">
                             <div class:chat={$navChat === "chat"} />
                             <ul class="list-none flex justify-between">
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <li
                                     class="w-1/2 py-4 text-center cursor-pointer bold border border-solid border-secondary border-x-0 border-b-0 {$navChat ===
                                     'chat'
@@ -192,6 +193,7 @@
                                 >
                                     Chat
                                 </li>
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <li
                                     class="w-1/2 py-4 text-center cursor-pointer bold border border-solid border-secondary border-x-0 border-b-0 {$navChat ===
                                     'users'
@@ -256,7 +258,7 @@
                         />
                     {/if}
                 {/if}
-                {#if $navChat !== "users" || $showPart !== "loading" || $showPart !== "connectionNotAuthorized"}
+                {#if $navChat !== "users" && $showPart !== "loading" && $showPart !== "connectionNotAuthorized"}
                     <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
                 {/if}
                 {#if ENABLE_OPENID && $enableChat}
