@@ -14,7 +14,6 @@
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
     import { JitsiTrackExt, JitsiTrackStreamWrapper } from "../../../Streaming/Jitsi/JitsiTrackStreamWrapper";
     import { jitsiConferencesStore } from "../../../Streaming/Jitsi/JitsiConferencesStore";
-    import { size } from "lodash";
 
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
@@ -62,7 +61,7 @@
             ($myJitsiCameraStore?.getVideoTrack() as JitsiTrackExt | undefined)?.unmute();
         }
 
-        for (const [id, peer] of $streamableCollectionStore.entries()) {
+        for (const [, peer] of $streamableCollectionStore.entries()) {
             const videoTrack = (peer as JitsiTrackStreamWrapper).getVideoTrack();
             const mediaStreamTrack = videoTrack?.getTrack() as MediaStreamTrack;
 
