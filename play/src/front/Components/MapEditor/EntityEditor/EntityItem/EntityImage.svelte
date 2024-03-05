@@ -1,7 +1,6 @@
 <script lang="ts">
     import { IconLoader, IconPhotoOff } from "@tabler/icons-svelte";
-    import { of } from "rxjs";
-    import { createEventDispatcher, onMount } from "svelte";
+    import { createEventDispatcher } from "svelte";
 
     export let classNames: string | undefined = undefined;
     export let imageSource: string;
