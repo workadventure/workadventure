@@ -95,7 +95,7 @@
 <svelte:window on:keydown={onKeyDown} use:clickOutside />
 
 <div class="emote-menu-container">
-    <div class="emote-menu {$bottomActionBarVisibilityStore ? 'active-discussion' : ''}" bind:this={emojiContainer}></div>
+    <div class="emote-menu {$bottomActionBarVisibilityStore ? 'active-discussion' : ''}" bind:this={emojiContainer} />
 </div>
 
 <style lang="scss">

@@ -101,7 +101,9 @@
 
 <div
     id={"cowebsite-thumbnail-" + index}
-    class="cowebsite-thumbnail flex items-center mr-4 p-2 rounded {isMain || isHighlight ? 'bg-white text-contrast' : 'bg-contrast/80 text-white' }"
+    class="cowebsite-thumbnail flex items-center mr-4 p-2 rounded {isMain || isHighlight
+        ? 'bg-white text-contrast'
+        : 'bg-contrast/80 text-white'}"
     class:asleep={$state === "asleep"}
     class:loading={$state === "loading"}
     class:ready={$state === "ready"}
@@ -115,22 +117,29 @@
         on:dragstart|preventDefault={noDrag}
         alt=""
     />
-    <div class:hide={iconLoaded} class="h-10 w-10 aspect-ratio bg-contrast" style="background-image: url({loaderImg})"></div>
+    <div
+        class:hide={iconLoaded}
+        class="h-10 w-10 aspect-ratio bg-contrast"
+        style="background-image: url({loaderImg})"
+    />
     <div class="pr-2">
         <div class="bold text-lg">{cowebsiteName}</div>
         <div class="italic text-xs opacity-50 -mt-1">{cowebsiteName}</div>
     </div>
-    <div
-        on:click={() => analyticsClient.stackOpenCloseMultiIframe()}
-        on:click={onClick}
-    >
+    <div on:click={() => analyticsClient.stackOpenCloseMultiIframe()} on:click={onClick}>
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
             <g clip-path="url(#clip0_1820_4223)">
-                <path d="M16.5 5.5L5.5 16.5M5.5 5.5L16.5 16.5" class="{isMain || isHighlight ? 'stroke-contrast' : 'stroke-white' } transition-all" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path
+                    d="M16.5 5.5L5.5 16.5M5.5 5.5L16.5 16.5"
+                    class="{isMain || isHighlight ? 'stroke-contrast' : 'stroke-white'} transition-all"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                />
             </g>
             <defs>
                 <clipPath id="clip0_1820_4223">
-                    <rect width="22" height="22" fill="white"/>
+                    <rect width="22" height="22" fill="white" />
                 </clipPath>
             </defs>
         </svg>

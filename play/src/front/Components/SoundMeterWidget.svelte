@@ -37,7 +37,7 @@
                 class:scale-y-[80%]={bar > 90 && bar < 120}
                 class:scale-y-[90%]={bar > 120 && bar < 140}
                 class:scale-y-[100%]={bar >= 140}
-            ></div>
+            />
         {/each}
     {/if}
 </div>

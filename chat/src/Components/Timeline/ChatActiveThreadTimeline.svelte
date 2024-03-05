@@ -1,6 +1,5 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
-    import { ArrowLeftIcon, RefreshCwIcon, SmileIcon, SendIcon, Trash2Icon } from "svelte-feather-icons";
+    import { Trash2Icon } from "svelte-feather-icons";
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import { Unsubscriber, writable } from "svelte/store";
     import { EmojiButton } from "@joeattardi/emoji-button";
@@ -54,11 +53,6 @@
     }
     const applications = writable<Set<Application>>(new Set());
     const applicationsSelected = writable<Set<Application>>(new Set());
-
-    function reInitialize() {
-        chatMessagesStore.reInitialize();
-        settingsView = false;
-    }
 
     function onFocus() {
         chatInputFocusStore.set(true);
@@ -204,9 +198,7 @@
         picker.on("emoji", ({ emoji }) => {
             htmlMessageText += emoji;
         });
-        picker.on("hidden", () => {
-            emojiOpened = false;
-        });
+        picker.on("hidden", () => {});
 
         if (chatConnectionManager.klaxoonToolIsActivated) {
             applications.update((apps) => {
@@ -283,12 +275,6 @@
         }
         const minutesBetween = (date.getTime() - previousMsg.date.getTime()) / 60000;
         return previousMsg.authorName === authorName && minutesBetween < 2;
-    }
-
-    let emojiOpened = false;
-    function openEmoji() {
-        picker.showPicker(emojiContainer);
-        emojiOpened = true;
     }
 
     let applicationMenuIsOpenned = false;
@@ -457,13 +443,25 @@
     class="flex flex-col h-full min-h-full over w-full"
     on:click={() => (applicationMenuIsOpenned = false)}
 >
-
-    <div class="wa-thread-head fixed w-full border-x-0 border-b border-t-0 border-solid border-white/30 backdrop-blur z-20 bg-contrast/80">
+    <div
+        class="wa-thread-head fixed w-full border-x-0 border-b border-t-0 border-solid border-white/30 backdrop-blur z-20 bg-contrast/80"
+    >
         <div class="title relative py-2">
             <div class="absolute left-3 top-3">
                 <button class="exit p-2 hover:bg-white/20 rounded cursor-pointer" on:click={backToThreadList}>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="32" height="32" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="icon icon-tabler icon-tabler-chevron-left"
+                        width="32"
+                        height="32"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="#ffffff"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M15 6l-6 6l6 6" />
                     </svg>
                 </button>
@@ -497,8 +495,19 @@
         <div class="absolute right-4 top-3">
             <div class="wa-message-bg">
                 <button class="p-2 hover:bg-white/20 cursor-pointer rounded">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-dots" width="32" height="32" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="icon icon-tabler icon-tabler-dots"
+                        width="32"
+                        height="32"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="#ffffff"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
                         <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
                         <path d="M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
@@ -513,78 +522,97 @@
     </div>
 
     <!-- MESSAGE LIST-->
-    <div id="timeLine-messageList" class="flex flex-col flex-auto px-5 pt-32 pb-16 justify-end h-auto min-h-screen relative z-10">
+    <div
+        id="timeLine-messageList"
+        class="flex flex-col flex-auto px-5 pt-32 pb-16 justify-end h-auto min-h-screen relative z-10"
+    >
         {#each $chatMessagesStore as message, i (message.id)}
             {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
                 <div
                     id="message_{message.id}"
-                    class="{needHideHeader(message.author?.name ?? message.authorName ?? '', message.date, i) ? 'mt-0.5' : 'mt-2'}"
+                    class={needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)
+                        ? "mt-0.5"
+                        : "mt-2"}
                 >
-                    <div class={`flex ${message.type === ChatMessageTypes.me ? "justify-end text-right" : "justify-start"}`}>
+                    <div
+                        class={`flex ${
+                            message.type === ChatMessageTypes.me ? "justify-end text-right" : "justify-start"
+                        }`}
+                    >
                         {#if !needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)}
-                        <div
-                            class="relative wa-avatar aspect-ratio h-10 w-10 rounded overflow-hidden false cursor-default { message.type === ChatMessageTypes.me ? 'opacity-0' : 'mt-6' } wa-avatar-mini mr-2" style={`background-color: ${message.author?.color ?? "#56eaff"}`}>
-                            <div class="wa-container cursor-default">
-                                <img
-                                    class="cursor-default w-full mt-2"
-                                    style="image-rendering: pixelated;"
-                                    src={`${message.author?.woka ? message.author?.woka : defaultWoka}`}
-                                    alt="Avatar"
-                                    loading="lazy"
-                                />
+                            <div
+                                class="relative wa-avatar aspect-ratio h-10 w-10 rounded overflow-hidden false cursor-default {message.type ===
+                                ChatMessageTypes.me
+                                    ? 'opacity-0'
+                                    : 'mt-6'} wa-avatar-mini mr-2"
+                                style={`background-color: ${message.author?.color ?? "#56eaff"}`}
+                            >
+                                <div class="wa-container cursor-default">
+                                    <img
+                                        class="cursor-default w-full mt-2"
+                                        style="image-rendering: pixelated;"
+                                        src={`${message.author?.woka ? message.author?.woka : defaultWoka}`}
+                                        alt="Avatar"
+                                        loading="lazy"
+                                    />
+                                </div>
                             </div>
-                        </div>
                         {:else}
-                            <div class="aspect-ratio w-12 h-12 mr-2"></div>
+                            <div class="aspect-ratio w-12 h-12 mr-2" />
                         {/if}
                         <div class="w-3/4">
                             <div class="inline-block">
-                            {#if !needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)}
-                                <div class="flex text-xxs px-4 py-1">
-                                    <span class="bold text-white/50 text-left grow">
-                                    {#if message.type === ChatMessageTypes.me}
-                                        {$LL.me()}
-                                    {:else if message.author}
-                                        {message.author?.name.match(/\[\d*]/)
-                                            ? message.author?.name.substring(
-                                                0,
-                                                message.author?.name.search(/\[\d*]/)
-                                            )
-                                            : message.author?.name}
-                                        {#if message.author?.name.match(/\[\d*]/)}
+                                {#if !needHideHeader(message.author?.name ?? message.authorName ?? "", message.date, i)}
+                                    <div class="flex text-xxs px-4 py-1">
+                                        <span class="bold text-white/50 text-left grow">
+                                            {#if message.type === ChatMessageTypes.me}
+                                                {$LL.me()}
+                                            {:else if message.author}
+                                                {message.author?.name.match(/\[\d*]/)
+                                                    ? message.author?.name.substring(
+                                                          0,
+                                                          message.author?.name.search(/\[\d*]/)
+                                                      )
+                                                    : message.author?.name}
+                                                {#if message.author?.name.match(/\[\d*]/)}
                                                     <span class="font-light text-xs text-gray">
                                                         #{message.author?.name
-                                                        .match(/\[\d*]/)
-                                                        ?.join()
-                                                        ?.replace("[", "")
-                                                        ?.replace("]", "")}
+                                                            .match(/\[\d*]/)
+                                                            ?.join()
+                                                            ?.replace("[", "")
+                                                            ?.replace("]", "")}
                                                     </span>
-                                        {/if}
-                                    {:else}
-                                        {message.authorName}
-                                    {/if}
-                                    </span>
-                                    <span class="text-white/50 text-right" >
-                                        {message.date.toLocaleTimeString($locale, {
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                        })}
-                                    </span>
-                                </div>
-                            {/if}
-                            {#if message.text}
-                                <div class="wa-message-body break-all rounded-lg px-4 py-2 inline-block leading-6 min-w-[7rem] max-h-80 overflow-hidden relative before:absolute before:content-[''] before:z-10 before:top-64 before:left-0 before:h-16 before:w-full before:bg-gradient-to-t after:content-['Read_more...'] after:absolute after:left-0 after:top-[18.5rem] after:w-full after:h-10 after:cursor-pointer after:text-center after:underline after:z-20 after:text-xs after:mt-6px after:border after:border-l-0 after:border-b-0 after:border-t after:border-solid after:border-white/20 {message.type === ChatMessageTypes.me ? 'bg-secondary from-secondary text-left before:from-secondary before:via-secondary' : 'bg-contrast before:from-contrast before:via-contrast'}">
-                                    {#each message.text as text (text)}
-                                        <div class="text-ellipsis overflow-y-auto break-words whitespace-pre-line">
-                                            {#await HtmlUtils.urlify(text)}
-                                                <p>...waiting</p>
-                                            {:then html}
-                                                {@html html}
-                                            {/await}
-                                        </div>
-                                    {/each}
-                                </div>
-                            {/if}
+                                                {/if}
+                                            {:else}
+                                                {message.authorName}
+                                            {/if}
+                                        </span>
+                                        <span class="text-white/50 text-right">
+                                            {message.date.toLocaleTimeString($locale, {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            })}
+                                        </span>
+                                    </div>
+                                {/if}
+                                {#if message.text}
+                                    <div
+                                        class="wa-message-body break-all rounded-lg px-4 py-2 inline-block leading-6 min-w-[7rem] max-h-80 overflow-hidden relative before:absolute before:content-[''] before:z-10 before:top-64 before:left-0 before:h-16 before:w-full before:bg-gradient-to-t after:content-['Read_more...'] after:absolute after:left-0 after:top-[18.5rem] after:w-full after:h-10 after:cursor-pointer after:text-center after:underline after:z-20 after:text-xs after:mt-6px after:border after:border-l-0 after:border-b-0 after:border-t after:border-solid after:border-white/20 {message.type ===
+                                        ChatMessageTypes.me
+                                            ? 'bg-secondary from-secondary text-left before:from-secondary before:via-secondary'
+                                            : 'bg-contrast before:from-contrast before:via-contrast'}"
+                                    >
+                                        {#each message.text as text (text)}
+                                            <div class="text-ellipsis overflow-y-auto break-words whitespace-pre-line">
+                                                {#await HtmlUtils.urlify(text)}
+                                                    <p>...waiting</p>
+                                                {:then html}
+                                                    {@html html}
+                                                {/await}
+                                            </div>
+                                        {/each}
+                                    </div>
+                                {/if}
                             </div>
                         </div>
                     </div>
@@ -719,7 +747,9 @@
                 </div>
             {/each}
 
-            <div class="w-full px-2 py-2 flex flex-row justify-center items-center bg-contrast/80 border-x-0 border-b-0 border-t border-solid border-white/30 backdrop-blur">
+            <div
+                class="w-full px-2 py-2 flex flex-row justify-center items-center bg-contrast/80 border-x-0 border-b-0 border-t border-solid border-white/30 backdrop-blur"
+            >
                 <div class="actions px-2 py-2">
                     <div class="flex items-center space-x-1">
                         <button
@@ -728,11 +758,28 @@
                             on:click|preventDefault|stopPropagation={toggleApplicationMenu}
                             disabled={$applications.size === 0}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-apps" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                <path d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
-                                <path d="M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
-                                <path d="M14 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="icon icon-tabler icon-tabler-apps"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="#ffffff"
+                                fill="none"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path
+                                    d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
+                                />
+                                <path
+                                    d="M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
+                                />
+                                <path
+                                    d="M14 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
+                                />
                                 <path d="M14 7l6 0" />
                                 <path d="M17 4l0 6" />
                             </svg>
@@ -741,17 +788,16 @@
                 </div>
                 <div class="relative grow">
                     <div
-                            bind:this={input}
-                            contenteditable="true"
-                            bind:innerHTML={htmlMessageText}
-                            data-placeholder={$LL.enterText()}
-                            on:keydown={handlerKeyDown}
-                            on:input={writing}
-                            on:focus={onFocus}
-                            on:blur={onBlur}
-                            class="bg-contrast rounded border border-solid border-white/20 px-4 py-2 focus:outline-secondary"
-                    ></div>
-
+                        bind:this={input}
+                        contenteditable="true"
+                        bind:innerHTML={htmlMessageText}
+                        data-placeholder={$LL.enterText()}
+                        on:keydown={handlerKeyDown}
+                        on:input={writing}
+                        on:focus={onFocus}
+                        on:blur={onBlur}
+                        class="bg-contrast rounded border border-solid border-white/20 px-4 py-2 focus:outline-secondary"
+                    />
                 </div>
                 <div class="actions">
                     <div class="flex items-center space-x-1">
@@ -761,8 +807,19 @@
                             class="can-send bg-transparent p-0 m-0 inline-flex justify-center items-center text-light-blue px-3 mx-1 py-1.5 rounded hover:bg-secondary cursor-pointer"
                             on:click|stopPropagation={saveMessage}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-send" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="icon icon-tabler icon-tabler-send"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="#ffffff"
+                                fill="none"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                 <path d="M10 14l11 -11" />
                                 <path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5" />
                             </svg>
@@ -770,37 +827,6 @@
                     </div>
                 </div>
             </div>
-            <!--
-                <div class="w-full p-2">
-                    <div class="flex items-center relative">
-                        <textarea
-                            type="text"
-                            bind:value={htmlMessageText}
-                            placeholder={$LL.form.placeholder()}
-                            on:keydown={handlerKeyDown}
-                            on:input={writing}
-                            on:focus={onFocus}
-                            on:blur={onBlur}
-                            rows="1"
-                        />
-                        <button
-                            class={`bg-transparent h-8 w-8 p-0 inline-flex justify-center items-center right-0 ${
-                                emojiOpened ? "text-light-blue" : ""
-                            }`}
-                            on:click|preventDefault|stopPropagation={openEmoji}
-                        >
-                            <SmileIcon size="17" />
-                        </button>
-                        <button
-                            type="submit"
-                            class="bg-transparent h-8 w-8 p-0 inline-flex justify-center items-center right-0 text-light-blue"
-                            on:click|stopPropagation={saveMessage}
-                        >
-                            <SendIcon size="17" />
-                        </button>
-                    </div>
-                </div>
-                -->
         </form>
     </div>
 </div>

@@ -18,9 +18,12 @@
     }
 </script>
 
-<div class="horizontal-sound-meter flex items-center justify-center rounded-full overflow-hidden" class:active={spectrum !== undefined}>
+<div
+    class="horizontal-sound-meter flex items-center justify-center rounded-full overflow-hidden"
+    class:active={spectrum !== undefined}
+>
     {#each [...Array(NB_BARS).keys()] as i (i)}
-        <div class="w-2 h-4" style="{color(i, spectrum)}" />
+        <div class="w-2 h-4" style={color(i, spectrum)} />
     {/each}
 </div>
 

@@ -18,7 +18,7 @@ const actionbar: BaseTranslation = {
     subtitle: {
         microphone: "Choosen microphone",
         speaker: "Choosen speaker",
-        camera: "Choosen camera"
+        camera: "Choosen camera",
     },
     app: "Open / Close applications",
     globalMessage: "Send a global message",

@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { ChevronUpIcon } from "svelte-feather-icons";
     import { fly } from "svelte/transition";
     import { get, Unsubscriber, Writable } from "svelte/store";
     import { onDestroy, onMount } from "svelte";
@@ -81,10 +80,15 @@
 {:else}
     {#each roomSorted as room (room)}
         <div class="users bg-contrast/80 px-4 pb-4">
-            <div class="group px-4 py-2 flex items-center transition-all border border-solid border-white/10 border-[1px] bg-contrast-800 hover:bg-contrast-900 select-none rounded" on:click={() => shownRoomListStore.set($shownRoomListStore === room ? "" : room)}  >
+            <div
+                class="group px-4 py-2 flex items-center transition-all border border-solid border-white/10 border-[1px] bg-contrast-800 hover:bg-contrast-900 select-none rounded"
+                on:click={() => shownRoomListStore.set($shownRoomListStore === room ? "" : room)}
+            >
                 {#if !$loadingSubscribersStore}
                     <span
-                        class="{room !== 'disconnected' ? 'bg-secondary' : 'bg-white/30'} min-w-[20px] h-5 mr-3 text-xs font-bold flex items-center justify-center rounded-full"
+                        class="{room !== 'disconnected'
+                            ? 'bg-secondary'
+                            : 'bg-white/30'} min-w-[20px] h-5 mr-3 text-xs font-bold flex items-center justify-center rounded-full"
                     >
                         {usersByMaps.get(room)?.length}
                     </span>
@@ -96,11 +100,22 @@
                         {room}
                     {/if}
                 </div>
-                <button
-                    class="m-0 btn btn-sm btn-white btn-ghost !pr-0"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-up transition-all {$shownRoomListStore === room ? '' : 'rotate-180'}" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <button class="m-0 btn btn-sm btn-white btn-ghost !pr-0">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="icon icon-tabler icon-tabler-chevron-up transition-all {$shownRoomListStore === room
+                            ? ''
+                            : 'rotate-180'}"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="#ffffff"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M6 15l6 -6l6 6" />
                     </svg>
                 </button>

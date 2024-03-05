@@ -44,9 +44,7 @@
             <label for="askagain">{$LL.mapEditor.explorer.popup.notAskAgain()}</label>
         </p>
     </div>
-    <div
-        class="footer flex flex-row justify-evenly items-center bg-dark-purple w-full p-2 rounded-b-3xl"
-    >
+    <div class="footer flex flex-row justify-evenly items-center bg-dark-purple w-full p-2 rounded-b-3xl">
         <button on:click={close} class="bg-dark-purple p-4"> {$LL.mapEditor.explorer.popup.close()} </button>
         <button on:click={activeExplorerMode} class="light p-4"> {$LL.mapEditor.explorer.popup.continue()} </button>
     </div>

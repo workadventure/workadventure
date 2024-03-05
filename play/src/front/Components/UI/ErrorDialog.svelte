@@ -54,12 +54,12 @@
                 >
             </p>
         {/if}
-    {#if $hasClosableMessagesInErrorStore}
-        <section class="footer w-full flex flex-row justify-center backdrop-blur-sm">
-            <button class="light" on:click={close}>{$LL.error.errorDialog.close()}</button>
-            <button class="light outline" on:click={refresh}>{$LL.error.errorDialog.reload()}</button>
-        </section>
-    {/if}
+        {#if $hasClosableMessagesInErrorStore}
+            <section class="footer w-full flex flex-row justify-center backdrop-blur-sm">
+                <button class="light" on:click={close}>{$LL.error.errorDialog.close()}</button>
+                <button class="light outline" on:click={refresh}>{$LL.error.errorDialog.reload()}</button>
+            </section>
+        {/if}
     </div>
 </div>
 

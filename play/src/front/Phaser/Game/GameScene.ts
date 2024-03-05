@@ -169,6 +169,7 @@ import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManag
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { faviconManager } from "./../../WebRtc/FaviconManager";
+import { UIWebsiteManager } from "./UI/UIWebsiteManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -177,7 +178,6 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
-import {UIWebsiteManager} from "./UI/UIWebsiteManager";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -1723,8 +1723,10 @@ export class GameScene extends DirtyScene {
                     );
                     return;
                 }
-                const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);Œ
-                let html = '<div id="container" class="relative bg-contrast/50 backdrop-blur pt-4 overflow-hidden rounded-lg text-white" hidden>';
+                const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
+                Œ;
+                let html =
+                    '<div id="container" class="relative bg-contrast/50 backdrop-blur pt-4 overflow-hidden rounded-lg text-white" hidden>';
                 if (escapedMessage) {
                     html += `<div class="text-xxs text-center px-4">
 ${escapedMessage}

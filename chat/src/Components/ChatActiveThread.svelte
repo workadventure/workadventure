@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ArrowLeftIcon, RefreshCwIcon, EyeIcon, EyeOffIcon } from "svelte-feather-icons";
+    import { EyeIcon, EyeOffIcon } from "svelte-feather-icons";
     import { onDestroy } from "svelte";
     import { get } from "svelte/store";
     import { LL } from "../i18n/i18n-svelte";
@@ -33,7 +33,9 @@
 
 <!-- thread -->
 <div id="activeThread" class="flex flex-col h-full min-h-full over w-full">
-    <div class="wa-thread-head fixed w-full border-x-0 border-b border-t-0 border-solid border-white/30 backdrop-blur z-20 bg-contrast/80">
+    <div
+        class="wa-thread-head fixed w-full border-x-0 border-b border-t-0 border-solid border-white/30 backdrop-blur z-20 bg-contrast/80"
+    >
         <div class="title relative py-2">
             <div class="absolute left-3 top-3">
                 <button
@@ -42,8 +44,19 @@
                         activeThreadStore.reset();
                     }}
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="32" height="32" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="icon icon-tabler icon-tabler-chevron-left"
+                        width="32"
+                        height="32"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="#ffffff"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M15 6l-6 6l6 6" />
                     </svg>
                 </button>
@@ -83,8 +96,19 @@
             <div class="absolute right-4 top-3">
                 <div class="wa-message-bg">
                     <button class="p-2 hover:bg-white/20 cursor-pointer rounded">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-dots" width="32" height="32" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="icon icon-tabler icon-tabler-dots"
+                            width="32"
+                            height="32"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="#ffffff"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                             <path d="M5 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
                             <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
                             <path d="M19 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />

@@ -55,7 +55,7 @@
             class:mozaic-duo={mozaicDuo}
             class:mozaic-full-width={mozaicSolo}
             class:mozaic-quarter={mozaicQuarter}
-            transition:fly={{y: 50, duration: 150 }}
+            transition:fly={{ y: 50, duration: 150 }}
         >
             <VideoMediaBox peer={streamable} clickable={isClickable} />
         </div>

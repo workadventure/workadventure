@@ -52,11 +52,8 @@
     import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
     import Modal from "./Modal/Modal.svelte";
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
-    import XIcon from "./Icons/XIcon.svelte";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
-    import ChevronLeftIcon from "./Icons/ChevronLeftIcon.svelte";
-    import ChevronRightIcon from "./Icons/ChevronRightIcon.svelte";
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
     import ObjectDetails from "./Modal/ObjectDetails.svelte";
     import Popup from "./Modal/Popup.svelte";
@@ -76,11 +73,13 @@
 </script>
 
 <!-- Components ordered by z-index -->
-<div id="main-layout" class="relative z-10 h-screen pointer-events-none {[...$coWebsites.values()].length === 0 ? 'not-cowebsite' : ''}" bind:this={mainLayout}>
+<div
+    id="main-layout"
+    class="relative z-10 h-screen pointer-events-none {[...$coWebsites.values()].length === 0 ? 'not-cowebsite' : ''}"
+    bind:this={mainLayout}
+>
     {#if $modalVisibilityStore || $modalPopupVisibilityStore}
-        <div class="bg-black/60 w-full h-full fixed left-0 right-0">
-
-        </div>
+        <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
     {/if}
 
     <aside id="main-layout-left-aside">
@@ -368,5 +367,4 @@
 
 <style lang="scss">
     @import "../style/breakpoints.scss";
-
 </style>

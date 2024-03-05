@@ -144,7 +144,12 @@
             Manage background music <!-- Trad -->
         </div>
         <div class="audio-manager-player-volume flex items-center justify-center">
-            <div id="audioplayer_volume_icon_playing" bind:this={audioPlayerVolumeIcon} on:click={onMute} class="pr-4 flex items-center">
+            <div
+                id="audioplayer_volume_icon_playing"
+                bind:this={audioPlayerVolumeIcon}
+                on:click={onMute}
+                class="pr-4 flex items-center"
+            >
                 <svg
                     viewBox="0 0 19.54 18.03"
                     class="bi bi-volume-up h-6 w-6 fill-white"
@@ -187,7 +192,7 @@
                 class="grow"
             />
             <div class="text-white ml-4">
-                {Math.round(currentVolume*100)}<span class="opacity-50">%</span>
+                {Math.round(currentVolume * 100)}<span class="opacity-50">%</span>
             </div>
         </div>
         <section class="audio-manager-file">

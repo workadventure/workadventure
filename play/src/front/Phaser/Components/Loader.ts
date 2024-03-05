@@ -1,5 +1,5 @@
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
-import {loaderProgressStore, loaderVisibleStore} from "../../Stores/LoaderStore"
+import { loaderProgressStore, loaderVisibleStore } from "../../Stores/LoaderStore";
 
 export class Loader {
     private progress!: Phaser.GameObjects.Graphics;
