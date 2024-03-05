@@ -59,7 +59,6 @@
     }
 
     function saveCustomEntityModifications(customEntity: EntityPrefab) {
-        console.log(customEntity);
         mapEditorModifyCustomEntityEventStore.set({
             ...customEntity,
         });
