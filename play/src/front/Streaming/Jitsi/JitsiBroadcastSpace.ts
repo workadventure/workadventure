@@ -179,6 +179,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                 this.broadcastService.checkIfCanDisconnect(this.provider);
                 jitsiLoadingStore.set(false);
             });
+        jitsiConferencesStore.delete(this.space.name);
         this.unsubscribes.forEach((unsubscribe) => unsubscribe());
         this.space.destroy();
     }

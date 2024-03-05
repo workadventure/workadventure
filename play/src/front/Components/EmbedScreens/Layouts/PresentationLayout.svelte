@@ -1,5 +1,6 @@
 <script lang="ts">
     import { afterUpdate, onMount } from "svelte";
+    import { ArrowRightCircleIcon } from "svelte-feather-icons";
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
@@ -11,13 +12,11 @@
     import { liveStreamingEnabledStore } from "../../../Stores/MegaphoneStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
+    import { JitsiTrackExt, JitsiTrackStreamWrapper } from "../../../Streaming/Jitsi/JitsiTrackStreamWrapper";
+    import { jitsiConferencesStore } from "../../../Streaming/Jitsi/JitsiConferencesStore";
 
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
-            /* if the co-website is closable, would like we to close it instead of unloading it?
-            if ($highlightedEmbedScreen.embed.isClosable()) {
-                coWebsiteManager.closeCoWebsite($highlightedEmbedScreen.embed);
-            }*/
             coWebsiteManager.unloadCoWebsite($highlightedEmbedScreen.embed).catch((err) => {
                 console.error("Cannot unload co-website", err);
             });
@@ -51,6 +50,30 @@
     onMount(() => {
         resizeObserver.observe(layoutDom);
     });
+
+    let presentationIsHidden = false;
+    function toggleCameraPresentation() {
+        presentationIsHidden = !presentationIsHidden;
+        // Mute camera if presentation is hidden
+        if (presentationIsHidden) {
+            ($myJitsiCameraStore?.getVideoTrack() as JitsiTrackExt | undefined)?.mute();
+        } else {
+            ($myJitsiCameraStore?.getVideoTrack() as JitsiTrackExt | undefined)?.unmute();
+        }
+
+        for (const [, peer] of $streamableCollectionStore.entries()) {
+            const videoTrack = (peer as JitsiTrackStreamWrapper).getVideoTrack();
+            const mediaStreamTrack = videoTrack?.getTrack() as MediaStreamTrack;
+
+            if (!mediaStreamTrack) continue;
+
+            if (presentationIsHidden) {
+                mediaStreamTrack.enabled = false;
+            } else {
+                mediaStreamTrack.enabled = true;
+            }
+        }
+    }
 </script>
 
 <div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias}>
@@ -109,9 +132,21 @@
         </div>
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div
-                class="tw-flex tw-flex-col tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-max-w-[25%] 2xl:tw-max-w-[420px] tw-w-full tw-max-h-full"
+                class="tw-flex tw-flex-col tw-relative tw-self-end tw-z-[300] tw-bottom-6 md:tw-bottom-4 tw-max-w-[25%] 2xl:tw-max-w-[420px] tw-w-full tw-max-h-full tw-transition-all"
+                class:tw-translate-x-full={presentationIsHidden}
                 class:tw-w-[10%]={$highlightedEmbedScreen != undefined}
             >
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                {#if $jitsiConferencesStore.size > 0}
+                    <div
+                        class="tw-absolute -tw-left-10 tw-top-0 tw-w-fit tw-h-fit tw-pointer-events-auto tw-cursor-pointer tw-opacity-10 hover:tw-opacity-80 tw-transition-all"
+                        class:tw-rotate-180={presentationIsHidden}
+                        on:click={toggleCameraPresentation}
+                    >
+                        <ArrowRightCircleIcon size="40" class="tw-fill-white tw-pointer-events-none" />
+                    </div>
+                {/if}
+
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}

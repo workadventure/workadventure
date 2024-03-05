@@ -30,6 +30,13 @@ import { JitsiLocalTracks } from "./JitsiLocalTracks";
 
 const debug = Debug("JitsiConferenceWrapper");
 
+const JITSI_MIN_RESOLUTION = 180;
+//const JITSI_MOZAIK_RESOLUTION = 360;
+//const JITSI_MAX_RESOLUTION = 720;
+
+//const JITSI_PRESENTATION_LASTN = 10;
+const JITSI_MOZAIC_LASTN = 4;
+
 export class JitsiConferenceWrapper {
     private myParticipantId: string | undefined;
     private _streamStore: Writable<Map<string, JitsiTrackWrapper>>;
@@ -64,9 +71,6 @@ export class JitsiConferenceWrapper {
         this.megaphoneEnabledUnsubscribe = liveStreamingEnabledStore.subscribe((megaphoneEnabled) => {
             if (megaphoneEnabled) {
                 this.broadcast(["video", "audio"]);
-                /*                this.firstLocalTrackInit().catch((e) => {
-                    console.error(e);
-                });*/
             } else {
                 this.broadcast([]);
             }
@@ -76,7 +80,12 @@ export class JitsiConferenceWrapper {
     public static join(connection: JitsiConnection, jitsiRoomName: string): Promise<JitsiConferenceWrapper> {
         return new Promise((resolve, reject) => {
             const JitsiMeetJS = window.JitsiMeetJS;
-            const room = connection.initJitsiConference(jitsiRoomName, {});
+            const room = connection.initJitsiConference(jitsiRoomName, { avgRtpStatsN: 4, channelLastN: 4 });
+
+            // To start the conference, we define the minim video quality
+            room.setReceiverVideoConstraint(JITSI_MIN_RESOLUTION);
+            room.setSenderVideoConstraint(JITSI_MIN_RESOLUTION).catch((e) => debug("setSenderVideoConstraint", e));
+            room.setLastN(JITSI_MOZAIC_LASTN);
 
             const jitsiConferenceWrapper = new JitsiConferenceWrapper(room, jitsiRoomName);
 
@@ -348,6 +357,7 @@ export class JitsiConferenceWrapper {
             devices: types,
             cameraDeviceId: this.cameraDeviceId,
             micDeviceId: this.microphoneDeviceId,
+            resolution: `${JITSI_MIN_RESOLUTION}`,
             constraints: {
                 video: videoConstraints,
             },
@@ -523,8 +533,8 @@ export class JitsiConferenceWrapper {
     }
 
     private addRemoteTrack(track: JitsiTrack, allowOverride: boolean) {
-        const videoTracks = track.getOriginalStream().getVideoTracks();
-        if (videoTracks.length > 0) {
+        const videoTracks = track.getOriginalStream()?.getVideoTracks();
+        if (videoTracks && videoTracks.length > 0) {
             console.info("JitsiConferenceWrapper => addRemoteTrack => videoTracks", videoTracks[0].getSettings());
         }
         debug("JitsiConferenceWrapper => addRemoteTrack", track.getType());
