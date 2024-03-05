@@ -116,7 +116,7 @@
 
     import { StringUtils } from "../../Utils/StringUtils";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
-    let userName = gameManager.getPlayerName() || "";
+    let userName = gameManager.getPlayerName() || "👋";
 
     let cameraActive = false;
     let profileMenuIsDropped = false;
