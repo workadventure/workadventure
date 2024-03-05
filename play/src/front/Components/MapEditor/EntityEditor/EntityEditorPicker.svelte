@@ -66,7 +66,6 @@
     }
 
     function onPickItem(entityPrefab: EntityPrefab) {
-        pickedEntity = entityPrefab;
         mapEditorSelectedEntityPrefabStore.set(entityPrefab);
     }
 
