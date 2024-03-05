@@ -22,8 +22,8 @@ import { Game } from "./front/Phaser/Game/Game";
 import App from "./front/Components/App.svelte";
 import { HtmlUtils } from "./front/WebRtc/HtmlUtils";
 import { urlManager } from "./front/Url/UrlManager";
-import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 import { e2eHooks } from "./front/Utils/E2EHooks";
+import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 
 if (SENTRY_DSN_FRONT != undefined) {
     try {
