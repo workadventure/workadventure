@@ -23,6 +23,7 @@ import App from "./front/Components/App.svelte";
 import { HtmlUtils } from "./front/WebRtc/HtmlUtils";
 import { urlManager } from "./front/Url/UrlManager";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+import { e2eHooks } from "./front/Utils/E2EHooks";
 
 if (SENTRY_DSN_FRONT != undefined) {
     try {
@@ -198,6 +199,14 @@ coWebsiteManager.onResize.subscribe(() => {
 
 iframeListener.init();
 desktopApi.init();
+
+// Initialize E2E hooks
+declare global {
+    interface Window {
+        e2eHooks: typeof e2eHooks;
+    }
+}
+window.e2eHooks = e2eHooks;
 
 const app = new App({
     target: HtmlUtils.getElementByIdOrFail("game-overlay"),

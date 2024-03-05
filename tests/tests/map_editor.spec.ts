@@ -18,7 +18,6 @@ test.use({
 });
 
 test.describe("Map editor", () => {
-
   test.beforeEach(
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
     ({}, { project }) => {
@@ -30,7 +29,7 @@ test.describe("Map editor", () => {
       }
     }
   );
-  
+
   test.beforeEach("Ignore tests on webkit because of issue with camera and microphone", ({ browserName }) => {
     //WebKit has issue with camera
     if (browserName === "webkit") {
@@ -443,11 +442,11 @@ test.describe("Map editor", () => {
 
     // Select uploaded entity and move it to the map
     await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName());
-    await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
+    await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
 
     // Add open link interaction on uploaded asset
     await EntityEditor.clearEntitySelection(page);
-    await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
+    await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
     await EntityEditor.addProperty(page, "Open Link");
 
     // fill link
@@ -457,8 +456,8 @@ test.describe("Map editor", () => {
     await Menu.closeMapEditor(page);
 
     // click on the object and open popup on both pages
-    await EntityEditor.moveAndClick(page, 14 * 32, 13 * 32);
-    await EntityEditor.moveAndClick(page2, 14 * 32, 13 * 32);
+    await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
+    await EntityEditor.moveAndClick(page2, 6 * 32, 6 * 32);
 
     // check if the popup with application is opened on both pages
     await expect(page.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");

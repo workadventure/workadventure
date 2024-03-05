@@ -9,6 +9,7 @@ class EntityEditor {
     }
     await expect(page.getByTestId("entityImageLoader")).toHaveCount(0);
     await expect(page.getByTestId("entityImageError")).toHaveCount(0);
+    await expect(page.getByTestId("entity-item").nth(nb)).toHaveCount(1);
     await page.getByTestId("entity-item").nth(nb).click();
   }
 
@@ -23,11 +24,14 @@ class EntityEditor {
     await page.mouse.move(x, y);
     await page.mouse.down();
     await page.mouse.up();
+    await page.evaluate(async () => {
+      await window.e2eHooks.waitForNextFrame();
+      await window.e2eHooks.waitForNextFrame();
+    });
   }
 
   async clearEntitySelection(page: Page) {
     await page.getByTestId("clearEntitySelection").click();
-
     await expect(page.getByTestId("clearEntitySelection")).toHaveCount(0);
     // That's bad, but we need to wait a bit for the canvas to put the object.
     // eslint-disable-next-line playwright/no-wait-for-timeout
