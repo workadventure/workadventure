@@ -2,7 +2,7 @@
     import SettingsIcon from "../Icons/SettingsIcon.svelte";
     import CopyIcon from "../Icons/CopyIcon.svelte";
     import ExternalLinkIcon from "../Icons/ExternalLinkIcon.svelte";
-    import Loading from "../Video/Loading.svelte";
+    // import Loading from "../Video/Loading.svelte";
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
 
     export let title = "GitHub - Workadventure";
@@ -11,6 +11,7 @@
     export let isLoading = false;
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="text flex items-center px-2 mr-2 rounded transition-all {active ? 'text-contrast bg-white hover:bg-white/90 translate-y-2 rounded-b-none pt-1' : 'text-white hover:bg-white/10' }"
      on:click={() => active = !active}
 >
@@ -47,12 +48,12 @@
         </div>
     </div>
     <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
-        <ExternalLinkIcon classList="h-4 w-4 aspect-ratio transition-all" color={active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' } />
+        <ExternalLinkIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
     </div>
     <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
-        <CopyIcon classList="h-4 w-4 aspect-ratio transition-all" color="{active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
+        <CopyIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
     </div>
     <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
-        <SettingsIcon classList="h-4 w-4 aspect-ratio transition-all" color="{active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
+        <SettingsIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
     </div>
 </div>

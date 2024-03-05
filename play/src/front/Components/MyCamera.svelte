@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
     import { Color } from "@workadventure/shared-utils";
+    import { fly } from "svelte/transition";
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import {
         cameraEnergySavingStore,
@@ -13,15 +14,14 @@
     import { LL } from "../../i18n/i18n-svelte";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
     import { gameManager } from "../Phaser/Game/GameManager";
-    import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
+    // import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
+    import { heightCamWrapper } from "../Stores/EmbedScreensStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";
     import loaderImg from "./images/loader.svg";
     import silentImg from "./images/silent-zone.gif";
 
-    import { fly } from "svelte/transition";
-    import { heightCamWrapper } from "../Stores/EmbedScreensStore";
     import MicOffIcon from "./Icons/MicOffIcon.svelte";
 
     let stream: MediaStream | null;
@@ -81,6 +81,7 @@
         <div
             class="z-[250] rounded-lg py-4 px-3 text-white border-[1px] border-solid border-danger flex flex-col items-center content-center justify-between media-box-camera-off-size bg-no-repeat bg-center bg-danger-1000/70 backdrop-blur rounded-xl text-center -translate-y-8">
             <div class="flex flex-col -mt-20 leading-3">
+                <!-- svelte-ignore a11y-missing-attribute -->
                 <img src="{silentImg}" class="h-40 w-40" />
             </div>
             <div class="m-0 text-center -mt-4 text-lg bold">
@@ -110,7 +111,7 @@
                 </div>
             </div>
 
-            <div class="aspect-video w-full absolute top-0 left-0 overflow-hidden z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur" style="background-image: url({loaderImg})"
+            <div class="aspect-video w-full absolute top-0 left-0 overflow-hidden z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur " style="background-image: url({loaderImg})"
                  transition:fly={{y: 50, duration: 150 }}>
                 <div class="text-white/50 text-xxs absolute w-full h-6 left-0 text-center top-0 -bottom-20 m-auto z-10">
                     {$LL.camera.my.loading()}

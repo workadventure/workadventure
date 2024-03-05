@@ -177,16 +177,18 @@
                 {:else if $showPart === "loading"}
                     <Loader
                         text={loadingText}
-                        class="h-full bg-contrast/80"
+                        className="h-full bg-contrast/80"
                     />
                 {:else}
                     {#if $enableChatOnlineListStore}
                         <nav class="nav">
                             <div class:chat={$navChat === "chat"}></div>
                             <ul class="list-none flex justify-between">
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <li class="w-1/2 py-4 text-center cursor-pointer bold border border-solid border-secondary border-x-0 border-b-0 {$navChat === 'chat' ? 'bg-contrast/80 text-white border-t-2' : 'border-t-0'}" on:click={() => navChat.set("chat")}>
                                     Chat
                                 </li>
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <li class="w-1/2 py-4 text-center cursor-pointer bold border border-solid border-secondary border-x-0 border-b-0 {$navChat === 'users' ? 'bg-contrast/80 text-white border-t-2' : 'border-t-0'}" on:click={() => navChat.set("users")}>
                                     {$LL.users()}
                                 </li>

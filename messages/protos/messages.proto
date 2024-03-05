@@ -144,6 +144,7 @@ message EditMapMessage {
     DeleteEntityMessage deleteEntityMessage = 6;
     UpdateWAMSettingsMessage updateWAMSettingsMessage = 7;
     ErrorCommandMessage errorCommandMessage = 8;
+    ModifiyWAMMetadataMessage modifiyWAMMetadataMessage = 9;
   }
 }
 
@@ -271,6 +272,14 @@ message ReceivedEventMessage {
   string name = 1;
   google.protobuf.Value data = 2;
   optional int32 senderId = 3;
+}
+
+message ModifiyWAMMetadataMessage{
+  string name = 1;
+  optional string description = 2;
+  optional string copyright = 3;
+  optional string thumbnail = 4;
+  optional string tags = 5;
 }
 
 /************ BI-DIRECTIONAL MESSAGES **************/
@@ -403,6 +412,11 @@ message RoomShortDescription {
   string name = 1;
   string roomUrl = 2;
   optional string wamUrl = 3;
+  optional string description = 4;
+  optional string copyright = 5;
+  optional string thumbnail = 6;
+  optional int32 areasSearchable = 7;
+  optional int32 entitiesSearchable = 8;
 }
 
 message RoomsFromSameWorldAnswer {

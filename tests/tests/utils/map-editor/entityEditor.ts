@@ -26,6 +26,23 @@ class EntityEditor {
     async addProperty(page: Page, property: string) {
         await page.locator('.map-editor .sidebar .properties-buttons .add-property-button', {hasText: property}).click();
     }
+
+    async setEntityName(page: Page, name: string){
+        await page.getByPlaceholder('MyObject').click();
+        await page.getByPlaceholder('MyObject').fill(name);
+        await page.getByPlaceholder('MyObject').press('Enter');
+    }
+
+    async setEntityDescription(page: Page, Description: string){
+        await page.getByText('+ Add description field').click();
+        await page.getByPlaceholder('My object is a...').click();
+        await page.getByPlaceholder('My object is a...').fill(Description);
+        await page.getByPlaceholder('My object is a...').press('Enter');
+    }
+
+    async setEntitySearcheable(page: Page, value: boolean){
+        await page.locator('.map-editor .sidebar input#searchable').setChecked(value);
+    }
 }
 
 export default new EntityEditor();

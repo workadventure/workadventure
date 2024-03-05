@@ -13,7 +13,7 @@ test.describe('Areas', () => {
         // We check the silent zone applies to the Woka.
 
         await page.goto(
-            `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Areas/AreaFromTiledMap/map.json?phaserMode=${RENDERER_MODE}`
+            `/_/global/maps.workadventure.localhost/tests/Areas/AreaFromTiledMap/map.json?phaserMode=${RENDERER_MODE}`
         );
         await login(page, 'Alice');
 

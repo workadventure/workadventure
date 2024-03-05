@@ -1,8 +1,9 @@
 <script lang="ts">
-import GameOverlay from "./GameOverlay.svelte";
 import {onMount} from "svelte";
-import {DEBUG_MODE, SENTRY_DSN_FRONT, SENTRY_ENVIRONMENT, SENTRY_RELEASE} from "../Enum/EnvironmentVariable";
 import * as Sentry from "@sentry/svelte";
+import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
+// import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
+import {DEBUG_MODE, SENTRY_DSN_FRONT, SENTRY_ENVIRONMENT, SENTRY_RELEASE} from "../Enum/EnvironmentVariable";
 import {coWebsiteManager} from "../WebRtc/CoWebsiteManager";
 import {HdpiManager} from "../Phaser/Services/HdpiManager";
 import {EntryScene} from "../Phaser/Login/EntryScene";
@@ -13,18 +14,16 @@ import {EnableCameraScene} from "../Phaser/Login/EnableCameraScene";
 import {ReconnectingScene} from "../Phaser/Reconnecting/ReconnectingScene";
 import {ErrorScene} from "../Phaser/Reconnecting/ErrorScene";
 import {CustomizeScene} from "../Phaser/Login/CustomizeScene";
-import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
-import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import {Game} from "../Phaser/Game/Game";
 import {waScaleManager} from "../Phaser/Services/WaScaleManager";
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {iframeListener} from "../Api/IframeListener";
 import {desktopApi} from "../Api/Desktop";
+import GameOverlay from "./GameOverlay.svelte";
 
-import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
-import CoWebsiteTab from "./EmbedScreens/CoWebsiteTab.svelte";
-import XIcon from "./Icons/XIcon.svelte";
-import FullScreenIcon from "./Icons/FullScreenIcon.svelte";
+// import CoWebsiteTab from "./EmbedScreens/CoWebsiteTab.svelte";
+// import XIcon from "./Icons/XIcon.svelte";
+// import FullScreenIcon from "./Icons/FullScreenIcon.svelte";
 import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
 let game: Game;
@@ -154,10 +153,7 @@ onMount(() => {
         callbacks: {
             postBoot: (game) => {
                 // Install rexOutlinePipeline only if the renderer is WebGL.
-                const renderer = game.renderer;
-                if (renderer instanceof WebGLRenderer) {
-                    game.plugins.install("rexOutlinePipeline", OutlinePipelinePlugin, true);
-                }
+                const renderer = game.renderer; // eslint-disable-line @typescript-eslint/no-unused-vars
             },
         },
         backgroundColor: "#1b2a41",

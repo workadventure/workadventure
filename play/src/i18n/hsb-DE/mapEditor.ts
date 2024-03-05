@@ -7,6 +7,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         entityEditor: "Entita wobdźěłać",
         tileEditor: "Kachlu wobdźěłać",
         trashEditor: "papjernik",
+        closeMapEditor: "Mapu zacyniś",
     },
     properties: {
         silentProperty: {
@@ -152,6 +153,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     areaEditor: {
         editInstructions: "Klikńće na płoninu, zo byšće jeje kajkosće změnili.",
         nameLabel: "mjeno",
+        nameLabelPlaceholder: "mjeno",
+        areaDescription: "pśedstajenje",
+        areaDescriptionPlaceholder: "pśedstajenje",
+        addDescriptionField: "Pśedstajenje přidać",
     },
     areaEditorInstructions: {
         title: "Kako deluje?",
@@ -170,6 +175,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         buttonLabel: "kneflowe popisanje",
         editInstructions: "Klikńće na objekt, zo byšće jeho kajkosće změnili.",
         selectObject: "Klikńće na objekt, zo byšće jón wuzwolił.",
+        objectName: "mjeno",
+        objectNamePlaceholder: "mjeno",
+        objectDescription: "pśedstajenje",
+        objectDescriptionPlaceholder: "pśedstajenje",
+        addDescriptionField: "Pśedstajenje přidać",
     },
     settings: {
         loading: "Laden...",

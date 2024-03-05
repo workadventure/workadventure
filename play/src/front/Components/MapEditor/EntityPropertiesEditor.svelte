@@ -4,6 +4,7 @@
         EntityDataProperties,
         EntityDataPropertiesKeys,
         EntityDataProperty,
+        EntityDescriptionPropertyData,
         OpenWebsiteTypePropertiesKeys,
     } from "@workadventure/map-editor";
     import { ArrowLeftIcon } from "svelte-feather-icons";
@@ -33,6 +34,8 @@
 
     let properties: EntityDataProperties = [];
     let entityName = "";
+    let entityDescription = "";
+    let entitySearchable = false;
     let hasJitsiRoomProperty: boolean;
 
     let selectedEntityUnsubscriber = mapEditorSelectedEntityStore.subscribe((currentEntity) => {
@@ -40,6 +43,18 @@
             currentEntity.setEditColor(0x00ffff);
             properties = currentEntity.getProperties() ?? [];
             entityName = currentEntity.getEntityData().name ?? "";
+            const descriptionProperty = properties.find((p) => p.type === "entityDescriptionProperties");
+            if (!descriptionProperty) {
+                $mapEditorSelectedEntityStore?.addProperty({
+                    id: crypto.randomUUID(),
+                    type: "entityDescriptionProperties",
+                    description: "",
+                    searchable: false,
+                });
+            } else {
+                entityDescription = (descriptionProperty as EntityDescriptionPropertyData).description ?? "";
+                entitySearchable = (descriptionProperty as EntityDescriptionPropertyData).searchable ?? false;
+            }
         }
     });
 
@@ -58,6 +73,32 @@
     function onUpdateName() {
         if ($mapEditorSelectedEntityStore) {
             $mapEditorSelectedEntityStore.setEntityName(entityName);
+        }
+    }
+
+    function onUpdateDescription() {
+        let properties = $mapEditorSelectedEntityStore
+            ?.getProperties()
+            .find((p) => p.type === "entityDescriptionProperties");
+        if (!properties || (properties && properties.type !== "entityDescriptionProperties"))
+            throw new Error("Wrong property type");
+
+        properties.description = entityDescription;
+        if ($mapEditorSelectedEntityStore) {
+            $mapEditorSelectedEntityStore.updateProperty(properties);
+        }
+    }
+
+    function onUpdateSearchable() {
+        let properties = $mapEditorSelectedEntityStore
+            ?.getProperties()
+            .find((p) => p.type === "entityDescriptionProperties");
+        if (!properties || (properties && properties.type !== "entityDescriptionProperties"))
+            throw new Error("Wrong property type");
+
+        properties.searchable = entitySearchable;
+        if ($mapEditorSelectedEntityStore) {
+            $mapEditorSelectedEntityStore.updateProperty(properties);
         }
     }
 
@@ -309,8 +350,27 @@
         />
     </div>
     <div class="entity-name-container">
-        <label for="objectName">Object name</label>
+        <label for="objectName">{$LL.mapEditor.entityEditor.objectName()}</label>
         <input id="objectName" type="text" placeholder="Value" bind:value={entityName} on:change={onUpdateName} />
+    </div>
+    <div class="entity-name-container">
+        <label for="objectDescription">{$LL.mapEditor.entityEditor.objectDescription()}</label>
+        <textarea
+            id="objectDescription"
+            placeholder="Value"
+            bind:value={entityDescription}
+            on:change={onUpdateDescription}
+        />
+    </div>
+    <div class="value-switch">
+        <label for="searchable">{$LL.mapEditor.entityEditor.objectSearchable()}</label>
+        <input
+            id="searchable"
+            type="checkbox"
+            class="input-switch"
+            bind:checked={entitySearchable}
+            on:change={onUpdateSearchable}
+        />
     </div>
     <div class="properties-container">
         {#each properties as property (property.id)}
@@ -376,5 +436,70 @@
         * {
             margin-bottom: 0;
         }
+    }
+
+    .input-switch {
+        position: relative;
+        top: 0px;
+        right: 0px;
+        bottom: 0px;
+        left: 0px;
+        display: inline-block;
+        height: 1rem;
+        width: 2rem;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border-radius: 9999px;
+        border-width: 1px;
+        border-style: solid;
+        --tw-border-opacity: 1;
+        border-color: rgb(77 75 103 / var(--tw-border-opacity));
+        --tw-bg-opacity: 1;
+        background-color: rgb(15 31 45 / var(--tw-bg-opacity));
+        background-image: none;
+        padding: 0px;
+        --tw-text-opacity: 1;
+        color: rgb(242 253 255 / var(--tw-text-opacity));
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+        cursor: url(/src/front/style/images/cursor_pointer.png), pointer;
+    }
+
+    .input-switch::before {
+        position: absolute;
+        left: -3px;
+        top: -3px;
+        height: 1.25rem;
+        width: 1.25rem;
+        border-radius: 9999px;
+        --tw-bg-opacity: 1;
+        background-color: rgb(146 142 187 / var(--tw-bg-opacity));
+        transition-property: all;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 150ms;
+        --tw-content: "";
+        content: var(--tw-content);
+    }
+
+    .input-switch:checked {
+        --tw-border-opacity: 1;
+        border-color: rgb(146 142 187 / var(--tw-border-opacity));
+    }
+
+    .input-switch:checked::before {
+        left: 13px;
+        top: -3px;
+        --tw-bg-opacity: 1;
+        background-color: rgb(65 86 246 / var(--tw-bg-opacity));
+        content: var(--tw-content);
+        /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
+        --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
+        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
+    }
+
+    .input-switch:disabled {
+        cursor: not-allowed;
+        opacity: 0.4;
     }
 </style>

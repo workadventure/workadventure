@@ -263,7 +263,6 @@ class LocalUserStore {
     }
 
     setPreferredVideoInputDevice(deviceId?: string) {
-        console.log("setPreferredVideoInputDevice", deviceId);
         if (deviceId === undefined) {
             localStorage.removeItem(preferredVideoInputDevice);
             return;

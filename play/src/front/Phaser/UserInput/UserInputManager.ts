@@ -52,6 +52,9 @@ export class ActiveEventList {
 
 //this class is responsible for catching user inputs and listing all active user actions at every game tick events.
 export class UserInputManager {
+    static addSpaceEventListener(click: () => void) {
+        throw new Error('Method not implemented.');
+    }
     private keysCode!: UserInputManagerDatum[];
     private scene: Phaser.Scene;
     private isInputDisabled: boolean;
@@ -173,10 +176,6 @@ export class UserInputManager {
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
             },
         ];
-    }
-
-    clearAllListeners() {
-        this.scene.input.keyboard?.removeAllListeners();
     }
 
     disableControls() {
@@ -304,6 +303,9 @@ export class UserInputManager {
         this.scene.input.on(
             Phaser.Input.Events.POINTER_MOVE,
             (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+                if (this.isInputDisabled) {
+                    return;
+                }
                 this.userInputHandler.handlePointerMoveEvent(pointer, gameObjects);
             }
         );

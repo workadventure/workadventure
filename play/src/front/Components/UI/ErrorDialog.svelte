@@ -2,7 +2,7 @@
     import { errorStore, hasClosableMessagesInErrorStore } from "../../Stores/ErrorStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { connectionManager } from "../../Connection/ConnectionManager";
-    import ImgVirtualhugsvirtualhug from "../images/virtual-hugs-virtual-hug.gif";
+    // import ImgVirtualhugsvirtualhug from "../images/virtual-hugs-virtual-hug.gif";
     import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
     import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 
@@ -29,7 +29,7 @@
 </script>
 
 <div class="error-div is-dark is-rounded flex flex-col items-center justify-center">
-    <p class="is-error title">{$LL.error.error()}</p>
+    <p class="is-error title">{$LL.error.errorDialog.title()}</p>
     <div class="body">
         {#each $errorStore as error (error.id)}
             <p>{error.message}</p>

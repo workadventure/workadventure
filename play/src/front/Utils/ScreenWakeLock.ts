@@ -4,7 +4,6 @@ class ScreenWakeLock {
     constructor() {
         if ("wakeLock" in navigator) {
             this.isSupported = true;
-            console.log("Screen Wake Lock API supported!");
         } else {
             this.isSupported = false;
             console.info("Wake lock is not supported by this browser.");

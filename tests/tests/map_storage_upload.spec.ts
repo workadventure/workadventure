@@ -4,9 +4,10 @@ import { login } from './utils/roles';
 import {createZipFromDirectory} from "./utils/zip";
 import { gotoWait200 } from "./utils/containers";
 import {RENDERER_MODE} from "./utils/environment";
+import {map_storage_url} from "./utils/urls";
 
 test.use({
-    baseURL: (process.env.MAP_STORAGE_PROTOCOL ?? "http") + "://john.doe:password@" + (process.env.MAP_STORAGE_ENDPOINT ?? 'map-storage.workadventure.localhost'),
+    baseURL: map_storage_url,
 })
 
 test.describe('Map-storage Upload API', () => {
@@ -47,12 +48,12 @@ test.describe('Map-storage Upload API', () => {
         });
         await expect(uploadFile2.ok()).toBeTruthy();
 
-        await gotoWait200(page, `http://play.workadventure.localhost/~/map1.wam?phaserMode=${RENDERER_MODE}`);
+        await gotoWait200(page, `/~/map1.wam?phaserMode=${RENDERER_MODE}`);
         await login(page, 'Alice');
 
         const newBrowser = await browser.browserType().launch();
         const page2 = await newBrowser.newPage();
-        await gotoWait200(page2, `http://play.workadventure.localhost/~/map2.wam?phaserMode=${RENDERER_MODE}`);
+        await gotoWait200(page2, `/~/map2.wam?phaserMode=${RENDERER_MODE}`);
         await login(page2, 'Bob');
 
         // Let's trigger a reload of map 1 only

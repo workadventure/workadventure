@@ -21,6 +21,8 @@ import { LL } from "../../../i18n/i18n-svelte";
 import { inJitsiStore, inBbbStore, silentStore, inOpenWebsite, isSpeakerStore } from "../../Stores/MediaStore";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { currentLiveStreamingNameStore } from "../../Stores/MegaphoneStore";
+import { popupStore } from "../../Stores/PopupStore";
+import PopUpJitsi from "../../Components/PopUp/PopUpJitsi.svelte"
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
@@ -74,8 +76,9 @@ export class GameMapPropertiesListener {
 
         // Jitsi room
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.JITSI_ROOM, (newValue, oldValue, allProps) => {
-            if (newValue === undefined || newValue !== oldValue) {
-                layoutManagerActionStore.removeAction("jitsi");
+            if (newValue === undefined || (newValue !== oldValue && oldValue != undefined)) {
+                //layoutManagerActionStore.removeAction("jitsi");
+                popupStore.removePopup("jitsi");
                 coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
                     if (coWebsite instanceof JitsiCoWebsite) {
                         coWebsiteManager.closeCoWebsite(coWebsite);
@@ -181,17 +184,26 @@ export class GameMapPropertiesListener {
             if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                 let message = allProps.get(GameMapProperties.JITSI_TRIGGER_MESSAGE);
                 if (message === undefined) {
-                    message = get(LL).trigger.jitsiRoom();
+                  message = get(LL).trigger.jitsiRoom();
                 }
-                layoutManagerActionStore.addAction({
-                    uuid: "jitsi",
-                    type: "message",
+                /*layoutManagerActionStore.addAction({
+                  uuid: "jitsi",
+                  type: "message",
+                  message: message,
+                  callback: () => {
+                    openJitsiRoomFunction().catch((e) => console.error(e));
+                  },
+                  userInputManager: this.scene.userInputManager,
+                });*/
+                popupStore.addPopup(PopUpJitsi, {
                     message: message,
-                    callback: () => {
+                    click: () => {
                         openJitsiRoomFunction().catch((e) => console.error(e));
                     },
                     userInputManager: this.scene.userInputManager,
-                });
+                },
+                "jitsi");
+
             } else {
                 openJitsiRoomFunction().catch((e) => console.error(e));
             }
