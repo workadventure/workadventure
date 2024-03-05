@@ -1,10 +1,10 @@
 
 import {expect, test} from '@playwright/test';
-import {RENDERER_MODE} from "./utils/environment";
 import { evaluateScript } from './utils/scripting';
 import { login } from './utils/roles';
 import Menu  from './utils/menu';
 import Map  from './utils/map';
+import { publicTestMapUrl } from './utils/urls';
 
 test.describe('Availability Status', () => {
 
@@ -14,9 +14,7 @@ test.describe('Availability Status', () => {
         test('should return to online status when you move',async({ page, browser,browserName },{project})=>{
             const statusName = "Busy";
     
-            await page.goto(
-                `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
-            );
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
             await login(page, 'Alice');
             
@@ -54,9 +52,7 @@ test.describe('Availability Status', () => {
             }
             const statusName = "Busy";
     
-            await page.goto(
-                `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
-            );
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
             await login(page, 'Alice');
             
@@ -85,9 +81,7 @@ test.describe('Availability Status', () => {
             }
             const statusName = "Busy";
     
-            await page.goto(
-                `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
-            );
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
             await login(page, 'Alice');
 
@@ -117,10 +111,9 @@ test.describe('Availability Status', () => {
             }
             
             const statusName = "Busy";
-            const map_URL =  `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`;
-            
 
-            await page.goto(map_URL);
+
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
             await login(page, 'Alice');
             await Map.walkTo(page,'ArrowRight',500);
@@ -142,8 +135,7 @@ test.describe('Availability Status', () => {
                     return;
                 }
                 const statusName = "Busy";
-                const map_URL =  `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`;
-                await page.goto(map_URL);
+                await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         
                 await login(page, 'Alice');
                 const positionToDiscuss = {
@@ -155,7 +147,7 @@ test.describe('Availability Status', () => {
                 const newBrowser = await browser.browserType().launch();
                 const userBob = await newBrowser.newPage();
             
-                await userBob.goto(map_URL);
+                await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
                // Login user "Bob"
                 const secondPageName = 'Bob'
                 await login(userBob, secondPageName);
@@ -193,8 +185,7 @@ test.describe('Availability Status', () => {
                     return;
                 }
                 const statusName = "Busy";
-                const map_URL =  `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`;
-                await page.goto(map_URL);
+                await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         
                 await login(page, 'Alice');
 
@@ -210,7 +201,7 @@ test.describe('Availability Status', () => {
                 const newBrowser = await browser.browserType().launch();
                 const userBob = await newBrowser.newPage();
 
-                await userBob.goto(map_URL);
+                await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
                // Login user "Bob"
                 const secondPageName = 'Bob'
                 await login(userBob, secondPageName);
@@ -236,8 +227,7 @@ test.describe('Availability Status', () => {
                 }
 
                 const statusName = "Busy";
-                const map_URL =  `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`;
-                await page.goto(map_URL);
+                await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         
                 await login(page, 'Alice');
                 const positionToDiscuss = {
@@ -252,7 +242,7 @@ test.describe('Availability Status', () => {
                 const newBrowser = await browser.browserType().launch();
                 const userBob = await newBrowser.newPage();
 
-                await userBob.goto(map_URL);
+                await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
                // Login user "Bob"
                 const secondPageName = 'Bob'
                 await login(userBob, secondPageName);
@@ -279,9 +269,7 @@ test.describe('Availability Status', () => {
             const statusName = "Back in a moment";
     
     
-            await page.goto(
-                `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
-            );
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
             await login(page, 'Alice');
             
@@ -319,9 +307,7 @@ test.describe('Availability Status', () => {
                 test.skip();
                 return;
             }
-            await page.goto(
-                `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
-            );
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
             await login(page, 'Alice');
 
@@ -349,9 +335,7 @@ test.describe('Availability Status', () => {
             }
             const statusName = "Back in a moment";
     
-            await page.goto(
-                `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
-            );
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
             await login(page, 'Alice');
             
@@ -378,8 +362,7 @@ test.describe('Availability Status', () => {
         test.describe('Back in a moment interaction',async()=>{
             test('should not create a bubble',async({ page, browser,context})=>{
                 const statusName = "Back in a moment";
-                const map_URL =  `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`;
-                await page.goto(map_URL);
+                await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         
                 await login(page, 'Alice');
                 const positionToDiscuss = {
@@ -393,7 +376,7 @@ test.describe('Availability Status', () => {
                 const newBrowser = await browser.browserType().launch();
                 const userBob = await newBrowser.newPage();
 
-                await userBob.goto(map_URL);
+                await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
                // Login user "Bob"
                 const secondPageName = 'Bob'
                 await login(userBob, secondPageName);
@@ -408,9 +391,7 @@ test.describe('Availability Status', () => {
         test('should return to online status when you move',async({ page, browser,browserName },{project})=>{
             const statusName = "Do not disturb";
     
-            await page.goto(
-                `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
-            );
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
             await login(page, 'Alice');
             
@@ -448,9 +429,7 @@ test.describe('Availability Status', () => {
             }
             const statusName = "Do not disturb";
 
-            await page.goto(
-                `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
-            );
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
             await login(page, 'Alice');
 
@@ -480,9 +459,7 @@ test.describe('Availability Status', () => {
             }
             const statusName = "Do not disturb";
     
-            await page.goto(
-                `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`
-            );
+            await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
             await login(page, 'Alice');
         
@@ -509,8 +486,7 @@ test.describe('Availability Status', () => {
         test.describe('Do not disturb interaction',async()=>{
             test('should not create a bubble ',async({ page, browser,context})=>{
                 const statusName = "Do not disturb";
-                const map_URL =  `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json?phaserMode=${RENDERER_MODE}`;
-                await page.goto(map_URL);
+                await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
         
                 await login(page, 'Alice');
                 const positionToDiscuss = {
@@ -525,7 +501,7 @@ test.describe('Availability Status', () => {
                 const userBob = await newBrowser.newPage();
 
 
-                await userBob.goto(map_URL);
+                await userBob.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
                // Login user "Bob"
                 const secondPageName = 'Bob'
                 await login(userBob, secondPageName);
