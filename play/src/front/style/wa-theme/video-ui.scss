@@ -41,7 +41,7 @@
 }
 
 .media-container {
-    @apply tw-max-w-full tw-h-auto;
+    @apply tw-max-w-full tw-h-auto tw-w-full tw-flex tw-flex-wrap tw-justify-center;
 
     &.hightlighted {
         @apply tw-pointer-events-auto tw-h-full;
@@ -68,6 +68,13 @@
         .voice-meter-cam-off {
             @apply -tw-translate-x-1;
         }
+    }
+
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+    &::-webkit-scrollbar {
+        display: none;
     }
 }
 
@@ -199,7 +206,7 @@
 }
 
 .mozaic-full-size {
-    @apply md:tw-h-[60vh] md:tw-w-[60vw];
+    @apply md:tw-h-[60vh] md:tw-w-[75vw];
     &.media-box-camera-off-size{
         @apply md:tw-h-[4vh];
     }
