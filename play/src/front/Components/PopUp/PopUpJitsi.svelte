@@ -18,11 +18,11 @@
 
 </script>
 
-<div class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[300px] rounded-lg overflow-hidden animation">
+<div class="bg-contrast/80 backdrop-blur text-white sm:w-[500px] sm:h-[300px] rounded-lg overflow-hidden animation w-[300px] h-[150px]">
   <div class="flex p-4 space-x-4 pointer-events-auto">
       <div class="grow">
       </div>
-      <div class="p-4 mt-16 -mb-6 text-center leading-6">
+      <div class="p-4 mt-2 -mb-6 text-center leading-6 sm:mt-16">
         { message }
       </div>
   </div>

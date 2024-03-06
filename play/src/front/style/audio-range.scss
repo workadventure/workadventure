@@ -9,6 +9,14 @@ div.main-audio-manager {
     display: none;
   }
 
+@media screen and (max-width: 480px) {
+    .main-audio-manager {
+        margin-bottom: 16px;
+        width: auto;
+
+    }
+}
+
   #audioplayer_volume_icon_playing.muted {
     #audioplayer_volume_icon_playing_low {
       visibility: hidden;

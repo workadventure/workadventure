@@ -44,14 +44,6 @@
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
     import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
-    import PopUpMapEditorShortcut from "./PopUp/PopUpMapEditorShortcut.svelte";
-    import PopUpFollow from "./PopUp/PopUpFollow.svelte";
-    import PopUpJitsi from "./PopUp/PopUpJitsi.svelte";
-    import PopUpSound from "./PopUp/PopUpSound.svelte";
-    import PopUpRoomAccessDenied from "./PopUp/PopUpRoomAccessDenied.svelte";
-    import PopUpCameraAccesDenied from "./PopUp/PopUpCameraAccesDenied.svelte";
-    import PopUpTriggerActionMessage from "./PopUp/PopUpTriggerActionMessage.svelte";
-    import PopupCowebsite from "./PopUp/PopupCowebsite.svelte";
 
     let mainLayout: HTMLDivElement;
     export let message: string;
@@ -176,11 +168,11 @@
     <div class="popups">
         {#each $popupStore.slice().reverse() as popup (popup.uuid)}
             <div class="popupwrapper">
-                <svelte:component this={popup.component} {...popup.props} on:close={() => popupStore.removePopup(popup.uuid)} />
-                <!-- {#if popup.lenght > 5}
-                    {popupStore.removePopup(popup.uuid)}
-                {/if} -->
-                <!-- A essayer limitage d'apparition 5 popups-->
+                {#if $popupStore.length < 5}
+                    <svelte:component this={popup.component} {...popup.props} on:close={() => popupStore.removePopup(popup.uuid)} /> <!-- A essayer limitage d'apparition 5 popups-->
+                {:else}
+                    {popup.uuid = "hidden"}
+                {/if}
             </div>
         {/each}
     </div>
@@ -243,12 +235,6 @@
     .popupwrapper:nth-child(5) {
         top: 68%;
         transform: translate(-50%, -50%) scale(0.8);
-        filter: blur(4px);
-    }
-
-    .popupwrapper:nth-child(6) {
-        top: 65%;
-        transform: translate(-50%, -50%) scale(0.75);
         filter: blur(4px);
     }
 </style>

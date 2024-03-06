@@ -4,7 +4,7 @@
 </script>
 
 
-  <div class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[300px] rounded-lg overflow-hidden animation" id="popup-audio-manager">
+  <div class="bg-contrast/80 backdrop-blur text-white sm:w-[500px] sm:h-[300px] rounded-lg overflow-hidden animation w-[300px] h-[150px]" id="popup-audio-manager">
     <div id="visible">
         <AudioManager />
     </div>
