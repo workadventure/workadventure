@@ -23,7 +23,7 @@ const actionbar: BaseTranslation = {
     listStatusTitle: {
         enable: "Changer de statut",
         inMeeting: "Bonne réunion 🤓",
-        inSilentZone: "Profitez de la silent zone 😁",
+        inSilentZone: "Profitez de la zone silencieuse 😁",
     },
     status: {
         ONLINE: "En Ligne",
