@@ -513,6 +513,7 @@
 
 <div class="wa-message-form" bind:this={messageForm}>
     {#if $selectedMessageToReply}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div class="replyMessage" on:click={() => selectedMessageToReply.set(null)}>
             <div
                 style={`border-bottom-color:${getColor($selectedMessageToReply.name)}`}
@@ -555,6 +556,7 @@
     {#if usersSearching.length > 0}
         <div class="wa-dropdown-menu">
             {#each usersSearching as user (user.jid)}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <span
                     class="wa-dropdown-item user-tag"
                     on:click|stopPropagation|preventDefault={() => addUserTag(user)}
@@ -632,9 +634,12 @@
                                     {$LL.file.notLogged()}
                                 {:else if fileUploaded.errorMessage === "disabled"}
                                     {$LL.disabled()}
+                                {:else}
+                                    {fileUploaded.errorMessage}
                                 {/if}
                             </p>
                             {#if fileUploaded.errorMessage === "not-logged"}
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
                                     class="tw-text-light-blue tw-cursor-pointer"
                                     on:click|preventDefault|stopPropagation={() => iframeListener.sendLogin()}
@@ -660,6 +665,7 @@
                         {#if fileUploaded.uploadState === uploadingState.finish}
                             <CheckIcon size="14" class="tw-text-pop-green" />
                         {:else if fileUploaded.uploadState === uploadingState.error}
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
                                 class="alert-upload tw-cursor-pointer"
                                 on:click|preventDefault|stopPropagation={() => resend()}
@@ -684,6 +690,7 @@
                 </div>
             {/each}
             {#if informationMessage}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-py-2 tw-text-xs tw-items-center tw-px-4 tw-text-warning tw-w-full tw-mb-1 tw-cursor-pointer"
                     on:click|preventDefault|stopPropagation={() => (informationMessage = null)}
