@@ -19,6 +19,12 @@ class EntityEditor {
     }
   }
 
+  async searchEntity(page: Page, search: string) {
+    await page.getByPlaceholder("Search").click();
+    await page.getByPlaceholder("Search").fill(search);
+    return page.getByTestId("entity-item").nth(0);
+  }
+
   async moveAndClick(page: Page, x: number, y: number) {
     await page.evaluate(async () => {
       await window.e2eHooks.waitForNextFrame();
