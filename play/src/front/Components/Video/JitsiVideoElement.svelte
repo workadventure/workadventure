@@ -6,7 +6,6 @@
     import { LayoutMode } from "../../WebRtc/LayoutManager";
 
     export let jitsiTrack: JitsiTrack;
-    export let isMobile: boolean;
     export let isLocal: boolean;
     export let isHightlighted: boolean;
     export let isMobileFormat: boolean;

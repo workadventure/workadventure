@@ -46,7 +46,7 @@ services:
         environment:
             # On startup, we ask the messages container to regenerate the files.
             # Note: we need to use this "messages" container because of ARM64 processors that are not supported with protoc (used in "messages" container)
-            STARTUP_COMMAND_0: sudo apt-get update && sudo apt-get -y install build-essential python3
+            STARTUP_COMMAND_0: if [[ $(dpkg --print-architecture) == "arm64" ]]; then sudo apt-get update && sudo apt-get -y install build-essential python3; fi;
             STARTUP_COMMAND_1: ../wait-proto.sh
             STARTUP_COMMAND_2: ../npm-install.sh
             STARTUP_COMMAND_3: npm run typesafe-i18n
@@ -145,7 +145,6 @@ services:
             # Google drive picker
             GOOGLE_DRIVE_PICKER_CLIENT_ID: "$GOOGLE_DRIVE_PICKER_CLIENT_ID"
             GOOGLE_DRIVE_PICKER_APP_ID: "$GOOGLE_DRIVE_PICKER_APP_ID"
-        # ME PAS COMMIT
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"
@@ -357,7 +356,6 @@ services:
 
     icon:
         image: matthiasluedtke/iconserver:v3.15.0
-        # NE PAS COMMIT
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.icon.rule=Host(`icon.workadventure.localhost`)"

@@ -2,14 +2,8 @@
   import { createEventDispatcher } from "svelte";
   import XIcon from "../Icons/XIcon.svelte";
   import FollowMenu from "../FollowMenu/FollowMenu.svelte";
-  import { UserInputManager } from "../../Phaser/UserInput/UserInputManager";
-
 
   const dispatch = createEventDispatcher()
-
-  export let priority = 3;
-  export let click: () => void;
-  export let userInputManager: UserInputManager;
 
   function closeBanner() {
     console.log("je suis dans la fonction close follow lolololol")

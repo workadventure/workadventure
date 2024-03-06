@@ -16,7 +16,7 @@
     import JitsiVideoElement from "./JitsiVideoElement.svelte";
     import JitsiAudioElement from "./JitsiAudioElement.svelte";
     import ActionMediaBox from "./ActionMediaBox.svelte";
-    // import { boolean } from "zod";
+
 
     export let clickable = true;
     export let isHightlighted = false;
@@ -28,7 +28,6 @@
     let embedScreen: EmbedScreen;
     // let videoContainer: HTMLDivElement;
     //let minimized: boolean;
-    let isMobile: boolean;
 
     // let backGroundColor = Color.getColorByString(peer.jitsiTrackWrapper.spaceUser?.name ?? "");
     // let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
@@ -85,7 +84,6 @@
                 jitsiTrack={$videoTrackStore}
                 isLocal={$videoTrackStore?.isLocal()}
                 isHightlighted={isHightlighted}
-                isMobile={isMobile}
                 isMobileFormat={isMobileFormat}
             />
         </div>

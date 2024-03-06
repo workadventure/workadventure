@@ -1,14 +1,11 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import { UserInputManager } from "../../Phaser/UserInput/UserInputManager";
     import TextGlobalMessage from "../Menu/TextGlobalMessage.svelte";
     import { consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
 
-
-    export let priority = 4;
-    export let message: string;
-    export let click: () => void;
-    export let userInputManager: UserInputManager;
+    // export let message: string;
+    // export let click: () => void;
+    // export let userInputManager: UserInputManager;
 
     const dispatch = createEventDispatcher()
 

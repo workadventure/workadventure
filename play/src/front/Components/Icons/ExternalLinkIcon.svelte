@@ -1,6 +1,4 @@
 <script lang="ts">
-    // import { boolean } from "zod";
-
     export let height = "h-6";
     export let width = "w-6";
     export let strokeColor = "stroke-white";

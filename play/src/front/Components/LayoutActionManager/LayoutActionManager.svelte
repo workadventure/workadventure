@@ -8,9 +8,10 @@
 
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
+
 <div class="layout-manager-list flex flex-col right-0 left-0 absolute bottom-12 z-[155]">
     {#each $layoutManagerActionStore as action (action.uuid)}
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
       <div
             class="{action.type === 'warning' ? 'after:bg-warning' : 'after:bg-secondary'}"
             on:click={() => onClick(action.callback)}

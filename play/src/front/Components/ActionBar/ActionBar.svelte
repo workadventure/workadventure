@@ -104,7 +104,7 @@
     import {selectCompanionSceneVisibleStore} from "../../Stores/SelectCompanionStore";
     import {SelectCompanionScene, SelectCompanionSceneName} from "../../Phaser/Login/SelectCompanionScene";
     import {EnableCameraScene, EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
-    import Tooltip from "../Util/Tooltip.svelte";
+    // import Tooltip from "../Util/Tooltip.svelte";
 
     // import { availabilityStatusStore } from "../../Stores/MediaStore";
     // import HorizontalSoundMeterWidget from "../EnableCamera/HorizontalSoundMeterWidget.svelte";
@@ -559,7 +559,7 @@
                         <div
                           class="h-12 w-12 rounded aspect-square flex items-center justify-center transition-all {$emoteMenuSubStore ? 'bg-secondary group-hover/bg-secondary-600' : ' group-hover/btn-emoji:bg-white/10'}"
                         >
-                            <EmojiIcon color="{$emoteMenuSubStore ? 'stroke-white fill-white' : 'stroke-white fill-transparent'}" hover="group-hover/btn-emoji:fill-white" />
+                            <EmojiIcon strokeColor="{$emoteMenuSubStore ? 'stroke-white fill-white' : 'stroke-white fill-transparent'}" hover="group-hover/btn-emoji:fill-white" />
                         </div>
                         {#if helpActive === !!"emoji" && !$emoteMenuSubStore}
                             <HelpTooltip title="Display an emoji above your Woka" />
@@ -763,7 +763,7 @@
                                                     {StringUtils.normalizeDeviceName(camera.label)}
                                                 </div>
                                                 {#if $usedCameraDeviceIdStore === camera.deviceId}
-                                                <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" color="stroke-white fill-transparent {$usedCameraDeviceIdStore === camera.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
+                                                <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" strokeColor="stroke-white fill-transparent {$usedCameraDeviceIdStore === camera.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
                                                 {/if}
                                             </div>
                                         {/each}                                </div>
@@ -806,7 +806,7 @@
                                                     {StringUtils.normalizeDeviceName(microphone.label)}
                                                 </div>
                                                 {#if $usedMicrophoneDeviceIdStore === microphone.deviceId}
-                                                <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" color="stroke-white fill-transparent {$usedMicrophoneDeviceIdStore === microphone.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
+                                                <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" strokeColor="stroke-white fill-transparent {$usedMicrophoneDeviceIdStore === microphone.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
                                                 {/if}
                                             </div>
                                         {/each}
@@ -850,7 +850,7 @@
                                                     {StringUtils.normalizeDeviceName(speaker.label)}
                                                 </div>
                                                 {#if $speakerSelectedStore === speaker.deviceId}
-                                                <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" color="stroke-white fill-transparent {$speakerSelectedStore === speaker.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
+                                                <CheckIcon height="h-4" width="w-4" classList="aspect-ratio transition-all" strokeColor="stroke-white fill-transparent {$speakerSelectedStore === speaker.deviceId ? 'opacity-100' : 'opacity-0 group-hover:opacity-30'}" strokeWidth="1.5" />
                                                 {/if}
                                             </div>
                                         {/each}

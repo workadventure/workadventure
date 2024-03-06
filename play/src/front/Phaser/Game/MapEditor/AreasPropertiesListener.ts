@@ -35,6 +35,7 @@ import { chatZoneLiveStore } from "../../../Stores/ChatStore";
 import { Room } from "../../../Connection/Room";
 import { popupStore } from "../../../Stores/PopupStore";
 import JitsiPopup from '../../../Components/PopUp/PopUpJitsi.svelte';
+import PopUpTab from '../../../Components/PopUp/PopUpTab.svelte'; // Replace 'path/to/PopUpTab' with the actual path to the PopUpTab class
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -268,13 +269,22 @@ export class AreasPropertiesListener {
                 if (message === undefined) {
                     message = get(LL).trigger.newTab();
                 }
-                layoutManagerActionStore.addAction({
-                    uuid: actionId,
-                    type: "message",
+
+                // layoutManagerActionStore.addAction({
+                //     uuid: actionId,
+                //     type: "message",
+                //     message: message,
+                //     callback: () => scriptUtils.openTab(property.link as string),
+                //     userInputManager: this.scene.userInputManager,
+                // });
+
+                popupStore.addPopup(PopUpTab, {
                     message: message,
                     callback: () => scriptUtils.openTab(property.link as string),
                     userInputManager: this.scene.userInputManager,
-                });
+                },
+                actionId);
+
             } else {
                 scriptUtils.openTab(property.link);
             }
@@ -306,6 +316,14 @@ export class AreasPropertiesListener {
                 callback: () => this.openCoWebsiteFunction(property, coWebsiteOpen, actionId),
                 userInputManager: this.scene.userInputManager,
             });
+
+            // popupStore.addPopup(PopUpCowebsite, {
+                //     message: message,
+                //     callback: () => this.openCoWebsiteFunction(property, coWebsiteOpen, actionId),
+                //     userInputManager: this.scene.userInputManager,
+                // },
+                // actionId);
+
         } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
             const coWebsite = new SimpleCoWebsite(
                 new URL(property.link ?? "", this.scene.mapUrlFile),
@@ -422,6 +440,7 @@ export class AreasPropertiesListener {
                 //     },
                 //     userInputManager: this.scene.userInputManager,
                 // });
+
               popupStore.addPopup(JitsiPopup, {
                 message: message,
                 callback: () => {
@@ -478,7 +497,7 @@ export class AreasPropertiesListener {
                 : undefined;
 
         if (action) {
-            layoutManagerActionStore.removeAction(actionTriggerUuid);
+            layoutManagerActionStore.removeAction(actionTriggerUuid); // remove the action after the co-website is loaded --> replace by the removePopup
         }
 
         this.coWebsitesActionTriggers.delete(property.id);
@@ -506,7 +525,7 @@ export class AreasPropertiesListener {
     }
 
     private handleJitsiRoomPropertyOnLeave(property: JitsiRoomPropertyData): void {
-        layoutManagerActionStore.removeAction("jitsi");
+        layoutManagerActionStore.removeAction("jitsi"); // remove the action after the co-website is loaded --> replace by the removePopup
         coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
             if (coWebsite instanceof JitsiCoWebsite) {
                 coWebsiteManager.closeCoWebsite(coWebsite);
@@ -546,7 +565,7 @@ export class AreasPropertiesListener {
             console.error("Error during loading a co-website: " + coWebsite.getUrl());
         });
 
-        layoutManagerActionStore.removeAction(actionId);
+        layoutManagerActionStore.removeAction(actionId); // remove the action after the co-website is loaded --> replace by the removePopup
     }
 
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {

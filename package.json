@@ -16,8 +16,5 @@
     "benchmark",
     "uploader",
     "play/packages/iframe-api-typings"
-  ],
-  "dependencies": {
-    "svelte-sound": "^0.6.0"
-  }
+  ]
 }
