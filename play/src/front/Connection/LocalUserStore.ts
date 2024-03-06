@@ -489,6 +489,13 @@ class LocalUserStore {
     setRequestedStatus(newStatus: RequestedStatus | null) {
         localStorage.setItem("RequestedStatus", String(newStatus));
     }
+
+    getLastNotificationPermissionRequest(): string | null {
+        return localStorage.getItem("lastNotificationPermissionRequest");
+    }
+    setLastNotificationPermissionRequest() {
+        localStorage.setItem("lastNotificationPermissionRequest", new Date().toString());
+    }
 }
 
 export const localUserStore = new LocalUserStore();

@@ -3,6 +3,7 @@ import { TimedRules } from "../statusRules";
 import { askIfUserWantToJoinBubbleOf, askToChangeStatus } from "../statusChangerFunctions";
 import { notificationPermissionModalVisibility } from "../../../Stores/AvailabilityStatusModalsStore";
 import { helpNotificationSettingsVisibleStore } from "../../../Stores/HelpSettingsStore";
+import { localUserStore } from "../../../Connection/LocalUserStore";
 import { BasicStatusStrategy } from "./BasicStatusStrategy";
 
 export class BusyStatusStrategy extends BasicStatusStrategy {
@@ -42,9 +43,8 @@ export class BusyStatusStrategy extends BasicStatusStrategy {
     };
 
     private showNotificationPermissionModal = () => {
-        const localStoragelastNotificationPermissionRequest: string | null = localStorage.getItem(
-            "lastNotificationPermissionRequest"
-        );
+        const localStoragelastNotificationPermissionRequest: string | null =
+            localUserStore.getLastNotificationPermissionRequest();
         const lastNotificationPermissionRequest = localStoragelastNotificationPermissionRequest
             ? new Date(localStoragelastNotificationPermissionRequest)
             : new Date();
@@ -57,7 +57,7 @@ export class BusyStatusStrategy extends BasicStatusStrategy {
             localStoragelastNotificationPermissionRequest === null
         ) {
             helpNotificationSettingsVisibleStore.set(true);
-            localStorage.setItem("lastNotificationPermissionRequest", new Date().toString());
+            localUserStore.setLastNotificationPermissionRequest();
         }
     };
 }

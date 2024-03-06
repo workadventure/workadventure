@@ -7,6 +7,7 @@
     import { getColorHexOfStatus, getStatusInformation } from "../../../Utils/AvailabilityStatus";
     import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
     import { availabilityStatusStore } from "../../../Stores/MediaStore";
+    import { localUserStore } from "../../../Connection/LocalUserStore";
     import { statusChanger } from "./statusChanger";
     import AvailabilityStatusList from "./AvailabilityStatusList.svelte";
     import AvailabilityStatusButton from "./AvailabilityStatusButton.svelte";
@@ -45,7 +46,7 @@
     };
 
     let buttonProps: AvailabilityStatusPropsInterface = {
-        currentPlayerName: localStorage.getItem("playerName") || "",
+        currentPlayerName: localUserStore.getName() || "",
         listStatusTitle: statusButtonTooltipText(),
         menuVisibility: $menuVisiblilityStore,
         statusColorHex: getColorHexOfStatus($availabilityStatusStore),
