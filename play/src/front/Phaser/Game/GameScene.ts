@@ -2331,7 +2331,8 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("removeActionMessage", (message) => {
-            layoutManagerActionStore.removeAction(message.uuid);
+            // layoutManagerActionStore.removeAction(message.uuid);
+            popupStore.removePopup(message.uuid); // Voir si utile
         });
 
         iframeListener.registerAnswerer("setPlayerOutline", (message) => {
@@ -2635,7 +2636,7 @@ ${escapedMessage}
     private tryOpenMapEditorWithToolEditorParameter(): void {
         const toolEditorParam = urlManager.getHashParameter("mapEditor");
         console.log("toolEditorParam ===", toolEditorParam);
-        if (toolEditorParam === undefined) {
+        if (toolEditorParam) {
             if (!get(mapEditorActivated)) {
 
                 popupStore.addPopup(PopUpMapEditorNotEnabled, {

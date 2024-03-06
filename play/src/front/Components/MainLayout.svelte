@@ -44,14 +44,17 @@
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
     import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
-
-
-
+    import PopUpMapEditorShortcut from "./PopUp/PopUpMapEditorShortcut.svelte";
+    import PopUpFollow from "./PopUp/PopUpFollow.svelte";
+    import PopUpJitsi from "./PopUp/PopUpJitsi.svelte";
+    import PopUpSound from "./PopUp/PopUpSound.svelte";
+    import PopUpRoomAccessDenied from "./PopUp/PopUpRoomAccessDenied.svelte";
+    import PopUpCameraAccesDenied from "./PopUp/PopUpCameraAccesDenied.svelte";
+    import PopUpTriggerActionMessage from "./PopUp/PopUpTriggerActionMessage.svelte";
+    import PopupCowebsite from "./PopUp/PopupCowebsite.svelte";
 
     let mainLayout: HTMLDivElement;
     export let message: string;
-
-
 
     let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
@@ -168,11 +171,8 @@
     <ActionsMenu />
     {/if}
 
-
     <ActionBar />
     <!-- svelte-ignore missing-declaration -->
-
-
     <div class="popups">
         {#each $popupStore.slice().reverse() as popup (popup.uuid)}
             <div class="popupwrapper">
@@ -184,6 +184,7 @@
             </div>
         {/each}
     </div>
+
 
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
@@ -234,21 +235,20 @@
     }
 
     .popupwrapper:nth-child(4) {
-        top: 77%;
-        transform: translate(-50%, -50%) scale(0.9);
+        top: 72%;
+        transform: translate(-50%, -50%) scale(0.85);
         filter: blur(4px);
     }
 
     .popupwrapper:nth-child(5) {
-        top: 72%;
-        transform: translate(-50%, -50%) scale(0.9);
+        top: 68%;
+        transform: translate(-50%, -50%) scale(0.8);
         filter: blur(4px);
     }
 
     .popupwrapper:nth-child(6) {
-        top: 68%;
-        transform: translate(-50%, -50%) scale(0.9);
+        top: 65%;
+        transform: translate(-50%, -50%) scale(0.75);
         filter: blur(4px);
     }
-
 </style>
