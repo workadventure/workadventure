@@ -374,7 +374,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             console.debug("No object selected");
         }
         if (!this.entityPrefabPreview || !this.entityPrefab) {
-            console.debug("No entityPrefabPreview of no EntityPrefab");
+            console.debug("No entityPrefabPreview or no EntityPrefab", this.entityPrefabPreview, this.entityPrefab);
             return;
         }
         if (

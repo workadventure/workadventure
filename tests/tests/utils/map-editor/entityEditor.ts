@@ -10,7 +10,11 @@ class EntityEditor {
     await expect(page.getByTestId("entityImageLoader")).toHaveCount(0);
     await expect(page.getByTestId("entityImageError")).toHaveCount(0);
     await expect(page.getByTestId("entity-item").nth(nb)).toHaveCount(1);
+    const responseOnEntityClicked = page.waitForResponse((response) =>
+      response.url().includes(this.getTestAssetName())
+    );
     await page.getByTestId("entity-item").nth(nb).click();
+    await responseOnEntityClicked;
   }
 
   async searchEntity(page: Page, search: string) {
