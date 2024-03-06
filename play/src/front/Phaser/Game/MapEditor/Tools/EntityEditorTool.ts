@@ -371,10 +371,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 document.activeElement.blur();
             }
             mapEditorSelectedEntityStore.set(undefined);
-            console.debug("No object selected");
         }
         if (!this.entityPrefabPreview || !this.entityPrefab) {
-            console.debug("No entityPrefabPreview or no EntityPrefab", this.entityPrefabPreview, this.entityPrefab);
             return;
         }
         if (
@@ -389,7 +387,6 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                     this.shiftKey?.isDown
                 )
         ) {
-            console.debug("Entity cannot be placed here.");
             return;
         }
         if (pointer.rightButtonDown()) {
@@ -411,7 +408,6 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             prefabRef: this.entityPrefab,
             properties: get(mapEditorCopiedEntityDataPropertiesStore) ?? [],
         };
-        console.debug("Execute CreateEntityFrontCommand");
         this.mapEditorModeManager
             .executeCommand(
                 new CreateEntityFrontCommand(
