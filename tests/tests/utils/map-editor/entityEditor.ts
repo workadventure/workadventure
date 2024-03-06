@@ -17,6 +17,9 @@ class EntityEditor {
     } else {
       await page.getByTestId("entity-item").nth(nb).click();
     }
+    // That's bad, but we need to wait a bit for the canvas to put the object.
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await page.waitForTimeout(1000);
   }
 
   async searchEntity(page: Page, search: string) {
