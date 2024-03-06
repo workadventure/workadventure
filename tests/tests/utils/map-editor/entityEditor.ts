@@ -2,7 +2,7 @@ import * as path from "path";
 import { expect, Page } from "@playwright/test";
 
 class EntityEditor {
-  async selectEntity(page: Page, nb: number, search?: string) {
+  async selectEntity(page: Page, nb: number, search?: string, expectedFilename?: string) {
     if (search != undefined) {
       await page.getByPlaceholder("Search").click();
       await page.getByPlaceholder("Search").fill(search);
@@ -10,15 +10,15 @@ class EntityEditor {
     await expect(page.getByTestId("entityImageLoader")).toHaveCount(0);
     await expect(page.getByTestId("entityImageError")).toHaveCount(0);
     await expect(page.getByTestId("entity-item").nth(nb)).toHaveCount(1);
-    await page.getByTestId("entity-item").nth(nb).click();
+    if (expectedFilename) {
+      const responseOnTestAssetClicked = page.waitForResponse((response) => response.url().includes(expectedFilename));
+      await page.getByTestId("entity-item").nth(nb).click();
+      await responseOnTestAssetClicked;
+    } else {
+      await page.getByTestId("entity-item").nth(nb).click();
+    }
   }
 
-  async searchEntity(page: Page, search: string) {
-    await page.getByPlaceholder("Search").click();
-    await page.getByPlaceholder("Search").fill(search);
-
-    return page.getByTestId("entity-item").nth(0);
-  }
   async moveAndClick(page: Page, x: number, y: number) {
     await page.evaluate(async () => {
       await window.e2eHooks.waitForNextFrame();

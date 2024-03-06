@@ -441,12 +441,7 @@ test.describe("Map editor", () => {
     await EntityEditor.uploadTestAsset(page);
 
     // Select uploaded entity and move it to the map
-    const responseOnTestAssetClicked = page.waitForResponse((response) =>
-      response.url().includes(EntityEditor.getTestAssetName())
-    );
-    await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName());
-    await responseOnTestAssetClicked;
-
+    await EntityEditor.selectEntity(page, 0, EntityEditor.getTestAssetName(), EntityEditor.getTestAssetName());
     await EntityEditor.moveAndClick(page, 6 * 32, 6 * 32);
 
     // Add open link interaction on uploaded asset
