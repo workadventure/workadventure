@@ -5,8 +5,8 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { menuVisiblilityStore } from "../../../Stores/MenuStore";
     import { getColorHexOfStatus, getStatusInformation } from "../../../Utils/AvailabilityStatus";
-    import { availabilityStatusStore } from "../../../Stores/MediaStore";
     import { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
+    import { availabilityStatusStore } from "../../../Stores/MediaStore";
     import { statusChanger } from "./statusChanger";
     import AvailabilityStatusList from "./AvailabilityStatusList.svelte";
     import AvailabilityStatusButton from "./AvailabilityStatusButton.svelte";
@@ -22,17 +22,33 @@
         AvailabilityStatus.DO_NOT_DISTURB,
     ];
 
+    const statusButtonTooltipText = (): string => {
+        if (
+            [
+                AvailabilityStatus.SPEAKER,
+                AvailabilityStatus.JITSI,
+                AvailabilityStatus.BBB,
+                AvailabilityStatus.DENY_PROXIMITY_MEETING,
+            ].includes($availabilityStatusStore)
+        )
+            return $LL.actionbar.listStatusTitle.inMeeting();
+
+        if ([AvailabilityStatus.SILENT].includes($availabilityStatusStore))
+            return $LL.actionbar.listStatusTitle.inSilentZone();
+        return $LL.actionbar.listStatusTitle.enable();
+    };
+
     let listProps: AvailabilityStatusListPropsInterface = {
         currentStatus: $availabilityStatusStore,
-        listStatusTitle: $LL.actionbar.listStatusTitle(),
+        listStatusTitle: $LL.actionbar.listStatusTitle.enable(),
         statusInformations: getStatusInformation(statusToShow),
     };
 
-    const buttonProps: AvailabilityStatusPropsInterface = {
+    let buttonProps: AvailabilityStatusPropsInterface = {
         currentPlayerName: localStorage.getItem("playerName") || "",
-        listStatusTitle: $LL.actionbar.listStatusTitle(),
+        listStatusTitle: statusButtonTooltipText(),
         menuVisibility: $menuVisiblilityStore,
-        statusColorHex: getColorHexOfStatus($availabilityStatusStore || AvailabilityStatus.ONLINE),
+        statusColorHex: getColorHexOfStatus($availabilityStatusStore),
     };
 
     const toggleStatusPicker = (): void => {
@@ -44,8 +60,13 @@
     };
 
     const unsubcribeToAvailabilityStatusStore = availabilityStatusStore.subscribe((newStatus: AvailabilityStatus) => {
+        console.log(AvailabilityStatus[newStatus], statusButtonTooltipText());
         statusChanger.changeStatusTo(newStatus);
-        buttonProps.statusColorHex = getColorHexOfStatus($availabilityStatusStore);
+        buttonProps = {
+            ...buttonProps,
+            statusColorHex: getColorHexOfStatus($availabilityStatusStore),
+            listStatusTitle: statusButtonTooltipText(),
+        };
         listProps = {
             ...listProps,
             currentStatus: $availabilityStatusStore,

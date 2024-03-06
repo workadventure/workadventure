@@ -30,7 +30,6 @@ export class BusyStatusStrategy extends BasicStatusStrategy {
     }
 
     private NotificationPermissionIs = (permission: "denied" | "default" | "granted") => {
-        console.log("Notification Permission : ", Notification.permission);
         if (!("Notification" in window)) return false;
         return Notification.permission === permission;
     };

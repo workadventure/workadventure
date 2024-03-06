@@ -20,7 +20,11 @@ const actionbar: BaseTranslation = {
         speaker: "Speaker",
     },
     app: "Ouvrir / Fermer les applications",
-    listStatusTitle: "Changer de statut",
+    listStatusTitle: {
+        enable: "Changer de statut",
+        inMeeting: "Bonne réunion 🤓",
+        inSilentZone: "Profitez de la silent zone 😁",
+    },
     status: {
         ONLINE: "En Ligne",
         BACK_IN_A_MOMENT: "Revient dans un moment",
