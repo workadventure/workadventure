@@ -48,20 +48,11 @@ export class MediaManager {
                 localStreamStore.subscribe((result) => {
                     if (result.type === "error") {
                         if (result.error.name !== MediaStreamConstraintsError.NAME && get(myCameraStore)) {
-                            // layoutManagerActionStore.addAction({
-                            //     uuid: "cameraAccessDenied",
-                            //     type: "warning",
-                            //     message: get(LL).warning.accessDenied.camera(),
-                            //     callback: () => {
-                            //         helpCameraSettingsVisibleStore.set(true);
-                            //     },
-                            //     userInputManager: this.userInputManager,
-                            // });
-
                             popupStore.addPopup(PopUpCameraAccesDenied, {
                                 message: get(LL).warning.accessDenied.camera(),
                                 click: () => {
                                     helpCameraSettingsVisibleStore.set(true);
+                                    popupStore.removePopup("cameraAccessDenied");
                                 },
                                 userInputManager: this.userInputManager,
                             },
@@ -69,7 +60,6 @@ export class MediaManager {
                         }
                         //remove it after 10 sec
                         setTimeout(() => {
-                            // layoutManagerActionStore.removeAction("cameraAccessDenied");
                             popupStore.removePopup("cameraAccessDenied");
                         }, 10000);
                         return;
@@ -81,27 +71,17 @@ export class MediaManager {
                 screenSharingLocalStreamStore.subscribe((result) => {
                     if (result.type === "error") {
                         console.error(result.error);
-                        // layoutManagerActionStore.addAction({
-                        //     uuid: "screenSharingAccessDenied",
-                        //     type: "warning",
-                        //     message: get(LL).warning.accessDenied.screenSharing(),
-                        //     callback: () => {
-                        //         helpCameraSettingsVisibleStore.set(true);
-                        //     },
-                        //     userInputManager: this.userInputManager,
-                        // });
-
                         popupStore.addPopup(PopUpSharingScreenAcessDenied, {
                             message: get(LL).warning.accessDenied.screenSharing(),
                             click: () => {
                                 helpCameraSettingsVisibleStore.set(true);
+                                popupStore.removePopup("screenSharingAccessDenied");
                             },
                             userInputManager: this.userInputManager,
                         },
                         "screenSharingAccessDenied");
                         //remove it after 10 sec
                         setTimeout(() => {
-                            // layoutManagerActionStore.removeAction("screenSharingAccessDenied");
                             popupStore.removePopup("screenSharingAccessDenied");
                         }, 10000);
                         return;

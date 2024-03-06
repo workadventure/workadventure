@@ -30,7 +30,8 @@ import { AreasPropertiesListener } from "./MapEditor/AreasPropertiesListener";
 import { gameManager } from "./GameManager";
 import PopUpJitsi from "../../Components/PopUp/PopUpJitsi.svelte"
 import PopUpTab from "../../Components/PopUp/PopUpTab.svelte";
-import PopupCowebsite from '../../Components/PopUp/PopupCowebsite.svelte'; // Import the missing PopupCowebsite class
+import PopUpCowebsite from "../../Components/PopUp/PopupCowebsite.svelte"
+
 
 export interface OpenCoWebsite {
     actionId: string;
@@ -55,7 +56,6 @@ export class GameMapPropertiesListener {
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
                 popupStore.removePopup("openTab");
-                // layoutManagerActionStore.removeAction("openTab");
             }
             if (typeof newValue == "string" && newValue.length) {
                 const openWebsiteTriggerValue = allProps.get(GameMapProperties.OPEN_WEBSITE_TRIGGER);
@@ -69,20 +69,12 @@ export class GameMapPropertiesListener {
                     popupStore.addPopup(PopUpTab, {
                         message: message,
                         click: () => {
+                            popupStore.removePopup("openTab");
                             scriptUtils.openTab(newValue)
                         },
                         userInputManager: this.scene.userInputManager,
                     },
                     "openTab");
-
-                    // layoutManagerActionStore.addAction({
-                    //     uuid: "openTab",
-                    //     type: "message",
-                    //     message: message,
-                    //     callback: () => scriptUtils.openTab(newValue),
-                    //     userInputManager: this.scene.userInputManager,
-                    // });
-
                 } else {
                     scriptUtils.openTab(newValue);
                 }
@@ -92,7 +84,6 @@ export class GameMapPropertiesListener {
         // Jitsi room
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.JITSI_ROOM, (newValue, oldValue, allProps) => {
             if (newValue === undefined || (newValue !== oldValue && oldValue != undefined)) {
-                // layoutManagerActionStore.removeAction("jitsi");
                 popupStore.removePopup("jitsi");
                 coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
                     if (coWebsite instanceof JitsiCoWebsite) {
@@ -191,7 +182,6 @@ export class GameMapPropertiesListener {
 
                 analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
-                // layoutManagerActionStore.removeAction("jitsi");
                 popupStore.removePopup("jitsi");
             };
 
@@ -202,15 +192,6 @@ export class GameMapPropertiesListener {
                 if (message === undefined) {
                   message = get(LL).trigger.jitsiRoom();
                 }
-                /*layoutManagerActionStore.addAction({
-                  uuid: "jitsi",
-                  type: "message",
-                  message: message,
-                  callback: () => {
-                    openJitsiRoomFunction().catch((e) => console.error(e));
-                  },
-                  userInputManager: this.scene.userInputManager,
-                });*/
                 popupStore.addPopup(PopUpJitsi, {
                     message: message,
                     click: () => {
@@ -227,7 +208,7 @@ export class GameMapPropertiesListener {
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
             if (newValue === undefined || newValue !== oldValue) {
-                layoutManagerActionStore.removeAction("bbbMeeting");
+                layoutManagerActionStore.removeAction("bbbMeeting"); // A voir pour enlever le popup et le faire
                 inBbbStore.set(false);
                 bbbFactory.setStopped(true);
                 bbbFactory.stop();
@@ -264,7 +245,7 @@ export class GameMapPropertiesListener {
                     .catch((e) => console.error(e));
             } else {
                 setTimeout(() => {
-                    layoutManagerActionStore.removeAction("roomAccessDenied");
+                    layoutManagerActionStore.removeAction("roomAccessDenied"); // A voir pour enlever le popup ou non
                 }, 2000);
             }
         });
@@ -276,7 +257,7 @@ export class GameMapPropertiesListener {
                     .catch((e) => console.error(e));
             } else {
                 setTimeout(() => {
-                    layoutManagerActionStore.removeAction("roomAccessDenied");
+                    layoutManagerActionStore.removeAction("roomAccessDenied"); // A voir pour enlever le popup ou non
                 }, 2000);
             }
         });
@@ -477,7 +458,7 @@ export class GameMapPropertiesListener {
             });
 
             // layoutManagerActionStore.removeAction(actionId);
-            popupStore.removePopup(actionId);
+            popupStore.removePopup(actionId); //A voir si cela est utile
         };
 
         const openCoWebsiteFunction = () => {
@@ -517,12 +498,14 @@ export class GameMapPropertiesListener {
             //     userInputManager: this.scene.userInputManager,
             // });
 
-            popupStore.addPopup(PopupCowebsite, {
+            popupStore.addPopup(PopUpCowebsite, {
                 message: websiteTriggerMessageProperty,
-                callback: () => openCoWebsiteFunction(),
+                click: () => {
+                    openCoWebsiteFunction();
+                },
                 userInputManager: this.scene.userInputManager,
             },
-            "actionId");
+            actionId);
 
 
 
@@ -693,7 +676,8 @@ export class GameMapPropertiesListener {
                 : undefined;
 
         if (action) {
-            layoutManagerActionStore.removeAction(actionTriggerUuid);
+            // layoutManagerActionStore.removeAction(actionTriggerUuid);
+            popupStore.removePopup(actionTriggerUuid); //A voir si cela est utile
         }
 
         this.coWebsitesActionTriggerByPlace.delete(this.getIdFromPlace(place));

@@ -36,16 +36,16 @@
 
 <div class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[300px] rounded-lg overflow-hidden animation">
     <div class="flex pointer-events-auto">
-        <div class="grow mb-2">
-            <p class="text-center text-sm font-semibold mb-0 mb-4">New Message</p>
+        <div class="grow">
+            <p class="text-center text-sm font-semibold">New Message</p>
         </div>
     </div>
-    <div class="max-h-[110px] px-4 overflow-y-auto overflow-x-hidden pointer-events-auto">
-        <div class="break-words">
+    <div class="max-h-[140px] px-4 overflow-y-auto overflow-x-hidden pointer-events-auto">
+        <div class="break-words mb-12">
             <TextGlobalMessage />
         </div>
     </div>
-    <div class="flex p-4 space-x-4 bg-contrast mt-4 pointer-events-auto">
+    <div class="flex p-4 space-x-4 mt-6 bg-contrast pointer-events-auto">
         <button class="btn btn-light btn-ghost w-1/2 justify-center">Send Message</button> <!-- Mettre l'action du send message -->
         <button class="btn btn-secondary w-1/2 justify-center" on:click={closeBanner}>Close</button>
     </div>

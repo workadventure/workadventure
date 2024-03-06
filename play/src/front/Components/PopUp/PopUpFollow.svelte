@@ -6,7 +6,6 @@
   const dispatch = createEventDispatcher()
 
   function closeBanner() {
-    console.log("je suis dans la fonction close follow lolololol")
     dispatch('close')
   }
 </script>

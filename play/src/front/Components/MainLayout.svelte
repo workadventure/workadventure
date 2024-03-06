@@ -44,8 +44,6 @@
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
     import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
-    import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
-    import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
 
 
 
@@ -140,9 +138,9 @@
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
         {/if}
 
-        {#if $hasEmbedScreen}
+        <!-- {#if $hasEmbedScreen}
             <EmbedScreensContainer />
-        {/if}
+        {/if} -->
 
         {#if $uiWebsitesStore}
             <UiWebsiteContainer />
@@ -179,6 +177,10 @@
         {#each $popupStore.slice().reverse() as popup (popup.uuid)}
             <div class="popupwrapper">
                 <svelte:component this={popup.component} {...popup.props} on:close={() => popupStore.removePopup(popup.uuid)} />
+                <!-- {#if popup.lenght > 5}
+                    {popupStore.removePopup(popup.uuid)}
+                {/if} -->
+                <!-- A essayer limitage d'apparition 5 popups-->
             </div>
         {/each}
     </div>
@@ -198,6 +200,8 @@
 
 <style lang="scss">
     @import "../style/breakpoints.scss";
+
+    //Essayer de calculer la hauteur par rapport au precedent
 
     .popups {
         position: relative;

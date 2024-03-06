@@ -174,6 +174,11 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import { popupStore } from "../../Stores/PopupStore";
+import PopUpRoomAccessDenied from "../../Components/PopUp/PopUpRoomAccessDenied.svelte";
+import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
+import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
+import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerActionMessage.svelte";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -2274,16 +2279,26 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("triggerActionMessage", (message) =>
-            layoutManagerActionStore.addAction({
-                uuid: message.uuid,
-                type: "message",
+            // layoutManagerActionStore.addAction({
+            //     uuid: message.uuid,
+            //     type: "message",
+            //     message: message.message,
+            //     callback: () => {
+            //         layoutManagerActionStore.removeAction(message.uuid);
+            //         iframeListener.sendActionMessageTriggered(message.uuid);
+            //     },
+            //     userInputManager: this.userInputManager,
+            // })
+
+            popupStore.addPopup(PopUpTriggerActionMessage, {
                 message: message.message,
-                callback: () => {
-                    layoutManagerActionStore.removeAction(message.uuid);
-                    iframeListener.sendActionMessageTriggered(message.uuid);
+                click: () => {
+                    popupStore.removePopup(message.uuid);
+                    iframeListener.sendActionMessageTriggered(message.uuid)
                 },
                 userInputManager: this.userInputManager,
-            })
+            },
+            message.uuid)
         );
 
         iframeListener.registerAnswerer("setVariable", (event, source) => {
@@ -2437,17 +2452,26 @@ ${escapedMessage}
             targetRoom = await Room.createRoom(roomUrl);
         } catch (e /*: unknown*/) {
             console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);
+            // layoutManagerActionStore.addAction({
+                //     uuid: "roomAccessDenied",
+                //     type: "warning",
+                //     message: get(LL).warning.accessDenied.room(),
+                //     callback: () => {
+            //         layoutManagerActionStore.removeAction("roomAccessDenied");
+            //     },
+            //     userInputManager: this.userInputManager,
+            // });
+
 
             //show information room access denied
-            layoutManagerActionStore.addAction({
-                uuid: "roomAccessDenied",
-                type: "warning",
+            popupStore.addPopup(PopUpRoomAccessDenied, {
                 message: get(LL).warning.accessDenied.room(),
-                callback: () => {
-                    layoutManagerActionStore.removeAction("roomAccessDenied");
+                click: () => {
+                    popupStore.removePopup("roomAccessDenied");
                 },
                 userInputManager: this.userInputManager,
-            });
+            },
+            "roomAccessDenied");
 
             this.mapTransitioning = false;
             return;
@@ -2610,16 +2634,31 @@ ${escapedMessage}
 
     private tryOpenMapEditorWithToolEditorParameter(): void {
         const toolEditorParam = urlManager.getHashParameter("mapEditor");
-        if (toolEditorParam) {
+        console.log("toolEditorParam ===", toolEditorParam);
+        if (toolEditorParam === undefined) {
             if (!get(mapEditorActivated)) {
-                layoutManagerActionStore.addAction({
-                    uuid: "mapEditorNotEnabled",
-                    type: "warning",
+
+                popupStore.addPopup(PopUpMapEditorNotEnabled, {
                     message: get(LL).warning.mapEditorNotEnabled(),
-                    callback: () => layoutManagerActionStore.removeAction("mapEditorNotEnabled"),
+                    click: () => {
+                        popupStore.removePopup("mapEditorNotEnabled");
+                    },
                     userInputManager: this.userInputManager,
-                });
-                setTimeout(() => layoutManagerActionStore.removeAction("mapEditorNotEnabled"), 6_000);
+                },
+                "mapEditorNotEnabled");
+
+                // setTimeout(() => popupStore.removePopup("mapEditorNotEnabled"), 6_000);
+
+                // layoutManagerActionStore.addAction({
+                //     uuid: "mapEditorNotEnabled",
+                //     type: "warning",
+                //     message: get(LL).warning.mapEditorNotEnabled(),
+                //     callback: () => layoutManagerActionStore.removeAction("mapEditorNotEnabled"),
+                //     userInputManager: this.userInputManager,
+                // });
+
+                //  setTimeout(() => layoutManagerActionStore.removeAction("mapEditorNotEnabled"), 6_000);
+
             } else {
                 switch (toolEditorParam) {
                     case "wamSettingsEditorTool": {
@@ -2658,15 +2697,25 @@ ${escapedMessage}
                         break;
                     }
                     default: {
-                        layoutManagerActionStore.addAction({
-                            uuid: "mapEditorShortCut",
-                            type: "warning",
+
+                        popupStore.addPopup(PopUpMapEditorShortcut, {
                             message: get(LL).warning.mapEditorShortCut(),
-                            callback: () => layoutManagerActionStore.removeAction("mapEditorShortCut"),
+                            click: () => {
+                                popupStore.removePopup("mapEditorShortCut");
+                            },
                             userInputManager: this.userInputManager,
-                        });
-                        setTimeout(() => layoutManagerActionStore.removeAction("mapEditorShortCut"), 6_000);
+                        },
+                        "mapEditorShortCut");
+
+                        setTimeout(() => popupStore.removePopup("mapEditorShortCut"), 6_000);
                         break;
+                        // layoutManagerActionStore.addAction({
+                        //     uuid: "mapEditorShortCut",
+                        //     type: "warning",
+                        //     message: get(LL).warning.mapEditorShortCut(),
+                        //     callback: () => layoutManagerActionStore.removeAction("mapEditorShortCut"),
+                        //     userInputManager: this.userInputManager,
+                        // });
                     }
                 }
             }

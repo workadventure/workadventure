@@ -544,6 +544,7 @@
             </div>
         </div>
     </div>
+
     <div class="justify-self-center pointer-events-auto">
         <div class="flex relative space-x-2 xl:space-x-4">
             {#if !$silentStore}
@@ -935,8 +936,7 @@
                                     on:click={() => {
                                         buttonActionBarTrigger(button.id);
                                     }}
-                                    on:mouseenter={() => { !navigating ? helpActive = !!button.id : '' }}
-                                    on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+
                                     class="h-12 min-w-[48px] p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
                             >
                                 {#if button.toolTip}
