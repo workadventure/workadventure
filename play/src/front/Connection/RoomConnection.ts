@@ -74,6 +74,9 @@ import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { ENABLE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
 import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
+import type { AreaData, AtLeast, EntityCoordinates, WAMEntityData } from "@workadventure/map-editor";
+import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene";
@@ -1306,7 +1309,12 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyEntity(commandId: string, entityId: string, config: Partial<WAMEntityData>): void {
+    public emitMapEditorModifyEntity(
+        commandId: string,
+        entityId: string,
+        config: Partial<WAMEntityData>,
+        entityCenterCoordinates: EntityCoordinates
+    ): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1320,7 +1328,8 @@ export class RoomConnection implements RoomConnection {
                                 id: entityId,
                                 properties: config.properties ?? [],
                                 modifyProperties: config.properties !== undefined,
-                                areaId: config.areaId,
+                                xCenter: entityCenterCoordinates.x,
+                                yCenter: entityCenterCoordinates.y,
                             },
                         },
                     },
@@ -1329,7 +1338,12 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorCreateEntity(commandId: string, entityId: string, config: WAMEntityData): void {
+    public emitMapEditorCreateEntity(
+        commandId: string,
+        entityId: string,
+        config: WAMEntityData,
+        entityCenterCoordinates: EntityCoordinates
+    ): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1345,7 +1359,8 @@ export class RoomConnection implements RoomConnection {
                                 collectionName: config.prefabRef.collectionName,
                                 prefabId: config.prefabRef.id,
                                 properties: config.properties ?? [],
-                                areaId: config.areaId,
+                                xCenter: entityCenterCoordinates.x,
+                                yCenter: entityCenterCoordinates.y,
                             },
                         },
                     },

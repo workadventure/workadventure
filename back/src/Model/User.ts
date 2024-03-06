@@ -1,4 +1,5 @@
 import { ServerDuplexStream } from "@grpc/grpc-js";
+import * as Sentry from "@sentry/node";
 import {
     ApplicationMessage,
     AvailabilityStatus,
@@ -11,16 +12,15 @@ import {
     SetPlayerVariableMessage_Scope,
     SubMessage,
 } from "@workadventure/messages";
-import * as Sentry from "@sentry/node";
-import { Zone } from "../Model/Zone";
 import { Movable } from "../Model/Movable";
 import { PositionNotifier } from "../Model/PositionNotifier";
+import { Zone } from "../Model/Zone";
 import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
 import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository";
-import { PointInterface } from "./Websocket/PointInterface";
-import { Group } from "./Group";
 import { BrothersFinder } from "./BrothersFinder";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
+import { Group } from "./Group";
+import { PointInterface } from "./Websocket/PointInterface";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
@@ -42,6 +42,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
         private availabilityStatus: AvailabilityStatus,
         public readonly socket: UserSocket,
         public readonly tags: string[],
+        public readonly canEdit: boolean,
         public readonly visitCardUrl: string | null,
         public readonly name: string,
         public readonly characterTextures: CharacterTextureMessage[],
@@ -69,6 +70,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
         availabilityStatus: AvailabilityStatus,
         socket: UserSocket,
         tags: string[],
+        canEdit: boolean,
         visitCardUrl: string | null,
         name: string,
         characterTextures: CharacterTextureMessage[],
@@ -96,6 +98,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
             availabilityStatus,
             socket,
             tags,
+            canEdit,
             visitCardUrl,
             name,
             characterTextures,

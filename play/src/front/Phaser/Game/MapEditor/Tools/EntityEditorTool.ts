@@ -133,7 +133,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         createEntityMessage.id,
                         entityData,
                         commandId,
-                        this.entitiesManager
+                        this.entitiesManager,
+                        { x: data.xCenter, y: data.yCenter }
                     ),
                     false,
                     false
@@ -231,14 +232,6 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 .catch((e) => console.error(e));
         });
         this.entitiesManager.on(EntitiesManagerEvent.UpdateEntity, (entityData: EntityData) => {
-            // Get Area from position of the entity object
-            const areas = this.getAreasFromPosition(entityData.x, entityData.y);
-            let areaId: string | undefined;
-            if (areas && areas.length > 0) {
-                const area = areas[0];
-                areaId = area?.id;
-            }
-
             // Create commande to update entity data
             this.mapEditorModeManager
                 .executeCommand(
@@ -247,7 +240,6 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         entityData.id,
                         {
                             ...entityData,
-                            areaId,
                         },
                         undefined,
                         undefined,
@@ -266,7 +258,6 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                 y: data.position.y,
                 prefabRef: data.prefabRef,
                 properties: data.properties ?? [],
-                areaId: data.areaId,
             };
             this.mapEditorModeManager
                 .executeCommand(
@@ -275,7 +266,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         undefined,
                         entityData,
                         undefined,
-                        this.entitiesManager
+                        this.entitiesManager,
+                        data.centerCoordinates
                     )
                 )
                 .catch((e) => console.error(e));
@@ -460,26 +452,11 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             y = Math.floor(pointer.worldY / 32) * 32 + offsets.y;
         }
 
-        // Get the area and associate the object into the area
-        let area: AreaData | undefined;
-        if (gameObjects.length > 0 && gameObjects[0] instanceof AreaPreview) {
-            area = gameObjects[0].getAreaData();
-        }
-
-        // If the area was not found by Phaser Pointer, we will try to find it by the position
-        if (!area) {
-            const areas = this.getAreasFromPosition(x, y);
-            if (areas.length > 0) {
-                area = areas[0];
-            }
-        }
-
         const entityData: WAMEntityData = {
             x: x - this.entityPrefabPreview.displayWidth * 0.5,
             y: y - this.entityPrefabPreview.displayHeight * 0.5,
             prefabRef: this.entityPrefab,
             properties: get(mapEditorCopiedEntityDataPropertiesStore) ?? [],
-            areaId: area?.id,
         };
 
         this.mapEditorModeManager
@@ -489,7 +466,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                     undefined,
                     entityData,
                     undefined,
-                    this.entitiesManager
+                    this.entitiesManager,
+                    this.entityPrefabPreview.getCenter()
                 )
             )
             .catch((e) => console.error(e));
