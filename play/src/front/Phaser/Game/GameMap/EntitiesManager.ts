@@ -1,5 +1,6 @@
 import {
     AreaDataProperties,
+    EntityCoordinates,
     EntityData,
     EntityDataProperties,
     EntityPrefabRef,
@@ -31,7 +32,7 @@ export const CopyEntityEventData = z.object({
     }),
     prefabRef: EntityPrefabRef,
     properties: EntityDataProperties.optional(),
-    areaId: z.string().optional(),
+    centerCoordinates: EntityCoordinates,
 });
 
 export const CopyAreaEventData = z.object({
@@ -391,9 +392,9 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         mapEditorSelectedEntityStore.set(undefined);
         const eventData: CopyEntityEventData = {
             position: positionToPlaceCopyAt,
-            //prefab: entity.getEntityData().prefab,
             prefabRef: entity.getEntityData().prefabRef,
             properties: entity.getEntityData().properties,
+            centerCoordinates: entity.getCenter(),
         };
         this.emit(EntitiesManagerEvent.CopyEntity, eventData);
     }

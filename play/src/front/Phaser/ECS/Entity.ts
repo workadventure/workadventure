@@ -7,9 +7,8 @@ import {
     EntityPrefab,
     GameMapProperties,
     WAMEntityData,
-    EntityPermissions,
 } from "@workadventure/map-editor";
-import * as _ from "lodash";
+import merge from "lodash/merge";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { Unsubscriber, get } from "svelte/store";
 import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
@@ -54,7 +53,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             ...data,
             name: data.name ?? "",
             properties: data.properties ?? [],
-            areaId: data.areaId ?? "", // Ensure areaId is always assigned a string value
         };
         this.prefab = prefab;
 
@@ -82,7 +80,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
      * This method is being used after command execution from outside and it will not trigger any emits
      */
     public updateEntity(dataToModify: Partial<WAMEntityData>): void {
-        _.merge(this.entityData, dataToModify);
+        merge(this.entityData, dataToModify);
         // TODO: Find a way to update it without need of using conditions
         if (dataToModify.properties !== undefined) {
             this.entityData.properties = dataToModify.properties;
@@ -352,7 +350,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     public updateProperty(changes: AtLeast<EntityDataProperty, "id">): void {
         const property = this.entityData.properties.find((property) => property.id === changes.id);
         if (property) {
-            _.merge(property, changes);
+            merge(property, changes);
         }
         this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
     }

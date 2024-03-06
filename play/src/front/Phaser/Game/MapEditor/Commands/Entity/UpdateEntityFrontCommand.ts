@@ -57,6 +57,11 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
         );
     }
     public emitEvent(roomConnection: RoomConnection): void {
-        roomConnection.emitMapEditorModifyEntity(this.commandId, this.entityId, this.newConfig);
+        const entity = this.entitiesManager.getEntities().get(this.entityId);
+        if (!entity) {
+            console.error("Entity not found");
+            return;
+        }
+        roomConnection.emitMapEditorModifyEntity(this.commandId, this.entityId, this.newConfig, entity.getCenter());
     }
 }

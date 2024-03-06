@@ -183,6 +183,8 @@ message EditMapCommandsArrayMessage {
 message EditMapCommandWithKeyMessage {
   string mapKey = 1;
   EditMapCommandMessage editMapCommandMessage = 2;
+  repeated string connectedUserTags = 3;
+  bool userCanEdit = 4;
 }
 
 message ModifyAreaMessage {
@@ -218,7 +220,8 @@ message CreateEntityMessage {
   string prefabId = 5;
   repeated google.protobuf.Value properties = 6;
   optional string name = 7;
-  optional string areaId = 8;
+  uint32 x_center = 8;
+  uint32 y_center = 9;
 }
 
 message DeleteEntityMessage {
@@ -267,7 +270,8 @@ message ModifyEntityMessage {
   repeated google.protobuf.Value properties = 4;
   optional bool modifyProperties = 5;
   optional string name = 6;
-  optional string areaId = 7;
+  uint32 x_center = 7;
+  uint32 y_center = 8;
 }
 
 message ClientToServerMessage {

@@ -1,4 +1,5 @@
 import { GameMapAreas } from "../GameMap/GameMapAreas";
+import { EntityCoordinates } from "../types";
 
 export class EntityPermissions {
     constructor(
@@ -7,28 +8,28 @@ export class EntityPermissions {
         private userCanEdit?: boolean
     ) {}
 
-    public canEdit(entityCenterCoordinates: { x: number; y: number }): boolean {
+    public canEdit(entityCenterCoordinates: EntityCoordinates): boolean {
         if (this.userCanEdit) {
             return true;
         }
         return this.isEntityInsideAreaWithUserWriteAccess(entityCenterCoordinates);
     }
 
-    public canRead(entityCenterCoordinates: { x: number; y: number }): boolean {
+    public canRead(entityCenterCoordinates: EntityCoordinates): boolean {
         if (this.userCanEdit) {
             return true;
         }
         return this.isEntityInsideAreaWithUserReadAccess(entityCenterCoordinates);
     }
 
-    private isEntityInsideAreaWithUserWriteAccess(entityCenterCoordinates: { x: number; y: number }) {
+    private isEntityInsideAreaWithUserWriteAccess(entityCenterCoordinates: EntityCoordinates) {
         return this.gameMapAreas.isUserHasWriteAccessOnAreaForEntityCoordinates(
             entityCenterCoordinates,
             this.userConnectedTags
         );
     }
 
-    private isEntityInsideAreaWithUserReadAccess(entityCenterCoordinates: { x: number; y: number }) {
+    private isEntityInsideAreaWithUserReadAccess(entityCenterCoordinates: EntityCoordinates) {
         return this.gameMapAreas.isUserHasReadAccessOnAreaForEntityCoordinates(
             entityCenterCoordinates,
             this.userConnectedTags
