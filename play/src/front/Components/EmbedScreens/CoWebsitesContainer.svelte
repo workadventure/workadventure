@@ -34,8 +34,8 @@
         <div class="grow flex">
 
             <!-- {#each [...$coWebsites.values()] as coWebsite, index (coWebsite.getId())} --> <!--$CoWebsite.URL} -->
-                <CoWebsiteTab title="Hello world !" link="https://google.fr" isLoading={true} active="true" />
-                <CoWebsiteTab title="Github" link="https://google.fr"  isLoading={true} active="true" />
+                <CoWebsiteTab title="Hello world !" url="https://google.fr" isLoading={true} active={true} />
+                <CoWebsiteTab title="Github" url="https://google.fr"  isLoading={true} active={true} />
             <!-- {/each} -->
 
         </div>

@@ -92,7 +92,6 @@
         liveStreamingEnabledStore,
         requestedMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
-    import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {ADMIN_URL, ENABLE_OPENID} from "../../Enum/EnvironmentVariable";
     import Woka from "../Woka/WokaFromUserId.svelte";
@@ -183,7 +182,7 @@
             requestedMicrophoneState.disableMicrophone();
         } else {
             requestedMicrophoneState.enableMicrophone();
-            // layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone");Voir avec Hugo
+            // layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"); Voir avec Hugo
         }
     }
 

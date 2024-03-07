@@ -6,7 +6,6 @@ import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils
 import { z } from "zod";
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
-import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
@@ -653,7 +652,7 @@ export class GameMapPropertiesListener {
             return;
         }
 
-        const actionStore = get(layoutManagerActionStore);
+        const actionStore = get(popupStore); // layoutManagerActionStore
         const actionTriggerUuid = this.coWebsitesActionTriggerByPlace.get(this.getIdFromPlace(place));
 
         if (!actionTriggerUuid) {

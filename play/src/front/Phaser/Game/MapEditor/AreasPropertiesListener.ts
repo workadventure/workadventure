@@ -16,7 +16,7 @@ import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
-import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
+// import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
 import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { localUserStore } from "../../../Connection/LocalUserStore";
