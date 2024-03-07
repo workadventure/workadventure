@@ -2612,7 +2612,6 @@ ${escapedMessage}
 
     private tryOpenMapEditorWithToolEditorParameter(): void {
         const toolEditorParam = urlManager.getHashParameter("mapEditor");
-        console.log("toolEditorParam ===", toolEditorParam);
         if (toolEditorParam) {
             if (!get(mapEditorActivated)) {
 
