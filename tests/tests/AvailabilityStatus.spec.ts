@@ -23,7 +23,6 @@ test.describe('Availability Status', () => {
             if((browserName === "firefox" ||browserName === "webkit" ) && page.getByText(`Do you want to allow notification`).isVisible() ){
                 await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
             }
-            await page.waitForTimeout(500);
             await Menu.openStatusList(page);
             await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
         
@@ -106,6 +105,7 @@ test.describe('Availability Status', () => {
         test('should ask to change notification permission when you pass in Busy status and your browser notification permission is denied',async({ page, browser,context,browserName})=>{
             if(browserName === "firefox" || browserName === "webkit"){
                 //skip for firefox because of notification permission management
+                //eslint-disable-next-line playwright/no-skipped-test
                 test.skip();
                 return;
             }
@@ -274,11 +274,7 @@ test.describe('Availability Status', () => {
             await login(page, 'Alice');
             
 
-            await Menu.clickOnStatus(page,statusName); 
-
-        
-            
-            await page.waitForTimeout(500);
+            await Menu.clickOnStatus(page,statusName);
 
             await Menu.openStatusList(page);
             

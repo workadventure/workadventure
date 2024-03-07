@@ -139,7 +139,14 @@ test.describe('Meeting actions test', () => {
     // Check if the user has been muted
     await expect(page.locator('.cameras-container .other-cameras .jitsi-video .voice-meter-cam-off')).toBeVisible({timeout: 20_000});
     // Click on the mute video button
-    await page.click('.cameras-container .other-cameras .jitsi-video .action-button#more-action');
+
+    try {
+      // Sometimes the menu is closed again (maybe because Jitsi triggered a redisplay of the component?)
+      // We need to reopen the menu
+      await page.click('.cameras-container .other-cameras .jitsi-video .action-button#more-action', {timeout: 2_000});
+    } catch {
+      // Let's ignore the error
+    }
     await page.click('.cameras-container .other-cameras .jitsi-video .action-button#mute-video-user');
 
 

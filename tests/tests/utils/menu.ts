@@ -48,7 +48,9 @@ class Menu {
     async clickOnStatus(page:Page,status: string){
         await this.openStatusList(page);
         await expect(page.getByText(status)).toBeVisible();
-        await page.getByText(status).click(); 
+        await page.getByText(status).click();
+        //eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(500);
     }
 
     async turnOnCamera(page:Page){
