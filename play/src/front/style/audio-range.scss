@@ -6,16 +6,8 @@ div.main-audio-manager {
   margin-bottom: 114px;
 
   section.audio-manager-file {
-    display: none;
-  }
-
-@media screen and (max-width: 480px) {
-    .main-audio-manager {
-        margin-bottom: 16px;
-        width: auto;
-
+      display: none;
     }
-}
 
   #audioplayer_volume_icon_playing.muted {
     #audioplayer_volume_icon_playing_low {
@@ -57,4 +49,14 @@ div.main-audio-manager {
     visibility: hidden;
     display: none;
   }
+}
+
+@media screen and (max-width: 480px) {
+    div.main-audio-manager {
+        width: auto;
+        z-index: 550;
+        text-align: center;
+        pointer-events: auto;
+        margin-bottom: 12px;
+    }
 }

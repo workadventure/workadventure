@@ -11,14 +11,14 @@
 </script>
 
 
-<div class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[300px] rounded-lg overflow-hidden animation" id="close-banner">
+<div class="bg-contrast/80 backdrop-blur text-white sm:w-[500px] sm:h-[300px] rounded-lg overflow-hidden animation w-[300px] h-[150px]">
   <div class="flex p-4 space-x-4 pointer-events-auto">
       <div class="">
       </div>
       <div class="grow">
       </div>
       <div class="">
-          <button class="btn btn-secondary btn-sm -mb-8 z-[700]" on:click={closeBanner}>
+          <button class="btn btn-secondary btn-sm -mb-8 z-[2000] responsive-close-button" on:click={closeBanner}>
               <XIcon height="h-4" width="w-4" />
           </button>
           <div class="">
@@ -43,4 +43,12 @@
       opacity: 1;
     }
   }
+
+
+  @media screen and (max-width: 480px) {
+    .responsive-close-button {
+        display: none;
+    }
+  }
+
   </style>
