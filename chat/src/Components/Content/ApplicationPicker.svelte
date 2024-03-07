@@ -28,7 +28,11 @@
             on:click|stopPropagation|preventDefault={() => addNewApp(app)}
         >
             <img src={app.icon} alt={`App ${app.name} iniated in the chat`} width="20px" />
-            <div class="caption">{app.name}</div>
+            <div
+                class="caption absolute bg-dark-blue text-sm px-2 py-1 rounded-xl border-lighter-purple border border-solid before:absolute before:border-lighter-purple after:absolute after:border-dark-blue"
+            >
+                {app.name}
+            </div>
         </button>
     {/each}
 </div>
@@ -61,14 +65,12 @@
             opacity: 0.8;
             position: relative;
             .caption {
-                @apply absolute bg-dark-blue text-sm px-2 py-1 rounded-xl border-lighter-purple border border-solid;
                 display: none;
                 top: 5px;
                 left: 54px;
                 z-index: 10;
                 width: max-content;
                 &::before {
-                    @apply absolute border-lighter-purple;
                     left: -18px;
                     top: 40%;
                     content: "";
@@ -81,7 +83,6 @@
                     transform: rotate(90deg);
                 }
                 &::after {
-                    @apply absolute border-dark-blue;
                     left: -16px;
                     top: 40%;
                     content: "";
@@ -93,17 +94,6 @@
                     border-top-style: solid;
                     transform: rotate(90deg);
                 }
-            }
-            &:hover {
-                opacity: 1;
-                .caption {
-                    display: block;
-                }
-            }
-        }
-        &:hover {
-            .actions {
-                visibility: visible;
             }
         }
     }
