@@ -24,7 +24,7 @@ function closeBanner() {
 </script>
 
 
-<div class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[300px] rounded-lg overflow-hidden animation responsive">
+<div class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[250px] rounded-lg overflow-hidden animation responsive">
   <div class="flex p-4 space-x-4 pointer-events-auto">
       <div class="">
           <button class="btn btn-light btn-ghost btn-sm {0 < $currentBannerIndex && $currentBannerIndex < 5 ? "" : "opacity-20"}" id="chevron-left" on:click={goToPreviousBanner}
@@ -45,7 +45,7 @@ function closeBanner() {
           </button>
       </div>
   </div>
-  <div class="flex pb-4 px-8 space-x-4 mt-8">
+  <div class="flex pb-4 px-8 space-x-4">
       <div>
           <svg width="59" height="59" viewBox="0 0 59 59" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M17.8677 44.1154V35.0185C17.8677 32.8352 16.0978 31.0653 13.9143 31.0653H4.81749C2.63426 31.0653 0.864258 32.8352 0.864258 35.0185V44.1154C0.864258 46.2987 2.63426 48.0686 4.81749 48.0686H13.9143C16.0978 48.0686 17.8677 46.2987 17.8677 44.1154Z" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>

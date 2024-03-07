@@ -47,10 +47,10 @@ function createPopupStore() {
                 return list;
             });
         },
-
         clearActions: (): void => {
-            set({});
-        }
+            set([]);
+    }
+
     };
 }
 

@@ -34,10 +34,10 @@
 </div> -->
 
 
-<div class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[300px] rounded-lg overflow-hidden animation responsive">
+<div class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[250px] rounded-lg overflow-hidden animation responsive">
     <div class="flex pointer-events-auto">
         <div class="grow">
-            <p class="text-center text-sm font-semibold">New Message</p>
+            <p class="text-center text-sm font-semibold mt-0">New Message</p>
         </div>
     </div>
     <div class="max-h-[140px] px-4 overflow-y-auto overflow-x-hidden pointer-events-auto">
@@ -45,7 +45,7 @@
             <TextGlobalMessage />
         </div>
     </div>
-    <div class="flex p-4 space-x-4 mt-6 bg-contrast pointer-events-auto responsive-bar">
+    <div class="flex p-2 space-x-4 mt-6 bg-contrast pointer-events-auto responsive-bar">
         <button class="btn btn-light btn-ghost w-1/2 justify-center">Send Message</button> <!-- Mettre l'action du send message -->
         <button class="btn btn-secondary w-1/2 justify-center" on:click={closeBanner}>Close</button>
     </div>

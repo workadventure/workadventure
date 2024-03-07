@@ -3,8 +3,8 @@
 </script>
 
 
-  <div class="bg-contrast/80 backdrop-blur text-white sm:w-[500px] sm:h-[300px] rounded-lg overflow-hidden animation w-[300px] h-[150px]" id="popup-audio-manager">
-    <div id="visible">
+  <div class="bg-contrast/80 backdrop-blur text-white sm:w-[500px] sm:h-[250px] rounded-lg overflow-hidden animation w-[300px] h-[150px]">
+    <div id="visible mb-8">
         <AudioManager />
     </div>
     <div class="flex p-4 space-x-4 pointer-events-auto mt-8">

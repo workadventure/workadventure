@@ -42,10 +42,7 @@
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
-    // import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
-    // import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
-    // import PopUpJitsi from "./PopUp/PopUpJitsi.svelte";
-    // import PopUpTab from "./PopUp/PopUpTab.svelte";
+
 
     let mainLayout: HTMLDivElement;
     export let message: string;
@@ -156,14 +153,13 @@
         <MuteDialogBox />
     {/if}
 
-    <!-- {#if $layoutManagerActionVisibilityStore}
-        <LayoutActionManager />
-    {/if} -->
 
 
     {#if $actionsMenuStore}
     <ActionsMenu />
     {/if}
+
+
 
     <ActionBar />
     <!-- svelte-ignore missing-declaration -->

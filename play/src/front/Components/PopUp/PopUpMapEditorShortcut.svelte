@@ -18,9 +18,9 @@
 
   </script>
 
-  <div class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[300px] rounded-lg overflow-hidden animation responsive">
+  <div class="bg-contrast/80 backdrop-blur text-white w-[500px] h-250px] rounded-lg overflow-hidden animation responsive">
     <div class="flex p-4 space-x-4 pointer-events-auto flex justify-center align-center">
-        <div class="p-4 mt-20 -mb-6 text-center leading-6">
+        <div class="p-4 mt-10 -mb-6 text-center leading-6">
           { message }
         </div>
     </div>

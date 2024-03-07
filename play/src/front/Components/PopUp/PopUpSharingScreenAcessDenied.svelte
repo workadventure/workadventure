@@ -15,11 +15,11 @@
     })
 </script>
 
-<div class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[300px] rounded-lg overflow-hidden animation responsive">
+<div class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[250px] rounded-lg overflow-hidden animation responsive">
     <div class="flex p-4 space-x-4 pointer-events-auto">
         <div class="grow">
         </div>
-        <div class="p-4 mt-16 -mb-6 text-center leading-6 responsive-message">
+        <div class="p-4 mt-12 -mb-6 text-center leading-6 responsive-message">
           { message }
         </div>
     </div>
