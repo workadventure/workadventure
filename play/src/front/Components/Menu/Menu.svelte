@@ -126,28 +126,28 @@
 
 <!-- TODO HUGO : REMOVE !important -->
 <div
-    class="close-window pointer-events-auto absolute flex bg-contrast/50 right-0 left-0 top-24 bottom-0 z-[900] h-3/4 container m-auto rounded-xl backdrop-blur overflow-hidden font-main"
+    class="w-full h-full top-0 flex-col @md/main-layout:flex-row @md/main-layout:rounded-xl @md/main-layout:h-3/4 @md/main-layout:w-11/12 @md/main-layout:top-24 @2xl/main-layout:container close-window pointer-events-auto absolute flex bg-contrast/50 right-0 left-0 bottom-0 z-[900] m-auto backdrop-blur overflow-hidden font-main"
     transition:fly={{ y: 1000, duration: 150 }}
     on:blur={closeMenu}
 >
     <div class="menu-nav-sidebar bg-transparent rounded-none min-w-[200px] relative">
         <!--<h2 class="p-8 text-white/10 h-5 tracking-[1rem] mb-8">{$LL.menu.title()}</h2>-->
-        <nav class="mt-24">
+        <nav class="mt-0 @md/main-layout:mt-24 mr-16 @md/main-layout:mr-0 flex flex-row @md/main-layout:flex-col items-center @md/main-layout:items-start overflow-hidden">
             {#each $subMenusStore as submenu, i (submenu.key + "_" + submenu.type)}
                 <div
-                    class="menu-item-container group flex py-4 px-4 relative transition-all hover:pl-6 hover:opacity-100 cursor-pointer before:z-1 before:transition-all before:content-[''] before:absolute before:h-full before:w-0 before:top-0 before:right-0 before:bg-contrast/80 {activeSubMenu ===
+                    class="menu-item-container group flex py-4 px-4 relative transition-all @md/main-layout:hover:pl-6 hover:opacity-100 cursor-pointer before:z-1 before:transition-all before:content-[''] before:absolute before:h-full before:w-0 before:top-0 before:right-0 before:bg-contrast/80 {activeSubMenu ===
                     submenu
                         ? 'active before:w-full opacity-100 hover:pl-4'
                         : 'opacity-60'}"
                     on:click|preventDefault={() => switchMenu(submenu)}
                     transition:fly={{ delay: i * 75, x: 200, duration: 150 }}
                 >
-                    <button type="button" class="flex menu-item m-0 relative z-10">
+                    <button type="button" class="flex menu-item m-0 relative z-10 bold">
                         {subMenuTranslations[i]}
                     </button>
                     <img
                         src={chevronImg}
-                        class="absolute transition-all right-4 group-hover:right-6 top-0 bottom-0 m-auto w-4 z-10 {activeSubMenu ===
+                        class="hidden @md/main-layout:block absolute transition-all right-4 group-hover:right-6 top-0 bottom-0 m-auto w-4 z-10 {activeSubMenu ===
                         submenu
                             ? 'opacity-100 group-hover:right-4'
                             : 'opacity-30'}"
@@ -155,14 +155,14 @@
                         draggable="false"
                     />
                     <div
-                        class="bg-secondary h-full transition-all left-0 top-0 absolute {activeSubMenu === submenu
-                            ? 'w-1'
+                        class="bg-secondary transition-all left-0 top-0 absolute {activeSubMenu === submenu
+                            ? 'w-full h-1 @md/main-layout:w-1 @md/main-layout:h-full'
                             : 'w-0'}"
                     />
                 </div>
             {/each}
         </nav>
-        <div class="absolute bottom-8 w-full px-4">
+        <div class="absolute bottom-8 w-full px-4 hidden @md/main-layout:block">
             <div>
                 <a href="#" target="_blank" class="btn btn-ghost btn-light btn-sm w-full">
                     <svg
@@ -188,7 +188,7 @@
                         <path d="M4 7l3.75 2.4" />
                         <path d="M20 7l-3.75 2.4" />
                     </svg>
-                    Find a bug ?
+                    Find a bug ? <!-- Trad & TODO Hugo : Icon and link -->
                 </a>
             </div>
             <div>
@@ -210,7 +210,7 @@
                         <path d="M12 16v.01" />
                         <path d="M12 13a2 2 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483" />
                     </svg>
-                    Help & tutorials
+                    Help & tutorials <!-- Trad & TODO Hugo : Icon and link -->
                 </a>
             </div>
         </div>
@@ -218,7 +218,7 @@
     <div class="menu-submenu-container w-full !rounded-r-xl overflow-y relative">
         <button
             type="button"
-            class="btn btn-lg btn-ghost btn-light absolute right-0 top-0 !p-[1.15rem] !rounded-none cursor-pointer m-0"
+            class="btn btn-lg btn-ghost btn-light fixed @md/main-layout:absolute right-0 top-0 !p-[0.5rem] @md/main-layout:!p-[1.15rem] !rounded-none cursor-pointer m-0"
             on:click={closeMenu}
         >
             <!-- TODO HUGO : I REMOVE class close-window -->
@@ -234,10 +234,10 @@
                 </g>
             </svg>
         </button>
-        <h2 class="py-5 px-8 text-white h5 border-b border-white/20 absolute top-0 left-0">
+        <h2 class="py-5 px-8 text-white h5 border-b border-white/20 absolute top-0 left-0 hidden @md/main-layout:block">
             {activeSubMenuTranslation}
         </h2>
-        <div class="bg-contrast/80 h-[calc(100%-5rem)] mt-20 overflow-y-auto text-white pb-8 rounded-tl">
+        <div class="bg-contrast/80 h-[calc(100%-5rem)] mt-0 @md/main-layout:mt-20 overflow-y-auto text-white pb-8 rounded-tl overflow-y-scroll @md/main-layout:overflow-none ">
             <svelte:component this={activeComponent} {...props} />
         </div>
     </div>

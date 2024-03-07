@@ -945,8 +945,8 @@
                     </div>
                 {/if}
                 {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
-                    <div id="action-admin" class="items-center relative transition-all hidden @lg/actions:block">
-                        <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2 transition-all" on:click={() => adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false } tabindex="0">
+                    <div id="action-admin" class="items-center relative transition-all hidden @lg/actions:block" on:click={() => adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false } tabindex="0">
+                        <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2 transition-all">
                             <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-4 pr-3">
                                 <AdminPanIcon />
                                 <div class="pr-2">
@@ -998,8 +998,8 @@
                         {/if}
                     </div>
                 {/if}
-                <div id="action-user" class="flex items-center relative transition-all hidden @md/actions:flex">
-                    <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2" on:click={() => profileMenuIsDropped = !profileMenuIsDropped} on:click|preventDefault={close} on:blur={() => profileMenuIsDropped = false } tabindex="0">
+                <div id="action-user" class="flex items-center relative transition-all hidden @md/actions:flex" on:click={() => profileMenuIsDropped = !profileMenuIsDropped} on:click|preventDefault={close} on:blur={() => profileMenuIsDropped = false }>
+                    <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2" tabindex="0">
                         <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-2 pr-3">
                             <Woka userId={-1} placeholderSrc="" customWidth="32px" customHeight="32px" />
                             <div class="grow flex items-center flex-row @xl/actions:flex-col justify-start text-left pr-2">
