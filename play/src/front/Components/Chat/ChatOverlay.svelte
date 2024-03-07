@@ -36,7 +36,7 @@
 
 <style lang="scss">
     .overlay-chat {
-        -webkit-mask-image: -webkit-gradient(
+        mask-image: -webkit-gradient(
             linear,
             left 50%,
             left bottom,
@@ -44,7 +44,7 @@
             to(rgba(0, 0, 0, 0))
         );
         &:hover {
-            -webkit-mask-image: none;
+          mask-image: none;
         }
     }
 </style>

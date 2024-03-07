@@ -44,6 +44,7 @@
             loading="eager"
             src={tooltipArrow}
             class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1"
+            alt="Sub menu arrow"
             style="visibility: hidden;"
         />
         <span class="relative">

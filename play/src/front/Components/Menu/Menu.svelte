@@ -164,7 +164,7 @@
         </nav>
         <div class="absolute bottom-8 w-full px-4 hidden @md/main-layout:block">
             <div>
-                <a href="#" target="_blank" class="btn btn-ghost btn-light btn-sm w-full">
+                <a href="https://workadventu.re/contact/" target="_blank" class="btn btn-ghost btn-light btn-sm w-full">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         class="icon icon-tabler icon-tabler-bug mr-4"
@@ -192,7 +192,7 @@
                 </a>
             </div>
             <div>
-                <a href="#" target="_blank" class="btn btn-ghost btn-light btn-sm w-full">
+                <a href="https://workadventu.re/faq/" target="_blank" class="btn btn-ghost btn-light btn-sm w-full">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         class="icon icon-tabler icon-tabler-help-square mr-4"

@@ -71,6 +71,7 @@
     {/if}
     {#if $videoTrackStore}
         <div class="rounded-sm overflow-hidden flex w-full flex-col h-full">
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <JitsiVideoElement
                 jitsiTrack={$videoTrackStore}
                 isLocal={$videoTrackStore?.isLocal()}

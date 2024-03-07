@@ -118,9 +118,6 @@
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
     let userName = gameManager.getPlayerName() || "";
 
-    let elementsWidth;
-    let colWidth = window.innerWidth/3;
-
     let cameraActive = false;
     let microphoneActive = false;
     let profileMenuIsDropped = false;
@@ -488,7 +485,7 @@
                 </div>
             </div>
         </div>
-        <div class="@xxs/actions:justify-center justify-end main-action justify-center pointer-events-auto min-w-[128px] @sm/actions:min-w-[192px] max-w-[424px]">
+        <div class="@xxs/actions:justify-center justify-end main-action justify-center pointer-events-auto min-w-32 @sm/actions:min-w-[192px] max-w-[424px]">
             <div class="flex justify-center relative space-x-0 @sm/actions:space-x-2 @xl/actions:space-x-4">
                 {#if !$silentStore}
                     <div in:fly={{delay: 750, y: -200, duration: 750 }}>
@@ -513,7 +510,7 @@
                                             class="flex justify-center m-auto absolute left-0 right-0 top-[70px] w-auto z-[500]"
                                             transition:fly={{y: 20, duration: 150 }}
                                     >
-                                        <img loading="eager" src="{tooltipArrow}" class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1" />
+                                        <img loading="eager" src="{tooltipArrow}" alt="Sub menu arrow" class="content-[''] absolute -top-1 left-0 right-0 m-auto w-2 h-1" />
                                         <div class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg px-3 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 sm:flex-row">
                                             <div class="flex animate flex-row flex items-center">
                                                 <div class="py-1 flex">
@@ -733,7 +730,7 @@
                                         </div>
                                     </div>
                                 {/if}
-                                {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 1}
+                                {#if $requestedMicrophoneState && $microphoneListStore && $microphoneListStore.length > 1 && microphoneActive}
                                     <div class="my-2">
                                         <div class="flex text-xxs uppercase text-white/50 px-3 py-2 relative">
                                             {$LL.actionbar.subtitle.microphone()}
@@ -880,7 +877,7 @@
                                     }}
                                         on:mouseenter={() => { !navigating ? helpActive = button.id : '' }}
                                         on:mouseleave={() => { !navigating ? helpActive = undefined : '' }}
-                                        class="h-12 min-w-[48px] @sm/actions:min-w-[40px] @sm/actions:h-10 @xl/actions:h-12 @xl/actions:min-w-[48px] p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
+                                        class="h-12 min-w-12 @sm/actions:min-w-10 @sm/actions:h-10 @xl/actions:h-12 @xl/actions:min-w-12 p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
                                 >
                                     {#if button.toolTip}
                                         {#if helpActive === button.id}
@@ -945,7 +942,7 @@
                     </div>
                 {/if}
                 {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
-                    <div id="action-admin" class="items-center relative transition-all hidden @lg/actions:block" on:click={() => adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false } tabindex="0">
+                    <div id="action-admin" class="items-center relative transition-all hidden @lg/actions:block" on:click={() => adminMenuIsDropped = !adminMenuIsDropped} on:click|preventDefault={close} on:blur={() => adminMenuIsDropped = false }>
                         <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2 transition-all">
                             <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-4 pr-3">
                                 <AdminPanIcon />
@@ -999,7 +996,7 @@
                     </div>
                 {/if}
                 <div id="action-user" class="flex items-center relative transition-all hidden @md/actions:flex" on:click={() => profileMenuIsDropped = !profileMenuIsDropped} on:click|preventDefault={close} on:blur={() => profileMenuIsDropped = false }>
-                    <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2" tabindex="0">
+                    <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2">
                         <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-2 pr-3">
                             <Woka userId={-1} placeholderSrc="" customWidth="32px" customHeight="32px" />
                             <div class="grow flex items-center flex-row @xl/actions:flex-col justify-start text-left pr-2">
