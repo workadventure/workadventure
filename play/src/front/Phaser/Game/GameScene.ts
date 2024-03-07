@@ -9,15 +9,22 @@ import { MathUtils } from "@workadventure/math-utils";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import {
-    availabilityStatusToJSON,
     AvailabilityStatus,
+    availabilityStatusToJSON,
     ErrorScreenMessage,
     PositionMessage_Direction,
     SpaceFilterMessage,
 } from "@workadventure/messages";
 import { z } from "zod";
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
-import { GameMap, GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
+import {
+    ENTITIES_FOLDER_PATH_NO_PREFIX,
+    ENTITY_COLLECTION_FILE,
+    EntityPrefabType,
+    GameMap,
+    GameMapProperties,
+    WAMFileFormat,
+} from "@workadventure/map-editor";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
@@ -36,6 +43,7 @@ import {
     ENABLE_OPENID,
     MAX_PER_GROUP,
     POSITION_DELAY,
+    PUBLIC_MAP_STORAGE_PREFIX,
 } from "../../Enum/EnvironmentVariable";
 import { Room } from "../../Connection/Room";
 import { CharacterTextureError } from "../../Exception/CharacterTextureError";
@@ -110,9 +118,9 @@ import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
 import {
-    chatVisibilityStore,
     _newChatMessageSubject,
     _newChatMessageWritingStatusSubject,
+    chatVisibilityStore,
     forceRefreshChatStore,
 } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
@@ -122,17 +130,17 @@ import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalPopupVisibilityStore, modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
-    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
-    mapEditorWamSettingsEditorToolCurrentMenuItemStore,
     mapEditorModeStore,
     mapEditorSelectedToolStore,
+    mapEditorWamSettingsEditorToolCurrentMenuItemStore,
+    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
     mapExplorationModeStore,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
-import { megaphoneCanBeUsedStore, liveStreamingEnabledStore } from "../../Stores/MegaphoneStore";
+import { liveStreamingEnabledStore, megaphoneCanBeUsedStore } from "../../Stores/MegaphoneStore";
 import { CompanionTextureError } from "../../Exception/CompanionTextureError";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
 import { scriptUtils } from "../../Api/ScriptUtils";
@@ -163,8 +171,8 @@ import type { CameraManagerEventCameraUpdateData } from "./CameraManager";
 import { CameraManager, CameraManagerEvent } from "./CameraManager";
 
 import { EditorToolName, MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
-import { RemotePlayersRepository } from "./RemotePlayersRepository";
 import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
+import { RemotePlayersRepository } from "./RemotePlayersRepository";
 import { IframeEventDispatcher } from "./IframeEventDispatcher";
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
@@ -454,9 +462,7 @@ export class GameScene extends DirtyScene {
                         this.wamFile = wamFileResult.data;
                         this.mapUrlFile = new URL(this.wamFile.mapUrl, absoluteWamFileUrl).toString();
                         this.doLoadTMJFile(this.mapUrlFile);
-                        this.entitiesCollectionsManager.loadCollections(
-                            this.wamFile.entityCollections.map((collectionUrl) => collectionUrl.url)
-                        );
+                        this.loadEntityCollections();
                     }
                 )
                 .catch((e) => {
@@ -477,6 +483,24 @@ export class GameScene extends DirtyScene {
 
         //this function must stay at the end of preload function
         this.loader.addLoader();
+    }
+
+    private loadEntityCollections() {
+        const customEntityCollectionUrl = this.getCustomEntityCollectionUrl();
+        const collectionDescriptors: { url: string; type: EntityPrefabType }[] = this.wamFile.entityCollections.map(
+            (collectionUrl) => ({
+                url: collectionUrl.url,
+                type: "Default",
+            })
+        );
+        collectionDescriptors.push({ url: customEntityCollectionUrl, type: "Custom" });
+
+        this.entitiesCollectionsManager.loadCollections(collectionDescriptors);
+    }
+
+    public getCustomEntityCollectionUrl() {
+        const mapStoragePath = `${PUBLIC_MAP_STORAGE_PREFIX}${ENTITIES_FOLDER_PATH_NO_PREFIX}/${ENTITY_COLLECTION_FILE}`;
+        return new URL(mapStoragePath, this.wamUrlFile).toString();
     }
 
     private doLoadTMJFile(mapUrlFile: string): void {

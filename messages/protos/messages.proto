@@ -147,7 +147,10 @@ message EditMapMessage {
     DeleteEntityMessage deleteEntityMessage = 6;
     UpdateWAMSettingsMessage updateWAMSettingsMessage = 7;
     ErrorCommandMessage errorCommandMessage = 8;
-    ModifiyWAMMetadataMessage modifiyWAMMetadataMessage = 9;
+    UploadEntityMessage uploadEntityMessage = 9;
+    ModifyCustomEntityMessage modifyCustomEntityMessage = 10;
+    DeleteCustomEntityMessage deleteCustomEntityMessage = 11;
+    ModifiyWAMMetadataMessage modifiyWAMMetadataMessage = 12;
   }
 }
 
@@ -218,6 +221,41 @@ message CreateEntityMessage {
 }
 
 message DeleteEntityMessage {
+  string id = 1;
+}
+
+message CollisionGridRow {
+  repeated uint32 row = 1;
+}
+
+enum CustomEntityDirection {
+  Up = 0;
+  Right = 1;
+  Down = 2;
+  Left = 3;
+}
+
+message UploadEntityMessage {
+  bytes file = 1;
+  string id = 2;
+  string name = 3;
+  repeated string tags = 4;
+  string imagePath = 5;
+  CustomEntityDirection direction = 6;
+  string color = 7;
+  optional google.protobuf.Value collisionGrid = 8;
+  optional int32 depthOffset = 9;
+}
+
+message ModifyCustomEntityMessage {
+  string id = 1;
+  string name = 2;
+  repeated string tags = 3;
+  optional google.protobuf.Value collisionGrid = 4;
+  optional int32 depthOffset = 5;
+}
+
+message DeleteCustomEntityMessage {
   string id = 1;
 }
 

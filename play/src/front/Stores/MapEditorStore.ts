@@ -1,5 +1,6 @@
-import type { EntityPrefab, EntityDataProperties } from "@workadventure/map-editor";
+import type { EntityDataProperties, EntityPrefab } from "@workadventure/map-editor";
 import { writable } from "svelte/store";
+import { DeleteCustomEntityMessage, ModifyCustomEntityMessage, UploadEntityMessage } from "@workadventure/messages";
 import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
 import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
 import { Entity } from "../Phaser/ECS/Entity";
@@ -68,6 +69,10 @@ export const mapEditorSelectedEntityPrefabStore = writable<EntityPrefab | undefi
 export const mapEditorCopiedEntityDataPropertiesStore = writable<EntityDataProperties | undefined>(undefined);
 
 export const mapEditorEntityModeStore = writable<MapEditorEntityToolMode>("ADD");
+
+export const mapEditorEntityUploadEventStore = writable<UploadEntityMessage | undefined>(undefined);
+export const mapEditorModifyCustomEntityEventStore = writable<ModifyCustomEntityMessage | undefined>(undefined);
+export const mapEditorDeleteCustomEntityEventStore = writable<DeleteCustomEntityMessage | undefined>(undefined);
 
 export enum WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM {
     Megaphone = "Megaphone",

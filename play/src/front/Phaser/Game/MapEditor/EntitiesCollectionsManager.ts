@@ -1,89 +1,72 @@
-import { EntityPrefab, EntityRawPrefab } from "@workadventure/map-editor";
-
-export interface EntityCollection {
-    collectionName: string;
-    tags: string[];
-    collection: EntityPrefab[];
-}
-
-export interface EntityCollectionRaw {
-    collectionName: string;
-    tags: string[];
-    collection: EntityRawPrefab[];
-}
+import {
+    EntityCollection,
+    EntityCollectionRaw,
+    EntityPrefab,
+    EntityPrefabType,
+    EntityRawPrefab,
+} from "@workadventure/map-editor";
+import { derived, Readable, Writable, writable } from "svelte/store";
+import { entitiesFileMigration } from "@workadventure/map-editor/src/Migrations/EntitiesFileMigration";
+import { EntityVariant } from "./Entities/EntityVariant";
 
 export class EntitiesCollectionsManager {
-    private entitiesPrefabs: EntityPrefab[] = [];
     private entitiesPrefabsMapPromise!: Promise<Map<string, EntityPrefab>>;
     private tags: string[] = [];
 
-    private filter = "";
     private currentCollection: EntityCollection = { collectionName: "All Object Collection", collection: [], tags: [] };
+    private readonly entitiesPrefabsStore: Writable<EntityPrefab[]>;
+    private readonly entitiesPrefabsVariantStore: Readable<EntityVariant[]>;
 
-    constructor() {}
-
-    public getEntitiesPrefabs(): EntityPrefab[] {
-        return this.entitiesPrefabs;
+    constructor() {
+        this.entitiesPrefabsStore = writable([]);
+        this.entitiesPrefabsVariantStore = derived(this.entitiesPrefabsStore, ($entitiesPrefabsStore) => {
+            // entityVariants ordered by collectionName+name
+            const entityVariants = new Map<string, EntityVariant>();
+            for (const entityPrefab of $entitiesPrefabsStore) {
+                const idOrGeneratedName =
+                    entityPrefab.type === "Custom"
+                        ? entityPrefab.id
+                        : entityPrefab.collectionName + "__" + entityPrefab.name;
+                let variant = entityVariants.get(idOrGeneratedName);
+                if (variant === undefined) {
+                    variant = new EntityVariant(entityPrefab);
+                    entityVariants.set(idOrGeneratedName, variant);
+                } else {
+                    variant.addPrefab(entityPrefab);
+                }
+            }
+            return [...entityVariants.values()];
+        });
     }
 
-    public getEntitiesPrefabsMap(): Promise<Map<string, EntityPrefab>> {
-        return this.entitiesPrefabsMapPromise;
+    public getEntitiesPrefabsVariantStore(): Readable<EntityVariant[]> {
+        return this.entitiesPrefabsVariantStore;
     }
 
     public async getEntityPrefab(collectionName: string, entityPrefabId: string): Promise<EntityPrefab | undefined> {
         const prefabsMap = await this.entitiesPrefabsMapPromise;
         return prefabsMap.get(entityPrefabId);
-
-        // FIXME: remove the find from here. Too slow
-        /*return this.entitiesPrefabs.find(
-            (prefab) => prefab.collectionName === collectionName && prefab.id === entityPrefabId
-        );*/
     }
 
-    public setFilter(filter: string, isTag = false) {
-        this.filter = filter;
-        this.applyFilters(isTag);
-    }
-
-    private applyFilters(isTag: boolean) {
-        const filters = this.filter
-            .toLowerCase()
-            .split(" ")
-            .filter((v) => v.trim() !== "");
-        let newCollection = this.currentCollection.collection;
-
-        if (isTag) {
-            newCollection = newCollection.filter((item) =>
-                filters.every((word) => item.tags.some((tag) => tag.toLowerCase() === word.toLowerCase()))
-            );
-        } else {
-            newCollection = newCollection.filter(
-                (item) =>
-                    filters.every((word) => item.name.toLowerCase().includes(word.toLowerCase())) ||
-                    filters.every((word) => item.tags.some((tag) => tag.toLowerCase() === word.toLowerCase()))
-            );
-        }
-
-        this.entitiesPrefabs = newCollection;
-    }
-
-    public loadCollections(urls: string[]): void {
+    public loadCollections(collectionDescriptors: { url: string; type: EntityPrefabType }[]): void {
         this.entitiesPrefabsMapPromise = new Promise<Map<string, EntityPrefab>>((resolve, reject) => {
             const entityCollections: { collection: EntityCollection; url: string }[] = [];
             const fetchUrlPromises: Promise<EntityCollectionRaw>[] = [];
-            for (const url of urls) {
-                const promise = this.fetchRawCollection(url);
+            for (const descriptor of collectionDescriptors) {
+                const promise = this.fetchRawCollection(descriptor.url);
                 fetchUrlPromises.push(promise);
                 promise
                     .then((entityCollectionRaw) => {
+                        entityCollectionRaw = entitiesFileMigration.migrate(entityCollectionRaw);
                         entityCollections.push({
-                            collection: this.parseRawCollection(entityCollectionRaw),
-                            url,
+                            collection: this.parseRawCollection(entityCollectionRaw, descriptor.type),
+                            url: descriptor.url,
                         });
                     })
                     .catch((error) => console.warn(error));
             }
 
+            //TODO check tagSet and this.currentCollection
             Promise.allSettled(fetchUrlPromises)
                 .then(() => {
                     for (const { collection, url } of entityCollections) {
@@ -99,6 +82,7 @@ export class EntitiesCollectionsManager {
                                 direction: entity.direction,
                                 color: entity.color,
                                 collisionGrid: entity.collisionGrid,
+                                type: entity.type,
                             });
                             entity.tags.forEach((tag: string) => tagSet.add(tag));
                         });
@@ -106,23 +90,100 @@ export class EntitiesCollectionsManager {
                         const tags = [...new Set([...tagSet, ...this.tags])];
                         tags.sort();
                         this.tags = tags;
-                        this.entitiesPrefabs = this.currentCollection.collection;
                     }
+                    this.entitiesPrefabsStore.set(this.currentCollection.collection);
 
                     const prefabsMap = new Map<string, EntityPrefab>();
-                    for (const prefab of this.entitiesPrefabs) {
+                    for (const prefab of this.currentCollection.collection) {
                         prefabsMap.set(prefab.id, prefab);
                     }
                     resolve(prefabsMap);
                 })
-                .catch((err) => {
-                    console.error(err);
+                .catch((error) => {
+                    console.error(error);
+                    reject(error);
                 });
         });
     }
 
-    public getTags(): string[] {
-        return this.tags;
+    public addUploadedEntity(uploadedEntity: EntityRawPrefab, customEntityCollectionUrl: string) {
+        const uploadedEntityPrefab: EntityPrefab = {
+            ...this.parseRawEntityPrefab("custom entities", uploadedEntity, "Custom"),
+            imagePath: new URL(uploadedEntity.imagePath, customEntityCollectionUrl).toString(),
+        };
+        this.currentCollection.collection.push(uploadedEntityPrefab);
+
+        this.entitiesPrefabsStore.update((currentEntitiesPrefabs) => [...currentEntitiesPrefabs, uploadedEntityPrefab]);
+        this.entitiesPrefabsMapPromise = new Promise<Map<string, EntityPrefab>>((resolve, reject) => {
+            this.entitiesPrefabsMapPromise
+                .then((existingEntitiesPrefabsMap) => {
+                    existingEntitiesPrefabsMap.set(uploadedEntityPrefab.id, uploadedEntityPrefab);
+                    resolve(existingEntitiesPrefabsMap);
+                })
+                .catch((error) => {
+                    console.error(error);
+                    reject(error);
+                });
+        });
+    }
+
+    public modifyCustomEntity(
+        id: string,
+        name: string,
+        tags: string[],
+        depthOffset?: number,
+        collisionGrid?: number[][]
+    ): void {
+        this.entitiesPrefabsStore.update((currentEntitiesPrefabs) => {
+            const indexOfCustomEntity = currentEntitiesPrefabs.findIndex((entityPrefab) => entityPrefab.id === id);
+            if (indexOfCustomEntity !== -1) {
+                currentEntitiesPrefabs[indexOfCustomEntity] = {
+                    ...currentEntitiesPrefabs[indexOfCustomEntity],
+                    name,
+                    tags,
+                    depthOffset,
+                    collisionGrid,
+                };
+            }
+            return currentEntitiesPrefabs;
+        });
+        this.entitiesPrefabsMapPromise = new Promise<Map<string, EntityPrefab>>((resolve, reject) => {
+            this.entitiesPrefabsMapPromise
+                .then((existingEntitiesPrefabsMap) => {
+                    const entity = existingEntitiesPrefabsMap.get(id);
+                    if (entity) {
+                        existingEntitiesPrefabsMap.set(id, {
+                            ...entity,
+                            name,
+                            tags,
+                            depthOffset,
+                            collisionGrid,
+                        });
+                    }
+                    resolve(existingEntitiesPrefabsMap);
+                })
+                .catch((error) => {
+                    console.error(error);
+                    reject(error);
+                });
+        });
+    }
+
+    public deleteCustomEntity(id: string): void {
+        this.entitiesPrefabsStore.update((currentEntitiesPrefabs) => {
+            return currentEntitiesPrefabs.filter((entityPrefab) => entityPrefab.id !== id);
+        });
+        this.entitiesPrefabsMapPromise = new Promise<Map<string, EntityPrefab>>((resolve, reject) => {
+            this.entitiesPrefabsMapPromise
+                .then((existingEntitiesPrefabsMap) => {
+                    existingEntitiesPrefabsMap.delete(id);
+                    resolve(existingEntitiesPrefabsMap);
+                })
+                .catch((error) => {
+                    console.error(error);
+                    reject(error);
+                });
+        });
     }
 
     private async fetchRawCollection(url: string): Promise<EntityCollectionRaw> {
@@ -138,21 +199,28 @@ export class EntitiesCollectionsManager {
         return response.json();
     }
 
-    private parseRawCollection(rawCollection: EntityCollectionRaw): EntityCollection {
+    private parseRawCollection(
+        rawCollection: EntityCollectionRaw,
+        rawCollectionType: EntityPrefabType
+    ): EntityCollection {
         return {
             collectionName: rawCollection.collectionName,
             tags: [...rawCollection.tags],
-            collection: rawCollection.collection.map((rawPrefab) =>
-                this.parseRawEntityPrefab(rawCollection.collectionName, rawPrefab)
+            collection: rawCollection.collection.map((rawPrefab: EntityRawPrefab) =>
+                this.parseRawEntityPrefab(rawCollection.collectionName, rawPrefab, rawCollectionType)
             ),
         };
     }
 
-    private parseRawEntityPrefab(collectionName: string, rawPrefab: EntityRawPrefab): EntityPrefab {
+    private parseRawEntityPrefab(
+        collectionName: string,
+        rawPrefab: EntityRawPrefab,
+        entityPrefabType: EntityPrefabType
+    ): EntityPrefab {
         return {
             ...rawPrefab,
             collectionName,
-            id: `${collectionName}:${rawPrefab.name}:${rawPrefab.color}:${rawPrefab.direction}`,
+            type: entityPrefabType,
         };
     }
 }

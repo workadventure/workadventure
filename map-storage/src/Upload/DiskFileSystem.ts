@@ -1,11 +1,11 @@
-import path from "path";
-import * as fs from "fs-extra";
-import { NextFunction, Response } from "express";
 import { Archiver } from "archiver";
+import { NextFunction, Response } from "express";
+import * as fs from "fs-extra";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
+import path from "path";
 import { MapListService } from "../Services/MapListService";
-import { FileSystemInterface } from "./FileSystemInterface";
 import { FileNotFoundError } from "./FileNotFoundError";
+import { FileSystemInterface } from "./FileSystemInterface";
 import { NodeError } from "./NodeError";
 
 export class DiskFileSystem implements FileSystemInterface {
@@ -129,6 +129,13 @@ export class DiskFileSystem implements FileSystemInterface {
         return fs.writeFile(fullPath, content, {
             encoding: "utf-8",
         });
+    }
+
+    async writeByteArrayAsFile(virtualPath: string, content: Uint8Array): Promise<void> {
+        const fullPath = this.getFullPath(virtualPath);
+        const dir = path.dirname(fullPath);
+        await fs.mkdirp(dir);
+        return fs.writeFile(fullPath, Buffer.from(content), { encoding: "utf-8" });
     }
 
     archiveDirectory(archiver: Archiver, virtualPath: string): Promise<void> {
