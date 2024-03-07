@@ -13,7 +13,7 @@
 
 <link rel="preload" as="image" href={tooltipArrow} />
 <div
-    class="block absolute {hasImage && hasDesc
+    class=" hidden sm:block absolute {hasImage && hasDesc
         ? 'w-64'
         : 'min-w-[128px] text-center'} z-[500] text-white rounded-lg top-[70px] -left-2 transform before:content-[''] before:absolute before:w-full before:h-full before:z-1 before:left-0 before:top-0 before:rounded-lg before:bg-contrast/80 before:backdrop-blur after:content-[''] after:absolute after:z-0 after:w-full after:bg-transparent after:h-full after:-top-4 after:-left-0"
     in:fly={{ delay: delayBeforeAppear, y: 40, duration: 150 }}

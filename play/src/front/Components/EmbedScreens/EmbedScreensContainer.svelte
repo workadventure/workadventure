@@ -51,7 +51,7 @@
 
 <div
     id="embedScreensContainer"
-    class="group relative h-full pt-24 flex justify-center items-center pointer-events-auto transition-all pb-7"
+    class="group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 flex justify-center items-center pointer-events-auto transition-all pb-7"
     style={$emoteMenuSubStore ? "padding-top:96px;" : ""}
 >
     {#if $embedScreenLayoutStore === LayoutMode.Presentation}
