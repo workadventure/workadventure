@@ -22,7 +22,7 @@
   <div class="flex p-4 space-x-4 pointer-events-auto">
       <div class="grow">
       </div>
-      <div class="p-4 mt-2 -mb-6 text-center leading-6 sm:mt-16">
+      <div class="p-4 mt-2 -mb-6 text-center leading-6 sm:mt-16 ">
         { message }
       </div>
   </div>
@@ -38,12 +38,13 @@
   animation-name: slidein;
 }
 
-.responsive-bar {
-    position: absolute;
-    width: 100%;
-    bottom: 0;
+@media (min-width: 768px) {
+    .responsive-bar {
+        position: absolute;
+        width: 100%;
+        bottom: 0;
+    }
 }
-
 @keyframes slidein {
   from {
     opacity: 0;

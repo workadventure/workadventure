@@ -80,6 +80,6 @@
         {#if $mapEditorModeStore}
             <MapEditor />
         {/if}
-        <MainLayout />
+        <MainLayout message="" />
     {/key}
 {/if}

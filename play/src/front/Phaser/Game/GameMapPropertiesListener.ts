@@ -208,7 +208,7 @@ export class GameMapPropertiesListener {
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
             if (newValue === undefined || newValue !== oldValue) {
-                layoutManagerActionStore.removeAction("bbbMeeting"); // A voir pour enlever le popup et le faire
+                // layoutManagerActionStore.removeAction("bbbMeeting"); // A voir pour enlever le popup et le faire
                 inBbbStore.set(false);
                 bbbFactory.setStopped(true);
                 bbbFactory.stop();

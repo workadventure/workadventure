@@ -1,8 +1,7 @@
 <script lang="ts">
+
+import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 import {onMount} from "svelte";
-import * as Sentry from "@sentry/svelte";
-import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
-import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import {DEBUG_MODE, SENTRY_DSN_FRONT, SENTRY_ENVIRONMENT, SENTRY_RELEASE} from "../Enum/EnvironmentVariable";
 import {coWebsiteManager} from "../WebRtc/CoWebsiteManager";
 import {HdpiManager} from "../Phaser/Services/HdpiManager";
@@ -19,13 +18,12 @@ import {waScaleManager} from "../Phaser/Services/WaScaleManager";
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {iframeListener} from "../Api/IframeListener";
 import {desktopApi} from "../Api/Desktop";
+import * as Sentry from "@sentry/svelte";
+import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import GameOverlay from "./GameOverlay.svelte";
-
-// import CoWebsiteTab from "./EmbedScreens/CoWebsiteTab.svelte";
-// import XIcon from "./Icons/XIcon.svelte";
-// import FullScreenIcon from "./Icons/FullScreenIcon.svelte";
-import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
+import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+
 
 let game: Game;
 let gameDiv: HTMLDivElement;

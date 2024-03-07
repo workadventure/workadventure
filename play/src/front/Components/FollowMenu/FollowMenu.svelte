@@ -130,11 +130,11 @@
 
         .responsive-follow-follower {
             margin-top: 8px;
-            scale: 0.6;
+            scale: 1;
         }
 
         .responsive-button-follow {
-            margin-top: 12px;
+            margin-top: 16px;
         }
 
         .responsive-svg {

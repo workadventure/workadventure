@@ -25,10 +25,12 @@
   animation-name: slidein;
 }
 
-.responsive-bar {
-    position: absolute;
-    width: 100%;
-    bottom: 0;
+@media (min-width: 768px) {
+    .responsive-bar {
+        position: absolute;
+        width: 100%;
+        bottom: 0;
+    }
 }
 
 @keyframes slidein {
