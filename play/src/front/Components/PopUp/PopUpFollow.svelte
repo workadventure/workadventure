@@ -11,7 +11,7 @@
 </script>
 
 
-<div class="bg-contrast/80 backdrop-blur text-white sm:w-[500px] sm:h-[300px] rounded-lg overflow-hidden animation w-[300px] h-[150px]">
+<div class="bg-contrast/80 backdrop-blur text-white sm:w-[500px] sm:h-[300px] w-[300px] h-[150px] rounded-lg overflow-hidden animation responsive">
   <div class="flex p-4 space-x-4 pointer-events-auto">
       <div class="">
       </div>

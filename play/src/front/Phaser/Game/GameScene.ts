@@ -2279,17 +2279,6 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("triggerActionMessage", (message) =>
-            // layoutManagerActionStore.addAction({
-            //     uuid: message.uuid,
-            //     type: "message",
-            //     message: message.message,
-            //     callback: () => {
-            //         layoutManagerActionStore.removeAction(message.uuid);
-            //         iframeListener.sendActionMessageTriggered(message.uuid);
-            //     },
-            //     userInputManager: this.userInputManager,
-            // })
-
             popupStore.addPopup(PopUpTriggerActionMessage, {
                 message: message.message,
                 click: () => {
@@ -2331,8 +2320,7 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("removeActionMessage", (message) => {
-            // layoutManagerActionStore.removeAction(message.uuid);
-            popupStore.removePopup(message.uuid); // Voir si utile
+            popupStore.removePopup(message.uuid);
         });
 
         iframeListener.registerAnswerer("setPlayerOutline", (message) => {
@@ -2453,16 +2441,6 @@ ${escapedMessage}
             targetRoom = await Room.createRoom(roomUrl);
         } catch (e /*: unknown*/) {
             console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);
-            // layoutManagerActionStore.addAction({
-                //     uuid: "roomAccessDenied",
-                //     type: "warning",
-                //     message: get(LL).warning.accessDenied.room(),
-                //     callback: () => {
-            //         layoutManagerActionStore.removeAction("roomAccessDenied");
-            //     },
-            //     userInputManager: this.userInputManager,
-            // });
-
 
             //show information room access denied
             popupStore.addPopup(PopUpRoomAccessDenied, {
@@ -2648,18 +2626,7 @@ ${escapedMessage}
                 },
                 "mapEditorNotEnabled");
 
-                // setTimeout(() => popupStore.removePopup("mapEditorNotEnabled"), 6_000);
-
-                // layoutManagerActionStore.addAction({
-                //     uuid: "mapEditorNotEnabled",
-                //     type: "warning",
-                //     message: get(LL).warning.mapEditorNotEnabled(),
-                //     callback: () => layoutManagerActionStore.removeAction("mapEditorNotEnabled"),
-                //     userInputManager: this.userInputManager,
-                // });
-
-                //  setTimeout(() => layoutManagerActionStore.removeAction("mapEditorNotEnabled"), 6_000);
-
+                setTimeout(() => popupStore.removePopup("mapEditorNotEnabled"), 6_000);
             } else {
                 switch (toolEditorParam) {
                     case "wamSettingsEditorTool": {
@@ -2710,13 +2677,6 @@ ${escapedMessage}
 
                         setTimeout(() => popupStore.removePopup("mapEditorShortCut"), 6_000);
                         break;
-                        // layoutManagerActionStore.addAction({
-                        //     uuid: "mapEditorShortCut",
-                        //     type: "warning",
-                        //     message: get(LL).warning.mapEditorShortCut(),
-                        //     callback: () => layoutManagerActionStore.removeAction("mapEditorShortCut"),
-                        //     userInputManager: this.userInputManager,
-                        // });
                     }
                 }
             }

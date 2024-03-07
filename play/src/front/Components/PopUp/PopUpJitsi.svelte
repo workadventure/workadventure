@@ -26,7 +26,7 @@
         { message }
       </div>
   </div>
-  <div class="flex flex-col items-center p-4 space-x-4 mt-16 bg-contrast pointer-events-auto">
+  <div class="flex flex-col items-center p-4 space-x-4 mt-16 bg-contrast pointer-events-auto responsive-bar">
     <button class="btn btn-secondary w-1/2 justify-center" on:click={click}>Enter Jitsi</button>
   </div>
 </div>
@@ -36,6 +36,12 @@
 .animation {
   animation-duration: 0.5s;
   animation-name: slidein;
+}
+
+.responsive-bar {
+    position: absolute;
+    width: 100%;
+    bottom: 0;
 }
 
 @keyframes slidein {

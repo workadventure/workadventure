@@ -138,6 +138,7 @@
     import PenIcon from "../Icons/PenIcon.svelte";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
     import { consoleGlobalMessageManagerVisibleStore } from '../../Stores/ConsoleGlobalMessageManagerStore';
+    import { popupStore } from "../../Stores/PopupStore";
     // import { popupStore } from "../../Stores/PopupStore";
     // import PopUpMessage from '../PopUp/PopUpMessage.svelte';
 
@@ -172,7 +173,7 @@
             requestedCameraState.disableWebcam();
         } else {
             requestedCameraState.enableWebcam();
-            layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone");
+            // layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"); Voir avec Hugo
         }
     }
 
@@ -182,7 +183,7 @@
             requestedMicrophoneState.disableMicrophone();
         } else {
             requestedMicrophoneState.enableMicrophone();
-            layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone");
+            // layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone");Voir avec Hugo
         }
     }
 

@@ -24,7 +24,7 @@ function closeBanner() {
 </script>
 
 
-<div class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[300px] rounded-lg overflow-hidden animation">
+<div class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[300px] rounded-lg overflow-hidden animation responsive">
   <div class="flex p-4 space-x-4 pointer-events-auto">
       <div class="">
           <button class="btn btn-light btn-ghost btn-sm {0 < $currentBannerIndex && $currentBannerIndex < 5 ? "" : "opacity-20"}" id="chevron-left" on:click={goToPreviousBanner}
@@ -72,8 +72,8 @@ function closeBanner() {
       </div>
   </div>
 
-  <div class="flex p-4 space-x-4 bg-contrast mt-8 pointer-events-auto">
-      <button class="btn btn-light btn-ghost w-1/2 justify-center">View full tutorial</button>
+  <div class="flex p-4 space-x-4 bg-contrast mt-8 pointer-events-auto responsive-bar">
+      <button class="btn btn-light btn-ghost w-1/2 justify-center responsive-message">View full tutorial</button>
       <button class="btn btn-secondary w-1/2 justify-center" on:click={closeBanner}>Close</button>
   </div>
 </div>
@@ -81,10 +81,16 @@ function closeBanner() {
 
 
 <style>
-  .animation {
-    animation-duration: 0.5s;
-    animation-name: slidein;
-  }
+    .animation {
+        animation-duration: 0.5s;
+        animation-name: slidein;
+    }
+
+    .responsive-bar {
+        position: absolute;
+        width: 100%;
+        bottom: 0;
+    }
 
   @keyframes slidein {
     from {
@@ -95,4 +101,14 @@ function closeBanner() {
       opacity: 1;
     }
   }
+
+  @media (max-width: 768px) {
+        .responsive {
+           scale: 0.6;
+        }
+
+        .responsive-message {
+            scale: 1.2;
+        }
+    }
   </style>

@@ -1,5 +1,4 @@
 <script lang="ts">
-  // import { SvelteComponent, onDestroy, onMount } from 'svelte';
   import AudioManager from '../AudioManager/AudioManager.svelte';
 </script>
 
@@ -13,8 +12,8 @@
         </div>
     </div>
 
-    <div class="flex flex-col items-center p-4 space-x-4 mt-40 bg-contrast pointer-events-auto">
-        <button class="btn btn-secondary w-1/2 justify-center">Reduce Popup Sound</button> <!--on:click={reduceBanner}-->
+    <div class="flex flex-col items-center p-4 space-x-4 mt-40 bg-contrast pointer-events-auto responsive-bar">
+        <button class="btn btn-secondary w-1/2 justify-center">Reduce Popup Sound</button>
     </div>
   </div>
 
@@ -24,6 +23,12 @@
 .animation {
   animation-duration: 0.5s;
   animation-name: slidein;
+}
+
+.responsive-bar {
+    position: absolute;
+    width: 100%;
+    bottom: 0;
 }
 
 @keyframes slidein {

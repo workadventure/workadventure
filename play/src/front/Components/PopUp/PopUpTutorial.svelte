@@ -47,7 +47,6 @@
     </TutorialInstruction>
   {/if}
 
-
   {#if $currentBannerIndex === 4 && $bannerVisible }
     <TutorialInstruction>
       <div class="text-xs uppercase opacity-50">

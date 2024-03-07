@@ -245,7 +245,7 @@ export class GameMapPropertiesListener {
                     .catch((e) => console.error(e));
             } else {
                 setTimeout(() => {
-                    layoutManagerActionStore.removeAction("roomAccessDenied"); // A voir pour enlever le popup ou non
+                    popupStore.removePopup("roomAccessDenied");
                 }, 2000);
             }
         });
@@ -257,7 +257,7 @@ export class GameMapPropertiesListener {
                     .catch((e) => console.error(e));
             } else {
                 setTimeout(() => {
-                    layoutManagerActionStore.removeAction("roomAccessDenied"); // A voir pour enlever le popup ou non
+                    popupStore.removePopup("roomAccessDenied");
                 }, 2000);
             }
         });
@@ -456,9 +456,7 @@ export class GameMapPropertiesListener {
             coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
                 console.error("Error during loading a co-website: " + coWebsite.getUrl());
             });
-
-            // layoutManagerActionStore.removeAction(actionId);
-            popupStore.removePopup(actionId); //A voir si cela est utile
+            popupStore.removePopup(actionId);
         };
 
         const openCoWebsiteFunction = () => {
@@ -489,14 +487,6 @@ export class GameMapPropertiesListener {
             }
 
             this.coWebsitesActionTriggerByPlace.set(this.getIdFromPlace(place), actionId);
-
-            // layoutManagerActionStore.addAction({
-            //     uuid: actionId,
-            //     type: "message",
-            //     message: websiteTriggerMessageProperty,
-            //     callback: () => openCoWebsiteFunction(),
-            //     userInputManager: this.scene.userInputManager,
-            // });
 
             popupStore.addPopup(PopUpCowebsite, {
                 message: websiteTriggerMessageProperty,
@@ -676,8 +666,7 @@ export class GameMapPropertiesListener {
                 : undefined;
 
         if (action) {
-            // layoutManagerActionStore.removeAction(actionTriggerUuid);
-            popupStore.removePopup(actionTriggerUuid); //A voir si cela est utile
+            popupStore.removePopup(actionTriggerUuid);
         }
 
         this.coWebsitesActionTriggerByPlace.delete(this.getIdFromPlace(place));

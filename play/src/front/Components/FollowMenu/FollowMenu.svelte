@@ -35,7 +35,7 @@
 <svelte:window on:keydown={onKeyDown} />
 
 {#if $followStateStore === "requesting" && $followRoleStore === "follower"}
-    <div class="interact-menu text-center text-white sm:w-[500px] sm:h-[250px] w-[300px] h-[150px] absolute mt-8 left-0 right-0 pointer-events-auto z-[150] right-0 left-0 m-auto rounded-lg overflow-hidden margin-bottom responsive-follow-follower">
+    <div class="interact-menu text-center text-white sm:w-[500px] sm:h-[250px]  absolute mt-8 left-0 right-0 pointer-events-auto z-[150] right-0 left-0 m-auto rounded-lg overflow-hidden margin-bottom responsive-follow-follower">
         <div class="mt-12 text-lg bold responsive-follow-follower">
             <div>
                 <svg class="opacity-50 mb-4 responsive-svg" width="23" height="23" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -44,7 +44,7 @@
             </div>
             {$LL.follow.interactMenu.title.follow({ leader: name($followUsersStore[0]) })}
         </div>
-        <div class="flex p-4 space-x-4 bg-contrast mt-12 pointer-events-auto mt-18 responsive-button">
+        <div class="flex p-4 space-x-4 bg-contrast mt-12 pointer-events-auto mt-18 responsive-button-follow">
             <button type="button" class="btn btn-light btn-ghost w-1/2 justify-center" on:click|preventDefault={reset}
             >{$LL.follow.interactMenu.no()}
             </button>
@@ -130,9 +130,10 @@
 
         .responsive-follow-follower {
             margin-top: 8px;
+            scale: 0.6;
         }
 
-        .responsive-button {
+        .responsive-button-follow {
             margin-top: 12px;
         }
 
@@ -140,4 +141,5 @@
             display: none;
         }
     }
+
 </style>

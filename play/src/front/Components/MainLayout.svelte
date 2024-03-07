@@ -44,6 +44,8 @@
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
     import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
+    import PopUpJitsi from "./PopUp/PopUpJitsi.svelte";
+    import PopUpTab from "./PopUp/PopUpTab.svelte";
 
     let mainLayout: HTMLDivElement;
     export let message: string;
@@ -168,11 +170,7 @@
     <div class="popups">
         {#each $popupStore.slice().reverse() as popup (popup.uuid)}
             <div class="popupwrapper">
-                {#if $popupStore.length < 5}
-                    <svelte:component this={popup.component} {...popup.props} on:close={() => popupStore.removePopup(popup.uuid)} /> <!-- A essayer limitage d'apparition 5 popups-->
-                {:else}
-                    {popup.uuid = "hidden"}
-                {/if}
+                <svelte:component this={popup.component} {...popup.props} on:close={() => popupStore.removePopup(popup.uuid)} />
             </div>
         {/each}
     </div>
@@ -211,7 +209,6 @@
 
     .popupwrapper:nth-child(1) {
         z-index: 505;
-
     }
 
     .popupwrapper:nth-child(2) {
@@ -236,5 +233,17 @@
         top: 68%;
         transform: translate(-50%, -50%) scale(0.8);
         filter: blur(4px);
+    }
+
+    .popupwrapper:nth-child(6),
+    .popupwrapper:nth-child(7),
+    .popupwrapper:nth-child(8),
+    .popupwrapper:nth-child(9),
+    .popupwrapper:nth-child(10),
+    .popupwrapper:nth-child(11),
+    .popupwrapper:nth-child(12),
+    .popupwrapper:nth-child(13)
+    {
+        display: none;
     }
 </style>

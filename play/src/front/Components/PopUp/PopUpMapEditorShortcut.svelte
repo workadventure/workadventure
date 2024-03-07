@@ -18,23 +18,29 @@
 
   </script>
 
-  <div class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[300px] rounded-lg overflow-hidden animation">
+  <div class="bg-contrast/80 backdrop-blur text-white w-[500px] h-[300px] rounded-lg overflow-hidden animation responsive">
     <div class="flex p-4 space-x-4 pointer-events-auto flex justify-center align-center">
         <div class="p-4 mt-20 -mb-6 text-center leading-6">
           { message }
         </div>
     </div>
-    <div class="flex flex-col items-center p-4 space-x-4 mt-20 bg-contrast pointer-events-auto">
-      <button class="btn btn-secondary w-1/2 justify-center" on:click={click}>See preferences</button>
+    <div class="flex flex-col items-center p-4 space-x-4 mt-20 bg-contrast pointer-events-auto responsive-bar">
+      <button class="btn btn-secondary w-1/2 justify-center responsive-message" on:click={click}>See preferences</button>
     </div>
   </div>
 
 
   <style>
-  .animation {
+    .animation {
     animation-duration: 0.5s;
     animation-name: slidein;
-  }
+    }
+
+    .responsive-bar {
+        position: absolute;
+        width: 100%;
+        bottom: 0;
+    }
 
   @keyframes slidein {
     from {
@@ -45,4 +51,14 @@
       opacity: 1;
     }
   }
+
+  @media (max-width: 768px) {
+        .responsive {
+           scale: 0.6;
+        }
+
+        .responsive-message {
+            scale: 1.2;
+        }
+    }
   </style>
