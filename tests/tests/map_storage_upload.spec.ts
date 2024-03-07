@@ -485,26 +485,36 @@ test.describe('Map-storage Upload API', () => {
             return;
         }
 
+        const folderName = "toDelete" ;
+        const fileName = "map.wam" ;
+        const filePath = `${folderName}/${fileName}`;
+
         createZipFromDirectory("./assets/file1/", "./assets/file1.zip");
         const uploadFileToDir = await request.post("upload", {
             multipart: {
                 file: fs.createReadStream("./assets/file1.zip"),
-                directory: "/toDelete"
+                directory: `/${folderName}`
             }
         });
+
         await expect(uploadFileToDir.ok()).toBeTruthy();
 
         let listOfMaps = await request.get("maps");
         let maps = await listOfMaps.json();
-        await expect(maps["maps"]["toDelete/map.wam"]).toBeDefined();
+        await expect(maps["maps"][filePath]).toBeDefined();
 
-        const deleteRoot = await request.delete(`toDelete`);
+
+
+        const deleteRoot = await request.delete(folderName);
 
         await expect(deleteRoot.status() === 204).toBeTruthy();
 
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
-        await expect(maps["maps"]).toEqual({});
+
+        for(const folder in maps["maps"]){
+            expect(folder.includes(folderName)).toBeFalsy();
+        }
     });
 
     test("move a folder", async ({

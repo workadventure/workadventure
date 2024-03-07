@@ -19,6 +19,7 @@ import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
 import { MegaphoneIcon } from "../Components/MegaphoneIcon";
+import { passStatusToOnlineWhenUserIsInSetableStatus } from "../../Rules/StatusRules/statusChangerFunctions";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
 import Text = Phaser.GameObjects.Text;
@@ -373,8 +374,9 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this._lastDirection = PositionMessage_Direction.DOWN;
             }
         }
-        this.playAnimation(this._lastDirection, true);
 
+        this.playAnimation(this._lastDirection, true);
+        passStatusToOnlineWhenUserIsInSetableStatus();
         this.setDepth(this.y + 16);
 
         if (this.companion) {

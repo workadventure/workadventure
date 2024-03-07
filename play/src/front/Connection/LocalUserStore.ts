@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH, PEER_VIDEO_RECOMMENDED_BANDWIDTH } from "../Enum/EnvironmentVariable";
 import { arrayEmoji, Emoji } from "../Stores/Utils/emojiSchema";
+import { RequestedStatus } from "../Rules/StatusRules/statusRules";
+import { requestedStatusFactory } from "../Rules/StatusRules/StatusFactory/RequestedStatusFactory";
 import type { LocalUser } from "./LocalUser";
 import { areCharacterTexturesValid, isUserNameValid } from "./LocalUser";
 
@@ -478,6 +480,21 @@ class LocalUserStore {
         }
 
         return parseInt(value);
+    }
+
+    getRequestedStatus(): RequestedStatus | null {
+        return requestedStatusFactory.createRequestedStatus(localStorage.getItem("RequestedStatus"));
+    }
+
+    setRequestedStatus(newStatus: RequestedStatus | null) {
+        localStorage.setItem("RequestedStatus", String(newStatus));
+    }
+
+    getLastNotificationPermissionRequest(): string | null {
+        return localStorage.getItem("lastNotificationPermissionRequest");
+    }
+    setLastNotificationPermissionRequest() {
+        localStorage.setItem("lastNotificationPermissionRequest", new Date().toString());
     }
 }
 

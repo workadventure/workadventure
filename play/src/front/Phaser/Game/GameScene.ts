@@ -140,6 +140,8 @@ import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { askDialogStore } from "../../Stores/MeetingStore";
+import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChangerFunctions";
+import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
@@ -1198,7 +1200,10 @@ export class GameScene extends DirtyScene {
                 this.connection.megaphoneSettingsMessageStream.subscribe((megaphoneSettingsMessage) => {
                     if (megaphoneSettingsMessage) {
                         megaphoneCanBeUsedStore.set(megaphoneSettingsMessage.enabled);
-                        if (megaphoneSettingsMessage.url) {
+                        if (
+                            megaphoneSettingsMessage.url &&
+                            get(availabilityStatusStore) !== AvailabilityStatus.DO_NOT_DISTURB
+                        ) {
                             broadcastService.joinSpace(megaphoneSettingsMessage.url);
                         }
                     }
@@ -1521,6 +1526,10 @@ export class GameScene extends DirtyScene {
                 // Note: by design, the peerStore can only add or remove one user at a given time.
                 // So we know for sure that there is only one new user.
                 const peer = Array.from(peers.values())[0];
+                //askIfUserWantToJoinBubbleOf(peer.userName);
+                statusChanger.setUserNameInteraction(peer.userName);
+                statusChanger.applyInteractionRules();
+
                 pendingConnects.add(peer.userId);
                 peer.once("connect", () => {
                     pendingConnects.delete(peer.userId);
@@ -1534,6 +1543,7 @@ export class GameScene extends DirtyScene {
             // Left
             if (newPeerNumber === 0 && newPeerNumber < oldPeersNumber) {
                 // TODO: leave event can be triggered without a join if connect fails
+                hideBubbleConfirmationModal();
                 iframeListener.sendLeaveProximityMeetingEvent();
 
                 if (screenWakeRelease) {
@@ -1581,10 +1591,10 @@ export class GameScene extends DirtyScene {
             }
 
             if (newPeerNumber > oldPeersNumber) {
-                this.playSound("audio-webrtc-in");
+                if (statusChanger.allowNotificationSound()) this.playSound("audio-webrtc-in");
                 faviconManager.pushNotificationFavicon();
             } else if (newPeerNumber < oldPeersNumber) {
-                this.playSound("audio-webrtc-out");
+                if (statusChanger.allowNotificationSound()) this.playSound("audio-webrtc-out");
                 faviconManager.pushOriginalFavicon();
             }
 

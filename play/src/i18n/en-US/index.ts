@@ -20,6 +20,7 @@ import actionbar from "./actionbar";
 import mapEditor from "./mapEditor";
 import megaphone from "./megaphone";
 import video from "./video";
+import statusModal from "./statusModal";
 
 const en_US: BaseTranslation = {
     audio,
@@ -43,6 +44,7 @@ const en_US: BaseTranslation = {
     mapEditor,
     megaphone,
     video,
+    statusModal,
 };
 
 export default en_US;
