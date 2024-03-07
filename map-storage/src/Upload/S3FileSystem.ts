@@ -1,6 +1,3 @@
-import { IncomingMessage } from "http";
-import { Readable } from "stream";
-import path from "path";
 import {
     CopyObjectCommand,
     DeleteObjectCommand,
@@ -15,13 +12,16 @@ import {
     PutObjectCommand,
     S3,
 } from "@aws-sdk/client-s3";
-import mime from "mime";
-import { NextFunction, Response } from "express";
 import { Archiver } from "archiver";
+import { NextFunction, Response } from "express";
+import { IncomingMessage } from "http";
+import mime from "mime";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
 import pLimit from "p-limit";
-import { s3UploadConcurrencyLimit } from "../Services/S3Client";
+import path from "path";
+import { Readable } from "stream";
 import { MapListService } from "../Services/MapListService";
+import { s3UploadConcurrencyLimit } from "../Services/S3Client";
 import { FileNotFoundError } from "./FileNotFoundError";
 import { FileSystemInterface } from "./FileSystemInterface";
 
@@ -314,6 +314,20 @@ export class S3FileSystem implements FileSystemInterface {
                     Bucket: this.bucketName,
                     Key: virtualPath,
                     Body: content,
+                    ContentType: mime.getType(virtualPath) ?? undefined,
+                })
+            )
+        );
+        return;
+    }
+
+    async writeByteArrayAsFile(virtualPath: string, content: Uint8Array): Promise<void> {
+        await s3UploadConcurrencyLimit(() =>
+            this.s3.send(
+                new PutObjectCommand({
+                    Bucket: this.bucketName,
+                    Key: virtualPath,
+                    Body: Buffer.from(content),
                     ContentType: mime.getType(virtualPath) ?? undefined,
                 })
             )

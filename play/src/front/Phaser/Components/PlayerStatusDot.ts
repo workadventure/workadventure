@@ -1,5 +1,6 @@
 import { AvailabilityStatus } from "@workadventure/messages";
 import { Easing } from "../../types";
+import { getColorOfStatus } from "../../Utils/AvailabilityStatus";
 
 export class PlayerStatusDot extends Phaser.GameObjects.Container {
     private statusImage: Phaser.GameObjects.Image;
@@ -8,18 +9,6 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
     private _availabilityStatus: AvailabilityStatus;
 
     private animationTween?: Phaser.Tweens.Tween;
-
-    private readonly COLORS: Record<AvailabilityStatus, { filling: number; outline: number }> = {
-        [AvailabilityStatus.AWAY]: { filling: 0xf5931e, outline: 0x875d13 },
-        [AvailabilityStatus.ONLINE]: { filling: 0x8cc43f, outline: 0x427a25 },
-        [AvailabilityStatus.SPEAKER]: { filling: 0x8cc43f, outline: 0x427a25 },
-        [AvailabilityStatus.SILENT]: { filling: 0xe74c3c, outline: 0xc0392b },
-        [AvailabilityStatus.JITSI]: { filling: 0x8cc43f, outline: 0x427a25 },
-        [AvailabilityStatus.BBB]: { filling: 0x8cc43f, outline: 0x427a25 },
-        [AvailabilityStatus.DENY_PROXIMITY_MEETING]: { filling: 0xffffff, outline: 0x404040 },
-        [AvailabilityStatus.UNRECOGNIZED]: { filling: 0xffffff, outline: 0xffffff },
-        [AvailabilityStatus.UNCHANGED]: { filling: 0xffffff, outline: 0xffffff },
-    };
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y);
@@ -71,7 +60,7 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
     }
 
     private redraw(): void {
-        const colors = this.COLORS[this._availabilityStatus];
+        const colors = getColorOfStatus(this._availabilityStatus);
         this.statusImage.setTintFill(colors.filling);
         this.statusImageOutline.setTintFill(colors.outline);
     }

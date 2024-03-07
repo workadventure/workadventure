@@ -175,6 +175,10 @@ const mapEditor: BaseTranslation = {
         description: "Draw a zone on the map to create a new one.",
     },
     entityEditor: {
+        header: {
+            title: "Add object to your map",
+            description: "Search, upload or select existing object and add it in the map.",
+        },
         title: "Put your object",
         editing: "Editing: {name}",
         itemPicker: {
@@ -195,6 +199,36 @@ const mapEditor: BaseTranslation = {
         objectDescriptionPlaceholder: "My object is a...",
         objectSearchable: "Searchable in the exploration mode",
         addDescriptionField: "Add description field",
+        uploadEntity: {
+            title: "Add your image",
+            description: "Drag and drop or choose your image to add it in the map",
+            dragDrop: "Drag and Drop or",
+            chooseFile: "Choose file",
+            errorOnFileFormat: "File format not supported",
+            errorOnFileNumber: "Multiple file drop is not supported",
+        },
+        images: "Image{{s}}",
+        noImage: "No image",
+        customEntityEditorForm: {
+            imageName: "Image name",
+            tags: "Tags",
+            objectType: "Object type",
+            floatingObject: "Floating object",
+            floatingObjectDescription:
+                "A floating object can be placed freely on the map. Otherwise, it will be aligned on the map grid.",
+            depth: "Depth",
+            groundLevel: "Ground level",
+            custom: "Custom",
+            standing: "Standing",
+        },
+        buttons: {
+            editEntity: "Edit",
+            back: "Back",
+            cancel: "Cancel",
+            delete: "Delete",
+            save: "Save",
+            upload: "Upload",
+        },
     },
     settings: {
         loading: "Loading",

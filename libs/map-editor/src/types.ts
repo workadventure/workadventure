@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CustomEntityDirection } from "@workadventure/messages";
 
 export type AtLeast<T, K extends keyof T> = Partial<T> & Pick<T, K>;
 
@@ -160,19 +161,24 @@ export const EntityDataProperty = z.discriminatedUnion("type", [
 
 export const EntityDataProperties = z.array(EntityDataProperty);
 
+export const CollisionGrid = z.array(z.array(z.number()));
+
 export const EntityRawPrefab = z.object({
+    id: z.string(),
     name: z.string(),
     tags: z.array(z.string()),
     imagePath: z.string(),
     direction: z.enum(["Left", "Up", "Down", "Right"]),
     color: z.string(),
-    collisionGrid: z.array(z.array(z.number())).optional(),
+    collisionGrid: CollisionGrid.optional(),
     depthOffset: z.number().optional(),
 });
 
+export const EntityPrefabType = z.union([z.literal("Default"), z.literal("Custom")]);
+
 export const EntityPrefab = EntityRawPrefab.extend({
     collectionName: z.string(),
-    id: z.string(),
+    type: EntityPrefabType,
 });
 
 export const EntityPrefabRef = z.object({
@@ -184,6 +190,13 @@ export const EntityCollection = z.object({
     collectionName: z.string(),
     tags: z.array(z.string()),
     collection: z.array(EntityPrefab),
+});
+
+export const EntityCollectionRaw = z.object({
+    collectionName: z.string(),
+    tags: z.array(z.string()),
+    collection: z.array(EntityRawPrefab),
+    version: z.string().optional(),
 });
 
 // TODO: get rid of this type and use only WAMEntityData
@@ -280,8 +293,11 @@ export const MapsCacheFileFormat = z.object({
 
 export type EntityRawPrefab = z.infer<typeof EntityRawPrefab>;
 export type EntityPrefab = z.infer<typeof EntityPrefab>;
+export type EntityPrefabType = z.infer<typeof EntityPrefabType>;
 export type EntityCollection = z.infer<typeof EntityCollection>;
+export type EntityCollectionRaw = z.infer<typeof EntityCollectionRaw>;
 export type CollectionUrl = z.infer<typeof CollectionUrl>;
+export type CollisionGrid = z.infer<typeof CollisionGrid>;
 export type EntityData = z.infer<typeof EntityData>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
@@ -366,3 +382,18 @@ export enum GameMapProperties {
     ZONE = "zone",
     ZOOM_MARGIN = "zoomMargin",
 }
+
+export const mapCustomEntityDirectionToDirection = (uploadEntityMessageDirection: CustomEntityDirection) => {
+    switch (uploadEntityMessageDirection) {
+        case CustomEntityDirection.Up:
+            return Direction.Up;
+        case CustomEntityDirection.Right:
+            return Direction.Right;
+        case CustomEntityDirection.Down:
+            return Direction.Down;
+        case CustomEntityDirection.Left:
+            return Direction.Left;
+        default:
+            return Direction.Down;
+    }
+};

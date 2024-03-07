@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { get, writable } from "svelte/store";
+    import { writable } from "svelte/store";
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import MoreActionSvg from "../images/ellipsis.svg";
     import MicrophoneCloseSvg from "../images/microphone-close.svg";
@@ -74,7 +74,7 @@
     class="tw-absolute tw-top-0 tw-left-0 tw-flex tw-flex-col tw-flex-wrap tw-justify-between tw-items-center tw-p-1 tw-bg-black tw-bg-opacity-10 tw-rounded-lg tw-max-h-full tw-z-50 hover:tw-bg-opacity-90 tw-cursor-pointer"
     class:tw-mt-[0.2rem]={!videoEnabled}
     on:click={() => analyticsClient.moreActionMetting()}
-    on:click|preventDefault|stopPropagation={() => toggleActionMenu(!get(moreActionOpened))}
+    on:click|preventDefault|stopPropagation={() => toggleActionMenu(!$moreActionOpened)}
     on:mouseleave={() => toggleActionMenu(false)}
 >
     {#if !$moreActionOpened}

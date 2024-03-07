@@ -10,11 +10,11 @@ import { get, Unsubscriber } from "svelte/store";
 import { z } from "zod";
 import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
 import {
+    mapEditorEntityModeStore,
     mapEditorModeStore,
+    mapEditorSelectedEntityDraggedStore,
     mapEditorSelectedEntityPrefabStore,
     mapEditorSelectedEntityStore,
-    mapEditorEntityModeStore,
-    mapEditorSelectedEntityDraggedStore,
     mapEditorSelectedToolStore,
 } from "../../../Stores/MapEditorStore";
 import { Entity, EntityEvent } from "../../ECS/Entity";
@@ -71,7 +71,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
      */
     private pointerOverEntitySubject = new Subject<Entity>();
     private pointerOutEntitySubject = new Subject<Entity>();
-
     constructor(scene: GameScene, gameMapFrontWrapper: GameMapFrontWrapper) {
         super();
         this.scene = scene;
@@ -165,6 +164,23 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         this.scene.markDirty();
 
         return this.entities.delete(id);
+    }
+
+    public deleteEntities(idsToRemove: string[]): boolean {
+        const removedEntitiesStatus: boolean[] = idsToRemove.map((id) => this.deleteEntity(id));
+        return removedEntitiesStatus.every(Boolean);
+    }
+
+    public updateEntitiesDepth(modifiedEntityPrefabId: string, depthOffset: number) {
+        const entities = this.getEntities();
+        for (const entity of entities.values()) {
+            const entityPrefab = entity.getPrefab();
+            if (entityPrefab.id === modifiedEntityPrefabId) {
+                if (entityPrefab.depthOffset !== depthOffset) {
+                    entity.setDepth(entity.y + entity.displayHeight + depthOffset);
+                }
+            }
+        }
     }
 
     public getProperties(): Map<string, string | boolean | number> {

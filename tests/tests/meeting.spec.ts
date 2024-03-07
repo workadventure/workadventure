@@ -131,7 +131,7 @@ test.describe('Meeting actions test', () => {
     // Click on the mute button
     await page.click('.cameras-container .other-cameras .jitsi-video .action-button#mute-audio-user');
 
-    // Check if "Bob" user receive the request to be metued
+    // Check if "Bob" user receive the request to be muted
     await expect(userBob.locator('.interact-menu')).toBeVisible({timeout: 20_000});
     // Click on the accept button
     await userBob.click('.interact-menu .accept-request');
@@ -139,9 +139,18 @@ test.describe('Meeting actions test', () => {
     // Check if the user has been muted
     await expect(page.locator('.cameras-container .other-cameras .jitsi-video .voice-meter-cam-off')).toBeVisible({timeout: 20_000});
     // Click on the mute video button
+
+    try {
+      // Sometimes the menu is closed again (maybe because Jitsi triggered a redisplay of the component?)
+      // We need to reopen the menu
+      await page.click('.cameras-container .other-cameras .jitsi-video .action-button#more-action', {timeout: 2_000});
+    } catch {
+      // Let's ignore the error
+    }
     await page.click('.cameras-container .other-cameras .jitsi-video .action-button#mute-video-user');
 
-    // Check if "Bob" user receive the request to be metued
+
+    // Check if "Bob" user receive the request to be muted
     await expect(userBob.locator('.interact-menu')).toBeVisible({timeout: 20_000});
     // Click on the accept button
     await userBob.click('.interact-menu .accept-request');

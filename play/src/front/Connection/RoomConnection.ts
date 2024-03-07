@@ -1,13 +1,22 @@
 import axios from "axios";
 
-import { get } from "svelte/store";
+import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
 import {
-    apiVersionHash,
+    AddSpaceFilterMessage,
+    AddSpaceUserMessage,
     AnswerMessage,
+    apiVersionHash,
+    AskMutedMessage,
+    AskMutedVideoMessage,
+    AskMuteMicrophoneMessage,
+    AskMuteVideoMessage,
     AvailabilityStatus,
     CharacterTextureMessage,
     ClientToServerMessage as ClientToServerMessageTsProto,
+    CompanionTextureMessage,
+    DeleteCustomEntityMessage,
     EditMapCommandMessage,
+    EmbeddableWebsiteAnswer,
     EmoteEventMessage as EmoteEventMessageTsProto,
     ErrorMessage as ErrorMessageTsProto,
     ErrorScreenMessage as ErrorScreenMessageTsProto,
@@ -16,58 +25,63 @@ import {
     JitsiJwtAnswer,
     JoinBBBMeetingAnswer,
     LeaveMucRoomMessage,
+    MegaphoneSettings,
+    ModifiyWAMMetadataMessage,
+    ModifyCustomEntityMessage,
     MoveToPositionMessage as MoveToPositionMessageProto,
     MucRoomDefinitionMessage,
+    MutedMessage,
+    MutedVideoMessage,
+    MuteMicrophoneEverybodyMessage,
+    MuteMicrophoneMessage,
+    MuteVideoEverybodyMessage,
+    MuteVideoMessage,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     PositionMessage_Direction,
+    QueryMessage,
+    RefreshRoomMessage,
+    RemoveSpaceFilterMessage,
+    RemoveSpaceUserMessage,
+    RoomShortDescription,
     ServerToClientMessage as ServerToClientMessageTsProto,
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     SetPlayerVariableMessage_Scope,
-    QueryMessage,
+    SpaceFilterMessage,
     TokenExpiredMessage,
+    UnwatchSpaceMessage,
+    UpdateSpaceFilterMessage,
+    UpdateSpaceMetadataMessage,
+    UpdateSpaceUserMessage,
+    UpdateWAMSettingsMessage,
+    UploadEntityMessage,
     UserJoinedMessage as UserJoinedMessageTsProto,
     UserLeftMessage as UserLeftMessageTsProto,
     UserMovedMessage as UserMovedMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
+    WatchSpaceMessage,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnectionMessage,
     XmppSettingsMessage,
-    RefreshRoomMessage,
-    AddSpaceFilterMessage,
-    UpdateSpaceFilterMessage,
-    RemoveSpaceFilterMessage,
-    UpdateSpaceMetadataMessage,
-    AddSpaceUserMessage,
-    UpdateSpaceUserMessage,
-    RemoveSpaceUserMessage,
-    WatchSpaceMessage,
-    SpaceFilterMessage,
-    MegaphoneSettings,
-    UpdateWAMSettingsMessage,
-    UnwatchSpaceMessage,
-    EmbeddableWebsiteAnswer,
-    CompanionTextureMessage,
-    RoomShortDescription,
-    MuteMicrophoneMessage,
-    MuteVideoMessage,
-    MuteMicrophoneEverybodyMessage,
-    MuteVideoEverybodyMessage,
-    MutedMessage,
-    MutedVideoMessage,
-    AskMuteVideoMessage,
-    AskMuteMicrophoneMessage,
-    AskMutedMessage,
-    AskMutedVideoMessage,
-    ModifiyWAMMetadataMessage,
 } from "@workadventure/messages";
-import { BehaviorSubject, Subject } from "rxjs";
-import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
+import { BehaviorSubject, Subject } from "rxjs";
+import { get } from "svelte/store";
+import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
+import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
+import { iframeListener } from "../Api/IframeListener";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import { ENABLE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
+import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
+import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
+import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene";
+import { chatZoneLiveStore } from "../Stores/ChatStore";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
+import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
+import { isSpeakerStore } from "../Stores/MediaStore";
+import { currentLiveStreamingNameStore } from "../Stores/MegaphoneStore";
 import {
     inviteUserActivated,
     mapEditorActivated,
@@ -75,23 +89,11 @@ import {
     menuVisiblilityStore,
     warningBannerStore,
 } from "../Stores/MenuStore";
-import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
-import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
-import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
-import { ENABLE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
-import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
-import { iframeListener } from "../Api/IframeListener";
-import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
-import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene";
-import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
-import { currentLiveStreamingNameStore } from "../Stores/MegaphoneStore";
-import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
-import { isSpeakerStore } from "../Stores/MediaStore";
-import { chatZoneLiveStore } from "../Stores/ChatStore";
-import { localUserStore } from "./LocalUserStore";
-import { connectionManager } from "./ConnectionManager";
+import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
 import { adminMessagesService } from "./AdminMessagesService";
+import { connectionManager } from "./ConnectionManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
     GroupUsersUpdateMessageInterface,
@@ -102,6 +104,7 @@ import type {
     ViewportInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
+import { localUserStore } from "./LocalUserStore";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -1368,6 +1371,23 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitMapEditorUploadEntity(commandId: string, uploadEntityMessage: UploadEntityMessage): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "uploadEntityMessage",
+                            uploadEntityMessage,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
     public emitModifiyWAMMetadataMessage(
         commandId: string,
         modifiyWAMMetadataMessage: ModifiyWAMMetadataMessage
@@ -1381,6 +1401,46 @@ export class RoomConnection implements RoomConnection {
                         message: {
                             $case: "modifiyWAMMetadataMessage",
                             modifiyWAMMetadataMessage,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitMapEditorModifyCustomEntity(
+        commandId: string,
+        modifyCustomEntityMessage: ModifyCustomEntityMessage
+    ): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "modifyCustomEntityMessage",
+                            modifyCustomEntityMessage,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitMapEditorDeleteCustomEntity(
+        commandId: string,
+        deleteCustomEntityMessage: DeleteCustomEntityMessage
+    ): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "deleteCustomEntityMessage",
+                            deleteCustomEntityMessage,
                         },
                     },
                 },

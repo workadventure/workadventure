@@ -1,4 +1,5 @@
 import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
+import * as Sentry from "@sentry/node";
 import {
     AreaData,
     AtLeast,
@@ -9,9 +10,9 @@ import {
     EntityDataProperties,
     UpdateAreaCommand,
     UpdateEntityCommand,
+    UpdateWAMMetadataCommand,
     UpdateWAMSettingCommand,
     WAMEntityData,
-    UpdateWAMMetadataCommand,
 } from "@workadventure/map-editor";
 import {
     EditMapCommandMessage,
@@ -21,9 +22,12 @@ import {
     PingMessage,
     UpdateMapToNewestWithKeyMessage,
 } from "@workadventure/messages";
-import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
-import * as Sentry from "@sentry/node";
+import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
+import { DeleteCustomEntityMapStorageCommand } from "./Commands/DeleteCustomEntityMapStorageCommand";
+import { ModifyCustomEntityMapStorageCommand } from "./Commands/ModifyCustomEntityMapStorageCommand";
+import { UploadEntityMapStorageCommand } from "./Commands/UploadEntityMapStorageCommand";
+import { entitiesManager } from "./EntitiesManager";
 import { mapsManager } from "./MapsManager";
 import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
 
@@ -200,6 +204,27 @@ const mapStorageServer: MapStorageServer = {
                         mapKey,
                         mapUrl.host,
                         new DeleteEntityCommand(gameMap, message.id, commandId)
+                    );
+                    break;
+                }
+                case "uploadEntityMessage": {
+                    const uploadEntityMessage = editMapMessage.uploadEntityMessage;
+                    await entitiesManager.executeCommand(
+                        new UploadEntityMapStorageCommand(uploadEntityMessage, mapUrl.hostname)
+                    );
+                    break;
+                }
+                case "modifyCustomEntityMessage": {
+                    const modifyCustomEntityMessage = editMapMessage.modifyCustomEntityMessage;
+                    await entitiesManager.executeCommand(
+                        new ModifyCustomEntityMapStorageCommand(modifyCustomEntityMessage, mapUrl.hostname)
+                    );
+                    break;
+                }
+                case "deleteCustomEntityMessage": {
+                    const deleteCustomEntityMessage = editMapMessage.deleteCustomEntityMessage;
+                    await entitiesManager.executeCommand(
+                        new DeleteCustomEntityMapStorageCommand(deleteCustomEntityMessage, gameMap, mapUrl.hostname)
                     );
                     break;
                 }

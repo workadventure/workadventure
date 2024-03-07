@@ -4,7 +4,11 @@
     import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { emoteDataStoreLoading, emoteMenuStore } from "../Stores/EmoteStore";
     import { requestVisitCardsStore } from "../Stores/GameStore";
-    import { helpCameraSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
+    import {
+        helpCameraSettingsVisibleStore,
+        helpWebRtcSettingsVisibleStore,
+        helpNotificationSettingsVisibleStore,
+    } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
     import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
@@ -29,6 +33,11 @@
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { askDialogStore } from "../Stores/MeetingStore";
+    import {
+        bubbleModalVisibility,
+        changeStatusConfirmationModalVisibility,
+        notificationPermissionModalVisibility,
+    } from "../Stores/AvailabilityStatusModalsStore";
     import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
@@ -36,6 +45,7 @@
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
+    import HelpNotificationSettingsPopup from "./HelpSettings/HelpNotificationSettingPopup.svelte";
     import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
     import Menu from "./Menu/Menu.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
@@ -54,6 +64,9 @@
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
+    import ChangeStatusConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/ChangeStatusConfirmationModal.svelte";
+    import BubbleConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/BubbleConfirmationModal.svelte";
+    import NotificationPermissionModal from "./ActionBar/AvailabilityStatus/Modals/NotificationPermissionModal.svelte";
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
     import ObjectDetails from "./Modal/ObjectDetails.svelte";
     import Popup from "./Modal/Popup.svelte";
@@ -120,6 +133,10 @@
 
         {#if $helpCameraSettingsVisibleStore}
             <HelpCameraSettingsPopup />
+        {/if}
+
+        {#if $helpNotificationSettingsVisibleStore}
+            <HelpNotificationSettingsPopup />
         {/if}
 
         {#if $helpWebRtcSettingsVisibleStore !== "hidden" && $proximityMeetingStore === true}
@@ -191,6 +208,16 @@
 
     <ActionBar />
 
+    {#if $changeStatusConfirmationModalVisibility}
+        <ChangeStatusConfirmationModal />
+    {/if}
+
+    {#if $bubbleModalVisibility}
+        <BubbleConfirmationModal />
+    {/if}
+    {#if $notificationPermissionModalVisibility}
+        <NotificationPermissionModal />
+    {/if}
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 

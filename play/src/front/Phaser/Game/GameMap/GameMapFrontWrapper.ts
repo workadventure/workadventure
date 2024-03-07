@@ -1,5 +1,5 @@
-import { AreaCoordinates, AreaDataProperties, AreaUpdateCallback, GameMapProperties } from "@workadventure/map-editor";
 import type { AreaChangeCallback, AreaData, AtLeast, GameMap } from "@workadventure/map-editor";
+import { AreaCoordinates, AreaDataProperties, AreaUpdateCallback, GameMapProperties } from "@workadventure/map-editor";
 import type {
     ITiledMap,
     ITiledMapLayer,
@@ -127,8 +127,6 @@ export class GameMapFrontWrapper {
 
         this.gameMap.initialize();
 
-        this.updateCollisionGrid(undefined, false);
-
         let depth = -2;
         for (const layer of this.gameMap.flatLayers) {
             if (layer.type === "tilelayer") {
@@ -211,6 +209,21 @@ export class GameMapFrontWrapper {
             this.updateCollisionGrid(this.entitiesCollisionLayer, false);
             this.initializedPromise.resolve();
         });
+    }
+
+    public recomputeEntitiesCollisionGrid() {
+        const entities = this.entitiesManager.getEntities();
+
+        this.entitiesCollisionLayer.fill(-1);
+
+        for (const entity of entities.values()) {
+            const entityCollisionGrid = entity.getCollisionGrid();
+            if (entityCollisionGrid === undefined) {
+                continue;
+            }
+            this.modifyToCollisionsLayer(entity.x, entity.y, entity.name, entityCollisionGrid, false);
+        }
+        this.updateCollisionGrid(this.entitiesCollisionLayer, false);
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {

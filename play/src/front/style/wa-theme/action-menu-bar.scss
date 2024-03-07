@@ -35,6 +35,10 @@
                         @apply sm:tw-w-14 sm:tw-h-12;
                     }
                 }
+
+                button.large {
+                    @apply tw-w-max;
+                }
             }
 
             #invite-btn {

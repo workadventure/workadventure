@@ -173,6 +173,10 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         description: "Dessinez une zone sur la carte afin d'en créer une nouvelle.",
     },
     entityEditor: {
+        header: {
+            title: "Ajouter un objet",
+            description: "Recherchez, téléchargez ou sélectionnez un objet existant et ajoutez-le à la carte.",
+        },
         title: "Outil d'édition d'entités",
         editing: "Edition : {name}",
         itemPicker: {
@@ -193,6 +197,36 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         objectDescriptionPlaceholder: "Description de l'objet",
         objectSearchable: "Recherchable dans le mode exploration",
         addDescriptionField: "Ajouter une description",
+        uploadEntity: {
+            title: "Ajouter votre image",
+            description: "Glissez-déposer ou choisissez votre image afin de l'ajouter sur la carte",
+            dragDrop: "Glissez-déposer ou",
+            chooseFile: "Choisir ",
+            errorOnFileFormat: "Format du fichier non supporté",
+            errorOnFileNumber: "Dépot multiple de fichier non supporté",
+        },
+        images: "Image{{s}}",
+        noImage: "Aucune image",
+        customEntityEditorForm: {
+            imageName: "Nom de l'image",
+            tags: "Tags",
+            objectType: "Type d'objet",
+            floatingObject: "Objet flottant",
+            floatingObjectDescription:
+                "Un objet flottant peut être placé librement sur la carte. Autrement, il sera aligné sur la grille de la carte.",
+            depth: "Prodondeur",
+            groundLevel: "Au sol",
+            custom: "Personnalisé",
+            standing: "Debout",
+        },
+        buttons: {
+            editEntity: "Editer",
+            back: "Retour",
+            cancel: "Annuler",
+            delete: "Supprimer",
+            save: "Enregister",
+            upload: "Charger",
+        },
     },
     settings: {
         loading: "Chargement en cours",
