@@ -35,7 +35,7 @@ const JITSI_MIN_RESOLUTION = 180;
 //const JITSI_MAX_RESOLUTION = 720;
 
 //const JITSI_PRESENTATION_LASTN = 10;
-const JITSI_MOZAIC_LASTN = 4;
+//const JITSI_MOZAIC_LASTN = 4;
 
 export class JitsiConferenceWrapper {
     private myParticipantId: string | undefined;
