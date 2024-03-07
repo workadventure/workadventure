@@ -1027,7 +1027,7 @@
                         </div>
                     </div>
                     {#if profileMenuIsDropped}
-                        <div class="absolute mt-2 top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all hidden @lg:block" transition:fly={{y: 40, duration: 150 }}>
+                        <div class="absolute mt-2 top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all hidden @md/actions:block" transition:fly={{y: 40, duration: 150 }}>
                             <div class="p-0 m-0 list-none">
                                 <a href="https://workadventu.re/pricing/" target="_blank" class="group flex px-2 transition-all cursor-pointer text-sm font-bold w-full text-white no-underline">
                                     <div class="flex items-center px-3 py-3 w-full bg-white/10 rounded">
@@ -1121,6 +1121,8 @@
                 <div class="group/btn-burger relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 rounded-l-lg rounded-r-lg aspect-square block @lg:hidden">
                     <div
                             on:click={() => burgerOpen = !burgerOpen}
+                            on:blur={() => burgerOpen = false }
+                            on:click|preventDefault={close}
                             class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:w-12 @xl/actions:w-12 p-1 m-0 rounded hover:bg-white/10 flex items-center justify-center transition-all"
                     >
                         {#if !burgerOpen}
@@ -1173,7 +1175,7 @@
             {/if}
             <div class="h-[1px] w-full bg-white/10 my-4"></div>
             {#if $inviteUserActivated}
-                <div class="px-4">
+                <div class="px-4 space-y-2">
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     {#each $addClassicButtonActionBarEvent as button}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
