@@ -488,7 +488,7 @@
                 </div>
             </div>
         </div>
-        <div class="@xxs/actions:justify-center justify-end main-action justify-center pointer-events-auto min-w-[192px] max-w-[424px]">
+        <div class="@xxs/actions:justify-center justify-end main-action justify-center pointer-events-auto min-w-[128px] @sm/actions:min-w-[192px] max-w-[424px]">
             <div class="flex justify-center relative space-x-0 @sm/actions:space-x-2 @xl/actions:space-x-4">
                 {#if !$silentStore}
                     <div in:fly={{delay: 750, y: -200, duration: 750 }}>
@@ -956,7 +956,7 @@
                             </div>
                         </div>
                         {#if adminMenuIsDropped}
-                            <div class="absolute mt-2 top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all" transition:fly={{y: 40, duration: 150 }}>
+                            <div class="absolute mt-2 top-14 @xl/actions:top-16 right-0 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all" transition:fly={{y: 40, duration: 150 }}>
                                 <ul class="p-0 m-0">
                                     {#if $mapEditorActivated}
                                         <li class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold" on:click={() => toggleMapEditorMode()}>
@@ -998,36 +998,36 @@
                         {/if}
                     </div>
                 {/if}
-                <div id="action-user" class="flex items-center relative min-w-40 transition-all hidden @md/actions:flex">
-                    <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2" on:click={() => profileMenuIsDropped = !profileMenuIsDropped} on:click={close} tabindex="0">
+                <div id="action-user" class="flex items-center relative transition-all hidden @md/actions:flex">
+                    <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2" on:click={() => profileMenuIsDropped = !profileMenuIsDropped} on:click|preventDefault={close} on:blur={() => profileMenuIsDropped = false } tabindex="0">
                         <div class="flex items-center h-full group-hover:bg-white/10 transition-all group-hover:rounded space-x-2 pl-2 pr-3">
                             <Woka userId={-1} placeholderSrc="" customWidth="32px" customHeight="32px" />
-                            <div class="grow flex flex-col justify-start text-left pr-2">
-                                <div class="font-bold text-white leading-5 whitespace-nowrap select-none text-base @sm/actions:text-sm @xl/actions:text-base">
+                            <div class="grow flex items-center flex-row @xl/actions:flex-col justify-start text-left pr-2">
+                                <div class="font-bold text-white leading-5 whitespace-nowrap select-none text-base @sm/actions:text-sm @xl/actions:text-base order-last @xl/actions:order-first flex items-center">
                                     {userName}
                                 </div>
                                 <div class="text-xxs bold whitespace-nowrap select-none flex items-center">
                                     {#if $availabilityStatusStore === 1}
                                         <div class="aspect-square h-2 w-2 bg-success rounded-full mr-2"></div>
-                                        <div class="text-success">Online</div>
+                                        <div class="text-success hidden @xl/actions:block">Online</div>
                                     {/if}
                                     {#if $availabilityStatusStore === 2}
                                         <div class="aspect-square h-2 w-2 bg-warning rounded-full mr-2"></div>
-                                        <div class="text-warning">Away</div>
+                                        <div class="text-warning hidden @xl/actions:block">Away</div>
                                     {/if}
                                     {#if $availabilityStatusStore === 3}
                                         <div class="aspect-square h-2 w-2 bg-danger rounded-full mr-2"></div>
-                                        <div class="text-danger">Do not Disturb</div>
+                                        <div class="text-danger hidden @xl/actions:block">Do not Disturb</div>
                                     {/if}
                                 </div>
                             </div>
                             <div>
-                                <ChevronDownIcon strokeWidth="2" classList="transition-all opacity-50 {adminMenuIsDropped ? 'rotate-180' : '' }" height="h-4" width="w-4"  />
+                                <ChevronDownIcon strokeWidth="2" classList="transition-all opacity-50 {profileMenuIsDropped ? 'rotate-180' : '' }" height="h-4" width="w-4"  />
                             </div>
                         </div>
                     </div>
                     {#if profileMenuIsDropped}
-                        <div class="absolute mt-2 top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all hidden @lg:block" transition:fly={{y: 40, duration: 150 }}>
+                        <div class="absolute mt-2 top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 right-0 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all hidden @lg:block" transition:fly={{y: 40, duration: 150 }}>
                             <div class="p-0 m-0 list-none">
                                 <a href="https://workadventu.re/pricing/" target="_blank" class="group flex px-2 transition-all cursor-pointer text-sm font-bold w-full text-white no-underline">
                                     <div class="flex items-center px-3 py-3 w-full bg-white/10 rounded">
@@ -1135,7 +1135,7 @@
         </div>
     </div>
     {#if burgerOpen}
-        <div class="w-48 bg-contrast/80 absolute right-2 top-auto bottom-20 sm:bottom-auto sm:top-18 z-[1000] py-4 rounded-lg text-right text-white no-underline pointer-events-auto block @lg:hidden">
+        <div class="w-48 bg-contrast/80 absolute right-2 top-auto bottom-20 sm:bottom-auto sm:top-18 z-[1000] py-4 rounded-lg text-right text-white no-underline pointer-events-auto block @lg:hidden before:content-[''] before:absolute before:w-0 before:h-0 sm:before:-top-[14px] sm:before:bottom-auto before:-bottom-4 before:top-auto before:rotate-180 sm:before:rotate-0 before:right-5 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all" transition:fly={{y: 40, duration: 150 }}>
             <div class="block @md/actions:hidden">
                 <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">Your profil</div>
 
