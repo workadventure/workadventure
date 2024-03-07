@@ -514,7 +514,7 @@
                                         <div class="bottom-action-bar bg-contrast/80 transition-all backdrop-blur rounded-lg px-3 flex flex-col items-stretch items-center pointer-events-auto justify-center m-auto bottom-6 md:bottom-4 z-[251] transition-transform duration-300 sm:flex-row">
                                             <div class="flex animate flex-row flex items-center">
                                                 <div class="py-1 flex">
-                                                    {#each [...$emoteDataStore.keys()] as key}
+                                                    {#each [...$emoteDataStore.keys()] as key, index (index)}
                                                         <div class="transition-all bottom-action-button divide-x">
                                                             <button
                                                                     on:click|stopPropagation|preventDefault={() => {
@@ -691,7 +691,7 @@
                                         <div class="flex text-xxs uppercase text-white/50 px-3 py-2 relative">
                                             {$LL.actionbar.subtitle.camera()}
                                         </div>
-                                        {#each $cameraListStore as camera}
+                                        {#each $cameraListStore as camera, index (index)}
                                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                                             <div
                                                     class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$usedCameraDeviceIdStore === camera.deviceId ? 'bg-secondary' : 'hover:bg-white/10'}"
@@ -735,7 +735,7 @@
                                         <div class="flex text-xxs uppercase text-white/50 px-3 py-2 relative">
                                             {$LL.actionbar.subtitle.microphone()}
                                         </div>
-                                        {#each $microphoneListStore as microphone}
+                                        {#each $microphoneListStore as microphone, index (index)}
                                             <div
                                                     class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$usedMicrophoneDeviceIdStore === microphone.deviceId ? 'bg-secondary' : 'hover:bg-white/10'}"
                                                     on:click={() => {
@@ -778,7 +778,7 @@
                                         <div class="flex text-xxs uppercase text-white/50 px-3 py-1 relative">
                                             {$LL.actionbar.subtitle.speaker()}
                                         </div>
-                                        {#each $speakerListStore as speaker}
+                                        {#each $speakerListStore as speaker, index (index)}
                                             <div
                                                     class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$speakerSelectedStore === speaker.deviceId ? 'bg-secondary' : 'hover:bg-white/10'}"
                                                     on:click={() => {
@@ -859,7 +859,7 @@
             <div class="flex justify-end space-x-0 md:space-x-2 xl:space-x-4">
                 {#if $addActionButtonActionBarEvent.length > 0}
                     <div class="items-center relative hidden @lg/actions:flex">
-                        {#each $addActionButtonActionBarEvent as button}
+                        {#each $addActionButtonActionBarEvent as button, index (index)}
                             <div class="group/btn-custom{button.id} peer/custom{button.id} relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg">
                                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
@@ -903,7 +903,7 @@
                     <div id="action-invite" class="transition-all hidden @lg/actions:block">
                         <div class="flex items-center">
                             <div class="flex items-center bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg">
-                                {#each $addClassicButtonActionBarEvent as button}
+                                {#each $addClassicButtonActionBarEvent as button, index (index)}
                                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
                                             class="flex flex-initial"
@@ -1174,7 +1174,7 @@
             {#if $inviteUserActivated}
                 <div class="px-4 space-y-2">
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    {#each $addClassicButtonActionBarEvent as button}
+                    {#each $addClassicButtonActionBarEvent as button, index (index)}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                                 class="flex flex-initial"
@@ -1211,7 +1211,7 @@
                 </div>
             {/if}
             {#if $addActionButtonActionBarEvent.length > 0}
-                {#each $addActionButtonActionBarEvent as button}
+                {#each $addActionButtonActionBarEvent as button, index (index)}
                     <div class="px-4">
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
