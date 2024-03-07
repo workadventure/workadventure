@@ -159,8 +159,6 @@
         margin-top: auto;
         margin-bottom: auto;
 
-
-
         .cowebsite-icon {
             width: 50px;
             height: 50px;
@@ -172,14 +170,6 @@
 
             &.meeting {
                 padding: 7px;
-            }
-        }
-
-
-        &:hover {
-            .cowebsite-hover {
-                opacity: 1;
-                width: max-content !important;
             }
         }
     }
