@@ -85,8 +85,8 @@ test.describe('Map editor', () => {
     // Check that the live message is displayed
     //await expect(page.locator('.menu-container #content-liveMessage h3')).toContainText('Live message', {timeout: 5_000});
     // Click on the button to start live message
-    await page.locator('.menu-container #content-liveMessage').getByRole('button', {name: 'Start a live message'}).click({timeout: 10_000});
-    await page.locator('.menu-container #active-liveMessage').getByRole('button', {name: 'Start live message'}).click({timeout: 10_000});
+    await page.locator('.menu-container #content-liveMessage').getByRole('button', {name: 'Start live message'}).click({timeout: 10_000});
+    await page.locator('.menu-container #active-liveMessage').getByRole('button', {name: 'Start megaphone'}).click({timeout: 10_000});
 
     // click on the megaphone button to start the streaming session
     await expect(page2.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 15_000});
@@ -127,7 +127,7 @@ test.describe('Map editor', () => {
     await AreaEditor.setSpeakerMegaphoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
     await AreaEditor.drawArea(page, {x: 1*32*1.5, y: 6*32*1.5}, {x: 9*32*1.5, y: 9*32*1.5});
     await AreaEditor.addProperty(page, 'Attendees zone');
-    await AreaEditor.setListenerZoneProperty(page, `${browser.browserType().name()}SpeakerZone`);
+    await AreaEditor.setListenerZoneProperty(page, `${browser.browserType().name()}SpeakerZone`.toLowerCase());
     await Menu.closeMapEditor(page);
     await Map.teleportToPosition(page, 4*32, 2*32);
     await expect(await page.locator('.jitsi-video')).toBeVisible({timeout: 20_000});
