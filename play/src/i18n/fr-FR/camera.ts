@@ -27,6 +27,7 @@ const camera: DeepPartial<Translation["camera"]> = {
             "Impossible de se connecter au serveur vidéo relais. La connexion audio/vidéo avec d'autres utilisateurs pourrait ne pas fonctionner.",
         solutionVpn:
             "Si vous êtes connectés avec <strong>un VPN</strong>, vous devez vous déconnecter du VPN et rafraîchir votre page pour profiter de la meilleure expérience possible.",
+        solutionVpnNotAskAgain: "Compris, ne plus afficher cette page 🫡",
         solutionHotspot:
             "Si vous êtes sur un réseau sécurisé (réseau d'entreprise...), essayez de changer de réseau. Par exemple, en créant un <strong>hotspot Wifi</strong> avec votre smartphone.",
         solutionNetworkAdmin: "Si vous êtes <strong>administrateur réseay</strong>, consultez le ",
