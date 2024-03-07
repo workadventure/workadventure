@@ -1,12 +1,8 @@
 <script lang="ts">
     import { onMount , onDestroy } from "svelte";
-    // import { Color } from "@workadventure/shared-utils";
     import { Readable, Unsubscriber } from "svelte/store";
     import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-    // import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
-
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    // import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { Streamable, myJitsiCameraStore } from "../../Stores/StreamableCollectionStore";
     import SoundMeterWidgetWrapper from "../SoundMeterWidgetWrapper.svelte";

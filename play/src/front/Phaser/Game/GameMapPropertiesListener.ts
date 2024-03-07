@@ -21,7 +21,6 @@ import { inJitsiStore, inBbbStore, silentStore, inOpenWebsite, isSpeakerStore } 
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { currentLiveStreamingNameStore } from "../../Stores/MegaphoneStore";
 import { popupStore } from "../../Stores/PopupStore";
-// import popupOpenTab from "../../Components/PopUp/PopUpTab.svelte"
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
@@ -207,7 +206,7 @@ export class GameMapPropertiesListener {
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
             if (newValue === undefined || newValue !== oldValue) {
-                // layoutManagerActionStore.removeAction("bbbMeeting"); // A voir pour enlever le popup et le faire
+                // layoutManagerActionStore.removeAction("bbbMeeting"); // A voir pour enlever et faire un popup
                 inBbbStore.set(false);
                 bbbFactory.setStopped(true);
                 bbbFactory.stop();
