@@ -140,6 +140,11 @@ import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { askDialogStore } from "../../Stores/MeetingStore";
 import { warningMessageStore } from "../../Stores/ErrorStore";
+import { popupStore } from "../../Stores/PopupStore";
+import PopUpRoomAccessDenied from "../../Components/PopUp/PopUpRoomAccessDenied.svelte";
+import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
+import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
+import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerActionMessage.svelte";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -159,6 +164,7 @@ import type { AddPlayerInterface } from "./AddPlayerInterface";
 import type { CameraManagerEventCameraUpdateData } from "./CameraManager";
 import { CameraManager, CameraManagerEvent } from "./CameraManager";
 
+import { UIWebsiteManager } from "./UI/UIWebsiteManager";
 import { EditorToolName, MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
 import { RemotePlayersRepository } from "./RemotePlayersRepository";
 import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
@@ -176,12 +182,6 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
-import { popupStore } from "../../Stores/PopupStore";
-import PopUpRoomAccessDenied from "../../Components/PopUp/PopUpRoomAccessDenied.svelte";
-import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
-import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
-import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerActionMessage.svelte";
-import {UIWebsiteManager} from "./UI/UIWebsiteManager";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -1727,8 +1727,9 @@ export class GameScene extends DirtyScene {
                     );
                     return;
                 }
-                const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);Œ
-                let html = '<div id="container" class="relative bg-contrast/50 backdrop-blur pt-4 overflow-hidden rounded-lg text-white" hidden>';
+                const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
+                let html =
+                    '<div id="container" class="relative bg-contrast/50 backdrop-blur pt-4 overflow-hidden rounded-lg text-white" hidden>';
                 if (escapedMessage) {
                     html += `<div class="text-xxs text-center px-4">
 ${escapedMessage}
@@ -2322,15 +2323,18 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("triggerActionMessage", (message) =>
-            popupStore.addPopup(PopUpTriggerActionMessage, {
-                message: message.message,
-                click: () => {
-                    popupStore.removePopup(message.uuid);
-                    iframeListener.sendActionMessageTriggered(message.uuid)
+            popupStore.addPopup(
+                PopUpTriggerActionMessage,
+                {
+                    message: message.message,
+                    click: () => {
+                        popupStore.removePopup(message.uuid);
+                        iframeListener.sendActionMessageTriggered(message.uuid);
+                    },
+                    userInputManager: this.userInputManager,
                 },
-                userInputManager: this.userInputManager,
-            },
-            message.uuid)
+                message.uuid
+            )
         );
 
         iframeListener.registerAnswerer("setVariable", (event, source) => {
@@ -2486,14 +2490,17 @@ ${escapedMessage}
             console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);
 
             //show information room access denied
-            popupStore.addPopup(PopUpRoomAccessDenied, {
-                message: get(LL).warning.accessDenied.room(),
-                click: () => {
-                    popupStore.removePopup("roomAccessDenied");
+            popupStore.addPopup(
+                PopUpRoomAccessDenied,
+                {
+                    message: get(LL).warning.accessDenied.room(),
+                    click: () => {
+                        popupStore.removePopup("roomAccessDenied");
+                    },
+                    userInputManager: this.userInputManager,
                 },
-                userInputManager: this.userInputManager,
-            },
-            "roomAccessDenied");
+                "roomAccessDenied"
+            );
 
             this.mapTransitioning = false;
             return;
@@ -2658,15 +2665,17 @@ ${escapedMessage}
         const toolEditorParam = urlManager.getHashParameter("mapEditor");
         if (toolEditorParam) {
             if (!get(mapEditorActivated)) {
-
-                popupStore.addPopup(PopUpMapEditorNotEnabled, {
-                    message: get(LL).warning.mapEditorNotEnabled(),
-                    click: () => {
-                        popupStore.removePopup("mapEditorNotEnabled");
+                popupStore.addPopup(
+                    PopUpMapEditorNotEnabled,
+                    {
+                        message: get(LL).warning.mapEditorNotEnabled(),
+                        click: () => {
+                            popupStore.removePopup("mapEditorNotEnabled");
+                        },
+                        userInputManager: this.userInputManager,
                     },
-                    userInputManager: this.userInputManager,
-                },
-                "mapEditorNotEnabled");
+                    "mapEditorNotEnabled"
+                );
 
                 setTimeout(() => popupStore.removePopup("mapEditorNotEnabled"), 6_000);
             } else {
@@ -2707,15 +2716,17 @@ ${escapedMessage}
                         break;
                     }
                     default: {
-
-                        popupStore.addPopup(PopUpMapEditorShortcut, {
-                            message: get(LL).warning.mapEditorShortCut(),
-                            click: () => {
-                                popupStore.removePopup("mapEditorShortCut");
+                        popupStore.addPopup(
+                            PopUpMapEditorShortcut,
+                            {
+                                message: get(LL).warning.mapEditorShortCut(),
+                                click: () => {
+                                    popupStore.removePopup("mapEditorShortCut");
+                                },
+                                userInputManager: this.userInputManager,
                             },
-                            userInputManager: this.userInputManager,
-                        },
-                        "mapEditorShortCut");
+                            "mapEditorShortCut"
+                        );
 
                         setTimeout(() => popupStore.removePopup("mapEditorShortCut"), 6_000);
                         break;

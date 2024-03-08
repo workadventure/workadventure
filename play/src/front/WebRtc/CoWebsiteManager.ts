@@ -8,9 +8,7 @@ import { coWebsites, coWebsitesNotAsleep, mainCoWebsite } from "../Stores/CoWebs
 import { embedScreenLayoutStore } from "../Stores/EmbedScreensStore";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { isMediaBreakpointDown } from "../Utils/BreakpointsUtils";
-// import { analyticsClient } from "../Administration/AnalyticsClient";
 import { gameManager } from "../Phaser/Game/GameManager";
-// import { inCowebsiteZone } from "../Stores/MediaStore";
 import { LayoutMode } from "./LayoutManager";
 import type { CoWebsite } from "./CoWebsite/CoWebsite";
 import { HtmlUtils } from "./HtmlUtils";
@@ -206,11 +204,12 @@ class CoWebsiteManager {
         //this.mainCoWebsiteUnsubscriber();
         //this.highlightedEmbedScreenUnsubscriber();
     }
+    s;
 
-    // public getCoWebsiteBuffer(): HTMLDivElement {
-    //     throw new Error("To be reimplemented");
-    //     return this.cowebsiteBufferDom;
-    // }
+    public getCoWebsiteBuffer(): HTMLDivElement {
+        throw new Error("To be reimplemented");
+        return this.cowebsiteBufferDom;
+    }
 
     public getDevicePixelRatio(): number {
         //on chrome engines, movementX and movementY return global screens coordinates while other browser return pixels
