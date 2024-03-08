@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/svelte";
 import type { Subscription } from "rxjs";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
@@ -936,7 +937,12 @@ export class GameScene extends DirtyScene {
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
                 const commandsToApply = onConnect.room.commandsToApply;
                 if (commandsToApply) {
-                    await this.mapEditorModeManager?.updateMapToNewest(commandsToApply);
+                    try {
+                        await this.mapEditorModeManager?.updateMapToNewest(commandsToApply);
+                    } catch (e) {
+                        Sentry.captureException(e);
+                        console.error("Error while updating map to newest", e);
+                    }
                 }
 
                 this.tryOpenMapEditorWithToolEditorParameter();
