@@ -1,7 +1,6 @@
 import { derived, writable } from "svelte/store";
 import { SvelteComponent } from "svelte";
 import { v4 } from "uuid";
-import { set } from "zod";
 
 export const bannerVisible = writable(true);
 export const currentBannerIndex = writable(0);
