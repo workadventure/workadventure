@@ -42,11 +42,14 @@ function createPopupStore() {
                 if (index !== -1) {
                     list.splice(index, 1);
                 }
+
                 return list;
             });
         },
         clearActions: (): void => {
-            set([]);
+            update(() => {
+                return [];
+            });
         },
     };
 }
