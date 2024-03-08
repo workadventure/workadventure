@@ -33,9 +33,9 @@ import { iframeListener } from "../../../Api/IframeListener";
 import { chatZoneLiveStore } from "../../../Stores/ChatStore";
 import { Room } from "../../../Connection/Room";
 import { popupStore } from "../../../Stores/PopupStore";
-import JitsiPopup from '../../../Components/PopUp/PopUpJitsi.svelte';
-import PopUpTab from '../../../Components/PopUp/PopUpTab.svelte'; // Replace 'path/to/PopUpTab' with the actual path to the PopUpTab class
-import PopUpCowebsite from '../../../Components/PopUp/PopupCowebsite.svelte'; // Import the necessary module
+import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
+import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte"; // Replace 'path/to/PopUpTab' with the actual path to the PopUpTab class
+import PopUpCowebsite from "../../../Components/PopUp/PopupCowebsite.svelte"; // Import the necessary module
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -270,16 +270,18 @@ export class AreasPropertiesListener {
                     message = get(LL).trigger.newTab();
                 }
 
-                popupStore.addPopup(PopUpTab, {
-                    message: message,
-                    click: () => {
-                        popupStore.removePopup(actionId);
-                        scriptUtils.openTab(property.link as string);
+                popupStore.addPopup(
+                    PopUpTab,
+                    {
+                        message: message,
+                        click: () => {
+                            popupStore.removePopup(actionId);
+                            scriptUtils.openTab(property.link as string);
+                        },
+                        userInputManager: this.scene.userInputManager,
                     },
-                    userInputManager: this.scene.userInputManager,
-                },
-                actionId);
-
+                    actionId
+                );
             } else {
                 scriptUtils.openTab(property.link);
             }
@@ -304,15 +306,17 @@ export class AreasPropertiesListener {
 
             this.coWebsitesActionTriggers.set(property.id, actionId);
 
-            popupStore.addPopup(PopUpCowebsite, {
-                message: message,
-                click: () => {
-                    this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+            popupStore.addPopup(
+                PopUpCowebsite,
+                {
+                    message: message,
+                    click: () => {
+                        this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+                    },
+                    userInputManager: this.scene.userInputManager,
                 },
-                userInputManager: this.scene.userInputManager,
-            },
-            actionId);
-
+                actionId
+            );
         } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
             const coWebsite = new SimpleCoWebsite(
                 new URL(property.link ?? "", this.scene.mapUrlFile),
@@ -417,16 +421,19 @@ export class AreasPropertiesListener {
         if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
             let message = property.triggerMessage;
             if (message === undefined) {
-              message = get(LL).trigger.jitsiRoom();
+                message = get(LL).trigger.jitsiRoom();
             }
-              popupStore.addPopup(JitsiPopup, {
-                message: message,
-                callback: () => {
-                  openJitsiRoomFunction().catch((e) => console.error(e));
+            popupStore.addPopup(
+                JitsiPopup,
+                {
+                    message: message,
+                    callback: () => {
+                        openJitsiRoomFunction().catch((e) => console.error(e));
+                    },
+                    userInputManager: this.scene.userInputManager,
                 },
-                userInputManager: this.scene.userInputManager,
-              },
-              "jitsi");
+                "jitsi"
+            );
         } else {
             openJitsiRoomFunction().catch((e) => console.error(e));
         }
@@ -462,7 +469,7 @@ export class AreasPropertiesListener {
             return;
         }
 
-        const actionStore = get(layoutManagerActionStore);
+        const actionStore = get(popupStore);
         const actionTriggerUuid = this.coWebsitesActionTriggers.get(property.id);
 
         if (!actionTriggerUuid) {
