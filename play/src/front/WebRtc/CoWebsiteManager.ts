@@ -204,11 +204,10 @@ class CoWebsiteManager {
         //this.mainCoWebsiteUnsubscriber();
         //this.highlightedEmbedScreenUnsubscriber();
     }
-    s;
 
     public getCoWebsiteBuffer(): HTMLDivElement {
         throw new Error("To be reimplemented");
-        return this.cowebsiteBufferDom;
+        // return this.cowebsiteBufferDom;
     }
 
     public getDevicePixelRatio(): number {
