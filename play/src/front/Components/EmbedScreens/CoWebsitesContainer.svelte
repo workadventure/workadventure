@@ -14,29 +14,23 @@
 
 
 
-    if (coWebsiteManager) {
-        coWebsiteManager.displayMain = () => {
-            active = true;
-        };
-    }
-
 </script>
 
 
 <!-- Cette div devra apparaitre que s'il y a un event et elle peux apparaitre avec la methode display main dans le cowebsite manager-->
 
 <div
-    class="w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1000] hidden"
+    class="w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1000]"
     class:vertical
     transition:fly={{ duration: 750, x:1000 }}
 >
     <div class="flex py-2 ml-3 items-center">
         <div class="grow flex">
 
-            <!-- {#each [...$coWebsites.values()] as coWebsite, index (coWebsite.getId())} --> <!--$CoWebsite.URL} -->
-                <CoWebsiteTab title="Hello world !" url="https://google.fr" isLoading={true} active={true} />
-                <CoWebsiteTab title="Github" url="https://google.fr"  isLoading={true} active={true} />
-            <!-- {/each} -->
+            <CoWebsiteTab title="Hello world !" url="https://google.fr" isLoading={true} active={true} />
+            <CoWebsiteTab title="Github" url="https://google.fr"  isLoading={true} active={true} />
+            <!-- {#each [...$coWebsites.values()] as coWebsite, index (coWebsite.getId())} $CoWebsite.URL
+            {/each} -->
 
         </div>
         <div class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer">
