@@ -47,7 +47,7 @@ function createPopupStore() {
             });
         },
         clearActions: (): void => {
-            set<undefined>([]);
+            set([]);
         },
     };
 }
