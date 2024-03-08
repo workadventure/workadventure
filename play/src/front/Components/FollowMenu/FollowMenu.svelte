@@ -76,7 +76,7 @@
 
 {#if $followStateStore === "active" || $followStateStore === "ending"}
     <div
-        class="blue-dialog-box outline-light w-96 min-h-10 absolute bottom-16 mb-16 text-center m-auto right-0 left-0 z-[150] rounded-lg overflow-hidden text-white hover:animate-none transition-all pointer-events-auto responsive-follow-asker"
+        class="blue-dialog-box outline-light w-96 min-h-10 absolute bottom-16 mb-8 text-center m-auto right-0 left-0 z-[150] rounded-lg overflow-hidden text-white hover:animate-none transition-all pointer-events-auto responsive-follow-asker"
     >
 
         {#if $followRoleStore === "follower"}
@@ -140,5 +140,4 @@
             display: none;
         }
     }
-
 </style>
