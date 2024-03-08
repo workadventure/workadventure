@@ -87,6 +87,12 @@ app.get("*.wam", (req, res, next) => {
 
         const gameMap = await mapsManager.loadWAMToMemory(key);
 
+        res.setHeader("Content-Type", "application/json");
+        // Let's disable any kind of cache (we allow for a 5 seconds cache just to avoid spamming the server and
+        // to allow a CDN to take over the load). 5 seconds is ok, because it is lower than the 30 seconds of
+        // the command queue.
+        res.setHeader("Cache-Control", "max-age=5");
+
         res.send(gameMap.getWam());
     })().catch((e) => next());
 });

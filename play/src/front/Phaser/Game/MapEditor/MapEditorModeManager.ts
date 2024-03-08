@@ -211,13 +211,13 @@ export class MapEditorModeManager {
      * are applied locally and are not being send further.
      */
     public async updateMapToNewest(commands: EditMapCommandMessage[]): Promise<void> {
-        if (!commands) {
-            return;
-        }
-        for (const command of commands) {
-            for (const tool of Object.values(this.editorTools)) {
-                //eslint-disable-next-line no-await-in-loop
-                await tool.handleIncomingCommandMessage(command);
+        if (commands.length !== 0) {
+            logger(`Map is not up to date. Updating by applying ${commands.length} missing commands.`);
+            for (const command of commands) {
+                for (const tool of Object.values(this.editorTools)) {
+                    //eslint-disable-next-line no-await-in-loop
+                    await tool.handleIncomingCommandMessage(command);
+                }
             }
         }
     }
