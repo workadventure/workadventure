@@ -51,7 +51,6 @@
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
 
-
     let mainLayout: HTMLDivElement;
     export let message: string;
 
