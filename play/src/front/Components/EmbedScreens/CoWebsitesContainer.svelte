@@ -1,33 +1,35 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    // import { coWebsites } from "../../Stores/CoWebsiteStore";
+    import { coWebsites } from "../../Stores/CoWebsiteStore";
     import XIcon from "../Icons/XIcon.svelte";
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
+    import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
 
     export let vertical = false;
+
+    // coWebsites.add(new CoWebsite());
 
 </script>
 
 <div
-    class="w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1000] hidden"
+    class="w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1000]"
     class:vertical
     transition:fly={{ duration: 750, x:1000 }}
 >
     <div class="flex py-2 ml-3 items-center">
         <div class="grow flex">
-            <!--
-            {#each [...$coWebsites.values()] as coWebsite, index (coWebsite.getId())}
-                <CoWebsiteTab title="Hello world !" link="https://google.fr" active="true" />
+
+            {#each $coWebsites as coWebsite, index (coWebsite.getId())}
+                <CoWebsiteTab {coWebsite} isLoading={true} active={true} />
             {/each}
-            -->
-            <CoWebsiteTab title="Hello world !" url="https://google.fr" active={false} />
-            <CoWebsiteTab title="Hello world !" url="https://google.fr" isLoading={false} active={true}/>
+
         </div>
         <div class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer">
             <FullScreenIcon />
         </div>
-        <div class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer">
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <div class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer" >
             <XIcon />
         </div>
     </div>

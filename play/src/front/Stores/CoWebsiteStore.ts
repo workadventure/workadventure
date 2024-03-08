@@ -1,6 +1,14 @@
 import { derived, Unsubscriber, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 
+
+// Intergrer un store tabs pour référencer chaque coWebsite comme un onglet
+const tableActive = writable(
+
+);
+
+
+
 function createCoWebsiteStore() {
     const { subscribe, set, update } = writable(Array<CoWebsite>());
 

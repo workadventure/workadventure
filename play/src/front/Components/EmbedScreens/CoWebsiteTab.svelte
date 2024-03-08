@@ -4,11 +4,17 @@
     import ExternalLinkIcon from "../Icons/ExternalLinkIcon.svelte";
     // import Loading from "../Video/Loading.svelte";
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
+    import { coWebsites } from "../../Stores/CoWebsiteStore";
+    // Remove the duplicate import statement for 'CoWebsite'
+    // import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
+    import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
 
-    export let title = "GitHub - Workadventure";
-    export let url = "https://git.thecodingmachine.com/workadventure-saas";
+    export let coWebsite: CoWebsite;
+    const url = coWebsite.getUrl();
+    const title = coWebsite.getId();
     export let active = false;
     export let isLoading = false;
+
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
