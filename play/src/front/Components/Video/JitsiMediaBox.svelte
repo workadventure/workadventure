@@ -61,7 +61,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     id="container"
-    class="jitsi-video"
+    class={`jitsi-video ${peer.uniqueId}`}
     bind:this={jitsiMediaBoxHtml}
     on:click={() => analyticsClient.pinMeetingAction()}
     on:click={() =>
@@ -79,7 +79,7 @@
     {#if $videoTrackStore}
         <div class="tw-rounded-sm tw-overflow-hidden tw-flex tw-justify-center tw-flex-col tw-w-full tw-h-full">
             <JitsiVideoElement
-                jitsiTrack={$videoTrackStore}
+                jitsiTrack={videoTrackStore}
                 isLocal={$videoTrackStore?.isLocal()}
                 {isHightlighted}
                 {isMobileFormat}
