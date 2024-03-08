@@ -6,6 +6,7 @@ const actionbar: BaseTranslation = {
     lock: "Lock / Unlock discussion",
     screensharing: "Start / Stop sharing your screen",
     layout: "Toggle tile view",
+    disableLayout: "Not available if only one person in the meeting",
     camera: "Start / Stop camera",
     microphone: "Mute / Unmute",
     emoji: "Open / Close emoji",
@@ -21,6 +22,7 @@ const actionbar: BaseTranslation = {
     },
     app: "Open / Close applications",
     globalMessage: "Send a global message",
+    roomList: "Open / Close room list",
 };
 
 export default actionbar;

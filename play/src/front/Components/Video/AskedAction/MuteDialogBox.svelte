@@ -14,13 +14,13 @@
 {#if $askDialogStore.size > 0}
     {#each [...$askDialogStore] as askDialog (askDialog.userId)}
         <div
-            class="interact-menu blue-dialog-box outline-light tw-text-center tw-w-72 tw-absolute tw-bottom-36 tw-left-0 tw-right-0 tw-pointer-events-auto tw-z-[150] tw-m-auto"
+            class="interact-menu blue-dialog-box outline-light text-center w-72 absolute bottom-36 left-0 right-0 pointer-events-auto z-[150] m-auto"
         >
-            <p class="tw-mt-2">
+            <p class="mt-2">
                 {#if askDialog.userName} {askDialog.userName}: {/if}
                 {askDialog.message}
             </p>
-            <div class="tw-flex tw-flex-row tw-justify-evenly">
+            <div class="flex flex-row justify-evenly">
                 <button type="button" class="btn light accept-request" on:click={() => acceptRequest(askDialog.uuid)}
                     >{$LL.follow.interactMenu.yes()}</button
                 >

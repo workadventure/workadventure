@@ -14,7 +14,6 @@
     import { LL } from "../../i18n/i18n-svelte";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
     import { gameManager } from "../Phaser/Game/GameManager";
-    // import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
     import { heightCamWrapper } from "../Stores/EmbedScreensStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
@@ -110,7 +109,7 @@
                 </div>
             </div>
 
-            <div class="aspect-video w-full absolute top-0 left-0 overflow-hidden z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur " style="background-image: url({loaderImg})"
+            <div class="aspect-video w-full absolute top-0 left-0 overflow-hidden z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur" style="background-image: url({loaderImg})"
                  transition:fly={{y: 50, duration: 150 }}>
                 <div class="text-white/50 text-xxs absolute w-full h-6 left-0 text-center top-0 -bottom-20 m-auto z-10">
                     {$LL.camera.my.loading()}
@@ -118,7 +117,7 @@
                 <video
                     class="h-full w-full rounded-lg md:object-cover relative z-20"
                     class:object-contain={stream}
-                    class:tw-max-h-[230px]={stream}
+                    class:max-h-[230px]={stream}
                     style="-webkit-transform: scaleX(-1);transform: scaleX(-1);"
                     use:srcObject={stream}
                     autoplay

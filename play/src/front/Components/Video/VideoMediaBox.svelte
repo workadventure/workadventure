@@ -15,9 +15,8 @@
     import { LL } from "../../../i18n/i18n-svelte";
 
     import Woka from "../Woka/WokaFromUserId.svelte";
-    import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+    import { isMediaBreakpointOnly } from "../../Utils/BreakpointsUtils";
     // @ts-ignore
-    import microphoneOffImg from "../images/microphone-off-blue.png";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
     import { embedScreenLayoutStore, heightCamWrapper } from "../../Stores/EmbedScreensStore";
@@ -30,8 +29,6 @@
     import FlagIcon from "../Icons/FlagIcon.svelte";
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
-    import { srcObject } from "./utils";
-    import BanReportBox from "./BanReportBox.svelte";
     import ActionMediaBox from "./ActionMediaBox.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
@@ -43,8 +40,8 @@
 
     export let clickable = false;
     export let isHightlighted = false;
-
     export let peer: VideoPeer;
+
     let streamStore = peer.streamStore;
     let volumeStore = peer.volumeStore;
     let name = peer.userName;
@@ -60,7 +57,6 @@
     let videoContainer: HTMLDivElement;
     let videoElement: HTMLVideoElementExt;
     let minimized = isMediaBreakpointOnly("md");
-    let isMobile = isMediaBreakpointUp("md");
     let noVideoTimeout: ReturnType<typeof setTimeout> | undefined;
 
     let destroyed = false;
@@ -85,7 +81,6 @@
 
     const resizeObserver = new ResizeObserver(() => {
         minimized = isMediaBreakpointOnly("md");
-        isMobile = isMediaBreakpointUp("md");
     });
 
     // TODO: check the race condition when setting sinkId is solved.
@@ -147,11 +142,10 @@
                 if ("requestVideoFrameCallback" in videoElement) {
                     // Let's wait 3 seconds before displaying a warning.
                     noVideoTimeout = setTimeout(() => {
-                            displayNoVideoWarning = true;
-                            noVideoTimeout = undefined;
-                            analyticsClient.noVideoStreamReceived();
-                        },
-                        3000);
+                        displayNoVideoWarning = true;
+                        noVideoTimeout = undefined;
+                        analyticsClient.noVideoStreamReceived();
+                    }, 3000);
 
                     videoElement.requestVideoFrameCallback(() => {
                         // A video frame was displayed. No need to display a warning.
@@ -251,7 +245,7 @@
 <div
     class="video-container transition-all relative h-full aspect-video"
     class:video-off={!videoEnabled}
-    class:h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
+    class:h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
     bind:this={videoContainer}
     on:click={() => analyticsClient.pinMeetingAction()}
     on:click={() => hightlight()}
@@ -266,7 +260,6 @@
         class:h-full={videoEnabled}
         class:items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
         class:px-7={!videoEnabled}
-        class:rounded={!videoEnabled}
         class:flex-row={!videoEnabled}
         class:relative={!videoEnabled}
         class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
@@ -286,7 +279,7 @@
             class:max-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
             class:max-h-[80vh]={videoEnabled && isHightlighted}
             class:h-full={videoEnabled}
-            class:rounded={videoEnabled}
+            class:rounded-lg={videoEnabled}
             autoplay
             playsinline
         />
@@ -321,7 +314,7 @@
                             />
                         </div>
                         {name}
-                        <div class="p-1 rounded-sm hover:bg-white/20 absolute right-0 top-0 bottom-0 m-auto h-6 w-6 mr-1 transition-all {showUserSubMenu ? 'bg-white/20 hover:bg-white/30' : '' }"  on:click={() => showUserSubMenu = !showUserSubMenu}>
+                        <div class="p-1 rounded-sm hover:bg-white/20 absolute right-0 top-0 bottom-0 m-auto h-6 w-6 mr-1 transition-all pointer-events-auto {showUserSubMenu ? 'bg-white/20 hover:bg-white/30' : '' }"  on:click={() => showUserSubMenu = !showUserSubMenu}>
                             <ChevronDownIcon strokeWidth="2.5" height="h-4" width="w-4" classList="aspect-ratio transition-all {showUserSubMenu ? 'rotate-180' : '' }"  />
                         </div>
                         {#if showUserSubMenu}
@@ -357,28 +350,17 @@
                     </div>
                 </div>
             </div>
-            {#if videoEnabled}
-                <div class="z-[251] absolute aspect-ratio right-3 w-8 p-1 flex items-center justify-center {$constraintStore && $constraintStore.audio !== false ? 'bottom-4' : 'bottom-3' }">
-                    {#if $constraintStore && $constraintStore.audio !== false}
-                        <SoundMeterWidget volume={$volumeStore} classcss="absolute" barColor="blue" />
-                    {:else}
-                        <MicOffIcon />
-                    {/if}
-                </div>
-            {:else}
+            <div class="z-[251] absolute aspect-ratio right-3 w-8 p-1 flex items-center justify-center {$constraintStore && $constraintStore.audio !== false ? 'bottom-4' : 'bottom-3' }">
                 {#if $constraintStore && $constraintStore.audio !== false}
                     <SoundMeterWidget
-                        volume={$volumeStore}
-                        classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
-                        barColor={textColor}
+                            volume={$volumeStore}
+                            classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
+                            barColor={textColor}
                     />
                 {:else}
                     <MicOffIcon />
                 {/if}
-                <div class="w-full flex report-ban-container-cam-off opacity-0 h-10">
-                    <BanReportBox {peer} />
-                </div>
-            {/if}
+            </div>
         {/if}
     </div>
 </div>

@@ -1,7 +1,9 @@
 <script lang="ts">
-    import { onMount , onDestroy } from "svelte";
+    import { Color } from "@workadventure/shared-utils";
     import { Readable, Unsubscriber } from "svelte/store";
     import type JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
+    import { onDestroy, onMount } from "svelte";
+
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { Streamable, myJitsiCameraStore } from "../../Stores/StreamableCollectionStore";
@@ -22,11 +24,12 @@
     const audioTrackStore: Readable<JitsiTrack | undefined> = peer.audioTrackStore;
 
     let embedScreen: EmbedScreen;
-    // let videoContainer: HTMLDivElement;
+    //let videoContainer: HTMLDivElement;
     //let minimized: boolean;
+    //let isMobile: boolean;
 
-    // let backGroundColor = Color.getColorByString(peer.jitsiTrackWrapper.spaceUser?.name ?? "");
-    // let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
+    let backGroundColor = Color.getColorByString(peer.jitsiTrackWrapper.spaceUser?.name ?? "");
+    //let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
 
     if (peer) {
         embedScreen = {
@@ -89,7 +92,7 @@
             {#if $audioTrackStore}
                 <JitsiAudioElement jitsiTrack={$audioTrackStore} />
                 <SoundMeterWidgetWrapper
-                    classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                    classcss="voice-meter-cam-off relative mr-0 ml-auto translate-x-0 transition-transform"
                     barColor={$videoTrackStore ? "blue" : "black"}
                     volume={peer.jitsiTrackWrapper.volumeStore}
                 />

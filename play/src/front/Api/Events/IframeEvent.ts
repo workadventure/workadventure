@@ -321,6 +321,46 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("banUser"),
         data: isBanEvent,
     }),
+    z.object({
+        type: z.literal("disableMapEditor"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restoreMapEditor"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("disableScreenSharing"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restoreScreenSharing"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("disableRightClick"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restoreRightClick"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("disableWheelZoom"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restoreWheelZoom"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("disableInviteUserButton"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restoreInviteUserButton"),
+        data: z.undefined(),
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;

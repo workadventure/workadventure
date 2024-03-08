@@ -1,0 +1,21 @@
+{{- if .Values.mapstorage.persistence.enabled }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ include "workadventure.fullname" . }}-mapstorage
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+
+  annotations:
+    helm.sh/resource-policy: "keep"
+
+spec:
+  accessModes:
+    - {{ .Values.mapstorage.persistence.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.mapstorage.persistence.storageSize }}
+  {{- with .Values.mapstorage.persistence.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}
+{{- end }}

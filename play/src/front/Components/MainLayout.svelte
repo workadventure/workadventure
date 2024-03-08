@@ -4,7 +4,7 @@
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpCameraSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
-    import { menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
+    import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
@@ -13,6 +13,7 @@
         showLimitRoomModalStore,
         modalVisibilityStore,
         modalPopupVisibilityStore,
+        showModalGlobalComminucationVisibilityStore,
     } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
@@ -23,13 +24,15 @@
     import { notificationPlayingStore } from "../Stores/NotificationStore";
     import { popupStore } from "../Stores/PopupStore";
     import { askDialogStore } from "../Stores/MeetingStore";
+    import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
+    import { warningMessageStore } from "../Stores/ErrorStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
     import Menu from "./Menu/Menu.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
-    import WarningContainer from "./WarningContainer/WarningContainer.svelte";
+    import WarningBanner from "./WarningContainer/WarningBanner.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import BanMessageContainer from "./TypeMessage/BanMessageContainer.svelte";
     import TextMessageContainer from "./TypeMessage/TextMessageContainer.svelte";
@@ -42,6 +45,11 @@
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
+    import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
+    import ObjectDetails from "./Modal/ObjectDetails.svelte";
+    import Popup from "./Modal/Popup.svelte";
+    import MapList from "./Exploration/MapList.svelte";
+    import WarningToast from "./WarningContainer/WarningToast.svelte";
 
 
     let mainLayout: HTMLDivElement;
@@ -90,7 +98,7 @@
         {/if}
 
         {#if $notificationPlayingStore}
-            <div class="tw-flex tw-flex-col tw-absolute tw-w-auto tw-right-0">
+            <div class="flex flex-col absolute w-auto right-0">
                 {#each [...$notificationPlayingStore.values()] as notification (notification.id)}
                     <Notification {notification} />
                 {/each}
@@ -98,8 +106,8 @@
         {/if}
 
 
-        {#if $warningContainerStore}
-            <WarningContainer />
+        {#if $warningBannerStore}
+            <WarningBanner />
         {/if}
 
         {#if $showReportScreenStore !== userReportEmpty}
@@ -143,15 +151,34 @@
         {#if $modalVisibilityStore}
             <Modal />
         {/if}
+        {#if $modalVisibilityStore}
+            <Modal />
+        {/if}
+
+        {#if $askDialogStore}
+            <MuteDialogBox />
+        {/if}
+
+        {#if $showModalGlobalComminucationVisibilityStore}
+            <GlobalCommunicationModal />
+        {/if}
+
+        {#if $mapExplorationObjectSelectedStore}
+            <ObjectDetails />
+        {/if}
+
+        {#if $modalPopupVisibilityStore}
+            <Popup />
+        {/if}
+
+        {#if $modalVisibilityStore}
+            <MapList />
+        {/if}
+
+        {#if $warningMessageStore.length > 0}
+            <WarningToast />
+        {/if}
     </section>
-
-    {#if $modalVisibilityStore}
-        <Modal />
-    {/if}
-
-    {#if $askDialogStore}
-        <MuteDialogBox />
-    {/if}
 
 
 
@@ -176,6 +203,7 @@
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 
 
+
     <Lazy
         on:onload={() => emoteDataStoreLoading.set(true)}
         on:loaded={() => emoteDataStoreLoading.set(false)}
@@ -187,8 +215,6 @@
 
 <style lang="scss">
     @import "../style/breakpoints.scss";
-
-    //Essayer de calculer la hauteur par rapport au precedent
 
     .popups {
         position: relative;

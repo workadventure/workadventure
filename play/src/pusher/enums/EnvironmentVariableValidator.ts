@@ -14,8 +14,12 @@ export const EnvironmentVariables = z.object({
     // Pusher related environment variables
     SECRET_KEY: z.string().min(1),
     API_URL: z.string().min(1),
-    ADMIN_API_URL: AbsoluteOrRelativeUrl.optional(),
-    ADMIN_URL: AbsoluteOrRelativeUrl.optional(),
+    ADMIN_API_URL: AbsoluteOrRelativeUrl.optional().describe(
+        "The URL to the admin API. If in the same network, you can use a local name here."
+    ),
+    ADMIN_URL: AbsoluteOrRelativeUrl.optional().describe(
+        "The URL to the admin. This should be a publicly accessible URL."
+    ),
     ADMIN_API_TOKEN: z.string().optional(),
     AUTOLOGIN_URL: AbsoluteOrRelativeUrl.optional().describe(
         "The URL to be used to automatically log someone given a token."

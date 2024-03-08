@@ -12,7 +12,6 @@
     import jitsiIcon from "../images/jitsi.png";
     import meetingIcon from "../images/meeting.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { LL } from "../../../i18n/i18n-svelte";
     import loaderImg from "../images/loader.svg";
 
     export let index: number;
@@ -170,11 +169,11 @@
                 height: 40px;
             }
 
-            .cowebsite-hover {
-                width: max-content !important;
-                top: -4px;
-                left: 55px;
-            }
+            // .cowebsite-hover {
+            //     width: max-content !important;
+            //     top: -4px;
+            //     left: 55px;
+            // }
 
             animation: shake 0.35s ease-in-out;
         }
@@ -262,29 +261,29 @@
             }
         }
 
-        .cowebsite-hover {
-            position: absolute;
-            background-color: rgba(0, 0, 0, 0.6);
-            top: -40px;
-            left: -4px;
-            width: 0 !important;
-            min-height: 20px;
-            transition: all 0.2s ease;
-            overflow: hidden;
-            color: white;
-            padding: 4px;
-            border-radius: 4px;
+        // .cowebsite-hover {
+        //     position: absolute;
+        //     background-color: rgba(0, 0, 0, 0.6);
+        //     top: -40px;
+        //     left: -4px;
+        //     width: 0 !important;
+        //     min-height: 20px;
+        //     transition: all 0.2s ease;
+        //     overflow: hidden;
+        //     color: white;
+        //     padding: 4px;
+        //     border-radius: 4px;
 
-            p {
-                margin-bottom: 0;
-            }
-        }
+        //     p {
+        //         margin-bottom: 0;
+        //     }
+        // }
 
-        &:hover {
-            .cowebsite-hover {
-                opacity: 1;
-                width: max-content !important;
-            }
-        }
+        // &:hover {
+        //     .cowebsite-hover {
+        //         opacity: 1;
+        //         width: max-content !important;
+        //     }
+        // }
     }
 </style>

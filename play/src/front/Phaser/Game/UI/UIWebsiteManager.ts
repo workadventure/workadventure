@@ -4,7 +4,8 @@ import type { CreateUIWebsiteEvent, ModifyUIWebsiteEvent, UIWebsiteEvent } from 
 import { iframeListener } from "../../../Api/IframeListener";
 import { uiWebsitesStore } from "../../../Stores/UIWebsiteStore";
 
-class UIWebsiteManager {
+
+export class UIWebsiteManager {
     constructor() {
         // This is a singleton, so we subscribe to iframeListener only once and never unsubscribe.
         //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
@@ -103,4 +104,3 @@ class UIWebsiteManager {
     }
 }
 
-export const uiWebsiteManager = new UIWebsiteManager();

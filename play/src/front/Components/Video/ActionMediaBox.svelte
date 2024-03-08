@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { writable } from "svelte/store";
+    import { get, writable } from "svelte/store";
     import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import MoreActionSvg from "../images/ellipsis.svg";
     import MicrophoneCloseSvg from "../images/microphone-close.svg";
@@ -13,6 +13,8 @@
     import { VideoPeer } from "../../WebRtc/VideoPeer";
     import { userIsAdminStore } from "../../Stores/GameStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+    import { LayoutMode } from "../../WebRtc/LayoutManager";
     import reportImg from "./images/report.svg";
 
     export let embedScreen: EmbedScreen;
@@ -51,6 +53,7 @@
     function pin() {
         if (!videoEnabled) return;
         highlightedEmbedScreen.toggleHighlight(embedScreen);
+        embedScreenLayoutStore.set(LayoutMode.Presentation);
     }
 
     function sendPrivateMessage() {
@@ -58,6 +61,7 @@
     }
 
     function toggleActionMenu(value: boolean) {
+        console.log("value", value, $moreActionOpened, !$moreActionOpened);
         moreActionOpened.set(value);
     }
 
@@ -66,18 +70,21 @@
     }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     class={`absolute top-0
     ${$moreActionOpened ? (!videoEnabled ? "-left-56" : "-left-14") : "-left-8"}
     flex flex-col flex-wrap justify-between items-center p-1 bg-black bg-opacity-50 rounded-lg max-h-full`}
+    class:mt-[0.2rem]={!videoEnabled}
+    on:click={() => analyticsClient.moreActionMetting()}
+    on:click|preventDefault|stopPropagation={() => toggleActionMenu(!get(moreActionOpened))}
+    on:mouseleave={() => toggleActionMenu(false)}
 >
     {#if !$moreActionOpened}
         <!-- More action -->
         <button
             id="more-action"
             class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
-            on:click={() => analyticsClient.moreActionMetting()}
-            on:click|preventDefault|stopPropagation={() => toggleActionMenu(true)}
         >
             <img src={MoreActionSvg} class="w-4 h-4" alt="Ellipsis icon" />
         </button>
@@ -86,7 +93,6 @@
         <button
             id="less-action"
             class="action-button flex flex-row items-center justify-center p-0 mx-1 cursor-pointer"
-            on:click|preventDefault|stopPropagation={() => toggleActionMenu(false)}
         >
             <img src={MoreActionSvg} class="w-4 h-4 rotate-90" alt="Ellipsis icon" />
             <Tooltip text={$LL.camera.menu.closeMenu()} leftPosition="true" />

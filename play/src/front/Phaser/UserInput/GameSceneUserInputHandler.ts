@@ -47,6 +47,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             return;
         }
 
+        // If right click is disabled, we don't want to move the player
+        if (!this.gameScene.userInputManager.isRightClickEnabled) {
+            return;
+        }
+
         for (const object of gameObjects) {
             if (object instanceof Player || object instanceof RemotePlayer) {
                 return;

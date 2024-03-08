@@ -2,7 +2,6 @@
     import SettingsIcon from "../Icons/SettingsIcon.svelte";
     import CopyIcon from "../Icons/CopyIcon.svelte";
     import ExternalLinkIcon from "../Icons/ExternalLinkIcon.svelte";
-    // import Loading from "../Video/Loading.svelte";
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
 
     export let title = "GitHub - Workadventure";
@@ -48,12 +47,12 @@
         </div>
     </div>
     <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
-        <ExternalLinkIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
+        <ExternalLinkIcon classList="h-4 w-4 aspect-ratio transition-all" strokeColor={active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' } />
     </div>
     <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
-        <CopyIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
+        <CopyIcon classList="h-4 w-4 aspect-ratio transition-all" strokeColor="{active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
     </div>
     <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
-        <SettingsIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
+        <SettingsIcon classList="h-4 w-4 aspect-ratio transition-all" strokeColor="{active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
     </div>
 </div>

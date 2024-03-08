@@ -100,51 +100,51 @@
 {/if}
 
 <style lang="scss">
-    .actions-menu {
-        position: relative;
-        width: auto !important;
-        height: max-content !important;
-        max-height: 50vh;
-        margin-top: 200px;
-        overflow-y: auto;
-        z-index: 425;
-        word-break: break-all;
-        pointer-events: auto;
-        color: whitesmoke;
-        border-radius: 0.25rem;
-        background-color: rgb(27 27 41 / 0.95);
+    // .actions-menu {
+    //     position: relative;
+    //     width: auto !important;
+    //     height: max-content !important;
+    //     max-height: 50vh;
+    //     margin-top: 200px;
+    //     overflow-y: auto;
+    //     z-index: 425;
+    //     word-break: break-all;
+    //     pointer-events: auto;
+    //     color: whitesmoke;
+    //     border-radius: 0.25rem;
+    //     background-color: rgb(27 27 41 / 0.95);
 
-        .close-window {
-            position: absolute;
-            right: 0rem;
-            top: 0rem;
-            margin-top: 0.3rem;
-            margin-right: 0.2rem;
-        }
+    // .close-window {
+    //     position: absolute;
+    //     right: 0rem;
+    //     top: 0rem;
+    //     margin-top: 0.3rem;
+    //     margin-right: 0.2rem;
+    // }
 
-        .margin-close {
-            margin-top: 15px;
-        }
+    // .margin-close {
+    //     margin-top: 15px;
+    // }
 
-        .actions {
-            max-height: 30vh;
-            width: 100%;
-            overflow-x: hidden;
-            overflow-y: auto;
-        }
+    // .actions {
+    //     max-height: 30vh;
+    //     width: 100%;
+    //     overflow-x: hidden;
+    //     overflow-y: auto;
+    // }
 
-        .name {
-            max-height: 25vh;
-            margin: 20px 20px 0 20px;
-            overflow-y: auto;
-        }
+    // .name {
+    //     max-height: 25vh;
+    //     margin: 20px 20px 0 20px;
+    //     overflow-y: auto;
+    // }
 
-        .actions::-webkit-scrollbar {
-            display: none;
-        }
+    // .actions::-webkit-scrollbar {
+    //     display: none;
+    // }
 
-        h2 {
-            text-align: center;
-        }
-    }
+    // h2 {
+    //     text-align: center;
+    // }
+    // }
 </style>

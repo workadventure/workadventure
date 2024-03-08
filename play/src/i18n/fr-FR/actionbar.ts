@@ -6,6 +6,7 @@ const actionbar: BaseTranslation = {
     lock: "Verrouiller / Déverrouiller la discussion",
     screensharing: "Démarrer / Arrêter le partage d'écran",
     layout: "Changer l'affichage",
+    disableLayout: "Non disponible si une seul personne dans le meeting",
     camera: "Activer / Couper la caméra",
     microphone: "Activer / Couper le microphone",
     emoji: "Ouvrir / Fermer les émoticônes",
@@ -20,6 +21,7 @@ const actionbar: BaseTranslation = {
     },
     app: "Ouvrir / Fermer les applications",
     globalMessage: "Envoyer un message global",
+    roomList: "Ouvrir / Fermer la liste des salons",
 };
 
 export default actionbar;

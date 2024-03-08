@@ -1,0 +1,20 @@
+{{- if .Values.maps.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "workadventure.fullname" . }}-maps
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+    role: maps
+spec:
+  type: {{ .Values.maps.service.type }}
+  ports:
+    - port: {{ .Values.maps.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "workadventure.selectorLabels" . | nindent 4 }}
+    role: maps
+{{- end }}

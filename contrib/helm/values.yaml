@@ -1,0 +1,740 @@
+# Default values for workadventure.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+appVersion: "master"
+domainName: wa.example.com
+ejabberdDomain: ejabberd.example.com
+
+# If singleDomain is true, WorkAdventure is hosted on the [domainName] domain.
+# If singleDomain is false, WorkAdventure is hosted in subdomains:
+# - play.[domainName]
+# - mapstorage.[domainName]
+# - ...
+singleDomain: false
+# When building default domain names (in multi domain mode), use this prefix
+# Defaults to "."
+# For instance, if you set this to "-", the default domain name for play will be "play-[domainName]" instead of "play.[domainName]"
+# This can be useful in some specific scenarios (Continuous Deployment) where you want to have a different domain name for each deployment
+# and creating "deep wildcard" DNS records is not an option.
+domainNamePrefix: "-"
+
+
+# Secret key used by the application to encode JWT tokens.
+# If empty, a secret key will be generated and stored in the "shared-env-secret" secret.
+secretKey: ""
+# Secret key used by the application to connect to ejabberd.
+# If empty, a secret key will be generated and stored in the "shared-env-secret" secret.
+ejabberdJwtSecret: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# If true, when the chart is updated, all services will be restarted (even if the configuration has not changed).
+# This is done by adding a random number as an annotation to the deployment.
+forceRedeploy: false
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+commonEnv:
+  ENABLE_MAP_EDITOR: "true"
+  JITSI_URL: https://meet.jit.si
+  MAX_PER_GROUP: 4
+  EJABBERD_USER: admin
+  ENABLE_CHAT: "true"
+  ENABLE_CHAT_UPLOAD: "true"
+  UPLOAD_MAX_FILESIZE: "10485760"
+
+commonSecretEnv:
+  EJABBERD_PASSWORD: mySecretPassword
+
+# #########################################################
+# play service
+# #########################################################
+play:
+  replicaCount: 1
+
+  image:
+    repository: thecodingmachine/workadventure-play
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is appVersion.
+    tag: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 3000
+
+  roomApiService:
+    type: ClusterIP
+    port: 50051
+    annotations:
+      "traefik.ingress.kubernetes.io/service.serversscheme": "h2c"
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
+  env:
+    JITSI_PRIVATE_MODE: "false"
+    START_ROOM_URL: /_/global/raw.githubusercontent.com/workadventure/map-starter-kit/master/map.tmj
+    ENABLE_CHAT_ONLINE_LIST: "true"
+    ENABLE_CHAT_DISCONNECTED_LIST: "true"
+    MAX_HISTORY_CHAT: 0
+    ENABLE_REPORT_ISSUES_MENU: "false"
+    #GRPC_VERBOSITY: DEBUG
+    #GRPC_TRACE: all
+    MAX_USERNAME_LENGTH: 10
+    DISABLE_ANONYMOUS: "false"
+    DISABLE_NOTIFICATIONS: "false"
+
+  secretEnv:
+    ROOM_API_SECRET_KEY: myRoomApiSecretKey
+
+  # The name of a configMap that should be added to the service.
+  externalConfigMapName: ""
+  # The name of a secret that should be added to the service.
+  externalSecretName: ""
+
+  ingress:
+    # This setting is used to enable the play (front and pusher) ingresses in multiDomain mode.
+    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
+    enabled: true
+    # Whether to enable Room API or not.
+    # If set to false, no ingress will be created for the room-api.
+    roomApiEnabled: true
+    tls: false
+    secretName: ""
+    # Domain name to be used for the front assets.
+    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
+    frontDomainName: ""
+    # Domain name to be used for the pusher connection.
+    # If not set, the pusher domain name is built from the root "domainName" value and the "singleDomain" value.
+    pusherDomainName: ""
+    # Domain name to be used for the Room API connection.
+    # If not set, the room-api domain name is built from the root "domainName" value and the "singleDomain" value.
+    # WARNING! The room-api uses the gRPC protocol and your ingress must support HTTP/2 for this to work.
+    # By default, if you are using Traefik for an ingress controller, the appropriate annotations are used.
+    roomApiDomainName: ""
+    # ClassName to use for the play container. If not set, will fallback to (root.ingress.className)
+    className: ""
+
+# #########################################################
+# chat service
+# #########################################################
+chat:
+  replicaCount: 1
+
+  image:
+    repository: thecodingmachine/workadventure-chat
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is appVersion.
+    tag: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
+  env: {}
+
+  secretEnv: {}
+
+  # The name of a configMap that should be added to the service.
+  externalConfigMapName: ""
+  # The name of a secret that should be added to the service.
+  externalSecretName: ""
+
+  ingress:
+    # This setting is used to enable the chat ingress in multiDomain mode.
+    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
+    enabled: true
+    tls: false
+    secretName: ""
+    # Domain name to be used for the container.
+    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
+    domainName: ""
+    # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
+    className: ""
+
+
+# #########################################################
+# back service
+# #########################################################
+back:
+  replicaCount: 1
+
+  image:
+    repository: thecodingmachine/workadventure-back
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is appVersion.
+    tag: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
+  env:
+    STORE_VARIABLES_FOR_LOCAL_MAPS: "true"
+    PLAYER_VARIABLES_MAX_TTL: "-1"
+
+  secretEnv: {}
+
+  # The name of a configMap that should be added to the service.
+  externalConfigMapName: ""
+  # The name of a secret that should be added to the service.
+  externalSecretName: ""
+
+# #########################################################
+# uploader service
+# #########################################################
+uploader:
+  replicaCount: 1
+
+  image:
+    repository: thecodingmachine/workadventure-uploader
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is appVersion.
+    tag: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
+  env: {}
+    # AWS_DEFAULT_REGION:
+    # AWS_BUCKET:
+    # AWS_URL:
+    # AWS_ENDPOINT:
+    # # or
+    # REDIS_HOST:
+    # REDIS_PORT:
+
+  secretEnv: {}
+    # AWS_ACCESS_KEY_ID:
+    # AWS_SECRET_ACCESS_KEY:
+
+  # The name of a configMap that should be added to the service.
+  externalConfigMapName: ""
+  # The name of a secret that should be added to the service.
+  externalSecretName: ""
+
+  ingress:
+    # This setting is used to enable the uploader ingress in multiDomain mode.
+    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
+    enabled: true
+    tls: false
+    secretName: ""
+    # Domain name to be used for the container.
+    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
+    domainName: ""
+    # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
+    className: ""
+
+# #########################################################
+# maps service
+# #########################################################
+# Note: the maps container only contains test maps.
+# It is not meant to be used in production and is therefore disabled by default.
+maps:
+  enabled: false
+  replicaCount: 1
+
+  image:
+    repository: thecodingmachine/workadventure-maps
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is appVersion.
+    tag: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+  # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+  # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+  #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
+  env: {}
+    # AWS_DEFAULT_REGION:
+    # AWS_BUCKET:
+    # AWS_URL:
+    # AWS_ENDPOINT:
+    # # or
+    # REDIS_HOST:
+  # REDIS_PORT:
+
+  secretEnv: {}
+    # AWS_ACCESS_KEY_ID:
+  # AWS_SECRET_ACCESS_KEY:
+
+  # The name of a configMap that should be added to the service.
+  externalConfigMapName: ""
+  # The name of a secret that should be added to the service.
+  externalSecretName: ""
+
+  ingress:
+    # This setting is used to enable the maps ingress in multiDomain mode.
+    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
+    enabled: true
+    tls: false
+    secretName: ""
+    # Domain name to be used for the container.
+    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
+    domainName: ""
+    # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
+    className: ""
+
+# #########################################################
+# icon service
+# #########################################################
+icon:
+  replicaCount: 1
+
+  image:
+    repository: matthiasluedtke/iconserver
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is appVersion.
+    tag: "v3.16.0"
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  ingress:
+    # This setting is used to enable the icon ingress in multiDomain mode.
+    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
+    enabled: true
+    tls: false
+    secretName: ""
+    # Domain name to be used for the container.
+    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
+    domainName: ""
+    # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
+    className: ""
+
+
+# #########################################################
+# ejabberd service
+# #########################################################
+ejabberd:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: thecodingmachine/workadventure-ejabberd
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is appVersion.
+    tag: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 5443
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
+  env: {}
+
+  secretEnv: {}
+
+  # The name of a configMap that should be added to the service.
+  externalConfigMapName: ""
+  # The name of a secret that should be added to the service.
+  externalSecretName: ""
+
+  ingress:
+    # This setting is used to enable the ingress in multiDomain mode.
+    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
+    enabled: true
+    tls: false
+    secretName: ""
+    # Domain name to be used for the container.
+    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
+    domainName: ""
+    # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
+    className: ""
+
+
+# #########################################################
+# mapstorage service
+# #########################################################
+mapstorage:
+  replicaCount: 1
+
+  image:
+    repository: thecodingmachine/workadventure-map-storage
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is appVersion.
+    tag: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: "3000"
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  persistence:
+    enabled: false
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    storageSize: 1Gi
+
+  # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
+  env:
+    ENABLE_BASIC_AUTHENTICATION: "true"
+    AUTHENTICATION_USER: admin
+    AWS_DEFAULT_REGION: ""
+    AWS_BUCKET: ""
+    AWS_URL: ""
+    AWS_ENDPOINT: ""
+    S3_UPLOAD_CONCURRENCY_LIMIT: ""
+    MAX_UNCOMPRESSED_SIZE: ""
+    USE_DOMAIN_NAME_IN_PATH: "false"
+    CACHE_CONTROL: ""
+    ENABLE_WEB_HOOK: "false"
+    WEB_HOOK_URL: ""
+    WEB_HOOK_API_TOKEN: ""
+    SENTRY_DSN: ""
+    SENTRY_RELEASE: ""
+    SENTRY_ENVIRONMENT: ""
+    SENTRY_TRACES_SAMPLE_RATE: ""
+    ENABLE_BEARER_AUTHENTICATION: "false"
+    AUTHENTICATION_VALIDATOR_URL: ""
+    ENABLE_DIGEST_AUTHENTICATION: "false"
+
+
+  secretEnv:
+    AUTHENTICATION_PASSWORD: ""
+    AWS_ACCESS_KEY_ID: ""
+    AWS_SECRET_ACCESS_KEY: ""
+    #AUTHENTICATION_TOKEN: ""
+
+  # The name of a configMap that should be added to the service.
+  externalConfigMapName: ""
+  # The name of a secret that should be added to the service.
+  externalSecretName: ""
+
+  ingress:
+    # This setting is used to enable the map-storage ingress in multiDomain mode.
+    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
+    enabled: true
+    tls: false
+    secretName: ""
+    # Domain name to be used for the container.
+    # If not set, the map-storage domain name is built from the root "domainName" value and the "singleDomain" value.
+    domainName: ""
+    # If you are using USE_DOMAIN_NAME_IN_PATH=true, and if you are not using a wildcard domain in "domainName",
+    # you can register many domains using the property below.
+    domainNames: []
+    # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
+    className: ""
+
+ingress:
+  enabled: false
+  className: ""
+  tls: false
+  secretName: ""
+  pathType: ImplementationSpecific
+  annotationsPath:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+  annotationsMapstoragePath:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+
+  rewritePathSuffix: "(/|$)(.*)"
+
+redis:
+  architecture: standalone
+
+  auth:
+    enabled: false

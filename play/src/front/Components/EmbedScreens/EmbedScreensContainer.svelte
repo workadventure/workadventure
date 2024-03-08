@@ -1,13 +1,17 @@
 <script lang="ts">
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { embedScreenLayoutStore} from "../../Stores/EmbedScreensStore";
+    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { emoteMenuSubStore } from "../../Stores/EmoteStore";
     import PresentationLayout from "./Layouts/PresentationLayout.svelte";
     import MozaicLayout from "./Layouts/MozaicLayout.svelte";
     import "../../style/wa-theme/video-ui.scss";
 
-
-//     export let y = 20
+    /**
+     * Hugo :
+     * Goal : make a resizable cam height
+     * Doesn't work properly : buggy */
+    /*
+    export let y = 20
 
 //     let expanding: `top` | "bottom" | undefined | null;
 //     let start: number | null, initial: { y: number, height: number } | null;
@@ -39,16 +43,16 @@
 //             return
 //         }
 
-//         if (expanding == 'bottom') {
-//             const delta = start !== null ? event.pageY - start : 0;
-//             console.log(event.pageY);
-//             $heightCamWrapper = initial ? initial.height + delta : $heightCamWrapper;
-//             return
-//         }
-//     }
+        // if (expanding == 'bottom') {
+        //     const delta = event.pageY - start
+        //     console.log(event.pageY);
+        //     $heightCamWrapper = initial.height + delta
+        //     return
+        // }
+
 </script>
 
-<div id="embedScreensContainer" class="group relative h-full pt-24 flex justify-center items-center pointer-events-auto transition-all pb-7" style="{$emoteMenuSubStore ? 'padding-top:96px;' : '' }" > <!-- on:mouseleave={stopExpand} -->
+<div id="embedScreensContainer" class="group relative h-full pt-24 flex justify-center items-center pointer-events-auto transition-all pb-7" style="{$emoteMenuSubStore ? 'padding-top:96px;' : '' }">
     {#if $embedScreenLayoutStore === LayoutMode.Presentation}
         <PresentationLayout />
     {:else}

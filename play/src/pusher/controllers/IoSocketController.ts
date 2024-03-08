@@ -858,9 +858,12 @@ export class IoSocketController {
                         case "followAbortMessage":
                         case "lockGroupPromptMessage":
                         case "pingMessage":
-                        case "editMapCommandMessage":
                         case "askPositionMessage": {
                             socketManager.forwardMessageToBack(socket, message.message);
+                            break;
+                        }
+                        case "editMapCommandMessage": {
+                            socketManager.forwardAdminMessageToBack(socket, message.message);
                             break;
                         }
                         case "muteParticipantIdMessage": {

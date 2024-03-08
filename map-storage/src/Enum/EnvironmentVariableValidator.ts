@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
     BoolAsString,
+    emptyStringToDefault,
     emptyStringToUndefined,
     PositiveIntAsString,
     toBool,
@@ -9,12 +10,17 @@ import {
 
 export const EnvironmentVariables = z.object({
     API_URL: z.string().min(1).describe("The URI(s) of the back server"),
-    AWS_ACCESS_KEY_ID: z.string().optional(),
-    AWS_SECRET_ACCESS_KEY: z.string().optional(),
-    AWS_DEFAULT_REGION: z.string().optional(),
-    AWS_BUCKET: z.string().optional(),
-    AWS_URL: z.string().url().optional(),
-    AWS_ENDPOINT: z.string().url().optional(),
+    AWS_ACCESS_KEY_ID: z.string().optional().transform(emptyStringToUndefined),
+    AWS_SECRET_ACCESS_KEY: z.string().optional().transform(emptyStringToUndefined),
+    AWS_DEFAULT_REGION: z.string().optional().transform(emptyStringToUndefined),
+    AWS_BUCKET: z.string().optional().transform(emptyStringToUndefined),
+    AWS_URL: z
+        .string()
+        .url()
+        .or(z.literal(""))
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("URL of the S3 endpoint."),
     //UPLOADER_AWS_SIGNED_URL_EXPIRATION: PositiveIntAsString.optional(),
     S3_UPLOAD_CONCURRENCY_LIMIT: PositiveIntAsString.optional().transform((val) => toNumber(val, 100)),
     MAX_UNCOMPRESSED_SIZE: PositiveIntAsString.optional()
@@ -30,16 +36,17 @@ export const EnvironmentVariables = z.object({
         .optional()
         .describe(
             "The prefix to strip if a reverse proxy is proxying calls to the map-storage from a path, e.g. /map-storage"
-        ),
+        )
+        .transform(emptyStringToUndefined),
     STORAGE_DIRECTORY: z
         .string()
         .optional()
-        .default("./public")
+        .transform(emptyStringToDefault("./public"))
         .describe("Storage directory for the maps on physical disk. Used if S3 storage is not configured."),
     CACHE_CONTROL: z
         .string()
         .optional()
-        .default("public, s-max-age=10")
+        .transform(emptyStringToDefault("public, s-max-age=10"))
         .describe(
             'The cache-control HTTP header to be used for "normal" resources. Note: resources containing a hash in the name will be set to "immutable", whatever this setting is.'
         ),
@@ -51,21 +58,29 @@ export const EnvironmentVariables = z.object({
         .optional()
         .describe(
             "The URL of the webhook to call when a WAM file is created / updated / deleted. The URL will be called using POST."
-        ),
+        )
+        .transform(emptyStringToUndefined),
     WEB_HOOK_API_TOKEN: z
         .string()
         .optional()
         .describe(
             "The (optional) API token to use when calling the webhook. The token will be sent in the Authorization header of the POST request."
-        ),
-    SENTRY_DSN: z.string().optional().describe("If set, WorkAdventure will send errors to Sentry"),
+        )
+        .transform(emptyStringToUndefined),
+    SENTRY_DSN: z
+        .string()
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("If set, WorkAdventure will send errors to Sentry"),
     SENTRY_RELEASE: z
         .string()
         .optional()
+        .transform(emptyStringToUndefined)
         .describe("The Sentry release we target. Only used if SENTRY_DSN is configured."),
     SENTRY_ENVIRONMENT: z
         .string()
         .optional()
+        .transform(emptyStringToUndefined)
         .describe("The Sentry environment we target. Only used if SENTRY_DSN is configured."),
     SENTRY_TRACES_SAMPLE_RATE: z
         .string()
@@ -106,8 +121,8 @@ export const EnvironmentVariables = z.object({
         .describe(
             "Enables basic authentication. When true, you need to set both AUTHENTICATION_USER and AUTHENTICATION_PASSWORD"
         ),
-    AUTHENTICATION_USER: z.string().min(1).optional(),
-    AUTHENTICATION_PASSWORD: z.string().min(1).optional(),
+    AUTHENTICATION_USER: z.string().optional().transform(emptyStringToUndefined),
+    AUTHENTICATION_PASSWORD: z.string().optional().transform(emptyStringToUndefined),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

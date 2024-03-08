@@ -65,10 +65,10 @@ p.help-text{
 
   .input-switch {
     position: relative;
-    top: 0px;
-    right: 0px;
-    bottom: 0px;
-    left: 0px;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
     display: inline-block;
     height: 1rem;
     width: 2rem;
@@ -82,7 +82,7 @@ p.help-text{
     border-color: rgb(77 75 103 / var(--border-opacity));
     --bg-opacity: 1;
     background-color: rgb(15 31 45 / var(--bg-opacity));
-    padding: 0px;
+    padding: 0;
     --text-opacity: 1;
     color: rgb(242 253 255 / var(--text-opacity));
     outline: 2px solid transparent;
@@ -188,10 +188,10 @@ p.help-text{
   }
   .value-switch input.input-switch {
     position: relative;
-    top: 0px;
-    right: 0px;
-    bottom: 0px;
-    left: 0px;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
     display: inline-block;
     height: 1rem;
     width: 2rem;
@@ -206,7 +206,7 @@ p.help-text{
     --bg-opacity: 1;
     background-color: rgb(15 31 45 / var(--bg-opacity));
     background-image: none;
-    padding: 0px;
+    padding: 0;
     --text-opacity: 1;
     color: rgb(242 253 255 / var(--text-opacity));
     outline: 2px solid transparent;

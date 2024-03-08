@@ -1,0 +1,23 @@
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "workadventure.fullname" . }}-env-back
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+data:
+  PLAY_URL: {{ include "workadventure.playUrl" . | quote }}
+  REDIS_HOST: "{{ .Release.Name }}-redis-master"
+  MAP_STORAGE_URL: "{{ include "workadventure.fullname" . }}-mapstorage:50053"
+  INTERNAL_MAP_STORAGE_URL: "http://{{ include "workadventure.fullname" . }}-mapstorage:3000"
+  PUBLIC_MAP_STORAGE_URL: {{ include "workadventure.mapStorageUrl" . | quote }}
+  EJABBERD_API_URI: "http://{{ include "workadventure.fullname" . }}-ejabberd:5443/api"
+  EJABBERD_DOMAIN: {{ .Values.ejabberdDomain | quote }}
+
+  {{- range $key, $val := .Values.commonEnv }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+
+  {{- range $key, $val := .Values.back.env }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}

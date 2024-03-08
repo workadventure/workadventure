@@ -78,7 +78,7 @@
     <span slot="content">
         <div class="value-input">
             <label for="audioLink">{$LL.mapEditor.properties.audioProperties.audioLinkLabel()}</label>
-            <div class="tw-flex">
+            <div class="flex">
                 <input
                     id="audioLink"
                     type="text"
@@ -87,14 +87,14 @@
                     on:change={onValueChange}
                 />
                 {#if !playing}
-                    <button on:click={playAudio} class="tw-m-0 tw-pl-1 tw-pr-0 tw-text-xl"> ▶️ </button>
+                    <button on:click={playAudio} class="m-0 pl-1 pr-0 text-xl"> ▶️ </button>
                 {:else}
-                    <button on:click={stopAudio} class="tw-m-0 tw-pl-1 tw-pr-0 tw-text-xl"> ⏹️ </button>
+                    <button on:click={stopAudio} class="m-0 pl-1 pr-0 text-xl"> ⏹️ </button>
                 {/if}
             </div>
             <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
         </div>
-        <div class="value-input tw-text-danger-500" class:tw-invisible={!errorMessage}>
+        <div class="value-input text-danger-500" class:invisible={!errorMessage}>
             ⚠️ {errorMessage}
         </div>
         <div class="value-switch">
