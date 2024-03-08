@@ -15,32 +15,32 @@
 
     onMount(() => {
         // TODO: remove this hack
-        if(aspectVideoTimeOut) clearTimeout(aspectVideoTimeOut);
+        if (aspectVideoTimeOut) clearTimeout(aspectVideoTimeOut);
         aspectVideoTimeOut = setTimeout(() => {
             aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
         }, 1000);
-        videoTrackUnSuscriber = jitsiTrack.subscribe((videoTrack) => {
-            attachTrack();
+        videoTrackUnSuscriber = jitsiTrack.subscribe((_jitsiTrack) => {
+            if (_jitsiTrack) attachTrack(_jitsiTrack);
         });
-        attachTrack();
+        if ($jitsiTrack) attachTrack($jitsiTrack);
     });
 
     afterUpdate(() => {
         // TODO: remove this hack
-        if(aspectVideoTimeOut) clearTimeout(aspectVideoTimeOut);
+        if (aspectVideoTimeOut) clearTimeout(aspectVideoTimeOut);
         aspectVideoTimeOut = setTimeout(() => {
             aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
         }, 1000);
-        attachTrack();
-    })
+        if ($jitsiTrack) attachTrack($jitsiTrack);
+    });
 
     onDestroy(() => {
         if (videoTrackUnSuscriber) videoTrackUnSuscriber();
-        if(aspectVideoTimeOut) clearTimeout(aspectVideoTimeOut);
+        if (aspectVideoTimeOut) clearTimeout(aspectVideoTimeOut);
     });
 
-    function attachTrack() {
-        $jitsiTrack?.attach(videoElement);
+    function attachTrack(_jitsiTrack: JitsiTrack) {
+        _jitsiTrack?.attach(videoElement);
     }
 </script>
 
