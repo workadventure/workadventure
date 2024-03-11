@@ -919,10 +919,11 @@ export class GameScene extends DirtyScene {
             entitiesInitializedPromise,
         ])
             .then(() => {
-                this.initEntityPermissions();
+                this.initUserPermissionsOnEntity();
                 this.initMapEditorForThematics();
                 this.hide(false);
                 this.sceneReadyToStartDeferred.resolve();
+                this.initializeAreaManager();
             })
             .catch((e) =>
                 console.error(
@@ -936,7 +937,7 @@ export class GameScene extends DirtyScene {
         }
     }
 
-    private initEntityPermissions() {
+    private initUserPermissionsOnEntity() {
         const isAdmin = this.connection?.hasTag("admin") ?? false;
         const isEditor = this.connection?.hasTag("editor") ?? false;
         const userCanEdit = isAdmin || isEditor;
@@ -946,6 +947,14 @@ export class GameScene extends DirtyScene {
             userCanEdit
         );
         this.entityPermissionsDeferred.resolve(this.entityPermissions);
+    }
+
+    private initializeAreaManager() {
+        const isAdmin = this.connection?.hasTag("admin") ?? false;
+        const isEditor = this.connection?.hasTag("editor") ?? false;
+        const userCanEdit = isAdmin || isEditor;
+        const userConnectedTags = this.connection?.getAllTags() ?? [];
+        this.gameMapFrontWrapper.initializeAreaManager(userConnectedTags, userCanEdit);
     }
 
     private initMapEditorForThematics() {

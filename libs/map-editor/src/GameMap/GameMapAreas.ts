@@ -119,6 +119,25 @@ export class GameMapAreas {
         return areas.some((area) => this.isUserHasReadAccessOnAreaByTags(area, userConnectedTags));
     }
 
+    public isUserHasAreaAccess(areaId: string, userConnectedTags: string[]) {
+        const area = this.getArea(areaId);
+        if (area === undefined) {
+            return true;
+        }
+        const areaRights = this.getAreaRightPropertyData(area);
+        if (areaRights === undefined) {
+            return true;
+        }
+
+        const areaRightTags = [...areaRights.writeTags, ...areaRights.readTags];
+
+        if (areaRightTags.length === 0) {
+            return true;
+        }
+
+        return areaRightTags.some((tag) => userConnectedTags.includes(tag));
+    }
+
     private isUserHasWriteAccessOnAreaByUserTags(area: AreaData, userTags: string[]): boolean {
         const areaRights = this.getAreaRightPropertyData(area);
         if (areaRights === undefined) {
