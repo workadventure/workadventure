@@ -114,7 +114,7 @@ export class GameMapAreas {
     ): boolean {
         const areas = this.getAreasOnPosition(entityCenterCoordinates);
         if (areas?.length === 0) {
-            return false;
+            return true;
         }
         return areas.some((area) => this.isUserHasReadAccessOnAreaByTags(area, userConnectedTags));
     }
