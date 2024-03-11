@@ -1,9 +1,13 @@
 import { AreaData, AtLeast } from "@workadventure/map-editor";
 import { merge } from "lodash";
 import { GameScene } from "../Game/GameScene";
+import { warningMessageStore } from "../../Stores/ErrorStore";
+import LL from "../../../i18n/i18n-svelte";
+import { get } from "svelte/store";
 
 export class Area extends Phaser.GameObjects.Rectangle {
     private areaCollider: Phaser.Physics.Arcade.Collider | undefined = undefined;
+    private userHasCollideWithArea = false;
 
     constructor(public readonly scene: GameScene, public areaData: AreaData, collide?: boolean) {
         super(
@@ -39,16 +43,29 @@ export class Area extends Phaser.GameObjects.Rectangle {
         }
     }
 
-    public highLightArea(): void {
+    private applyCollider() {
+        if (this.areaCollider === undefined) {
+            this.areaCollider = this.scene.physics.add.collider(this.scene.CurrentPlayer, this, () =>
+                this.onCollideAction()
+            );
+        }
+    }
+
+    private highLightArea() {
         this.setVisible(true);
         setTimeout(() => this.setVisible(false), 1000);
     }
 
-    private applyCollider() {
-        if (this.areaCollider === undefined) {
-            this.areaCollider = this.scene.physics.add.collider(this.scene.CurrentPlayer, this, () => {
-                this.highLightArea();
-            });
+    private displayWarningMessageOnCollide() {
+        warningMessageStore.addWarningMessage(get(LL).area.noAccess());
+    }
+
+    private onCollideAction() {
+        if (!this.userHasCollideWithArea) {
+            this.userHasCollideWithArea = true;
+            this.highLightArea();
+            this.displayWarningMessageOnCollide();
+            setTimeout(() => (this.userHasCollideWithArea = false), 3000);
         }
     }
 }
