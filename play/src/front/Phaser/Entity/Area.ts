@@ -15,7 +15,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
             0xff0000,
             0.1
         );
-        this.scene.add.existing(this).setVisible(true);
+        this.scene.add.existing(this).setVisible(false);
         this.scene.physics.add.existing(this, true);
         if (collide) {
             this.applyCollider();
