@@ -532,7 +532,7 @@
         <div class="properties-container">
             {#if !addRights}
                 <a href="#toggleRight" on:click|preventDefault|stopPropagation={toggleRight}
-                    >+ {$LL.mapEditor.areaEditor.addRight()} ({writeTags.length + readTags.length})</a
+                    >+ {$LL.mapEditor.areaEditor.addRight()} ({writeTags?.length + readTags?.length})</a
                 >
             {:else}
                 <a href="#toggleRight" class="tw-cursor-pointer" on:click|preventDefault|stopPropagation={toggleRight}

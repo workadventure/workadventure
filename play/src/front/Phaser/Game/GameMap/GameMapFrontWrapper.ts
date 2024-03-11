@@ -19,6 +19,7 @@ import { ITiledPlace } from "../GameMapPropertiesListener";
 import type { GameScene } from "../GameScene";
 import { EntitiesManager } from "./EntitiesManager";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
+import { AreasManager } from "./AreasManager";
 
 export type DynamicArea = {
     name: string;
@@ -96,6 +97,8 @@ export class GameMapFrontWrapper {
 
     private enterDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
     private leaveDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
+
+    public areasManager!: AreasManager;
 
     /**
      * Firing on map change, containing newest collision grid array
@@ -229,6 +232,14 @@ export class GameMapFrontWrapper {
             this.modifyToCollisionsLayer(entity.x, entity.y, entity.name, entityCollisionGrid, false);
         }
         this.updateCollisionGrid(this.entitiesCollisionLayer, false);
+    }
+
+    public initializeAreaManager(userConnectedTags: string[], userCanEdit: boolean) {
+        const gameMapAreas = this.getGameMap().getGameMapAreas();
+        if (gameMapAreas === undefined) {
+            console.error("Unable to load AreasManager because gameMapAreas is undefined");
+        }
+        this.areasManager = new AreasManager(this.scene, gameMapAreas!, userConnectedTags, userCanEdit);
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {
