@@ -47,8 +47,8 @@
         label: string;
         created: undefined | boolean;
     };
-    let writeTags: Option[] = [];
-    let readTags: Option[] = [];
+    let writeTags: Option[] | undefined = [];
+    let readTags: Option[] | undefined = [];
     let _tag: Option[] = [
         {
             value: "member",
@@ -342,23 +342,23 @@
     }
 
     function onChangeWriteReadTags() {
-        let properties = $mapEditorSelectedAreaPreviewStore
+        let areaRightProperties = $mapEditorSelectedAreaPreviewStore
             ?.getProperties()
             .find((p) => p.type === "areaRightPropertyData");
-        if (!properties || (properties && properties.type !== "areaRightPropertyData")) {
-            properties = {
+        if (!areaRightProperties || (areaRightProperties && areaRightProperties.type !== "areaRightPropertyData")) {
+            areaRightProperties = {
                 id: crypto.randomUUID(),
                 type: "areaRightPropertyData",
                 readTags: [],
                 writeTags: [],
                 searchable: false,
             } as AreaRightPropertyData;
-            $mapEditorSelectedAreaPreviewStore?.addProperty(properties);
+            $mapEditorSelectedAreaPreviewStore?.addProperty(areaRightProperties);
         }
 
-        properties.readTags = readTags.map((tag) => tag.value);
-        properties.writeTags = writeTags.map((tag) => tag.value);
-        $mapEditorSelectedAreaPreviewStore?.updateProperty(properties);
+        areaRightProperties.readTags = readTags?.map((tag) => tag.value) ?? [];
+        areaRightProperties.writeTags = writeTags?.map((tag) => tag.value) ?? [];
+        $mapEditorSelectedAreaPreviewStore?.updateProperty(areaRightProperties);
     }
 </script>
 
@@ -532,7 +532,7 @@
         <div class="properties-container">
             {#if !addRights}
                 <a href="#toggleRight" on:click|preventDefault|stopPropagation={toggleRight}
-                    >+ {$LL.mapEditor.areaEditor.addRight()} ({writeTags?.length + readTags?.length})</a
+                    >+ {$LL.mapEditor.areaEditor.addRight()} ({(writeTags?.length ?? 0) + (readTags?.length ?? 0)})</a
                 >
             {:else}
                 <a href="#toggleRight" class="tw-cursor-pointer" on:click|preventDefault|stopPropagation={toggleRight}
@@ -542,15 +542,15 @@
                 <InputTags
                     label={$LL.mapEditor.areaEditor.rightWriteTitle()}
                     options={_tag}
-                    on:change={onChangeWriteReadTags}
                     bind:value={writeTags}
+                    handleChange={onChangeWriteReadTags}
                 />
                 <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.areaEditor.rightReadDescription()}</p>
                 <InputTags
                     label={$LL.mapEditor.areaEditor.rightReadTitle()}
                     options={_tag}
-                    on:change={onChangeWriteReadTags}
                     bind:value={readTags}
+                    handleChange={onChangeWriteReadTags}
                 />
                 {#if writeTags != undefined && writeTags.length > 0}
                     <div class="tw-flex tw-flex-wrap tw-gap-1">
