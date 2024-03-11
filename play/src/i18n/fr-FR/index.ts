@@ -21,8 +21,10 @@ import mapEditor from "./mapEditor";
 import megaphone from "./megaphone";
 import video from "./video";
 import statusModal from "./statusModal";
+import area from "./area";
 
 const fr_FR = merge(en_US, {
+    area,
     audio,
     camera,
     chat,
