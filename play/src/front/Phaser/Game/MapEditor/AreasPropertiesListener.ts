@@ -2,7 +2,6 @@ import {
     AreaData,
     AreaDataProperties,
     AreaDataProperty,
-    AreaRightPropertyData,
     FocusablePropertyData,
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
@@ -23,12 +22,9 @@ import { Room } from "../../../Connection/Room";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
 import { chatZoneLiveStore } from "../../../Stores/ChatStore";
-import { userIsAdminStore } from "../../../Stores/GameStore";
 import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
-import { mapEditorAreaOnUserPositionStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
 import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
 import { currentLiveStreamingNameStore } from "../../../Stores/MegaphoneStore";
-import { mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";

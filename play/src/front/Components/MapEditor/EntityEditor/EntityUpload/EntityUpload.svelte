@@ -15,16 +15,19 @@
 
     $: {
         if (files) {
-            customEntityToUpload = {
-                collectionName: "custom entities",
-                name: files.item(0)!.name,
-                imagePath: URL.createObjectURL(files.item(0)!),
-                id: uuidv4(),
-                direction: Direction.Down,
-                tags: [],
-                color: "",
-                type: "Custom",
-            };
+            const file = files.item(0);
+            if (file) {
+                customEntityToUpload = {
+                    collectionName: "custom entities",
+                    name: file.name,
+                    imagePath: URL.createObjectURL(file),
+                    id: uuidv4(),
+                    direction: Direction.Down,
+                    tags: [],
+                    color: "",
+                    type: "Custom",
+                };
+            }
         }
     }
 

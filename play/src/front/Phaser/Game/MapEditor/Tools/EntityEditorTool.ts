@@ -20,20 +20,7 @@ import { ModifyCustomEntityFrontCommand } from "../Commands/Entity/ModifyCustomE
 import { UpdateEntityFrontCommand } from "../Commands/Entity/UpdateEntityFrontCommand";
 import { UploadEntityFrontCommand } from "../Commands/Entity/UploadEntityFrontCommand";
 import { MapEditorModeManager } from "../MapEditorModeManager";
-import { TexturesHelper } from "../../../Helpers/TexturesHelper";
-import {
-    mapEditorCopiedEntityDataPropertiesStore,
-    mapEditorEntityModeStore,
-    mapEditorSelectedEntityStore,
-} from "../../../../Stores/MapEditorStore";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
-import { Entity } from "../../../ECS/Entity";
-import { TexturesHelper } from "../../../Helpers/TexturesHelper";
-import { CopyEntityEventData, EntitiesManagerEvent } from "../../GameMap/EntitiesManager";
-import { CreateEntityFrontCommand } from "../Commands/Entity/CreateEntityFrontCommand";
-import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand";
-import { UpdateEntityFrontCommand } from "../Commands/Entity/UpdateEntityFrontCommand";
-import { MapEditorModeManager } from "../MapEditorModeManager";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
 
 export class EntityEditorTool extends EntityRelatedEditorTool {
@@ -77,12 +64,6 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
 
     public clear(): void {
         super.clear();
-        this.setAreaPreviewsVisibility(false);
-        this.deleteAreaPreview();
-    }
-
-    public destroy(): void {
-        super.destroy();
         this.setAreaPreviewsVisibility(false);
         this.deleteAreaPreview();
     }
@@ -134,7 +115,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         entityData,
                         commandId,
                         this.entitiesManager,
-                        { x: data.xCenter, y: data.yCenter }
+                        { x: createEntityMessage.xCenter, y: createEntityMessage.yCenter }
                     ),
                     false,
                     false
@@ -486,12 +467,6 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
     }
 
-    public destroy() {
-        super.destroy();
-        this.unbindEventHandlers();
-        this.unsubscribeStore();
-    }
-
     protected createAreaPreviews(): AreaPreview[] {
         this.areaPreviews = [];
         const areaConfigs = this.scene.getGameMapFrontWrapper().getAreas();
@@ -531,5 +506,13 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         return Array.from(areasPreview.values()).filter((area: AreaData) => {
             return x >= area.x && x <= area.x + area.width && y >= area.y && y <= area.y + area.height;
         });
+    }
+
+    public destroy() {
+        super.destroy();
+        this.unbindEventHandlers();
+        this.unsubscribeStore();
+        this.setAreaPreviewsVisibility(false);
+        this.deleteAreaPreview();
     }
 }

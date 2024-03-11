@@ -8,7 +8,6 @@
     } from "@workadventure/map-editor";
     import { onDestroy } from "svelte";
     import { ArrowLeftIcon } from "svelte-feather-icons";
-    import { get } from "svelte/store";
     import {
         mapEditorEntityModeStore,
         mapEditorSelectedEntityPrefabStore,
