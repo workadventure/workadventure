@@ -27,7 +27,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
     }
 
     public updateArea(newAreaData: AtLeast<AreaData, "id">, collide?: boolean) {
-        this.areaData = merge(this.areaData, newAreaData);
+        merge(this.areaData, newAreaData);
         this.setPosition(this.areaData.x + this.areaData.width * 0.5, this.areaData.y + this.areaData.height * 0.5);
         this.setSize(this.areaData.width, this.areaData.height);
         this.updateDisplayOrigin();

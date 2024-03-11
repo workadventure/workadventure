@@ -130,11 +130,6 @@ export class GameMapAreas {
         }
 
         const areaRightTags = [...areaRights.writeTags, ...areaRights.readTags];
-
-        if (areaRightTags.length === 0) {
-            return true;
-        }
-
         return areaRightTags.some((tag) => userConnectedTags.includes(tag));
     }
 
@@ -149,20 +144,28 @@ export class GameMapAreas {
     private isUserHasReadAccessOnAreaByTags(area: AreaData, userTags: string[]): boolean {
         const areaRights = this.getAreaRightPropertyData(area);
         if (areaRights === undefined) {
-            return false;
+            return true;
         }
         return areaRights.readTags.some((tag) => userTags.includes(tag));
     }
 
     private getAreaRightPropertyData(area: AreaData): AreaRightPropertyData | undefined {
         const areaRightPropertyData = area.properties.find((property) => property.type === "areaRightPropertyData");
-        return areaRightPropertyData ? AreaRightPropertyData.parse(areaRightPropertyData) : undefined;
+        const areaRights = areaRightPropertyData ? AreaRightPropertyData.parse(areaRightPropertyData) : undefined;
+        if (areaRights !== undefined) {
+            const rightTags = [...areaRights.writeTags, ...areaRights.readTags];
+            if (rightTags.length === 0) {
+                return;
+            }
+            return AreaRightPropertyData.parse(areaRightPropertyData);
+        }
+        return;
     }
 
     public isGameMapContainsThematics(): boolean {
         let hasThematics = false;
         this.areas.forEach((area) => {
-            if (area.properties.find((property) => property.type === "areaRightPropertyData") !== undefined) {
+            if (this.getAreaRightPropertyData(area) !== undefined) {
                 hasThematics = true;
                 return;
             }

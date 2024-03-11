@@ -920,7 +920,6 @@ export class GameScene extends DirtyScene {
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();
-                this.initMapEditorForThematics();
                 this.hide(false);
                 this.sceneReadyToStartDeferred.resolve();
                 this.initializeAreaManager();
@@ -958,11 +957,6 @@ export class GameScene extends DirtyScene {
         const userCanEdit = isAdmin || isEditor;
         const userConnectedTags = this.connection?.getAllTags() ?? [];
         this.gameMapFrontWrapper.initializeAreaManager(userConnectedTags, userCanEdit);
-    }
-
-    private initMapEditorForThematics() {
-        const isGameMapHasThematics = this.getGameMap().getGameMapAreas()?.isGameMapContainsThematics() ? true : false;
-        mapEditorActivatedForThematics.set(isGameMapHasThematics);
     }
 
     private hide(hide = true): void {
