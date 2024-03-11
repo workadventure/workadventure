@@ -2,18 +2,13 @@
     import SettingsIcon from "../Icons/SettingsIcon.svelte";
     import CopyIcon from "../Icons/CopyIcon.svelte";
     import ExternalLinkIcon from "../Icons/ExternalLinkIcon.svelte";
-    // import Loading from "../Video/Loading.svelte";
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
-    import { coWebsites } from "../../Stores/CoWebsiteStore";
-    // Remove the duplicate import statement for 'CoWebsite'
-    // import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
-    import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
 
-    export let coWebsite: CoWebsite;
-    const url = coWebsite.getUrl();
-    const title = coWebsite.getId();
+
+    export let title = "GitHub - Workadventure";
+    export let url = "https://git.thecodingmachine.com/workadventure-saas";
     export let active = false;
-    export let isLoading = false;
+    export let isLoading = false
 
 </script>
 

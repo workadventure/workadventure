@@ -201,13 +201,6 @@
         {#each $popupStore as popup, index (popup.uuid)}
             <div class="popupwrapper {index === 0 ? 'popup1' : index === 1 ? 'popup2' : index === 2 ? 'popup3' : index === 3 ? 'popup4' : index === 4 ? 'popup5' : ''}">
                 <svelte:component this={popup.component} {...popup.props} on:close={() => popupStore.removePopup(popup.uuid)} />
-                <!--{#if index === 3}
-                    <button class="btn btn-secondary w-1/2 justify-center" on:click={() => popupStore.removePopup(popup.uuid)}>Close</button>
-                {/if}
-                {#if index === 4}
-                    <button class="btn btn-secondary w-1/2 justify-center" on:click={() => popupStore.removePopup(popup.uuid)}>Close</button>
-
-                {/if} -->
             </div>
         {/each}
     </div>

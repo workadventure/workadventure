@@ -5,7 +5,6 @@ import { Jitsi } from "@workadventure/shared-utils";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { z } from "zod";
 import { scriptUtils } from "../../Api/ScriptUtils";
-import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
@@ -28,6 +27,7 @@ import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
 import { AreasPropertiesListener } from "./MapEditor/AreasPropertiesListener";
 import { gameManager } from "./GameManager";
+import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 
 export interface OpenCoWebsite {
     actionId: string;
@@ -168,11 +168,13 @@ export class GameMapPropertiesListener {
                     domainWithoutProtocol
                 );
 
-                coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
+                coWebsiteManager.addCoWebsiteToStore(coWebsite);
 
-                coWebsiteManager.loadCoWebsite(coWebsite).catch((err) => {
-                    console.error(err);
-                });
+                coWebsiteManager.loadCoWebsite(coWebsite);
+
+                // .catch((err) => {
+                //     console.error(err);
+                // });
 
                 analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
@@ -450,15 +452,16 @@ export class GameMapPropertiesListener {
         }
 
         const coWebsiteOpen: OpenCoWebsite = {
-            actionId: actionId,
+            actionId: actionId, websitePositionProperty
         };
 
         this.coWebsitesOpenByPlace.set(this.getIdFromPlace(place), coWebsiteOpen);
 
         const loadCoWebsiteFunction = (coWebsite: CoWebsite) => {
-            coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
-                console.error("Error during loading a co-website: " + coWebsite.getUrl());
-            });
+            coWebsiteManager.loadCoWebsite(coWebsite);
+            // coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
+            //     console.error("Error during loading a co-website: " + coWebsite.getUrl());
+            // });
 
             layoutManagerActionStore.removeAction(actionId);
         };
@@ -474,7 +477,7 @@ export class GameMapPropertiesListener {
 
             coWebsiteOpen.coWebsite = coWebsite;
 
-            coWebsiteManager.addCoWebsiteToStore(coWebsite, websitePositionProperty);
+            coWebsiteManager.addCoWebsiteToStore(coWebsite);
 
             loadCoWebsiteFunction(coWebsite);
 
@@ -510,7 +513,7 @@ export class GameMapPropertiesListener {
 
             coWebsiteOpen.coWebsite = coWebsite;
 
-            coWebsiteManager.addCoWebsiteToStore(coWebsite, websitePositionProperty);
+            coWebsiteManager.addCoWebsiteToStore(coWebsite);
 
             //user in zone to open cowesite with only icone
             inOpenWebsite.set(true);
