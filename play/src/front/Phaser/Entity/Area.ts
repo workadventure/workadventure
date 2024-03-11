@@ -1,6 +1,6 @@
 import { AreaData, AtLeast } from "@workadventure/map-editor";
-import { GameScene } from "../Game/GameScene";
 import { merge } from "lodash";
+import { GameScene } from "../Game/GameScene";
 
 export class Area extends Phaser.GameObjects.Rectangle {
     private areaCollider: Phaser.Physics.Arcade.Collider | undefined = undefined;

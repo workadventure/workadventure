@@ -1,8 +1,6 @@
 import { AreaData, AreaPermissions, AtLeast, GameMapAreas } from "@workadventure/map-editor";
 import { Area } from "../../Entity/Area";
-import { Player } from "../../Player/Player";
 import { GameScene } from "../GameScene";
-import { GameMapFrontWrapper } from "./GameMapFrontWrapper";
 
 export class AreasManager {
     private areas: Area[] = [];

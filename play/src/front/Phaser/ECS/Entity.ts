@@ -56,13 +56,16 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         };
         this.prefab = prefab;
 
-        scene.getEntityPermissionsPromise().then(() => {
-            this.activatable = this.hasAnyPropertiesSet();
-            if (this.activatable) {
-                this.setInteractive({ pixelPerfect: true, cursor: "pointer" });
-                this.scene.input.setDraggable(this);
-            }
-        });
+        scene
+            .getEntityPermissionsPromise()
+            .then(() => {
+                this.activatable = this.hasAnyPropertiesSet();
+                if (this.activatable) {
+                    this.setInteractive({ pixelPerfect: true, cursor: "pointer" });
+                    this.scene.input.setDraggable(this);
+                }
+            })
+            .catch((error) => console.error(error));
 
         this.setDepth(this.y + this.displayHeight + (this.prefab.depthOffset ?? 0));
 

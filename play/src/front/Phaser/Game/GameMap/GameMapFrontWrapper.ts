@@ -18,8 +18,8 @@ import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 import { ITiledPlace } from "../GameMapPropertiesListener";
 import type { GameScene } from "../GameScene";
 import { EntitiesManager } from "./EntitiesManager";
-import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import { AreasManager } from "./AreasManager";
+import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 
 export type DynamicArea = {
     name: string;
@@ -236,10 +236,11 @@ export class GameMapFrontWrapper {
 
     public initializeAreaManager(userConnectedTags: string[], userCanEdit: boolean) {
         const gameMapAreas = this.getGameMap().getGameMapAreas();
-        if (gameMapAreas === undefined) {
+        if (gameMapAreas !== undefined) {
+            this.areasManager = new AreasManager(this.scene, gameMapAreas, userConnectedTags, userCanEdit);
+        } else {
             console.error("Unable to load AreasManager because gameMapAreas is undefined");
         }
-        this.areasManager = new AreasManager(this.scene, gameMapAreas!, userConnectedTags, userCanEdit);
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {

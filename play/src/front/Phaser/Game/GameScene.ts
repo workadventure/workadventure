@@ -21,11 +21,11 @@ import {
     ENTITIES_FOLDER_PATH_NO_PREFIX,
     ENTITY_COLLECTION_FILE,
     EntityPrefabType,
+    EntityPermissions,
     GameMap,
     GameMapProperties,
     WAMFileFormat,
 } from "@workadventure/map-editor";
-import { EntityPermissions, GameMap, GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
@@ -941,12 +941,15 @@ export class GameScene extends DirtyScene {
         const isAdmin = this.connection?.hasTag("admin") ?? false;
         const isEditor = this.connection?.hasTag("editor") ?? false;
         const userCanEdit = isAdmin || isEditor;
-        this.entityPermissions = new EntityPermissions(
-            this.getGameMap().getGameMapAreas()!,
-            this.connection?.getAllTags() ?? [],
-            userCanEdit
-        );
-        this.entityPermissionsDeferred.resolve(this.entityPermissions);
+        const gameMapAreas = this.getGameMap().getGameMapAreas();
+        if (gameMapAreas !== undefined) {
+            this.entityPermissions = new EntityPermissions(
+                gameMapAreas,
+                this.connection?.getAllTags() ?? [],
+                userCanEdit
+            );
+            this.entityPermissionsDeferred.resolve(this.entityPermissions);
+        }
     }
 
     private initializeAreaManager() {
