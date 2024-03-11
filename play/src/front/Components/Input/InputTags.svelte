@@ -9,7 +9,7 @@
         created: undefined | boolean;
     };
     export let label: string;
-    export let value: Option[];
+    export let value: Option[] | undefined;
     export let options: Option[];
     export let onFocus = () => {};
     export let onBlur = () => {};
