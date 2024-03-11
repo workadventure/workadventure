@@ -230,7 +230,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             });
         }
         if (this.scene instanceof GameScene) {
-            this.scene.markDirty();
+            this.scene.refreshSceneForOutline();
         } else {
             throw new Error("Not the Game Scene");
         }

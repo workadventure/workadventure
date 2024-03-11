@@ -3572,6 +3572,18 @@ ${escapedMessage}
         return this._broadcastService;
     }
 
+    /**
+     * Quickfix for phaser last version breaking the outline on
+     * objects and characters
+     * TODO: Remove this function after the bug correction on phaser
+     */
+    public refreshSceneForOutline(): void {
+        this.events.once(Phaser.Scenes.Events.POST_UPDATE, () => {
+            this.markDirty();
+        });
+        this.markDirty();
+    }
+
     get room(): Room {
         return this._room;
     }
