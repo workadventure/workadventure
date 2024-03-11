@@ -486,7 +486,9 @@ export abstract class Character extends Container implements OutlineableInterfac
                 outlineColor: color,
             });
         }
-        this.scene.markDirty();
+
+        //Using outline quickfix
+        this.scene.refreshSceneForOutline();
     }
 
     cancelPreviousEmote() {
