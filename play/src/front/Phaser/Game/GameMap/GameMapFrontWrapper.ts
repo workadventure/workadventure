@@ -805,22 +805,6 @@ export class GameMapFrontWrapper {
         this.dynamicAreas.delete(name);
     }
 
-    public isPlayerInsideArea(id: string): boolean {
-        if (!this.position) {
-            return false;
-        }
-        return this.gameMap.getGameMapAreas()?.isPlayerInsideArea(id, this.position) || false;
-    }
-
-    public isEntityInsideArea(areaId: string, objectCenterCoordinates: { x: number; y: number }) {
-        const area = this.getArea(areaId);
-        if (area === undefined) {
-            console.error("Unable to find the area from id : ", areaId);
-            return false;
-        }
-        return this.isInsideAreaByCoordinates({ ...area }, objectCenterCoordinates);
-    }
-
     private isPlayerInsideAreaByCoordinates(
         areaCoordinates: { x: number; y: number; width: number; height: number },
         playerPosition: { x: number; y: number }
