@@ -1,10 +1,7 @@
 import type { FrontConfigurationInterface } from "../../common/FrontConfigurationInterface";
 import { EnvironmentVariables } from "./EnvironmentVariableValidator";
 
-
 const envChecking = EnvironmentVariables.safeParse(process.env);
-
-
 
 // Will break the process if an error happens
 if (!envChecking.success) {
@@ -141,7 +138,6 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     ENABLE_OPENID: !!env.OPID_CLIENT_ID,
     OPID_PROFILE_SCREEN_PROVIDER: env.OPID_PROFILE_SCREEN_PROVIDER,
     OPID_WOKA_NAME_POLICY,
-    CHAT_URL: env.CHAT_URL,
     ENABLE_CHAT_UPLOAD,
     FALLBACK_LOCALE,
     ENABLE_REPORT_ISSUES_MENU: env.ENABLE_REPORT_ISSUES_MENU,
