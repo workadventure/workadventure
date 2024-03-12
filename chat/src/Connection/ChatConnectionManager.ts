@@ -26,6 +26,7 @@ class ChatConnectionManager {
     private _eraserToolActivated = false;
 
     constructor() {
+
         this.uuid = "";
         this.playUri = "";
         this.deferredXmppClient = new Deferred<XmppClient>();

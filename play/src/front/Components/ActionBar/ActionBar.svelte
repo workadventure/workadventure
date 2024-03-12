@@ -102,7 +102,6 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
-
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -172,6 +171,7 @@
             menuVisiblilityStore.set(false);
             activeSubMenuStore.activateByIndex(0);
         }
+        
         chatVisibilityStore.set(!$chatVisibilityStore);
     }
 
@@ -379,16 +379,10 @@
     let totalMessagesToSee = writable<number>(0);
 
     onMount(() => {
-        chatTotalMessagesSubscription = iframeListener.chatTotalMessagesToSeeStream.subscribe((total) =>
-            totalMessagesToSee.set(total)
-        );
         resizeObserver.observe(mainHtmlDiv);
     });
 
-    onDestroy(() => {
-        subscribers.map((subscriber) => subscriber());
-        chatTotalMessagesSubscription?.unsubscribe();
-    });
+
 
     function buttonActionBarTrigger(id: string) {
         const button = $additionnalButtonsMenu.get(id) as AddButtonActionBarEvent;

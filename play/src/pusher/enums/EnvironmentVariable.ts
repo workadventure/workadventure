@@ -1,7 +1,10 @@
 import type { FrontConfigurationInterface } from "../../common/FrontConfigurationInterface";
 import { EnvironmentVariables } from "./EnvironmentVariableValidator";
 
+
 const envChecking = EnvironmentVariables.safeParse(process.env);
+
+
 
 // Will break the process if an error happens
 if (!envChecking.success) {
@@ -167,4 +170,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: parseInt(env.PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH || "1000"),
     GOOGLE_DRIVE_PICKER_CLIENT_ID: env.GOOGLE_DRIVE_PICKER_CLIENT_ID,
     GOOGLE_DRIVE_PICKER_APP_ID: env.GOOGLE_DRIVE_PICKER_APP_ID,
+    EMBEDLY_KEY: env.EMBEDLY_KEY,
+    EJABBERD_DOMAIN: env.EJABBERD_DOMAIN,
+    EJABBERD_WS_URI: env.EJABBERD_WS_URI,
 };

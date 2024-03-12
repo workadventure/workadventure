@@ -141,6 +141,9 @@ export const EnvironmentVariables = z.object({
     GOOGLE_DRIVE_PICKER_CLIENT_ID: z.string().optional(),
     GOOGLE_DRIVE_PICKER_API_KEY: z.string().optional(),
     GOOGLE_DRIVE_PICKER_APP_ID: z.string().optional(),
+
+    EMBEDLY_KEY: z.string().optional(),
+    EJABBERD_WS_URI:  z.string().optional(),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

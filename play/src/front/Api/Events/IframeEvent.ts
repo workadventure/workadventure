@@ -302,10 +302,6 @@ export const isIframeEventWrapper = z.union([
         data: isRemoveButtonActionBarEvent,
     }),
     z.object({
-        type: z.literal("chatReady"),
-        data: z.undefined(),
-    }),
-    z.object({
         type: z.literal("openBanner"),
         data: isBannerEvent,
     }),
@@ -359,6 +355,10 @@ export const isIframeEventWrapper = z.union([
     }),
     z.object({
         type: z.literal("restoreInviteUserButton"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("chatReady"),
         data: z.undefined(),
     }),
 ]);

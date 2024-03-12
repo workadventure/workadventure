@@ -144,6 +144,9 @@ services:
             # Google drive picker
             GOOGLE_DRIVE_PICKER_CLIENT_ID: "$GOOGLE_DRIVE_PICKER_CLIENT_ID"
             GOOGLE_DRIVE_PICKER_APP_ID: "$GOOGLE_DRIVE_PICKER_APP_ID"
+            #Chat 
+            EJABBERD_WS_URI: ws://xmpp.workadventure.localhost:5443/ws
+            EMBEDLY_KEY: "$EMBEDLY_KEY"       
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"

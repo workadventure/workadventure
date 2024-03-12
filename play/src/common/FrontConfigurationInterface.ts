@@ -56,4 +56,7 @@ export interface FrontConfigurationInterface {
     PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: number;
     GOOGLE_DRIVE_PICKER_CLIENT_ID: string | undefined;
     GOOGLE_DRIVE_PICKER_APP_ID: string | undefined;
+    EMBEDLY_KEY : string | undefined;
+    EJABBERD_DOMAIN : string | undefined;
+    EJABBERD_WS_URI : string | undefined;
 }
