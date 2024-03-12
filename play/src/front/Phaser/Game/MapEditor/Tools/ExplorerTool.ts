@@ -309,11 +309,13 @@ export class ExplorerTool implements MapEditorTool {
         return new AreaPreview(this.scene, structuredClone(areaConfig));
     }
 
+    private defineZoomToCenterCameraPositionTimeOut?: NodeJS.Timeout;
     public defineZoomToCenterCameraPosition() {
+        if (this.defineZoomToCenterCameraPositionTimeOut) clearTimeout(this.defineZoomToCenterCameraPositionTimeOut);
         // FIXME from the svelte component, the udate isn't dispatch in totaly at the same time after to move the camera
-        setTimeout(() => {
-            const cameraCenterXToZoom = this.scene.cameras.main.worldView.x + this.scene.cameras.main.width / 2 - 16;
-            const cameraCenterYToZoom = this.scene.cameras.main.worldView.y + this.scene.cameras.main.height / 2 - 16;
+        this.defineZoomToCenterCameraPositionTimeOut = setTimeout(() => {
+            const cameraCenterXToZoom = this.scene.cameras.main.worldView.x + this.scene.cameras.main.width / 2;
+            const cameraCenterYToZoom = this.scene.cameras.main.worldView.y + this.scene.cameras.main.height / 2;
             if (
                 cameraCenterXToZoom != this.lastCameraCenterXToZoom ||
                 cameraCenterYToZoom != this.lastCameraCenterYToZoom
@@ -322,6 +324,7 @@ export class ExplorerTool implements MapEditorTool {
                 this.lastCameraCenterXToZoom = cameraCenterXToZoom;
                 this.lastCameraCenterYToZoom = cameraCenterYToZoom;
             }
+            this.defineZoomToCenterCameraPositionTimeOut = undefined;
         }, 100);
     }
 }
