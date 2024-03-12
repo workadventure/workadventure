@@ -531,7 +531,7 @@
         </div>
         <div class="properties-container">
             {#if !addRights}
-                <a href="#toggleRight" on:click|preventDefault|stopPropagation={toggleRight}
+                <a href="#toggleRight" on:click|preventDefault|stopPropagation={toggleRight} data-testid="addRights"
                     >+ {$LL.mapEditor.areaEditor.addRight()} ({(writeTags?.length ?? 0) + (readTags?.length ?? 0)})</a
                 >
             {:else}
@@ -544,6 +544,7 @@
                     options={_tag}
                     bind:value={writeTags}
                     handleChange={onChangeWriteReadTags}
+                    testId="writeTags"
                 />
                 <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.areaEditor.rightReadDescription()}</p>
                 <InputTags
@@ -551,6 +552,7 @@
                     options={_tag}
                     bind:value={readTags}
                     handleChange={onChangeWriteReadTags}
+                    testId="readTags"
                 />
                 {#if writeTags != undefined && writeTags.length > 0}
                     <div class="tw-flex tw-flex-wrap tw-gap-1">
