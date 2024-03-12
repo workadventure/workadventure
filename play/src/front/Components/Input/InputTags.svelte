@@ -14,6 +14,7 @@
     export let onFocus = () => {};
     export let onBlur = () => {};
     export let handleChange = () => {};
+    export let testId: string | undefined = undefined;
 
     let filterText = "";
 
@@ -55,6 +56,7 @@
         --icons-color="var(--brand-blue)"
         --text-color="var(--brand-blue)"
         listAutoWidth={false}
+        inputAttributes={{ "data-testid": testId }}
     >
         <div slot="item" let:item>
             {item.created ? "Add new : " : ""}
