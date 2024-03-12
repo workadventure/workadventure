@@ -132,7 +132,9 @@
 >
     <div class="menu-nav-sidebar bg-transparent rounded-none min-w-[200px] relative">
         <!--<h2 class="p-8 text-white/10 h-5 tracking-[1rem] mb-8">{$LL.menu.title()}</h2>-->
-        <nav class="mt-0 @md/main-layout:mt-24 mr-16 @md/main-layout:mr-0 flex flex-row @md/main-layout:flex-col items-center @md/main-layout:items-start overflow-hidden">
+        <nav
+            class="mt-0 @md/main-layout:mt-24 mr-16 @md/main-layout:mr-0 flex flex-row @md/main-layout:flex-col items-stretch @md/main-layout:items-start overflow-hidden overflow-x-scroll @md/main-layout:overflow-auto px-4 @md/main-layout:px-0"
+        >
             {#each $subMenusStore as submenu, i (submenu.key + "_" + submenu.type)}
                 <div
                     class="menu-item-container group flex py-4 px-4 relative transition-all @md/main-layout:hover:pl-6 hover:opacity-100 cursor-pointer before:z-1 before:transition-all before:content-[''] before:absolute before:h-full before:w-0 before:top-0 before:right-0 before:bg-contrast/80 {activeSubMenu ===
@@ -142,7 +144,7 @@
                     on:click|preventDefault={() => switchMenu(submenu)}
                     transition:fly={{ delay: i * 75, x: 200, duration: 150 }}
                 >
-                    <button type="button" class="flex menu-item m-0 relative z-10 bold">
+                    <button type="button" class="menu-item m-0 relative z-10 bold block @md/main-layout:flex">
                         {subMenuTranslations[i]}
                     </button>
                     <img
@@ -237,7 +239,9 @@
         <h2 class="py-5 px-8 text-white h5 border-b border-white/20 absolute top-0 left-0 hidden @md/main-layout:block">
             {activeSubMenuTranslation}
         </h2>
-        <div class="bg-contrast/80 h-[calc(100%-5rem)] mt-0 @md/main-layout:mt-20 overflow-y-auto text-white pb-8 rounded-tl overflow-y-scroll @md/main-layout:overflow-none ">
+        <div
+            class="bg-contrast/80 h-[calc(100%-5rem)] mt-0 @md/main-layout:mt-20 overflow-y-auto text-white pb-8 rounded-tl overflow-y-scroll @md/main-layout:overflow-none "
+        >
             <svelte:component this={activeComponent} {...props} />
         </div>
     </div>
