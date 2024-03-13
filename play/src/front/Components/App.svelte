@@ -1,7 +1,7 @@
 <script lang="ts">
+    // import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
     import Phaser from "phaser";
     import * as Sentry from "@sentry/svelte";
-    // import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
     import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
     import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
     import { onMount } from "svelte";
