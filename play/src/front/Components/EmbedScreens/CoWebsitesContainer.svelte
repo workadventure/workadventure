@@ -59,7 +59,7 @@
     // let isHighlight = false;
     // let isMain = false;
     // $: {
-    //     isMain =
+    //     isMain =tr
     //         $mainState === iframeStates.opened &&
     //         $mainCoWebsite !== undefined &&
     //         $mainCoWebsite.getId() === coWebsite.getId();
