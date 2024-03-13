@@ -10,6 +10,7 @@
     export let isLoading = false;
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="text flex items-center px-2 mr-2 rounded transition-all {active ? 'text-contrast bg-white hover:bg-white/90 translate-y-2 rounded-b-none pt-1' : 'text-white hover:bg-white/10' }"
      on:click={() => active = !active}
 >

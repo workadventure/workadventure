@@ -20,6 +20,8 @@
     let unsubscriberFileStore: Unsubscriber | null = null;
     let unsubscriberVolumeStore: Unsubscriber | null = null;
 
+
+
     let state: "loading" | "playing" | "not_allowed" | "error" = "loading";
 
     let currentVolume: number = localUserStore.getAudioPlayerVolume();
@@ -132,18 +134,23 @@
         audioPlayerVol.blur();
         return false;
     }
+
 </script>
 
+
+
+
 <div
-    class="main-audio-manager absolute bottom-4 bg-contrast/80 backdrop-blur left-0 right-0 m-auto rounded-lg p-4"
+    class="main-audio-manager absolute bottom-4 w-[500px] left-0 right-0 m-auto rounded-lg p-4 mb-7"
     transition:fly={{ y: -200, duration: 500 }}
     class:hidden={state !== "playing" && state !== "not_allowed"}
 >
     <div class:hidden={state !== "playing"} class="">
-        <div class="font-lg text-center text-white mb-4 opacity-50">
-            Manage background music <!-- Trad -->
+        <div class="font-lg text-center text-white mb-7">
+            Manage background music<!-- Trad -->
         </div>
         <div class="audio-manager-player-volume flex items-center justify-center">
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div id="audioplayer_volume_icon_playing" bind:this={audioPlayerVolumeIcon} on:click={onMute} class="pr-4 flex items-center">
                 <svg
                     viewBox="0 0 19.54 18.03"

@@ -29,6 +29,7 @@
 
 <div class="error-div is-dark is-rounded flex flex-col items-center justify-center">
     <p class="is-error title">{$LL.error.errorDialog.title()}</p>
+    <p class="is-error title">{$LL.error.errorDialog.title()}</p>
     <div class="body">
         {#each $errorStore as error (error.id)}
             <p>{error.message}</p>

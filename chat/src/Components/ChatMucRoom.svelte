@@ -32,10 +32,24 @@
     const readyStore = mucRoom.getRoomReadyStore();
 </script>
 
-<div class="wa-chat-item flex rounded bg-white/10 transition-all hover:bg-white/20 pl-4 py-2 pr-2 mb-2 items-center cursor-pointer" on:mouseleave={closeChatUserMenu}>
+<div
+    class="wa-chat-item flex rounded bg-white/10 transition-all hover:bg-white/20 pl-4 py-2 pr-2 mb-2 items-center cursor-pointer"
+    on:mouseleave={closeChatUserMenu}
+>
     <div class="relative" on:click|stopPropagation={() => open()}>
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-messages" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="icon icon-tabler icon-tabler-messages"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="#ffffff"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
             <path d="M21 14l-3 -3h-7a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1h9a1 1 0 0 1 1 1v10" />
             <path d="M14 15v2a1 1 0 0 1 -1 1h-7l-3 3v-10a1 1 0 0 1 1 -1h2" />
         </svg>
@@ -64,9 +78,7 @@
     </div>
 
     {#if $unreads}
-        <span
-            class="bg-secondary text-white w-6 h-6 text-xs font-bold flex items-center justify-center rounded-full"
-        >
+        <span class="bg-secondary text-white w-6 h-6 text-xs font-bold flex items-center justify-center rounded-full">
             {$unreads}
         </span>
     {/if}
@@ -74,8 +86,19 @@
     <div class="wa-dropdown">
         <!-- toggle -->
         <button class="m-0 btn btn-white btn-ghost">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="icon icon-tabler icon-tabler-chevron-right"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="#ffffff"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                 <path d="M9 6l6 6l-6 6" />
             </svg>
         </button>

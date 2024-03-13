@@ -5,6 +5,7 @@ import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import type { RoomConnection } from "../Connection/RoomConnection";
 import { localUserStore } from "../Connection/LocalUserStore";
 
+
 let idCount = 0;
 
 /**

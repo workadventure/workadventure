@@ -23,7 +23,7 @@
             {/if}
             -->
             <div class="text-center mb-4 w-full">
-                <img src="{logo}" class="max-h-10 px-4" />
+                <img src="{logo}" alt="" class="max-h-10 px-4" />
             </div>
             <div class="absolute w-full h-3 bg-contrast py-[2px]">
                 <div class="bg-secondary h-full transition-all duration-200" style="width: {$loaderProgressStore * 100}%"></div>

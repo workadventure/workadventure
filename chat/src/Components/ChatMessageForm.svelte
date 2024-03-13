@@ -516,19 +516,30 @@
             <div class="flex flex-wrap items-center justify-between">
                 <div class="grow message text-xs px-4 py-2 text-left w-full pr-12">
                     <div class="flex items-end justify-between text-xxs">
-                    <span class="text-white opacity-50"
-                    >
-                        {#if isMe($selectedMessageToReply.name)}{$LL.me()}{:else}{$selectedMessageToReply.name}{/if} -
-                       {$selectedMessageToReply.time.toLocaleTimeString($locale, {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        })}
-                    </span>
+                        <span class="text-white opacity-50">
+                            {#if isMe($selectedMessageToReply.name)}{$LL.me()}{:else}{$selectedMessageToReply.name}{/if}
+                            -
+                            {$selectedMessageToReply.time.toLocaleTimeString($locale, {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            })}
+                        </span>
                     </div>
                     <div class="mb-0 whitespace-pre-line break-words flex">
                         <div class="mr-1 opacity-50">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-corner-down-right" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="icon icon-tabler icon-tabler-corner-down-right"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="#ffffff"
+                                fill="none"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                 <path d="M6 6v6a3 3 0 0 0 3 3h10l-4 -4m0 8l4 -4" />
                             </svg>
                         </div>
@@ -540,22 +551,56 @@
                         {#each $selectedMessageToReply.links as link (link.url)}
                             <div class="flex pt-2">
                                 <div class="px-1 aspect-square h-6 w-6 opacity-30">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-paperclip s-58EZrIzJfOBz" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" class="s-58EZrIzJfOBz"></path>
-                                        <path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5" class="s-58EZrIzJfOBz"></path>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="icon icon-tabler icon-tabler-paperclip s-58EZrIzJfOBz"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        stroke-width="1.5"
+                                        stroke="#ffffff"
+                                        fill="none"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" class="s-58EZrIzJfOBz" />
+                                        <path
+                                            d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5"
+                                            class="s-58EZrIzJfOBz"
+                                        />
                                     </svg>
                                 </div>
-                                <a href="{link.url}" target="_blank" class="no-underline text-white ml-3 max-w-full text-ellipsis overflow-hidden whitespace-nowrap hover:underline">
+                                <a
+                                    href={link.url}
+                                    target="_blank"
+                                    class="no-underline text-white ml-3 max-w-full text-ellipsis overflow-hidden whitespace-nowrap hover:underline"
+                                >
                                     {link.description}
                                 </a>
                             </div>
                         {/each}
                     {/if}
                 </div>
-                <div class="close absolute right-0 top-0 bottom-0 m-auto h-full w-9 hover:bg-white/10 text-center flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="mt-1 icon icon-tabler icon-tabler-x s-58EZrIzJfOBz" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" class="s-58EZrIzJfOBz"></path><path d="M18 6l-12 12" class="s-58EZrIzJfOBz"></path>
-                        <path d="M6 6l12 12" class="s-58EZrIzJfOBz"></path>
+                <div
+                    class="close absolute right-0 top-0 bottom-0 m-auto h-full w-9 hover:bg-white/10 text-center flex items-center justify-center"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="mt-1 icon icon-tabler icon-tabler-x s-58EZrIzJfOBz"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="#ffffff"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" class="s-58EZrIzJfOBz" /><path
+                            d="M18 6l-12 12"
+                            class="s-58EZrIzJfOBz"
+                        />
+                        <path d="M6 6l12 12" class="s-58EZrIzJfOBz" />
                     </svg>
                 </div>
             </div>
@@ -670,9 +715,23 @@
                     >
                         {#if fileUploaded.uploadState === uploadingState.finish}
                             <div class="px-1 aspect-square h-6 w-6 opacity-30">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-paperclip s-58EZrIzJfOBz" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" class="s-58EZrIzJfOBz"></path>
-                                    <path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5" class="s-58EZrIzJfOBz"></path>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="icon icon-tabler icon-tabler-paperclip s-58EZrIzJfOBz"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    stroke-width="1.5"
+                                    stroke="#ffffff"
+                                    fill="none"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" class="s-58EZrIzJfOBz" />
+                                    <path
+                                        d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5"
+                                        class="s-58EZrIzJfOBz"
+                                    />
                                 </svg>
                             </div>
                         {:else if fileUploaded.uploadState === uploadingState.error}
@@ -689,13 +748,24 @@
                             {fileUploaded.name}
                         </span>
                         <button
-                                on:click|preventDefault|stopPropagation={() => {
-                            handlerDeleteUploadedFile(fileUploaded);
-                        }}
-                                class="delete p-0 m-0 absolute right-0 top-0 h-full w-9 hover:bg-white/10 text-center"
+                            on:click|preventDefault|stopPropagation={() => {
+                                handlerDeleteUploadedFile(fileUploaded);
+                            }}
+                            class="delete p-0 m-0 absolute right-0 top-0 h-full w-9 hover:bg-white/10 text-center"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="mt-1 icon icon-tabler icon-tabler-x" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="mt-1 icon icon-tabler icon-tabler-x"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="#ffffff"
+                                fill="none"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                 <path d="M18 6l-12 12" />
                                 <path d="M6 6l12 12" />
                             </svg>
@@ -717,7 +787,9 @@
                 </div>
             {/if}
 
-            <div class="w-full px-2 py-2 flex flex-row justify-center items-center bg-contrast/80 border-x-0 border-b-0 border-t border-solid border-white/30 backdrop-blur">
+            <div
+                class="w-full px-2 py-2 flex flex-row justify-center items-center bg-contrast/80 border-x-0 border-b-0 border-t border-solid border-white/30 backdrop-blur"
+            >
                 <div class="actions px-2 py-2">
                     <div class="flex items-center space-x-1">
                         <button
@@ -726,11 +798,28 @@
                             on:click|preventDefault|stopPropagation={toggleApplicationMenu}
                             disabled={$applications.size === 0}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-apps" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                <path d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
-                                <path d="M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
-                                <path d="M14 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="icon icon-tabler icon-tabler-apps"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="#ffffff"
+                                fill="none"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path
+                                    d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
+                                />
+                                <path
+                                    d="M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
+                                />
+                                <path
+                                    d="M14 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"
+                                />
                                 <path d="M14 7l6 0" />
                                 <path d="M17 4l0 6" />
                             </svg>
@@ -739,22 +828,35 @@
                 </div>
                 <div class="relative grow">
                     <div
-                            contenteditable="true"
-                            bind:this={textarea}
-                            bind:textContent={newMessageText}
-                            bind:innerHTML={htmlMessageText}
-                            data-placeholder={$LL.enterText()}
-                            on:input={onInput}
-                            on:keydown={onKeyDown}
-                            on:keypress={onKeyPress}
-                            class="bg-contrast rounded border border-solid border-white/20 px-4 py-2 focus:outline-secondary"
-                    ></div>
+                        contenteditable="true"
+                        bind:this={textarea}
+                        bind:textContent={newMessageText}
+                        bind:innerHTML={htmlMessageText}
+                        data-placeholder={$LL.enterText()}
+                        on:input={onInput}
+                        on:keydown={onKeyDown}
+                        on:keypress={onKeyPress}
+                        class="bg-contrast rounded border border-solid border-white/20 px-4 py-2 focus:outline-secondary"
+                    />
                     <button
-                            class="bg-transparent p-0 m-0 inline-flex justify-center items-center absolute right-2 top-0 bottom-0 m-auto opacity-50 hover:opacity-100 cursor-pointer { emojiOpened ? 'text-light-blue' : '' }"
-                            on:click|preventDefault|stopPropagation={openEmoji}
+                        class="bg-transparent p-0 m-0 inline-flex justify-center items-center absolute right-2 top-0 bottom-0 m-auto opacity-50 hover:opacity-100 cursor-pointer {emojiOpened
+                            ? 'text-light-blue'
+                            : ''}"
+                        on:click|preventDefault|stopPropagation={openEmoji}
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-mood-smile" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="icon icon-tabler icon-tabler-mood-smile"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="#ffffff"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                             <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
                             <path d="M9 10l.01 0" />
                             <path d="M15 10l.01 0" />
@@ -762,26 +864,34 @@
                         </svg>
                     </button>
                     {#if $enableChatUpload}
-                        <input
-                                type="file"
-                                id="file"
-                                name="file"
-                                class="hidden"
-                                on:input={handleInputFile}
-                                multiple
-                        />
-                        <label for="file" class="bg-transparent p-0 m-0 inline-flex justify-center items-center absolute right-10 top-0 bottom-0 m-auto opacity-50 hover:opacity-100 cursor-pointer">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-paperclip" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                <path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5" />
+                        <input type="file" id="file" name="file" class="hidden" on:input={handleInputFile} multiple />
+                        <label
+                            for="file"
+                            class="bg-transparent p-0 m-0 inline-flex justify-center items-center absolute right-10 top-0 bottom-0 m-auto opacity-50 hover:opacity-100 cursor-pointer"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                class="icon icon-tabler icon-tabler-paperclip"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="#ffffff"
+                                fill="none"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path
+                                    d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5"
+                                />
                             </svg>
                         </label>
                     {:else}
                         <button
-                                id="file"
-                                class={`bg-transparent p-0 m-0 inline-flex justify-center items-center opacity-50`}
-                                on:click|preventDefault|stopPropagation={() =>
-                                    (informationMessage = $LL.disabledByAdmin())}
+                            id="file"
+                            class={`bg-transparent p-0 m-0 inline-flex justify-center items-center opacity-50`}
+                            on:click|preventDefault|stopPropagation={() => (informationMessage = $LL.disabledByAdmin())}
                         >
                             <PaperclipIcon size="17" />
                         </button>
@@ -789,7 +899,6 @@
                 </div>
                 <div class="actions px-2 py-2">
                     <div class="flex items-center space-x-1">
-
                         <button
                             id="send"
                             type="submit"
@@ -807,10 +916,23 @@
                             {:else if $hasInProgressUploadingFile}
                                 <LoaderIcon size="17" class="animate-spin" />
                             {:else}
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-send" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="icon icon-tabler icon-tabler-send"
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    stroke-width="1.5"
+                                    stroke="#ffffff"
+                                    fill="none"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                     <path d="M10 14l11 -11" />
-                                    <path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5" />
+                                    <path
+                                        d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5"
+                                    />
                                 </svg>
                             {/if}
                         </button>

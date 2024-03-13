@@ -15,6 +15,7 @@
     import JitsiAudioElement from "./JitsiAudioElement.svelte";
     import ActionMediaBox from "./ActionMediaBox.svelte";
 
+
     export let clickable = true;
     export let isHightlighted = false;
     export let peer: JitsiTrackStreamWrapper;
@@ -81,8 +82,8 @@
             <JitsiVideoElement
                 jitsiTrack={$videoTrackStore}
                 isLocal={$videoTrackStore?.isLocal()}
-                {isHightlighted}
-                {isMobileFormat}
+                isHightlighted={isHightlighted}
+                isMobileFormat={isMobileFormat}
             />
         </div>
     {/if}

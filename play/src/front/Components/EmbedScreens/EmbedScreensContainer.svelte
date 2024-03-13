@@ -13,40 +13,43 @@
     /*
     export let y = 20
 
-    let expanding = null
-    let start = null, initial = null
-    let height = get(heightCamWrapper);
+//     let expanding: `top` | "bottom" | undefined | null;
+//     let start: number | null, initial: { y: number, height: number } | null;
+//     let height = get(heightCamWrapper);
 
-    function startExpand(type, event) {
-        expanding = type
-        start = event.pageY
-        initial = { y, height }
-    }
+//     /* eslint-disable @typescript-eslint/no-explicit-any */
+//     function startExpand(type: any, event: any): void { // eslint-disable-line @typescript-eslint/no-unused-vars
+//         expanding = type
+//         start = event.pageY
+//         initial = { y, height }
+//     }
 
-    function stopExpand() {
-        expanding = null
-        start = null
-        initial = null
-    }
+//     function stopExpand() {
+//         expanding = null
+//         start = null
+//         initial = null
+//     }
 
-    function expand(event) {
-        if (!expanding) return
-        if (expanding == 'top') {
-            const delta = start - event.pageY
-            console.log(event.pageY);
-            y = initial.y - delta
-            $heightCamWrapper = initial.height + delta
-            return
-        }
+// /* eslint-disable @typescript-eslint/no-explicit-any */
+//     function expand(event: any) { // eslint-disable-line @typescript-eslint/no-unused-vars
+//         if (!expanding) return
+//         if (expanding == 'top') {
+//             const delta = start !== null ? start - event.pageY : 0;
+//             console.log(event.pageY);
+//             if (initial) {
+//                 y = initial.y - delta;
+//             }
+//             $heightCamWrapper = initial ? initial.height + delta : $heightCamWrapper;
+//             return
+//         }
 
-        if (expanding == 'bottom') {
-            const delta = event.pageY - start
-            console.log(event.pageY);
-            $heightCamWrapper = initial.height + delta
-            return
-        }
-    }
-     */
+        // if (expanding == 'bottom') {
+        //     const delta = event.pageY - start
+        //     console.log(event.pageY);
+        //     $heightCamWrapper = initial.height + delta
+        //     return
+        // }
+
 </script>
 
 <div id="embedScreensContainer" class="group relative h-full pt-24 flex justify-center items-center pointer-events-auto transition-all pb-7" style="{$emoteMenuSubStore ? 'padding-top:96px;' : '' }">

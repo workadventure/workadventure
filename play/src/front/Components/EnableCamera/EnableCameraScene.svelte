@@ -42,6 +42,8 @@
     let speakerEdit = false;
     let selectedCamera: string | undefined = undefined;
     let selectedMicrophone: string | undefined = undefined;
+    // let selectedSpeaker: string | undefined = undefined;
+    const sound = new Audio("/resources/objects/webrtc-in.mp3");
 
     let legalStrings: string[] = [];
     if (legals?.termsOfUseUrl) {
@@ -72,8 +74,8 @@
     }
 
     function submit() {
-        selectCamera();
-        selectMicrophone();
+        selectCamera(selectedCamera);
+        selectMicrophone(selectedMicrophone);
         enableCameraScene.login();
     }
 
@@ -123,6 +125,7 @@
         requestedCameraState.enableWebcam();
         requestedMicrophoneState.enableMicrophone();
         batchGetUserMediaStore.commitChanges();
+        sound.load();
     });
 
     function selectCamera(selectedCamera: string | undefined = undefined) {
@@ -147,10 +150,15 @@
         localUserStore.setPreferredAudioInputDevice(selectedMicrophone);
     }
 
-    function selectSpeaker(deviceId: string) {
-        localUserStore.setSpeakerDeviceId(deviceId);
+    function selectSpeaker(deviceId: string | undefined) {
+        localUserStore.setSpeakerDeviceId(deviceId ?? "");
         speakerSelectedStore.set(deviceId);
     }
+
+    function playSoundClick() {
+        sound.play().catch(e => console.error(e));
+    }
+
 </script>
 
 <form class="enableCameraScene pointer-events-auto relative z-30 m-0" on:submit|preventDefault={submit}>
@@ -177,8 +185,10 @@
 
                     <div class="flex items-center justify-center">
                         <div class="flex flex-wrap items-center justify-center min-h-[129px]">
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div class="border border-solid border-white rounded-lg pr-8 pl-6 pb-4 m-2 items-center justify-center space-x-4 transition-all cursor-pointer relative {selectedMicrophone == undefined ? 'bg-white text-secondary pt-12' : 'over:bg-white/10 pt-4'} {(microphoneEdit && selectedMicrophone != undefined) || (!microphoneEdit && selectedMicrophone == undefined) ? 'flex' : 'hidden'}"
                                  on:click={() => {
+                        selectMicrophone(undefined);
                         selectMicrophone(undefined);
                         microphoneEdit = false;
                     }}
@@ -205,6 +215,7 @@
                                 </div>
                             </div>
                             {#each $microphoneListStore ?? [] as microphone (microphone.deviceId)}
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div class="border border-solid border-white rounded-lg pr-8 pl-6 pb-4 m-2 items-center justify-center space-x-4 transition-all cursor-pointer relative {selectedMicrophone === microphone.deviceId ? 'bg-white text-secondary pt-12' : 'hover:bg-white/10 pt-4'} {(microphoneEdit && selectedMicrophone !== microphone.deviceId) || (!microphoneEdit && selectedMicrophone === microphone.deviceId) ? 'flex' : 'hidden'}"
                                      on:click={() => {
                                 selectMicrophone(microphone.deviceId)
@@ -255,6 +266,7 @@
 
                     <div class="flex justify-center">
                         <div class="flex items-center justify-center min-h-[294px]">
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div class="border border-solid border-white rounded-lg items-center justify-start m-2 space-x-4 transition-all cursor-pointer overflow-hidden {selectedCamera == undefined ? 'bg-white/10' : 'hover:bg-white/10'} {(cameraEdit && selectedCamera != undefined) || (!cameraEdit && selectedCamera == undefined) ? 'flex flex-col' : 'hidden'}"
                                  on:click={() => {
                         selectCamera(undefined);
@@ -289,6 +301,7 @@
                                 </div>
                             </div>
                             {#each $cameraListStore ?? [] as camera (camera.deviceId)}
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div class="border border-solid rounded-lg relative justify-start m-2 space-x-4 transition-all overflow-hidden cursor-pointer {selectedCamera === camera.deviceId ? 'bg-white text-secondary border-none' : 'border-white hover:bg-white/10'} {(cameraEdit && selectedCamera !== camera.deviceId) || (!cameraEdit && selectedCamera === camera.deviceId) ? 'flex flex-col' : 'hidden'}"
                                      on:click={() => {
                                 selectCamera(camera.deviceId);
@@ -353,13 +366,15 @@
 
                         <div class="flex items-center justify-center">
                             <div class="flex flex-wrap items-center justify-center min-h-[129px]">
-                                {#each $speakerListStore as speaker}
+                                {#each $speakerListStore as speaker(speaker.deviceId)}
+                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
                                             class="border border-solid rounded-lg relative justify-start items-center m-2 space-x-4 transition-all overflow-hidden cursor-pointer px-8 py-6 {$speakerSelectedStore === speaker.deviceId ? 'bg-white text-secondary border-none' : 'border-white hover:bg-white/10'} {(speakerEdit && $speakerSelectedStore !== speaker.deviceId) || (!speakerEdit && $speakerSelectedStore === speaker.deviceId) ? 'flex' : 'hidden'}"
                                             on:click={() => {
                                             selectSpeaker(speaker.deviceId)
                                             speakerEdit = false;
                                         }}
+                                            on:click={playSoundClick}
                                     >
                                         <div class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center {$speakerSelectedStore === speaker.deviceId ? 'bg-secondary border-secondary' : 'border-white'}">
                                             {#if $speakerSelectedStore === speaker.deviceId}
