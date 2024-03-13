@@ -3,21 +3,41 @@
     import CopyIcon from "../Icons/CopyIcon.svelte";
     import ExternalLinkIcon from "../Icons/ExternalLinkIcon.svelte";
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
+    import XIcon from "../Icons/XIcon.svelte";
+    import { coWebsiteManager, coWebsites, mainCoWebsite } from "../../Stores/CoWebsiteStore";
+
+
+
 
 
     export let title = "GitHub - Workadventure";
     export let url = "https://git.thecodingmachine.com/workadventure-saas";
     export let active = false;
-    export let isLoading = false
+    export let isLoading = false;
+    let test;
+    let test2;
+
+
+    function displayMaintab() {
+
+        test = coWebsiteManager.getCoWebsites();
+        console.log({test});
+        test2 = coWebsiteManager.getMainState();
+        console.log({test2});
+    }
+
+
 
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="text flex items-center px-2 mr-2 rounded transition-all {active ? 'text-contrast bg-white hover:bg-white/90 translate-y-2 rounded-b-none pt-1' : 'text-white hover:bg-white/10' }"
      on:click={() => active = !active}
+     on:click={displayMaintab}
+
 >
     {#if isLoading}
-        <svg width="24" height="24" viewBox="0 0 24 24" class="m-1 {active ? 'fill-contrast' : 'fill-white' }" xmlns="http://www.w3.org/2000/svg">
+        <svg width="24" height="24" viewBox="0 0 24 24" class="m-1 {active ? 'fill-contrast' : 'fill-white' } " xmlns="http://www.w3.org/2000/svg">
             <path d="M8.65642 19.2969C8.48956 19.328 8.41666 19.4063 8.43756 19.5312C8.45836 19.6561 8.55211 19.6979 8.71875 19.6561C8.88562 19.6145 8.95846 19.5415 8.9375 19.4374C8.91681 19.3229 8.82307 19.2759 8.65642 19.2969Z" />
             <path d="M7.76573 19.422C7.59903 19.422 7.51573 19.479 7.51573 19.5938C7.51573 19.7292 7.60434 19.7863 7.78133 19.7655C7.94803 19.7655 8.03143 19.7082 8.03143 19.5938C8.03143 19.4585 7.94283 19.401 7.76573 19.422Z" />
             <path d="M6.547 19.3748C6.50541 19.4894 6.57316 19.5673 6.7501 19.6092C6.90634 19.6714 7.00535 19.6403 7.04694 19.5154C7.07824 19.401 7.01049 19.3178 6.84384 19.2654C6.68754 19.2239 6.58865 19.2598 6.547 19.3748Z" />
@@ -48,13 +68,19 @@
             {/if}
         </div>
     </div>
-    <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
+    <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center" id="duplicate">
         <ExternalLinkIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
     </div>
-    <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
+    <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center" id="copy">
         <CopyIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
     </div>
     <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
-        <SettingsIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
+        <XIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
     </div>
+
+     <!-- <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
+        <SettingsIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
+    </div> -->
 </div>
+
+<!--{active ? 'fill-contrast' : 'fill-white' }  {active ? '' : 'stroke-white fill-transparent' }-->

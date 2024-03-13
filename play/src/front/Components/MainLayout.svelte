@@ -76,10 +76,27 @@
     // import { pop } from "@sentry/browser/types/transports/offline";
     // import { log } from "console";
     // import { UserInputManager } from "../Phaser/UserInput/UserInputManager";
+    import JistiCowebsite from "./Cowebsites/JistiCowebsite.svelte";
+    import { Jitsi } from "@workadventure/shared-utils";
+    import BigBlueButtonCowebsite from "./Cowebsites/BigBlueButtonCowebsite.svelte";
+    import { JitsiCoWebsite } from "../WebRtc/CoWebsite/JitsiCoWebsite";
 
 
 
     let mainLayout: HTMLDivElement;
+    // let playerName: string;
+    // let url = URL || undefined
+    // let widthPercent: number
+    // let closable: boolean
+    // let roomName: string
+    // let jwt: string
+    // let domain: string
+    // let jitsiConfig: object | undefined
+    // let jitsiInterfaceConfig: object | undefined
+
+
+
+
     export let message: string;
 
 
@@ -97,6 +114,7 @@
 
 
 
+
 </script>
 
 <!-- Components ordered by z-index -->
@@ -108,7 +126,9 @@
     {/if}
 
     <aside id="main-layout-left-aside">
-        <CoWebsitesContainer vertical={isMobile} />
+        <!-- {#if $coWebsites.length > 0}
+            <CoWebsitesContainer vertical={isMobile} />
+        {/if} -->
     </aside>
 
     <section id="main-layout-main" class="pb-0 pointer-events-none">
@@ -214,7 +234,6 @@
 
 
 
-
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 
@@ -274,5 +293,15 @@
         z-index: 501;
         transform: translate(-50%, -50%) scale(0.9);
         filter: blur(4px);
+    }
+
+
+    .jitsi {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100%;
+        height: 100%;
+        z-index: 100;
     }
 </style>

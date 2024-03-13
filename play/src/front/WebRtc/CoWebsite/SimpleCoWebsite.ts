@@ -91,7 +91,7 @@ export class SimpleCoWebsite implements CoWebsite {
                 setTimeout(() => resolve(), 2000);
             });
 
-            coWebsiteManager.getCoWebsiteBuffer().appendChild(this.iframe);
+            //coWebsiteManager.getCoWebsiteBuffer().appendChild(this.iframe);
 
             const race = CancelablePromise.race([onloadPromise, onTimeoutPromise])
                 .then(() => {

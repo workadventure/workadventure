@@ -2,12 +2,13 @@
     import { onMount } from "svelte";
 
     import { ICON_URL } from "../../Enum/EnvironmentVariable";
-    import { mainCoWebsite } from "../../Stores/CoWebsiteStore";
+    import { coWebsiteManager, mainCoWebsite } from "../../Stores/CoWebsiteStore";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
-    import { iframeStates, coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+    import { iframeStates } from "../../WebRtc/CoWebsiteManager"
+
 
     import jitsiIcon from "../images/jitsi.png";
     import meetingIcon from "../images/meeting.svg";
@@ -51,7 +52,8 @@
     async function onClick() {
         if ($mainCoWebsite) {
             if ($mainCoWebsite.getId() === coWebsite.getId()) {
-                if (coWebsiteManager.getMainState() === iframeStates.closed) {
+                const mainState = coWebsiteManager.getMainState();
+                if (mainState !== undefined && mainState === iframeStates.closed) {
                     coWebsiteManager.displayMain();
                 } else if ($highlightedEmbedScreen?.type === "cowebsite") {
                     coWebsiteManager.goToMain($highlightedEmbedScreen.embed);
@@ -63,7 +65,7 @@
                     coWebsiteManager.hideMain();
                     coWebsiteManager.goToMain(coWebsite);
                     coWebsiteManager.displayMain();
-                } else if (coWebsiteManager.getMainState() === iframeStates.closed) {
+                } else if (mainState !== undefined && mainState === iframeStates.closed) {
                     coWebsiteManager.goToMain(coWebsite);
                     coWebsiteManager.displayMain();
                 } else {
@@ -79,7 +81,7 @@
             await coWebsiteManager.loadCoWebsite(coWebsite);
         }
 
-        coWebsiteManager.resizeAllIframes();
+        // coWebsiteManager.resizeAllIframes();
     }
 
     function noDrag() {

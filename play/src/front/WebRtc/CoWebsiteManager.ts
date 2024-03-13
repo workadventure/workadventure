@@ -34,7 +34,7 @@ const cowebsiteSlotBaseDomId = "cowebsite-slot-";
 const animationTime = 500; //time used by the css transitions, in ms.
 
 interface TouchMoveCoordinates {
-    x: number;getCoWebsites
+    x: number;
     y: number;
 }
 

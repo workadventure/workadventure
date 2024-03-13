@@ -4,6 +4,7 @@ import type { Readable } from "svelte/store";
 export type CoWebsiteState = "asleep" | "loading" | "ready";
 
 export interface CoWebsite {
+    // getTitle(): string;
     getId(): string;
     getUrl(): URL;
     getState(): CoWebsiteState;
@@ -14,4 +15,5 @@ export interface CoWebsite {
     isClosable(): boolean;
     load(): CancelablePromise<HTMLIFrameElement>;
     unload(): Promise<void>;
+    isActice(): boolean;
 }

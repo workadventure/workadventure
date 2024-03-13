@@ -3,7 +3,8 @@ import { z } from "zod";
 import { get } from "svelte/store";
 import { randomDelay } from "@workadventure/shared-utils/src/RandomDelay/RandomDelay";
 import { inExternalServiceStore } from "../../Stores/MyMediaStore";
-import { coWebsiteManager } from "../CoWebsiteManager";
+// import { coWebsiteManager } from "../CoWebsiteManager";
+import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import { jitsiExternalApiFactory } from "../JitsiExternalApiFactory";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
@@ -131,6 +132,7 @@ const defaultInterfaceConfig = {
 };
 
 export class JitsiCoWebsite extends SimpleCoWebsite {
+
     private jitsiApi?: JitsiApi;
     private audioCallback = this.onAudioChange.bind(this);
     private videoCallback = this.onVideoChange.bind(this);
@@ -219,10 +221,9 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
 
                     Promise.race([timemoutPromise, jistiMeetLoadedPromise])
                         .then(async () => {
+
                             await randomDelay();
-                            const iframe = coWebsiteManager
-                                .getCoWebsiteBuffer()
-                                .querySelector<HTMLIFrameElement>('[id*="jitsi" i]');
+                            const iframe = coWebsiteManager.getCoWebsiteBuffer().querySelector<HTMLIFrameElement>('[id*="jitsi" i]');
 
                             if (cancelled /*&& iframe*/) {
                                 console.info("CLOSING BECAUSE CANCELLED AFTER LOAD");

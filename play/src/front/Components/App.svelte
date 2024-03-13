@@ -25,6 +25,7 @@ import GameOverlay from "./GameOverlay.svelte";
 // import XIcon from "./Icons/XIcon.svelte";
 // import FullScreenIcon from "./Icons/FullScreenIcon.svelte";
 import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
+    import { coWebsites } from "../Stores/CoWebsiteStore";
 
 let game: Game;
 let gameDiv: HTMLDivElement;
@@ -202,7 +203,9 @@ onMount(() => {
          class="absolute top-0 -z-10"
     >
     </div>
-    <CoWebsitesContainer />
+    {#if $coWebsites.length > 0}
+        <CoWebsitesContainer />
+    {/if}
 </div>
 
 <style lang="scss">

@@ -1,5 +1,6 @@
 import { derived, get, Unsubscriber, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
+import type { Writable } from "svelte/store";
 
 
 
@@ -17,6 +18,7 @@ function createCoWebsiteStore() {
                 coWebsite.getStateSubscriber().subscribe(() => {
                     update((currentArray) => currentArray);
                 })
+
             );
 
             if (position || position === 0) {
@@ -27,11 +29,11 @@ function createCoWebsiteStore() {
                         return [...currentArray.splice(position, 0, coWebsite)];
                     }
 
+                    console.log(currentArray.length)
                     return [...currentArray, coWebsite];
                 });
                 return;
             }
-
             update((currentArray) => [...currentArray, coWebsite]);
         },
         remove: (coWebsite: CoWebsite) => {
@@ -49,6 +51,7 @@ function createCoWebsiteStore() {
     };
 }
 
+
 export const coWebsites = createCoWebsiteStore();
 
 export const coWebsitesNotAsleep = derived([coWebsites], ([$coWebsites]) =>
@@ -65,22 +68,41 @@ export const mainCoWebsite = derived([coWebsites], ([$coWebsites]) =>
 
 
 
+export enum iframeStates {
+    closed = 1,
+    loading, // loading an iframe can be slow, so we show some placeholder until it is ready
+    opened,
+}
 // const activeTab = writable(true);
 
-class CoWebsiteManager {
+export class CoWebsiteManager {
 
-    // Create store for active coWebsite
+    private openedMain: Writable<iframeStates> = writable(iframeStates.closed);
 
-    // constructor() {
-    //     this.cowebsiteDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDomId);
-    //     this.gameOverlayDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(gameOverlayDomId);
-    //     this.cowebsiteBufferDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteBufferDomId);
-    //     this.cowebsiteAsideHolderDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteAsideHolderDomId);
-    //     this.cowebsiteLoaderDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteLoaderDomId);
-    //     this.buttonCloseCoWebsite = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
-    //
+    public displayMain() {
+        const coWebsite = this.getMainCoWebsite();
+        console.log(coWebsite);
+        if (coWebsite) {
+            const iframe = coWebsite.getIframe();
+            if (iframe) {
+                iframe.style.display = "block";
+            }
+        }
+        // let others = get(coWebsites).filter((coWebsite) => coWebsite.getState() === "asleep");
+        // console.log(others);
+        // this.loadMain(coWebsite?.getWidthPercent());
+        // this.openMain();
+        // this.fire();
+    }
 
-    private getMainCoWebsite(): CoWebsite | undefined {
+
+    public getMainState() {
+        // console.log("je suis dans la fonction getMainState");
+        return get(this.openedMain);
+    }
+
+    public getMainCoWebsite(): CoWebsite | undefined {
+        // console.log("je suis dans la fonction getMainCoWebsite", mainCoWebsite);
         return get(mainCoWebsite);
     }
 
@@ -88,17 +110,81 @@ class CoWebsiteManager {
         return get(coWebsites);
     }
 
+
+
+
+    // public goToMain(coWebsite: CoWebsite) {
+    //     const mainCoWebsite = this.getMainCoWebsite();
+    //     coWebsites.remove(coWebsite);
+    //     coWebsites.add(coWebsite, 0);
+
+    //     if (mainCoWebsite) {
+    //         const iframe = mainCoWebsite.getIframe();
+    //         if (iframe) {
+    //             iframe.style.display = "block";
+    //         }
+    //     }
+    // }
+
+    //     this.fire();
+    // }
+    // private closeMain(): void {
+    //     this.toggleFullScreenIcon(true);
+    //     //this.cowebsiteDom.classList.add("closing");
+    //     //this.cowebsiteDom.classList.remove("opened");
+    //     this.openedMain.set(iframeStates.closed);
+    //     //this.cowebsiteDom.style.height = "";
+    //     //this.cowebsiteDom.style.width = "";
+    //     this.coWebsiteResizeSize = 50;
+    //     this.fire();
+    // }
+
+
+    // public closeCoWebsite(coWebsite: CoWebsite, withStack = true): void {
+    //     if (get(coWebsites).length === 1) {
+    //         this.fire();
+    //     }
+    //     this.removeCoWebsiteFromStack(coWebsite, withStack);
+    //     const mainCoWebsite = this.getMainCoWebsite();
+    //     if (mainCoWebsite) {
+    //         this.removeHighlightCoWebsite(mainCoWebsite);
+    //         this.goToMain(mainCoWebsite);
+    //         this.resizeAllIframes();
+    //     } else {
+    //         this.closeMain();
+    //     }
+    // }
+    // goToMain(embed: CoWebsite) {
+    //     throw new Error("Method not implemented.");
+    // }
+    // hideMain() {
+    //     throw new Error("Method not implemented.");
+    // }
+    // displayMain() {
+    //     throw new Error("Method not implemented.");
+    // }
+
+
+
+
+
     public addCoWebsiteToStore(coWebsite: CoWebsite) {
-        console.log("je suis dans la fonction add to store cowebsite");
+        // console.log("je suis dans la fonction add to store cowebsite");
         coWebsites.add(coWebsite);
-        console.log(coWebsite);
+        // console.log(coWebsite.getState());
+    }
+
+    public loadCoWebsite(coWebsite: CoWebsite) {
+        coWebsite.load();
+        // console.log("je suis dans la fonction load cowebsite");
     }
 
     public removeCoWebsiteToStore(coWebsite: CoWebsite) {
-        console.log("je suis dans la fonction remove to store cowebsite");
+        // console.log("je suis dans la fonction remove to store cowebsite");
         coWebsites.remove(coWebsite);
-        console.log(coWebsite);
+        // console.log(coWebsites);
     }
+
 
 
     // public closeCoWebsite(coWebsite: CoWebsite, withStack = true): void {
@@ -120,55 +206,104 @@ class CoWebsiteManager {
     // }
 
 
-    // public closeCoWebsites(): void {
-    //     get(coWebsites).forEach((coWebsite: CoWebsite) => {
-    //         this.closeCoWebsite(coWebsite);
-    //     });
-    // }
+    public getCoWebsiteBuffer(): HTMLDivElement {
+        console.log("method cowebsite buffer")
+        // throw new Error("To be reimplemented");
+        // return this.cowebsiteBufferDom;
+    }
 
-
-
-
-    public displayMain() {
-        console.log("je suis dans la fonction display main cowebsite")
-        const coWebsite = this.getMainCoWebsite();
-        if (coWebsite) {
-            const iframe = coWebsite.getIframe();
-            if (iframe) {
-                iframe.style.display = "block";
-            }
-        }
-        // this.loadMain(coWebsite?.getWidthPercent());
-        // this.openMain();
-        // this.fire();
+    public closeCoWebsites(): void {
+        get(coWebsites).forEach((coWebsite: CoWebsite) => {
+            this.closeCoWebsite(coWebsite);
+        });
     }
 
 
-
-
-    public loadCoWebsite(coWebsite: CoWebsite) {
-        // console.log("je suis dans la fonction load cowebsite");
-    }
-
-    public closeCoWebsite(coWebsite: CoWebsite) {
-
-    }
-
-
-
-
-
-
-    public removeCoWebsiteFromStore(coWebsite: CoWebsite) {
-        console.log("je suis dans la fonction close from store cowebsite");
+    public closeCoWebsite(coWebsite: CoWebsite): void {
+        this.removeCoWebsiteToStore(coWebsite);
         // coWebsites.remove(coWebsite);
         // console.log(coWebsites);
     }
 
-    public setActiveCoWebsite(coWebsite: CoWebsite) {
-        // this.activeCoWebsite = coWebsite;
-        // this.activeCoWebsiteStore.set(coWebsite);
+
+
+
+
+    public getMainStateSubscriber(): Readable<iframeStates> {
+        console.log("je suis dans la fonction getMainStateSubscriber");
+        // return this.openedMain;
     }
+
+
+
+
+
+    // public closeCoWebsite(coWebsite: CoWebsite) {
+
+    // }
+
+    private resizeObserver = new ResizeObserver(() => {
+        /*this.resizeAllIframes();
+
+        if (!this.isFullScreen && this.cowebsiteAsideHolderDom.style.visibility === "hidden") {
+            this.toggleFullScreenIcon(true);
+            this.restoreMainSize();
+            this.fire();
+        }*/
+    });
+
+
+    // public getCoWebsiteBuffer(): HTMLDivElement {
+    //     throw new Error("To be reimplemented");
+        // return this.cowebsiteBufferDom;
+    // }
+
+
+    public unloadCoWebsite(coWebsite: CoWebsite): Promise<void> {
+        // this.removeHighlightCoWebsite(coWebsite);
+
+        // return coWebsite
+        //     .unload()
+        //     .then(async () => {
+        //         await randomDelay();
+
+        //         coWebsites.remove(coWebsite);
+        //         const mainCoWebsite = this.getMainCoWebsite();
+
+        //         if (mainCoWebsite) {
+        //             this.removeHighlightCoWebsite(mainCoWebsite);
+        //             this.goToMain(mainCoWebsite);
+        //             this.resizeAllIframes();
+        //         } else {
+        //             this.closeMain();
+        //         }
+
+        //         coWebsites.add(coWebsite, get(coWebsites).length);
+        //     })
+        //     .catch(() => {
+        //         console.error();
+        //     });
+    }
+
+
+    private removeHighlightCoWebsite(coWebsite: CoWebsite) {
+        // const highlighted = get(highlightedEmbedScreen);
+
+        // if (highlighted && highlighted.type === "cowebsite" && highlighted.embed.getId() === coWebsite.getId()) {
+        //     highlightedEmbedScreen.removeHighlight();
+        // }
+    }
+
+    // public removeCoWebsiteFromStore(coWebsite: CoWebsite) {
+    //     console.log("je suis dans la fonction close from store cowebsite");
+    //     // coWebsites.remove(coWebsite);
+    //     // console.log(coWebsites);
+    // }
+
+    // public setActiveCoWebsite(coWebsite: CoWebsite) {
+    //     // this.activeCoWebsite = coWebsite;
+    //     // this.activeCoWebsiteStore.set(coWebsite);
+    // }
 
     // public getActiveCoWebsite(): CoWebsite | null {
     //     console.log(this.activeCoWebsite);
