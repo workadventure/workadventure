@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import Map from "./utils/map";
-import AreaEditor from "./utils/map-editor/areaEditor";
 import { resetWamMaps } from "./utils/map-editor/uploader";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
@@ -245,9 +244,12 @@ test.describe("Map editor", () => {
     // Expected not to be removed
     await Menu.openMapEditor(page2);
     await MapEditor.openTrashEditor(page2);
-    await EntityEditor.moveAndClick(page2, thematics.entityPositionInArea.x, thematics.entityPositionInArea.y);
+    await EntityEditor.moveAndClick(
+      page2,
+      thematics.mouseCoordinatesToClickOnEntityInsideArea.x,
+      thematics.mouseCoordinatesToClickOnEntityInsideArea.y
+    );
     await Menu.closeMapEditor(page2);
-    await EntityEditor.moveAndClick(page2, thematics.entityPositionInArea.x, thematics.entityPositionInArea.y);
     await EntityEditor.moveAndClick(
       page2,
       thematics.mouseCoordinatesToClickOnEntityInsideArea.x,
@@ -297,12 +299,52 @@ test.describe("Map editor", () => {
       thematics.mouseCoordinatesToClickOnEntityInsideArea.x,
       thematics.mouseCoordinatesToClickOnEntityInsideArea.y
     );
-    await EntityEditor.moveAndClick(
-      page2,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.x,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.y
-    );
 
     await expect(page2.locator(".actions-menu .actions button").nth(0)).not.toBeAttached();
+  });
+
+  test("Area with restricted write access : Trying to remove an object outside the area", async ({
+    page,
+    browser,
+    request,
+  }) => {
+    await resetWamMaps(request);
+
+    await page.goto(Map.url("empty"));
+    await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
+
+    // Second browser with member user trying to read the object
+    const newBrowser = await browser.browserType().launch({});
+    const page2 = await newBrowser.newPage();
+    await page2.goto(Map.url("empty"));
+    await login(page2, "test2", 5);
+    await oidcMemberTagLogin(page2);
+
+    // Add area with admin rights
+    await Menu.openMapEditor(page);
+    await thematics.openAreaEditorAndAddAreaWithRights(page, ["admin"], []);
+    await thematics.openEntityEditorAndAddEntityWithOpenLinkPropertyOutsideArea(page);
+    await oidcLogout(page);
+
+    // From browser 2
+    // Try to remove entity and click on it to
+    // check if removed or not
+    // Expected to be removed
+    await Menu.openMapEditor(page2);
+    await MapEditor.openTrashEditor(page2);
+    await EntityEditor.moveAndClick(
+      page2,
+      thematics.mouseCoordinatesToClickOnEntityOutsideArea.x,
+      thematics.mouseCoordinatesToClickOnEntityOutsideArea.y
+    );
+    await Menu.closeMapEditor(page2);
+    await EntityEditor.moveAndClick(
+      page2,
+      thematics.mouseCoordinatesToClickOnEntityOutsideArea.x,
+      thematics.mouseCoordinatesToClickOnEntityOutsideArea.y
+    );
+
+    await expect(page2.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
   });
 });
