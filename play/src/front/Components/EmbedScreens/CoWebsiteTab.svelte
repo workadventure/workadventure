@@ -1,30 +1,17 @@
 <script lang="ts">
-    import SettingsIcon from "../Icons/SettingsIcon.svelte";
     import CopyIcon from "../Icons/CopyIcon.svelte";
     import ExternalLinkIcon from "../Icons/ExternalLinkIcon.svelte";
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
-    import { coWebsiteManager, coWebsites, mainCoWebsite } from "../../Stores/CoWebsiteStore";
+    import { createEventDispatcher } from 'svelte';
 
 
-
-
+    const dispatch = createEventDispatcher();
 
     export let title = "GitHub - Workadventure";
     export let url = "https://git.thecodingmachine.com/workadventure-saas";
     export let active = false;
     export let isLoading = false;
-    let test;
-    let test2;
-
-
-    function displayMaintab() {
-
-        test = coWebsiteManager.getCoWebsites();
-        console.log({test});
-        test2 = coWebsiteManager.getMainState();
-        console.log({test2});
-    }
 
 
 
@@ -32,9 +19,7 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="text flex items-center px-2 mr-2 rounded transition-all {active ? 'text-contrast bg-white hover:bg-white/90 translate-y-2 rounded-b-none pt-1' : 'text-white hover:bg-white/10' }"
-     on:click={() => active = !active}
-     on:click={displayMaintab}
-
+on:click={() => dispatch('tabClicked')}
 >
     {#if isLoading}
         <svg width="24" height="24" viewBox="0 0 24 24" class="m-1 {active ? 'fill-contrast' : 'fill-white' } " xmlns="http://www.w3.org/2000/svg">
@@ -68,13 +53,13 @@
             {/if}
         </div>
     </div>
-    <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center" id="duplicate">
+    <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
         <ExternalLinkIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
     </div>
-    <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center" id="copy">
+    <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
         <CopyIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
     </div>
-    <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
+    <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center" on:click={() => dispatch('closeClick')}>
         <XIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
     </div>
 

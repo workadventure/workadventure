@@ -1,6 +1,9 @@
 import { derived, get, Unsubscriber, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import type { Writable } from "svelte/store";
+import { HtmlUtils } from "../WebRtc/HtmlUtils";
+
+
 
 
 
@@ -73,27 +76,116 @@ export enum iframeStates {
     loading, // loading an iframe can be slow, so we show some placeholder until it is ready
     opened,
 }
-// const activeTab = writable(true);
+
+
+// const cowebsiteDomId = "cowebsites-container";
+
 
 export class CoWebsiteManager {
 
-    private openedMain: Writable<iframeStates> = writable(iframeStates.closed);
 
-    public displayMain() {
-        const coWebsite = this.getMainCoWebsite();
-        console.log(coWebsite);
-        if (coWebsite) {
-            const iframe = coWebsite.getIframe();
-            if (iframe) {
-                iframe.style.display = "block";
-            }
-        }
+
+    // private cowebsiteDom: HTMLDivElement;
+    private openedMain: Writable<iframeStates> = writable(iframeStates.closed);
+    // private vertical: boolean = false;
+    // private verticalStore = writable(this.vertical);
+
+    // constructor() {
+    //     this.cowebsiteDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDomId);
+    // }
+
+
+//Méthode pour le full screen
+
+
+    // public toggleFullScreenCowebsite(value: boolean) {
+    //     this.vertical = value;
+    //     this.verticalStore.set(value);
+    // }
+
+    // public toggleFullScreen() {
+    //     this.setVertical(true);
+    // }
+
+    // get width(): number {
+    //     return this.cowebsiteDom.clientWidth;
+    // }
+
+    // set width(width: number) {
+    //     this.cowebsiteDom.style.width = width + "px";
+    // }
+
+    // get height(): number {
+    //     return this.cowebsiteDom.clientHeight;
+    // }
+
+    // set height(height: number) {
+    //     this.cowebsiteDom.style.height = height + "px";
+    // }
+
+    // get verticalMode(): boolean {
+    //     return window.innerWidth < window.innerHeight;
+    // }
+
+    // get isFullScreen(): boolean {
+    //     return this.verticalMode ? this.height === window.innerHeight : this.width === window.innerWidth;
+    // }
+
+
+//Méthode pour ajout load et retrait au store
+    public addCoWebsiteToStore(coWebsite: CoWebsite) {
+        coWebsites.add(coWebsite);
+    }
+
+    public loadCoWebsite(coWebsite: CoWebsite) {
+        coWebsite.load();
+    }
+
+    public removeCoWebsiteToStore(coWebsite: CoWebsite) {
+        coWebsites.remove(coWebsite);
+    }
+
+
+
+    // Autres fonctions que je n'utilise pas pour le moment
+
+
+    // public toggleFullscreen(): void {
+    //     if (this.isFullScreen) {
+    //         this.toggleFullScreenIcon(true);
+    //         this.restoreMainSize();
+    //         this.fire();
+    //         //we don't trigger a resize of the phaser game since it won't be visible anyway.
+    //     } else {
+    //         this.toggleFullScreenIcon(false);
+    //         this.verticalMode ? (this.height = window.innerHeight) : (this.width = window.innerWidth);
+    //         //we don't trigger a resize of the phaser game since it won't be visible anyway.
+    //     }
+    // }
+
+
+    // public restoreMainSize() {
+    //     this.verticalMode ? (this.cowebsiteDom.style.width = "") : (this.cowebsiteDom.style.height = "");
+    //     this.verticalMode
+    //         ? (this.height = Math.round((this.coWebsiteResizeSize * window.innerHeight) / 100))
+    //         : (this.width = Math.round((this.coWebsiteResizeSize * window.innerWidth) / 100));
+    // }
+
+    // public displayMain() {
+    //     const coWebsite = this.getMainCoWebsite();
+    //     console.log(coWebsite);
+    //     if (coWebsite) {
+    //         const iframe = coWebsite.getIframe();
+    //         if (iframe) {
+    //             iframe.style.display = "block";
+    //         }
+    //     }
         // let others = get(coWebsites).filter((coWebsite) => coWebsite.getState() === "asleep");
         // console.log(others);
         // this.loadMain(coWebsite?.getWidthPercent());
         // this.openMain();
         // this.fire();
-    }
+    // }
 
 
     public getMainState() {
@@ -168,22 +260,6 @@ export class CoWebsiteManager {
 
 
 
-    public addCoWebsiteToStore(coWebsite: CoWebsite) {
-        // console.log("je suis dans la fonction add to store cowebsite");
-        coWebsites.add(coWebsite);
-        // console.log(coWebsite.getState());
-    }
-
-    public loadCoWebsite(coWebsite: CoWebsite) {
-        coWebsite.load();
-        // console.log("je suis dans la fonction load cowebsite");
-    }
-
-    public removeCoWebsiteToStore(coWebsite: CoWebsite) {
-        // console.log("je suis dans la fonction remove to store cowebsite");
-        coWebsites.remove(coWebsite);
-        // console.log(coWebsites);
-    }
 
 
 

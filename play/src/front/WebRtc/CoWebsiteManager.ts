@@ -20,7 +20,7 @@ export enum iframeStates {
     opened,
 }
 
-// const cowebsiteDomId = "cowebsite"; // the id of the whole container.
+const cowebsiteDomId = "cowebsite"; // the id of the whole container.
 // const gameOverlayDomId = "game-overlay";
 // const cowebsiteBufferDomId = "cowebsite-buffer"; // the id of the container who contains cowebsite iframes.
 // const cowebsiteAsideHolderDomId = "cowebsite-aside-holder";
@@ -807,7 +807,7 @@ class CoWebsiteManager {
     }
 
     private toggleFullscreen(): void {
-        /*if (this.isFullScreen) {
+        if (this.isFullScreen) {
             this.toggleFullScreenIcon(true);
             this.restoreMainSize();
             this.fire();
@@ -816,7 +816,7 @@ class CoWebsiteManager {
             this.toggleFullScreenIcon(false);
             this.verticalMode ? (this.height = window.innerHeight) : (this.width = window.innerWidth);
             //we don't trigger a resize of the phaser game since it won't be visible anyway.
-        }*/
+        }
     }
 
     private toggleFullScreenIcon(visible: boolean) {
