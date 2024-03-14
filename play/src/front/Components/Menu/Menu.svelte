@@ -137,7 +137,7 @@
         >
             {#each $subMenusStore as submenu, i (submenu.key + "_" + submenu.type)}
                 <div
-                    class="menu-item-container group flex py-4 px-4 relative transition-all @md/main-layout:hover:pl-6 hover:opacity-100 cursor-pointer before:z-1 before:transition-all before:content-[''] before:absolute before:h-full before:w-0 before:top-0 before:right-0 before:bg-contrast/80 {activeSubMenu ===
+                    class="menu-item-container group flex py-4 px-4 relative transition-all w-auto @md/main-layout:w-full @md/main-layout:hover:pl-6 hover:opacity-100 cursor-pointer before:z-1 before:transition-all before:content-[''] before:absolute before:h-full before:w-0 before:top-0 before:right-0 before:bg-contrast/80 {activeSubMenu ===
                     submenu
                         ? 'active before:w-full opacity-100 hover:pl-4'
                         : 'opacity-60'}"
@@ -217,7 +217,7 @@
             </div>
         </div>
     </div>
-    <div class="menu-submenu-container w-full !rounded-r-xl overflow-y relative">
+    <div class="menu-submenu-container w-full !rounded-r-xl overflow-y relative h-full">
         <button
             type="button"
             class="btn btn-lg btn-ghost btn-light fixed @md/main-layout:absolute right-0 top-0 !p-[0.5rem] @md/main-layout:!p-[1.15rem] !rounded-none cursor-pointer m-0"
@@ -240,7 +240,7 @@
             {activeSubMenuTranslation}
         </h2>
         <div
-            class="bg-contrast/80 h-[calc(100%-5rem)] mt-0 @md/main-layout:mt-20 overflow-y-auto text-white pb-8 rounded-tl overflow-y-scroll @md/main-layout:overflow-none "
+            class="bg-contrast/80 h-[calc(100%-5rem)] mt-0 @md/main-layout:mt-20 overflow-y-auto text-white pb-8 rounded-none @md/main-layout:rounded-tl overflow-y-scroll @md/main-layout:overflow-none"
         >
             <svelte:component this={activeComponent} {...props} />
         </div>

@@ -61,10 +61,15 @@
     bind:this={mainModal}
 >
     <div class="w-full h-full bg-contrast/80 backdrop-blur rounded" transition:blur={{ amount: 10, duration: 250 }}>
-        <div class="flex bg-contrast/80 backdrop-blur p-2 space-x-2 rounded-lg absolute top-4 right-4 z-50 ">
+        <div
+            class="flex bg-contrast/80 backdrop-blur p-2 space-x-0 @lg/main-layout:space-x-2 rounded-lg absolute top-4 right-4 z-50 "
+        >
             {#if modalUrl != undefined}
                 {#if $modalIframeStore?.allow}
-                    <button class="btn btn-light btn-ghost rounded" on:click={() => (isFullScreened = !isFullScreened)}>
+                    <button
+                        class="btn btn-light btn-ghost rounded hidden @lg/main-layout:block"
+                        on:click={() => (isFullScreened = !isFullScreened)}
+                    >
                         {#if isFullScreened}
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
