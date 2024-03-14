@@ -36,6 +36,7 @@ import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 import { localCompanionService } from "./LocalCompanionSevice";
 import { ShortMapDescription, ShortMapDescriptionList } from "./ShortMapDescription";
+import { jwtTokenManager } from "./JWTTokenManager";
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -48,12 +49,12 @@ class LocalAdmin implements AdminInterface {
         ipAddress: string,
         characterTextureIds: string[],
         companionTextureId?: string,
-        locale?: string
+        locale?: string,
+        tags?: string[]
     ): Promise<FetchMemberDataByUuidResponse> {
         let canEdit = false;
         const roomUrl = new URL(playUri);
         const match = /\/~\/(.+)/.exec(roomUrl.pathname);
-
         if (
             match &&
             ENABLE_MAP_EDITOR &&
@@ -83,11 +84,17 @@ class LocalAdmin implements AdminInterface {
             }
         }
 
+        if (tags) {
+            if (tags?.includes("admin") || tags?.includes("editor")) {
+                canEdit = true;
+            }
+        }
+
         return {
             status: "ok",
             email: userIdentifier,
             userUuid: userIdentifier,
-            tags: [],
+            tags: tags ?? [],
             messages: [],
             visitCardUrl: null,
             isCharacterTexturesValid,

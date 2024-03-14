@@ -1,6 +1,14 @@
 import axios from "axios";
 
-import type { AreaData, AtLeast, WAMEntityData , AreaData, AtLeast, EntityCoordinates, WAMEntityData } from "@workadventure/map-editor";
+import type {
+    AreaData,
+    AtLeast,
+    WAMEntityData,
+    AreaData,
+    AtLeast,
+    EntityCoordinates,
+    WAMEntityData,
+} from "@workadventure/map-editor";
 import {
     AddSpaceFilterMessage,
     AddSpaceUserMessage,
@@ -64,7 +72,7 @@ import {
     WorldConnectionMessage,
     XmppSettingsMessage,
 } from "@workadventure/messages";
-import { slugify , slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
+import { slugify, slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
 import { get } from "svelte/store";
 import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
@@ -74,7 +82,7 @@ import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { ENABLE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
 import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
-import { selectCharacterSceneVisibleStore , selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
+import { selectCharacterSceneVisibleStore, selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene";
@@ -116,6 +124,7 @@ export class RoomConnection implements RoomConnection {
     private closed = false;
     private tags: string[] = [];
     private _userRoomToken: string | undefined;
+    private canEdit = false;
 
     private readonly _errorMessageStream = new Subject<ErrorMessageTsProto>();
     public readonly errorMessageStream = this._errorMessageStream.asObservable();
@@ -535,7 +544,8 @@ export class RoomConnection implements RoomConnection {
                             ? roomJoinedMessage.activatedInviteUser
                             : true
                     );
-                    mapEditorActivated.set(ENABLE_MAP_EDITOR && (roomJoinedMessage.canEdit || this.isAdmin()));
+                    this.canEdit = roomJoinedMessage.canEdit || this.isAdmin();
+                    mapEditorActivated.set(ENABLE_MAP_EDITOR && this.canEdit);
 
                     // If there are scripts from the admin, run it
                     if (roomJoinedMessage.applications != undefined) {
@@ -1160,6 +1170,10 @@ export class RoomConnection implements RoomConnection {
 
     public isAdmin(): boolean {
         return this.hasTag("admin");
+    }
+
+    get userCanEdit() {
+        return this.canEdit;
     }
 
     public emitEmoteEvent(emoteName: string): void {
