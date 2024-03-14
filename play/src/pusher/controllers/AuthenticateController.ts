@@ -152,7 +152,8 @@ export class AuthenticateController extends BaseHttpController {
                     IPAddress,
                     localStorageCharacterTextureIds ?? [],
                     localStorageCompanionTextureId,
-                    req.header("accept-language")
+                    req.header("accept-language"),
+                    authTokenData.tags
                 );
 
                 if (resUserData.status === "error") {
@@ -268,7 +269,8 @@ export class AuthenticateController extends BaseHttpController {
                 email,
                 userInfo?.access_token,
                 userInfo?.username,
-                userInfo?.locale
+                userInfo?.locale,
+                userInfo?.tags
             );
 
             res.atomic(() => {

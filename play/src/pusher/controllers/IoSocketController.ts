@@ -334,7 +334,7 @@ export class IoSocketController {
                             status: "ok",
                             email: userIdentifier,
                             userUuid: userIdentifier,
-                            tags: [],
+                            tags: tokenData?.tags ?? [],
                             visitCardUrl: null,
                             isCharacterTexturesValid: true,
                             characterTextures: [],
@@ -361,7 +361,8 @@ export class IoSocketController {
                                     ipAddress,
                                     characterTextureIds,
                                     companionTextureId,
-                                    locale
+                                    locale,
+                                    userData.tags
                                 );
 
                                 if (userData.status === "ok" && !userData.isCharacterTexturesValid) {

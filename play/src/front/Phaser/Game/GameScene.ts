@@ -90,7 +90,6 @@ import {
     inviteUserActivated,
     mapEditorActivated,
     mapManagerActivated,
-    mapEditorActivatedForThematics,
     menuVisiblilityStore,
     screenSharingActivatedStore,
     SubMenusInterface,
@@ -937,9 +936,7 @@ export class GameScene extends DirtyScene {
     }
 
     private initUserPermissionsOnEntity() {
-        const isAdmin = this.connection?.hasTag("admin") ?? false;
-        const isEditor = this.connection?.hasTag("editor") ?? false;
-        const userCanEdit = isAdmin || isEditor;
+        const userCanEdit = this.connection?.userCanEdit ? true : false;
         const gameMapAreas = this.getGameMap().getGameMapAreas();
         if (gameMapAreas !== undefined) {
             this.entityPermissions = new EntityPermissions(
@@ -952,9 +949,7 @@ export class GameScene extends DirtyScene {
     }
 
     private initializeAreaManager() {
-        const isAdmin = this.connection?.hasTag("admin") ?? false;
-        const isEditor = this.connection?.hasTag("editor") ?? false;
-        const userCanEdit = isAdmin || isEditor;
+        const userCanEdit = this.connection?.userCanEdit ? true : false;
         const userConnectedTags = this.connection?.getAllTags() ?? [];
         this.gameMapFrontWrapper.initializeAreaManager(userConnectedTags, userCanEdit);
     }

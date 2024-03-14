@@ -6,7 +6,7 @@ import debug from "debug";
 import type { RoomConnection } from "../../../Connection/RoomConnection";
 import type { GameScene } from "../GameScene";
 import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
-import { mapEditorActivated } from "../../../Stores/MenuStore";
+import { mapEditorActivated, mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
@@ -416,7 +416,9 @@ export class MapEditorModeManager {
             }
             this.equipTool(
                 this.lastlyUsedTool ??
-                    (get(mapEditorActivated) ? EditorToolName.EntityEditor : EditorToolName.ExploreTheRoom)
+                    (get(mapEditorActivated) || get(mapEditorActivatedForThematics)
+                        ? EditorToolName.EntityEditor
+                        : EditorToolName.ExploreTheRoom)
             );
         });
     }
