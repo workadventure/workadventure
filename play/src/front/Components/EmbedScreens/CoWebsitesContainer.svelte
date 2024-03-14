@@ -29,11 +29,11 @@
     };
 </script>
 
-
+<!-- on:close={() => console.log("bonjourrrrrr")} pour event dispacher -->
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
-    class="w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500] hidden" id ="cowebsites-container"
+    class="w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500]" id ="cowebsites-container"
     class:vertical
     transition:fly={{ duration: 750, x:1000 }}
 >
@@ -41,10 +41,8 @@
         <div class="grow flex">
 
             {#each $coWebsites as coWebsite (coWebsite.getId())}
-                <div class="{`${activeCowebsite === coWebsite.getId()}`}"
-                on:close={() => console.log("bonjour")}
-                on:click={() => setActiveCowebsite(coWebsite.getId())}>
-                    <CoWebsiteTab title={coWebsite.getId()} url={coWebsite.getUrl().toString()} isLoading={true} active={activeCowebsite === coWebsite.getId()} />
+                <div class="{`${activeCowebsite === coWebsite.getId()}`}" on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                    <CoWebsiteTab title={coWebsite.getId()} url={coWebsite.getUrl().toString()} isLoading={true} active={activeCowebsite === coWebsite.getId()} on:close={() => coWebsites.remove(coWebsite)}/>
                 </div>
             {/each}
 

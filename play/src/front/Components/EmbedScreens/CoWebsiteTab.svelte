@@ -1,9 +1,11 @@
 <script lang="ts">
+    import { createEventDispatcher } from 'svelte';
+
     import CopyIcon from "../Icons/CopyIcon.svelte";
     import ExternalLinkIcon from "../Icons/ExternalLinkIcon.svelte";
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
-    import { createEventDispatcher } from 'svelte';
+    import { CoWebsiteManager } from "../../Stores/CoWebsiteStore";
 
     export let title = "GitHub - Workadventure";
     export let url = "https://git.thecodingmachine.com/workadventure-saas";
@@ -13,9 +15,9 @@
     const dispatch = createEventDispatcher();
 
     function closeTab() {
+        console.log("closeTab hello world");
         dispatch('close');
     }
-
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

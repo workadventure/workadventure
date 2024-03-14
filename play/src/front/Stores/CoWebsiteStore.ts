@@ -84,7 +84,6 @@ export enum iframeStates {
 export class CoWebsiteManager {
 
 
-
     // private cowebsiteDom: HTMLDivElement;
     private openedMain: Writable<iframeStates> = writable(iframeStates.closed);
     // private vertical: boolean = false;
@@ -142,6 +141,7 @@ export class CoWebsiteManager {
     }
 
     public removeCoWebsiteToStore(coWebsite: CoWebsite) {
+        console.log("removeCoWebsiteToStore")
         coWebsites.remove(coWebsite);
     }
 
