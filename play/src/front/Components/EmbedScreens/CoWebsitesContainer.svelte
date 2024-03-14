@@ -3,9 +3,6 @@
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
     import { coWebsiteManager, coWebsites } from "../../Stores/CoWebsiteStore";
-    import { createEventDispatcher } from "svelte";
-    import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
-;
 
     export let vertical = false;
     let cowebsiteContainer;
@@ -44,8 +41,7 @@
         <div class="grow flex">
 
             {#each $coWebsites as coWebsite (coWebsite.getId())}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div class="{`${activeCowebsite === coWebsite.getId()}`}" on:closeTab={() => { coWebsiteManager.removeCoWebsiteToStore(coWebsite); setActiveCowebsite(coWebsite.getId()); }}>
+                <div class="{`${activeCowebsite === coWebsite.getId()}`}" on:close={() => console.log("bonjour")} on:click={() => setActiveCowebsite(coWebsite.getId())}>
                     <CoWebsiteTab title={coWebsite.getId()} url={coWebsite.getUrl().toString()} isLoading={true} active={activeCowebsite === coWebsite.getId()} />
                 </div>
             {/each}

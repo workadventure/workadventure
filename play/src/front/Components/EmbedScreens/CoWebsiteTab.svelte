@@ -13,7 +13,7 @@
     const dispatch = createEventDispatcher();
 
     function closeTab() {
-        dispatch('closeTab');
+        dispatch('close');
     }
 
 </script>
