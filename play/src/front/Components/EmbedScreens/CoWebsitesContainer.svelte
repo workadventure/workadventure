@@ -11,7 +11,6 @@
     let cowebsiteContainer;
     let activeCowebsite = $coWebsites[0].getId();
 
-    const dispatch = createEventDispatcher();
 
     const setActiveCowebsite = (coWebsiteId: string) => {
         activeCowebsite = coWebsiteId;
@@ -20,12 +19,6 @@
     coWebsites.subscribe((arr) => {
         activeCowebsite = arr[arr.length - 1]?.getId();
     });
-
-    dispatch('closeClick', (event: CoWebsite) => {
-        console.log('closeClick', event);
-        // coWebsiteManager.removeCoWebsiteToStore(event);
-    });
-
 
     function toggleFullScreen() {
         cowebsiteContainer = document.getElementById("cowebsites-container")
@@ -52,8 +45,7 @@
 
             {#each $coWebsites as coWebsite (coWebsite.getId())}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div class="{`${activeCowebsite === coWebsite.getId()}`}"
-                on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                <div class="{`${activeCowebsite === coWebsite.getId()}`}" on:closeTab={() => { coWebsiteManager.removeCoWebsiteToStore(coWebsite); setActiveCowebsite(coWebsite.getId()); }}>
                     <CoWebsiteTab title={coWebsite.getId()} url={coWebsite.getUrl().toString()} isLoading={true} active={activeCowebsite === coWebsite.getId()} />
                 </div>
             {/each}

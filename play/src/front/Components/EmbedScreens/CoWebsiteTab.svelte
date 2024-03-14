@@ -5,22 +5,22 @@
     import XIcon from "../Icons/XIcon.svelte";
     import { createEventDispatcher } from 'svelte';
 
-
-    const dispatch = createEventDispatcher();
-
     export let title = "GitHub - Workadventure";
     export let url = "https://git.thecodingmachine.com/workadventure-saas";
     export let active = false;
     export let isLoading = false;
 
+    const dispatch = createEventDispatcher();
 
+    function closeTab() {
+        dispatch('closeTab');
+    }
 
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="text flex items-center px-2 mr-2 rounded transition-all {active ? 'text-contrast bg-white hover:bg-white/90 translate-y-2 rounded-b-none pt-1' : 'text-white hover:bg-white/10' }"
-on:click={() => dispatch('tabClicked')}
->
+<div class="text flex items-center px-2 mr-2 rounded transition-all {active ? 'text-contrast bg-white hover:bg-white/90 translate-y-2 rounded-b-none pt-1' : 'text-white hover:bg-white/10' }">
+
     {#if isLoading}
         <svg width="24" height="24" viewBox="0 0 24 24" class="m-1 {active ? 'fill-contrast' : 'fill-white' } " xmlns="http://www.w3.org/2000/svg">
             <path d="M8.65642 19.2969C8.48956 19.328 8.41666 19.4063 8.43756 19.5312C8.45836 19.6561 8.55211 19.6979 8.71875 19.6561C8.88562 19.6145 8.95846 19.5415 8.9375 19.4374C8.91681 19.3229 8.82307 19.2759 8.65642 19.2969Z" />
@@ -59,7 +59,7 @@ on:click={() => dispatch('tabClicked')}
     <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
         <CopyIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
     </div>
-    <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center" on:click={() => dispatch('closeClick')}>
+    <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center" on:click={closeTab}>
         <XIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
     </div>
 
