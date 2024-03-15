@@ -7,6 +7,7 @@ services:
       OPID_CLIENT_ID: authorization-code-client-id
       OPID_CLIENT_SECRET: authorization-code-client-secret
       OPID_CLIENT_ISSUER: http://oidc.workadventure.localhost
+      OPID_SCOPE: profile openid email tags-scope
       MAP_EDITOR_ALLOWED_USERS: noUserAllowed
   chat:
     environment:
