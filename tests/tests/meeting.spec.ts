@@ -1,4 +1,4 @@
-import {expect, test, webkit} from '@playwright/test';
+import {expect, test} from '@playwright/test';
 import {login} from './utils/roles';
 import Map from "./utils/map";
 import {resetWamMaps} from './utils/map-editor/uploader';
