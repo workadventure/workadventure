@@ -36,7 +36,6 @@ import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 import { localCompanionService } from "./LocalCompanionSevice";
 import { ShortMapDescription, ShortMapDescriptionList } from "./ShortMapDescription";
-import { jwtTokenManager } from "./JWTTokenManager";
 
 /**
  * A local class mocking a real admin if no admin is configured.

@@ -5,7 +5,7 @@ import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
 import { login } from "./utils/roles";
 import { map_storage_url } from "./utils/urls";
-import { oidcAdminTagLogin, oidcLogin, oidcLogout, oidcMemberTagLogin } from "./utils/oidc";
+import { oidcAdminTagLogin, oidcLogout, oidcMemberTagLogin } from "./utils/oidc";
 import EntityEditor from "./utils/map-editor/entityEditor";
 import thematics from "./utils/thematics";
 

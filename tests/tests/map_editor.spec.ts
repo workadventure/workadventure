@@ -11,6 +11,7 @@ import Menu from "./utils/menu";
 import { hideNoCamera, login } from "./utils/roles";
 import { evaluateScript } from "./utils/scripting";
 import { map_storage_url } from "./utils/urls";
+import { oidcAdminTagLogin } from "./utils/oidc";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -44,6 +45,7 @@ test.describe("Map editor", () => {
     await page.goto(Map.url("empty"));
     //await page.evaluate(() => localStorage.setItem('debug', '*'));
     await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
     // Because webkit in playwright does not support Camera/Microphone Permission by settings
     if (browserName === "webkit") {
       await hideNoCamera(page);
@@ -56,6 +58,7 @@ test.describe("Map editor", () => {
     await page2.goto(Map.url("empty"));
     await page2.evaluate(() => localStorage.setItem("debug", "*"));
     await login(page2, "test2", 5);
+    await oidcAdminTagLogin(page2);
 
     await Menu.openMapEditor(page);
     await MapEditor.openConfigureMyRoom(page);
@@ -118,6 +121,7 @@ test.describe("Map editor", () => {
     //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
     //await page.reload();
     await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
 
     await Menu.openMapEditor(page);
     await MapEditor.openAreaEditor(page);
@@ -140,6 +144,7 @@ test.describe("Map editor", () => {
     //await page2.evaluate(() => { localStorage.setItem('debug', '*'); });
     //await page2.reload();
     await login(page2, "test2", 5);
+    await oidcAdminTagLogin(page2);
     await Map.teleportToPosition(page2, 4 * 32, 7 * 32);
 
     // The user in the listener zone can see the speaker
@@ -166,6 +171,7 @@ test.describe("Map editor", () => {
     await resetWamMaps(request);
     await page.goto(Map.url("start"));
     await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
 
     await Menu.openMapEditor(page);
     await MapEditor.openAreaEditor(page);
@@ -180,6 +186,7 @@ test.describe("Map editor", () => {
 
     await page.goto(Map.url("exit"));
     await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
 
     await Menu.openMapEditor(page);
     await MapEditor.openAreaEditor(page);
@@ -212,6 +219,7 @@ test.describe("Map editor", () => {
 
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
 
     //await Menu.openMapEditor(page);
     await page.getByRole("button", { name: "toggle-map-editor" }).click();
@@ -246,6 +254,7 @@ test.describe("Map editor", () => {
 
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
 
     //await Menu.openMapEditor(page);
     await page.getByRole("button", { name: "toggle-map-editor" }).click();
@@ -302,6 +311,7 @@ test.describe("Map editor", () => {
 
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
 
     // open map editor
     await page.getByRole("button", { name: "toggle-map-editor" }).click();
@@ -365,6 +375,7 @@ test.describe("Map editor", () => {
 
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
 
     // open map editor
     await page.getByRole("button", { name: "toggle-map-editor" }).click();
@@ -405,6 +416,7 @@ test.describe("Map editor", () => {
 
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
 
     // open map editor
     await page.getByRole("button", { name: "toggle-map-editor" }).click();
@@ -425,6 +437,7 @@ test.describe("Map editor", () => {
     // First browser + moved woka
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
     await Map.teleportToPosition(page, 0, 0);
 
     // Second browser
@@ -432,6 +445,7 @@ test.describe("Map editor", () => {
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
     await login(page2, "test2", 3);
+    await oidcAdminTagLogin(page2);
 
     // open map editor
     await page.getByRole("button", { name: "toggle-map-editor" }).click();
@@ -471,6 +485,7 @@ test.describe("Map editor", () => {
     // First browser + moved woka
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
     await Map.teleportToPosition(page, 0, 0);
 
     // Second browser
@@ -478,6 +493,7 @@ test.describe("Map editor", () => {
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
     await login(page2, "test2", 3);
+    await oidcAdminTagLogin(page2);
 
     // open map editor on both pages
     await page.getByRole("button", { name: "toggle-map-editor" }).click();
@@ -514,6 +530,8 @@ test.describe("Map editor", () => {
     // First browser + moved woka
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
+
     await Map.teleportToPosition(page, 0, 0);
 
     // Second browser
@@ -521,6 +539,7 @@ test.describe("Map editor", () => {
     const page2 = await newBrowser.newPage();
     await page2.goto(Map.url("empty"));
     await login(page2, "test2", 3);
+    await oidcAdminTagLogin(page2);
 
     // open map editor on both pages
     await page.getByRole("button", { name: "toggle-map-editor" }).click();
@@ -549,6 +568,7 @@ test.describe("Map editor", () => {
     await resetWamMaps(request);
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
 
     // Open the map editor
     await Menu.openMapEditor(page);
@@ -609,6 +629,7 @@ test.describe("Map editor", () => {
     await page.goto(Map.url("empty"));
 
     await login(page, "test", 3);
+    await oidcAdminTagLogin(page);
 
     // Move user and not create discussion with the second user
     await Map.teleportToPosition(page, 5 * 32, 5 * 32);
