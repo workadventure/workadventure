@@ -1,3 +1,4 @@
+import path from "path";
 import * as Sentry from "@sentry/node";
 import { GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
 import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
@@ -5,6 +6,7 @@ import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import {
     EditMapCommandMessage,
     EmoteEventMessage,
+    isMapDetailsData,
     JoinRoomMessage,
     MapBbbData,
     MapDetailsData,
@@ -15,11 +17,9 @@ import {
     SetPlayerDetailsMessage,
     SubToPusherRoomMessage,
     VariableWithTagMessage,
-    isMapDetailsData,
 } from "@workadventure/messages";
 import { Jitsi } from "@workadventure/shared-utils";
 import { ITiledMap, ITiledMapProperty, Json } from "@workadventure/tiled-map-type-guard";
-import path from "path";
 import {
     ADMIN_API_URL,
     BBB_SECRET,
