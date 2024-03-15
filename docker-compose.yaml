@@ -144,7 +144,6 @@ services:
       # Google drive picker
       GOOGLE_DRIVE_PICKER_CLIENT_ID: "$GOOGLE_DRIVE_PICKER_CLIENT_ID"
       GOOGLE_DRIVE_PICKER_APP_ID: "$GOOGLE_DRIVE_PICKER_APP_ID"
-      MAP_EDITOR_ALLOWED_USERS: noUserAllowed
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"
