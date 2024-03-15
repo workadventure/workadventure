@@ -46,11 +46,6 @@ export class JWTTokenManager {
     public verifyJWTToken(token: string, ignoreExpiration = false): AuthTokenData {
         return AuthTokenData.parse(Jwt.verify(token, SECRET_KEY, { ignoreExpiration }));
     }
-
-    //The access token in included in JwtToken already verified before
-    public decodeJwtAccessToken(accessToken: string) {
-        return AccessTokenData.parse(Jwt.decode(accessToken));
-    }
 }
 
 export const jwtTokenManager = new JWTTokenManager();

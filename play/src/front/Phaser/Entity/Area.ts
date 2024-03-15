@@ -1,9 +1,9 @@
 import { AreaData, AtLeast } from "@workadventure/map-editor";
 import { merge } from "lodash";
+import { get } from "svelte/store";
 import { GameScene } from "../Game/GameScene";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import LL from "../../../i18n/i18n-svelte";
-import { get } from "svelte/store";
 
 export class Area extends Phaser.GameObjects.Rectangle {
     private areaCollider: Phaser.Physics.Arcade.Collider | undefined = undefined;
