@@ -6,6 +6,7 @@ import Menu from "./utils/menu";
 import MapEditor from "./utils/mapeditor";
 import AreaEditor from "./utils/map-editor/areaEditor";
 import {publicTestMapUrl} from "./utils/urls";
+import {oidcAdminTagLogin, oidcMemberTagLogin} from "./utils/oidc";
 
 test.describe('Meeting actions test', () => {
   test('Meeting action to mute microphone & video', async ({page, browser}, { project }) => {
@@ -92,6 +93,7 @@ test.describe('Meeting actions test', () => {
     //await page.evaluate(() => { localStorage.setItem('debug', '*'); });
     //await page.reload();
     await login(page, "Alice", 3);
+    await oidcAdminTagLogin(page);
 
     // Open the map editor
     await Menu.openMapEditor(page);
@@ -112,14 +114,16 @@ test.describe('Meeting actions test', () => {
 
     // Add a second user "Bob"
     const newBrowser = await browser.browserType().launch();
-    const userBob = await newBrowser.newPage();
-    await userBob.goto(Map.url("empty"));
+    const userBobPage = await newBrowser.newPage();
+    await userBobPage.goto(Map.url("empty"));
     // Login user "Bob"
-    await login(userBob, "Bob", 3);
+    await login(userBobPage, "Bob", 3);
+    await oidcMemberTagLogin(userBobPage)
     // Move user "Bob" to the new area
     // FIME: the teleportToPosition does not work ??
     //await Map.teleportToPosition(userBob, 4*32, 2*32);
-    await Map.walkTo(userBob, 'ArrowUp', 2000);
+    await page.waitForURL(page.url());
+    await Map.walkTo(userBobPage, 'ArrowUp', 2000);
 
     // The user in the bubble meeting should be visible
     await expect(page.locator('.cameras-container .other-cameras .jitsi-video')).toBeVisible({timeout: 20_000});
@@ -132,9 +136,9 @@ test.describe('Meeting actions test', () => {
     await page.click('.cameras-container .other-cameras .jitsi-video .action-button#mute-audio-user');
 
     // Check if "Bob" user receive the request to be muted
-    await expect(userBob.locator('.interact-menu')).toBeVisible({timeout: 20_000});
+    await expect(userBobPage.locator('.interact-menu')).toBeVisible({timeout: 20_000});
     // Click on the accept button
-    await userBob.click('.interact-menu .accept-request');
+    await userBobPage.click('.interact-menu .accept-request');
 
     // Check if the user has been muted
     await expect(page.locator('.cameras-container .other-cameras .jitsi-video .voice-meter-cam-off')).toBeVisible({timeout: 20_000});
@@ -151,9 +155,9 @@ test.describe('Meeting actions test', () => {
 
 
     // Check if "Bob" user receive the request to be muted
-    await expect(userBob.locator('.interact-menu')).toBeVisible({timeout: 20_000});
+    await expect(userBobPage.locator('.interact-menu')).toBeVisible({timeout: 20_000});
     // Click on the accept button
-    await userBob.click('.interact-menu .accept-request');
+    await userBobPage.click('.interact-menu .accept-request');
 
     // Check if the user has been muted
     await expect(page.locator('.cameras-container .other-cameras .jitsi-video video')).toBeHidden({timeout: 20_000});
