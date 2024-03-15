@@ -36,7 +36,7 @@ test.describe("Map editor", () => {
     }
   });
 
-  test('Successfully set Area with right access"', async ({ page, request }) => {
+  test("Successfully set Area with right access", async ({ page, request }) => {
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));

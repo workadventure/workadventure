@@ -32,7 +32,6 @@ services:
       STARTUP_COMMAND_5: ""
       WOKA_SPEED: 3
       MAP_EDITOR_ALLOWED_USERS: noUserAllowed
-
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.play.rule=Host(`play.workadventure.localhost`)"
