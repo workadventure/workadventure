@@ -4,7 +4,7 @@ import { get, writable } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
 import { randomDelay } from "@workadventure/shared-utils/src/RandomDelay/RandomDelay";
 import { waScaleManager } from "../Phaser/Services/WaScaleManager";
-import { coWebsites, coWebsitesNotAsleep, mainCoWebsite } from "../Stores/CoWebsiteStore";
+import { coWebsites } from "../Stores/CoWebsiteStore";
 import { embedScreenLayoutStore } from "../Stores/EmbedScreensStore";
 import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 import { isMediaBreakpointDown } from "../Utils/BreakpointsUtils";
@@ -659,8 +659,9 @@ class CoWebsiteManager {
             isMediaBreakpointDown("lg") &&
             get(embedScreenLayoutStore) === LayoutMode.Presentation &&
             mainCoWebsite &&
-            mainCoWebsite.getId() !== coWebsite.getId() &&
-            mainCoWebsite.getState() !== "asleep"
+            mainCoWebsite.getId() !== coWebsite.getId()
+            // &&
+            // mainCoWebsite.getState() !== "asleep"
         ) {
             highlightedEmbedScreen.removeHighlight();
         }

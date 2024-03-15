@@ -44,7 +44,6 @@
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
     import WarningContainer from "./WarningContainer/WarningContainer.svelte";
-    import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import BanMessageContainer from "./TypeMessage/BanMessageContainer.svelte";
     import TextMessageContainer from "./TypeMessage/TextMessageContainer.svelte";
     import AudioPlaying from "./UI/AudioPlaying.svelte";
@@ -54,52 +53,14 @@
     import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
     import Modal from "./Modal/Modal.svelte";
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
-    // import { JitsiBroadcastSpace } from "../Streaming/Jitsi/JitsiBroadcastSpace";
-    // import { JitsiConferenceWrapper } from "../Streaming/Jitsi/JitsiConferenceWrapper";
-    // import PopUpJitsi from "./PopUp/PopUpJitsi.svelte";
-    // import PopUpTutorial from "./PopUp/PopUpJitsi.svelte";
-    // import PopUpMessage from "./PopUp/PopUpMessage.svelte";
-    // import PopUpSound from "./PopUp/PopUpJitsi.svelte";
-    // import PopUpFollow from "./PopUp/PopUpFollow.svelte";
-    // import JitsiTrack from "../Streaming/Jitsi/JitsiTrackWrapper";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
     import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
-    // import PopUpMessage from "./PopUp/PopUpMessage.svelte";
-    // import PopUpTutorial from "./PopUp/PopUpTutorial.svelte";
-    // import PopUpSound from "./PopUp/PopUpSound.svelte";
-    // import PopUpFollow from "./PopUp/PopUpFollow.svelte";
-    // import PopUpJitsi from "./PopUp/PopUpJitsi.svelte";
-    // import { all } from "axios";
-    // import { add } from "lodash";
-    // import { pop } from "@sentry/browser/types/transports/offline";
-    // import { log } from "console";
-    // import { UserInputManager } from "../Phaser/UserInput/UserInputManager";
-    import JistiCowebsite from "./Cowebsites/JistiCowebsite.svelte";
-    import { Jitsi } from "@workadventure/shared-utils";
-    import BigBlueButtonCowebsite from "./Cowebsites/BigBlueButtonCowebsite.svelte";
-    import { JitsiCoWebsite } from "../WebRtc/CoWebsite/JitsiCoWebsite";
-
-
 
     let mainLayout: HTMLDivElement;
-    // let playerName: string;
-    // let url = URL || undefined
-    // let widthPercent: number
-    // let closable: boolean
-    // let roomName: string
-    // let jwt: string
-    // let domain: string
-    // let jitsiConfig: object | undefined
-    // let jitsiInterfaceConfig: object | undefined
-
-
-
 
     export let message: string;
-
-
 
     let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
@@ -110,19 +71,16 @@
         resizeObserver.observe(mainLayout);
         // ...
     });
-
-
-
-
-
 </script>
 
 <!-- Components ordered by z-index -->
-<div id="main-layout" class="relative z-10 h-screen pointer-events-none {[...$coWebsites.values()].length === 0 ? 'not-cowebsite' : ''}" bind:this={mainLayout}>
+<div
+    id="main-layout"
+    class="relative z-10 h-screen pointer-events-none {[...$coWebsites.values()].length === 0 ? 'not-cowebsite' : ''}"
+    bind:this={mainLayout}
+>
     {#if $modalVisibilityStore || $modalPopupVisibilityStore}
-        <div class="bg-black/60 w-full h-full fixed left-0 right-0">
-
-        </div>
+        <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
     {/if}
 
     <aside id="main-layout-left-aside">
@@ -155,8 +113,6 @@
             </div>
         {/if}
 
-
-
         {#if $warningContainerStore}
             <WarningContainer />
         {/if}
@@ -177,7 +133,6 @@
             <HelpPopUpBlocked />
         {/if}
 
-
         {#if $soundPlayingStore}
             <AudioPlaying url={$soundPlayingStore} />
         {/if}
@@ -185,7 +140,6 @@
         {#if $showLimitRoomModalStore}
             <LimitRoomModal />
         {/if}
-
 
         {#if $requestVisitCardsStore}
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
@@ -216,27 +170,38 @@
         <LayoutActionManager />
     {/if}
 
-
     <div class="popups">
         {#each $popupStore as popup, index (popup.uuid)}
-            <div class="popupwrapper {index === 0 ? 'popup1' : index === 1 ? 'popup2' : index === 2 ? 'popup3' : index === 3 ? 'popup4' : index === 4 ? 'popup5' : ''}">
-                <svelte:component this={popup.component} {...popup.props} on:close={() => popupStore.removePopup(popup.uuid)} />
+            <div
+                class="popupwrapper {index === 0
+                    ? 'popup1'
+                    : index === 1
+                    ? 'popup2'
+                    : index === 2
+                    ? 'popup3'
+                    : index === 3
+                    ? 'popup4'
+                    : index === 4
+                    ? 'popup5'
+                    : ''}"
+            >
+                <svelte:component
+                    this={popup.component}
+                    {...popup.props}
+                    on:close={() => popupStore.removePopup(popup.uuid)}
+                />
             </div>
         {/each}
     </div>
 
-          {#if $actionsMenuStore}
-              <ActionsMenu />
-          {/if}
+    {#if $actionsMenuStore}
+        <ActionsMenu />
+    {/if}
 
-
-          <ActionBar />
-
-
+    <ActionBar />
 
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
-
 
     <Lazy
         on:onload={() => emoteDataStoreLoading.set(true)}
@@ -293,15 +258,5 @@
         z-index: 501;
         transform: translate(-50%, -50%) scale(0.9);
         filter: blur(4px);
-    }
-
-
-    .jitsi {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 100%;
-        height: 100%;
-        z-index: 100;
     }
 </style>

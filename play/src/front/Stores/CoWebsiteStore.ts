@@ -3,67 +3,100 @@ import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import type { Writable } from "svelte/store";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 
+// nouveau store
 
+export function createCoWebsiteStore() {
+    const { subscribe, set, update } = writable<Array<CoWebsite>>([]);
 
+    const add = (coWebsite: CoWebsite, position?: number) => {
+        if (position || position === 0) {
+            update((currentArray) => {
+                const newArray = [...currentArray];
+                if (position === 0) {
+                    newArray.unshift(coWebsite);
+                } else if (currentArray.length > position) {
+                    newArray.splice(position, 0, coWebsite);
+                } else {
+                    newArray.push(coWebsite);
+                }
+                return newArray;
+            });
+        } else {
+            update((currentArray) => [...currentArray, coWebsite]);
+        }
+    };
 
+    const remove = (coWebsite: CoWebsite) => {
+        update((currentArray) => currentArray.filter((currentCoWebsite) => currentCoWebsite.getId() !== coWebsite.getId()));
+    };
 
-function createCoWebsiteStore() {
-    const { subscribe, set, update } = writable(Array<CoWebsite>());
-
-    set(Array<CoWebsite>());
-    const unsubscribers = new Map<string, Unsubscriber>();
+    const empty = () => set([]);
 
     return {
         subscribe,
-        add: (coWebsite: CoWebsite, position?: number) => {
-            unsubscribers.set(
-                coWebsite.getId(),
-                coWebsite.getStateSubscriber().subscribe(() => {
-                    update((currentArray) => currentArray);
-                })
-
-            );
-
-            if (position || position === 0) {
-                update((currentArray) => {
-                    if (position === 0) {
-                        return [coWebsite, ...currentArray];
-                    } else if (currentArray.length > position) {
-                        return [...currentArray.splice(position, 0, coWebsite)];
-                    }
-
-                    console.log(currentArray.length)
-                    return [...currentArray, coWebsite];
-                });
-                return;
-            }
-            update((currentArray) => [...currentArray, coWebsite]);
-        },
-        remove: (coWebsite: CoWebsite) => {
-            unsubscribers.get(coWebsite.getId())?.();
-            unsubscribers.delete(coWebsite.getId());
-            update((currentArray) => [
-                ...currentArray.filter((currentCoWebsite) => currentCoWebsite.getId() !== coWebsite.getId()),
-            ]);
-        },
-        empty: () => {
-            unsubscribers.forEach((unsubscriber) => unsubscriber());
-            unsubscribers.clear();
-            set(Array<CoWebsite>());
-        },
+        add,
+        remove,
+        empty,
     };
 }
+
+// function createCoWebsiteStore() {
+//     const { subscribe, set, update } = writable(Array<CoWebsite>());
+
+//     set(Array<CoWebsite>());
+//     const unsubscribers = new Map<string, Unsubscriber>();
+
+//     return {
+//         subscribe,
+//         add: (coWebsite: CoWebsite, position?: number) => {
+//             unsubscribers.set(
+//                 coWebsite.getId(),
+//                 coWebsite.getStateSubscriber().subscribe(() => {
+//                     update((currentArray) => currentArray);
+//                 })
+
+//             );
+
+//             if (position || position === 0) {
+//                 update((currentArray) => {
+//                     if (position === 0) {
+//                         return [coWebsite, ...currentArray];
+//                     } else if (currentArray.length > position) {
+//                         return [...currentArray.splice(position, 0, coWebsite)];
+//                     }
+
+//                     console.log(currentArray.length)
+//                     return [...currentArray, coWebsite];
+//                 });
+//                 return;
+//             }
+//             update((currentArray) => [...currentArray, coWebsite]);
+//         },
+//         remove: (coWebsite: CoWebsite) => {
+//             unsubscribers.get(coWebsite.getId())?.();
+//             unsubscribers.delete(coWebsite.getId());
+//             update((currentArray) => [
+//                 ...currentArray.filter((currentCoWebsite) => currentCoWebsite.getId() !== coWebsite.getId()),
+//             ]);
+//         },
+//         empty: () => {
+//             unsubscribers.forEach((unsubscriber) => unsubscriber());
+//             unsubscribers.clear();
+//             set(Array<CoWebsite>());
+//         },
+//     };
+// }
 
 
 export const coWebsites = createCoWebsiteStore();
 
-export const coWebsitesNotAsleep = derived([coWebsites], ([$coWebsites]) =>
-    $coWebsites.filter((coWebsite) => coWebsite.getState() !== "asleep")
-);
+// export const coWebsitesNotAsleep = derived([coWebsites], ([$coWebsites]) =>
+//     $coWebsites.filter((coWebsite) => coWebsite.getState() !== "asleep")
+// );
 
-export const mainCoWebsite = derived([coWebsites], ([$coWebsites]) =>
-    $coWebsites.find((coWebsite) => coWebsite.getState() !== "asleep")
-);
+// export const mainCoWebsite = derived([coWebsites], ([$coWebsites]) =>
+//     $coWebsites.find((coWebsite) => coWebsite.getState() !== "asleep")
+// );
 
 
 
@@ -145,6 +178,21 @@ export class CoWebsiteManager {
         coWebsites.remove(coWebsite);
     }
 
+    public generateUniqueId() {
+        let id = undefined;
+        do {
+            id = "cowebsite-iframe-" + (Math.random() + 1).toString(36).substring(7);
+        } while (this.getCoWebsiteById(id));
+
+        return id;
+    }
+
+    public getCoWebsiteById(coWebsiteId: string): CoWebsite | undefined {
+        return get(coWebsites).find((coWebsite: CoWebsite) => {
+            return coWebsite.getId() === coWebsiteId;
+        });
+    }
+
 
 
     // Autres fonctions que je n'utilise pas pour le moment
@@ -193,10 +241,10 @@ export class CoWebsiteManager {
         return get(this.openedMain);
     }
 
-    public getMainCoWebsite(): CoWebsite | undefined {
-        // console.log("je suis dans la fonction getMainCoWebsite", mainCoWebsite);
-        return get(mainCoWebsite);
-    }
+    // public getMainCoWebsite(): CoWebsite | undefined {
+    //     // console.log("je suis dans la fonction getMainCoWebsite", mainCoWebsite);
+    //     return get(mainCoWebsite);
+    // }
 
     public getCoWebsites() {
         return get(coWebsites);

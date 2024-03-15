@@ -1,41 +1,14 @@
 <script lang="ts">
-    import { onMount, onDestroy } from "svelte";
-    import { jitsiExternalApiFactory } from "../../WebRtc/JitsiExternalApiFactory";
-    import { inExternalServiceStore } from "../../Stores/MyMediaStore";
-    import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
-    import CancelablePromise from "cancelable-promise";
+    import { on } from "events";
+    import { onMount } from "svelte";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
+    import { GameMapPropertiesListener } from "../../Phaser/Game/GameMapPropertiesListener";
 
-
-    // export let coWebsite: CoWebsite;
-    // let url: string;
-    // let widthPercent: number | undefined;
-    // let closable: boolean | undefined;
-    // let roomName: string;
-    // let playerName: string;
-    // let jwt: string | undefined;
-    // let jitsiConfig: object | undefined;
-    // let jitsiInterfaceConfig: object | undefined;
-    // let domain: string;
-    // let CancelablePromise: CancelablePromise<HTMLIFrameElement> | undefined;
-    // let loadPromise : CancelablePromise | undefined;
-
-
-    // Faire une instance ou un reprendre la fonction load de Jitsi
     onMount(() => {
-
+        // jitsiCowebsite = new JitsiCoWebsite(url, allowApi, allowPolicy, widthPercent, closable);
     });
 
-
-
-
-
-    onDestroy(() => {
-
-    });
-
-
-
+    // Je ne sais pas s'il faut faire cela car dans le game map property listener on a déja un new jitsi qui se créé
 </script>
 
 <div class="container">

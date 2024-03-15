@@ -160,7 +160,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
     load(): CancelablePromise<HTMLIFrameElement> {
         let cancelled = false;
         return (this.loadPromise = new CancelablePromise((resolve, reject, cancel) => {
-            this.state.set("loading");
+            // this.state.set("loading");
 
             inExternalServiceStore.set(true);
 
@@ -243,7 +243,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
 
                                 this.iframe = iframe;
                                 this.iframe.classList.add("pixel");
-                                this.state.set("ready");
+                                // this.state.set("ready");
                                 return resolve(iframe);
                             } else {
                                 console.error("No iframe or no jitsiApi. We may have a problem.");

@@ -1,14 +1,15 @@
 import CancelablePromise from "cancelable-promise";
-import type { Readable, Writable } from "svelte/store";
-import { get, writable } from "svelte/store";
+// import type { Readable, Writable } from "svelte/store";
+// import { get, writable } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
-import { coWebsiteManager } from "../CoWebsiteManager";
-import type { CoWebsite, CoWebsiteState } from "./CoWebsite";
+
+import type { CoWebsite } from "./CoWebsite";
+import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 
 export class SimpleCoWebsite implements CoWebsite {
     protected id: string;
     protected url: URL;
-    protected state: Writable<CoWebsiteState>;
+    // protected state: Writable<CoWebsiteState>;
     protected iframe?: HTMLIFrameElement;
     protected loadIframe?: CancelablePromise<HTMLIFrameElement>;
     protected allowApi?: boolean;
@@ -19,7 +20,7 @@ export class SimpleCoWebsite implements CoWebsite {
     constructor(url: URL, allowApi?: boolean, allowPolicy?: string, widthPercent?: number, closable?: boolean) {
         this.id = coWebsiteManager.generateUniqueId();
         this.url = url;
-        this.state = writable("asleep");
+        // this.state = writable("asleep");
         this.allowApi = allowApi;
         this.allowPolicy = allowPolicy;
         this.widthPercent = widthPercent;
@@ -34,13 +35,13 @@ export class SimpleCoWebsite implements CoWebsite {
         return this.url;
     }
 
-    getState(): CoWebsiteState {
-        return get(this.state);
-    }
+    // getState(): CoWebsiteState {
+    //     return get(this.state);
+    // }
 
-    getStateSubscriber(): Readable<CoWebsiteState> {
-        return this.state;
-    }
+    // getStateSubscriber(): Readable<CoWebsiteState> {
+    //     return this.state;
+    // }
 
     getIframe(): HTMLIFrameElement | undefined {
         return this.iframe;
@@ -60,7 +61,7 @@ export class SimpleCoWebsite implements CoWebsite {
 
     load(): CancelablePromise<HTMLIFrameElement> {
         this.loadIframe = new CancelablePromise((resolve, reject, cancel) => {
-            this.state.set("loading");
+            // this.state.set("loading");
 
             const iframe = document.createElement("iframe");
             this.iframe = iframe;
@@ -81,7 +82,7 @@ export class SimpleCoWebsite implements CoWebsite {
             const onloadPromise = new Promise<void>((resolve) => {
                 if (this.iframe) {
                     this.iframe.onload = () => {
-                        this.state.set("ready");
+                        // this.state.set("ready");
                         resolve();
                     };
                 }
@@ -127,7 +128,7 @@ export class SimpleCoWebsite implements CoWebsite {
                 this.loadIframe = undefined;
             }
 
-            this.state.set("asleep");
+            // this.state.set("asleep");
 
             resolve();
         });

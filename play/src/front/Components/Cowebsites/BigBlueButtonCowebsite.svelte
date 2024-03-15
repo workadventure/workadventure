@@ -1,26 +1,24 @@
-<script lang="ts">
-    import { onMount, onDestroy } from 'svelte';
-    import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
-    import meetingIcon from "../images/meeting.svg";
-    import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
+<script>
+    import { onMount, onDestroy } from "svelte";
+    import { BBBCoWebsite } from "./BBBCoWebsite";
 
-    // Définissez les paramètres du composant
-    export let coWebsite: CoWebsite;
+    export let url;
+    export let allowApi = true;
+    export let allowPolicy;
+    export let widthPercent;
+    export let closable = true;
 
-    let icon: HTMLImageElement;
-    let cowebsiteName = "";
-    let iconLoaded = false;
-    let url = isBBB.getUrl().toString();
+    let coWebsiteInstance;
 
+    // Création de l'instance de BBBCoWebsite avec les paramètres dynamiques
     onMount(() => {
-
+        coWebsiteInstance = new BBBCoWebsite(url, allowApi, allowPolicy, widthPercent, closable);
+        // Code supplémentaire pour afficher l'instance dans un iframe si nécessaire
     });
 
     onDestroy(() => {
-
+        // Nettoyage ou libération des ressources si nécessaire
     });
 </script>
 
-<div class="container">
-    <iframe src="" frameborder="0"></iframe>
-</div>
+<!-- <iframe src={url} /> -->
