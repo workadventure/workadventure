@@ -13,7 +13,6 @@ import {
     UpdateWAMMetadataCommand,
     UpdateWAMSettingCommand,
     WAMEntityData,
-    UpdateWAMMetadataCommand,
     EntityPermissions,
 } from "@workadventure/map-editor";
 import {

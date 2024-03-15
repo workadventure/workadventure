@@ -1,4 +1,4 @@
-import { Page, expect } from "@playwright/test";
+import { expect } from "@playwright/test";
 import AreaEditor from "./map-editor/areaEditor";
 import EntityEditor from "./map-editor/entityEditor";
 import MapEditor from "./mapeditor";
