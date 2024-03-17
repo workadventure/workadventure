@@ -540,6 +540,7 @@ export class RoomConnection implements RoomConnection {
                     // If there are scripts from the admin, run it
                     if (roomJoinedMessage.applications != undefined) {
                         for (const script of roomJoinedMessage.applications) {
+                            if(script.script == undefined) continue;
                             iframeListener.registerScript(script.script).catch((err) => {
                                 console.error("roomJoinedMessage => registerScript => err", err);
                             });

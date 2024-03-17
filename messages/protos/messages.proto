@@ -52,7 +52,10 @@ message CharacterTextureMessage {
 
 message ApplicationMessage {
   string name = 1;
-  string script = 2;
+  optional string script = 2;
+  optional string doc = 3;
+  optional string description = 4;
+  optional string image = 5;
 }
 
 message CompanionTextureMessage {
