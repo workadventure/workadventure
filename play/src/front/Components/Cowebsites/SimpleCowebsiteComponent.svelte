@@ -11,10 +11,5 @@
     });
 </script>
 
-<iframe
-    title={actualCowebsite.getId()}
-    src={actualCowebsite.getUrl().toString()}
-    frameborder="0"
-    width="100%"
-    height="100%"
-/>
+<!-- svelte-ignore a11y-missing-attribute -->
+<iframe src={actualCowebsite.getUrl().toString()} frameborder="0" width="100%" height="100%" />

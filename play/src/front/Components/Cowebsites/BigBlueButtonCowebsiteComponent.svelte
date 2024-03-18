@@ -5,16 +5,9 @@
     export let actualCowebsite: BBBCoWebsite;
 
     onMount(() => {
-        actualCowebsite.load().catch((e) => {
-            console.error(e);
-        });
+        actualCowebsite.load();
     });
 </script>
 
-<iframe
-    title={actualCowebsite.getId()}
-    src={actualCowebsite.getUrl().toString()}
-    frameborder="0"
-    height="100%"
-    width="100%"
-/>
+<!-- svelte-ignore a11y-missing-attribute -->
+<iframe src={actualCowebsite.getUrl().toString()} frameborder="0" height="100%" width="100%" />

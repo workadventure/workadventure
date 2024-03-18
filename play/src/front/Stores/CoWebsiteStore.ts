@@ -1,7 +1,6 @@
-import { derived, get, Unsubscriber, writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import type { Writable } from "svelte/store";
-import { HtmlUtils } from "../WebRtc/HtmlUtils";
 
 // nouveau store
 

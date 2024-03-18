@@ -35,6 +35,7 @@
     import { askDialogStore } from "../Stores/MeetingStore";
     // import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     // import AudioManager from "./AudioManager/AudioManager.svelte";
+    import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     // import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
@@ -55,7 +56,6 @@
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
-    import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
     import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
 
     let mainLayout: HTMLDivElement;
@@ -87,8 +87,7 @@
     <!-- {#if $coWebsites.length > 0}
             <CoWebsitesContainer vertical={isMobile} />
         {/if} -->
-    <!-- </asi
-    de> -->
+    <!-- </aside> -->
 
     <section id="main-layout-main" class="pb-0 pointer-events-none">
         <Lazy

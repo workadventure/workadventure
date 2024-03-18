@@ -1,4 +1,4 @@
-<!-- <script lang="ts">
+<script lang="ts">
     import { onMount } from "svelte";
 
     import { ICON_URL } from "../../Enum/EnvironmentVariable";
@@ -128,6 +128,7 @@
         <div class="bold text-lg">{cowebsiteName}</div>
         <div class="italic text-xs opacity-50 -mt-1">{cowebsiteName}</div>
     </div>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div on:click={() => analyticsClient.stackOpenCloseMultiIframe()} on:click={onClick}>
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
             <g clip-path="url(#clip0_1820_4223)">
@@ -147,11 +148,9 @@
         </svg>
     </div>
 
-
     <div class="cowebsite-hover opacity-1 md:opacity-0" style="width: max-content;">
         <p>{$LL.cowebsite.open()} / {$LL.cowebsite.close()} <b>{cowebsiteName}</b></p>
     </div>
-
 </div>
 
 <style lang="scss">
@@ -296,4 +295,4 @@
             }
         }
     }
-</style> -->
+</style>
