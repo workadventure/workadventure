@@ -4,16 +4,23 @@
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
     import { coWebsites } from "../../Stores/CoWebsiteStore";
     import { onMount } from "svelte";
+    // import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
+    // import SimpleCowebsiteComponent from "../Cowebsites/SimpleCowebsiteComponent.svelte";
+    // import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
+    // import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
+    // import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
+    // import BigBlueButtonCowebsiteComponent from "../Cowebsites/BigBlueButtonCowebsiteComponent.svelte";
 
     export let vertical = false;
+
     let activeCowebsite = $coWebsites[0].getId();
     let cowebsiteContainer: HTMLElement | null;
-    // const resizeContainer = document.getElementById("cowebsites-container");
-    // let mousePosition: number;
     let container: HTMLElement;
     let resizeBar: HTMLElement;
     let startX: number;
     let startWidth: number;
+    // const resizeContainer = document.getElementById("cowebsites-container");
+    // let mousePosition: number;
 
     onMount(() => {
         const handleMouseDown = (e) => {
@@ -137,10 +144,14 @@
         console.log("toggleFullScreen");
         if (!document.fullscreenElement) {
             if (cowebsiteContainer && cowebsiteContainer.requestFullscreen) {
-                cowebsiteContainer.requestFullscreen();
+                cowebsiteContainer.requestFullscreen().catch((e) => {
+                    console.error(e);
+                });
             }
         } else if (document.exitFullscreen) {
-            document.exitFullscreen();
+            document.exitFullscreen().catch((e) => {
+                console.error(e);
+            });
         }
     }
 </script>
@@ -169,6 +180,7 @@
                     class={`${activeCowebsite === coWebsite.getId()}`}
                     on:click={() => setActiveCowebsite(coWebsite.getId())}
                 >
+                    <!-- svelte-ignore missing-declaration -->
                     <CoWebsiteTab
                         title={coWebsite.getId()}
                         url={coWebsite.getUrl().toString()}
@@ -179,6 +191,8 @@
                 </div>
             {/each}
         </div>
+        <!-- isClosable={coWebsite instanceof JitsiCoWebsite} -->
+
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
             class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
@@ -193,15 +207,38 @@
     <div class="h-full ml-3">
         {#each $coWebsites as coWebsite (coWebsite.getId())}
             {#if activeCowebsite === coWebsite.getId()}
-                <iframe
-                    title={coWebsite.getId()}
-                    src={coWebsite.getUrl().toString()}
-                    frameborder="0"
-                    height="100%"
-                    width="100%"
-                />
+                <!-- <svelte:component this={coWebsite.component} {...coWebsite.props} on:close={() => coWebsiteStore.remove(coWebsite.getId())} /> -->
+
+                <!-- {#if coWebsite instanceof JitsiCoWebsite}
+                    <JitsiCowebsiteComponent actualCowebsite={coWebsite} />
+                {/if}
+                {#if coWebsite instanceof SimpleCoWebsite}
+                    <SimpleCowebsiteComponent actualCowebsite={coWebsite} />
+                {/if}
+                {#if coWebsite instanceof BBBCoWebsite}
+                    <BigBlueButtonCowebsiteComponent actualCowebsite={coWebsite} />
+                {/if} -->
             {/if}
         {/each}
+
+        <!-- {#each $coWebsites as coWebsite (coWebsite.getId())}
+            {#if activeCowebsite === coWebsite.getId()}
+
+                {#if coWebsite instanceof SimpleCowebsiteComponent}
+                <SimpleCowebsiteComponent actualCowebsite={coWebsite} />
+                {/if}
+            {/if}
+        {/each}
+
+        Itérer sur les cowebsite avec les sveltes components voir pour instance de jitsi -->
+
+        <!-- {#each $coWebsites as coWebsite (coWebsite.getId())} -->
+        <!-- {#if activeCowebsite === coWebsite.getId()}
+                {#if coWebsite instanceof JitsiCoWebsite}
+                    <JitsiCowebsiteComponent actualCowebsite={coWebsite} />
+                {/if}
+            {/if} -->
+        <!-- {/each} -->
 
         <!-- Exemple itération sur ce que je vais devoir faire -->
         <!-- <div class="popups">
@@ -213,7 +250,7 @@
         </div> -->
     </div>
     <div
-        class="absolute left-1 top-0 bottom-0 m-auto w-8 h-40 bg-white rounded cursor-col-resize test-resize"
+        class="absolute left-1 top-0 bottom-0 m-auto w-4 h-40 bg-white rounded cursor-col-resize test-resize"
         id="resize-bar"
         bind:this={resizeBar}
     />

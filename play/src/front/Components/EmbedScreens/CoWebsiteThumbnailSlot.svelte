@@ -1,14 +1,13 @@
-<script lang="ts">
+<!-- <script lang="ts">
     import { onMount } from "svelte";
 
     import { ICON_URL } from "../../Enum/EnvironmentVariable";
-    import { coWebsiteManager, mainCoWebsite } from "../../Stores/CoWebsiteStore";
+    import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
-    import { iframeStates } from "../../WebRtc/CoWebsiteManager"
-
+    import { iframeStates } from "../../WebRtc/CoWebsiteManager";
 
     import jitsiIcon from "../images/jitsi.png";
     import meetingIcon from "../images/meeting.svg";
@@ -22,7 +21,7 @@
 
     let icon: HTMLImageElement;
     let iconLoaded = false;
-    let state = coWebsite.getStateSubscriber();
+    // let state = coWebsite.getStateSubscriber();
     let isJitsi: boolean = coWebsite instanceof JitsiCoWebsite;
     let isBBB: boolean = coWebsite instanceof BBBCoWebsite;
     let isMeeting: boolean = isJitsi || isBBB;
@@ -104,7 +103,9 @@
 
 <div
     id={"cowebsite-thumbnail-" + index}
-    class="cowebsite-thumbnail flex items-center mr-4 p-2 rounded {isMain || isHighlight ? 'bg-white text-contrast' : 'bg-contrast/80 text-white' }"
+    class="cowebsite-thumbnail flex items-center mr-4 p-2 rounded {isMain || isHighlight
+        ? 'bg-white text-contrast'
+        : 'bg-contrast/80 text-white'}"
     class:asleep={$state === "asleep"}
     class:loading={$state === "loading"}
     class:ready={$state === "ready"}
@@ -118,33 +119,39 @@
         on:dragstart|preventDefault={noDrag}
         alt=""
     />
-    <div class:hide={iconLoaded} class="h-10 w-10 aspect-ratio bg-contrast" style="background-image: url({loaderImg})"></div>
+    <div
+        class:hide={iconLoaded}
+        class="h-10 w-10 aspect-ratio bg-contrast"
+        style="background-image: url({loaderImg})"
+    />
     <div class="pr-2">
         <div class="bold text-lg">{cowebsiteName}</div>
         <div class="italic text-xs opacity-50 -mt-1">{cowebsiteName}</div>
     </div>
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div
-        on:click={() => analyticsClient.stackOpenCloseMultiIframe()}
-        on:click={onClick}
-    >
+    <div on:click={() => analyticsClient.stackOpenCloseMultiIframe()} on:click={onClick}>
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
             <g clip-path="url(#clip0_1820_4223)">
-                <path d="M16.5 5.5L5.5 16.5M5.5 5.5L16.5 16.5" class="{isMain || isHighlight ? 'stroke-contrast' : 'stroke-white' } transition-all" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path
+                    d="M16.5 5.5L5.5 16.5M5.5 5.5L16.5 16.5"
+                    class="{isMain || isHighlight ? 'stroke-contrast' : 'stroke-white'} transition-all"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                />
             </g>
             <defs>
                 <clipPath id="clip0_1820_4223">
-                    <rect width="22" height="22" fill="white"/>
+                    <rect width="22" height="22" fill="white" />
                 </clipPath>
             </defs>
         </svg>
     </div>
 
-    <!--
+
     <div class="cowebsite-hover opacity-1 md:opacity-0" style="width: max-content;">
         <p>{$LL.cowebsite.open()} / {$LL.cowebsite.close()} <b>{cowebsiteName}</b></p>
     </div>
-    -->
+
 </div>
 
 <style lang="scss">
@@ -289,4 +296,4 @@
             }
         }
     }
-</style>
+</style> -->
