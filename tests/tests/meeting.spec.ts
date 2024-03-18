@@ -10,26 +10,26 @@ import {oidcAdminTagLogin, oidcLogout} from "./utils/oidc";
 
 test.describe('Meeting actions test', () => {
 
-  test.beforeEach(
-      "Ignore tests on mobilechromium because map editor not available for mobile devices",
-      ({}, { project }) => {
-        //Map Editor not available on mobile
-        if (project.name === "mobilechromium") {
-          //eslint-disable-next-line playwright/no-skipped-test
-          test.skip();
-          return;
+    test.beforeEach(
+        "Ignore tests on mobilechromium because map editor not available for mobile devices",
+        ({}, {project}) => {
+            //Map Editor not available on mobile
+            if (project.name === "mobilechromium") {
+                //eslint-disable-next-line playwright/no-skipped-test
+                test.skip();
+                return;
+            }
         }
-      }
-  );
+    );
 
-  test.beforeEach("Ignore tests on webkit because of issue with camera and microphone", ({ browserName }) => {
-    //WebKit has issue with camera
-    if (browserName === "webkit") {
-      //eslint-disable-next-line playwright/no-skipped-test
-      test.skip();
-      return;
-    }
-  });
+    test.beforeEach("Ignore tests on webkit because of issue with camera and microphone", ({browserName}) => {
+        //WebKit has issue with camera
+        if (browserName === "webkit") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+    });
 
     test('Meeting action to mute microphone & video', async ({page, browser}, {project}) => {
         // Go to the empty map
@@ -81,7 +81,7 @@ test.describe('Meeting actions test', () => {
         await userBob.close();
     });
 
-    test('Jitsi meeting action to mute microphone & video', async ({page, browser, request}, {project}) => {
+    test('Jitsi meeting action to mute microphone & video @oidc', async ({page, browser, request}, {project}) => {
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
