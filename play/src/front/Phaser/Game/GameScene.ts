@@ -1899,7 +1899,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.cameraSetStream.subscribe((cameraSetEvent) => {
-                const duration = cameraSetEvent.smooth ? 1000 : 0;
+                const duration = cameraSetEvent.smooth ? cameraSetEvent.duration ?? 1000 : 0;
                 cameraSetEvent.lock
                     ? this.cameraManager.enterFocusMode({ ...cameraSetEvent }, undefined, duration)
                     : this.cameraManager.setPosition({ ...cameraSetEvent }, duration);
