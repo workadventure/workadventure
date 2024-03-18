@@ -95,24 +95,24 @@
 
     function addDivForResize() {
         const div = document.createElement("div");
+        div.id = "resize-overlay";
         div.style.width = "100%";
         div.style.height = "100%";
         div.style.position = "absolute";
         div.style.top = "0";
         div.style.left = "0";
         div.style.zIndex = "1000";
-        div.style.backgroundColor = "pink";
         div.style.opacity = "0.4";
         document.body.appendChild(div);
+
+        window.addEventListener("mouseup", removeDivForResize);
     }
 
     function removeDivForResize() {
-        console.log("bonjour");
-        // const div = document.getElementById("div");
-        // console.log("removeDivForResize");
-        // if (div) {
-        //     document.body.removeChild(div);
-        // }
+        const div = document.getElementById("resize-overlay");
+        if (div) {
+            document.body.removeChild(div);
+        }
     }
 </script>
 
