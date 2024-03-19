@@ -15,185 +15,27 @@ import { adminService } from "./AdminService";
 
 export const MetaTagsDefaultValue: RequiredMetaTagsData = {
     title: "WorkAdventure",
-    description: "Create your own digital office, Metaverse and meet online with the world.",
+    description:
+        "Organize your online event in WorkAdventure to recreate spontaneous social interactions. Connect, collaborate and have fun with your teammates and attendees.",
     author: "WorkAdventure team",
     provider: "WorkAdventure",
     favIcons: [
         {
             rel: "icon",
-            sizes: "16x16",
-            src: "/static/images/favicons/favicon-16x16.png",
-        },
-        {
-            rel: "icon",
-            sizes: "32x32",
-            src: "/static/images/favicons/favicon-32x32.png",
-        },
-        {
-            rel: "apple-touch-icon",
-            sizes: "57x57",
-            src: "/static/images/favicons/apple-icon-57x57.png",
-        },
-        {
-            rel: "apple-touch-icon",
-            sizes: "/static/images/favicons/apple-icon-60x60.png",
-            src: "60x60",
-        },
-        {
-            rel: "apple-touch-icon",
-            sizes: "/static/images/favicons/apple-icon-72x72.png",
-            src: "72x72",
-        },
-        {
-            rel: "apple-touch-icon",
-            sizes: "/static/images/favicons/apple-icon-76x76.png",
-            src: "76x76",
-        },
-        {
-            rel: "icon",
-            sizes: "96x96",
-            src: "/static/images/favicons/favicon-96x96.png",
-        },
-        {
-            rel: "apple-touch-icon",
-            sizes: "114x114",
-            src: "/static/images/favicons/apple-icon-114x114.png",
-        },
-        {
-            rel: "apple-touch-icon",
-            sizes: "120x120",
-            src: "/static/images/favicons/apple-icon-120x120.png",
-        },
-        {
-            rel: "apple-touch-icon",
-            sizes: "144x144",
-            src: "/static/images/favicons/apple-icon-144x144.png",
-        },
-        {
-            rel: "apple-touch-icon",
-            sizes: "152x152",
-            src: "/static/images/favicons/apple-icon-152x152.png",
-        },
-        {
-            rel: "apple-touch-icon",
-            sizes: "180x180",
-            src: "/static/images/favicons/apple-icon-180x180.png",
-        },
-        {
-            rel: "icon",
-            sizes: "192x192",
-            src: "/static/images/favicons/android-icon-192x192.png",
+            sizes: "512x512",
+            src: "/static/images/favicons/favicon-512x512.svg",
         },
     ],
     manifestIcons: [
         {
-            src: "/static/images/favicons/apple-icon-57x57.png",
-            sizes: "57x57",
-            type: "image/png",
-        },
-        {
-            src: "/static/images/favicons/apple-icon-60x60.png",
-            sizes: "60x60",
-            type: "image/png",
-        },
-        {
-            src: "/static/images/favicons/apple-icon-72x72.png",
-            sizes: "72x72",
-            type: "image/png",
-        },
-        {
-            src: "/static/images/favicons/apple-icon-76x76.png",
-            sizes: "76x76",
-            type: "image/png",
-        },
-        {
-            src: "/static/images/favicons/apple-icon-114x114.png",
-            sizes: "114x114",
-            type: "image/png",
-        },
-        {
-            src: "/static/images/favicons/apple-icon-120x120.png",
-            sizes: "120x120",
-            type: "image/png",
-        },
-        {
-            src: "/static/images/favicons/apple-icon-144x144.png",
-            sizes: "144x144",
-            type: "image/png",
-        },
-        {
-            src: "/static/images/favicons/apple-icon-152x152.png",
-            sizes: "152x152",
-            type: "image/png",
-        },
-        {
-            src: "/static/images/favicons/apple-icon-180x180.png",
-            sizes: "180x180",
-            type: "image/png",
-        },
-        {
-            src: "/static/images/favicons/apple-icon.png",
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "any",
-        },
-
-        {
-            src: "/static/images/favicons/android-icon-36x36.png",
-            sizes: "36x36",
-            type: "image/png",
-        },
-        {
-            src: "/static/images/favicons/android-icon-48x48.png",
-            sizes: "48x48",
-            type: "image/png",
-        },
-        {
-            src: "/static/images/favicons/android-icon-72x72.png",
-            sizes: "72x72",
-            type: "image/png",
-        },
-        {
-            src: "/static/images/favicons/android-icon-96x96.png",
-            sizes: "96x96",
-            type: "image/png",
-        },
-        {
-            src: "/static/images/favicons/android-icon-144x144.png",
-            sizes: "144x144",
-            type: "image/png",
-        },
-        {
-            src: "/static/images/favicons/android-icon-192x192.png",
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "any",
-        },
-
-        {
-            src: "/static/images/favicons/favicon-16x16.png",
-            sizes: "16x16",
-            type: "image/png",
-        },
-        {
-            src: "/static/images/favicons/favicon-32x32.png",
-            sizes: "32x32",
-            type: "image/png",
-        },
-        {
-            src: "/static/images/favicons/favicon-96x96.png",
-            sizes: "96x96",
-            type: "image/png",
-        },
-        {
-            src: "/static/images/favicons/icon-512x512.png",
+            src: "/static/images/favicons/favicon-512x512.svg",
             sizes: "512x512",
-            type: "image/png",
+            type: "image/svg",
         },
     ],
     appName: "WorkAdventure",
     shortAppName: "WA",
-    themeColor: "#000000",
+    themeColor: "#1B2A41",
     cardImage: "https://workadventu.re/images/general/logo-og.png",
 };
 
