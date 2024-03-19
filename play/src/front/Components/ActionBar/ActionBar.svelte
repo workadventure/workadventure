@@ -459,7 +459,7 @@
                     </div>
 
                     {#if helpActive === "chat"}
-                        <HelpTooltip title="Send text message with chat" />
+                        <HelpTooltip title="{$LL.actionbar.help.chat.title()}" desc="{$LL.actionbar.help.chat.desc()}" />
                     {/if}
                     {#if $chatZoneLiveStore || $peerStore.size > 0}
                         <div>
@@ -500,7 +500,7 @@
                         <UsersIcon />
                     </div>
                     {#if helpActive === "users"}
-                        <HelpTooltip />
+                        <HelpTooltip title="{$LL.actionbar.help.users.title()}" desc="{$LL.actionbar.help.users.desc()}" />
                     {/if}
                 </div>
             </div>
@@ -536,7 +536,7 @@
                                     />
                                 </div>
                                 {#if helpActive === "emoji" && !$emoteMenuSubStore}
-                                    <HelpTooltip title="Display an emoji above your Woka" />
+                                    <HelpTooltip title="{$LL.actionbar.help.emoji.title()}" desc="{$LL.actionbar.help.emoji.desc()}" />
                                 {/if}
                                 {#if $emoteMenuSubStore}
                                     <div
@@ -615,10 +615,10 @@
                                                             </svg>
                                                         {:else if !$emoteMenuStore}
                                                             <PenIcon width="w-4" height="h-4" />
-                                                            <div>Edit <!-- Trad --></div>
+                                                            <div>{$LL.actionbar.edit()}</div>
                                                         {:else}
                                                             <XIcon width="w-4" height="h-4" />
-                                                            <div>Cancel <!-- Trad --></div>
+                                                            <div>{$LL.actionbar.cancel()}</div>
                                                         {/if}
                                                     </button>
                                                 </div>
@@ -717,7 +717,7 @@
                                         <FollowIcon />
                                     </div>
                                     {#if helpActive === "follow" || !emoteMenuSubStore}
-                                        <HelpTooltip title="Ask to someone to follow you" />
+                                        <HelpTooltip title="{$LL.actionbar.help.follow.title()}" desc="{$LL.actionbar.help.follow.desc()}" />
                                     {/if}
                                 </div>
                                 <div
@@ -742,7 +742,7 @@
                                         {/if}
                                     </div>
                                     {#if helpActive === "lock" || !emoteMenuSubStore}
-                                        <HelpTooltip title="Lock and start a private discussion" />
+                                        <HelpTooltip title="{$LL.actionbar.help.lock.title()}" desc="{$LL.actionbar.help.lock.desc()}" />
                                     {/if}
                                 </div>
                             {/if}
@@ -780,7 +780,7 @@
                                         {/if}
                                     </div>
                                     {#if helpActive === "mic" || !emoteMenuSubStore}
-                                        <HelpTooltip title="Set mic ON/OFF" />
+                                        <HelpTooltip title="{$LL.actionbar.help.mic.title()}" desc="{$LL.actionbar.help.mic.desc()}" />
                                     {/if}
                                 </div>
                             {/if}
@@ -858,7 +858,7 @@
                                         </div>
                                         <div class="group flex items-center relative z-10 px-4 font-sm justify-center">
                                             <div class="text-sm italic">
-                                                Your camera is currently disabled. <!-- Trad -->
+                                                {$LL.actionbar.camera.disabled()}
                                             </div>
                                         </div>
                                         <div class="group flex items-center relative z-10 py-1 px-4 overflow-hidden">
@@ -867,7 +867,7 @@
                                                 on:click={() => analyticsClient.camera()}
                                                 on:click={cameraClick}
                                             >
-                                                Enable camera <!-- Trad -->
+                                                {$LL.actionbar.camera.activate()}
                                             </button>
                                         </div>
                                     </div>
@@ -921,7 +921,7 @@
                                             class="group flex items-center relative z-10 py-1 px-4 font-sm justify-center"
                                         >
                                             <div class="text-sm italic">
-                                                Your microphone is currently disabled. <!-- Trad -->
+                                                {$LL.actionbar.microphone.disabled()}
                                             </div>
                                         </div>
                                         <div class="group flex items-center relative z-10 px-4 overflow-hidden">
@@ -930,7 +930,7 @@
                                                 on:click={() => analyticsClient.microphone()}
                                                 on:click={microphoneClick}
                                             >
-                                                Enable microphone <!-- Trad -->
+                                                {$LL.actionbar.microphone.activate()}
                                             </button>
                                         </div>
                                     </div>
@@ -980,12 +980,12 @@
                                     <button
                                         href="#"
                                         class="btn btn-xs btn-ghost btn-light justify-center w-full mr-3"
-                                        on:click={openEnableCameraScene}>Test my settings <!-- trad --></button
+                                        on:click={openEnableCameraScene}>{$LL.actionbar.test()}</button
                                     >
                                     <button
                                         class="btn btn-xs btn-border btn-light justify-center w-full cursor-pointer"
                                         on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
-                                        >Close <!-- trad --></button
+                                        >{$LL.actionbar.close()}</button
                                     >
                                 </div>
                             </div>
@@ -1015,7 +1015,7 @@
                                     {/if}
                                 </div>
                                 {#if helpActive === "cam" || !emoteMenuSubStore}
-                                    <HelpTooltip title="Set camera ON/OFF" />
+                                    <HelpTooltip title="{$LL.actionbar.help.cam.title()}" desc="{$LL.actionbar.help.cam.desc()}" />
                                 {/if}
                             </div>
                         {/if}
@@ -1048,7 +1048,7 @@
                                     {/if}
                                 </div>
                                 {#if helpActive === "share" || !emoteMenuSubStore}
-                                    <HelpTooltip title="Share your screen" />
+                                    <HelpTooltip title="{$LL.actionbar.help.share.title()}" desc="{$LL.actionbar.help.share.desc()}" />
                                 {/if}
                             </div>
                         {/if}
@@ -1152,7 +1152,7 @@
                                         on:click={() => analyticsClient.login()}
                                         class="btn btn-secondary h-12 @sm/actions:h-10 @xl/actions:h-12 text-base @sm/actions:text-sm @xl/actions:text-base rounded select-none ml-2 !px-4 transition-all"
                                     >
-                                        Login <!-- trad -->
+                                        {$LL.actionbar.login()}
                                     </a>
                                 {/if}
                             </div>
@@ -1178,7 +1178,7 @@
                                     <div
                                         class="font-bold text-white leading-3 whitespace-nowrap select-none text-base @sm/actions:text-sm @xl/actions:text-base"
                                     >
-                                        Admin<!-- trad -->
+                                        {$LL.actionbar.admin()}
                                     </div>
                                 </div>
                                 <ChevronDownIcon
@@ -1219,9 +1219,9 @@
                                                         stroke-linecap="round"
                                                         stroke-linejoin="round"
                                                     />
-                                                </svg>
+                                                </svg> <!-- TODO Hugo : SVG inline -->
                                             </div>
-                                            <div>Map editor<!-- trad --></div>
+                                            <div>{$LL.actionbar.mapEditor()}</div>
                                         </li>
                                     {/if}
                                     {#if $userHasAccessToBackOfficeStore}
@@ -1234,7 +1234,7 @@
                                             >
                                                 <AdjustmentsIcon />
                                             </div>
-                                            <div>Back-office<!-- trad --></div>
+                                            <div>{$LL.actionbar.bo()}</div>
                                         </li>
                                     {/if}
                                     <li
@@ -1245,7 +1245,7 @@
                                         >
                                             <MessageGlobalIcon />
                                         </div>
-                                        <div>Envoyer message global<!-- trad --></div>
+                                        <div>{$LL.actionbar.globalMessage()}</div>
                                     </li>
                                     {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
                                         <li
@@ -1256,7 +1256,7 @@
                                             >
                                                 <MegaphoneIcon />
                                             </div>
-                                            <div>Utiliser le mégaphone<!-- trad --></div>
+                                            <div>{$LL.actionbar.megaphone()}</div>
                                         </li>
                                     {/if}
                                 </ul>
@@ -1292,15 +1292,15 @@
                                 <div class="text-xxs bold whitespace-nowrap select-none flex items-center">
                                     {#if $availabilityStatusStore === 1}
                                         <div class="aspect-square h-2 w-2 bg-success rounded-full mr-2" />
-                                        <div class="text-success hidden @xl/actions:block">Online</div>
+                                        <div class="text-success hidden @xl/actions:block">{$LL.actionbar.status.online()}</div>
                                     {/if}
                                     {#if $availabilityStatusStore === 2}
                                         <div class="aspect-square h-2 w-2 bg-warning rounded-full mr-2" />
-                                        <div class="text-warning hidden @xl/actions:block">Away</div>
+                                        <div class="text-warning hidden @xl/actions:block">{$LL.actionbar.status.away()}</div>
                                     {/if}
                                     {#if $availabilityStatusStore === 3}
                                         <div class="aspect-square h-2 w-2 bg-danger rounded-full mr-2" />
-                                        <div class="text-danger hidden @xl/actions:block">Do not Disturb</div>
+                                        <div class="text-danger hidden @xl/actions:block">{$LL.actionbar.status.disturb()}</div>
                                     {/if}
                                 </div>
                             </div>
@@ -1326,10 +1326,10 @@
                                     class="group flex px-2 transition-all cursor-pointer text-sm font-bold w-full text-white no-underline"
                                 >
                                     <div class="flex items-center px-3 py-3 w-full bg-white/10 rounded">
-                                        <div class="w-full text-left">Basic account<!-- trad --></div>
+                                        <div class="w-full text-left">{$LL.actionbar.accountType()}</div>
                                         <div class="">
                                             <div class="btn btn-light btn-sm">
-                                                Upgrade<!-- trad -->
+                                                {$LL.actionbar.upgrade()}
                                             </div>
                                         </div>
                                     </div>
@@ -1343,7 +1343,7 @@
                                     <div
                                         class="mr-3 grow text-left {$availabilityStatusStore === 1 ? '' : 'opacity-50'}"
                                     >
-                                        Online<!-- trad -->
+                                        {$LL.actionbar.status.online()}
                                     </div>
                                     {#if $availabilityStatusStore === 1}
                                         <div class="">
@@ -1359,7 +1359,7 @@
                                     <div
                                         class="mr-3 grow text-left {$availabilityStatusStore === 2 ? '' : 'opacity-50'}"
                                     >
-                                        Away<!-- trad -->
+                                        {$LL.actionbar.status.away()}
                                     </div>
                                     {#if $availabilityStatusStore === 2}
                                         <div class="">
@@ -1375,7 +1375,7 @@
                                     <div
                                         class="mr-3 grow text-left {$availabilityStatusStore === 3 ? '' : 'opacity-50'}"
                                     >
-                                        Do not disturb<!-- trad -->
+                                        {$LL.actionbar.status.disturb()}
                                     </div>
                                     {#if $availabilityStatusStore === 3}
                                         <div class="">
@@ -1391,7 +1391,7 @@
                                     <div
                                         class="mr-3 grow text-left {$availabilityStatusStore === 4 ? '' : 'opacity-50'}"
                                     >
-                                        Offline<!-- trad -->
+                                        {$LL.actionbar.status.offline()}
                                     </div>
                                     {#if $availabilityStatusStore === 4}
                                         <div class="">
@@ -1407,7 +1407,7 @@
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
                                         <ProfilIcon />
                                     </div>
-                                    <div>Edit profil<!-- trad --></div>
+                                    <div>{$LL.actionbar.profil()}</div>
                                 </button>
                                 <button
                                     class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
@@ -1416,7 +1416,7 @@
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
                                         <Woka userId={-1} placeholderSrc="" customWidth="26px" customHeight="26px" />
                                     </div>
-                                    <div>Change skin<!-- trad --></div>
+                                    <div>{$LL.actionbar.woka()}</div>
                                 </button>
                                 <button
                                     class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto"
@@ -1430,7 +1430,7 @@
                                             height="26px"
                                         />
                                     </div>
-                                    <div>Add a companion<!-- trad --></div>
+                                    <div>{$LL.actionbar.companion()}</div>
                                 </button>
                                 <button
                                     class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto"
@@ -1438,7 +1438,7 @@
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
                                         <AchievementIcon />
                                     </div>
-                                    <div>Achievement<!-- trad --></div>
+                                    <div>{$LL.actionbar.quest()}</div>
                                 </button>
                                 <div class="h-[1px] w-full bg-white/20 my-2" />
                                 <button
@@ -1448,7 +1448,7 @@
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
                                         <CamSettingsIcon />
                                     </div>
-                                    <div>Change cam / mic<!-- trad --></div>
+                                    <div>{$LL.actionbar.editCamMic()}</div>
                                 </button>
                                 <button
                                     class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
@@ -1457,7 +1457,7 @@
                                     <div class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center">
                                         <SettingsIcon />
                                     </div>
-                                    <div>Other settings<!-- trad --></div>
+                                    <div>{$LL.actionbar.otherSettings()}</div>
                                 </button>
                             </div>
                         </div>
@@ -1494,47 +1494,47 @@
                     class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
                     on:click={() => openEditNameScene()}
                 >
-                    Edit profil<!-- trad -->
+                    {$LL.actionbar.profil()}
                 </button>
                 <button
                     class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
                     on:click={() => openEditSkinScene()}
                 >
-                    <div>Change skin<!-- trad --></div>
+                    <div>{$LL.actionbar.woka()}</div>
                 </button>
                 <button
                     class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
                     on:click={() => openEditCompanionScene()}
                 >
-                    Add a companion<!-- trad -->
+                    {$LL.actionbar.companion()}
                 </button>
                 <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold">
-                    Achievement<!-- trad -->
+                    {$LL.actionbar.quest()}
                 </button>
                 <button
                     class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
                     on:click={openEnableCameraScene}
                 >
-                    Change cam / mic<!-- trad -->
+                    {$LL.actionbar.editCamMic()}
                 </button>
                 <button
                     class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold"
                     on:click={() => showMenuItem(SubMenusInterface.settings)}
                 >
-                    Other settings<!-- trad -->
+                    {$LL.actionbar.otherSettings()}
                 </button>
             </div>
             <div class="h-[1px] w-full bg-white/10 my-2 block @md/actions:hidden" />
             <div class="flex text-xxs uppercase text-white/50 px-4 py-2 relative justify-end">Administrator</div>
             <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold" on:click={() => openBo()}>
-                Back-office<!-- trad -->
+                {$LL.actionbar.bo()}
             </button>
             <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold">
-                Envoyer message global<!-- trad -->
+                {$LL.actionbar.globalMessage()}
             </button>
             {#if $megaphoneCanBeUsedStore && !$silentStore && ($myMicrophoneStore || $myCameraStore)}
                 <button class="px-4 py-2 hover:bg-white/10 w-full justify-end text-right bold">
-                    Utiliser le mégaphone<!-- trad -->
+                    {$LL.actionbar.megaphone()}
                 </button>
             {/if}
             <div class="h-[1px] w-full bg-white/10 my-4" />
@@ -1576,7 +1576,7 @@
                             on:click={() => analyticsClient.login()}
                             class="btn btn-secondary btn-sm w-full justify-center"
                         >
-                            Login <!-- trad -->
+                            {$LL.actionbar.login()}
                         </a>
                     {/if}
                 </div>
