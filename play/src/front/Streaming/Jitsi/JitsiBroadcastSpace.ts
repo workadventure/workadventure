@@ -6,7 +6,7 @@ import type JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnect
 import { ForwardableStore } from "@workadventure/store-utils";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { gameManager } from "../../Phaser/Game/GameManager";
-import { Space } from "../../Space/Space";
+import { Space } from "../../Space/SpaceWatcher/Space";
 import { liveStreamingEnabledStore } from "../../Stores/MegaphoneStore";
 import { BroadcastService, jitsiLoadingStore } from "../BroadcastService";
 import { BroadcastSpace } from "../Common/BroadcastSpace";

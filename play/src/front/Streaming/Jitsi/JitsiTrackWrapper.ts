@@ -3,7 +3,7 @@ import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack
 import { Readable, Unsubscriber, writable, Writable, readable } from "svelte/store";
 import { Subscription } from "rxjs";
 import { SoundMeter } from "../../Phaser/Components/SoundMeter";
-import { SpaceUserExtended } from "../../Space/Space";
+import { SpaceUserExtended } from "../../Space/SpaceWatcher/Space";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import { TrackWrapper } from "../Common/TrackWrapper";
 import { JitsiTrackStreamWrapper } from "./JitsiTrackStreamWrapper";
