@@ -92,7 +92,7 @@
                     readTags: [],
                     searchable: false,
                 });
-            } else if (rightsProperty.type === "areaRightPropertyData") {
+            } else if (rightsProperty.type === "restrictedRightsPropertyData") {
                 writeTags = rightsProperty.writeTags.map((tag) => {
                     return { value: tag, label: tag, created: false };
                 });
@@ -344,11 +344,14 @@
     function onChangeWriteReadTags() {
         let areaRightProperties = $mapEditorSelectedAreaPreviewStore
             ?.getProperties()
-            .find((p) => p.type === "areaRightPropertyData");
-        if (!areaRightProperties || (areaRightProperties && areaRightProperties.type !== "areaRightPropertyData")) {
+            .find((p) => p.type === "restrictedRightsPropertyData");
+        if (
+            !areaRightProperties ||
+            (areaRightProperties && areaRightProperties.type !== "restrictedRightsPropertyData")
+        ) {
             areaRightProperties = {
                 id: crypto.randomUUID(),
-                type: "areaRightPropertyData",
+                type: "restrictedRightsPropertyData",
                 readTags: [],
                 writeTags: [],
                 searchable: false,
@@ -538,7 +541,10 @@
                 <a href="#toggleRight" class="tw-cursor-pointer" on:click|preventDefault|stopPropagation={toggleRight}
                     >- {$LL.mapEditor.areaEditor.rightTitle()}</a
                 >
-                <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.areaEditor.rightWriteDescription()}</p>
+                <p class="help-text">
+                    <InfoIcon size="18" />
+                    {$LL.mapEditor.areaEditor.rightWriteDescription()}
+                </p>
                 <InputTags
                     label={$LL.mapEditor.areaEditor.rightWriteTitle()}
                     options={_tag}
@@ -546,7 +552,10 @@
                     handleChange={onChangeWriteReadTags}
                     testId="writeTags"
                 />
-                <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.areaEditor.rightReadDescription()}</p>
+                <p class="help-text">
+                    <InfoIcon size="18" />
+                    {$LL.mapEditor.areaEditor.rightReadDescription()}
+                </p>
                 <InputTags
                     label={$LL.mapEditor.areaEditor.rightReadTitle()}
                     options={_tag}
@@ -665,14 +674,17 @@
         margin-bottom: 0.5em;
         margin-top: 0.5em;
         flex-direction: column;
+
         label {
             min-width: fit-content;
             margin-right: 0.5em;
         }
+
         input {
             flex-grow: 1;
             min-width: 0;
         }
+
         * {
             margin-bottom: 0;
         }
@@ -734,8 +746,8 @@
         background-color: rgb(65 86 246 / var(--tw-bg-opacity));
         content: var(--tw-content);
         /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
-        --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
-        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
+    --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
+    box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
     }
 
     .input-switch:disabled {

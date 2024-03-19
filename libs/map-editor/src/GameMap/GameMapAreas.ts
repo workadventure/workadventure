@@ -133,35 +133,6 @@ export class GameMapAreas {
         return areaRightTags.some((tag) => userConnectedTags.includes(tag));
     }
 
-    private isUserHasWriteAccessOnAreaByUserTags(area: AreaData, userTags: string[]): boolean {
-        const areaRights = this.getAreaRightPropertyData(area);
-        if (areaRights === undefined) {
-            return false;
-        }
-        return areaRights.writeTags.some((tag) => userTags.includes(tag));
-    }
-
-    private isUserHasReadAccessOnAreaByTags(area: AreaData, userTags: string[]): boolean {
-        const areaRights = this.getAreaRightPropertyData(area);
-        if (areaRights === undefined) {
-            return true;
-        }
-        return areaRights.readTags.some((tag) => userTags.includes(tag));
-    }
-
-    private getAreaRightPropertyData(area: AreaData): AreaRightPropertyData | undefined {
-        const areaRightPropertyData = area.properties.find((property) => property.type === "areaRightPropertyData");
-        const areaRights = areaRightPropertyData ? AreaRightPropertyData.parse(areaRightPropertyData) : undefined;
-        if (areaRights !== undefined) {
-            const rightTags = [...areaRights.writeTags, ...areaRights.readTags];
-            if (rightTags.length === 0) {
-                return;
-            }
-            return AreaRightPropertyData.parse(areaRightPropertyData);
-        }
-        return;
-    }
-
     public isGameMapContainsThematics(): boolean {
         let hasThematics = false;
         this.areas.forEach((area) => {
@@ -207,34 +178,6 @@ export class GameMapAreas {
         const deleted = this.areas.delete(id);
         if (deleted) {
             return this.deleteAreaFromWAM(id);
-        }
-        return false;
-    }
-
-    private addAreaToWAM(areaData: AreaData): boolean {
-        if (!this.wam.areas.find((area) => area.id === areaData.id)) {
-            this.wam.areas.push(areaData);
-        } else {
-            console.warn(`ADD AREA FAIL: AREA OF ID ${areaData.id} ALREADY EXISTS WITHIN THE WAM FILE!`);
-            return false;
-        }
-        return true;
-    }
-
-    private deleteAreaFromWAM(id: string): boolean {
-        const index = this.wam.areas.findIndex((area) => area.id === id);
-        if (index !== -1) {
-            this.wam.areas.splice(index, 1);
-            return true;
-        }
-        return false;
-    }
-
-    private updateAreaWAM(areaData: AreaData): boolean {
-        const index = this.wam.areas.findIndex((area) => area.id === areaData.id);
-        if (index !== -1) {
-            this.wam.areas[index] = structuredClone(areaData);
-            return true;
         }
         return false;
     }
@@ -312,6 +255,77 @@ export class GameMapAreas {
         return properties;
     }
 
+    public getAreasOnPosition(position: { x: number; y: number }, offsetY = 0): AreaData[] {
+        const areasOfInterest = [...this.areas.values()];
+
+        const overlappedAreas: AreaData[] = [];
+        for (const area of areasOfInterest) {
+            if (MathUtils.isOverlappingWithRectangle({ x: position.x, y: position.y + offsetY }, area)) {
+                overlappedAreas.push(area);
+            }
+        }
+        return overlappedAreas;
+    }
+
+    private isUserHasWriteAccessOnAreaByUserTags(area: AreaData, userTags: string[]): boolean {
+        const areaRights = this.getAreaRightPropertyData(area);
+        if (areaRights === undefined) {
+            return false;
+        }
+        return areaRights.writeTags.some((tag) => userTags.includes(tag));
+    }
+
+    private isUserHasReadAccessOnAreaByTags(area: AreaData, userTags: string[]): boolean {
+        const areaRights = this.getAreaRightPropertyData(area);
+        if (areaRights === undefined) {
+            return true;
+        }
+        return areaRights.readTags.some((tag) => userTags.includes(tag));
+    }
+
+    private getAreaRightPropertyData(area: AreaData): AreaRightPropertyData | undefined {
+        const areaRightPropertyData = area.properties.find(
+            (property) => property.type === "restrictedRightsPropertyData"
+        );
+        const areaRights = areaRightPropertyData ? AreaRightPropertyData.parse(areaRightPropertyData) : undefined;
+        if (areaRights !== undefined) {
+            const rightTags = [...areaRights.writeTags, ...areaRights.readTags];
+            if (rightTags.length === 0) {
+                return;
+            }
+            return AreaRightPropertyData.parse(areaRightPropertyData);
+        }
+        return;
+    }
+
+    private addAreaToWAM(areaData: AreaData): boolean {
+        if (!this.wam.areas.find((area) => area.id === areaData.id)) {
+            this.wam.areas.push(areaData);
+        } else {
+            console.warn(`ADD AREA FAIL: AREA OF ID ${areaData.id} ALREADY EXISTS WITHIN THE WAM FILE!`);
+            return false;
+        }
+        return true;
+    }
+
+    private deleteAreaFromWAM(id: string): boolean {
+        const index = this.wam.areas.findIndex((area) => area.id === id);
+        if (index !== -1) {
+            this.wam.areas.splice(index, 1);
+            return true;
+        }
+        return false;
+    }
+
+    private updateAreaWAM(areaData: AreaData): boolean {
+        const index = this.wam.areas.findIndex((area) => area.id === areaData.id);
+        if (index !== -1) {
+            this.wam.areas[index] = structuredClone(areaData);
+            return true;
+        }
+        return false;
+    }
+
     private flattenAreaProperties(areaProperties: AreaDataProperties): Record<string, string | boolean | number> {
         const flattenedProperties: Record<string, string | boolean | number> = {};
         for (const property of areaProperties) {
@@ -366,17 +380,5 @@ export class GameMapAreas {
             }
         }
         return flattenedProperties;
-    }
-
-    public getAreasOnPosition(position: { x: number; y: number }, offsetY = 0): AreaData[] {
-        const areasOfInterest = [...this.areas.values()];
-
-        const overlappedAreas: AreaData[] = [];
-        for (const area of areasOfInterest) {
-            if (MathUtils.isOverlappingWithRectangle({ x: position.x, y: position.y + offsetY }, area)) {
-                overlappedAreas.push(area);
-            }
-        }
-        return overlappedAreas;
     }
 }
