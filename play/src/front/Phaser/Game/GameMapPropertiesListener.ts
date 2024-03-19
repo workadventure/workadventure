@@ -5,7 +5,7 @@ import { Jitsi } from "@workadventure/shared-utils";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { z } from "zod";
 import { scriptUtils } from "../../Api/ScriptUtils";
-import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
@@ -21,15 +21,14 @@ import { inJitsiStore, inBbbStore, silentStore, inOpenWebsite, isSpeakerStore } 
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { currentLiveStreamingNameStore } from "../../Stores/MegaphoneStore";
 import { popupStore } from "../../Stores/PopupStore";
+import PopUpJitsi from "../../Components/PopUp/PopUpJitsi.svelte";
+import PopUpTab from "../../Components/PopUp/PopUpTab.svelte";
+import PopUpCowebsite from "../../Components/PopUp/PopupCowebsite.svelte";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
 import { AreasPropertiesListener } from "./MapEditor/AreasPropertiesListener";
 import { gameManager } from "./GameManager";
-import PopUpJitsi from "../../Components/PopUp/PopUpJitsi.svelte"
-import PopUpTab from "../../Components/PopUp/PopUpTab.svelte";
-import PopUpCowebsite from "../../Components/PopUp/PopupCowebsite.svelte"
-
 
 export interface OpenCoWebsite {
     actionId: string;
@@ -64,15 +63,18 @@ export class GameMapPropertiesListener {
                         message = get(LL).trigger.newTab();
                     }
 
-                    popupStore.addPopup(PopUpTab, {
-                        message: message,
-                        click: () => {
-                            popupStore.removePopup("openTab");
-                            scriptUtils.openTab(newValue)
+                    popupStore.addPopup(
+                        PopUpTab,
+                        {
+                            message: message,
+                            click: () => {
+                                popupStore.removePopup("openTab");
+                                scriptUtils.openTab(newValue);
+                            },
+                            userInputManager: this.scene.userInputManager,
                         },
-                        userInputManager: this.scene.userInputManager,
-                    },
-                    "openTab");
+                        "openTab"
+                    );
                 } else {
                     scriptUtils.openTab(newValue);
                 }
@@ -174,7 +176,7 @@ export class GameMapPropertiesListener {
 
                 coWebsiteManager.addCoWebsiteToStore(coWebsite);
 
-                coWebsiteManager.loadCoWebsite(coWebsite);
+                // coWebsiteManager.loadCoWebsite(coWebsite);
 
                 // .catch((err) => {
                 //     console.error(err);
@@ -190,17 +192,19 @@ export class GameMapPropertiesListener {
             if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                 let message = allProps.get(GameMapProperties.JITSI_TRIGGER_MESSAGE);
                 if (message === undefined) {
-                  message = get(LL).trigger.jitsiRoom();
+                    message = get(LL).trigger.jitsiRoom();
                 }
-                popupStore.addPopup(PopUpJitsi, {
-                    message: message,
-                    click: () => {
-                        openJitsiRoomFunction().catch((e) => console.error(e));
+                popupStore.addPopup(
+                    PopUpJitsi,
+                    {
+                        message: message,
+                        click: () => {
+                            openJitsiRoomFunction().catch((e) => console.error(e));
+                        },
+                        userInputManager: this.scene.userInputManager,
                     },
-                    userInputManager: this.scene.userInputManager,
-                },
-                "jitsi");
-
+                    "jitsi"
+                );
             } else {
                 openJitsiRoomFunction().catch((e) => console.error(e));
             }
@@ -447,15 +451,17 @@ export class GameMapPropertiesListener {
         }
 
         const coWebsiteOpen: OpenCoWebsite = {
-            actionId: actionId, websitePositionProperty
+            actionId: actionId,
+            websitePositionProperty,
         };
 
         this.coWebsitesOpenByPlace.set(this.getIdFromPlace(place), coWebsiteOpen);
 
         const loadCoWebsiteFunction = (coWebsite: CoWebsite) => {
-            coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
-                console.error("Error during loading a co-website: " + coWebsite.getUrl());
-            });
+            coWebsiteManager.loadCoWebsite(coWebsite);
+            // .catch(() => {
+            //     console.error("Error during loading a co-website: " + coWebsite.getUrl());
+            // });
             popupStore.removePopup(actionId);
         };
 
@@ -488,17 +494,17 @@ export class GameMapPropertiesListener {
 
             this.coWebsitesActionTriggerByPlace.set(this.getIdFromPlace(place), actionId);
 
-            popupStore.addPopup(PopUpCowebsite, {
-                message: websiteTriggerMessageProperty,
-                click: () => {
-                    openCoWebsiteFunction();
+            popupStore.addPopup(
+                PopUpCowebsite,
+                {
+                    message: websiteTriggerMessageProperty,
+                    click: () => {
+                        openCoWebsiteFunction();
+                    },
+                    userInputManager: this.scene.userInputManager,
                 },
-                userInputManager: this.scene.userInputManager,
-            },
-            actionId);
-
-
-
+                actionId
+            );
         } else if (websiteTriggerProperty === ON_ICON_TRIGGER_BUTTON) {
             const coWebsite = new SimpleCoWebsite(
                 new URL(openWebsiteProperty ?? "", this.scene.mapUrlFile),
