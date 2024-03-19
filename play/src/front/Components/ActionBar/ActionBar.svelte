@@ -111,13 +111,13 @@
     import XIcon from "../Icons/XIcon.svelte";
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
-    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
-    import { consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
     import { StringUtils } from "../../Utils/StringUtils";
+    import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
 
+    let microphoneActive = false;
     let cameraActive = false;
     let profileMenuIsDropped = false;
     let adminMenuIsDropped = false;
@@ -402,7 +402,7 @@
     function selectMicrophone(deviceId: string) {
         requestedMicrophoneDeviceIdStore.set(deviceId);
         localUserStore.setPreferredAudioInputDevice(deviceId);
-        const microphoneActive = false;
+        microphoneActive = false;
     }
 
     function selectSpeaker(deviceId: string) {
@@ -439,9 +439,9 @@
         }
     });
 
-    function playSoundClick() {
-        sound.play().catch((e) => console.error(e));
-    }
+    // function playSoundClick() {
+    //     sound.play().catch((e) => console.error(e));
+    // }
 
     /*
     TODO Hugo : Add Room list
