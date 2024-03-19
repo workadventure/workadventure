@@ -141,7 +141,7 @@
 >
     <div class:hidden={state !== "playing"} class="">
         <div class="font-lg text-center text-white mb-4 opacity-50">
-            Manage background music <!-- Trad -->
+            {$LL.audio.volumeCtrl()}
         </div>
         <div class="audio-manager-player-volume flex items-center justify-center">
             <div

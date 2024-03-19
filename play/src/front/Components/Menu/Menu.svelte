@@ -190,7 +190,7 @@
                         <path d="M4 7l3.75 2.4" />
                         <path d="M20 7l-3.75 2.4" />
                     </svg>
-                    Find a bug ? <!-- Trad & TODO Hugo : Icon and link -->
+                    {$LL.menu.sub.report()} <!-- TODO Hugo : Icon and link -->
                 </a>
             </div>
             <div>
@@ -212,7 +212,7 @@
                         <path d="M12 16v.01" />
                         <path d="M12 13a2 2 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483" />
                     </svg>
-                    Help & tutorials <!-- Trad & TODO Hugo : Icon and link -->
+                    {$LL.menu.sub.report()} <!-- TODO Hugo : Icon and link -->
                 </a>
             </div>
         </div>

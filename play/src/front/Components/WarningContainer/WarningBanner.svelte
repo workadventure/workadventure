@@ -46,7 +46,7 @@
                         style={`color: ${$bannerStore.bgColor};background:${$bannerStore.textColor};`}
                         on:click|preventDefault={closeBanner}
                     >
-                        Got it ! <!-- Trad -->
+                        {$LL.actionbar.understand()}
                     </button>
                 {/if}
             </div>
