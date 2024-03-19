@@ -11,7 +11,7 @@
     export let coWebsite: CoWebsite;
     export let isLoading = false;
     export let isClosable = true;
-    let active = false;
+    export let active: boolean;
     let isJitsi: boolean = coWebsite instanceof JitsiCoWebsite;
     let isBBB: boolean = coWebsite instanceof BBBCoWebsite;
     let cowebsiteName: string;
@@ -57,8 +57,8 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     class="text flex items-center px-2 mr-2 rounded transition-all {active
-        ? 'text-contrast bg-white hover:bg-white/90 translate-y-2 rounded-b-none pt-1'
-        : 'text-white hover:bg-white/10'}"
+        ? 'bg-lime-500'
+        : 'stroke-white fill-transparent'}"
 >
     {#if isLoading}
         <img alt="icon" id="cowebsiteTabIcon" />
@@ -72,7 +72,11 @@
         </div>
     {/if}
     <div class="p-2 text-ellipsis overflow-hidden">
-        <div class="bold leading-3 text-ellipsis pb-1 max-w-[150px] whitespace-nowrap overflow-hidden">
+        <div
+            class="bold leading-3 text-ellipsis pb-1 max-w-[150px] whitespace-nowrap overflow-hidden {active
+                ? 'fill-white'
+                : ''}"
+        >
             {#if isLoading}
                 {cowebsiteName}
             {:else}

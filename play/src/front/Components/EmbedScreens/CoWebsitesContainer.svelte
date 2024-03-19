@@ -101,7 +101,7 @@
     transition:fly={{ duration: 750, x: 1000 }}
     bind:this={container}
 >
-    <div class="flex py-2 ml-3 items-center tab-display">
+    <div class="flex py-2 ml-3 items-center overflow-auto">
         <div class="grow flex">
             {#each $coWebsites.slice().reverse() as coWebsite (coWebsite.getId())}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -109,7 +109,12 @@
                     class={`${activeCowebsite === coWebsite.getId()}`}
                     on:click={() => setActiveCowebsite(coWebsite.getId())}
                 >
-                    <CoWebsiteTab {coWebsite} isLoading={true} on:close={() => coWebsites.remove(coWebsite)} />
+                    <CoWebsiteTab
+                        {coWebsite}
+                        active={false}
+                        isLoading={true}
+                        on:close={() => coWebsites.remove(coWebsite)}
+                    />
                 </div>
             {/each}
         </div>
@@ -145,9 +150,3 @@
         on:dragend={removeDivForResize}
     />
 </div>
-
-<style>
-    .tab-display {
-        overflow: auto;
-    }
-</style>
