@@ -40,30 +40,31 @@
             stroke-linejoin="round"
         >
             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="icon icon-tabler icon-tabler-messages"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="#ffffff"
-            fill="none"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-        >
-            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            <path d="M21 14l-3 -3h-7a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1h9a1 1 0 0 1 1 1v10" />
-            <path d="M14 15v2a1 1 0 0 1 -1 1h-7l-3 3v-10a1 1 0 0 1 1 -1h2" />
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="icon icon-tabler icon-tabler-messages"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="#ffffff"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M21 14l-3 -3h-7a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1h9a1 1 0 0 1 1 1v10" />
+                <path d="M14 15v2a1 1 0 0 1 -1 1h-7l-3 3v-10a1 1 0 0 1 1 -1h2" />
+            </svg>
+            <div class="block absolute right-0 top-0 transform translate-x-2 -translate-y-1">
+                {#if mucRoom.type === "live"}
+                    <div class="block relative">
+                        <span class="w-4 h-4 bg-success block rounded-full absolute right-0 top-0 animate-ping" />
+                        <span class="w-3 h-3 bg-success block rounded-full absolute right-0.5 top-0.5" />
+                    </div>
+                {/if}
+            </div>
         </svg>
-        <div class="block absolute right-0 top-0 transform translate-x-2 -translate-y-1">
-            {#if mucRoom.type === "live"}
-                <div class="block relative">
-                    <span class="w-4 h-4 bg-success block rounded-full absolute right-0 top-0 animate-ping" />
-                    <span class="w-3 h-3 bg-success block rounded-full absolute right-0.5 top-0.5" />
-                </div>
-            {/if}
-        </div>
     </div>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="flex-auto ml-4 grow" on:click|stopPropagation={() => open()}>
@@ -82,7 +83,6 @@
     </div>
 
     {#if $unreads}
-        <span class="bg-secondary text-white w-6 h-6 text-xs font-bold flex items-center justify-center rounded-full">
         <span class="bg-secondary text-white w-6 h-6 text-xs font-bold flex items-center justify-center rounded-full">
             {$unreads}
         </span>
@@ -104,21 +104,22 @@
                 stroke-linejoin="round"
             >
                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="icon icon-tabler icon-tabler-chevron-right"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="#ffffff"
-                fill="none"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            >
-                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                <path d="M9 6l6 6l-6 6" />
-            </svg>
-        </button>
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="icon icon-tabler icon-tabler-chevron-right"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="#ffffff"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M9 6l6 6l-6 6" />
+                </svg>
+            </svg></button
+        >
     </div>
 </div>

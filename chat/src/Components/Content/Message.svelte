@@ -8,7 +8,7 @@
     import { MucRoom } from "../../Xmpp/MucRoom";
     import { Message } from "../../Model/Message";
     import { LL, locale } from "../../i18n/i18n-svelte";
-    import { selectedMessageToReact, selectedMessageToReply, ChatMessageTypes } from "../../Stores/ChatStore";
+    import { selectedMessageToReact, selectedMessageToReply } from "../../Stores/ChatStore";
     import { HtmlUtils } from "../../Utils/HtmlUtils";
     import { User } from "../../Xmpp/AbstractRoom";
     import { iframeListener } from "../../IframeListener";
@@ -145,9 +145,7 @@
             {#if !isMe}
                 <div
                     class={`${
-
                         isMe || needHideHeader ? "opacity-0" : "mt-6"
-
                     } relative wa-avatar aspect-ratio h-10 w-10 rounded overflow-hidden false cursor-default mr-2`}
                     in:fade={{ duration: 100 }}
                     style={`background-color: ${color}`}
@@ -169,20 +167,8 @@
                     class="actions invisible justify-between text-xs text-left flex mt-3 pt-4 {isMe
                         ? 'pr-2 flex-row-reverse'
                         : 'order-3 pl-2 flex-row'}"
-                    class="actions invisible justify-between text-xs text-left flex mt-3 pt-4 {isMe
-                        ? 'pr-2 flex-row-reverse'
-                        : 'order-3 pl-2 flex-row'}"
                 >
                     {#if message.links != undefined && message.links.length > 0}
-                        <div
-                            class="action reply aspect-square h-8 w-8 bg-contrast/80 rounded-full mr-1 text-center flex justify-center items-center relative cursor-pointer"
-                            on:click={() => downloadAllFile()}
-                            transition:fly={{
-                                x: 50,
-                                delay: 100,
-                                duration: 200,
-                            }}
-                        >
                         <div
                             class="action reply aspect-square h-8 w-8 bg-contrast/80 rounded-full mr-1 text-center flex justify-center items-center relative cursor-pointer"
                             on:click={() => downloadAllFile()}
@@ -195,19 +181,6 @@
                             {#if loadingDownload}
                                 <LoaderIcon size="17" />
                             {:else}
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    class="icon icon-tabler icon-tabler-cloud-download"
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    stroke-width="1.5"
-                                    stroke="#ffffff"
-                                    fill="none"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     class="icon icon-tabler icon-tabler-cloud-download"
@@ -255,31 +228,6 @@
                                 <path
                                     d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5"
                                 />
-                        <div
-                            class="action reply aspect-square h-8 w-8 bg-contrast/80 rounded-full mr-1 text-center flex justify-center items-center relative cursor-pointer"
-                            on:click={() => openCowebsite()}
-                            transition:fly={{
-                                x: 50,
-                                delay: 150,
-                                duration: 200,
-                            }}
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="icon icon-tabler icon-tabler-paperclip"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="#ffffff"
-                                fill="none"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path
-                                    d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5"
-                                />
                             </svg>
                             <div class="caption">{$LL.open()}</div>
                         </div>
@@ -288,28 +236,9 @@
                         class="action reply aspect-square h-8 w-8 bg-contrast/80 rounded-full mr-1 text-center flex justify-center items-center relative cursor-pointer"
                         on:click={() => selectMessage(message)}
                         transition:fly={{
-                    <div
-                        class="action reply aspect-square h-8 w-8 bg-contrast/80 rounded-full mr-1 text-center flex justify-center items-center relative cursor-pointer"
-                        on:click={() => selectMessage(message)}
-                        transition:fly={{
                             x: 50,
                             delay: 200,
                             duration: 200,
-                        }}
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="icon icon-tabler icon-tabler-corner-down-right"
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="#ffffff"
-                            fill="none"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         }}
                     >
                         <svg
@@ -333,28 +262,9 @@
                         class="action react aspect-square h-8 w-8 bg-contrast/80 rounded-full mr-1 text-center flex justify-center items-center relative cursor-pointer"
                         on:click={() => reactMessage(message)}
                         transition:fly={{
-                    <div
-                        class="action react aspect-square h-8 w-8 bg-contrast/80 rounded-full mr-1 text-center flex justify-center items-center relative cursor-pointer"
-                        on:click={() => reactMessage(message)}
-                        transition:fly={{
                             x: 50,
                             delay: 250,
                             duration: 200,
-                        }}
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="icon icon-tabler icon-tabler-mood-smile"
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="#ffffff"
-                            fill="none"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         }}
                     >
                         <svg
@@ -381,28 +291,9 @@
                         class="action copy aspect-square h-8 w-8 bg-contrast/80 rounded-full mr-1 text-center flex justify-center items-center relative cursor-pointer"
                         on:click={(e) => copyMessage(e, message)}
                         transition:fly={{
-                    <div
-                        class="action copy aspect-square h-8 w-8 bg-contrast/80 rounded-full mr-1 text-center flex justify-center items-center relative cursor-pointer"
-                        on:click={(e) => copyMessage(e, message)}
-                        transition:fly={{
                             x: 50,
                             delay: 300,
                             duration: 200,
-                        }}
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="icon icon-tabler icon-tabler-copy"
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="#ffffff"
-                            fill="none"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         }}
                     >
                         <svg
@@ -446,28 +337,6 @@
                                 stroke-linejoin="round"
                             >
                                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <div
-                            class="action delete aspect-square h-8 w-8 bg-danger rounded-full mr-1 text-center flex justify-center items-center"
-                            on:click={() => mucRoom.sendRemoveMessage(message.id)}
-                            transition:fly={{
-                                x: 50,
-                                delay: 350,
-                                duration: 200,
-                            }}
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                class="icon icon-tabler icon-tabler-trash"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="#ffffff"
-                                fill="none"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                 <path d="M4 7l16 0" />
                                 <path d="M10 11l0 6" />
                                 <path d="M14 11l0 6" />
@@ -488,33 +357,7 @@
                 }}
             >
                 <!-- Delete message -->
-            >
-                <!-- Delete message -->
                 {#if !$deletedMessagesStore.has(message.id)}
-                    <div class="flex text-xxs px-4 py-1">
-                        <span class="bold text-white/50 text-left grow"
-                            >{#if isMe}{$LL.me()}{:else}
-                                {message.name.match(/\[\d*]/)
-                                    ? message.name.substring(0, message.name.search(/\[\d*]/))
-                                    : message.name}
-                                {#if message.name.match(/\[\d*]/)}
-                                    <span class="font-light text-xxs text-gray">
-                                        #{message.name
-                                            .match(/\[\d*]/)
-                                            ?.join()
-                                            ?.replace("[", "")
-                                            ?.replace("]", "")}
-                                    </span>
-                                {/if}
-                            {/if}</span
-                        >
-                        <span class="text-white/50 text-right"
-                            >{message.time.toLocaleTimeString($locale, {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            })}</span
-                        >
-                    </div>
                     <div class="flex text-xxs px-4 py-1">
                         <span class="bold text-white/50 text-left grow"
                             >{#if isMe}{$LL.me()}{:else}
@@ -545,9 +388,6 @@
                     <div
                         class="wa-message-body break-all rounded-lg px-3 py-1 inline-block leading-6 min-w-[7rem] max-h-80 overflow-hidden relative before:absolute before:content-[''] before:z-10 before:top-64 before:left-0 before:h-16 before:w-full before:bg-gradient-to-t after:content-['Read_more...'] after:absolute after:left-0 after:top-[18.5rem] after:w-full after:h-10 after:cursor-pointer after:text-center after:underline after:z-20 after:text-xs after:mt-6px after:border after:border-l-0 after:border-b-0 after:border-t after:border-solid after:border-white/20 bg-contrast/30"
                     >
-                    <div
-                        class="wa-message-body break-all rounded-lg px-3 py-1 inline-block leading-6 min-w-[7rem] max-h-80 overflow-hidden relative before:absolute before:content-[''] before:z-10 before:top-64 before:left-0 before:h-16 before:w-full before:bg-gradient-to-t after:content-['Read_more...'] after:absolute after:left-0 after:top-[18.5rem] after:w-full after:h-10 after:cursor-pointer after:text-center after:underline after:z-20 after:text-xs after:mt-6px after:border after:border-l-0 after:border-b-0 after:border-t after:border-solid after:border-white/20 bg-contrast/30"
-                    >
                         <p class="italic text-sm opacity-60">
                             {#if JID.toBare(message.jid) === $deletedMessagesStore.get(message.id)}
                                 {#if isMe}
@@ -563,9 +403,6 @@
 
                     <!-- Message -->
                 {:else}
-                    <div
-                        class="wa-message-body break-all rounded-lg px-4 py-2 inline-block leading-6 min-w-[7rem] max-h-80 overflow-hidden relative before:absolute before:content-[''] before:z-10 before:top-64 before:left-0 before:h-16 before:w-full before:bg-gradient-to-t after:content-['Read_more...'] after:absolute after:left-0 after:top-[18.5rem] after:w-full after:h-10 after:cursor-pointer after:text-center after:underline after:z-20 after:text-xs after:mt-6px after:border after:border-l-0 after:border-b-0 after:border-t after:border-solid after:border-white/20 z-20 group-[.right]:bg-secondary group-[.right]:from-secondary group-[.right]:text-left group-[.right]:before:from-secondary group-[.right]:before:via-secondary group-[.left]:bg-contrast group-[.left]:before:from-contrast group-[.left]:before:via-contrast"
-                    >
                     <div
                         class="wa-message-body break-all rounded-lg px-4 py-2 inline-block leading-6 min-w-[7rem] max-h-80 overflow-hidden relative before:absolute before:content-[''] before:z-10 before:top-64 before:left-0 before:h-16 before:w-full before:bg-gradient-to-t after:content-['Read_more...'] after:absolute after:left-0 after:top-[18.5rem] after:w-full after:h-10 after:cursor-pointer after:text-center after:underline after:z-20 after:text-xs after:mt-6px after:border after:border-l-0 after:border-b-0 after:border-t after:border-solid after:border-white/20 z-20 group-[.right]:bg-secondary group-[.right]:from-secondary group-[.right]:text-left group-[.right]:before:from-secondary group-[.right]:before:via-secondary group-[.left]:bg-contrast group-[.left]:before:from-contrast group-[.left]:before:via-contrast"
                     >
@@ -601,6 +438,7 @@
 
                     <!-- Reply associated -->
                     {#if message.targetMessageReply}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             class="message-replied text-xs rounded-lg bg-contrast/70 px-3 py-2 text-left cursor-pointer ml-5 relative -translate-y-2"
                             on:click|preventDefault|stopPropagation={() => {
@@ -608,19 +446,6 @@
                             }}
                         >
                             <div class="icon-replied absolute -left-4 top-1 opacity-">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    class="icon icon-tabler icon-tabler-corner-down-right"
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    stroke-width="1.5"
-                                    stroke="#ffffff"
-                                    fill="none"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     class="icon icon-tabler icon-tabler-corner-down-right"
@@ -663,6 +488,7 @@
                 class="wa-error-message"
                 on:mouseleave={() => document.getElementById(`error_${message.id}`)?.classList.add("invisible")}
             >
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class={`cursor-pointer text-pop-red ml-1 flex ${needHideHeader ? "" : "mt-4"}`}
                     on:click={() => document.getElementById(`error_${message.id}`)?.classList.remove("invisible")}
@@ -670,6 +496,7 @@
                     <AlertCircleIcon size="16" />
                 </div>
                 <div id={`error_${message.id}`} class={`wa-dropdown-menu invisible`}>
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <span
                         class="wa-dropdown-item"
                         on:click={() =>
@@ -679,6 +506,7 @@
                         <RefreshCwIcon size="13" class="mr-1" />
                         {$LL.sendBack()}
                     </span>
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <span
                         class="wa-dropdown-item text-pop-red"
                         on:click={() =>
