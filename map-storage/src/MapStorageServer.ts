@@ -179,7 +179,7 @@ const mapStorageServer: MapStorageServer = {
                             entityCommandPermissions &&
                             !entityCommandPermissions.canEdit({ x: entityXCenter, y: entityYCenter })
                         ) {
-                            console.debug("User is not allowed to modify the entity on map");
+                            Sentry.captureException("User is not allowed to modify the entity on map");
                             break;
                         }
                         await mapsManager.executeCommand(
@@ -199,7 +199,7 @@ const mapStorageServer: MapStorageServer = {
                         entityCommandPermissions &&
                         !entityCommandPermissions.canEdit({ x: entityXCenter, y: entityYcenter })
                     ) {
-                        console.debug("User is not allowed to create entity on map");
+                        Sentry.captureException("User is not allowed to create entity on map");
                         break;
                     }
                     await mapsManager.executeCommand(
