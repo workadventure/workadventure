@@ -517,7 +517,7 @@
                         },
                         "type": {
                           "type": "string",
-                          "const": "areaRightPropertyData"
+                          "const": "restrictedRightsPropertyData"
                         },
                         "writeTags": {
                           "type": "array",

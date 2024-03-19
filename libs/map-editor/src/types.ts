@@ -120,7 +120,7 @@ export const AreaDescriptionPropertyData = PropertyBase.extend({
 });
 
 export const AreaRightPropertyData = PropertyBase.extend({
-    type: z.literal("areaRightPropertyData"),
+    type: z.literal("restrictedRightsPropertyData"),
     writeTags: z.array(z.string()).default([]),
     readTags: z.array(z.string()).default([]),
     searchable: z.boolean().default(false),
