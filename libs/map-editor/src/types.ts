@@ -126,6 +126,16 @@ export const RestrictedRightsPropertyData = PropertyBase.extend({
     searchable: z.boolean().default(false),
 });
 
+export const PersonalAreaAccessClaimMode = z.enum(["dynamic", "static"]);
+
+export const PersonalAreaPropertyData = PropertyBase.extend({
+    type: z.literal("personalAreaPropertyData"),
+    isPersonalArea: z.boolean().default(false),
+    accessClaimMode: PersonalAreaAccessClaimMode,
+    allowedTags: z.array(z.string()).default([]),
+    owner: z.string().default(""),
+});
+
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,
@@ -138,6 +148,7 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     ListenerMegaphonePropertyData,
     AreaDescriptionPropertyData,
     RestrictedRightsPropertyData,
+    PersonalAreaPropertyData,
 ]);
 
 export const AreaDataProperties = z.array(AreaDataProperty);
@@ -355,6 +366,8 @@ export type ListenerMegaphonePropertyData = z.infer<typeof ListenerMegaphoneProp
 export type EntityDescriptionPropertyData = z.infer<typeof EntityDescriptionPropertyData>;
 export type AreaDescriptionPropertyData = z.infer<typeof AreaDescriptionPropertyData>;
 export type RestrictedRightsPropertyData = z.infer<typeof RestrictedRightsPropertyData>;
+export type PersonalAreaPropertyData = z.infer<typeof PersonalAreaPropertyData>;
+export type PersonalAreaAccessClaimMode = z.infer<typeof PersonalAreaAccessClaimMode>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",
