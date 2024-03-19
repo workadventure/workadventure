@@ -513,26 +513,7 @@
 
 <style lang="scss">
     .enableCameraScene {
-        section.selectWebcamForm {
-            min-height: 10vh;
-            width: 50vw;
-            margin-left: auto;
-            margin-right: auto;
 
-            select {
-                margin-top: 1vh;
-                margin-bottom: 1vh;
-            }
-        }
-
-        section.action {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            margin: 0;
-            width: 100%;
-        }
 
         h2 {
             margin: 1px;
@@ -542,22 +523,5 @@
             text-align: center;
         }
 
-        .control-group {
-            display: flex;
-            flex-direction: row;
-            max-height: 60px;
-            margin-top: 10px;
-
-            img {
-                width: 24px;
-                margin-right: 10px;
-            }
-        }
-
-        .webrtcsetup {
-            img.background-img {
-                width: 40%;
-            }
-        }
     }
 </style>

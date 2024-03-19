@@ -19,8 +19,8 @@
                 <CoWebsiteTab title="Hello world !" link="https://google.fr" active="true" />
             {/each}
             -->
-            <CoWebsiteTab title="Hello world !" active="false" />
-            <CoWebsiteTab title="Hello world !" url="https://google.fr" isLoading="false" active="true" />
+            <CoWebsiteTab title="Hello world !" active="{false}" />
+            <CoWebsiteTab title="Hello world !" url="https://google.fr" isLoading="{false}" active="{true}" />
         </div>
         <div
             class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
@@ -34,7 +34,7 @@
         </div>
     </div>
     <div class="h-full ml-3">
-        <iframe src="https://www.rum-x.com/search/" class="h-full w-full border-none" loading="lazy" />
+        <iframe src="https://www.rum-x.com/search/" title="Rhum List" class="h-full w-full border-none" loading="lazy" />
     </div>
     <div class="absolute left-1 top-0 bottom-0 m-auto w-0.5 h-40 bg-white rounded cursor-col-resize" />
 </div>

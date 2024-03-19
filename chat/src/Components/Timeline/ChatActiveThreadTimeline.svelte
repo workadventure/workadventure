@@ -37,8 +37,6 @@
 
     let writingTimer: ReturnType<typeof setTimeout> | undefined;
 
-    export let settingsView = false;
-
     let htmlMessageText = "";
     let input: HTMLElement;
 

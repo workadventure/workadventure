@@ -3,7 +3,7 @@
 </script>
 
 <div
-    class="group/overlay overlay-chat h-screen max-w-[300px] opacity-80 hover:opacity-100 hover:bg-contrast/50 pt-24 transition-all absolute z-[300] top-0 left-0 pointer-events-auto"
+    class="group/overlay overlay-chat h-screen max-w-[300px] opacity-80 hover:opacity-100 hover:bg-contrast/50 pt-24 transition-all absolute z-[300] top-0 left-0 pointer-events-auto hidden sm:block"
 >
     <div class="relative h-full">
         <div class="group-hover/overlay:visible invisible flex absolute bottom-0 w-full p-4 bg-contrast">
@@ -36,7 +36,7 @@
 
 <style lang="scss">
     .overlay-chat {
-        -webkit-mask-image: -webkit-gradient(
+        mask-image: -webkit-gradient(
             linear,
             left 50%,
             left bottom,
@@ -44,7 +44,7 @@
             to(rgba(0, 0, 0, 0))
         );
         &:hover {
-            -webkit-mask-image: none;
+          mask-image: none;
         }
     }
 </style>

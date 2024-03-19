@@ -55,16 +55,21 @@
 <svelte:window on:keydown={onKeyDown} />
 
 <div
-    class="menu-container fixed h-screen w-screen z-[2000] pointer-events-auto top-0 {isMobile
+    class="menu-container fixed h-screen w-screen z-[2000] pointer-events-auto top-0 transition-all {isMobile
         ? 'mobile'
         : $modalIframeStore?.position} {isFullScreened ? 'fullscreened' : ''}"
     bind:this={mainModal}
 >
     <div class="w-full h-full bg-contrast/80 backdrop-blur rounded" transition:blur={{ amount: 10, duration: 250 }}>
-        <div class="flex bg-contrast/80 backdrop-blur p-2 space-x-2 rounded-lg absolute top-4 right-4 z-50 ">
+        <div
+            class="flex bg-contrast/80 backdrop-blur p-2 space-x-0 @lg/main-layout:space-x-2 rounded-lg absolute top-4 right-4 z-50 "
+        >
             {#if modalUrl != undefined}
                 {#if $modalIframeStore?.allow}
-                    <button class="btn btn-light btn-ghost rounded" on:click={() => (isFullScreened = !isFullScreened)}>
+                    <button
+                        class="btn btn-light btn-ghost rounded hidden @lg/main-layout:block"
+                        on:click={() => (isFullScreened = !isFullScreened)}
+                    >
                         {#if isFullScreened}
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -115,7 +120,6 @@
 
 <style lang="scss">
     .menu-container {
-        @apply transition-all;
         &.mobile {
             width: 100% !important;
             height: 100% !important;
@@ -126,7 +130,7 @@
         }
         &.right:not(.fullscreened),
         &.left:not(.fullscreened) {
-            @apply w-1/3;
+            width: 33%;
         }
         &.right {
             right: 0;

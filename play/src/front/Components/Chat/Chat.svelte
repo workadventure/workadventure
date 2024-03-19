@@ -287,18 +287,5 @@
             width: 100%;
             height: 100%;
         }
-        .hide {
-            top: 13px;
-            position: absolute;
-            right: 12px;
-            width: fit-content;
-            height: fit-content;
-            .close-window {
-                height: 1.6rem;
-                width: 1.6rem;
-                position: initial;
-                cursor: pointer;
-            }
-        }
     }
 </style>
