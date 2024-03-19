@@ -3,6 +3,10 @@ import { Area } from "../../Entity/Area";
 import { GameScene } from "../GameScene";
 import { mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
 
+/**
+ * This class handle the display
+ * of Phaser Areas objects
+ */
 export class AreasManager {
     private areas: Area[] = [];
     private areaPermissions: AreaPermissions;
@@ -15,14 +19,6 @@ export class AreasManager {
     ) {
         this.areaPermissions = new AreaPermissions(gameMapAreas, userConnectedTags, userCanEdit);
         this.initializeAreas();
-    }
-
-    private initializeAreas() {
-        const gameMapAreas = this.gameMapAreas.getAreas();
-        gameMapAreas.forEach((areaData) =>
-            this.areas.push(new Area(this.scene, areaData, !this.areaPermissions.isUserHasAreaAccess(areaData.id)))
-        );
-        this.updateMapEditorOptionForThematics();
     }
 
     public addArea(areaData: AreaData): void {
@@ -52,8 +48,16 @@ export class AreasManager {
         this.updateMapEditorOptionForThematics();
     }
 
+    private initializeAreas() {
+        const gameMapAreas = this.gameMapAreas.getAreas();
+        gameMapAreas.forEach((areaData) =>
+            this.areas.push(new Area(this.scene, areaData, !this.areaPermissions.isUserHasAreaAccess(areaData.id)))
+        );
+        this.updateMapEditorOptionForThematics();
+    }
+
     private updateMapEditorOptionForThematics() {
-        const isGameMapHasThematics = this.gameMapAreas.isGameMapContainsThematics() ? true : false;
+        const isGameMapHasThematics = this.gameMapAreas.isGameMapContainsThematics();
         mapEditorActivatedForThematics.set(isGameMapHasThematics);
     }
 }
