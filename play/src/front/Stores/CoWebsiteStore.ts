@@ -39,6 +39,8 @@ export function createCoWebsiteStore() {
     };
 }
 
+//ancien store
+
 // function createCoWebsiteStore() {
 //     const { subscribe, set, update } = writable(Array<CoWebsite>());
 

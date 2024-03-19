@@ -5,42 +5,45 @@
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
-    import jitsiIcon from "../images/jitsi.png";
-    import meetingIcon from "../images/meeting.svg";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
 
     export let coWebsite: CoWebsite;
-    export let active = false;
     export let isLoading = false;
     export let isClosable = true;
+    let active = false;
     let isJitsi: boolean = coWebsite instanceof JitsiCoWebsite;
     let isBBB: boolean = coWebsite instanceof BBBCoWebsite;
     let cowebsiteName: string;
-    let url: string;
-    let cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon");
     let urlForFavicon = coWebsite.getUrl().toString();
-    let tabIcon: { src: string };
 
     onMount(() => {
         if (isJitsi) {
             const favicon = `https://s2.googleusercontent.com/s2/favicons?domain=${urlForFavicon}`;
-            cowebsiteTabIcon?.setAttribute("src", favicon);
+            const cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
+            if (cowebsiteTabIcon) {
+                cowebsiteTabIcon.src = favicon;
+            }
             cowebsiteName = "Jitsi meeting";
-            url = coWebsite.getUrl().toString();
+            isClosable = false;
         } else if (isBBB) {
             const favicon = `https://s2.googleusercontent.com/s2/favicons?domain=${urlForFavicon}`;
-            cowebsiteTabIcon?.setAttribute("src", favicon);
+            const cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
+            if (cowebsiteTabIcon) {
+                cowebsiteTabIcon.src = favicon;
+            }
             cowebsiteName = "BigBlueButton meeting";
-            url = coWebsite.getUrl().toString();
+            isClosable = false;
         } else {
             const favicon = `https://s2.googleusercontent.com/s2/favicons?domain=${urlForFavicon}`;
-            cowebsiteTabIcon?.setAttribute("src", favicon);
-            console.log("Other meeting");
+            const cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
+            if (cowebsiteTabIcon) {
+                cowebsiteTabIcon.src = favicon;
+            }
             cowebsiteName = coWebsite.getUrl().toString();
             cowebsiteName = cowebsiteName.replace(/.+\/\/|www.|\..+/g, "");
             cowebsiteName = cowebsiteName.charAt(0).toUpperCase() + cowebsiteName.slice(1);
-            url = coWebsite.getUrl().toString();
+            isClosable = true;
         }
     });
 
@@ -58,7 +61,7 @@
         : 'text-white hover:bg-white/10'}"
 >
     {#if isLoading}
-        <img alt="favicon" id="cowebsiteTabIcon" />
+        <img alt="icon" id="cowebsiteTabIcon" />
     {:else}
         <div class="h-6 w-6 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}">
             <LoaderIcon
@@ -69,7 +72,7 @@
         </div>
     {/if}
     <div class="p-2 text-ellipsis overflow-hidden">
-        <div class="bold leading-3 text-ellipsis max-w-[150px] whitespace-nowrap overflow-hidden">
+        <div class="bold leading-3 text-ellipsis pb-1 max-w-[150px] whitespace-nowrap overflow-hidden">
             {#if isLoading}
                 {cowebsiteName}
             {:else}

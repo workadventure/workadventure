@@ -10,11 +10,6 @@
     import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
     import BigBlueButtonCowebsiteComponent from "../Cowebsites/BigBlueButtonCowebsiteComponent.svelte";
-    import { identity } from "lodash";
-    // import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
-    // import { ICON_URL } from "../../Enum/EnvironmentVariable";
-    // import jitsiIcon from "../images/jitsi.png";
-    // import meetingIcon from "../images/meeting.svg";
 
     export let vertical = false;
     let activeCowebsite = $coWebsites[0].getId();
@@ -45,7 +40,6 @@
         };
 
         return () => {
-            // Cleanup event listener
             resizeBar.removeEventListener("mousedown", handleMouseDown);
             document.removeEventListener("mousemove", handleMouseMove);
             document.removeEventListener("mouseup", handleMouseUp);
@@ -62,36 +56,21 @@
 
     function toggleFullScreen() {
         cowebsiteContainer = document.getElementById("cowebsites-container");
-        console.log("toggleFullScreen");
+        resizeBar = document.getElementById("resize-bar") as HTMLElement;
         if (!document.fullscreenElement) {
             if (cowebsiteContainer && cowebsiteContainer.requestFullscreen) {
                 cowebsiteContainer.requestFullscreen().catch((e) => {
                     console.error(e);
                 });
+                resizeBar.style.display = "none";
             }
         } else if (document.exitFullscreen) {
             document.exitFullscreen().catch((e) => {
                 console.error(e);
             });
+            resizeBar.style.display = "block";
         }
     }
-
-    // function addDivForResize() {
-    //     if (div === null) {
-    //         div.style.display = "none";
-    //     } else {
-    //         const div = document.createElement("div");
-    //         div.style.width = "100%";
-    //         div.style.height = "100%";
-    //         div.style.position = "absolute";
-    //         div.style.top = "0";
-    //         div.style.left = "0";
-    //         div.style.zIndex = "1000";
-    //         div.style.backgroundColor = "pink";
-    //         div.style.opacity = "0.4";
-    //         document.body.appendChild(div);
-    //     }
-    // }
 
     function addDivForResize() {
         const div = document.createElement("div");
@@ -102,7 +81,6 @@
         div.style.top = "0";
         div.style.left = "0";
         div.style.zIndex = "1000";
-        div.style.opacity = "0.4";
         document.body.appendChild(div);
 
         window.addEventListener("mouseup", removeDivForResize);
@@ -123,7 +101,7 @@
     transition:fly={{ duration: 750, x: 1000 }}
     bind:this={container}
 >
-    <div class="flex py-2 ml-3 items-center">
+    <div class="flex py-2 ml-3 items-center tab-display">
         <div class="grow flex">
             {#each $coWebsites as coWebsite (coWebsite.getId())}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -131,30 +109,7 @@
                     class={`${activeCowebsite === coWebsite.getId()}`}
                     on:click={() => setActiveCowebsite(coWebsite.getId())}
                 >
-                    {#if coWebsite instanceof JitsiCoWebsite}
-                        <CoWebsiteTab
-                            {coWebsite}
-                            isLoading={true}
-                            isClosable={false}
-                            on:close={() => coWebsites.remove(coWebsite)}
-                        />
-                    {/if}
-                    {#if coWebsite instanceof SimpleCoWebsite}
-                        <CoWebsiteTab
-                            {coWebsite}
-                            isLoading={true}
-                            isClosable={true}
-                            on:close={() => coWebsites.remove(coWebsite)}
-                        />
-                    {/if}
-                    {#if coWebsite instanceof BBBCoWebsite}
-                        <CoWebsiteTab
-                            {coWebsite}
-                            isLoading={true}
-                            isClosable={true}
-                            on:close={() => coWebsites.remove(coWebsite)}
-                        />
-                    {/if}
+                    <CoWebsiteTab {coWebsite} isLoading={true} on:close={() => coWebsites.remove(coWebsite)} />
                 </div>
             {/each}
         </div>
@@ -181,41 +136,19 @@
                 {/if}
             {/if}
         {/each}
-
-        <!-- {#each $coWebsites as coWebsite (coWebsite.getId())}
-            {#if activeCowebsite === coWebsite.getId()}
-
-                {#if coWebsite instanceof SimpleCowebsiteComponent}
-                <SimpleCowebsiteComponent actualCowebsite={coWebsite} />
-                {/if}
-            {/if}
-        {/each}
-
-        Itérer sur les cowebsite avec les sveltes components voir pour instance de jitsi -->
-
-        <!-- {#each $coWebsites as coWebsite (coWebsite.getId())} -->
-        <!-- {#if activeCowebsite === coWebsite.getId()}
-                {#if coWebsite instanceof JitsiCoWebsite}
-                    <JitsiCowebsiteComponent actualCowebsite={coWebsite} />
-                {/if}
-            {/if} -->
-        <!-- {/each} -->
-
-        <!-- Exemple itération sur ce que je vais devoir faire -->
-        <!-- <div class="popups">
-            {#each $coWebsites as coWebsite (coWebsite.getId())}
-                <div class="container">
-                    <svelte:component this={cowebsite.component} {...coWebsite.props} on:close={() => coWebsites.remove(coWebsite.getId())} />
-                </div>
-            {/each}
-        </div> -->
     </div>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
-        class="absolute left-1 top-0 bottom-0 m-auto w-4 h-40 bg-white rounded cursor-col-resize test-resize"
+        class="absolute left-1 top-0 bottom-0 m-auto w-2 h-40 bg-white rounded cursor-col-resize test-resize"
         id="resize-bar"
         bind:this={resizeBar}
         on:mousedown={addDivForResize}
         on:dragend={removeDivForResize}
     />
 </div>
+
+<style>
+    .tab-display {
+        overflow: auto;
+    }
+</style>
