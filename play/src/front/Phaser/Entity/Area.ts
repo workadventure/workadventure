@@ -8,6 +8,8 @@ import LL from "../../../i18n/i18n-svelte";
 export class Area extends Phaser.GameObjects.Rectangle {
     private areaCollider: Phaser.Physics.Arcade.Collider | undefined = undefined;
     private userHasCollideWithArea = false;
+    private highlightTimeOut: undefined | NodeJS.Timeout = undefined;
+    private collideTimeOut: undefined | NodeJS.Timeout = undefined;
 
     constructor(public readonly scene: GameScene, public areaData: AreaData, collide?: boolean) {
         super(
@@ -43,6 +45,16 @@ export class Area extends Phaser.GameObjects.Rectangle {
         }
     }
 
+    destroy(fromScene?: boolean) {
+        super.destroy(fromScene);
+        if (this.highlightTimeOut !== undefined) {
+            clearTimeout(this.highlightTimeOut);
+        }
+        if (this.collideTimeOut !== undefined) {
+            clearTimeout(this.collideTimeOut);
+        }
+    }
+
     private applyCollider() {
         if (this.areaCollider === undefined) {
             this.areaCollider = this.scene.physics.add.collider(this.scene.CurrentPlayer, this, () =>
@@ -53,7 +65,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
 
     private highLightArea() {
         this.setVisible(true);
-        setTimeout(() => this.setVisible(false), 1000);
+        this.highlightTimeOut = setTimeout(() => this.setVisible(false), 1000);
     }
 
     private displayWarningMessageOnCollide() {
@@ -65,7 +77,7 @@ export class Area extends Phaser.GameObjects.Rectangle {
             this.userHasCollideWithArea = true;
             this.highLightArea();
             this.displayWarningMessageOnCollide();
-            setTimeout(() => (this.userHasCollideWithArea = false), 3000);
+            this.collideTimeOut = setTimeout(() => (this.userHasCollideWithArea = false), 3000);
         }
     }
 }
