@@ -1,9 +1,16 @@
 import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
 import { Capabilities } from "@workadventure/messages";
-import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import type { AdminBannedData, FetchMemberDataByUuidResponse, FetchMemberDataForAWorld } from "./AdminApi";
 import { ShortMapDescriptionList } from "./ShortMapDescription";
 
 export interface AdminInterface {
+    /**
+     * @var worldslug is the name of the world
+     * @return Promise<FetchMemberDataForAWorld>
+     */
+    fetch;
+    getMembersOfWorld(worldslug: string): Promise<FetchMemberDataForAWorld>;
+
     /**
      * @var playUri is url of the room
      * @var userIdentifier can to be undefined or email or uuid

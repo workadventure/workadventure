@@ -1164,13 +1164,11 @@ export class SocketManager implements ZoneEventListener {
             const space = socketData.spaces.find((space) => space.name === newFilter.spaceName);
             if (space) {
                 space.handleAddFilter(client, addSpaceFilterMessage);
-                let spacesFilter = socketData.spacesFilters.get(space.name);
+                let spacesFilter = socketData.spacesFilters.get(space.name) || [];
                 if (!spacesFilter) {
-                    spacesFilter = [newFilter];
-                } else {
-                    spacesFilter.push(newFilter);
+                    spacesFilter = [...spacesFilter, newFilter];
+                    socketData.spacesFilters.set(space.name, spacesFilter);
                 }
-                socketData.spacesFilters.set(space.name, spacesFilter);
             }
         }
     }

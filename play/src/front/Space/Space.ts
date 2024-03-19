@@ -19,6 +19,8 @@ export interface SpaceUserExtended extends SpaceUser {
 }
 
 const spaceLogger = debug("Space");
+
+//spaceWatcher
 export class Space {
     private readonly _users: MapStore<number, SpaceUserExtended>;
     private readonly _metadata: MapStore<string, unknown>;
@@ -31,86 +33,46 @@ export class Space {
         this.subscribers.push(
             this.connection.addSpaceUserMessageStream.subscribe((message) => {
                 spaceLogger(`Space => ${this.name} => addSpaceUserMessageStream`, message);
+
+                if (message.user === undefined) return;
+                if (!this.isTargetThisSpace(message.spaceName, message.filterName)) return;
+
                 const user = message.user;
-                if (message.spaceName === name && message.filterName === spaceFilter.filterName && user !== undefined) {
-                    this._users.set(user.id, this.extendSpaceUser(user));
-                }
+                this._users.set(user.id, this.extendSpaceUser(user));
             })
         );
         this.subscribers.push(
             this.connection.updateSpaceUserMessageStream.subscribe((message) => {
                 spaceLogger(`Space => ${this.name} => updateSpaceUserMessageStream`, message);
+
+                if (!this.isTargetThisSpace(message.spaceName, message.filterName)) return;
+
                 const partialUser = message.user;
-                if (
-                    message.spaceName === name &&
-                    message.filterName === spaceFilter.filterName &&
-                    partialUser !== undefined
-                ) {
-                    const user = this._users.get(partialUser.id);
-                    if (user !== undefined) {
-                        if (partialUser.name !== undefined) {
-                            user.name = partialUser.name;
-                        }
-                        if (partialUser.playUri !== undefined) {
-                            user.playUri = partialUser.playUri;
-                        }
-                        if (partialUser.color !== undefined) {
-                            user.color = partialUser.color;
-                        }
-                        if (partialUser.characterTextures !== undefined) {
-                            user.characterTextures = partialUser.characterTextures;
-                        }
-                        if (partialUser.isLogged !== undefined) {
-                            user.isLogged = partialUser.isLogged;
-                        }
-                        if (partialUser.availabilityStatus !== undefined) {
-                            user.availabilityStatus = partialUser.availabilityStatus;
-                        }
-                        if (partialUser.roomName !== undefined) {
-                            user.roomName = partialUser.roomName;
-                        }
-                        if (partialUser.visitCardUrl !== undefined) {
-                            user.visitCardUrl = partialUser.visitCardUrl;
-                        }
-                        if (partialUser.tags !== undefined) {
-                            user.tags = partialUser.tags;
-                        }
-                        if (partialUser.microphoneState !== undefined) {
-                            user.microphoneState = partialUser.microphoneState;
-                        }
-                        if (partialUser.cameraState !== undefined) {
-                            user.cameraState = partialUser.cameraState;
-                        }
-                        if (partialUser.megaphoneState !== undefined) {
-                            user.megaphoneState = partialUser.megaphoneState;
-                        }
-                        if (partialUser.screenSharingState !== undefined) {
-                            user.screenSharingState = partialUser.screenSharingState;
-                        }
-                        if (partialUser.jitsiParticipantId !== undefined) {
-                            user.jitsiParticipantId = partialUser.jitsiParticipantId;
-                        }
-                        if (partialUser.uuid !== undefined) {
-                            user.uuid = partialUser.uuid;
-                        }
-                        user.updateSubject.next({
-                            newUser: user,
-                            changes: partialUser,
-                        });
-                        this._users.set(partialUser.id, user);
-                    }
-                }
+                if (partialUser === undefined) return;
+
+                let user = this._users.get(partialUser.id);
+                if (user === undefined) return;
+
+                user = {
+                    ...user,
+                    ...partialUser,
+                } as SpaceUserExtended;
+
+                user.updateSubject.next({
+                    newUser: user,
+                    changes: partialUser,
+                });
+                this._users.set(partialUser.id, user);
             })
         );
         this.subscribers.push(
             this.connection.removeSpaceUserMessageStream.subscribe((message) => {
                 spaceLogger(`Space => ${this.name} => removeSpaceUserMessageStream`, message);
-                if (message.spaceName === name && message.filterName === spaceFilter.filterName) {
-                    const user = this._users.get(message.userId);
-                    if (user !== undefined) {
-                        user.updateSubject.complete();
-                        this._users.delete(message.userId);
-                    }
+                if (!this.isTargetThisSpace(message.spaceName, message.filterName)) return;
+                const user = this._users.get(message.userId);
+                if (user !== undefined) {
+                    user.updateSubject.complete();
+                    this._users.delete(message.userId);
                 }
             })
         );
@@ -130,6 +92,11 @@ export class Space {
                 }
             })
         );
+    }
+
+    isTargetThisSpace(spaceName: string, filterName: string | undefined): boolean {
+        if (this.spaceFilter.filterName === filterName && this.name === spaceName) return true;
+        return false;
     }
 
     public destroy() {

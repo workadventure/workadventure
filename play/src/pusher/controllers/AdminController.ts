@@ -5,6 +5,7 @@ import { z } from "zod";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import { adminToken } from "../middlewares/AdminToken";
 import { validatePostQuery } from "../services/QueryValidator";
+import { adminService } from "../services/AdminService";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class AdminController extends BaseHttpController {
@@ -14,6 +15,7 @@ export class AdminController extends BaseHttpController {
         this.getRoomsList();
         this.sendChatMessagePrompt();
         this.dispatchGlobalEvent();
+        this.getMembersOfTheActualWorld();
     }
 
     /**
@@ -394,6 +396,30 @@ export class AdminController extends BaseHttpController {
                 res.send("ok");
             });
             return;
+        });
+    }
+
+    getMembersOfTheActualWorld(): void {
+        this.app.get("/worlds/:worldslug/members", async (req: Request, res: Response) => {
+            const { members, total } = await adminService.getMembersOfWorld(req.params.worldslug);
+
+            const MAX_USER_TO_DISPLAY = 200;
+
+            if (total > MAX_USER_TO_DISPLAY) {
+                res.status(403).json({
+                    message: "Too many members search a member",
+                });
+            }
+
+            if (total === 0) {
+                res.status(204).json({
+                    message: "No members for this world",
+                });
+            }
+
+            return res.status(202).json({
+                members,
+            });
         });
     }
 }

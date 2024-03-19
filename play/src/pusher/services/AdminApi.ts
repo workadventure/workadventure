@@ -1,6 +1,6 @@
 import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
-import type { AdminApiData, MapDetailsData, RoomRedirect } from "@workadventure/messages";
+import type { AdminApiData, MapDetailsData, RoomRedirect, UserData } from "@workadventure/messages";
 import {
     Capabilities,
     CompanionDetail,
@@ -107,11 +107,17 @@ export const isFetchMemberDataByUuidSuccessResponse = z.object({
     }),
 });
 
+export const isFetchMemberDataForAWorld = z.object({
+    total: z.number().positive(),
+    members: z.array(isFetchMemberDataByUuidSuccessResponse),
+});
 export type FetchMemberDataByUuidSuccessResponse = z.infer<typeof isFetchMemberDataByUuidSuccessResponse>;
 
 export const isFetchMemberDataByUuidResponse = z.union([isFetchMemberDataByUuidSuccessResponse, ErrorApiData]);
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
+
+export type FetchMemberDataForAWorld = z.infer<typeof isFetchMemberDataForAWorld>;
 
 class AdminApi implements AdminInterface {
     private capabilities: Capabilities = {};
@@ -982,6 +988,18 @@ class AdminApi implements AdminInterface {
             );
         }
         return;
+    }
+    async getMembersOfWorld(worldSlug: string, offset = 0): Promise<FetchMemberDataForAWorld> {
+        const response: { total: number; data: UserData[] } = await axios.get(
+            `${ADMIN_API_URL}/api/worlds/${worldSlug}/members`,
+            {
+                headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            }
+        );
+        return {
+            total: response.total,
+            members: response.data,
+        };
     }
 }
 

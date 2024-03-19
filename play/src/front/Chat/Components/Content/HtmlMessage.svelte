@@ -9,8 +9,9 @@
     export let html: string;
     export let message: Message;
 
-    beforeUpdate(() => {
-        html = marked.parse(html);
+    beforeUpdate(async () => {
+        // eslint-disable-next-line require-atomic-updates
+        html = await marked.parse(html);
     });
 
     onMount(() => {
