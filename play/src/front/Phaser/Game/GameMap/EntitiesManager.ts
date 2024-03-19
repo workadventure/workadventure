@@ -75,6 +75,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
      */
     private pointerOverEntitySubject = new Subject<Entity>();
     private pointerOutEntitySubject = new Subject<Entity>();
+
     constructor(scene: GameScene, gameMapFrontWrapper: GameMapFrontWrapper) {
         super();
         this.scene = scene;
@@ -223,6 +224,43 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         });
     }
 
+    public getEntities(): Map<string, Entity> {
+        return this.entities;
+    }
+
+    public getActivatableEntities(): Entity[] {
+        return this.activatableEntities;
+    }
+
+    public getPointerOverEntityObservable(): Observable<Entity> {
+        return this.pointerOverEntitySubject.asObservable();
+    }
+
+    public getPointerOutEntityObservable(): Observable<Entity> {
+        return this.pointerOutEntitySubject.asObservable();
+    }
+
+    public clearProperties(): void {
+        this.properties.clear();
+    }
+
+    public close() {
+        this.actionsMenuStoreUnsubscriber();
+        this.gameSceneIsLoadedStoreUnsubscriber();
+    }
+
+    public setAllEntitiesPointedToEditColor(color: number) {
+        for (const entity of this.entities.values()) {
+            entity.setPointedToEditColor(color);
+        }
+    }
+
+    public removeAllEntitiesPointedToEditColor() {
+        for (const entity of this.entities.values()) {
+            entity.removePointedToEditColor();
+        }
+    }
+
     private bindEventHandlers(): void {
         this.ctrlKey?.on("down", () => {
             if (!this.scene.input.activePointer.leftButtonDown()) {
@@ -271,7 +309,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.emit(EntitiesManagerEvent.UpdateEntity, data);
         });
         entity.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
-            if (!entity.userCanEdit) {
+            if (!entity.canEdit) {
                 return;
             }
             if (
@@ -337,7 +375,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 return;
             }
 
-            if (!entity.userCanEdit) {
+            if (!entity.canEdit) {
                 return;
             }
 
@@ -354,7 +392,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     return;
                 }
 
-                if (!entity.userCanEdit) {
+                if (!entity.canEdit) {
                     return;
                 }
 
@@ -366,7 +404,7 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         entity.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
             this.pointerOverEntitySubject.next(entity);
             if (get(mapEditorModeStore) && this.isEntityEditorToolActive()) {
-                if (!entity.userCanEdit) {
+                if (!entity.canEdit) {
                     return;
                 }
                 entity.setPointedToEditColor(this.isTrashEditorToolActive() ? 0xff0000 : 0x00ff00);
@@ -432,41 +470,5 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     private isTrashEditorToolActive(): boolean {
         return get(mapEditorSelectedToolStore) === EditorToolName.TrashEditor;
-    }
-
-    public getEntities(): Map<string, Entity> {
-        return this.entities;
-    }
-
-    public getActivatableEntities(): Entity[] {
-        return this.activatableEntities;
-    }
-
-    public getPointerOverEntityObservable(): Observable<Entity> {
-        return this.pointerOverEntitySubject.asObservable();
-    }
-
-    public getPointerOutEntityObservable(): Observable<Entity> {
-        return this.pointerOutEntitySubject.asObservable();
-    }
-
-    public clearProperties(): void {
-        this.properties.clear();
-    }
-
-    public close() {
-        this.actionsMenuStoreUnsubscriber();
-        this.gameSceneIsLoadedStoreUnsubscriber();
-    }
-
-    public setAllEntitiesPointedToEditColor(color: number) {
-        for (const entity of this.entities.values()) {
-            entity.setPointedToEditColor(color);
-        }
-    }
-    public removeAllEntitiesPointedToEditColor() {
-        for (const entity of this.entities.values()) {
-            entity.removePointedToEditColor();
-        }
     }
 }
