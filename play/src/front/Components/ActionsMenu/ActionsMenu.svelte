@@ -77,7 +77,7 @@
         {/if}
         <div class="flex items-center bg-contrast" class:margin-close={!actionsMenuData.menuName}>
             <button type="button" class="btn btn-ghost justify-center basis-1/2 m-2 w-full" on:click={closeActionsMenu}>
-                Close <!-- Trad -->
+                {$LL.actionbar.close()}
             </button>
             {#if sortedActions}
                 {#each sortedActions ?? [] as action (action.actionName)}

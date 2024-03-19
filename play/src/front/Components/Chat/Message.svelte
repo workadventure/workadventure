@@ -14,6 +14,5 @@
         class="group-hover:h-3 group-hover:opacity-100 group-hover:visible invisible opacity-0 h-0 transition-all text-xxs mt-1 mb-2 ml-4 text-white"
     >
         <span class="opacity-50">{time}</span> <span class="bold">{user}</span>
-        <!-- trad -->
     </div>
 </div>

@@ -1,6 +1,7 @@
 import type { BaseTranslation } from "../i18n-types";
 
 const actionbar: BaseTranslation = {
+    understand: "Got it!",
     edit: "Edit",
     cancel: "Cancel",
     close: "Close",

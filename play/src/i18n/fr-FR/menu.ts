@@ -116,6 +116,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "Messages globaux",
         contact: "Contact",
         report: "Remonter un bug",
+        help: "Besoin d'aide ?",
     },
 };
 

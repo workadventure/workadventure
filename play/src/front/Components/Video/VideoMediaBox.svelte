@@ -311,7 +311,7 @@
                         </svg>
                         <div class="text-lg bold">{$LL.video.no_video_stream_received()}</div>
                         <div class="italic text-xs opacity-50">
-                            Consulter l'aide ou rafraichir la page <!-- Trad -->
+                            {$LL.menu.sub.help()}
                         </div>
                     </div>
                 </div>
