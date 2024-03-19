@@ -828,7 +828,7 @@ export class GameScene extends DirtyScene {
 
     public getEntityPermissions(): EntityPermissions {
         if (this.entityPermissions === undefined) {
-            throw new Error("EntityPermissions not instanciated yet");
+            throw new Error("EntityPermissions not instantiated yet");
         }
         return this.entityPermissions;
     }
