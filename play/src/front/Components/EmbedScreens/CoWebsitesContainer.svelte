@@ -12,12 +12,14 @@
     import BigBlueButtonCowebsiteComponent from "../Cowebsites/BigBlueButtonCowebsiteComponent.svelte";
 
     export let vertical = false;
-    let activeCowebsite = $coWebsites[0].getId();
+    export let activeCowebsite = $coWebsites[0].getId();
     let cowebsiteContainer: HTMLElement | null;
     let container: HTMLElement;
     let resizeBar: HTMLElement;
     let startX: number;
     let startWidth: number;
+    let active = false;
+    let coWebsiteTab = document.getElementById("cowebsite-tab");
 
     onMount(() => {
         const handleMouseDown = (e) => {
@@ -106,6 +108,7 @@
             {#each $coWebsites.slice().reverse() as coWebsite (coWebsite.getId())}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
+                    id="cowebsite-tab"
                     class={`${activeCowebsite === coWebsite.getId()}`}
                     on:click={() => setActiveCowebsite(coWebsite.getId())}
                 >
@@ -150,3 +153,9 @@
         on:dragend={removeDivForResize}
     />
 </div>
+
+<style>
+    .active {
+        background-color: white;
+    }
+</style>

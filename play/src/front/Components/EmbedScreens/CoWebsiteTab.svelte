@@ -11,7 +11,7 @@
     export let coWebsite: CoWebsite;
     export let isLoading = false;
     export let isClosable = true;
-    export let active: boolean;
+    export let active = false;
     let isJitsi: boolean = coWebsite instanceof JitsiCoWebsite;
     let isBBB: boolean = coWebsite instanceof BBBCoWebsite;
     let cowebsiteName: string;
@@ -55,10 +55,12 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- Pour effet clic onglets -->
 <div
     class="text flex items-center px-2 mr-2 rounded transition-all {active
-        ? 'bg-lime-500'
-        : 'stroke-white fill-transparent'}"
+        ? 'text-contrast bg-white hover:bg-white/90 translate-y-2 rounded-b-none pt-1'
+        : 'text-white hover:bg-white/10'}"
+    on:click={() => (active = !active)}
 >
     {#if isLoading}
         <img alt="icon" id="cowebsiteTabIcon" />
