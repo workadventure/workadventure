@@ -103,7 +103,7 @@
 >
     <div class="flex py-2 ml-3 items-center tab-display">
         <div class="grow flex">
-            {#each $coWebsites as coWebsite (coWebsite.getId())}
+            {#each $coWebsites.slice().reverse() as coWebsite (coWebsite.getId())}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class={`${activeCowebsite === coWebsite.getId()}`}
@@ -137,7 +137,6 @@
             {/if}
         {/each}
     </div>
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
         class="absolute left-1 top-0 bottom-0 m-auto w-2 h-40 bg-white rounded cursor-col-resize test-resize"
         id="resize-bar"
