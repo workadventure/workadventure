@@ -79,6 +79,28 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         });
     }
 
+    public get description(): string | undefined {
+        const descriptionProperty: EntityDescriptionPropertyData | undefined = this.entityData.properties.find(
+            (p) => p.type === "entityDescriptionProperties"
+        ) as EntityDescriptionPropertyData | undefined;
+        return descriptionProperty?.description;
+    }
+
+    public get searchable(): boolean | undefined {
+        const descriptionProperty: EntityDescriptionPropertyData | undefined = this.entityData.properties.find(
+            (p) => p.type === "entityDescriptionProperties"
+        ) as EntityDescriptionPropertyData | undefined;
+        return descriptionProperty?.searchable;
+    }
+
+    public get canEdit(): boolean {
+        return (this.scene as GameScene).getEntityPermissions().canEdit(this.getCenter());
+    }
+
+    public get canRead(): boolean {
+        return (this.scene as GameScene).getEntityPermissions().canRead(this.getCenter());
+    }
+
     /**
      * This method is being used after command execution from outside and it will not trigger any emits
      */
@@ -110,7 +132,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     public activate(): void {
-        if (!this.userCanEdit && !this.userCanRead) {
+        if (!this.canEdit && !this.canRead) {
             return;
         }
         if (get(mapEditorModeStore)) {
@@ -180,12 +202,61 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         this.outlineColorStore.characterFarAway();
     }
 
-    private getCurrentOutline(): { thickness: number; color?: number } {
-        return { thickness: 2, color: get(this.outlineColorStore) };
-    }
-
     public delete() {
         this.emit(EntityEvent.Delete);
+    }
+
+    public isActivatable(): boolean {
+        return this.activatable;
+    }
+
+    public getEntityData(): Required<WAMEntityData> {
+        return this.entityData;
+    }
+
+    public getPrefab(): EntityPrefab {
+        return this.prefab;
+    }
+
+    public getProperties(): EntityDataProperties {
+        return this.entityData.properties;
+    }
+
+    public addProperty(property: EntityDataProperty): void {
+        this.entityData.properties.push(property);
+        this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
+    }
+
+    public setEntityName(name: string): void {
+        this.entityData.name = name;
+        this.emit(EntityEvent.Updated, this.appendId({ name }));
+    }
+
+    public updateProperty(changes: AtLeast<EntityDataProperty, "id">): void {
+        const property = this.entityData.properties.find((property) => property.id === changes.id);
+        if (property) {
+            merge(property, changes);
+        }
+        this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
+    }
+
+    public deleteProperty(id: string): boolean {
+        const index = this.entityData.properties.findIndex((property) => property.id === id);
+        if (index !== -1) {
+            this.entityData.properties.splice(index, 1);
+            this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public getOldPosition(): { x: number; y: number } {
+        return this.oldPosition;
+    }
+
+    private getCurrentOutline(): { thickness: number; color?: number } {
+        return { thickness: 2, color: get(this.outlineColorStore) };
     }
 
     private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
@@ -193,7 +264,7 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
     }
 
     private hasAnyPropertiesSet(): boolean {
-        if (!this.userCanEdit && !this.userCanRead) {
+        if (!this.canEdit && !this.canRead) {
             return false;
         }
         if (!this.entityData.properties) {
@@ -324,81 +395,10 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
         return actions;
     }
 
-    public isActivatable(): boolean {
-        return this.activatable;
-    }
-
-    public getEntityData(): Required<WAMEntityData> {
-        return this.entityData;
-    }
-
-    public getPrefab(): EntityPrefab {
-        return this.prefab;
-    }
-
-    public getProperties(): EntityDataProperties {
-        return this.entityData.properties;
-    }
-
-    public addProperty(property: EntityDataProperty): void {
-        this.entityData.properties.push(property);
-        this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
-    }
-
-    public setEntityName(name: string): void {
-        this.entityData.name = name;
-        this.emit(EntityEvent.Updated, this.appendId({ name }));
-    }
-
-    public updateProperty(changes: AtLeast<EntityDataProperty, "id">): void {
-        const property = this.entityData.properties.find((property) => property.id === changes.id);
-        if (property) {
-            merge(property, changes);
-        }
-        this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
-    }
-
-    public deleteProperty(id: string): boolean {
-        const index = this.entityData.properties.findIndex((property) => property.id === id);
-        if (index !== -1) {
-            this.entityData.properties.splice(index, 1);
-            this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public getOldPosition(): { x: number; y: number } {
-        return this.oldPosition;
-    }
-
     private appendId(data: Partial<WAMEntityData>): Partial<EntityData> {
         return {
             ...data,
             id: this.entityId,
         };
-    }
-
-    public get description(): string | undefined {
-        const descriptionProperty: EntityDescriptionPropertyData | undefined = this.entityData.properties.find(
-            (p) => p.type === "entityDescriptionProperties"
-        ) as EntityDescriptionPropertyData | undefined;
-        return descriptionProperty?.description;
-    }
-
-    public get searchable(): boolean | undefined {
-        const descriptionProperty: EntityDescriptionPropertyData | undefined = this.entityData.properties.find(
-            (p) => p.type === "entityDescriptionProperties"
-        ) as EntityDescriptionPropertyData | undefined;
-        return descriptionProperty?.searchable;
-    }
-
-    public get userCanEdit(): boolean {
-        return (this.scene as GameScene).getEntityPermissions().canEdit(this.getCenter());
-    }
-
-    public get userCanRead(): boolean {
-        return (this.scene as GameScene).getEntityPermissions().canRead(this.getCenter());
     }
 }
