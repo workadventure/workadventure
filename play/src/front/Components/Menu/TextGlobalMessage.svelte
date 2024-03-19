@@ -70,7 +70,7 @@
     });
 </script>
 
-<section class="section-input-send-text">
+<section class="section-input-send-text test">
     <div class="input-send-text" bind:this={QUILL_EDITOR} />
 </section>
 
@@ -118,4 +118,6 @@
             }
         }
     }
+
+
 </style>

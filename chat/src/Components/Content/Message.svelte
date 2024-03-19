@@ -438,6 +438,7 @@
 
                     <!-- Reply associated -->
                     {#if message.targetMessageReply}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
                             class="message-replied text-xs rounded-lg bg-contrast/70 px-3 py-2 text-left cursor-pointer ml-5 relative -translate-y-2"
                             on:click|preventDefault|stopPropagation={() => {
@@ -487,6 +488,7 @@
                 class="wa-error-message"
                 on:mouseleave={() => document.getElementById(`error_${message.id}`)?.classList.add("invisible")}
             >
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class={`cursor-pointer text-pop-red ml-1 flex ${needHideHeader ? "" : "mt-4"}`}
                     on:click={() => document.getElementById(`error_${message.id}`)?.classList.remove("invisible")}
@@ -494,6 +496,7 @@
                     <AlertCircleIcon size="16" />
                 </div>
                 <div id={`error_${message.id}`} class={`wa-dropdown-menu invisible`}>
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <span
                         class="wa-dropdown-item"
                         on:click={() =>
@@ -503,6 +506,7 @@
                         <RefreshCwIcon size="13" class="mr-1" />
                         {$LL.sendBack()}
                     </span>
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <span
                         class="wa-dropdown-item text-pop-red"
                         on:click={() =>

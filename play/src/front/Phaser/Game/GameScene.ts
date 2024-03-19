@@ -66,7 +66,6 @@ import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
-import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteMenuStore, emoteStore } from "../../Stores/EmoteStore";
 import {
@@ -141,6 +140,11 @@ import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { askDialogStore } from "../../Stores/MeetingStore";
 import { warningMessageStore } from "../../Stores/ErrorStore";
+import { popupStore } from "../../Stores/PopupStore";
+import PopUpRoomAccessDenied from "../../Components/PopUp/PopUpRoomAccessDenied.svelte";
+import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
+import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
+import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerActionMessage.svelte";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -159,7 +163,6 @@ import { ActivatablesManager } from "./ActivatablesManager";
 import type { AddPlayerInterface } from "./AddPlayerInterface";
 import type { CameraManagerEventCameraUpdateData } from "./CameraManager";
 import { CameraManager, CameraManagerEvent } from "./CameraManager";
-
 import { EditorToolName, MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
 import { RemotePlayersRepository } from "./RemotePlayersRepository";
 import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
@@ -2319,16 +2322,18 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("triggerActionMessage", (message) =>
-            layoutManagerActionStore.addAction({
-                uuid: message.uuid,
-                type: "message",
-                message: message.message,
-                callback: () => {
-                    layoutManagerActionStore.removeAction(message.uuid);
-                    iframeListener.sendActionMessageTriggered(message.uuid);
+            popupStore.addPopup(
+                PopUpTriggerActionMessage,
+                {
+                    message: message.message,
+                    click: () => {
+                        popupStore.removePopup(message.uuid);
+                        iframeListener.sendActionMessageTriggered(message.uuid);
+                    },
+                    userInputManager: this.userInputManager,
                 },
-                userInputManager: this.userInputManager,
-            })
+                message.uuid
+            )
         );
 
         iframeListener.registerAnswerer("setVariable", (event, source) => {
@@ -2361,7 +2366,7 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("removeActionMessage", (message) => {
-            layoutManagerActionStore.removeAction(message.uuid);
+            popupStore.removePopup(message.uuid);
         });
 
         iframeListener.registerAnswerer("setPlayerOutline", (message) => {
@@ -2484,15 +2489,17 @@ ${escapedMessage}
             console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);
 
             //show information room access denied
-            layoutManagerActionStore.addAction({
-                uuid: "roomAccessDenied",
-                type: "warning",
-                message: get(LL).warning.accessDenied.room(),
-                callback: () => {
-                    layoutManagerActionStore.removeAction("roomAccessDenied");
+            popupStore.addPopup(
+                PopUpRoomAccessDenied,
+                {
+                    message: get(LL).warning.accessDenied.room(),
+                    click: () => {
+                        popupStore.removePopup("roomAccessDenied");
+                    },
+                    userInputManager: this.userInputManager,
                 },
-                userInputManager: this.userInputManager,
-            });
+                "roomAccessDenied"
+            );
 
             this.mapTransitioning = false;
             return;
@@ -2564,7 +2571,7 @@ ${escapedMessage}
         followUsersStore.stopFollowing();
 
         audioManagerFileStore.unloadAudio();
-        layoutManagerActionStore.clearActions();
+        popupStore.clearActions();
 
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         this.connection?.closeConnection();
@@ -2657,14 +2664,19 @@ ${escapedMessage}
         const toolEditorParam = urlManager.getHashParameter("mapEditor");
         if (toolEditorParam) {
             if (!get(mapEditorActivated)) {
-                layoutManagerActionStore.addAction({
-                    uuid: "mapEditorNotEnabled",
-                    type: "warning",
-                    message: get(LL).warning.mapEditorNotEnabled(),
-                    callback: () => layoutManagerActionStore.removeAction("mapEditorNotEnabled"),
-                    userInputManager: this.userInputManager,
-                });
-                setTimeout(() => layoutManagerActionStore.removeAction("mapEditorNotEnabled"), 6_000);
+                popupStore.addPopup(
+                    PopUpMapEditorNotEnabled,
+                    {
+                        message: get(LL).warning.mapEditorNotEnabled(),
+                        click: () => {
+                            popupStore.removePopup("mapEditorNotEnabled");
+                        },
+                        userInputManager: this.userInputManager,
+                    },
+                    "mapEditorNotEnabled"
+                );
+
+                setTimeout(() => popupStore.removePopup("mapEditorNotEnabled"), 6_000);
             } else {
                 switch (toolEditorParam) {
                     case "wamSettingsEditorTool": {
@@ -2703,14 +2715,19 @@ ${escapedMessage}
                         break;
                     }
                     default: {
-                        layoutManagerActionStore.addAction({
-                            uuid: "mapEditorShortCut",
-                            type: "warning",
-                            message: get(LL).warning.mapEditorShortCut(),
-                            callback: () => layoutManagerActionStore.removeAction("mapEditorShortCut"),
-                            userInputManager: this.userInputManager,
-                        });
-                        setTimeout(() => layoutManagerActionStore.removeAction("mapEditorShortCut"), 6_000);
+                        popupStore.addPopup(
+                            PopUpMapEditorShortcut,
+                            {
+                                message: get(LL).warning.mapEditorShortCut(),
+                                click: () => {
+                                    popupStore.removePopup("mapEditorShortCut");
+                                },
+                                userInputManager: this.userInputManager,
+                            },
+                            "mapEditorShortCut"
+                        );
+
+                        setTimeout(() => popupStore.removePopup("mapEditorShortCut"), 6_000);
                         break;
                     }
                 }

@@ -16,7 +16,6 @@ import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
 import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
-import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
 import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -33,6 +32,10 @@ import { gameManager } from "../GameManager";
 import { iframeListener } from "../../../Api/IframeListener";
 import { chatZoneLiveStore } from "../../../Stores/ChatStore";
 import { Room } from "../../../Connection/Room";
+import { popupStore } from "../../../Stores/PopupStore";
+import JitsiPopup from "../../../Components/PopUp/PopUpJitsi.svelte";
+import PopUpTab from "../../../Components/PopUp/PopUpTab.svelte"; // Replace 'path/to/PopUpTab' with the actual path to the PopUpTab class
+import PopUpCowebsite from "../../../Components/PopUp/PopupCowebsite.svelte"; // Import the necessary module
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -266,13 +269,19 @@ export class AreasPropertiesListener {
                 if (message === undefined) {
                     message = get(LL).trigger.newTab();
                 }
-                layoutManagerActionStore.addAction({
-                    uuid: actionId,
-                    type: "message",
-                    message: message,
-                    callback: () => scriptUtils.openTab(property.link as string),
-                    userInputManager: this.scene.userInputManager,
-                });
+
+                popupStore.addPopup(
+                    PopUpTab,
+                    {
+                        message: message,
+                        click: () => {
+                            popupStore.removePopup(actionId);
+                            scriptUtils.openTab(property.link as string);
+                        },
+                        userInputManager: this.scene.userInputManager,
+                    },
+                    actionId
+                );
             } else {
                 scriptUtils.openTab(property.link);
             }
@@ -297,13 +306,17 @@ export class AreasPropertiesListener {
 
             this.coWebsitesActionTriggers.set(property.id, actionId);
 
-            layoutManagerActionStore.addAction({
-                uuid: actionId,
-                type: "message",
-                message: message,
-                callback: () => this.openCoWebsiteFunction(property, coWebsiteOpen, actionId),
-                userInputManager: this.scene.userInputManager,
-            });
+            popupStore.addPopup(
+                PopUpCowebsite,
+                {
+                    message: message,
+                    click: () => {
+                        this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+                    },
+                    userInputManager: this.scene.userInputManager,
+                },
+                actionId
+            );
         } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
             const coWebsite = new SimpleCoWebsite(
                 new URL(property.link ?? "", this.scene.mapUrlFile),
@@ -400,7 +413,7 @@ export class AreasPropertiesListener {
 
             analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
-            layoutManagerActionStore.removeAction("jitsi");
+            popupStore.removePopup("jitsi");
         };
 
         const jitsiTriggerValue = property.trigger;
@@ -410,15 +423,17 @@ export class AreasPropertiesListener {
             if (message === undefined) {
                 message = get(LL).trigger.jitsiRoom();
             }
-            layoutManagerActionStore.addAction({
-                uuid: "jitsi",
-                type: "message",
-                message: message,
-                callback: () => {
-                    openJitsiRoomFunction().catch((e) => console.error(e));
+            popupStore.addPopup(
+                JitsiPopup,
+                {
+                    message: message,
+                    callback: () => {
+                        openJitsiRoomFunction().catch((e) => console.error(e));
+                    },
+                    userInputManager: this.scene.userInputManager,
                 },
-                userInputManager: this.scene.userInputManager,
-            });
+                "jitsi"
+            );
         } else {
             openJitsiRoomFunction().catch((e) => console.error(e));
         }
@@ -454,7 +469,7 @@ export class AreasPropertiesListener {
             return;
         }
 
-        const actionStore = get(layoutManagerActionStore);
+        const actionStore = get(popupStore);
         const actionTriggerUuid = this.coWebsitesActionTriggers.get(property.id);
 
         if (!actionTriggerUuid) {
@@ -467,7 +482,7 @@ export class AreasPropertiesListener {
                 : undefined;
 
         if (action) {
-            layoutManagerActionStore.removeAction(actionTriggerUuid);
+            popupStore.removePopup(actionTriggerUuid);
         }
 
         this.coWebsitesActionTriggers.delete(property.id);
@@ -495,7 +510,7 @@ export class AreasPropertiesListener {
     }
 
     private handleJitsiRoomPropertyOnLeave(property: JitsiRoomPropertyData): void {
-        layoutManagerActionStore.removeAction("jitsi");
+        popupStore.removePopup("jitsi");
         coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
             if (coWebsite instanceof JitsiCoWebsite) {
                 coWebsiteManager.closeCoWebsite(coWebsite);
@@ -534,8 +549,7 @@ export class AreasPropertiesListener {
         coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
             console.error("Error during loading a co-website: " + coWebsite.getUrl());
         });
-
-        layoutManagerActionStore.removeAction(actionId);
+        popupStore.removePopup(actionId);
     }
 
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {

@@ -81,5 +81,6 @@
             <MapEditor />
         {/if}
         <MainLayout />
+        <!--message=""-->
     {/key}
 {/if}

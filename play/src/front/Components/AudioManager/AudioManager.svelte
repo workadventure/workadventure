@@ -135,7 +135,7 @@
 </script>
 
 <div
-    class="main-audio-manager absolute bottom-4 bg-contrast/80 backdrop-blur left-0 right-0 m-auto rounded-lg p-4"
+    class="main-audio-manager absolute bottom-4 w-[500px] left-0 right-0 m-auto rounded-lg p-4 mb-7"
     transition:fly={{ y: -200, duration: 500 }}
     class:hidden={state !== "playing" && state !== "not_allowed"}
 >
@@ -144,6 +144,7 @@
             {$LL.audio.volumeCtrl()}
         </div>
         <div class="audio-manager-player-volume flex items-center justify-center">
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
                 id="audioplayer_volume_icon_playing"
                 bind:this={audioPlayerVolumeIcon}

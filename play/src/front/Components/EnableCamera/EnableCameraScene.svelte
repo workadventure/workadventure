@@ -41,6 +41,8 @@
     let speakerEdit = false;
     let selectedCamera: string | undefined = undefined;
     let selectedMicrophone: string | undefined = undefined;
+    // let selectedSpeaker: string | undefined = undefined;
+    const sound = new Audio("/resources/objects/webrtc-in.mp3");
 
     let legalStrings: string[] = [];
     if (legals?.termsOfUseUrl) {
@@ -83,8 +85,8 @@
     }
 
     function submit() {
-        selectCamera();
-        selectMicrophone();
+        selectCamera(selectedCamera);
+        selectMicrophone(selectedMicrophone);
         enableCameraScene.login();
     }
 
@@ -134,6 +136,7 @@
         requestedCameraState.enableWebcam();
         requestedMicrophoneState.enableMicrophone();
         batchGetUserMediaStore.commitChanges();
+        sound.load();
     });
 
     function selectCamera(selectedCamera: string | undefined = undefined) {
@@ -158,9 +161,13 @@
         localUserStore.setPreferredAudioInputDevice(selectedMicrophone);
     }
 
-    function selectSpeaker(deviceId: string) {
-        localUserStore.setSpeakerDeviceId(deviceId);
+    function selectSpeaker(deviceId: string | undefined) {
+        localUserStore.setSpeakerDeviceId(deviceId ?? "");
         speakerSelectedStore.set(deviceId);
+    }
+
+    function playSoundClick() {
+        sound.play().catch((e) => console.error(e));
     }
 </script>
 
@@ -442,6 +449,7 @@
                                             selectSpeaker(speaker.deviceId);
                                             speakerEdit = false;
                                         }}
+                                        on:click={playSoundClick}
                                     >
                                         <div
                                             class="aspect-square h-6 rounded-full border border-solid border-white flex items-center justify-center {$speakerSelectedStore ===
@@ -508,8 +516,6 @@
 
 <style lang="scss">
     .enableCameraScene {
-
-
         h2 {
             margin: 1px;
         }
@@ -517,6 +523,5 @@
         section.text-center {
             text-align: center;
         }
-
     }
 </style>

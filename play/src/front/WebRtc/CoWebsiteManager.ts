@@ -18,8 +18,17 @@ export enum iframeStates {
     loading, // loading an iframe can be slow, so we show some placeholder until it is ready
     opened,
 }
+
+// const cowebsiteDomId = "cowebsite"; // the id of the whole container.
+// const gameOverlayDomId = "game-overlay";
+// const cowebsiteBufferDomId = "cowebsite-buffer"; // the id of the container who contains cowebsite iframes.
+// const cowebsiteAsideHolderDomId = "cowebsite-aside-holder";
+// const cowebsiteLoaderDomId = "cowebsite-loader";
+// const cowebsiteCloseButtonId = "cowebsite-close";
+// const cowebsiteFullScreenButtonId = "cowebsite-fullscreen";
 const cowebsiteOpenFullScreenImageId = "cowebsite-fullscreen-open";
 const cowebsiteCloseFullScreenImageId = "cowebsite-fullscreen-close";
+// const cowebsiteSwipeButtonId = "cowebsite-swipe";
 const cowebsiteSlotBaseDomId = "cowebsite-slot-";
 const animationTime = 500; //time used by the css transitions, in ms.
 
@@ -28,6 +37,17 @@ class CoWebsiteManager {
 
     private _onResize: Subject<void> = new Subject();
     public onResize = this._onResize.asObservable();
+
+    // private cowebsiteDom: HTMLDivElement;
+    // private resizing = false;
+    // private gameOverlayDom: HTMLDivElement;
+    // private cowebsiteBufferDom: HTMLDivElement;
+    // private cowebsiteAsideHolderDom: HTMLDivElement;
+    // private cowebsiteLoaderDom: HTMLDivElement;
+    // private previousTouchMoveCoordinates: TouchMoveCoordinates | null = null; //only use on touchscreens to track touch movement
+    private coWebsiteResizeSize = 50;
+
+    //    private buttonCloseCoWebsite: HTMLElement;
 
     private loaderAnimationInterval: {
         interval: NodeJS.Timeout | undefined;
@@ -47,6 +67,14 @@ class CoWebsiteManager {
     }
 
     constructor() {
+        // this.cowebsiteDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDomId);
+        // this.gameOverlayDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(gameOverlayDomId);
+        // this.cowebsiteBufferDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteBufferDomId);
+        // this.cowebsiteAsideHolderDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteAsideHolderDomId);
+        // this.cowebsiteLoaderDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteLoaderDomId);
+
+        // this.buttonCloseCoWebsite = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
+
         this.loaderAnimationInterval = {
             interval: undefined,
             trails: undefined,
@@ -59,6 +87,7 @@ class CoWebsiteManager {
 
     public getCoWebsiteBuffer(): HTMLDivElement {
         throw new Error("To be reimplemented");
+        // return this.cowebsiteBufferDom;
     }
 
     public getDevicePixelRatio(): number {
@@ -106,12 +135,33 @@ class CoWebsiteManager {
             const logo = document.createElement("img");
             logo.id = "custom-logo";
             logo.src = customLogo;
+            //            this.cowebsiteLoaderDom.parentNode?.replaceChild(logo, this.cowebsiteLoaderDom);
+            //            this.cowebsiteLoaderDom.style.display = "block";
             return;
         }
 
+        //      this.cowebsiteLoaderDom.style.display = "block";
         this.loaderAnimationInterval.interval = setInterval(() => {
             if (!this.loaderAnimationInterval.trails) {
                 this.loaderAnimationInterval.trails = [0, 1, 2];
+            }
+
+            for (let trail = 1; trail < this.loaderAnimationInterval.trails.length + 1; trail++) {
+                for (let state = 0; state < 4; state++) {
+                    /*                    const stateDom = this.cowebsiteLoaderDom.querySelector(
+                        `#trail-${trail}-state-${state}`
+                    ) as SVGPolygonElement;
+
+                    if (!stateDom) {
+                        continue;
+                    }
+
+                    stateDom.style.visibility =
+                        this.loaderAnimationInterval.trails[trail - 1] !== 0 &&
+                        this.loaderAnimationInterval.trails[trail - 1] >= state
+                            ? "visible"
+                            : "hidden";*/
+                }
             }
 
             this.loaderAnimationInterval.trails = this.loaderAnimationInterval.trails.map((trail) =>
@@ -123,12 +173,59 @@ class CoWebsiteManager {
     private desactivateMainLoaderAnimation() {
         if (this.loaderAnimationInterval.interval) {
             //            this.cowebsiteLoaderDom.style.display = "none";
+            //            this.cowebsiteLoaderDom.style.display = "none";
             clearInterval(this.loaderAnimationInterval.interval);
         }
     }
 
-    private loadMain(): void {
+    private saveMainSize() {
+        /*      this.coWebsiteResizeSize = this.verticalMode
+            ? Math.round((this.height * 100) / window.innerHeight)
+            : Math.round((this.width * 100) / window.innerWidth);*/
+    }
+
+    public restoreMainSize() {
+        /*        this.verticalMode ? (this.cowebsiteDom.style.width = "") : (this.cowebsiteDom.style.height = "");
+        this.verticalMode
+            ? (this.height = Math.round((this.coWebsiteResizeSize * window.innerHeight) / 100))
+            : (this.width = Math.round((this.coWebsiteResizeSize * window.innerWidth) / 100));*/
+    }
+
+    private loadMain(openingWidth?: number): void {
         this.activateMainLoaderAnimation();
+
+        // const newWidth = openingWidth ?? 50;
+
+        /*        if (newWidth > 75 && !this.isFullScreen) {
+            this.coWebsiteResizeSize = 75;
+            this.toggleFullscreen();
+        } else if (this.verticalMode) {
+            const holderPercent = Math.round((this.cowebsiteAsideHolderDom.offsetHeight * 100) / window.innerHeight);
+
+            if (newWidth < holderPercent) {
+                newWidth = holderPercent;
+            } else if (newWidth > this.maxWidth) {
+                newWidth = 100;
+            }
+
+            this.cowebsiteDom.style.width = "";
+            this.height = Math.round((newWidth * window.innerHeight) / 100);
+            this.saveMainSize();
+        } else {
+            const holderPercent = Math.round((this.cowebsiteAsideHolderDom.offsetWidth * 100) / window.innerWidth);
+
+            if (newWidth < holderPercent) {
+                newWidth = holderPercent;
+            } else if (newWidth > this.maxWidth) {
+                newWidth = 100;
+            }
+
+            this.cowebsiteDom.style.height = "";
+            this.width = Math.round((newWidth * window.innerWidth) / 100);
+            this.saveMainSize();
+        }
+
+        this.cowebsiteDom.classList.add("opened");*/
         this.openedMain.set(iframeStates.loading);
     }
 

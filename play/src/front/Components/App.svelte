@@ -191,8 +191,11 @@
 </script>
 
 <div class="bg-contrast h-screen w-screen absolute z-[2]" />
+<div class="bg-contrast h-screen w-screen absolute z-[2]" />
 <div class="main-container z-10 relative">
     <!-- Create the editor container -->
+    <GameOverlay {game} />
+    <div id="game" bind:this={gameDiv} class="absolute top-0 -z-10" />
     <GameOverlay {game} />
     <div id="game" bind:this={gameDiv} class="absolute top-0 -z-10" />
     <CoWebsitesContainer />

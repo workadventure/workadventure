@@ -1,25 +1,19 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
-    import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { emoteDataStoreLoading, emoteMenuStore } from "../Stores/EmoteStore";
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpCameraSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
-    import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
     import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
-    import { followStateStore } from "../Stores/FollowStore";
-    import { peerStore } from "../Stores/PeerStore";
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
     import {
         showLimitRoomModalStore,
         modalVisibilityStore,
-        showModalGlobalComminucationVisibilityStore,
         modalPopupVisibilityStore,
-        roomListVisibilityStore,
+        showModalGlobalComminucationVisibilityStore,
     } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
@@ -28,21 +22,18 @@
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
+    import { popupStore } from "../Stores/PopupStore";
     import { askDialogStore } from "../Stores/MeetingStore";
     import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
-    import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
-    import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
-    import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
     import Menu from "./Menu/Menu.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
     import WarningBanner from "./WarningContainer/WarningBanner.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
-    import FollowMenu from "./FollowMenu/FollowMenu.svelte";
     import BanMessageContainer from "./TypeMessage/BanMessageContainer.svelte";
     import TextMessageContainer from "./TypeMessage/TextMessageContainer.svelte";
     import AudioPlaying from "./UI/AudioPlaying.svelte";
@@ -61,6 +52,7 @@
     import WarningToast from "./WarningContainer/WarningToast.svelte";
 
     let mainLayout: HTMLDivElement;
+    // export let message: string;
 
     let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
@@ -69,13 +61,16 @@
 
     onMount(() => {
         resizeObserver.observe(mainLayout);
+        // ...
     });
 </script>
 
 <!-- Components ordered by z-index -->
 <div
     id="main-layout"
-    class="@container/main-layout relative z-10 h-screen pointer-events-none {[...$coWebsites.values()].length === 0 ? 'not-cowebsite' : ''}"
+    class="@container/main-layout relative z-10 h-screen pointer-events-none {[...$coWebsites.values()].length === 0
+        ? 'not-cowebsite'
+        : ''}"
     bind:this={mainLayout}
 >
     {#if $modalVisibilityStore || $modalPopupVisibilityStore}
@@ -110,10 +105,6 @@
             </div>
         {/if}
 
-        {#if $soundPlayingStore}
-            <AudioPlaying url={$soundPlayingStore} />
-        {/if}
-
         {#if $warningBannerStore}
             <WarningBanner />
         {/if}
@@ -134,30 +125,29 @@
             <HelpPopUpBlocked />
         {/if}
 
-        {#if $audioManagerVisibilityStore}
-            <AudioManager />
+        {#if $soundPlayingStore}
+            <AudioPlaying url={$soundPlayingStore} />
         {/if}
 
         {#if $showLimitRoomModalStore}
             <LimitRoomModal />
         {/if}
 
-        {#if $followStateStore !== "off" || $peerStore.size > 0}
-            <FollowMenu />
-        {/if}
-
         {#if $requestVisitCardsStore}
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
         {/if}
 
-        {#if hasEmbedScreen}
+        <!-- {#if $hasEmbedScreen}
             <EmbedScreensContainer />
-        {/if}
+        {/if} -->
 
         {#if $uiWebsitesStore}
             <UiWebsiteContainer />
         {/if}
 
+        {#if $modalVisibilityStore}
+            <Modal />
+        {/if}
         {#if $modalVisibilityStore}
             <Modal />
         {/if}
@@ -177,185 +167,37 @@
         {#if $modalPopupVisibilityStore}
             <Popup />
         {/if}
-        {#if $roomListVisibilityStore}
+
+        {#if $modalVisibilityStore}
             <MapList />
         {/if}
+
         {#if $warningMessageStore.length > 0}
             <WarningToast />
         {/if}
     </section>
-
-    {#if $layoutManagerActionVisibilityStore}
-        <LayoutActionManager />
-    {/if}
 
     {#if $actionsMenuStore}
         <ActionsMenu />
     {/if}
 
     <ActionBar />
+    <!-- svelte-ignore missing-declaration -->
+    <div class="popups">
+        {#each $popupStore.slice().reverse() as popup (popup.uuid)}
+            <div class="popupwrapper">
+                <svelte:component
+                    this={popup.component}
+                    {...popup.props}
+                    on:close={() => popupStore.removePopup(popup.uuid)}
+                />
+            </div>
+        {/each}
+    </div>
 
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 
-    <!--
-    <div class="fixed bottom-16 scale-[80%] blur-[4px] opacity-50 left-0 right-0 m-auto bg-contrast/80 backdrop-blur text-white w-[500px] rounded-lg overflow-hidden z-[201]">
-        <div class="flex p-4 space-x-4 pointer-events-auto">
-            <div class="">
-                <button class="btn btn-light btn-ghost opacity-20 btn-sm">
-                    <ChevronLeftIcon height="h-4" width="w-4" />
-                </button>
-            </div>
-            <div class="grow">
-                <button class="btn btn-light btn-ghost btn-sm">
-                    <ChevronRightIcon height="h-4" width="w-4" />
-                </button>
-            </div>
-            <div class="">
-                <button class="btn btn-secondary btn-sm">
-                    <XIcon height="h-4" width="w-4" />
-                </button>
-            </div>
-        </div>
-        <div class="flex pb-4 px-8 space-x-4">
-            <div>
-                <svg width="59" height="59" viewBox="0 0 59 59" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.8677 44.1154V35.0185C17.8677 32.8352 16.0978 31.0653 13.9143 31.0653H4.81749C2.63426 31.0653 0.864258 32.8352 0.864258 35.0185V44.1154C0.864258 46.2987 2.63426 48.0686 4.81749 48.0686H13.9143C16.0978 48.0686 17.8677 46.2987 17.8677 44.1154Z" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M38.0017 44.1155V35.0187C38.0017 32.8353 36.2318 31.0654 34.0485 31.0654H24.9515C22.7683 31.0654 20.9983 32.8353 20.9983 35.0187V44.1155C20.9983 46.2988 22.7683 48.0687 24.9515 48.0687H34.0485C36.2318 48.0687 38.0017 46.2988 38.0017 44.1155Z" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M20.998 18.3337V23.9814C20.998 26.1651 22.768 27.9351 24.9517 27.9351H34.0483C36.232 27.9351 38.002 26.1651 38.002 23.9814V14.8848C38.002 12.7011 36.232 10.9311 34.0483 10.9311H24.9517C22.7692 10.9311 21.0004 12.6988 20.998 14.8813" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M50.5382 48.0688H54.182C56.3656 48.0688 58.1356 46.2988 58.1356 44.1152V35.0186C58.1356 32.8349 56.3656 31.066 54.182 31.066H45.0854C42.9017 31.066 41.1328 32.8349 41.1328 35.0186V44.1152C41.1328 46.2988 42.9017 48.0688 45.0854 48.0688H47.0812" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M3.82153 40.4702L6.27787 34.0209C6.328 33.8982 6.50177 33.8979 6.55213 34.0207L8.98611 40.4702" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M4.58765 38.864H8.23251" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M48.607 37.1995C48.607 38.9487 47.6363 40.3326 46.096 40.3595C45.5835 40.3685 44.2585 40.3735 44.2585 40.3735C44.2585 40.3735 44.2502 38.0741 44.2502 37.1925C44.2502 36.4685 44.2456 34.0255 44.2456 34.0255H46.0435C47.7328 34.0255 48.607 35.4505 48.607 37.1995Z" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M28.3154 34.6012C28.3154 34.6012 27.1416 33.6146 25.7574 34.0315C24.4864 34.4144 24.3087 35.88 25.2282 36.4794C25.2282 36.4794 26.1304 36.8819 27.1312 37.251C29.5402 38.1397 28.5025 40.4702 26.5631 40.4702C25.5921 40.4702 24.777 40.045 24.2837 39.5006" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M23.8315 14.546L24.8839 19.8662C24.9226 19.9751 25.077 19.974 25.1142 19.8647L26.7573 14.5559V14.546L28.3963 19.8662C28.435 19.9751 28.5895 19.974 28.6267 19.8647L29.6831 14.5559" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M35.0347 22.3364L32.6456 19.9474L30.2566 22.3364" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M32.6458 20.5235V25.0726" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M30.2566 43.3435L32.6456 45.7325L35.0347 43.3435" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M32.6458 45.1564V40.6073" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12.7631 40.7809L10.374 43.1699L12.7631 45.559" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10.9502 43.1699H15.4993" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M52.3701 40.7809L54.7592 43.1699L52.3701 45.559" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M54.1834 43.1699H49.6343" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <div class="flex flex-col">
-                <div class="text-xs uppercase opacity-50">
-                    Move your woka and discover world
-                </div>
-                <div class="text-lg">
-                    Use your keyboard to move and meet people!
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="fixed bottom-10 scale-[90%] blur-[2px] opacity-75 left-0 right-0 m-auto bg-contrast/80 backdrop-blur text-white w-[500px] rounded-lg overflow-hidden z-[202]">
-        <div class="flex p-4 space-x-4 pointer-events-auto">
-            <div class="">
-                <button class="btn btn-light btn-ghost opacity-20 btn-sm">
-                    <ChevronLeftIcon height="h-4" width="w-4" />
-                </button>
-            </div>
-            <div class="grow">
-                <button class="btn btn-light btn-ghost btn-sm">
-                    <ChevronRightIcon height="h-4" width="w-4" />
-                </button>
-            </div>
-            <div class="">
-                <button class="btn btn-secondary btn-sm">
-                    <XIcon height="h-4" width="w-4" />
-                </button>
-            </div>
-        </div>
-        <div class="flex pb-4 px-8 space-x-4">
-            <div>
-                <svg width="59" height="59" viewBox="0 0 59 59" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.8677 44.1154V35.0185C17.8677 32.8352 16.0978 31.0653 13.9143 31.0653H4.81749C2.63426 31.0653 0.864258 32.8352 0.864258 35.0185V44.1154C0.864258 46.2987 2.63426 48.0686 4.81749 48.0686H13.9143C16.0978 48.0686 17.8677 46.2987 17.8677 44.1154Z" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M38.0017 44.1155V35.0187C38.0017 32.8353 36.2318 31.0654 34.0485 31.0654H24.9515C22.7683 31.0654 20.9983 32.8353 20.9983 35.0187V44.1155C20.9983 46.2988 22.7683 48.0687 24.9515 48.0687H34.0485C36.2318 48.0687 38.0017 46.2988 38.0017 44.1155Z" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M20.998 18.3337V23.9814C20.998 26.1651 22.768 27.9351 24.9517 27.9351H34.0483C36.232 27.9351 38.002 26.1651 38.002 23.9814V14.8848C38.002 12.7011 36.232 10.9311 34.0483 10.9311H24.9517C22.7692 10.9311 21.0004 12.6988 20.998 14.8813" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M50.5382 48.0688H54.182C56.3656 48.0688 58.1356 46.2988 58.1356 44.1152V35.0186C58.1356 32.8349 56.3656 31.066 54.182 31.066H45.0854C42.9017 31.066 41.1328 32.8349 41.1328 35.0186V44.1152C41.1328 46.2988 42.9017 48.0688 45.0854 48.0688H47.0812" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M3.82153 40.4702L6.27787 34.0209C6.328 33.8982 6.50177 33.8979 6.55213 34.0207L8.98611 40.4702" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M4.58765 38.864H8.23251" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M48.607 37.1995C48.607 38.9487 47.6363 40.3326 46.096 40.3595C45.5835 40.3685 44.2585 40.3735 44.2585 40.3735C44.2585 40.3735 44.2502 38.0741 44.2502 37.1925C44.2502 36.4685 44.2456 34.0255 44.2456 34.0255H46.0435C47.7328 34.0255 48.607 35.4505 48.607 37.1995Z" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M28.3154 34.6012C28.3154 34.6012 27.1416 33.6146 25.7574 34.0315C24.4864 34.4144 24.3087 35.88 25.2282 36.4794C25.2282 36.4794 26.1304 36.8819 27.1312 37.251C29.5402 38.1397 28.5025 40.4702 26.5631 40.4702C25.5921 40.4702 24.777 40.045 24.2837 39.5006" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M23.8315 14.546L24.8839 19.8662C24.9226 19.9751 25.077 19.974 25.1142 19.8647L26.7573 14.5559V14.546L28.3963 19.8662C28.435 19.9751 28.5895 19.974 28.6267 19.8647L29.6831 14.5559" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M35.0347 22.3364L32.6456 19.9474L30.2566 22.3364" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M32.6458 20.5235V25.0726" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M30.2566 43.3435L32.6456 45.7325L35.0347 43.3435" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M32.6458 45.1564V40.6073" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12.7631 40.7809L10.374 43.1699L12.7631 45.559" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10.9502 43.1699H15.4993" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M52.3701 40.7809L54.7592 43.1699L52.3701 45.559" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M54.1834 43.1699H49.6343" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <div class="flex flex-col">
-                <div class="text-xs uppercase opacity-50">
-                    Move your woka and discover world
-                </div>
-                <div class="text-lg">
-                    Use your keyboard to move and meet people!
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="fixed bottom-4 left-0 right-0 m-auto bg-contrast/80 backdrop-blur text-white w-[500px] rounded-lg overflow-hidden z-[203]">
-        <div class="flex p-4 space-x-4 pointer-events-auto">
-            <div class="">
-                <button class="btn btn-light btn-ghost opacity-20 btn-sm">
-                    <ChevronLeftIcon height="h-4" width="w-4" />
-                </button>
-            </div>
-            <div class="grow">
-                <button class="btn btn-light btn-ghost btn-sm">
-                    <ChevronRightIcon height="h-4" width="w-4" />
-                </button>
-            </div>
-            <div class="">
-                <button class="btn btn-secondary btn-sm">
-                    <XIcon height="h-4" width="w-4" />
-                </button>
-            </div>
-        </div>
-        <div class="flex pb-4 px-8 space-x-4">
-            <div>
-                <svg width="59" height="59" viewBox="0 0 59 59" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.8677 44.1154V35.0185C17.8677 32.8352 16.0978 31.0653 13.9143 31.0653H4.81749C2.63426 31.0653 0.864258 32.8352 0.864258 35.0185V44.1154C0.864258 46.2987 2.63426 48.0686 4.81749 48.0686H13.9143C16.0978 48.0686 17.8677 46.2987 17.8677 44.1154Z" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M38.0017 44.1155V35.0187C38.0017 32.8353 36.2318 31.0654 34.0485 31.0654H24.9515C22.7683 31.0654 20.9983 32.8353 20.9983 35.0187V44.1155C20.9983 46.2988 22.7683 48.0687 24.9515 48.0687H34.0485C36.2318 48.0687 38.0017 46.2988 38.0017 44.1155Z" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M20.998 18.3337V23.9814C20.998 26.1651 22.768 27.9351 24.9517 27.9351H34.0483C36.232 27.9351 38.002 26.1651 38.002 23.9814V14.8848C38.002 12.7011 36.232 10.9311 34.0483 10.9311H24.9517C22.7692 10.9311 21.0004 12.6988 20.998 14.8813" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M50.5382 48.0688H54.182C56.3656 48.0688 58.1356 46.2988 58.1356 44.1152V35.0186C58.1356 32.8349 56.3656 31.066 54.182 31.066H45.0854C42.9017 31.066 41.1328 32.8349 41.1328 35.0186V44.1152C41.1328 46.2988 42.9017 48.0688 45.0854 48.0688H47.0812" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M3.82153 40.4702L6.27787 34.0209C6.328 33.8982 6.50177 33.8979 6.55213 34.0207L8.98611 40.4702" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M4.58765 38.864H8.23251" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M48.607 37.1995C48.607 38.9487 47.6363 40.3326 46.096 40.3595C45.5835 40.3685 44.2585 40.3735 44.2585 40.3735C44.2585 40.3735 44.2502 38.0741 44.2502 37.1925C44.2502 36.4685 44.2456 34.0255 44.2456 34.0255H46.0435C47.7328 34.0255 48.607 35.4505 48.607 37.1995Z" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M28.3154 34.6012C28.3154 34.6012 27.1416 33.6146 25.7574 34.0315C24.4864 34.4144 24.3087 35.88 25.2282 36.4794C25.2282 36.4794 26.1304 36.8819 27.1312 37.251C29.5402 38.1397 28.5025 40.4702 26.5631 40.4702C25.5921 40.4702 24.777 40.045 24.2837 39.5006" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M23.8315 14.546L24.8839 19.8662C24.9226 19.9751 25.077 19.974 25.1142 19.8647L26.7573 14.5559V14.546L28.3963 19.8662C28.435 19.9751 28.5895 19.974 28.6267 19.8647L29.6831 14.5559" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M35.0347 22.3364L32.6456 19.9474L30.2566 22.3364" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M32.6458 20.5235V25.0726" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M30.2566 43.3435L32.6456 45.7325L35.0347 43.3435" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M32.6458 45.1564V40.6073" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12.7631 40.7809L10.374 43.1699L12.7631 45.559" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10.9502 43.1699H15.4993" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M52.3701 40.7809L54.7592 43.1699L52.3701 45.559" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M54.1834 43.1699H49.6343" stroke="white" stroke-width="1.25" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <div class="flex flex-col">
-                <div class="text-xs uppercase opacity-50">
-                    Move your woka and discover world
-                </div>
-                <div class="text-lg">
-                    Use your keyboard to move and meet people!
-                </div>
-            </div>
-        </div>
-        <div class="flex p-4 space-x-4 bg-contrast mt-4 pointer-events-auto">
-            <button class="btn btn-light btn-ghost w-1/2 justify-center">View full tutorial</button>
-            <button class="btn btn-secondary w-1/2 justify-center">Close</button>
-        </div>
-    </div>
-
-        -->
     <Lazy
         on:onload={() => emoteDataStoreLoading.set(true)}
         on:loaded={() => emoteDataStoreLoading.set(false)}
@@ -367,4 +209,56 @@
 
 <style lang="scss">
     @import "../style/breakpoints.scss";
+
+    .popups {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    .popupwrapper {
+        position: absolute;
+        top: 80%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .popupwrapper:nth-child(1) {
+        z-index: 505;
+    }
+
+    .popupwrapper:nth-child(2) {
+        top: 77%;
+        transform: translate(-50%, -50%) scale(0.95);
+        filter: blur(2px);
+    }
+
+    .popupwrapper:nth-child(3) {
+        top: 74%;
+        transform: translate(-50%, -50%) scale(0.9);
+        filter: blur(4px);
+    }
+
+    .popupwrapper:nth-child(4) {
+        top: 72%;
+        transform: translate(-50%, -50%) scale(0.85);
+        filter: blur(4px);
+    }
+
+    .popupwrapper:nth-child(5) {
+        top: 68%;
+        transform: translate(-50%, -50%) scale(0.8);
+        filter: blur(4px);
+    }
+
+    .popupwrapper:nth-child(6),
+    .popupwrapper:nth-child(7),
+    .popupwrapper:nth-child(8),
+    .popupwrapper:nth-child(9),
+    .popupwrapper:nth-child(10),
+    .popupwrapper:nth-child(11),
+    .popupwrapper:nth-child(12),
+    .popupwrapper:nth-child(13) {
+        display: none;
+    }
 </style>

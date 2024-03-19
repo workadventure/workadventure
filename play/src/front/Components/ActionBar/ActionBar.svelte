@@ -64,7 +64,6 @@
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
     import { iframeListener } from "../../Api/IframeListener";
     import { peerStore } from "../../Stores/PeerStore";
-    //import { StringUtils } from "../../Utils/StringUtils";
     import {
         modalIframeStore,
         modalVisibilityStore,
@@ -74,7 +73,6 @@
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
     import { megaphoneCanBeUsedStore } from "../../Stores/MegaphoneStore";
-    import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL, ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
     import Woka from "../Woka/WokaFromUserId.svelte";
@@ -113,18 +111,20 @@
     import XIcon from "../Icons/XIcon.svelte";
     import MenuBurgerIcon from "../Icons/MenuBurgerIcon.svelte";
     import PenIcon from "../Icons/PenIcon.svelte";
-
     import { StringUtils } from "../../Utils/StringUtils";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
+
+    // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
 
-    let cameraActive = false;
     let microphoneActive = false;
+    let cameraActive = false;
     let profileMenuIsDropped = false;
     let adminMenuIsDropped = false;
     let burgerOpen = false;
     let helpActive: string | undefined = undefined;
     let navigating = false;
+    const sound = new Audio("/resources/objects/webrtc-out-button.mp3");
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -141,7 +141,7 @@
             requestedCameraState.disableWebcam();
         } else {
             requestedCameraState.enableWebcam();
-            layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone");
+            // layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"); Voir avec Hugo
         }
     }
 
@@ -151,7 +151,7 @@
             requestedMicrophoneState.disableMicrophone();
         } else {
             requestedMicrophoneState.enableMicrophone();
-            layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone");
+            // layoutManagerActionStore.removeAction("megaphoneNeedCameraOrMicrophone"); Voir avec Hugo
         }
     }
 
@@ -213,6 +213,25 @@
             emoteMenuSubStore.openEmoteMenu();
         }
     }
+
+    // function toggleGlobalMessage() { // eslint-disable-line @typescript-eslint/no-unused-vars
+    //     if ($requestedMegaphoneStore || $liveStreamingEnabledStore || $streamingMegaphoneStore) {
+    //         analyticsClient.stopMegaphone();
+    //         requestedMegaphoneStore.set(false);
+    //         streamingMegaphoneStore.set(false);
+    //         showModalGlobalComminucationVisibilityStore.set(false);
+    //         return;
+    //     }
+    //     if ($showModalGlobalComminucationVisibilityStore) {
+    //         showModalGlobalComminucationVisibilityStore.set(false);
+    //         return;
+    //     }
+
+    //     resetChatVisibility();
+    //     resetModalVisibility();
+    //     mapEditorModeStore.switchMode(false);
+    //     showModalGlobalComminucationVisibilityStore.set(true);
+    // }
 
     function toggleMapEditorMode() {
         if (isMobile) return;
@@ -397,10 +416,13 @@
         //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
         iframeListener.chatTotalMessagesToSeeStream.subscribe((total) => totalMessagesToSee.set(total));
         //resizeObserver.observe(mainHtmlDiv);
+        sound.load();
     });
 
     onDestroy(() => {
-        subscribers.map((subscriber) => subscriber());
+        // subscribers.map((subscriber) => subscriber());
+        subscribers.forEach((subscriber) => subscriber());
+        // unsubscribechatTotalMessagesToSeeStream?.unsubscribe();
         //chatTotalMessagesSubscription?.unsubscribe();
     });
 
@@ -411,21 +433,33 @@
 
     let isMobile = isMediaBreakpointUp("md");
     new ResizeObserver(() => {
-        console.log("ResizeObserver");
         isMobile = isMediaBreakpointUp("md");
         if (isMobile) {
             mapEditorModeStore.set(false);
         }
     });
 
+    // function playSoundClick() {
+    //     sound.play().catch((e) => console.error(e));
+    // }
+
     /*
     TODO Hugo : Add Room list
-    function showRoomList() {
-        resetChatVisibility();
-        resetModalVisibility();
-
-        roomListVisibilityStore.set(true);
+    function playSoundClick() {
+      sound.play().catch(e => console.error(e));
     }
+
+
+    // function showRoomList() {
+    //     resetChatVisibility();
+    //     resetModalVisibility();
+    //     roomListVisibilityStore.set(true);
+    // }
+
+
+    // on:mouseenter={() => { if (!navigating) helpActive = !!"chat"; }}
+    // on:mouseleave={() => { !navigating ? helpActive = false : '' }}
+
      */
 </script>
 
@@ -459,7 +493,7 @@
                     </div>
 
                     {#if helpActive === "chat"}
-                        <HelpTooltip title="{$LL.actionbar.help.chat.title()}" desc="{$LL.actionbar.help.chat.desc()}" />
+                        <HelpTooltip title={$LL.actionbar.help.chat.title()} desc={$LL.actionbar.help.chat.desc()} />
                     {/if}
                     {#if $chatZoneLiveStore || $peerStore.size > 0}
                         <div>
@@ -500,7 +534,7 @@
                         <UsersIcon />
                     </div>
                     {#if helpActive === "users"}
-                        <HelpTooltip title="{$LL.actionbar.help.users.title()}" desc="{$LL.actionbar.help.users.desc()}" />
+                        <HelpTooltip title={$LL.actionbar.help.users.title()} desc={$LL.actionbar.help.users.desc()} />
                     {/if}
                 </div>
             </div>
@@ -512,6 +546,7 @@
                 {#if !$silentStore}
                     <div in:fly={{ delay: 750, y: -200, duration: 750 }}>
                         <div class="flex items-center">
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
                                 class="group/btn-emoji bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square hidden sm:block"
                                 on:click={toggleEmojiPicker}
@@ -536,7 +571,10 @@
                                     />
                                 </div>
                                 {#if helpActive === "emoji" && !$emoteMenuSubStore}
-                                    <HelpTooltip title="{$LL.actionbar.help.emoji.title()}" desc="{$LL.actionbar.help.emoji.desc()}" />
+                                    <HelpTooltip
+                                        title={$LL.actionbar.help.emoji.title()}
+                                        desc={$LL.actionbar.help.emoji.desc()}
+                                    />
                                 {/if}
                                 {#if $emoteMenuSubStore}
                                     <div
@@ -717,7 +755,10 @@
                                         <FollowIcon />
                                     </div>
                                     {#if helpActive === "follow" || !emoteMenuSubStore}
-                                        <HelpTooltip title="{$LL.actionbar.help.follow.title()}" desc="{$LL.actionbar.help.follow.desc()}" />
+                                        <HelpTooltip
+                                            title={$LL.actionbar.help.follow.title()}
+                                            desc={$LL.actionbar.help.follow.desc()}
+                                        />
                                     {/if}
                                 </div>
                                 <div
@@ -742,7 +783,10 @@
                                         {/if}
                                     </div>
                                     {#if helpActive === "lock" || !emoteMenuSubStore}
-                                        <HelpTooltip title="{$LL.actionbar.help.lock.title()}" desc="{$LL.actionbar.help.lock.desc()}" />
+                                        <HelpTooltip
+                                            title={$LL.actionbar.help.lock.title()}
+                                            desc={$LL.actionbar.help.lock.desc()}
+                                        />
                                     {/if}
                                 </div>
                             {/if}
@@ -780,7 +824,10 @@
                                         {/if}
                                     </div>
                                     {#if helpActive === "mic" || !emoteMenuSubStore}
-                                        <HelpTooltip title="{$LL.actionbar.help.mic.title()}" desc="{$LL.actionbar.help.mic.desc()}" />
+                                        <HelpTooltip
+                                            title={$LL.actionbar.help.mic.title()}
+                                            desc={$LL.actionbar.help.mic.desc()}
+                                        />
                                     {/if}
                                 </div>
                             {/if}
@@ -878,6 +925,7 @@
                                             {$LL.actionbar.subtitle.microphone()}
                                         </div>
                                         {#each $microphoneListStore as microphone, index (index)}
+                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                                             <div
                                                 class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$usedMicrophoneDeviceIdStore ===
                                                 microphone.deviceId
@@ -1015,7 +1063,10 @@
                                     {/if}
                                 </div>
                                 {#if helpActive === "cam" || !emoteMenuSubStore}
-                                    <HelpTooltip title="{$LL.actionbar.help.cam.title()}" desc="{$LL.actionbar.help.cam.desc()}" />
+                                    <HelpTooltip
+                                        title={$LL.actionbar.help.cam.title()}
+                                        desc={$LL.actionbar.help.cam.desc()}
+                                    />
                                 {/if}
                             </div>
                         {/if}
@@ -1048,7 +1099,10 @@
                                     {/if}
                                 </div>
                                 {#if helpActive === "share" || !emoteMenuSubStore}
-                                    <HelpTooltip title="{$LL.actionbar.help.share.title()}" desc="{$LL.actionbar.help.share.desc()}" />
+                                    <HelpTooltip
+                                        title={$LL.actionbar.help.share.title()}
+                                        desc={$LL.actionbar.help.share.desc()}
+                                    />
                                 {/if}
                             </div>
                         {/if}
@@ -1219,7 +1273,8 @@
                                                         stroke-linecap="round"
                                                         stroke-linejoin="round"
                                                     />
-                                                </svg> <!-- TODO Hugo : SVG inline -->
+                                                </svg>
+                                                <!-- TODO Hugo : SVG inline -->
                                             </div>
                                             <div>{$LL.actionbar.mapEditor()}</div>
                                         </li>
@@ -1292,15 +1347,21 @@
                                 <div class="text-xxs bold whitespace-nowrap select-none flex items-center">
                                     {#if $availabilityStatusStore === 1}
                                         <div class="aspect-square h-2 w-2 bg-success rounded-full mr-2" />
-                                        <div class="text-success hidden @xl/actions:block">{$LL.actionbar.status.online()}</div>
+                                        <div class="text-success hidden @xl/actions:block">
+                                            {$LL.actionbar.status.online()}
+                                        </div>
                                     {/if}
                                     {#if $availabilityStatusStore === 2}
                                         <div class="aspect-square h-2 w-2 bg-warning rounded-full mr-2" />
-                                        <div class="text-warning hidden @xl/actions:block">{$LL.actionbar.status.away()}</div>
+                                        <div class="text-warning hidden @xl/actions:block">
+                                            {$LL.actionbar.status.away()}
+                                        </div>
                                     {/if}
                                     {#if $availabilityStatusStore === 3}
                                         <div class="aspect-square h-2 w-2 bg-danger rounded-full mr-2" />
-                                        <div class="text-danger hidden @xl/actions:block">{$LL.actionbar.status.disturb()}</div>
+                                        <div class="text-danger hidden @xl/actions:block">
+                                            {$LL.actionbar.status.disturb()}
+                                        </div>
                                     {/if}
                                 </div>
                             </div>

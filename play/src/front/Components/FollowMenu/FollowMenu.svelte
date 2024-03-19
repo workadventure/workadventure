@@ -34,12 +34,12 @@
 
 {#if $followStateStore === "requesting" && $followRoleStore === "follower"}
     <div
-        class="interact-menu text-center text-white w-96 absolute bottom-12 left-0 right-0 pointer-events-auto z-[150] right-0 left-0 m-auto bg-contrast/80 backdrop-blur rounded-lg overflow-hidden"
+        class="interact-menu text-center text-white sm:w-[500px] sm:h-[250px] -mt-4 absolute left-0 right-0 pointer-events-auto z-[150] right-0 left-0 m-auto rounded-lg overflow-hidden margin-bottom responsive-follow-follower"
     >
-        <div class="my-8 text-lg bold">
+        <div class="mt-12 text-lg bold responsive-follow-follower">
             <div>
                 <svg
-                    class="opacity-50"
+                    class="opacity-50 mb-4 responsive-svg"
                     width="23"
                     height="23"
                     viewBox="0 0 23 23"
@@ -57,16 +57,13 @@
             </div>
             {$LL.follow.interactMenu.title.follow({ leader: name($followUsersStore[0]) })}
         </div>
-        <div class="flex flex-row justify-evenly bg-contrast p-4">
-            <button
-                type="button"
-                class="btn btn-ghost btn-sm btn-light w-full justify-center mr-1"
-                on:click|preventDefault={reset}
+        <div class="flex p-4 space-x-4 bg-contrast mt-12 pointer-events-auto mt-18 responsive-button-follow">
+            <button type="button" class="btn btn-light btn-ghost w-1/2 justify-center" on:click|preventDefault={reset}
                 >{$LL.follow.interactMenu.no()}
             </button>
             <button
                 type="button"
-                class="btn btn-secondary btn-sm w-full justify-center ml-1"
+                class="btn btn-secondary btn btn-secondary w-1/2 justify-center"
                 on:click|preventDefault={acceptFollowRequest}
                 >{$LL.follow.interactMenu.yes()}
             </button>
@@ -97,7 +94,7 @@
 
 {#if $followStateStore === "active" || $followStateStore === "ending"}
     <div
-        class="blue-dialog-box outline-light w-72 min-h-10 absolute bottom-12 text-center m-auto right-0 left-0 z-[150] bg-contrast/80 backdrop-blur rounded-lg overflow-hidden text-white animate-bounce hover:animate-none transition-all pointer-events-auto"
+        class="blue-dialog-box outline-light w-96 min-h-10 absolute bottom-16 mb-8 text-center m-auto right-0 left-0 z-[150] rounded-lg overflow-hidden text-white hover:animate-none transition-all pointer-events-auto responsive-follow-asker"
     >
         {#if $followRoleStore === "follower"}
             <div class="m-1 px-8 py-4">
@@ -151,3 +148,28 @@
         {/if}
     </div>
 {/if}
+
+<style>
+    @media screen and (max-width: 480px) {
+        .responsive-follow-asker {
+            width: auto;
+            z-index: 550;
+            text-align: center;
+            pointer-events: auto;
+            margin-bottom: -28px;
+        }
+
+        .responsive-follow-follower {
+            margin-top: 8px;
+            scale: 1;
+        }
+
+        .responsive-button-follow {
+            margin-top: 16px;
+        }
+
+        .responsive-svg {
+            display: none;
+        }
+    }
+</style>

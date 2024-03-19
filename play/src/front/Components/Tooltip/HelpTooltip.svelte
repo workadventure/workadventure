@@ -1,6 +1,5 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-
     import tooltipArrow from "../images/arrow-top.svg";
     export let hasImage = true;
     export let hasDesc = true;
@@ -32,9 +31,7 @@
             {title}
         </div>
         {#if hasDesc}
-            <div class="text-xxs opacity-50 px-4">
-                {desc}
-            </div>
+            {desc}
         {/if}
     </div>
 </div>
