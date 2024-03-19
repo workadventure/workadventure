@@ -19,6 +19,7 @@ const actionbar: BaseTranslation = {
     bo: "Back office",
     globalMessage: "Envoyer un message global",
     mapEditor: "Éditeur de carte",
+    app: "Ouvrir / Fermer les applications",
     camera: {
         disabled: "Votre caméra est désactivé",
         activate: "Activer votre camera",
