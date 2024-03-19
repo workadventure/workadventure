@@ -967,6 +967,9 @@ export class GameScene extends DirtyScene {
                     await this.mapEditorModeManager?.updateMapToNewest(commandsToApply);
                 }
 
+                //TODO:Create SpaceManager
+                //TODO:Send Message for join space
+
                 this.tryOpenMapEditorWithToolEditorParameter();
 
                 this.subscribeToStores();
@@ -1896,7 +1899,7 @@ ${escapedMessage}
                 _newChatMessageSubject.next(text);
             })
         );
-/**
+        /**
  *         this.iframeSubscriptionList.push(
             iframeListener.newChatMessageWritingStatusStream.subscribe((status) => {
                 _newChatMessageWritingStatusSubject.next(status);
@@ -2132,11 +2135,11 @@ ${escapedMessage}
         );
 
         iframeListener.registerAnswerer("openCoWebsite", async (openCoWebsite, source) => {
-            return openCoWebSite(openCoWebsite,source);
+            return openCoWebSite(openCoWebsite, source);
         });
 
         iframeListener.registerAnswerer("getCoWebsites", () => {
-           return getCoWebSite();
+            return getCoWebSite();
         });
 
         iframeListener.registerAnswerer("closeCoWebsite", (coWebsiteId) => {
@@ -2568,7 +2571,7 @@ ${escapedMessage}
                 iframeListener.unregisterScript(script);
             }
         }
-        
+
         uiWebsiteManager.closeAll();
         followUsersStore.stopFollowing();
 

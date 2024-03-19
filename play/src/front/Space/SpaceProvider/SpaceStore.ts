@@ -89,7 +89,7 @@ export function createSpaceStore(
             });
         },
 
-        updateUserData(spaceName: string, userData: Required<Partial<SpaceUser>, "id">): void {
+        updateUserData(spaceName: string, userData: Required<"id">): void {
             update((spaceStore: Map<string, SpaceInterface>): Map<string, SpaceInterface> => {
                 if (!this.spaceExistInStore(spaceStore, spaceName)) throw new SpaceDoesNotExistError(spaceName);
                 const spaceToUpdate: SpaceInterface = spaceStore.get(spaceName);
