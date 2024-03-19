@@ -1908,7 +1908,8 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.cameraFollowPlayerStream.subscribe((cameraFollowPlayerEvent) => {
-                this.cameraManager.leaveFocusMode(this.CurrentPlayer, cameraFollowPlayerEvent.smooth ? 1000 : 0);
+                const duration = cameraFollowPlayerEvent.smooth ? cameraFollowPlayerEvent.duration ?? 1000 : 0;
+                this.cameraManager.leaveFocusMode(this.CurrentPlayer, duration);
             })
         );
 

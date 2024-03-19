@@ -31,7 +31,7 @@
                 });
 
                 followPlayerButton.addEventListener('click', () => {
-                    WA.camera.followPlayer(smoothField.checked);
+                    WA.camera.followPlayer(smoothField.checked, (durationField.value ? parseInt(durationField.value) : undefined));
                 });
             });
         })
