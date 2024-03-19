@@ -8,7 +8,6 @@
     import { myCameraStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import MyCamera from "../../MyCamera.svelte";
     import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
-    import { liveStreamingEnabledStore } from "../../../Stores/MegaphoneStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
 
@@ -80,7 +79,8 @@
                 {#if $streamableCollectionStore.size > 0}
                     <CamerasContainer highlightedEmbedScreen={$highlightedEmbedScreen} />
                 {/if}
-                {#if $myCameraStore} <!-- && !$megaphoneEnabledStore TODO HUGO -->
+                {#if $myCameraStore}
+                    <!-- && !$megaphoneEnabledStore TODO HUGO -->
                     <MyCamera />
                 {/if}
                 {#if $myJitsiCameraStore}
@@ -88,30 +88,30 @@
                 {/if}
             </div>
         {/if}
-        <div id="embed-left-block" class=" {$highlightedEmbedScreen ? 'block' : 'hidden' }">
+        <div id="embed-left-block" class=" {$highlightedEmbedScreen ? 'block' : 'hidden'}">
             <div id="main-embed-screen">
                 {#if $highlightedEmbedScreen}
                     {#if $highlightedEmbedScreen.type === "streamable"}
                         {#key $highlightedEmbedScreen.embed.uniqueId}
                             <MediaBox
-                                    isHightlighted={true}
-                                    isClickable={true}
-                                    streamable={$highlightedEmbedScreen.embed}
+                                isHightlighted={true}
+                                isClickable={true}
+                                streamable={$highlightedEmbedScreen.embed}
                             />
                         {/key}
                     {:else if $highlightedEmbedScreen.type === "cowebsite"}
                         {#key $highlightedEmbedScreen.embed.getId()}
                             <div class="highlighted-cowebsite-container">
                                 <div
-                                        id={"cowebsite-slot-" + $highlightedEmbedScreen.embed.getId()}
-                                        class="highlighted-cowebsite"
-                                ></div>
+                                    id={"cowebsite-slot-" + $highlightedEmbedScreen.embed.getId()}
+                                    class="highlighted-cowebsite"
+                                />
                                 <div class="actions">
                                     {#if $highlightedEmbedScreen.embed.isClosable()}
                                         <button
-                                                type="button"
-                                                class="close-window top-right-btn"
-                                                on:click={closeCoWebsite}
+                                            type="button"
+                                            class="close-window top-right-btn"
+                                            on:click={closeCoWebsite}
                                         >
                                             &times;
                                         </button>
@@ -123,7 +123,7 @@
                 {/if}
             </div>
         </div>
-        <!--
+        <!-- TODO HUGO Commented Why ?
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div
                 class="relative self-end z-[300] bottom-6 md:bottom-4 max-w-[25%] w-full"

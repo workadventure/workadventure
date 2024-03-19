@@ -45,13 +45,15 @@
         <button class="outline ml-2 selectCharacterButton" on:click|preventDefault={selectRight}> &gt; </button>
     {/if}
 </section>
-<section class="action flex flex-row justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[calc(50%-35vh)] h-10">
+<section
+    class="action flex flex-row justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[calc(50%-35vh)] h-10"
+>
     {#if $customizeAvailableStore}
         <button
-                type="submit"
-                class="btn btn-lg btn-light btn-border mr-4 selectCharacterSceneFormCustomYourOwnSubmit"
-                on:click={() => analyticsClient.selectCustomWoka()}
-                on:click={customizeScene}>{$LL.woka.selectWoka.customize()}</button
+            type="submit"
+            class="btn btn-lg btn-light btn-border mr-4 selectCharacterSceneFormCustomYourOwnSubmit"
+            on:click={() => analyticsClient.selectCustomWoka()}
+            on:click={customizeScene}>{$LL.woka.selectWoka.customize()}</button
         >
     {/if}
     <button

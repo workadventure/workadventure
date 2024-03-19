@@ -447,7 +447,7 @@
         {/if}
         <div class="value-input flex flex-col">
             <label for="tabLink">{$LL.mapEditor.properties.linkProperties.linkLabel()}</label>
-            <div class="tw-flex tw-flex-row">
+            <div class="flex flex-row">
                 <input
                     id="tabLink"
                     type="url"
@@ -461,9 +461,9 @@
                     disabled={embeddableLoading}
                 />
                 {#if property.application === "googleDocs" || property.application === "googleSheets" || property.application === "googleSlides" || property.application === "klaxoon" || property.application === "googleDrive"}
-                    <div class="tw-flex tw-flex-row tw-items-center tw-justify-center">
+                    <div class="flex flex-row items-center justify-center">
                         <img
-                            class="tw-w-6 tw-ml-4 tw-items-center tw-cursor-pointer"
+                            class="w-6 ml-4 items-center cursor-pointer"
                             src={pickerSvg}
                             alt={$LL.mapEditor.properties.linkProperties.openPickerSelector()}
                             on:keydown

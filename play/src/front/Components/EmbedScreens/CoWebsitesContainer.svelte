@@ -96,6 +96,8 @@
     }
 </script>
 
+<!-- Cette div devra apparaitre que s'il y a un event et elle peux apparaitre avec la methode display main dans le cowebsite manager-->
+
 <div
     class="w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500] left_panel"
     id="cowebsites-container"

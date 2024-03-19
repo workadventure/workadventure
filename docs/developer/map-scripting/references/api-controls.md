@@ -96,3 +96,117 @@ WA.room.onLeaveLayer('myZone').subscribe(() => {
     WA.controls.restorePlayerProximityMeeting();
 });
 ```
+
+### Disabling / restoring map editor
+
+```
+WA.controls.disableMapEditor(): void
+WA.controls.restoreMapEditor(): void
+```
+
+These 2 methods can be used to completely disable map editor and to enable them again.
+
+When map editor are disabled, the user cannot open the map editor and tools associated.
+
+Example:
+
+```ts
+WA.room.onEnterLayer('myZone').subscribe(() => {
+    WA.controls.disableMapEditor();
+});
+
+WA.room.onLeaveLayer('myZone').subscribe(() => {
+    WA.controls.restoreMapEditor();
+});
+```
+
+### Disabling / restoring screen sharing
+
+```
+WA.controls.disableScreenSharing(): void
+WA.controls.restoreScreenSharing(): void
+```
+
+These 2 methods can be used to completely disable screen sharing and to enable them again.
+
+When screen sharing are disabled, the user cannot share any screen in the meeting zone.
+
+Example:
+
+```ts
+WA.room.onEnterLayer('myZone').subscribe(() => {
+    WA.controls.disableScreenSharing();
+});
+
+WA.room.onLeaveLayer('myZone').subscribe(() => {
+    WA.controls.restoreScreenSharing();
+});
+```
+
+### Disabling / restoring wheel zoom
+
+```
+WA.controls.disableWheelZoom(): void
+WA.controls.restoreWheelZoom(): void
+```
+
+This feature allows or not users to zoom in or out of the map using the mouse wheel.
+
+To enable or diable the wheel zoom feature, you can use the following code:
+
+Example:
+
+```ts
+WA.room.onEnterLayer('myZone').subscribe(() => {
+    WA.controls.disableWheelZoom();
+});
+
+WA.room.onLeaveLayer('myZone').subscribe(() => {
+    WA.controls.restoreWheelZoom();
+});
+```
+
+### Disabling / restoring right click button
+```
+WA.controls.disableWheelZoom(): void
+WA.controls.restoreWheelZoom(): void
+```
+
+These 2 methods can be used to completely disable right click and to enable them again.
+
+When right click are disabled, the user cannot move on the right clicked zone.
+
+Example:
+
+```ts
+WA.room.onEnterLayer('myZone').subscribe(() => {
+    WA.controls.disableRightClick();
+});
+
+WA.room.onLeaveLayer('myZone').subscribe(() => {
+    WA.controls.restoreRightClick();
+});
+```
+
+### Disabling / restoring invite user button
+
+```
+WA.controls.disableInviteButton(): void
+WA.controls.restoreInviteButton(): void
+```
+
+These 2 methods can be used to completely disable invite button and to enable them again.
+
+Example:
+
+```ts
+WA.room.onEnterLayer('myZone').subscribe(() => {
+    WA.controls.disableInviteButton();
+});
+
+WA.room.onLeaveLayer('myZone').subscribe(() => {
+    WA.controls.restoreInviteButton();
+});
+```
+
+

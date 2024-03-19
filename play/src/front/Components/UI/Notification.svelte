@@ -2,8 +2,8 @@
     import { fly } from "svelte/transition";
     import { onMount } from "svelte";
     import { Notification, notificationPlayingStore } from "../../Stores/NotificationStore";
-    import microphoneOffImg from "../images/microphone.svg"; // TODO HUGO : Wrong icons
-    import cameraOffImg from "../images/microphone.svg";
+    import microphoneOffImg from "../images/mic.svg";
+    import cameraOffImg from "../images/cam.svg";
     import jistiImg from "../images/jitsi.png";
     import waImg from "../images/icon-workadventure-white.png";
 
@@ -23,12 +23,8 @@
     });
 </script>
 
-<div class="notification-playing tw-bg-dark-blue/95 tw-mt-1" transition:fly={{ x: 210, duration: 500 }}>
-    <img
-        src={icons.get(notification.icon) ?? waImg}
-        alt="Audio playing"
-        class="tw-bg-medium-purple tw-rounded-full tw-h-14"
-    />
+<div class="notification-playing bg-dark-blue/95 mt-1" transition:fly={{ x: 210, duration: 500 }}>
+    <img src={icons.get(notification.icon) ?? waImg} alt="Audio playing" class="bg-medium-purple rounded-full h-14" />
     <p>{notification.text}</p>
 </div>
 

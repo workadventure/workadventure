@@ -7,7 +7,7 @@ import {
     handleMenuRegistrationEvent,
     handleMenuUnregisterEvent,
     handleOpenMenuEvent,
-    warningContainerStore,
+    warningBannerStore,
 } from "../Stores/MenuStore";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
@@ -191,6 +191,21 @@ class IframeListener {
 
     private readonly _banPlayerIframeEvent: Subject<BanEvent> = new Subject();
     public readonly banPlayerIframeEvent = this._banPlayerIframeEvent.asObservable();
+
+    private readonly _mapEditorStream: Subject<boolean> = new Subject();
+    public readonly mapEditorStream = this._mapEditorStream.asObservable();
+
+    private readonly _screenSharingStream: Subject<boolean> = new Subject();
+    public readonly screenSharingStream = this._screenSharingStream.asObservable();
+
+    private readonly _rightClickStream: Subject<boolean> = new Subject();
+    public readonly rightClickStream = this._rightClickStream.asObservable();
+
+    private readonly _wheelZoomStream: Subject<boolean> = new Subject();
+    public readonly wheelZoomStream = this._wheelZoomStream.asObservable();
+
+    private readonly _inviteUserButtonStream: Subject<boolean> = new Subject();
+    public readonly inviteUserButtonStream = this._inviteUserButtonStream.asObservable();
 
     private readonly iframes = new Map<HTMLIFrameElement, string | undefined>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
@@ -479,10 +494,10 @@ class IframeListener {
                             this.messagesToChatQueue = [];
                         }
                     } else if (iframeEvent.type == "openBanner") {
-                        warningContainerStore.activateWarningContainer(iframeEvent.data.timeToClose);
+                        warningBannerStore.activateWarningContainer(iframeEvent.data.timeToClose);
                         bannerStore.set(iframeEvent.data);
                     } else if (iframeEvent.type == "closeBanner") {
-                        warningContainerStore.set(false);
+                        warningBannerStore.set(false);
                         bannerStore.set(null);
                     } else if (iframeEvent.type == KLAXOON_ACTIVITY_PICKER_EVENT) {
                         // dispacth event on windows
@@ -491,6 +506,26 @@ class IframeListener {
                         window.dispatchEvent(event);
                     } else if (iframeEvent.type == "banUser") {
                         this._banPlayerIframeEvent.next(iframeEvent.data);
+                    } else if (iframeEvent.type == "disableMapEditor") {
+                        this._mapEditorStream.next(false);
+                    } else if (iframeEvent.type == "restoreMapEditor") {
+                        this._mapEditorStream.next(true);
+                    } else if (iframeEvent.type == "disableScreenSharing") {
+                        this._screenSharingStream.next(false);
+                    } else if (iframeEvent.type == "restoreScreenSharing") {
+                        this._screenSharingStream.next(true);
+                    } else if (iframeEvent.type == "disableRightClick") {
+                        this._rightClickStream.next(false);
+                    } else if (iframeEvent.type == "restoreRightClick") {
+                        this._rightClickStream.next(true);
+                    } else if (iframeEvent.type == "disableWheelZoom") {
+                        this._wheelZoomStream.next(false);
+                    } else if (iframeEvent.type == "restoreWheelZoom") {
+                        this._wheelZoomStream.next(true);
+                    } else if (iframeEvent.type == "disableInviteUserButton") {
+                        this._inviteUserButtonStream.next(false);
+                    } else if (iframeEvent.type == "restoreInviteUserButton") {
+                        this._inviteUserButtonStream.next(true);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;

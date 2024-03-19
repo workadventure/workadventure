@@ -1,6 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
+    import { InfoIcon } from "svelte-feather-icons";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { showModalGlobalComminucationVisibilityStore } from "../../Stores/ModalStore";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
@@ -16,6 +17,8 @@
         streamingMegaphoneStore,
     } from "../../Stores/MediaStore";
     import LL from "../../../i18n/i18n-svelte";
+    import microphoneImg from "../images/mic.svg";
+    import cameraImg from "../images/cam.svg";
     import liveMessageImg from "../images/live-message.svg";
     import textMessageImg from "../images/text-message.svg";
     import audioMessageImg from "../images/audio-message.svg";
@@ -27,8 +30,7 @@
     import { StringUtils } from "../../Utils/StringUtils";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
-    import MicOffIcon from "../Icons/MicOffIcon.svelte";
-    import CamOffIcon from "../Icons/CamOffIcon.svelte";
+    import { userIsAdminStore } from "../../Stores/GameStore";
 
     let mainModal: HTMLDivElement;
 
@@ -218,8 +220,9 @@
                             />
                             {$LL.megaphone.modal.textMessage.title()}
                         </h3>
-                        <button class="light max-w-fit" on:click={activateInputText}
-                            >{$LL.megaphone.modal.textMessage.button()}</button
+                        <p class="help-text"><InfoIcon size="18" /> {$LL.megaphone.modal.audioMessage.noAccess()}</p>
+                        <button class="light max-w-fit" on:click={activateInputText} disabled={!$userIsAdminStore}>
+                            {$LL.megaphone.modal.textMessage.button()}</button
                         >
                         <p class="text-white text-sm whitespace-pre-line">
                             {$LL.megaphone.modal.textMessage.notice()}
@@ -234,8 +237,9 @@
                             />
                             {$LL.megaphone.modal.audioMessage.title()}
                         </h3>
-                        <button class="light max-w-fit" on:click={activateUploadAudio}
-                            >{$LL.megaphone.modal.audioMessage.button()}</button
+                        <p class="help-text"><InfoIcon size="18" /> {$LL.megaphone.modal.audioMessage.noAccess()}</p>
+                        <button class="light max-w-fit" on:click={activateUploadAudio} disabled={!$userIsAdminStore}>
+                            {$LL.megaphone.modal.audioMessage.button()}</button
                         >
                         <p class="text-white text-sm whitespace-pre-line">
                             {$LL.megaphone.modal.audioMessage.notice()}
@@ -246,7 +250,7 @@
                     <div class="flex flex-col p-5 w-1/3">
                         <div class="flex align-middle justify-center p-5">
                             <video
-                                src="/resources/videos/global_text_message.mp4"
+                                src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_live_message.mp4"
                                 class="w-full cursor-pointer rounded-xl"
                                 controls
                                 muted
@@ -259,7 +263,7 @@
                     <div class="flex flex-col p-5 w-1/3">
                         <div class="flex align-middle justify-center p-5">
                             <video
-                                src="/resources/videos/global_text_message.mp4"
+                                src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_text_message.mp4"
                                 class="w-full cursor-pointer rounded-xl"
                                 controls
                                 muted
@@ -272,7 +276,7 @@
                     <div class="flex flex-col p-5 w-1/3">
                         <div class="flex align-middle justify-center p-5">
                             <video
-                                src="/resources/videos/global_audio_message.mp4"
+                                src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_audio_message.mp4"
                                 class="w-full cursor-pointer rounded-xl"
                                 controls
                                 muted
@@ -326,11 +330,7 @@
             {#if activeLiveMessage}
                 <div id="active-liveMessage" class="flex flex-col p-5">
                     <h3>
-                        <img
-                            src={liveMessageImg}
-                            class="h-8 w-8 mr-1"
-                            alt={$LL.megaphone.modal.liveMessage.title()}
-                        />
+                        <img src={liveMessageImg} class="h-8 w-8 mr-1" alt={$LL.megaphone.modal.liveMessage.title()} />
                         {$LL.megaphone.modal.liveMessage.title()}
                     </h3>
                     <div class="flex flew-row justify-center">
@@ -346,9 +346,7 @@
                                 muted
                                 playsinline
                             />
-                            <div
-                                class="z-[251] w-full p-4 flex items-center justify-center scale-150"
-                            >
+                            <div class="z-[251] w-full p-4 flex items-center justify-center scale-150">
                                 <SoundMeterWidget
                                     volume={$localVolumeStore}
                                     classcss="!bg-none !bg-transparent scale-150"
@@ -380,12 +378,13 @@
                                 {/if}
                             </p>
                             <div class="flex flex-row">
-                                <CamOffIcon />
-                                <select
-                                    class="w-full ml-4"
-                                    bind:value={cameraDiveId}
-                                    on:change={() => selectCamera()}
-                                >
+                                <img
+                                    draggable="false"
+                                    src={cameraImg}
+                                    style="padding: 2px; height: 32px; width: 32px;"
+                                    alt="Turn off microphone"
+                                />
+                                <select class="w-full ml-4" bind:value={cameraDiveId} on:change={() => selectCamera()}>
                                     {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
                                         {#each $cameraListStore as camera (camera.deviceId)}
                                             <option value={camera.deviceId}>
@@ -396,7 +395,12 @@
                                 </select>
                             </div>
                             <div class="flex flex-row">
-                                <MicOffIcon />
+                                <img
+                                    draggable="false"
+                                    src={microphoneImg}
+                                    style="padding: 2px; height: 32px; width: 32px;"
+                                    alt="Turn off microphone"
+                                />
                                 <select
                                     class="w-full ml-4"
                                     bind:value={microphoneDeviceId}
@@ -443,5 +447,10 @@
         &:hover {
             scale: 1.1;
         }
+    }
+
+    button.light[disabled] {
+        background-color: #4a5568;
+        cursor: not-allowed;
     }
 </style>

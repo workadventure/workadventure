@@ -69,23 +69,55 @@
         <h3 class="h5 text-white/50">{mapName}</h3>
         <p class="whitespace-pre-line italic text-white/50">{mapDescription}</p>
         {#if mapLink}
-            <a href={mapLink} class="btn btn-sm btn-secondary uppercase inline-block" target="_blank">{$LL.menu.about.mapLink()}</a>
+            <a href={mapLink} class="btn btn-sm btn-secondary uppercase inline-block" target="_blank"
+                >{$LL.menu.about.mapLink()}</a
+            >
         {/if}
-        <div class="mt-4 text-lg font-bold flex items-center py-4 px-8 border-y border-x-0 border-solid border-white/20 {expandedMapCopyright ? 'bg-secondary' : 'bg-contrast/50 hover:bg-contrast'}" on:click={() => (expandedMapCopyright = !expandedMapCopyright)}>
+        <div
+            class="mt-4 text-lg font-bold flex items-center py-4 px-8 border-y border-x-0 border-solid border-white/20 {expandedMapCopyright
+                ? 'bg-secondary'
+                : 'bg-contrast/50 hover:bg-contrast'}"
+            on:click={() => (expandedMapCopyright = !expandedMapCopyright)}
+        >
             <div class="grow text-left">{$LL.menu.about.copyrights.map.title()}</div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="{expandedMapCopyright ? 'rotate-180' : ''}" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class={expandedMapCopyright ? "rotate-180" : ""}
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="#ffffff"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                 <path d="M6 9l6 6l6 -6" />
             </svg>
         </div>
         <p class="whitespace-pre-line" hidden={!expandedMapCopyright}>{mapCopyright}</p>
-        <div class="text-lg font-bold flex items-center py-4 px-8 border-y-0 border-x-0 border-b border-solid border-white/20 {expandedTilesetCopyright ? 'bg-secondary' : 'bg-contrast/50 hover:bg-contrast'}" on:click={() => (expandedTilesetCopyright = !expandedTilesetCopyright)}>
+        <div
+            class="text-lg font-bold flex items-center py-4 px-8 border-y-0 border-x-0 border-b border-solid border-white/20 {expandedTilesetCopyright
+                ? 'bg-secondary'
+                : 'bg-contrast/50 hover:bg-contrast'}"
+            on:click={() => (expandedTilesetCopyright = !expandedTilesetCopyright)}
+        >
             <div class="grow text-left">{$LL.menu.about.copyrights.tileset.title()}</div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="{expandedTilesetCopyright ? 'rotate-180' : ''}" width="24"
-                 height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round"
-                 stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                <path d="M6 9l6 6l6 -6"/>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class={expandedTilesetCopyright ? "rotate-180" : ""}
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="#ffffff"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M6 9l6 6l6 -6" />
             </svg>
         </div>
         <section hidden={!expandedTilesetCopyright}>
@@ -95,13 +127,27 @@
                 <p>{$LL.menu.about.copyrights.tileset.empty()}</p>
             {/each}
         </section>
-        <div class="text-lg font-bold flex items-center py-4 px-8 border-y-0 border-x-0 border-b border-solid border-white/20 {expandedAudioCopyright ? 'bg-secondary' : 'bg-contrast/50 hover:bg-contrast'}" on:click={() => (expandedAudioCopyright = !expandedAudioCopyright)}>
+        <div
+            class="text-lg font-bold flex items-center py-4 px-8 border-y-0 border-x-0 border-b border-solid border-white/20 {expandedAudioCopyright
+                ? 'bg-secondary'
+                : 'bg-contrast/50 hover:bg-contrast'}"
+            on:click={() => (expandedAudioCopyright = !expandedAudioCopyright)}
+        >
             <div class="grow text-left">{$LL.menu.about.copyrights.audio.title()}</div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="{expandedAudioCopyright ? 'rotate-180' : ''}" width="24"
-                 height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round"
-                 stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                <path d="M6 9l6 6l6 -6"/>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class={expandedAudioCopyright ? "rotate-180" : ""}
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="#ffffff"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M6 9l6 6l6 -6" />
             </svg>
         </div>
         <section hidden={!expandedAudioCopyright}>

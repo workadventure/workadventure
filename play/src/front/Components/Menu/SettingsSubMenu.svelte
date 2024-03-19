@@ -5,7 +5,6 @@
     import type { Locales } from "../../../i18n/i18n-types";
     import { displayableLocales, setCurrentLocale } from "../../../i18n/locales";
 
-    import infoImg from "../images/info.svg";
     import { iframeListener } from "../../Api/IframeListener";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { localUserStore } from "../../Connection/LocalUserStore";
@@ -169,9 +168,22 @@
 <div class="divide-y divide-white/20" transition:fly={{ x: -700, duration: 250 }}>
     <section class=" p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="mr-4 opacity-50" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                <path d="M12 20h-7a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2h1a2 2 0 0 0 2 -2a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v3.5" />
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="mr-4 opacity-50"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="#ffffff"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path
+                    d="M12 20h-7a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2h1a2 2 0 0 0 2 -2a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v3.5"
+                />
                 <path d="M12 16a3 3 0 1 0 0 -6a3 3 0 0 0 0 6z" />
                 <path d="M19 22v-6" />
                 <path d="M22 19l-3 -3l-3 3" />
@@ -181,35 +193,92 @@
         <div class="flex w-full mb-6 mt-2 pl-6">
             <div class="flex flex-col w-10/12 lg:w-6/12">
                 <ul class="flex justify-between w-full px-[10px] mb-8">
-                    <li class="flex justify-center relative {valueVideoBandwidth === 1 ? 'opacity-100 font-bold' : 'opacity-50 hover:opacity-80'}">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-antenna-bars-1" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <li
+                        class="flex justify-center relative {valueVideoBandwidth === 1
+                            ? 'opacity-100 font-bold'
+                            : 'opacity-50 hover:opacity-80'}"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="icon icon-tabler icon-tabler-antenna-bars-1"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="#ffffff"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                             <path d="M6 18l0 .01" />
                             <path d="M10 18l0 .01" />
                             <path d="M14 18l0 .01" />
                             <path d="M18 18l0 .01" />
                         </svg>
-                        <span class="absolute -bottom-4 cursor-pointer" on:click|preventDefault={() => valueVideoBandwidth = 1}>{$LL.menu.settings.videoBandwidth.low()}</span>
+                        <span
+                            class="absolute -bottom-4 cursor-pointer"
+                            on:click|preventDefault={() => (valueVideoBandwidth = 1)}
+                            >{$LL.menu.settings.videoBandwidth.low()}</span
+                        >
                     </li>
-                    <li class="flex justify-center relative {valueVideoBandwidth === 2 ? 'opacity-100 font-bold' : 'opacity-50 hover:opacity-80'}">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-antenna-bars-3" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <li
+                        class="flex justify-center relative {valueVideoBandwidth === 2
+                            ? 'opacity-100 font-bold'
+                            : 'opacity-50 hover:opacity-80'}"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="icon icon-tabler icon-tabler-antenna-bars-3"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="#ffffff"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                             <path d="M6 18l0 -3" />
                             <path d="M10 18l0 -6" />
                             <path d="M14 18l0 .01" />
                             <path d="M18 18l0 .01" />
                         </svg>
-                        <span class="absolute -bottom-4 cursor-pointer" on:click|preventDefault={() => valueVideoBandwidth = 2}>{$LL.menu.settings.videoBandwidth.recommended()}</span>
+                        <span
+                            class="absolute -bottom-4 cursor-pointer"
+                            on:click|preventDefault={() => (valueVideoBandwidth = 2)}
+                            >{$LL.menu.settings.videoBandwidth.recommended()}</span
+                        >
                     </li>
-                    <li class="flex justify-center relative {valueVideoBandwidth === 3 ? 'opacity-100 font-bold' : 'opacity-50 hover:opacity-80'}">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-antenna-bars-5" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <li
+                        class="flex justify-center relative {valueVideoBandwidth === 3
+                            ? 'opacity-100 font-bold'
+                            : 'opacity-50 hover:opacity-80'}"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="icon icon-tabler icon-tabler-antenna-bars-5"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="#ffffff"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                             <path d="M6 18l0 -3" />
                             <path d="M10 18l0 -6" />
                             <path d="M14 18l0 -9" />
                             <path d="M18 18l0 -12" />
                         </svg>
-                        <span class="absolute -bottom-4 cursor-pointer" on:click|preventDefault={() => valueVideoBandwidth = 3}>{$LL.menu.settings.videoBandwidth.unlimited()}</span>
+                        <span
+                            class="absolute -bottom-4 cursor-pointer"
+                            on:click|preventDefault={() => (valueVideoBandwidth = 3)}
+                            >{$LL.menu.settings.videoBandwidth.unlimited()}</span
+                        >
                     </li>
                 </ul>
                 <input
@@ -226,8 +295,19 @@
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="mr-4 opacity-50" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="mr-4 opacity-50"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="#ffffff"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                 <path d="M9 2m0 3a3 3 0 0 1 3 -3h0a3 3 0 0 1 3 3v5a3 3 0 0 1 -3 3h0a3 3 0 0 1 -3 -3z" />
                 <path d="M5 10a7 7 0 0 0 14 0" />
                 <path d="M8 21l8 0" />
@@ -238,35 +318,92 @@
         <div class="flex w-full mb-6 mt-2 pl-6">
             <div class="flex flex-col w-10/12 lg:w-6/12">
                 <ul class="flex justify-between w-full px-[10px] mb-8">
-                    <li class="flex relative {valueScreenShareBandwidth === 1 ? 'opacity-100 font-bold' : 'opacity-50 hover:opacity-80'}">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-antenna-bars-1" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <li
+                        class="flex relative {valueScreenShareBandwidth === 1
+                            ? 'opacity-100 font-bold'
+                            : 'opacity-50 hover:opacity-80'}"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="icon icon-tabler icon-tabler-antenna-bars-1"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="#ffffff"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                             <path d="M6 18l0 .01" />
                             <path d="M10 18l0 .01" />
                             <path d="M14 18l0 .01" />
                             <path d="M18 18l0 .01" />
                         </svg>
-                        <span class="absolute -bottom-4 cursor-pointer" on:click|preventDefault={() => valueScreenShareBandwidth = 1}>{$LL.menu.settings.shareScreenBandwidth.low()}</span>
+                        <span
+                            class="absolute -bottom-4 cursor-pointer"
+                            on:click|preventDefault={() => (valueScreenShareBandwidth = 1)}
+                            >{$LL.menu.settings.shareScreenBandwidth.low()}</span
+                        >
                     </li>
-                    <li class="flex justify-center relative {valueScreenShareBandwidth === 2 ? 'opacity-100 font-bold' : 'opacity-50 hover:opacity-80'}">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-antenna-bars-3" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <li
+                        class="flex justify-center relative {valueScreenShareBandwidth === 2
+                            ? 'opacity-100 font-bold'
+                            : 'opacity-50 hover:opacity-80'}"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="icon icon-tabler icon-tabler-antenna-bars-3"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="#ffffff"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                             <path d="M6 18l0 -3" />
                             <path d="M10 18l0 -6" />
                             <path d="M14 18l0 .01" />
                             <path d="M18 18l0 .01" />
                         </svg>
-                        <span class="absolute -bottom-4 cursor-pointer" on:click|preventDefault={() => valueScreenShareBandwidth = 2}>{$LL.menu.settings.shareScreenBandwidth.recommended()}</span>
+                        <span
+                            class="absolute -bottom-4 cursor-pointer"
+                            on:click|preventDefault={() => (valueScreenShareBandwidth = 2)}
+                            >{$LL.menu.settings.shareScreenBandwidth.recommended()}</span
+                        >
                     </li>
-                    <li class="flex justify-center relative {valueScreenShareBandwidth === 3 ? 'opacity-100 font-bold' : 'opacity-50 hover:opacity-80'}" >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-antenna-bars-5" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <li
+                        class="flex justify-center relative {valueScreenShareBandwidth === 3
+                            ? 'opacity-100 font-bold'
+                            : 'opacity-50 hover:opacity-80'}"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="icon icon-tabler icon-tabler-antenna-bars-5"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="#ffffff"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                             <path d="M6 18l0 -3" />
                             <path d="M10 18l0 -6" />
                             <path d="M14 18l0 -9" />
                             <path d="M18 18l0 -12" />
                         </svg>
-                        <span class="absolute -bottom-4 cursor-pointer" on:click|preventDefault={() => valueScreenShareBandwidth = 3}>{$LL.menu.settings.shareScreenBandwidth.unlimited()}</span>
+                        <span
+                            class="absolute -bottom-4 cursor-pointer"
+                            on:click|preventDefault={() => (valueScreenShareBandwidth = 3)}
+                            >{$LL.menu.settings.shareScreenBandwidth.unlimited()}</span
+                        >
                     </li>
                 </ul>
                 <input
@@ -283,8 +420,19 @@
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="mr-4 opacity-50" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="mr-4 opacity-50"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="#ffffff"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                 <path d="M4 5h7" />
                 <path d="M9 3v2c0 4.418 -2.239 8 -5 8" />
                 <path d="M5 9c0 2.144 2.952 3.908 6.7 4" />
@@ -294,12 +442,16 @@
             {$LL.menu.settings.language.title()}
         </div>
         <div class="mt-2 p-2">
-            <select class="w-full languages-switcher bg-contrast rounded border border-solid border-white/20 mb-0 " bind:value={valueLocale} on:change={updateLocale}>
+            <select
+                class="w-full languages-switcher bg-contrast rounded border border-solid border-white/20 mb-0 "
+                bind:value={valueLocale}
+                on:change={updateLocale}
+            >
                 {#each displayableLocales as locale (locale.id)}
                     <option value={locale.id}>
-                        {`${locale.language ? locale.language.charAt(0).toUpperCase() + locale.language.slice(1) : ""} (${
-                            locale.region
-                        })`}
+                        {`${
+                            locale.language ? locale.language.charAt(0).toUpperCase() + locale.language.slice(1) : ""
+                        } (${locale.region})`}
                     </option>
                 {/each}
             </select>
@@ -308,8 +460,19 @@
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="tooltip">
             <div class="group bg-contrast font-bold text-lg p-4 flex items-center relative">
-                <svg xmlns="http://www.w3.org/2000/svg" class="mr-4 opacity-50" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="mr-4 opacity-50"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="#ffffff"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                     <path d="M13 12v.01" />
                     <path d="M3 21h18" />
                     <path d="M5 21v-16a2 2 0 0 1 2 -2h7.5m2.5 10.5v7.5" />
@@ -323,14 +486,16 @@
         </div>
         <label for="cam-toggle" class="flex cursor-pointer items-center relative m-4">
             <input
-                    type="checkbox"
-                    id="cam-toggle"
-                    class="peer sr-only"
-                    bind:checked={valueCameraPrivacySettings}
-                    on:change={changeCameraPrivacySettings}
+                type="checkbox"
+                id="cam-toggle"
+                class="peer sr-only"
+                bind:checked={valueCameraPrivacySettings}
+                on:change={changeCameraPrivacySettings}
             />
-            <div class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"></div>
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full"></div>
+            <div
+                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
+            />
+            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
             <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
                 {$LL.menu.settings.privacySettings.cameraToggle()}
             </div>
@@ -338,14 +503,16 @@
 
         <label for="mic-toggle" class="flex cursor-pointer items-center relative m-4">
             <input
-                    type="checkbox"
-                    id="mic-toggle"
-                    class="peer sr-only"
-                    bind:checked={valueMicrophonePrivacySettings}
-                    on:change={changeMicrophonePrivacySettings}
+                type="checkbox"
+                id="mic-toggle"
+                class="peer sr-only"
+                bind:checked={valueMicrophonePrivacySettings}
+                on:change={changeMicrophonePrivacySettings}
             />
-            <div class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"></div>
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full"></div>
+            <div
+                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
+            />
+            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
             <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
                 {$LL.menu.settings.privacySettings.microphoneToggle()}
             </div>
@@ -353,8 +520,19 @@
     </section>
     <section class="flex flex-col p-0 first:pt-0 pt-8 m-0">
         <div class="bg-contrast font-bold text-lg p-4 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="mr-4 opacity-50" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="mr-4 opacity-50"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="#ffffff"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                 <path d="M4 8h4v4h-4z" />
                 <path d="M6 4l0 4" />
                 <path d="M6 12l0 8" />
@@ -370,79 +548,96 @@
 
         <label for="fullscreen-toggle" class="flex cursor-pointer items-center relative m-4">
             <input
-                    type="checkbox"
-                    id="fullscreen-toggle"
-                    class="peer sr-only"
-                    bind:checked={fullscreen} on:change={changeFullscreen}
+                type="checkbox"
+                id="fullscreen-toggle"
+                class="peer sr-only"
+                bind:checked={fullscreen}
+                on:change={changeFullscreen}
             />
-            <div class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"></div>
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full"></div>
+            <div
+                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
+            />
+            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
             <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
                 {$LL.menu.settings.fullscreen()}
             </div>
         </label>
         <label for="notification-toggle" class="flex cursor-pointer items-center relative m-4">
             <input
-                    type="checkbox"
-                    id="notification-toggle"
-                    class="peer sr-only"
-                    bind:checked={notification} on:change={changeNotification}
+                type="checkbox"
+                id="notification-toggle"
+                class="peer sr-only"
+                bind:checked={notification}
+                on:change={changeNotification}
             />
-            <div class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"></div>
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full"></div>
+            <div
+                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
+            />
+            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
             <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
                 {$LL.menu.settings.notifications()}
             </div>
         </label>
         <label for="chatSounds-toggle" class="flex cursor-pointer items-center relative m-4">
             <input
-                    type="checkbox"
-                    id="chatSounds-toggle"
-                    class="peer sr-only"
-                    bind:checked={chatSounds} on:change={changeChatSounds}
+                type="checkbox"
+                id="chatSounds-toggle"
+                class="peer sr-only"
+                bind:checked={chatSounds}
+                on:change={changeChatSounds}
             />
-            <div class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"></div>
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full"></div>
+            <div
+                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
+            />
+            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
             <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
                 {$LL.menu.settings.chatSounds()}
             </div>
         </label>
         <label for="cowebsiteTrigger-toggle" class="flex cursor-pointer items-center relative m-4">
             <input
-                    type="checkbox"
-                    id="cowebsiteTrigger-toggle"
-                    class="peer sr-only"
-                    bind:checked={forceCowebsiteTrigger} on:change={changeForceCowebsiteTrigger}
+                type="checkbox"
+                id="cowebsiteTrigger-toggle"
+                class="peer sr-only"
+                bind:checked={forceCowebsiteTrigger}
+                on:change={changeForceCowebsiteTrigger}
             />
-            <div class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"></div>
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full"></div>
+            <div
+                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
+            />
+            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
             <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
                 {$LL.menu.settings.cowebsiteTrigger()}
             </div>
         </label>
         <label for="cowebsiteTrigger-toggle" class="flex cursor-pointer items-center relative m-4">
             <input
-                    type="checkbox"
-                    id="cowebsiteTrigger-toggle"
-                    class="peer sr-only"
-                    bind:checked={ignoreFollowRequests} on:change={changeIgnoreFollowRequests}
+                type="checkbox"
+                id="cowebsiteTrigger-toggle"
+                class="peer sr-only"
+                bind:checked={ignoreFollowRequests}
+                on:change={changeIgnoreFollowRequests}
             />
-            <div class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"></div>
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full"></div>
+            <div
+                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
+            />
+            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
             <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
                 {$LL.menu.settings.ignoreFollowRequest()}
             </div>
         </label>
         <label for="decreaseAudioPlayerVolumeWhileTalking-toggle" class="flex cursor-pointer items-center relative m-4">
             <input
-                    type="checkbox"
-                    id="decreaseAudioPlayerVolumeWhileTalking-toggle"
-                    class="peer sr-only"
-                    bind:checked={decreaseAudioPlayerVolumeWhileTalking}
-                    on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
+                type="checkbox"
+                id="decreaseAudioPlayerVolumeWhileTalking-toggle"
+                class="peer sr-only"
+                bind:checked={decreaseAudioPlayerVolumeWhileTalking}
+                on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
             />
-            <div class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"></div>
-            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full"></div>
+            <div
+                class="dot peer-checked:translate-x-full peer-checked:bg-white absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition"
+            />
+            <div class="block bg-contrast peer-checked:bg-secondary w-12 h-7 rounded-full" />
             <div class="ml-3 text-white/50 font-regular peer-checked:text-white">
                 {$LL.audio.manager.reduce()}
             </div>

@@ -49,7 +49,7 @@
                         )}
                 >
                     <span>Room settings</span>
-                    <ChevronRightIcon class={`tw--mr-2`} />
+                    <ChevronRightIcon class={`-mr-2`} />
                 </li>
             {/if}
             <!-- svelte-ignore a11y-click-events-have-key-events -->

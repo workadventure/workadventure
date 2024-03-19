@@ -15,9 +15,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
 
     import Woka from "../Woka/WokaFromUserId.svelte";
-    import { isMediaBreakpointOnly, isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    // @ts-ignore
-    import microphoneOffImg from "../images/microphone-off-blue.png";
+    import { isMediaBreakpointOnly } from "../../Utils/BreakpointsUtils";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
     import { embedScreenLayoutStore, heightCamWrapper } from "../../Stores/EmbedScreensStore";
@@ -30,8 +28,6 @@
     import FlagIcon from "../Icons/FlagIcon.svelte";
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
-    import { srcObject } from "./utils";
-    import BanReportBox from "./BanReportBox.svelte";
     import ActionMediaBox from "./ActionMediaBox.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
@@ -43,8 +39,8 @@
 
     export let clickable = false;
     export let isHightlighted = false;
-
     export let peer: VideoPeer;
+
     let streamStore = peer.streamStore;
     let volumeStore = peer.volumeStore;
     let name = peer.userName;
@@ -60,7 +56,6 @@
     let videoContainer: HTMLDivElement;
     let videoElement: HTMLVideoElementExt;
     let minimized = isMediaBreakpointOnly("md");
-    let isMobile = isMediaBreakpointUp("md");
     let noVideoTimeout: ReturnType<typeof setTimeout> | undefined;
 
     let destroyed = false;
@@ -85,7 +80,6 @@
 
     const resizeObserver = new ResizeObserver(() => {
         minimized = isMediaBreakpointOnly("md");
-        isMobile = isMediaBreakpointUp("md");
     });
 
     // TODO: check the race condition when setting sinkId is solved.
@@ -147,11 +141,10 @@
                 if ("requestVideoFrameCallback" in videoElement) {
                     // Let's wait 3 seconds before displaying a warning.
                     noVideoTimeout = setTimeout(() => {
-                            displayNoVideoWarning = true;
-                            noVideoTimeout = undefined;
-                            analyticsClient.noVideoStreamReceived();
-                        },
-                        3000);
+                        displayNoVideoWarning = true;
+                        noVideoTimeout = undefined;
+                        analyticsClient.noVideoStreamReceived();
+                    }, 3000);
 
                     videoElement.requestVideoFrameCallback(() => {
                         // A video frame was displayed. No need to display a warning.
@@ -251,7 +244,7 @@
 <div
     class="video-container transition-all relative h-full aspect-video"
     class:video-off={!videoEnabled}
-    class:h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
+    class:h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
     bind:this={videoContainer}
     on:click={() => analyticsClient.pinMeetingAction()}
     on:click={() => hightlight()}
@@ -266,15 +259,14 @@
         class:h-full={videoEnabled}
         class:items-center={!videoEnabled || $statusStore === "connecting" || $statusStore === "error"}
         class:px-7={!videoEnabled}
-        class:rounded={!videoEnabled}
         class:flex-row={!videoEnabled}
         class:relative={!videoEnabled}
         class:justify-center={$statusStore === "connecting" || $statusStore === "error"}
     >
         {#if $statusStore === "connecting"}
-            <div class="connecting-spinner" ></div>
+            <div class="connecting-spinner" />
         {:else if $statusStore === "error"}
-            <div class="rtc-error" ></div>
+            <div class="rtc-error" />
         {/if}
         <!-- svelte-ignore a11y-media-has-caption -->
         <video
@@ -286,7 +278,7 @@
             class:max-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
             class:max-h-[80vh]={videoEnabled && isHightlighted}
             class:h-full={videoEnabled}
-            class:rounded={videoEnabled}
+            class:rounded-lg={videoEnabled}
             autoplay
             playsinline
         />
@@ -297,75 +289,106 @@
                     class="absolute w-full h-full top-0 left-0 flex justify-center items-center bg-danger/50 text-white"
                 >
                     <div class="text-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-camera-exclamation" width="32" height="32" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                            <path d="M15 20h-10a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2h1a2 2 0 0 0 2 -2a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v3.5" />
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="icon icon-tabler icon-tabler-camera-exclamation"
+                            width="32"
+                            height="32"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="#ffffff"
+                            fill="none"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path
+                                d="M15 20h-10a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2h1a2 2 0 0 0 2 -2a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v3.5"
+                            />
                             <path d="M9 13a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
                             <path d="M19 16v3" />
                             <path d="M19 22v.01" />
                         </svg>
                         <div class="text-lg bold">{$LL.video.no_video_stream_received()}</div>
-                        <div class="italic text-xs opacity-50">Consulter l'aide ou rafraichir la page <!-- Trad --></div>
+                        <div class="italic text-xs opacity-50">
+                            {$LL.menu.sub.help()}
+                        </div>
                     </div>
                 </div>
             {/if}
             <div class="absolute bottom-4 left-4 z-30">
                 <div class="flex">
-                    <div class="relative rounded bg-contrast/90 backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-9 bold">
+                    <div
+                        class="relative rounded bg-contrast/90 backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-9 bold"
+                    >
                         <div class="absolute left-1 -top-1 z-30" style="image-rendering:pixelated">
                             <Woka
-                                    userId={peer.userId}
-                                    placeholderSrc={""}
-                                    customHeight="42&& !$cameraEnergySavingStorepx"
-                                    customWidth="42px"
+                                userId={peer.userId}
+                                placeholderSrc={""}
+                                customHeight="42&& !$cameraEnergySavingStorepx"
+                                customWidth="42px"
                             />
                         </div>
                         {name}
-                        <div class="p-1 rounded-sm hover:bg-white/20 absolute right-0 top-0 bottom-0 m-auto h-6 w-6 mr-1 transition-all {showUserSubMenu ? 'bg-white/20 hover:bg-white/30' : '' }"  on:click={() => showUserSubMenu = !showUserSubMenu}>
-                            <ChevronDownIcon strokeWidth="2.5" height="h-4" width="w-4" classList="aspect-ratio transition-all {showUserSubMenu ? 'rotate-180' : '' }"  />
+                        <div
+                            class="p-1 rounded-sm hover:bg-white/20 absolute right-0 top-0 bottom-0 m-auto h-6 w-6 mr-1 transition-all pointer-events-auto {showUserSubMenu
+                                ? 'bg-white/20 hover:bg-white/30'
+                                : ''}"
+                            on:click={() => (showUserSubMenu = !showUserSubMenu)}
+                        >
+                            <ChevronDownIcon
+                                strokeWidth="2.5"
+                                height="h-4"
+                                width="w-4"
+                                classList="aspect-ratio transition-all {showUserSubMenu ? 'rotate-180' : ''}"
+                            />
                         </div>
                         {#if showUserSubMenu}
-                            <div class="rounded bg-contrast/80 justify-right font-normal py-1 absolute z-20 mt-1.5 right-0 text-right w-36 overflow-hidden"
-                                 transition:fly={{y: -25, duration: 50 }}
+                            <div
+                                class="rounded bg-contrast/80 justify-right font-normal py-1 absolute z-20 mt-1.5 right-0 text-right w-36 overflow-hidden"
+                                transition:fly={{ y: -25, duration: 50 }}
                             >
                                 <div class="flex items-center px-4 py-1 hover:bg-white/10">
                                     <FullScreenIcon height="h-4" width="w-4" />
-                                    <div class="pl-2">Show wide</div><!-- trans -->
+                                    <div class="pl-2">Show wide</div>
+                                    <!-- trans -->
                                 </div>
                                 <div class="flex items-center px-4 py-1 hover:bg-white/10">
                                     <BusinessCardIcon height="h-4" width="w-4" />
-                                    <div class="pl-2">Business card</div><!-- trans -->
+                                    <div class="pl-2">Business card</div>
+                                    <!-- trans -->
                                 </div>
                                 <div class="flex items-center px-4 py-1 hover:bg-white/10">
                                     <MessageCircleIcon height="h-4" width="w-4" />
-                                    <div class="pl-2">Send message</div><!-- trans -->
+                                    <div class="pl-2">Send message</div>
+                                    <!-- trans -->
                                 </div>
                                 <div class="flex items-center px-4 py-1 hover:bg-white/10">
                                     <VolumeIcon height="h-4" width="w-4" />
-                                    <div class="pl-2">Volume</div><!-- trans -->
+                                    <div class="pl-2">Volume</div>
+                                    <!-- trans -->
                                 </div>
                                 <div class="flex items-center px-4 py-1 hover:bg-white/10">
                                     <MicOffIcon height="h-4" width="w-4" />
-                                    <div class="pl-2">Mute</div><!-- trans -->
+                                    <div class="pl-2">Mute</div>
+                                    <!-- trans -->
                                 </div>
                                 <div class="flex items-center px-4 py-1 hover:bg-danger">
                                     <FlagIcon height="h-4" width="w-4" />
-                                    <div class="pl-2">Report user</div> <!-- trans -->
+                                    <div class="pl-2">Report user</div>
+                                    <!-- trans -->
                                 </div>
                             </div>
                         {/if}
                     </div>
                 </div>
             </div>
-            {#if videoEnabled}
-                <div class="z-[251] absolute aspect-ratio right-3 w-8 p-1 flex items-center justify-center {$constraintStore && $constraintStore.audio !== false ? 'bottom-4' : 'bottom-3' }">
-                    {#if $constraintStore && $constraintStore.audio !== false}
-                        <SoundMeterWidget volume={$volumeStore} classcss="absolute" barColor="blue" />
-                    {:else}
-                        <MicOffIcon />
-                    {/if}
-                </div>
-            {:else}
+            <div
+                class="z-[251] absolute aspect-ratio right-3 w-8 p-1 flex items-center justify-center {$constraintStore &&
+                $constraintStore.audio !== false
+                    ? 'bottom-4'
+                    : 'bottom-3'}"
+            >
                 {#if $constraintStore && $constraintStore.audio !== false}
                     <SoundMeterWidget
                         volume={$volumeStore}
@@ -375,10 +398,7 @@
                 {:else}
                     <MicOffIcon />
                 {/if}
-                <div class="w-full flex report-ban-container-cam-off opacity-0 h-10">
-                    <BanReportBox {peer} />
-                </div>
-            {/if}
+            </div>
         {/if}
     </div>
 </div>

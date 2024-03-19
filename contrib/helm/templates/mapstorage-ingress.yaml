@@ -1,0 +1,57 @@
+{{- if and (or .Values.ingress.enabled .Values.mapstorage.ingress.enabled) (not .Values.singleDomain) -}}
+{{- $fullName := include "workadventure.fullname" . -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}-mapstorage
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotationsRoot }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- $ingressClassName := coalesce .Values.mapstorage.ingress.className .Values.ingress.className -}}
+  {{- if $ingressClassName }}
+  ingressClassName: {{ $ingressClassName }}
+  {{- end }}
+  {{- $tls := coalesce .Values.mapstorage.ingress.tls .Values.ingress.tls false -}}
+  {{- if $tls }}
+  tls:
+    - hosts:
+        {{- if .Values.mapstorage.ingress.domainNames }}
+        {{- range $index, $domainName := .Values.mapstorage.ingress.domainNames }}
+        - {{ $domainName }}
+        {{- end }}
+        {{- else }}
+        - {{ (include "workadventure.mapStorageDomainName" .) | quote }}
+        {{- end }}
+      secretName: {{ .Values.mapstorage.ingress.secretName | default (printf "%s-mapstorage-cert" (include "workadventure.fullname" .)) }}
+  {{- end }}
+  rules:
+  {{- if .Values.mapstorage.ingress.domainNames }}
+  {{- range $index, $domainName := .Values.mapstorage.ingress.domainNames }}
+    - host: {{ $domainName | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: {{ $.Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" $ }}-mapstorage
+                port:
+                  number: {{ $.Values.mapstorage.service.port }}
+  {{- end }}
+  {{- else }}
+    - host: {{ (include "workadventure.mapStorageDomainName" .) | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-mapstorage
+                port:
+                  number: {{ .Values.mapstorage.service.port }}
+  {{- end }}
+{{- end }}

@@ -3,50 +3,50 @@
     import { userIsAdminStore, limitMapStore, bannerStore } from "../../Stores/GameStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import { LL } from "../../../i18n/i18n-svelte";
-    import { warningContainerStore } from "../../Stores/MenuStore";
-    import XIcon from "../Icons/XIcon.svelte";
+    import { warningBannerStore } from "../../Stores/MenuStore";
 
     /* eslint-disable svelte/no-at-html-tags */
 
     const registerLink = ADMIN_URL + "/second-step-register";
 
     function closeBanner() {
-        warningContainerStore.set(false);
+        warningBannerStore.set(false);
         bannerStore.set(null);
     }
 </script>
 
-<main class="warningMain flex justify-center absolute bottom-4 left-4 right-4 " transition:fly={{ y: 200, duration: 500 }}>
+<main
+    class="warningMain flex justify-center absolute bottom-4 left-4 right-4 "
+    transition:fly={{ y: 200, duration: 500 }}
+>
     <div class="backdrop-blur rounded-lg overflow-hidden">
         {#if $bannerStore != undefined}
-            <div
-                    id={$bannerStore.id}
-                    class="m-0 p-4 flex justify-center items-center relative"
-            >
-                <div class="relative z-10 text-lg bold pl-2"
-                     style={`color: ${$bannerStore.textColor};`}
-                >
+            <div id={$bannerStore.id} class="m-0 p-4 flex justify-center items-center relative">
+                <div class="relative z-10 text-lg bold pl-2" style={`color: ${$bannerStore.textColor};`}>
                     {$bannerStore.text}&nbsp;
                     {#if $bannerStore.link}
                         <a
-                                class=" underline"
-                                style={`color: ${$bannerStore.textColor};`}
-                                href={$bannerStore.link.url}
-                                target="_blank"
-                                rel="noreferrer"
+                            class=" underline"
+                            style={`color: ${$bannerStore.textColor};`}
+                            href={$bannerStore.link.url}
+                            target="_blank"
+                            rel="noreferrer"
                         >
                             {$bannerStore.link.label}
                         </a>
                     {/if}
                 </div>
-                <div class="absolute w-full h-full z-0 {$bannerStore.bgColor ? '' : 'bg-contrast/50' }"
-                     style={`background-color:${$bannerStore.bgColor};`}
-                ></div>
+                <div
+                    class="absolute w-full h-full z-0 {$bannerStore.bgColor ? '' : 'bg-contrast/50'}"
+                    style={`background-color:${$bannerStore.bgColor};`}
+                />
                 {#if $bannerStore.closable}
-                    <button class="btn btn-ghost relative z-10 ml-4 !py-1" style={`color: ${$bannerStore.bgColor};background:${$bannerStore.textColor};`}
-                            on:click|preventDefault={closeBanner}
+                    <button
+                        class="btn btn-ghost relative z-10 ml-4 !py-1"
+                        style={`color: ${$bannerStore.bgColor};background:${$bannerStore.textColor};`}
+                        on:click|preventDefault={closeBanner}
                     >
-                        Got it ! <!-- Trad -->
+                        {$LL.actionbar.understand()}
                     </button>
                 {/if}
             </div>

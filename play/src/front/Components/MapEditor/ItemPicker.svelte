@@ -150,6 +150,7 @@
     </div>
     <div class="item-variations">
         {#if pickedItem}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <p on:click|preventDefault={backToSelectObject} class="flex flex-row items-center text-xs m-0">
                 <ArrowLeftIcon size="12" class="cursor-pointer" />
                 <span class="ml-1 cursor-pointer">{$LL.mapEditor.entityEditor.itemPicker.backToSelectObject()}</span>
@@ -166,6 +167,7 @@
             </div>
             <div class="item-variant-picker-container h-28">
                 {#each currentVariants as item (item.id)}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         class="pickable-item {item.imagePath === pickedVariant?.imagePath ? 'active' : ''}"
                         on:click={() => onPickItemVariant(item)}

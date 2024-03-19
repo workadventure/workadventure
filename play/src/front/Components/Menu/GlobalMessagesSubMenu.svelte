@@ -33,16 +33,20 @@
 <div>
     <div class="global-message-subOptions mb-8">
         <section class="flex border border-solid border-white/20 pl-4">
-          <button
-            type="button"
-            class="py-6 px-12 text-lg bold relative {inputSendTextActive ? 'after:content-[\'\'] after:absolute after:w-full after:h-2 after:bg-secondary after:-bottom-[4px] after:left-0 after:rounded-lg' : 'opacity-50'}"
-            on:click|preventDefault={activateInputText}>{$LL.menu.globalMessage.text()}</button
-          >
-          <button
-            type="button"
-            class="py-6 px-12 text-lg bold relative {uploadAudioActive ? 'after:content-[\'\'] after:absolute after:w-full after:h-2 after:bg-secondary after:-bottom-[4px] after:left-0 after:rounded-lg' : 'opacity-50'}"
-            on:click|preventDefault={activateUploadAudio}>{$LL.menu.globalMessage.audio()}</button
-          >
+            <button
+                type="button"
+                class="py-6 px-12 text-lg bold relative {inputSendTextActive
+                    ? "after:content-[''] after:absolute after:w-full after:h-2 after:bg-secondary after:-bottom-[4px] after:left-0 after:rounded-lg"
+                    : 'opacity-50'}"
+                on:click|preventDefault={activateInputText}>{$LL.menu.globalMessage.text()}</button
+            >
+            <button
+                type="button"
+                class="py-6 px-12 text-lg bold relative {uploadAudioActive
+                    ? "after:content-[''] after:absolute after:w-full after:h-2 after:bg-secondary after:-bottom-[4px] after:left-0 after:rounded-lg"
+                    : 'opacity-50'}"
+                on:click|preventDefault={activateUploadAudio}>{$LL.menu.globalMessage.audio()}</button
+            >
         </section>
     </div>
     <div class="global-message-content">

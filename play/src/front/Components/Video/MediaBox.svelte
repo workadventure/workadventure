@@ -12,7 +12,6 @@
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
-    import loaderImg from "./../images/loader.svg";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -56,7 +55,7 @@
             class:mozaic-duo={mozaicDuo}
             class:mozaic-full-width={mozaicSolo}
             class:mozaic-quarter={mozaicQuarter}
-            transition:fly={{y: 50, duration: 150 }}
+            transition:fly={{ y: 50, duration: 150 }}
         >
             <VideoMediaBox peer={streamable} clickable={isClickable} />
         </div>
@@ -88,8 +87,8 @@
         class:m-auto={!isHightlighted && !streamable.getVideoTrack()}
         class:h-12={!isHightlighted && !streamable.getVideoTrack()}
         class:clickable={isClickable}
-        class:mozaic-duo={mozaicDuo}
         class:mozaic-full-width={mozaicSolo}
+        class:mozaic-duo={mozaicDuo}
         class:mozaic-quarter={mozaicQuarter}
     >
         <div
@@ -105,8 +104,8 @@
     <div
         class="media-container  {isHightlighted ? 'hightlighted mr-6' : 'flex h-full aspect-ratio'}"
         class:clickable={isClickable}
-        class:mozaic-duo={mozaicDuo}
         class:mozaic-full-width={mozaicSolo}
+        class:mozaic-duo={mozaicDuo}
         class:mozaic-quarter={mozaicQuarter}
     >
         <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'}   w-full h-full flex screen-blocker">

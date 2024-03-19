@@ -19,12 +19,12 @@
         resizeObserver.observe(layoutDom);
         highlightedEmbedScreen.removeHighlight();
     });
-    $:console.log(cardHeight);
+    $: console.log(cardHeight);
 </script>
 
-<div id="mozaic-layout" class="flex justify-center lg:pt-9" bind:this={layoutDom}>
+<div id="mozaic-layout" class="flex justify-center content-center items-center lg:pt-9 pb-16" bind:this={layoutDom}>
     <div
-        class="media-container grid mozaic-grid content-start"
+        class="media-container grid mozaic-grid content-start backdrop-blur-sm bg-black/20 pointer-events-auto max-h-full overflow-y-auto"
         class:grid-cols-1={$streamableCollectionStore.size === 1}
         class:grid-cols-2={$streamableCollectionStore.size >= 2}
     >

@@ -36,13 +36,13 @@
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     {#if $statusStore === "connecting"}
-        <div class="connecting-spinner"></div>
+        <div class="connecting-spinner" />
     {/if}
     {#if $statusStore === "error"}
-        <div class="rtc-error"></div>
+        <div class="rtc-error" />
     {/if}
     {#if $streamStore !== null}
-        <video use:srcObject={$streamStore} autoplay playsinline class="h-full max-w-full mx-auto rounded" muted></video>
+        <video use:srcObject={$streamStore} autoplay playsinline class="h-full max-w-full mx-auto rounded" muted />
         <div
             class="nametag-screenshare-container container-end flex media-box-camera-on-size video-on-responsive-height"
         >

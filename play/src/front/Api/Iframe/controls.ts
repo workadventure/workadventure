@@ -82,6 +82,86 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
     restorePlayerProximityMeeting(): void {
         sendToWorkadventure({ type: "restorePlayerProximityMeeting", data: undefined });
     }
+
+    /**
+     * Disable map editor mode.
+     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-map-editor | Website documentation}
+     */
+    disableMapEditor(): void {
+        sendToWorkadventure({ type: "disableMapEditor", data: undefined });
+    }
+
+    /**
+     * Restore map editor mode.
+     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-map-editor | Website documentation}
+     */
+    restoreMapEditor(): void {
+        sendToWorkadventure({ type: "restoreMapEditor", data: undefined });
+    }
+
+    /**
+     * Disable screen sharing.
+     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-screen-sharing | Website documentation}
+     */
+    disableScreenSharing(): void {
+        sendToWorkadventure({ type: "disableScreenSharing", data: undefined });
+    }
+
+    /**
+     * Restore screen sharing.
+     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-screen-sharing | Website documentation}
+     */
+    restoreScreenSharing(): void {
+        sendToWorkadventure({ type: "restoreScreenSharing", data: undefined });
+    }
+
+    /**
+     * Disable wheel zoom.
+     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-wheel-zoom | Website documentation}
+     */
+    disableWheelZoom(): void {
+        sendToWorkadventure({ type: "disableWheelZoom", data: undefined });
+    }
+
+    /**
+     * Restore wheel zoom.
+     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-wheel-zoom | Website documentation}
+     */
+    restoreWheelZoom(): void {
+        sendToWorkadventure({ type: "restoreWheelZoom", data: undefined });
+    }
+
+    /**
+     * Disable Right Click.
+     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-right-click | Website documentation}
+     */
+    disableRightClick(): void {
+        sendToWorkadventure({ type: "disableRightClick", data: undefined });
+    }
+
+    /**
+     * Restore Right Click.
+     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-right-click | Website documentation}
+     */
+    restoreRightClick(): void {
+        sendToWorkadventure({ type: "restoreRightClick", data: undefined });
+    }
+
+    /**
+     * Disable invite button.
+     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-invite-button | Website documentation}
+     */
+    disableInviteButton(): void {
+        sendToWorkadventure({ type: "disableInviteUserButton", data: undefined });
+    }
+
+    /**
+     * Restore invite button.
+     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-invite-user-button | Website documentation}
+     */
+    restoreInviteButton(): void {
+        sendToWorkadventure({ type: "restoreInviteUserButton", data: undefined });
+    }
 }
 
 export default new WorkadventureControlsCommands();

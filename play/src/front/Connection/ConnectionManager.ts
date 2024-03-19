@@ -9,7 +9,7 @@ import {
 } from "@workadventure/messages";
 import { isAxiosError } from "axios";
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import { subMenusStore, userIsConnected, warningContainerStore } from "../Stores/MenuStore";
+import { subMenusStore, userIsConnected, warningBannerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
@@ -301,7 +301,7 @@ class ConnectionManager {
 
         //if limit room active test headband
         if (this._currentRoom.expireOn !== undefined) {
-            warningContainerStore.activateWarningContainer();
+            warningBannerStore.activateWarningContainer();
             limitMapStore.set(true);
 
             //check time of map

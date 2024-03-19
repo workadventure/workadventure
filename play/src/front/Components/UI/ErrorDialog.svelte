@@ -2,7 +2,6 @@
     import { errorStore, hasClosableMessagesInErrorStore } from "../../Stores/ErrorStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { connectionManager } from "../../Connection/ConnectionManager";
-    // import ImgVirtualhugsvirtualhug from "../images/virtual-hugs-virtual-hug.gif";
     import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
     import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 
@@ -30,22 +29,23 @@
 
 <div class="error-div is-dark is-rounded flex flex-col items-center justify-center">
     <p class="is-error title">{$LL.error.errorDialog.title()}</p>
+    <p class="is-error title">{$LL.error.errorDialog.title()}</p>
     <div class="body">
         {#each $errorStore as error (error.id)}
             <p>{error.message}</p>
         {/each}
         {#if connectionManager.currentRoom?.reportIssuesUrl}
-            <p class="tw-text-xs">
+            <p class="text-xs">
                 {$LL.error.errorDialog.hasReportIssuesUrl()}
                 <a href={connectionManager.currentRoom.reportIssuesUrl} target="_blank" rel="noopener noreferrer"
                     >{connectionManager.currentRoom.reportIssuesUrl}</a
                 >
             </p>
         {:else}
-            <p class="tw-text-xs">
+            <p class="text-xs">
                 {$LL.error.errorDialog.noReportIssuesUrl()}
             </p>
-            <p class="tw-text-xs">
+            <p class="text-xs">
                 {$LL.error.errorDialog.messageFAQ()}
                 <a
                     href="https://workadventu.re/faq"
@@ -55,12 +55,12 @@
                 >
             </p>
         {/if}
-    {#if $hasClosableMessagesInErrorStore}
-        <section class="footer tw-w-full tw-flex tw-flex-row tw-justify-center tw-backdrop-blur-sm">
-            <button class="light" on:click={close}>{$LL.error.errorDialog.close()}</button>
-            <button class="light outline" on:click={refresh}>{$LL.error.errorDialog.reload()}</button>
-        </section>
-    {/if}
+        {#if $hasClosableMessagesInErrorStore}
+            <section class="footer w-full flex flex-row justify-center backdrop-blur-sm">
+                <button class="light" on:click={close}>{$LL.error.errorDialog.close()}</button>
+                <button class="light outline" on:click={refresh}>{$LL.error.errorDialog.reload()}</button>
+            </section>
+        {/if}
     </div>
 </div>
 

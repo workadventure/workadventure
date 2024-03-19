@@ -2,7 +2,7 @@
     import { fade, fly } from "svelte/transition";
     import { UserData } from "@workadventure/messages";
     import { onDestroy, onMount } from "svelte";
-    import { ArrowDownIcon, ArrowUpIcon } from "svelte-feather-icons";
+    import { ArrowUpIcon } from "svelte-feather-icons";
     import { get, Unsubscriber } from "svelte/store";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { ChatState } from "stanza/Constants";
@@ -169,7 +169,7 @@
                 "--category-button-color": "#00FF00",
                 "--category-button-active-color": "rgb(65, 86, 246)",
             },
-            position: 'bottom-start',
+            position: "bottom-start",
             emojisPerRow: 5,
             autoFocusSearch: false,
             showPreview: false,
@@ -221,7 +221,9 @@
         <div class="mb-auto load-history flex items-center pb-2">
             {#if $canLoadOlderMessagesStore}
                 {#if !$loadingStore}
-                    <button class="m-auto cursor-pointer text-xs rounded-xl btn btn-border btn-light btn-xs !px-3" on:click={() => mucRoom.sendRetrieveLastMessages()}
+                    <button
+                        class="m-auto cursor-pointer text-xs rounded-xl btn btn-border btn-light btn-xs !px-3"
+                        on:click={() => mucRoom.sendRetrieveLastMessages()}
                         >{$LL.load()}
                         {$LL.more()}
                         <ArrowUpIcon size="13" class="ml-1" /></button
@@ -230,7 +232,7 @@
                     <div
                         style="border-top-color:transparent"
                         class="w-5 h-5 border-2 border-white border-solid rounded-full animate-spin m-auto"
-                    ></div>
+                    />
                 {/if}
             {:else if $showDisabledLoadOlderMessagesStore && $me && $me.isAdmin}
                 {#if ADMIN_API_URL}
@@ -268,7 +270,6 @@
             <div class="emote-menu-container">
                 <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
             </div>
-
         {/each}
         {#each $usersStore
             .filter((userFilter) => !get(userFilter).isMe && get(userFilter).chatState === ChatState.Composing)
@@ -317,8 +318,19 @@
                     tabindex="0"
                     on:click={scrollDownAndRead}
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevrons-down" width="16" height="16" viewBox="0 0 24 24" stroke-width="1.5" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="icon icon-tabler icon-tabler-chevrons-down"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="#ffffff"
+                        fill="none"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M7 7l5 5l5 -5" />
                         <path d="M7 13l5 5l5 -5" />
                     </svg>

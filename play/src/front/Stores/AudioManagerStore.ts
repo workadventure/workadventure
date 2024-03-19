@@ -3,8 +3,6 @@ import { peerStore } from "./PeerStore";
 import { popupStore } from "./PopupStore";
 import PopUpSound from '../Components/PopUp/PopUpSound.svelte';
 
-// let popupUUID: void;
-
 export interface audioManagerVolume {
     muted: boolean;
     volume: number;

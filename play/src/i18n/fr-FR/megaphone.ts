@@ -3,8 +3,8 @@ import type { Translation } from "../i18n-types";
 
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
-        selectCamera: "Sélectionnez une caméra 📹",
-        selectMicrophone: "Sélectionnez un microphone 🎙️",
+        selectCamera: "Sélectionnez une caméra",
+        selectMicrophone: "Sélectionnez un microphone",
         liveMessage: {
             startMegaphone: "Démarrer le mégaphone",
             goingToStream: "Vous allez diffuser",
@@ -34,6 +34,7 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             Un exemple de message : "La conférence de la salle 3 commence dans 2 minutes 🎉. Vous pouvez vous rendre dans la zone de conférence 3 et ouvire l'application de visio 🚀"
             `,
             button: "Envoyer un message texte",
+            noAccess: "Vous n'avez pas accès à cette fonctionnalité 😱 Veuillez contacter l'administrateur 🙏",
         },
         audioMessage: {
             title: "Message audio",
@@ -45,6 +46,7 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             Un exemple de message auio peut être un enregistrement audio pour indiquer qu'une conférence va démarrer dans quelques minutes.
             `,
             button: "Envoyer un message audio",
+            noAccess: "Vous n'avez pas accès à cette fonctionnalité 😱 Veuillez contacter l'administrateur 🙏",
         },
     },
 };

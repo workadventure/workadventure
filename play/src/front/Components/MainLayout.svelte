@@ -1,26 +1,19 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    // import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
-    // import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { emoteDataStoreLoading, emoteMenuStore } from "../Stores/EmoteStore";
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpCameraSettingsVisibleStore, helpWebRtcSettingsVisibleStore } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
-    // import { handleChange, layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
-    import { menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
+    import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
-    // import { followStateStore } from "../Stores/FollowStore";
-
-    // import { peerStore } from "../Stores/PeerStore";
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
     import {
         showLimitRoomModalStore,
         modalVisibilityStore,
-        // showModalGlobalComminucationVisibilityStore,
         modalPopupVisibilityStore,
-        // roomListVisibilityStore,
+        showModalGlobalComminucationVisibilityStore,
     } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
@@ -29,22 +22,17 @@
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
-    // import { askDialogStore } from "../Stores/MeetingStore";
-    // import AudioManager from "./AudioManager/AudioManager.svelte";
     import { popupStore } from "../Stores/PopupStore";
     import { askDialogStore } from "../Stores/MeetingStore";
-    // import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
-    // import AudioManager from "./AudioManager/AudioManager.svelte";
-    import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
+    import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
+    import { warningMessageStore } from "../Stores/ErrorStore";
     import ActionBar from "./ActionBar/ActionBar.svelte";
-    // import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
     import HelpCameraSettingsPopup from "./HelpSettings/HelpCameraSettingsPopup.svelte";
     import HelpWebRtcSettingsPopup from "./HelpSettings/HelpWebRtcSettingsPopup.svelte";
-    // import LayoutManagerStore from "../Stores/LayoutManagerStore";
     import Menu from "./Menu/Menu.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
-    import WarningContainer from "./WarningContainer/WarningContainer.svelte";
+    import WarningBanner from "./WarningContainer/WarningBanner.svelte";
     import BanMessageContainer from "./TypeMessage/BanMessageContainer.svelte";
     import TextMessageContainer from "./TypeMessage/TextMessageContainer.svelte";
     import AudioPlaying from "./UI/AudioPlaying.svelte";
@@ -56,11 +44,14 @@
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
-    import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
+    import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
+    import ObjectDetails from "./Modal/ObjectDetails.svelte";
+    import Popup from "./Modal/Popup.svelte";
+    import MapList from "./Exploration/MapList.svelte";
+    import WarningToast from "./WarningContainer/WarningToast.svelte";
 
     let mainLayout: HTMLDivElement;
-
-    export let message: string;
+    // export let message: string;
 
     let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
@@ -76,7 +67,9 @@
 <!-- Components ordered by z-index -->
 <div
     id="main-layout"
-    class="relative z-10 h-screen pointer-events-none {[...$coWebsites.values()].length === 0 ? 'not-cowebsite' : ''}"
+    class="@container/main-layout relative z-10 h-screen pointer-events-none {[...$coWebsites.values()].length === 0
+        ? 'not-cowebsite'
+        : ''}"
     bind:this={mainLayout}
 >
     {#if $modalVisibilityStore || $modalPopupVisibilityStore}
@@ -106,15 +99,15 @@
         {/if}
 
         {#if $notificationPlayingStore}
-            <div class="tw-flex tw-flex-col tw-absolute tw-w-auto tw-right-0">
+            <div class="flex flex-col absolute w-auto right-0">
                 {#each [...$notificationPlayingStore.values()] as notification (notification.id)}
                     <Notification {notification} />
                 {/each}
             </div>
         {/if}
 
-        {#if $warningContainerStore}
-            <WarningContainer />
+        {#if $warningBannerStore}
+            <WarningBanner />
         {/if}
 
         {#if $showReportScreenStore !== userReportEmpty}
@@ -145,7 +138,7 @@
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
         {/if}
 
-        <!-- {#if hasEmbedScreen}
+        <!-- {#if $hasEmbedScreen}
             <EmbedScreensContainer />
         {/if} -->
 
@@ -156,35 +149,44 @@
         {#if $modalVisibilityStore}
             <Modal />
         {/if}
+        {#if $modalVisibilityStore}
+            <Modal />
+        {/if}
+
+        {#if $askDialogStore}
+            <MuteDialogBox />
+        {/if}
+
+        {#if $showModalGlobalComminucationVisibilityStore}
+            <GlobalCommunicationModal />
+        {/if}
+
+        {#if $mapExplorationObjectSelectedStore}
+            <ObjectDetails />
+        {/if}
+
+        {#if $modalPopupVisibilityStore}
+            <Popup />
+        {/if}
+
+        {#if $modalVisibilityStore}
+            <MapList />
+        {/if}
+
+        {#if $warningMessageStore.length > 0}
+            <WarningToast />
+        {/if}
     </section>
 
-    {#if $modalVisibilityStore}
-        <Modal />
+    {#if $actionsMenuStore}
+        <ActionsMenu />
     {/if}
 
-    {#if $askDialogStore}
-        <MuteDialogBox />
-    {/if}
-
-    {#if $layoutManagerActionVisibilityStore}
-        <LayoutActionManager />
-    {/if}
-
+    <ActionBar />
+    <!-- svelte-ignore missing-declaration -->
     <div class="popups">
-        {#each $popupStore as popup, index (popup.uuid)}
-            <div
-                class="popupwrapper {index === 0
-                    ? 'popup1'
-                    : index === 1
-                    ? 'popup2'
-                    : index === 2
-                    ? 'popup3'
-                    : index === 3
-                    ? 'popup4'
-                    : index === 4
-                    ? 'popup5'
-                    : ''}"
-            >
+        {#each $popupStore.slice().reverse() as popup (popup.uuid)}
+            <div class="popupwrapper">
                 <svelte:component
                     this={popup.component}
                     {...popup.props}
@@ -193,12 +195,6 @@
             </div>
         {/each}
     </div>
-
-    {#if $actionsMenuStore}
-        <ActionsMenu />
-    {/if}
-
-    <ActionBar />
 
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
@@ -228,35 +224,42 @@
         transform: translate(-50%, -50%);
     }
 
-    .popup1 {
+    .popupwrapper:nth-child(1) {
         z-index: 505;
     }
 
-    .popup2 {
+    .popupwrapper:nth-child(2) {
         top: 77%;
-        z-index: 504;
         transform: translate(-50%, -50%) scale(0.95);
         filter: blur(2px);
     }
 
-    .popup3 {
+    .popupwrapper:nth-child(3) {
         top: 74%;
-        z-index: 503;
         transform: translate(-50%, -50%) scale(0.9);
         filter: blur(4px);
     }
 
-    .popup4 {
-        top: 77%; // voir pour les popups plus grandes
-        z-index: 502;
-        transform: translate(-50%, -50%) scale(0.9);
+    .popupwrapper:nth-child(4) {
+        top: 72%;
+        transform: translate(-50%, -50%) scale(0.85);
         filter: blur(4px);
     }
 
-    .popup5 {
-        top: 72%; // voir pour les popups plus grandes
-        z-index: 501;
-        transform: translate(-50%, -50%) scale(0.9);
+    .popupwrapper:nth-child(5) {
+        top: 68%;
+        transform: translate(-50%, -50%) scale(0.8);
         filter: blur(4px);
+    }
+
+    .popupwrapper:nth-child(6),
+    .popupwrapper:nth-child(7),
+    .popupwrapper:nth-child(8),
+    .popupwrapper:nth-child(9),
+    .popupwrapper:nth-child(10),
+    .popupwrapper:nth-child(11),
+    .popupwrapper:nth-child(12),
+    .popupwrapper:nth-child(13) {
+        display: none;
     }
 </style>

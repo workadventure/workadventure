@@ -30,8 +30,8 @@
     }
 </script>
 
-<div class="input-tags tw-flex tw-flex-col tw-pb-5 tw-text-dark-purple">
-    <label for="selector" class="tw-text-white">
+<div class="input-tags flex flex-col pb-5 text-dark-purple">
+    <label for="selector" class="text-white">
         {label}
     </label>
     <Select

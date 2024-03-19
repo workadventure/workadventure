@@ -65,10 +65,10 @@
                     </div>
                     <div class="rounded-lg bg-dark text-xs p-3">
                         <!-- loading animation -->
-                        <div class="loading-group">
-                            <span class="loading-dot"></span>
-                            <span class="loading-dot"></span>
-                            <span class="loading-dot"></span>
+                        <div class="loading-group flex items-center space-x-1 relative">
+                            <span class="loading-dot w-2 h-2 aspect-square bg-white block rounded-full" />
+                            <span class="loading-dot w-2 h-2 aspect-square bg-white block rounded-full" />
+                            <span class="loading-dot w-2 h-2 aspect-square bg-white block rounded-full" />
                         </div>
                     </div>
                 </div>
@@ -78,39 +78,31 @@
 {/if}
 
 <style lang="scss">
-  $dot-width: 10px;
-  $dot-color: #FFFFFF;
-  $speed: 1.5s;
+    $speed: 1.5s;
 
-  .loading-group {
-    position: relative;
-    display: flex;
-    .loading-dot {
-      animation: blink $speed infinite;
-      animation-fill-mode: both;
-      @apply w-2 h-2 aspect-square bg-white block rounded-full;
-      &:nth-child(2) {
-        animation-delay: .2s;
-        @apply ml-1;
-      }
+    .loading-group {
+        .loading-dot {
+            animation: blink $speed infinite;
+            animation-fill-mode: both;
+            &:nth-child(2) {
+                animation-delay: 0.2s;
+            }
 
-      &:nth-child(3) {
-        animation-delay: .4s;
-        @apply ml-1;
-      }
+            &:nth-child(3) {
+                animation-delay: 0.4s;
+            }
+        }
     }
-  }
 
-
-  @keyframes blink {
-    0% {
-      opacity: .1;
+    @keyframes blink {
+        0% {
+            opacity: 0.1;
+        }
+        20% {
+            opacity: 1;
+        }
+        100% {
+            opacity: 0.1;
+        }
     }
-    20% {
-      opacity: 1;
-    }
-    100% {
-      opacity: .1;
-    }
-  }
 </style>

@@ -66,7 +66,6 @@ import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
-import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteMenuStore, emoteStore } from "../../Stores/EmoteStore";
 import {
@@ -78,8 +77,11 @@ import {
 import {
     activeSubMenuStore,
     contactPageStore,
+    inviteUserActivated,
     mapEditorActivated,
+    mapManagerActivated,
     menuVisiblilityStore,
+    screenSharingActivatedStore,
     SubMenusInterface,
     subMenusStore,
 } from "../../Stores/MenuStore";
@@ -137,6 +139,12 @@ import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { JitsiBroadcastSpace } from "../../Streaming/Jitsi/JitsiBroadcastSpace";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
 import { askDialogStore } from "../../Stores/MeetingStore";
+import { warningMessageStore } from "../../Stores/ErrorStore";
+import { popupStore } from "../../Stores/PopupStore";
+import PopUpRoomAccessDenied from "../../Components/PopUp/PopUpRoomAccessDenied.svelte";
+import PopUpMapEditorNotEnabled from "../../Components/PopUp/PopUpMapEditorNotEnabled.svelte";
+import PopUpMapEditorShortcut from "../../Components/PopUp/PopUpMapEditorShortcut.svelte";
+import PopUpTriggerActionMessage from "../../Components/PopUp/PopUpTriggerActionMessage.svelte";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -155,17 +163,16 @@ import { ActivatablesManager } from "./ActivatablesManager";
 import type { AddPlayerInterface } from "./AddPlayerInterface";
 import type { CameraManagerEventCameraUpdateData } from "./CameraManager";
 import { CameraManager, CameraManagerEvent } from "./CameraManager";
-
 import { EditorToolName, MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
 import { RemotePlayersRepository } from "./RemotePlayersRepository";
 import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
 import { IframeEventDispatcher } from "./IframeEventDispatcher";
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
-import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { faviconManager } from "./../../WebRtc/FaviconManager";
+import { UIWebsiteManager } from "./UI/UIWebsiteManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -290,6 +297,7 @@ export class GameScene extends DirtyScene {
     private playersDebugLogAlreadyDisplayed = false;
     private _broadcastService: BroadcastService | undefined;
     private hideTimeout: ReturnType<typeof setTimeout> | undefined;
+    private uiWebsiteManager: UIWebsiteManager;
 
     constructor(private _room: Room, customKey?: string | undefined) {
         super({
@@ -313,6 +321,7 @@ export class GameScene extends DirtyScene {
         this.connectionAnswerPromiseDeferred = new Deferred<RoomJoinedMessageInterface>();
         this.loader = new Loader(this);
         this.superLoad = new SuperLoaderPlugin(this);
+        this.uiWebsiteManager = new UIWebsiteManager();
     }
 
     //hook preload scene
@@ -1309,6 +1318,12 @@ export class GameScene extends DirtyScene {
                     );
                 });
 
+                // The errorMessageStream is completed in the RoomConnection. No need to unsubscribe.
+                //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.errorMessageStream.subscribe((errorMessage) => {
+                    warningMessageStore.addWarningMessage(errorMessage.message);
+                });
+
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
 
@@ -1712,18 +1727,19 @@ export class GameScene extends DirtyScene {
                     return;
                 }
                 const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
-                let html = '<div id="container" hidden>';
+                let html =
+                    '<div id="container" class="relative bg-contrast/50 backdrop-blur pt-4 overflow-hidden rounded-lg text-white" hidden>';
                 if (escapedMessage) {
-                    html += `<div class="relative bg-contrast/80 backdrop-blur p-2 rounded-lg last:rounded-r-lg">
+                    html += `<div class="text-xxs text-center px-4">
 ${escapedMessage}
  </div> `;
                 }
 
-                const buttonContainer = '<div class="buttonContainer"</div>';
+                const buttonContainer = '<div class="buttonContainer bg-contrast/50 py-4 px-4 mt-2"</div>';
                 html += buttonContainer;
                 let id = 0;
                 for (const button of openPopupEvent.buttons) {
-                    html += `<button type="button" class="is-${HtmlUtils.escapeHtml(
+                    html += `<button type="button" class="btn btn-xs justify-center w-full pb-4 ${HtmlUtils.escapeHtml(
                         button.className ?? ""
                     )}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
                     id++;
@@ -2050,6 +2066,38 @@ ${escapedMessage}
             })
         );
 
+        this.iframeSubscriptionList.push(
+            iframeListener.mapEditorStream.subscribe((isActivated: boolean) => {
+                mapManagerActivated.set(isActivated);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.screenSharingStream.subscribe((isActivated: boolean) => {
+                screenSharingActivatedStore.set(isActivated);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.rightClickStream.subscribe((isRestore: boolean) => {
+                if (isRestore) this.userInputManager.restoreRightClick();
+                else this.userInputManager.disableRightClick();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.wheelZoomStream.subscribe((isRestore: boolean) => {
+                if (isRestore) this.cameraManager.unlockZoom();
+                else this.cameraManager.lockZoom();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.inviteUserButtonStream.subscribe((isActivated: boolean) => {
+                inviteUserActivated.set(isActivated);
+            })
+        );
+
         iframeListener.registerAnswerer("openCoWebsite", async (openCoWebsite, source) => {
             if (!source) {
                 throw new Error("Unknown query source");
@@ -2099,15 +2147,15 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("openUIWebsite", (websiteConfig) => {
-            return uiWebsiteManager.open(websiteConfig);
+            return this.uiWebsiteManager.open(websiteConfig);
         });
 
         iframeListener.registerAnswerer("getUIWebsites", () => {
-            return uiWebsiteManager.getAll();
+            return this.uiWebsiteManager.getAll();
         });
 
         iframeListener.registerAnswerer("getUIWebsiteById", (websiteId) => {
-            const website = uiWebsiteManager.getById(websiteId);
+            const website = this.uiWebsiteManager.getById(websiteId);
             if (!website) {
                 throw new Error("Unknown ui-website");
             }
@@ -2115,7 +2163,7 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("closeUIWebsite", (websiteId) => {
-            return uiWebsiteManager.close(websiteId);
+            return this.uiWebsiteManager.close(websiteId);
         });
 
         iframeListener.registerAnswerer("getMapData", () => {
@@ -2274,16 +2322,18 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("triggerActionMessage", (message) =>
-            layoutManagerActionStore.addAction({
-                uuid: message.uuid,
-                type: "message",
-                message: message.message,
-                callback: () => {
-                    layoutManagerActionStore.removeAction(message.uuid);
-                    iframeListener.sendActionMessageTriggered(message.uuid);
+            popupStore.addPopup(
+                PopUpTriggerActionMessage,
+                {
+                    message: message.message,
+                    click: () => {
+                        popupStore.removePopup(message.uuid);
+                        iframeListener.sendActionMessageTriggered(message.uuid);
+                    },
+                    userInputManager: this.userInputManager,
                 },
-                userInputManager: this.userInputManager,
-            })
+                message.uuid
+            )
         );
 
         iframeListener.registerAnswerer("setVariable", (event, source) => {
@@ -2316,7 +2366,7 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("removeActionMessage", (message) => {
-            layoutManagerActionStore.removeAction(message.uuid);
+            popupStore.removePopup(message.uuid);
         });
 
         iframeListener.registerAnswerer("setPlayerOutline", (message) => {
@@ -2439,15 +2489,17 @@ ${escapedMessage}
             console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);
 
             //show information room access denied
-            layoutManagerActionStore.addAction({
-                uuid: "roomAccessDenied",
-                type: "warning",
-                message: get(LL).warning.accessDenied.room(),
-                callback: () => {
-                    layoutManagerActionStore.removeAction("roomAccessDenied");
+            popupStore.addPopup(
+                PopUpRoomAccessDenied,
+                {
+                    message: get(LL).warning.accessDenied.room(),
+                    click: () => {
+                        popupStore.removePopup("roomAccessDenied");
+                    },
+                    userInputManager: this.userInputManager,
                 },
-                userInputManager: this.userInputManager,
-            });
+                "roomAccessDenied"
+            );
 
             this.mapTransitioning = false;
             return;
@@ -2515,11 +2567,11 @@ ${escapedMessage}
         }
 
         iframeListener.cleanup();
-        uiWebsiteManager.closeAll();
+        this.uiWebsiteManager.closeAll();
         followUsersStore.stopFollowing();
 
         audioManagerFileStore.unloadAudio();
-        layoutManagerActionStore.clearActions();
+        popupStore.clearActions();
 
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         this.connection?.closeConnection();
@@ -2612,14 +2664,19 @@ ${escapedMessage}
         const toolEditorParam = urlManager.getHashParameter("mapEditor");
         if (toolEditorParam) {
             if (!get(mapEditorActivated)) {
-                layoutManagerActionStore.addAction({
-                    uuid: "mapEditorNotEnabled",
-                    type: "warning",
-                    message: get(LL).warning.mapEditorNotEnabled(),
-                    callback: () => layoutManagerActionStore.removeAction("mapEditorNotEnabled"),
-                    userInputManager: this.userInputManager,
-                });
-                setTimeout(() => layoutManagerActionStore.removeAction("mapEditorNotEnabled"), 6_000);
+                popupStore.addPopup(
+                    PopUpMapEditorNotEnabled,
+                    {
+                        message: get(LL).warning.mapEditorNotEnabled(),
+                        click: () => {
+                            popupStore.removePopup("mapEditorNotEnabled");
+                        },
+                        userInputManager: this.userInputManager,
+                    },
+                    "mapEditorNotEnabled"
+                );
+
+                setTimeout(() => popupStore.removePopup("mapEditorNotEnabled"), 6_000);
             } else {
                 switch (toolEditorParam) {
                     case "wamSettingsEditorTool": {
@@ -2658,14 +2715,19 @@ ${escapedMessage}
                         break;
                     }
                     default: {
-                        layoutManagerActionStore.addAction({
-                            uuid: "mapEditorShortCut",
-                            type: "warning",
-                            message: get(LL).warning.mapEditorShortCut(),
-                            callback: () => layoutManagerActionStore.removeAction("mapEditorShortCut"),
-                            userInputManager: this.userInputManager,
-                        });
-                        setTimeout(() => layoutManagerActionStore.removeAction("mapEditorShortCut"), 6_000);
+                        popupStore.addPopup(
+                            PopUpMapEditorShortcut,
+                            {
+                                message: get(LL).warning.mapEditorShortCut(),
+                                click: () => {
+                                    popupStore.removePopup("mapEditorShortCut");
+                                },
+                                userInputManager: this.userInputManager,
+                            },
+                            "mapEditorShortCut"
+                        );
+
+                        setTimeout(() => popupStore.removePopup("mapEditorShortCut"), 6_000);
                         break;
                     }
                 }
@@ -3358,7 +3420,7 @@ ${escapedMessage}
     }
 
     zoomByFactor(zoomFactor: number, velocity?: number) {
-        if (this.cameraManager.isCameraLocked()) {
+        if (this.cameraManager.isZoomLocked()) {
             return;
         }
         // If the zoom modifier is over the max zoom out, we propose to the user to switch to the explorer mode

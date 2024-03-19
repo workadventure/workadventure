@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "workadventure.fullname" . }}-back
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+    role: back
+spec:
+  replicas: {{ .Values.back.replicaCount }}
+  podManagementPolicy: Parallel
+  serviceName: {{ include "workadventure.fullname" . }}-back
+  updateStrategy:
+    type: RollingUpdate
+    # Back servers are independent, so we can update all at once
+    # See https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#maximum-unavailable-pods
+    #maxUnavailable: "100%"
+  selector:
+    matchLabels:
+      {{- include "workadventure.selectorLabels" . | nindent 6 }}
+      role: back
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ (include (print $.Template.BasePath "/back-env.yaml") .) | sha256sum }}
+        checksum/secret: {{ (include (print $.Template.BasePath "/back-secret-env.yaml") .) | sha256sum }}
+        checksum/shared-secret: {{ (include (print $.Template.BasePath "/shared-secret-env.yaml") .) | sha256sum }}
+        {{- if .Values.forceRedeploy }}
+        forceRedeploy: {{ randAlphaNum 10 | quote }}
+        {{- end }}
+        {{- with .Values.back.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "workadventure.selectorLabels" . | nindent 8 }}
+        role: back
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "workadventure.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.back.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-back
+          securityContext:
+            {{- toYaml .Values.back.securityContext | nindent 12 }}
+          image: "{{ .Values.back.image.repository }}:{{ .Values.back.image.tag | default .Values.appVersion }}"
+          imagePullPolicy: {{ .Values.back.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "workadventure.fullname" . }}-env-back
+            - secretRef:
+                name: {{ include "workadventure.fullname" . }}-secret-env-back
+            {{- if .Values.back.externalConfigMapName }}
+            - configMapRef:
+                name: {{ .Values.back.externalConfigMapName }}
+            {{- end }}
+            {{- if .Values.back.externalSecretName }}
+            - secretRef:
+                name: {{ .Values.back.externalSecretName }}
+            {{- end }}
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "workadventure.fullname" . }}-secret-env-shared
+                  key: SECRET_KEY
+          ports:
+            - name: http
+              containerPort: {{ .Values.back.service.port }}
+              protocol: TCP
+            - name: grpc
+              containerPort: 50051
+              protocol: TCP
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          resources:
+            {{- toYaml .Values.back.resources | nindent 12 }}
+      {{- with .Values.back.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.back.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.back.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

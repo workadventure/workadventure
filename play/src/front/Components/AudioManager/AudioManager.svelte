@@ -2,6 +2,7 @@
     import type { Unsubscriber } from "svelte/store";
     import { get } from "svelte/store";
     import { onDestroy, onMount } from "svelte";
+    import { fly } from "svelte/transition";
     import type { audioManagerVolume } from "../../Stores/AudioManagerStore";
     import {
         audioManagerFileStore,
@@ -11,14 +12,13 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
+    import { warningMessageStore } from "../../Stores/ErrorStore";
 
     let HTMLAudioPlayer: HTMLAudioElement;
     let audioPlayerVolumeIcon: HTMLElement;
     let audioPlayerVol: HTMLInputElement;
     let unsubscriberFileStore: Unsubscriber | null = null;
     let unsubscriberVolumeStore: Unsubscriber | null = null;
-
-
 
     let state: "loading" | "playing" | "not_allowed" | "error" = "loading";
 
@@ -84,6 +84,7 @@
                     state = "not_allowed";
                 } else {
                     state = "error";
+                    warningMessageStore.addWarningMessage($LL.audio.manager.error());
                     console.error("The audio could not be played: ", e.name, e);
                 }
             });
@@ -131,20 +132,25 @@
         audioPlayerVol.blur();
         return false;
     }
-
 </script>
 
-
-
-
-<div class="main-audio-manager absolute bottom-4 w-[500px] left-0 right-0 m-auto rounded-lg p-4 mb-7">
+<div
+    class="main-audio-manager absolute bottom-4 w-[500px] left-0 right-0 m-auto rounded-lg p-4 mb-7"
+    transition:fly={{ y: -200, duration: 500 }}
+    class:hidden={state !== "playing" && state !== "not_allowed"}
+>
     <div class:hidden={state !== "playing"} class="">
-        <div class="font-lg text-center text-white mb-7">
-            Manage background music<!-- Trad -->
+        <div class="font-lg text-center text-white mb-4 opacity-50">
+            {$LL.audio.volumeCtrl()}
         </div>
         <div class="audio-manager-player-volume flex items-center justify-center">
             <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <div id="audioplayer_volume_icon_playing" bind:this={audioPlayerVolumeIcon} on:click={onMute} class="pr-4 flex items-center">
+            <div
+                id="audioplayer_volume_icon_playing"
+                bind:this={audioPlayerVolumeIcon}
+                on:click={onMute}
+                class="pr-4 flex items-center"
+            >
                 <svg
                     viewBox="0 0 19.54 18.03"
                     class="bi bi-volume-up h-6 w-6 fill-white"
@@ -187,7 +193,7 @@
                 class="grow"
             />
             <div class="text-white ml-4">
-                {Math.round(currentVolume*100)}<span class="opacity-50">%</span>
+                {Math.round(currentVolume * 100)}<span class="opacity-50">%</span>
             </div>
         </div>
         <section class="audio-manager-file">
@@ -198,12 +204,6 @@
         <button type="button" class="btn light justify-center font-bold text-xs sm:text-base w-fit" on:click={tryPlay}
             >{$LL.audio.manager.allow()}</button
         >
-    </div>
-    <div
-        class:hidden={state !== "error"}
-        class="text-center flex justify-center text-danger h-6 truncate"
-    >
-        ⚠️ {$LL.audio.manager.error()} ⚠️
     </div>
 </div>
 
