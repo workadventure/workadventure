@@ -177,9 +177,7 @@
             <section class="mb-4 text-center">
                 <h2 class="h4">{$LL.camera.enable.title()}</h2>
                 <p class="opacity-50 w-2/3 m-auto">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
-                    et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-                    aliquip ex ea commodo consequat.<!-- Trad -->
+                    {$LL.camera.enable.start()}
                 </p>
             </section>
 
@@ -187,13 +185,12 @@
                 <div class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 flex flex-col justify-center items-center">
                     <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
                         <MicOnIcon height="h-8" width="w-8" />
-                        <div class="grow pr-8">Your microphone <!-- Trad --></div>
+                        <div class="grow pr-8">{$LL.actionbar.subtitle.microphone()}/div>
                         <button
                             class="btn {!microphoneEdit ? 'btn-secondary' : 'btn-light btn-ghost'}"
                             on:click|stopPropagation|preventDefault={() => (microphoneEdit = !microphoneEdit)}
                         >
-                            {!microphoneEdit ? "Edit mic" : "Cancel"}
-                            <!-- Trad -->
+                            {!microphoneEdit ? $LL.actionbar.edit() : $LL.actionbar.cancel()}
                         </button>
                     </div>
 
@@ -232,11 +229,11 @@
                                     </div>
                                     {#if selectedMicrophone == undefined}
                                         <span class="chip chip-sm chip-secondary !inline-block">
-                                            <span class="chip-label">Active</span><!-- Trad -->
+                                            <span class="chip-label">{$LL.camera.active()}</span>
                                         </span>
                                     {:else}
                                         <span class="chip chip-sm chip-neutral !inline-block">
-                                            <span class="chip-label">Not recommended</span><!-- Trad -->
+                                            <span class="chip-label">{$LL.camera.notRecommended()}</span>
                                         </span>
                                     {/if}
                                 </div>
@@ -280,11 +277,11 @@
                                         </div>
                                         {#if microphone.deviceId === selectedMicrophone}
                                             <span class="chip chip-sm chip-secondary !inline-block">
-                                                <span class="chip-label">Active</span><!-- Trad -->
+                                                <span class="chip-label">{$LL.camera.active()}</span>
                                             </span>
                                         {:else}
                                             <span class="chip chip-sm chip-neutral !inline-block">
-                                                <span class="chip-label">Inactive</span><!-- Trad -->
+                                                <span class="chip-label">{$LL.camera.disabled()}</span>
                                             </span>
                                         {/if}
                                     </div>
@@ -297,12 +294,12 @@
                 <div class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 flex flex-col justify-center items-center">
                     <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
                         <CamOnIcon height="h-8" width="w-8" />
-                        <div class="grow pr-8">Configure your camera <!-- Trad --></div>
+                        <div class="grow pr-8">{$LL.camera.editCam()}</div>
                         <button
                             class="btn {!cameraEdit ? 'btn-secondary' : 'btn-light btn-ghost'}"
                             on:click|stopPropagation|preventDefault={() => (cameraEdit = !cameraEdit)}
                         >
-                            {!cameraEdit ? "Edit camera" : "Cancel"}
+                            {!cameraEdit ? $LL.actionbar.edit() : $LL.actionbar.cancel()}
                         </button>
                     </div>
 
@@ -345,11 +342,11 @@
                                         </div>
                                         {#if selectedCamera == undefined}
                                             <span class="chip chip-sm chip-secondary !inline-block">
-                                                <span class="chip-label">Active</span><!-- Trad -->
+                                                <span class="chip-label">{$LL.camera.active()}</span>
                                             </span>
                                         {:else}
                                             <span class="chip chip-sm chip-neutral !inline-block">
-                                                <span class="chip-label">Not recommended</span><!-- Trad -->
+                                                <span class="chip-label">{$LL.camera.notRecommended()}</span>
                                             </span>
                                         {/if}
                                     </div>
@@ -407,11 +404,11 @@
                                             </div>
                                             {#if camera.deviceId === selectedCamera}
                                                 <span class="chip chip-sm chip-secondary !inline-block">
-                                                    <span class="chip-label">Active</span><!-- Trad -->
+                                                    <span class="chip-label">{$LL.camera.active()}</span>
                                                 </span>
                                             {:else}
                                                 <span class="chip chip-sm chip-neutral !inline-block">
-                                                    <span class="chip-label">Inactive</span><!-- Trad -->
+                                                    <span class="chip-label">{$LL.camera.disabled()}</span>
                                                 </span>
                                             {/if}
                                         </div>
@@ -426,13 +423,12 @@
                     <div class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 flex flex-col justify-center items-center">
                         <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
                             <MicOnIcon height="h-8" width="w-8" />
-                            <div class="grow pr-8">Your speakers <!-- Trad --></div>
+                            <div class="grow pr-8">{$LL.camera.editSpeaker()}</div>
                             <button
                                 class="btn {!speakerEdit ? 'btn-secondary' : 'btn-light btn-ghost'}"
                                 on:click|stopPropagation|preventDefault={() => (speakerEdit = !speakerEdit)}
                             >
-                                {!speakerEdit ? "Edit speaker" : "Cancel"}
-                                <!-- Trad -->
+                                {!speakerEdit ? $LL.actionbar.edit() : $LL.actionbar.cancel()}
                             </button>
                         </div>
 
@@ -473,11 +469,11 @@
                                             </div>
                                             {#if speaker.deviceId === $speakerSelectedStore}
                                                 <span class="chip chip-sm chip-secondary !inline-block">
-                                                    <span class="chip-label">Active</span><!-- Trad -->
+                                                    <span class="chip-label">{$LL.camera.active()}</span>
                                                 </span>
                                             {:else}
                                                 <span class="chip chip-sm chip-neutral !inline-block">
-                                                    <span class="chip-label">Inactive</span><!-- Trad -->
+                                                    <span class="chip-label">{$LL.camera.notRecommended()}</span>
                                                 </span>
                                             {/if}
                                         </div>
@@ -497,10 +493,9 @@
             <section
                 class="flex items-center space-x-4 justify-between border border-t border-white pt-8 min-w-[402px]"
             >
-                <button type="submit" class="btn btn-light btn-lg btn-ghost min-w-[175px] rounded block">Cancel</button>
-                <!-- Trad & TODO ACTION -->
-                <button type="submit" class="btn btn-secondary btn-lg min-w-[175px] rounded block">Valider</button>
-                <!-- Trad & Changer le label qui est pas ouf -->
+                <button type="submit" class="btn btn-light btn-lg btn-ghost min-w-[175px] rounded block">{$LL.actionbar.cancel()}</button>
+                <!-- TODO ACTION -->
+                <button type="submit" class="btn btn-secondary btn-lg min-w-[175px] rounded block">{$LL.menu.settings.save()}</button>
             </section>
         </div>
     </section>

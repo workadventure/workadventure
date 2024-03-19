@@ -140,10 +140,11 @@
     class:hidden={state !== "playing" && state !== "not_allowed"}
 >
     <div class:hidden={state !== "playing"} class="">
-        <div class="font-lg text-center text-white mb-7">
-            Manage background music<!-- Trad -->
+        <div class="font-lg text-center text-white mb-4 opacity-50">
+            {$LL.audio.volumeCtrl()}
         </div>
         <div class="audio-manager-player-volume flex items-center justify-center">
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
                 id="audioplayer_volume_icon_playing"
                 bind:this={audioPlayerVolumeIcon}

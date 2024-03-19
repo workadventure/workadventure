@@ -116,6 +116,7 @@ const menu: BaseTranslation = {
         globalMessages: "Global Messages",
         contact: "Contact",
         report: "Report Issues",
+        help: "Help & tutorials",
     },
 };
 

@@ -74,7 +74,7 @@
                 {$LL.camera.my.silentZone()}
             </div>
             <div class="text-danger-400 text-xs">
-                Ex quibusdam doloremque nihil. Sint odio tempora eveniet. <!-- Trad -->
+                {$LL.camera.my.silentZoneDesc()}
             </div>
         </div>
 
