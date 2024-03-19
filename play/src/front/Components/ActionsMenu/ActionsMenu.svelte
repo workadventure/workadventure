@@ -2,6 +2,7 @@
     import type { Unsubscriber } from "svelte/store";
     import { onDestroy } from "svelte";
     import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
+    import { LL } from "../../../i18n/i18n-svelte";
 
     import type { ActionsMenuAction, ActionsMenuData } from "../../Stores/ActionsMenuStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";

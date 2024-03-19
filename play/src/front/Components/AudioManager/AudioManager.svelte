@@ -141,7 +141,7 @@
 >
     <div class:hidden={state !== "playing"} class="">
         <div class="font-lg text-center text-white mb-4 opacity-50">
-            {$LL.audio.volume()}
+            {$LL.audio.volumeCtrl()}
         </div>
         <div class="audio-manager-player-volume flex items-center justify-center">
             <div
