@@ -28,10 +28,6 @@ document.addEventListener("focusout", (event) => {
 export const enableUserInputsStore = derived(
     [menuInputFocusStore, showReportScreenStore, inputFormFocusStore],
     ([$menuInputFocusStore, $showReportScreenStore, $inputFormFocusStore]) => {
-        return (
-            !$menuInputFocusStore &&
-            !($showReportScreenStore !== userReportEmpty) &&
-            !$inputFormFocusStore
-        );
+        return !$menuInputFocusStore && !($showReportScreenStore !== userReportEmpty) && !$inputFormFocusStore;
     }
 );

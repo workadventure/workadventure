@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { ChevronUpIcon } from "svelte-feather-icons";
     import { fly } from "svelte/transition";
     import { get, Unsubscriber, Writable } from "svelte/store";
     import { onDestroy, onMount } from "svelte";

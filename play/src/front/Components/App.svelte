@@ -1,12 +1,8 @@
 <script lang="ts">
-    // import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
-    import Phaser from "phaser";
-    import * as Sentry from "@sentry/svelte";
-    import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
-    import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
     import { onMount } from "svelte";
-    import { desktopApi } from "../Api/Desktop";
-    import { iframeListener } from "../Api/IframeListener";
+    import * as Sentry from "@sentry/svelte";
+    import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
+    import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
     import { DEBUG_MODE, SENTRY_DSN_FRONT, SENTRY_ENVIRONMENT, SENTRY_RELEASE } from "../Enum/EnvironmentVariable";
     import { coWebsiteManager } from "../WebRtc/CoWebsiteManager";
     import { HdpiManager } from "../Phaser/Services/HdpiManager";
@@ -21,8 +17,10 @@
     import { Game } from "../Phaser/Game/Game";
     import { waScaleManager } from "../Phaser/Services/WaScaleManager";
     import { HtmlUtils } from "../WebRtc/HtmlUtils";
-    import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
+    import { iframeListener } from "../Api/IframeListener";
+    import { desktopApi } from "../Api/Desktop";
     import GameOverlay from "./GameOverlay.svelte";
+    import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
     let WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
     let game: Game;
@@ -176,8 +174,6 @@
         }
 
         window.addEventListener("resize", function () {
-            coWebsiteManager.restoreMainSize();
-
             waScaleManager.applyNewSize();
             waScaleManager.refreshFocusOnTarget();
         });
@@ -195,8 +191,11 @@
 </script>
 
 <div class="bg-contrast h-screen w-screen absolute z-[2]" />
+<div class="bg-contrast h-screen w-screen absolute z-[2]" />
 <div class="main-container z-10 relative">
     <!-- Create the editor container -->
+    <GameOverlay {game} />
+    <div id="game" bind:this={gameDiv} class="absolute top-0 -z-10" />
     <GameOverlay {game} />
     <div id="game" bind:this={gameDiv} class="absolute top-0 -z-10" />
     <CoWebsitesContainer />

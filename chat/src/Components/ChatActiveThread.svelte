@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { ArrowLeftIcon, RefreshCwIcon, EyeIcon, EyeOffIcon } from "svelte-feather-icons";
+    import { EyeIcon, EyeOffIcon } from "svelte-feather-icons";
     import { onDestroy } from "svelte";
     import { get } from "svelte/store";
     import { LL } from "../i18n/i18n-svelte";

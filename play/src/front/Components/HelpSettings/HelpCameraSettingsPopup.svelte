@@ -30,9 +30,15 @@
     transition:fly={{ y: -50, duration: 500 }}
 >
     <section class="mb-0">
-        <div class="mb-0 text-lg bold border border-solid border-transparent border-b-white/20 bg-white/10 px-4 py-3">{$LL.camera.help.title()}</div>
+        <div class="mb-0 text-lg bold border border-solid border-transparent border-b-white/20 bg-white/10 px-4 py-3">
+            {$LL.camera.help.title()}
+        </div>
         <div class="px-4 mt-4">
-            <div class="bg-danger-1200 border border-solid border-danger text-danger-400 rounded-sm px-4 py-1 inline-block text-sm">{$LL.camera.help.permissionDenied()}</div>
+            <div
+                class="bg-danger-1200 border border-solid border-danger text-danger-400 rounded-sm px-4 py-1 inline-block text-sm"
+            >
+                {$LL.camera.help.permissionDenied()}
+            </div>
         </div>
         <div class="p-4 italic opacity-50 text-sm leading-4">
             {$LL.camera.help.content()}
@@ -44,22 +50,18 @@
         {/if}
         <div class="h-72 overflow-hidden opacity-80 saturate-50">
             {#if isFirefox}
-                <img
-                        src={$LL.camera.help.screen.firefox()}
-                        alt="help camera setup"
-                        class="w-full m-auto"
-                />
+                <img src={$LL.camera.help.screen.firefox()} alt="help camera setup" class="w-full m-auto" />
             {:else if isChrome && !isAndroid}
-                <img
-                        src={$LL.camera.help.screen.chrome()}
-                        alt="help camera setup"
-                        class="w-full m-auto"
-                />
+                <img src={$LL.camera.help.screen.chrome()} alt="help camera setup" class="w-full m-auto" />
             {/if}
         </div>
     </section>
     <section class="flex row justify-center p-4 bg-contrast">
-        <button class="btn btn-sm btn-border btn-light mr-2 w-full justify-center" on:click|preventDefault={refresh}>{$LL.camera.help.refresh()}</button>
-        <button type="submit" class="btn btn-danger btn-sm w-full justify-center" on:click|preventDefault={close}>{$LL.camera.help.continue()}</button>
+        <button class="btn btn-sm btn-border btn-light mr-2 w-full justify-center" on:click|preventDefault={refresh}
+            >{$LL.camera.help.refresh()}</button
+        >
+        <button type="submit" class="btn btn-danger btn-sm w-full justify-center" on:click|preventDefault={close}
+            >{$LL.camera.help.continue()}</button
+        >
     </section>
 </form>

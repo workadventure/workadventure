@@ -24,17 +24,29 @@
     let legalStrings: string[] = [];
     if (legals?.termsOfUseUrl) {
         legalStrings.push(
-            '<a href="' + encodeURI(legals.termsOfUseUrl) + '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' + $LL.login.termsOfUse() + "</a>"
+            '<a href="' +
+                encodeURI(legals.termsOfUseUrl) +
+                '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' +
+                $LL.login.termsOfUse() +
+                "</a>"
         );
     }
     if (legals?.privacyPolicyUrl) {
         legalStrings.push(
-            '<a href="' + encodeURI(legals.privacyPolicyUrl) + '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' + $LL.login.privacyPolicy() + "</a>"
+            '<a href="' +
+                encodeURI(legals.privacyPolicyUrl) +
+                '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' +
+                $LL.login.privacyPolicy() +
+                "</a>"
         );
     }
     if (legals?.cookiePolicyUrl) {
         legalStrings.push(
-            '<a href="' + encodeURI(legals.cookiePolicyUrl) + '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' + $LL.login.cookiePolicy() + "</a>"
+            '<a href="' +
+                encodeURI(legals.cookiePolicyUrl) +
+                '" target="_blank" class="text-white no-underline hover:underline bold hover:text-white">' +
+                $LL.login.cookiePolicy() +
+                "</a>"
         );
     }
 
@@ -110,8 +122,16 @@
                 </p>
             {/if}
         </section>
-        <section class="action flex h-fit justify-center m-0" class:opacity-50={(name.trim() === "" && startValidating) || errorName !== ""}>
-            <button type="submit" disabled='{(name.trim() === "" && startValidating) || errorName !== ""}' class="mt-4 w-52 md:w-96 bold text-center block btn btn-secondary btn-lg loginSceneFormSubmit">{$LL.login.continue()}</button>
+        <section
+            class="action flex h-fit justify-center m-0"
+            class:opacity-50={(name.trim() === "" && startValidating) || errorName !== ""}
+        >
+            <button
+                type="submit"
+                disabled={(name.trim() === "" && startValidating) || errorName !== ""}
+                class="mt-4 w-52 md:w-96 bold text-center block btn btn-secondary btn-lg loginSceneFormSubmit"
+                >{$LL.login.continue()}</button
+            >
         </section>
     </div>
     {#if logo !== logoImg && gameManager.currentStartedRoom.showPoweredBy !== false}
@@ -120,8 +140,11 @@
         </section>
     {/if}
 </form>
-<div class="absolute left-0 top-0 w-full h-full z-20 bg-contrast opacity-80" style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};` : ""}></div>
-<div class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url('{bgMap}');"></div>
+<div
+    class="absolute left-0 top-0 w-full h-full z-20 bg-contrast opacity-80"
+    style={getBackgroundColor() != undefined ? `background-color: ${getBackgroundColor()};` : ""}
+/>
+<div class="absolute left-0 top-0 w-full h-full bg-cover z-10" style="background-image: url('{bgMap}');" />
 
 {#if legalString}
     <section class="terms-and-conditions h-fit absolute z-40 bottom-0 text-center w-full">

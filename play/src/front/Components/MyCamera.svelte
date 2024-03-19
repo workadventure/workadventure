@@ -2,7 +2,6 @@
     import { onDestroy, onMount } from "svelte";
     import { Color } from "@workadventure/shared-utils";
     import { fly } from "svelte/transition";
-    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import {
         cameraEnergySavingStore,
         localVolumeStore,
@@ -24,31 +23,19 @@
     import MicOffIcon from "./Icons/MicOffIcon.svelte";
 
     let stream: MediaStream | null;
-    let videoElement: HTMLVideoElement;
     let userName = gameManager.getPlayerName();
     let backgroundColor = Color.getColorByString(userName ?? "default");
     let textColor = Color.getTextColorByBackgroundColor(backgroundColor);
 
-    let aspectRatio = 1;
-
     const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
             stream = value.stream;
-            // TODO: remove this hack
-            setTimeout(() => {
-                aspectRatio = videoElement != undefined ? videoElement.videoWidth / videoElement.videoHeight : 1;
-            }, 100);
         } else {
             stream = null;
         }
     });
 
     let cameraContainer: HTMLDivElement;
-    let isMobile = isMediaBreakpointUp("md");
-    const resizeObserver = new ResizeObserver(() => {
-        isMobile = isMediaBreakpointUp("md");
-    });
-
     export let small = false;
 
     onDestroy(() => {
@@ -67,20 +54,21 @@
                 cameraContainer.style.visibility = "visible";
             }
         });
-        resizeObserver.observe(cameraContainer);
     });
 </script>
 
-<div class="transition-all relative h-full aspect-video w-fit m-auto"
-     bind:this={cameraContainer}
-     style="{small ? 'width:100%' : 'height:'+$heightCamWrapper+'px;'}"
+<div
+    class="transition-all relative h-full aspect-video w-fit m-auto"
+    bind:this={cameraContainer}
+    style={small ? "width:100%" : "height:" + $heightCamWrapper + "px;"}
 >
     <!--If we are in a silent zone-->
     {#if $silentStore}
         <div
-            class="z-[250] rounded-lg py-4 px-3 text-white border-[1px] border-solid border-danger flex flex-col items-center content-center justify-between media-box-camera-off-size bg-no-repeat bg-center bg-danger-1000/70 backdrop-blur rounded-xl text-center -translate-y-8">
+            class="z-[250] rounded-lg py-4 px-3 text-white border-[1px] border-solid border-danger flex flex-col items-center content-center justify-between media-box-camera-off-size bg-no-repeat bg-center bg-danger-1000/70 backdrop-blur rounded-xl text-center -translate-y-8"
+        >
             <div class="flex flex-col -mt-20 leading-3">
-                <img src="{silentImg}" alt="silent" class="h-40 w-40" />
+                <img src={silentImg} alt="Silent emoji" class="h-40 w-40" />
             </div>
             <div class="m-0 text-center -mt-4 text-lg bold">
                 {$LL.camera.my.silentZone()}
@@ -93,15 +81,18 @@
         <!--If we have a video to display-->
     {:else if $localStreamStore.type === "success" && !$inExternalServiceStore}
         {#if $requestedCameraState && $mediaStreamConstraintsStore.video}
-            <div class="absolute bottom-4 left-4 z-30 {small ? 'hidden' : ''}" transition:fly={{delay: 50, y: 50, duration: 150 }}>
+            <div
+                class="absolute bottom-4 left-4 z-30 {small ? 'hidden' : ''}"
+                transition:fly={{ delay: 50, y: 50, duration: 150 }}
+            >
                 <div class="flex">
                     <span class="rounded bg-contrast/90 backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-4 bold">
                         <div class="absolute left-1 -top-1" style="image-rendering:pixelated">
                             <Woka
-                                    userId={-1}
-                                    placeholderSrc={""}
-                                    customHeight="42&& !$cameraEnergySavingStorepx"
-                                    customWidth="42px"
+                                userId={-1}
+                                placeholderSrc={""}
+                                customHeight="42&& !$cameraEnergySavingStorepx"
+                                customWidth="42px"
                             />
                         </div>
                         {$LL.camera.my.nameTag()}
@@ -109,8 +100,11 @@
                 </div>
             </div>
 
-            <div class="aspect-video w-full absolute top-0 left-0 overflow-hidden z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur" style="background-image: url({loaderImg})"
-                 transition:fly={{y: 50, duration: 150 }}>
+            <div
+                class="aspect-video w-full absolute top-0 left-0 overflow-hidden z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur"
+                style="background-image: url({loaderImg})"
+                transition:fly={{ y: 50, duration: 150 }}
+            >
                 <div class="text-white/50 text-xxs absolute w-full h-6 left-0 text-center top-0 -bottom-20 m-auto z-10">
                     {$LL.camera.my.loading()}
                 </div>
@@ -123,8 +117,12 @@
                     autoplay
                     muted
                     playsinline
-                ></video>
-                <div class="z-[251] absolute aspect-ratio right-4 w-8 p-1 flex items-center justify-center {small ? 'hidden' : ''} {$mediaStreamConstraintsStore.audio ? 'bottom-5' : 'bottom-3'}">
+                />
+                <div
+                    class="z-[251] absolute aspect-ratio right-4 w-8 p-1 flex items-center justify-center {small
+                        ? 'hidden'
+                        : ''} {$mediaStreamConstraintsStore.audio ? 'bottom-5' : 'bottom-3'}"
+                >
                     {#if $mediaStreamConstraintsStore.audio}
                         <SoundMeterWidget volume={$localVolumeStore} classcss="absolute" barColor="white" />
                     {:else}
@@ -134,19 +132,21 @@
             </div>
             <!-- If we do not have a video to display-->
         {:else if !$requestedCameraState && !$cameraEnergySavingStore}
-            <div class="w-full rounded-lg px-3 flex flex-row items-center bg-contrast/80 backdrop-blur media-box-camera-off-size h-12">
+            <div
+                class="w-full rounded-lg px-3 flex flex-row items-center bg-contrast/80 backdrop-blur media-box-camera-off-size h-12"
+            >
                 <div class="grow">
                     <span class="rounded bg-contrast/90 backdrop-blur px-4 py-1 text-white text-sm pl-12 pr-4 bold">
-                    <div class="absolute left-1 -top-1" style="image-rendering:pixelated">
-                        <Woka
+                        <div class="absolute left-1 -top-1" style="image-rendering:pixelated">
+                            <Woka
                                 userId={-1}
                                 placeholderSrc={""}
                                 customHeight="42&& !$cameraEnergySavingStorepx"
                                 customWidth="42px"
-                        />
-                    </div>
+                            />
+                        </div>
                         {$LL.camera.my.nameTag()}
-                </span>
+                    </span>
                 </div>
                 {#if $mediaStreamConstraintsStore.audio}
                     <SoundMeterWidget
@@ -155,7 +155,7 @@
                         barColor={textColor}
                     />
                 {:else}
-                    <div >
+                    <div>
                         <MicOffIcon />
                     </div>
                 {/if}

@@ -13,7 +13,7 @@
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { refreshPromptStore } from "../Stores/RefreshPromptStore";
     import { forceRefreshChatStore } from "../Stores/ChatStore";
-    import {loaderVisibleStore} from "../Stores/LoaderStore";
+    import { loaderVisibleStore } from "../Stores/LoaderStore";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
@@ -39,10 +39,10 @@
 </script>
 
 <!-- Preload image loader TODO HUGO : Better way ? -->
-<link rel="preload" as="image" href="{bgMap}" />
-<link rel="preload" as="image" href="{defaultLoader}" />
+<link rel="preload" as="image" href={bgMap} />
+<link rel="preload" as="image" href={defaultLoader} />
 
-{#if $loaderVisibleStore }
+{#if $loaderVisibleStore}
     <div class="bg-contrast">
         <LoaderScene />
     </div>
@@ -80,6 +80,7 @@
         {#if $mapEditorModeStore}
             <MapEditor />
         {/if}
-        <MainLayout message="" />
+        <MainLayout />
+        <!--message=""-->
     {/key}
 {/if}

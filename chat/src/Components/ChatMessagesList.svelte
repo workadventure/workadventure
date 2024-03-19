@@ -2,7 +2,7 @@
     import { fade, fly } from "svelte/transition";
     import { UserData } from "@workadventure/messages";
     import { onDestroy, onMount } from "svelte";
-    import { ArrowDownIcon, ArrowUpIcon } from "svelte-feather-icons";
+    import { ArrowUpIcon } from "svelte-feather-icons";
     import { get, Unsubscriber } from "svelte/store";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { ChatState } from "stanza/Constants";

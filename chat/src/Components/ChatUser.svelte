@@ -1,11 +1,10 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
-    import { MoreHorizontalIcon, ShieldOffIcon, ShieldIcon, SlashIcon, UsersIcon } from "svelte-feather-icons";
+    import { ShieldOffIcon } from "svelte-feather-icons";
     import { get } from "svelte/store";
     import { LL } from "../i18n/i18n-svelte";
     import { defaultColor, defaultWoka, User } from "../Xmpp/AbstractRoom";
     import { MucRoom } from "../Xmpp/MucRoom";
-    import walk from "../../public/static/images/walk.svg";
     import teleport from "../../public/static/images/teleport.svg";
     import businessCard from "../../public/static/images/business-cards.svg";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";

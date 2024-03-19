@@ -38,7 +38,7 @@
     class:max-h-[80vh]={isHightlighted}
     autoplay
     playsinline
-></video>
+/>
 
 <style lang="scss">
     /*    video.no-video {

@@ -1,6 +1,5 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
-    import { ArrowLeftIcon, RefreshCwIcon, SmileIcon, SendIcon, Trash2Icon } from "svelte-feather-icons";
+    import { Trash2Icon } from "svelte-feather-icons";
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import { Unsubscriber, writable } from "svelte/store";
     import { EmojiButton } from "@joeattardi/emoji-button";
@@ -38,8 +37,6 @@
 
     let writingTimer: ReturnType<typeof setTimeout> | undefined;
 
-    export let settingsView = false;
-
     let htmlMessageText = "";
     let input: HTMLElement;
 
@@ -54,11 +51,6 @@
     }
     const applications = writable<Set<Application>>(new Set());
     const applicationsSelected = writable<Set<Application>>(new Set());
-
-    function reInitialize() {
-        chatMessagesStore.reInitialize();
-        settingsView = false;
-    }
 
     function onFocus() {
         chatInputFocusStore.set(true);
@@ -204,9 +196,7 @@
         picker.on("emoji", ({ emoji }) => {
             htmlMessageText += emoji;
         });
-        picker.on("hidden", () => {
-            emojiOpened = false;
-        });
+        picker.on("hidden", () => {});
 
         if (chatConnectionManager.klaxoonToolIsActivated) {
             applications.update((apps) => {
@@ -283,12 +273,6 @@
         }
         const minutesBetween = (date.getTime() - previousMsg.date.getTime()) / 60000;
         return previousMsg.authorName === authorName && minutesBetween < 2;
-    }
-
-    let emojiOpened = false;
-    function openEmoji() {
-        picker.showPicker(emojiContainer);
-        emojiOpened = true;
     }
 
     let applicationMenuIsOpenned = false;
@@ -841,37 +825,6 @@
                     </div>
                 </div>
             </div>
-            <!--
-                <div class="w-full p-2">
-                    <div class="flex items-center relative">
-                        <textarea
-                            type="text"
-                            bind:value={htmlMessageText}
-                            placeholder={$LL.form.placeholder()}
-                            on:keydown={handlerKeyDown}
-                            on:input={writing}
-                            on:focus={onFocus}
-                            on:blur={onBlur}
-                            rows="1"
-                        />
-                        <button
-                            class={`bg-transparent h-8 w-8 p-0 inline-flex justify-center items-center right-0 ${
-                                emojiOpened ? "text-light-blue" : ""
-                            }`}
-                            on:click|preventDefault|stopPropagation={openEmoji}
-                        >
-                            <SmileIcon size="17" />
-                        </button>
-                        <button
-                            type="submit"
-                            class="bg-transparent h-8 w-8 p-0 inline-flex justify-center items-center right-0 text-light-blue"
-                            on:click|stopPropagation={saveMessage}
-                        >
-                            <SendIcon size="17" />
-                        </button>
-                    </div>
-                </div>
-                -->
         </form>
     </div>
 </div>

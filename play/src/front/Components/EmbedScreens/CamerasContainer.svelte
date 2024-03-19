@@ -9,10 +9,7 @@
     $: clickable = !full;
 </script>
 
-<aside
-    class:full
-    in:fly|local={{ x: 200, duration: 100 }}
->
+<aside class:full in:fly|local={{ x: 200, duration: 100 }}>
     <div class="other-cameras overflow-visible flex flex-col content-center gap-2">
         {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
             {#if !highlightedEmbedScreen || highlightedEmbedScreen.type !== "streamable" || (highlightedEmbedScreen.type === "streamable" && highlightedEmbedScreen.embed !== peer)}

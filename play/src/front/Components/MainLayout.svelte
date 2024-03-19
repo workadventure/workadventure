@@ -52,7 +52,7 @@
     import WarningToast from "./WarningContainer/WarningToast.svelte";
 
     let mainLayout: HTMLDivElement;
-    export let message: string;
+    // export let message: string;
 
     let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
@@ -63,17 +63,18 @@
         resizeObserver.observe(mainLayout);
         // ...
     });
-
-
 </script>
 
 <!-- Components ordered by z-index -->
-<!-- svelte-ignore missing-declaration -->
-<div id="main-layout" class="relative z-10 h-screen pointer-events-none {[...$coWebsites.values()].length === 0 ? 'not-cowebsite' : ''}" bind:this={mainLayout}>
+<div
+    id="main-layout"
+    class="@container/main-layout relative z-10 h-screen pointer-events-none {[...$coWebsites.values()].length === 0
+        ? 'not-cowebsite'
+        : ''}"
+    bind:this={mainLayout}
+>
     {#if $modalVisibilityStore || $modalPopupVisibilityStore}
-        <div class="bg-black/60 w-full h-full fixed left-0 right-0">
-
-        </div>
+        <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
     {/if}
 
     <aside id="main-layout-left-aside">
@@ -104,7 +105,6 @@
             </div>
         {/if}
 
-
         {#if $warningBannerStore}
             <WarningBanner />
         {/if}
@@ -125,7 +125,6 @@
             <HelpPopUpBlocked />
         {/if}
 
-
         {#if $soundPlayingStore}
             <AudioPlaying url={$soundPlayingStore} />
         {/if}
@@ -133,7 +132,6 @@
         {#if $showLimitRoomModalStore}
             <LimitRoomModal />
         {/if}
-
 
         {#if $requestVisitCardsStore}
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
@@ -179,29 +177,26 @@
         {/if}
     </section>
 
-
-
     {#if $actionsMenuStore}
-    <ActionsMenu />
+        <ActionsMenu />
     {/if}
-
-
 
     <ActionBar />
     <!-- svelte-ignore missing-declaration -->
     <div class="popups">
         {#each $popupStore.slice().reverse() as popup (popup.uuid)}
             <div class="popupwrapper">
-                <svelte:component this={popup.component} {...popup.props} on:close={() => popupStore.removePopup(popup.uuid)} />
+                <svelte:component
+                    this={popup.component}
+                    {...popup.props}
+                    on:close={() => popupStore.removePopup(popup.uuid)}
+                />
             </div>
         {/each}
     </div>
 
-
     <!-- audio when user have a message TODO delete it with new chat -->
     <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
-
-
 
     <Lazy
         on:onload={() => emoteDataStoreLoading.set(true)}
@@ -263,8 +258,7 @@
     .popupwrapper:nth-child(10),
     .popupwrapper:nth-child(11),
     .popupwrapper:nth-child(12),
-    .popupwrapper:nth-child(13)
-    {
+    .popupwrapper:nth-child(13) {
         display: none;
     }
 </style>

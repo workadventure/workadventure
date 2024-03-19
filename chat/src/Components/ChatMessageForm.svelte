@@ -1,18 +1,7 @@
 <script lang="ts">
-    import {
-        SendIcon,
-        SmileIcon,
-        PaperclipIcon,
-        LoaderIcon,
-        Trash2Icon,
-        CheckIcon,
-        AlertCircleIcon,
-        XCircleIcon,
-        ArrowRightCircleIcon,
-    } from "svelte-feather-icons";
+    import { PaperclipIcon, LoaderIcon, Trash2Icon, AlertCircleIcon, ArrowRightCircleIcon } from "svelte-feather-icons";
     import { createEventDispatcher, onMount } from "svelte";
     import { EmojiButton } from "@joeattardi/emoji-button";
-    import { UserData } from "@workadventure/messages";
     import { ChatState } from "stanza/Constants";
     import { get, writable } from "svelte/store";
     import {
@@ -36,13 +25,11 @@
         mentionsUserStore,
         enableChatUpload,
     } from "../Stores/ChatStore";
-    import { userStore } from "../Stores/LocalUserStore";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
     import { FileExt, fileMessageManager, UploadedFile, uploadingState } from "../Services/FileMessageManager";
     import crown from "../../public/static/svg/icone-premium-crown.svg";
     import { iframeListener } from "../IframeListener";
     import { chatConnectionManager } from "../Connection/ChatConnectionManager";
-    import File from "./Content/File.svelte";
     import ApplicationPicker from "./Content/ApplicationPicker.svelte";
 
     export let mucRoom: MucRoom;
@@ -154,27 +141,6 @@
 
     function isMe(name: string) {
         return name === mucRoom.playerName;
-    }
-
-    function findUserInDefault(name: string): User | UserData | undefined {
-        if (isMe(name)) {
-            return $userStore;
-        }
-        const userData = $presenceStore.map((user) => get(user)).find((user) => user.name === name);
-        let user = undefined;
-        if (userData) {
-            user = userData;
-        }
-        return user;
-    }
-
-    function getColor(name: string) {
-        const user = findUserInDefault(name);
-        if (user) {
-            return user.color;
-        } else {
-            return defaultColor;
-        }
     }
 
     function sendReplyMessage(message: string) {

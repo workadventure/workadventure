@@ -4,7 +4,6 @@ import type { CreateUIWebsiteEvent, ModifyUIWebsiteEvent, UIWebsiteEvent } from 
 import { iframeListener } from "../../../Api/IframeListener";
 import { uiWebsitesStore } from "../../../Stores/UIWebsiteStore";
 
-
 export class UIWebsiteManager {
     constructor() {
         // This is a singleton, so we subscribe to iframeListener only once and never unsubscribe.
@@ -103,4 +102,3 @@ export class UIWebsiteManager {
         });
     }
 }
-

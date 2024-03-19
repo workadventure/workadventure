@@ -330,11 +330,7 @@
             {#if activeLiveMessage}
                 <div id="active-liveMessage" class="flex flex-col p-5">
                     <h3>
-                        <img
-                            src={liveMessageImg}
-                            class="h-8 w-8 mr-1"
-                            alt={$LL.megaphone.modal.liveMessage.title()}
-                        />
+                        <img src={liveMessageImg} class="h-8 w-8 mr-1" alt={$LL.megaphone.modal.liveMessage.title()} />
                         {$LL.megaphone.modal.liveMessage.title()}
                     </h3>
                     <div class="flex flew-row justify-center">
@@ -350,9 +346,7 @@
                                 muted
                                 playsinline
                             />
-                            <div
-                                class="z-[251] w-full p-4 flex items-center justify-center scale-150"
-                            >
+                            <div class="z-[251] w-full p-4 flex items-center justify-center scale-150">
                                 <SoundMeterWidget
                                     volume={$localVolumeStore}
                                     classcss="!bg-none !bg-transparent scale-150"
@@ -390,11 +384,7 @@
                                     style="padding: 2px; height: 32px; width: 32px;"
                                     alt="Turn off microphone"
                                 />
-                                <select
-                                    class="w-full ml-4"
-                                    bind:value={cameraDiveId}
-                                    on:change={() => selectCamera()}
-                                >
+                                <select class="w-full ml-4" bind:value={cameraDiveId} on:change={() => selectCamera()}>
                                     {#if $requestedCameraState && $cameraListStore && $cameraListStore.length > 1}
                                         {#each $cameraListStore as camera (camera.deviceId)}
                                             <option value={camera.deviceId}>

@@ -153,12 +153,7 @@
                         on:click={explorationMode}
                     >
                         <div class="w-10 h-10 flex flex-wrap items-center justify-center">
-                            <img
-                                draggable="false"
-                                class="max-w-[75%] max-h-[75%]"
-                                src={ExplorerImg}
-                                alt="info icon"
-                            />
+                            <img draggable="false" class="max-w-[75%] max-h-[75%]" src={ExplorerImg} alt="info icon" />
                         </div>
                         <span class="tooltiptext text-xs">
                             <p class="text-sm mb-2">{$LL.mapEditor.explorer.explorationModeTitle()}</p>
@@ -334,11 +329,7 @@
                                 on:click={() => mapExplorationObjectSelectedStore.set(area)}
                                 class="item p-4 rounded-2xl flex flex-row justify-around items-center cursor-pointer"
                             >
-                                <img
-                                    class="w-10 h-auto mr-2 pointer-events-none"
-                                    src={AreaToolImg}
-                                    alt="link icon"
-                                />
+                                <img class="w-10 h-auto mr-2 pointer-events-none" src={AreaToolImg} alt="link icon" />
                                 <span
                                     class="pointer-events-none w-32"
                                     class:italic={!area.getAreaData().name || area.getAreaData().name == ""}
