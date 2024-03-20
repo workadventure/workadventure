@@ -436,7 +436,6 @@ export class AreaEditorTool extends MapEditorTool {
 
     public handleAreaDeletion(id: string, areaData: AreaData | undefined): void {
         this.scene.getGameMapFrontWrapper().listenAreaDeletion(areaData);
-        this.scene.getGameMapFrontWrapper().areasManager.removeArea(id);
 
         if (!this.active) {
             return;
@@ -449,7 +448,6 @@ export class AreaEditorTool extends MapEditorTool {
 
     public handleAreaCreation(config: AreaData, localCommand: boolean): void {
         this.scene.getGameMapFrontWrapper().listenAreaCreation(config);
-        this.scene.getGameMapFrontWrapper().areasManager.addArea(config);
 
         if (!this.active) {
             return;
@@ -465,7 +463,6 @@ export class AreaEditorTool extends MapEditorTool {
 
     public handleAreaUpdate(oldConfig: AtLeast<AreaData, "id">, newConfig: AtLeast<AreaData, "id">): void {
         this.scene.getGameMapFrontWrapper().listenAreaChanges(oldConfig, newConfig);
-        this.scene.getGameMapFrontWrapper().areasManager.updateArea(newConfig);
 
         if (!this.active) {
             return;

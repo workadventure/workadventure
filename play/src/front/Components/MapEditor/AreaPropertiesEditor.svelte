@@ -49,18 +49,7 @@
     };
     let writeTags: Option[] | undefined = [];
     let readTags: Option[] | undefined = [];
-    let _tag: Option[] = [
-        {
-            value: "member",
-            label: "member",
-            created: false,
-        },
-        {
-            value: "admin",
-            label: "admin",
-            created: false,
-        },
-    ];
+    let _tag: Option[] = [];
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
