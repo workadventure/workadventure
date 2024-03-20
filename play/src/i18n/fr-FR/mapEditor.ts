@@ -169,12 +169,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         addDescriptionField: "Ajouter une description",
         addRight: "Ajouter des droits",
         rightTitle: "Droit via les tags utilisateur (écriture / lecture)",
-        rightWriteTitle: "Droits d'écriture",
+        rightWriteTitle: "Droits d'édition",
         rightWriteDescription:
-            "Les droits d'écriture définissent qui peut modifier la zone. Les utilisateurs qui ont au moins l'un de ces 'tags' peuvent créer, mettre à jour ou supprimer un objet dans la zone.",
-        rightReadTitle: "Droits de lecture",
+            "Les droits d'édition définissent qui peut modifier la zone. Les utilisateurs correspondant à l'un de ces tags peuvent créer, mettre à jour ou supprimer un objet dans la zone.",
+        rightReadTitle: "Droits d'accès",
         rightReadDescription:
-            "Les droits de lecture définissent qui peut interagir avec la zone. Les utilisateurs qui ont au moins l'un de ces 'tags' peuvent interagir avec la zone et les objets dans la zone.",
+            "Les droits d'accès définissent qui peut interagir avec la zone. Les utilisateurs correspondant à l'un de ces tags peuvent entrer dans la zone et utiliser les objets qui s'y trouvent.",
     },
     areaEditorInstructions: {
         title: "Comment ca marche ?",
