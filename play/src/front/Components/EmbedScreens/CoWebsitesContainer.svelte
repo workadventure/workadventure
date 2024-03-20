@@ -136,23 +136,24 @@
             <FullScreenIcon />
         </div>
     </div>
+
+    <!-- Probleme avec l'appel en double de l'instance dans le tab voir pourquoi je ne sais pas encore trop -->
     <div class="h-full ml-3">
         {#each $coWebsites as coWebsite (coWebsite.getId())}
             {#if activeCowebsite === coWebsite.getId()}
                 {#if coWebsite instanceof JitsiCoWebsite}
                     <JitsiCowebsiteComponent actualCowebsite={coWebsite} />
-                {/if}
-                {#if coWebsite instanceof SimpleCoWebsite}
+                {:else if coWebsite instanceof SimpleCoWebsite}
                     <SimpleCowebsiteComponent actualCowebsite={coWebsite} />
-                {/if}
-                {#if coWebsite instanceof BBBCoWebsite}
+                {:else if coWebsite instanceof BBBCoWebsite}
                     <BigBlueButtonCowebsiteComponent actualCowebsite={coWebsite} />
                 {/if}
             {/if}
         {/each}
     </div>
+
     <div
-        class="absolute left-1 top-0 bottom-0 m-auto w-1 h-40 bg-white rounded cursor-col-resize test-resize"
+        class="absolute left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize test-resize"
         id="resize-bar"
         bind:this={resizeBar}
         on:mousedown={addDivForResize}

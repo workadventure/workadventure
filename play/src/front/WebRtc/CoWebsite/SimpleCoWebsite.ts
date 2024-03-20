@@ -1,8 +1,5 @@
 import CancelablePromise from "cancelable-promise";
-// import type { Readable, Writable } from "svelte/store";
-// import { get, writable } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
-
 import type { CoWebsite } from "./CoWebsite";
 import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 
@@ -35,13 +32,6 @@ export class SimpleCoWebsite implements CoWebsite {
         return this.url;
     }
 
-    // getState(): CoWebsiteState {
-    //     return get(this.state);
-    // }
-
-    // getStateSubscriber(): Readable<CoWebsiteState> {
-    //     return this.state;
-    // }
 
     getIframe(): HTMLIFrameElement | undefined {
         return this.iframe;

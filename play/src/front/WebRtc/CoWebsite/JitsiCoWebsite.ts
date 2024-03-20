@@ -41,7 +41,7 @@ interface JitsiOptions {
     onload?: () => void;
 }
 
-interface JitsiApi {
+export interface JitsiApi {
     executeCommand: (command: string, ...args: Array<unknown>) => void;
     addListener: (type: string, callback: Function) => void; //eslint-disable-line @typescript-eslint/ban-types
     removeListener: (type: string, callback: Function) => void; //eslint-disable-line @typescript-eslint/ban-types
@@ -302,6 +302,22 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         }
     }
 
+    getOptions(): JitsiOptions {
+        return {
+            roomName: this.roomName,
+            jwt: this.jwt,
+            width: "100%",
+            height: "100%",
+            parentNode: coWebsiteManager.getCoWebsiteBuffer(), //a voir
+            configOverwrite: mergeConfig(this.jitsiConfig),
+            interfaceConfigOverwrite: { ...defaultInterfaceConfig, ...this.jitsiInterfaceConfig }
+        };
+    }
+
+    getDomain(): string {
+        return this.domain;
+    }
+
     public stop() {
         if (!this.jitsiApi) {
             return;
@@ -321,6 +337,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         this.stop();
         this.jitsiApi?.dispose();
     }
+
 
     private onAudioChange({ muted }: { muted: boolean }): void {
         if (muted) {

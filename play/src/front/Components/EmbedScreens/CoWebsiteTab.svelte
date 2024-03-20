@@ -27,6 +27,7 @@
             cowebsiteName = "Jitsi meeting";
             isClosable = false;
         } else if (isBBB) {
+            console.log(isBBB);
             const favicon = `https://s2.googleusercontent.com/s2/favicons?domain=${urlForFavicon}`;
             const cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
             if (cowebsiteTabIcon) {
