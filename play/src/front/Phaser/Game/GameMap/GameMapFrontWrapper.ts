@@ -820,6 +820,7 @@ export class GameMapFrontWrapper {
         if (this.isPlayerInsideAreaByCoordinates(areaData, this.position)) {
             this.triggerSpecificAreaOnEnter(areaData);
         }
+        this.areasManager.addArea(areaData);
     }
 
     public listenAreaChanges(oldConfig: AtLeast<AreaData, "id">, newConfig: AtLeast<AreaData, "id">): void {
@@ -858,6 +859,7 @@ export class GameMapFrontWrapper {
             this.triggerSpecificAreaOnEnter(area);
             return;
         }
+        this.areasManager.updateArea(newConfig);
     }
 
     public listenAreaDeletion(areaData: AreaData | undefined) {
@@ -869,6 +871,7 @@ export class GameMapFrontWrapper {
         if (this.isPlayerInsideAreaByCoordinates(areaData, this.position)) {
             this.triggerSpecificAreaOnLeave(areaData);
         }
+        this.areasManager.removeArea(areaData.id);
     }
 
     public getMapChangedObservable(): Observable<number[][]> {
