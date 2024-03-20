@@ -52,15 +52,24 @@
     function closeTab() {
         dispatch("close");
     }
+
+    function toggleActive() {
+        active = !active;
+    }
+
+    // function duplicateTab() {
+    //     dispatch("duplicate");
+    // }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- Pour effet clic onglets -->
 <div
     class="text flex items-center px-2 mr-2 rounded transition-all {active
-        ? 'text-contrast bg-white hover:bg-white/90 translate-y-2 rounded-b-none pt-1'
+        ? 'text-contrast bg-white hover:bg-white/90 translate-y-2 rounded-b-none pt-1 bg-white'
         : 'text-white hover:bg-white/10'}"
-    on:click={() => (active = !active)}
+    class:active
+    on:click={toggleActive}
 >
     {#if isLoading}
         <img alt="icon" id="cowebsiteTabIcon" />
@@ -93,39 +102,49 @@
             {/if}
         </div>
     </div>
-    <div
-        class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
-    >
-        <ExternalLinkIcon
-            classList="h-4 w-4 aspect-ratio transition-all {active
-                ? 'group-hover:stroke-white stroke-contrast fill-transparent'
-                : 'stroke-white fill-transparent'}"
-        />
-    </div>
-    <div
-        class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
-    >
-        <CopyIcon
-            classList="h-4 w-4 aspect-ratio transition-all {active
-                ? 'group-hover:stroke-white stroke-contrast fill-transparent'
-                : 'stroke-white fill-transparent'}"
-        />
-    </div>
-    {#if isClosable}
+    <div class="flex gap-0.5">
         <div
-            class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
-            on:click={closeTab}
+            class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center {active
+                ? 'bg-contrast/90'
+                : ''}"
         >
-            <XIcon
+            <!-- on:click={duplicateTab} -->
+            <ExternalLinkIcon
+                classList="h-4 w-4 aspect-ratio transition-all {active
+                    ? 'group-hover:stroke-white stroke-contrast fill-transparent'
+                    : 'stroke-contrast fill-transparent'}"
+            />
+        </div>
+        <div
+            class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center {active
+                ? 'bg-contrast/90'
+                : ''}"
+            on:click={() => window.open(coWebsite.getUrl().toString(), "_blank")}
+        >
+            <CopyIcon
                 classList="h-4 w-4 aspect-ratio transition-all {active
                     ? 'group-hover:stroke-white stroke-contrast fill-transparent'
                     : 'stroke-white fill-transparent'}"
             />
         </div>
-    {/if}
+        {#if isClosable}
+            <div
+                class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center {active
+                    ? 'bg-contrast/90'
+                    : ''}"
+                on:click={closeTab}
+            >
+                <XIcon classList="h-4 w-4 aspect-ratio transition-all" />
+            </div>
+        {/if}
+    </div>
     <!-- <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
         <SettingsIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
     </div> -->
 </div>
 
 <!--{active ? 'fill-contrast' : 'fill-white' }  {active ? '' : 'stroke-white fill-transparent' }-->
+
+<!-- {active
+    ? 'group-hover:stroke-white stroke-contrast fill-transparent'
+    : 'stroke-white fill-transparent'}" -->

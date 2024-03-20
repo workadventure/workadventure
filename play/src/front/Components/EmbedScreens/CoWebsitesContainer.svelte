@@ -18,8 +18,6 @@
     let resizeBar: HTMLElement;
     let startX: number;
     let startWidth: number;
-    let active = false;
-    let coWebsiteTab = document.getElementById("cowebsite-tab");
 
     onMount(() => {
         const handleMouseDown = (e) => {
@@ -96,8 +94,6 @@
     }
 </script>
 
-<!-- Cette div devra apparaitre que s'il y a un event et elle peux apparaitre avec la methode display main dans le cowebsite manager-->
-
 <div
     class="w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500] left_panel"
     id="cowebsites-container"
@@ -110,16 +106,24 @@
             {#each $coWebsites.slice().reverse() as coWebsite (coWebsite.getId())}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
-                    id="cowebsite-tab"
-                    class={`${activeCowebsite === coWebsite.getId()}`}
+                    class={activeCowebsite === coWebsite.getId().toString()}
                     on:click={() => setActiveCowebsite(coWebsite.getId())}
                 >
                     <CoWebsiteTab
                         {coWebsite}
-                        active={false}
                         isLoading={true}
+                        active={activeCowebsite === coWebsite.getId().toString()}
                         on:close={() => coWebsites.remove(coWebsite)}
                     />
+
+                    <!-- on:duplicate={() => coWebsites.duplicate(coWebsite)} -->
+
+                    <!-- on:duplicate={() => coWebsites.add(coWebsite)} -->
+
+                    <!-- on:duplicate={() => {
+                        coWebsite = Object.assign({}, coWebsite);
+                        coWebsites.add(coWebsite);
+                    }} -->
                 </div>
             {/each}
         </div>
@@ -148,16 +152,10 @@
         {/each}
     </div>
     <div
-        class="absolute left-1 top-0 bottom-0 m-auto w-2 h-40 bg-white rounded cursor-col-resize test-resize"
+        class="absolute left-1 top-0 bottom-0 m-auto w-1 h-40 bg-white rounded cursor-col-resize test-resize"
         id="resize-bar"
         bind:this={resizeBar}
         on:mousedown={addDivForResize}
         on:dragend={removeDivForResize}
     />
 </div>
-
-<style>
-    .active {
-        background-color: white;
-    }
-</style>

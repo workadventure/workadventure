@@ -31,11 +31,27 @@ export function createCoWebsiteStore() {
 
     const empty = () => set([]);
 
+
+    // Adding fonction for duplicate coWebsite and tab in store
+
+    // const duplicate = (coWebsite: CoWebsite) => {
+    //     coWebsite = Object.assign({}, coWebsite);
+        // const newCoWebsite = coWebsite.clone();
+        // add(newCoWebsite);
+        // add(coWebsite);
+    // }s
+
+
+    // const duplicate = (coWebsite: CoWebsite) => {
+    //     add(coWebsite.clone());
+    // }
+
     return {
         subscribe,
         add,
         remove,
         empty,
+        // duplicate
     };
 }
 
@@ -171,7 +187,7 @@ export class CoWebsiteManager {
     }
 
     public loadCoWebsite(coWebsite: CoWebsite) {
-        coWebsite.load();
+        coWebsite.load().catch(() => {"error"});
     }
 
     public removeCoWebsiteToStore(coWebsite: CoWebsite) {
