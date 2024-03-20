@@ -16,8 +16,8 @@ enum AvailabilityStatus {
   DENY_PROXIMITY_MEETING = 6;
   SPEAKER = 7;
   BUSY = 8;
-  DO_NOT_DISTURB= 9;
-  BACK_IN_A_MOMENT=10;
+  DO_NOT_DISTURB = 9;
+  BACK_IN_A_MOMENT = 10;
 }
 
 message PositionMessage {
@@ -220,8 +220,8 @@ message CreateEntityMessage {
   string prefabId = 5;
   repeated google.protobuf.Value properties = 6;
   optional string name = 7;
-  uint32 x_center = 8;
-  uint32 y_center = 9;
+  uint32 width = 8;
+  uint32 height = 9;
 }
 
 message DeleteEntityMessage {
@@ -265,13 +265,13 @@ message DeleteCustomEntityMessage {
 
 message ModifyEntityMessage {
   string id = 1;
-  optional uint32 x = 2;
-  optional uint32 y = 3;
+  uint32 x = 2;
+  uint32 y = 3;
   repeated google.protobuf.Value properties = 4;
   optional bool modifyProperties = 5;
   optional string name = 6;
-  uint32 x_center = 7;
-  uint32 y_center = 8;
+  uint32 width = 7;
+  uint32 height = 8;
 }
 
 message ClientToServerMessage {

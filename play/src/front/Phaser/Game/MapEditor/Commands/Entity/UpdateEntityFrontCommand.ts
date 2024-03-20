@@ -25,6 +25,39 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
         return returnVal;
     }
 
+    public getUndoCommand(): UpdateEntityFrontCommand {
+        return new UpdateEntityFrontCommand(
+            this.gameMap,
+            this.entityId,
+            this.oldConfig,
+            undefined,
+            this.newConfig,
+            this.entitiesManager,
+            this.scene
+        );
+    }
+
+    public emitEvent(roomConnection: RoomConnection): void {
+        const entity = this.entitiesManager.getEntities().get(this.entityId);
+        if (!entity) {
+            console.error("Entity not found");
+            return;
+        }
+        roomConnection.emitMapEditorModifyEntity(
+            this.commandId,
+            this.entityId,
+            {
+                x: entity.x,
+                y: entity.y,
+                ...this.newConfig,
+            },
+            {
+                width: entity.width,
+                height: entity.height,
+            }
+        );
+    }
+
     private handleEntityUpdate(config: Partial<WAMEntityData>): void {
         const entity = this.entitiesManager.getEntities().get(this.entityId);
         if (!entity) {
@@ -43,25 +76,5 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
             this.scene.getGameMapFrontWrapper().modifyToCollisionsLayer(oldX, oldY, "0", reversedGrid);
             this.scene.getGameMapFrontWrapper().modifyToCollisionsLayer(entity.x, entity.y, "0", grid);
         }
-    }
-
-    public getUndoCommand(): UpdateEntityFrontCommand {
-        return new UpdateEntityFrontCommand(
-            this.gameMap,
-            this.entityId,
-            this.oldConfig,
-            undefined,
-            this.newConfig,
-            this.entitiesManager,
-            this.scene
-        );
-    }
-    public emitEvent(roomConnection: RoomConnection): void {
-        const entity = this.entitiesManager.getEntities().get(this.entityId);
-        if (!entity) {
-            console.error("Entity not found");
-            return;
-        }
-        roomConnection.emitMapEditorModifyEntity(this.commandId, this.entityId, this.newConfig, entity.getCenter());
     }
 }

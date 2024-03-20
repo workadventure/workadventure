@@ -3,10 +3,11 @@ import * as _ from "lodash";
 import {
     AreaData,
     AreaDataProperties,
-    AreaRightPropertyData,
+    RestrictedRightsPropertyData,
     AtLeast,
     GameMapProperties,
     WAMFileFormat,
+    EntityCoordinates,
 } from "../types";
 
 export type AreaChangeCallback = (
@@ -98,7 +99,7 @@ export class GameMapAreas {
     }
 
     public isUserHasWriteAccessOnAreaForEntityCoordinates(
-        entityCenterCoordinates: { x: number; y: number },
+        entityCenterCoordinates: EntityCoordinates,
         userConnectedTags: string[]
     ): boolean {
         const areas = this.getAreasOnPosition(entityCenterCoordinates);
@@ -109,7 +110,7 @@ export class GameMapAreas {
     }
 
     public isUserHasReadAccessOnAreaForEntityCoordinates(
-        entityCenterCoordinates: { x: number; y: number },
+        entityCenterCoordinates: EntityCoordinates,
         userConnectedTags: string[]
     ): boolean {
         const areas = this.getAreasOnPosition(entityCenterCoordinates);
@@ -283,17 +284,19 @@ export class GameMapAreas {
         return areaRights.readTags.some((tag) => userTags.includes(tag));
     }
 
-    private getAreaRightPropertyData(area: AreaData): AreaRightPropertyData | undefined {
+    private getAreaRightPropertyData(area: AreaData): RestrictedRightsPropertyData | undefined {
         const areaRightPropertyData = area.properties.find(
             (property) => property.type === "restrictedRightsPropertyData"
         );
-        const areaRights = areaRightPropertyData ? AreaRightPropertyData.parse(areaRightPropertyData) : undefined;
+        const areaRights = areaRightPropertyData
+            ? RestrictedRightsPropertyData.parse(areaRightPropertyData)
+            : undefined;
         if (areaRights !== undefined) {
             const rightTags = [...areaRights.writeTags, ...areaRights.readTags];
             if (rightTags.length === 0) {
                 return;
             }
-            return AreaRightPropertyData.parse(areaRightPropertyData);
+            return RestrictedRightsPropertyData.parse(areaRightPropertyData);
         }
         return;
     }

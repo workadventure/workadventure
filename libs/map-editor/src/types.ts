@@ -119,7 +119,7 @@ export const AreaDescriptionPropertyData = PropertyBase.extend({
     searchable: z.boolean().default(false),
 });
 
-export const AreaRightPropertyData = PropertyBase.extend({
+export const RestrictedRightsPropertyData = PropertyBase.extend({
     type: z.literal("restrictedRightsPropertyData"),
     writeTags: z.array(z.string()).default([]),
     readTags: z.array(z.string()).default([]),
@@ -137,7 +137,7 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     SpeakerMegaphonePropertyData,
     ListenerMegaphonePropertyData,
     AreaDescriptionPropertyData,
-    AreaRightPropertyData,
+    RestrictedRightsPropertyData,
 ]);
 
 export const AreaDataProperties = z.array(AreaDataProperty);
@@ -216,6 +216,11 @@ export const EntityData = z.object({
     properties: EntityDataProperties.optional(),
     prefab: EntityRawPrefab,
     prefabRef: EntityPrefabRef,
+});
+
+export const EntityDimensions = z.object({
+    width: z.number(),
+    height: z.number(),
 });
 
 export const EntityCoordinates = z.object({
@@ -312,6 +317,7 @@ export type EntityCollectionRaw = z.infer<typeof EntityCollectionRaw>;
 export type CollectionUrl = z.infer<typeof CollectionUrl>;
 export type CollisionGrid = z.infer<typeof CollisionGrid>;
 export type EntityData = z.infer<typeof EntityData>;
+export type EntityDimensions = z.infer<typeof EntityDimensions>;
 export type EntityCoordinates = z.infer<typeof EntityCoordinates>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
@@ -348,7 +354,7 @@ export type SpeakerMegaphonePropertyData = z.infer<typeof SpeakerMegaphoneProper
 export type ListenerMegaphonePropertyData = z.infer<typeof ListenerMegaphonePropertyData>;
 export type EntityDescriptionPropertyData = z.infer<typeof EntityDescriptionPropertyData>;
 export type AreaDescriptionPropertyData = z.infer<typeof AreaDescriptionPropertyData>;
-export type AreaRightPropertyData = z.infer<typeof AreaRightPropertyData>;
+export type RestrictedRightsPropertyData = z.infer<typeof RestrictedRightsPropertyData>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",
