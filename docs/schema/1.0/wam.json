@@ -543,6 +543,52 @@
                         "type"
                       ],
                       "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/id"
+                        },
+                        "buttonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/buttonLabel"
+                        },
+                        "hideButtonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "type": {
+                          "type": "string",
+                          "const": "personalAreaPropertyData"
+                        },
+                        "isPersonalArea": {
+                          "type": "boolean",
+                          "default": false
+                        },
+                        "accessClaimMode": {
+                          "type": "string",
+                          "enum": [
+                            "dynamic",
+                            "static"
+                          ]
+                        },
+                        "allowedTags": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "default": []
+                        },
+                        "owner": {
+                          "type": "string",
+                          "default": ""
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type",
+                        "accessClaimMode"
+                      ],
+                      "additionalProperties": false
                     }
                   ]
                 }
