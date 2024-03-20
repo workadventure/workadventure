@@ -21,4 +21,10 @@
     });
 </script>
 
-<div bind:this={jitsiContainer} class="w-full h-full" />
+<div bind:this={jitsiContainer} class="w-full height" />
+
+<style>
+    .height {
+        height: 90%;
+    }
+</style>
