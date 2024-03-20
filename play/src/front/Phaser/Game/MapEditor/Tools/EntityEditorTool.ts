@@ -115,7 +115,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         entityData,
                         commandId,
                         this.entitiesManager,
-                        { x: createEntityMessage.xCenter, y: createEntityMessage.yCenter }
+                        { width: createEntityMessage.width, height: createEntityMessage.height }
                     ),
                     false,
                     false
@@ -199,6 +199,14 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         }
     }
 
+    public destroy() {
+        super.destroy();
+        this.unbindEventHandlers();
+        this.unsubscribeStore();
+        this.setAreaPreviewsVisibility(false);
+        this.deleteAreaPreview();
+    }
+
     protected bindEntitiesManagerEventHandlers(): void {
         this.entitiesManager.on(EntitiesManagerEvent.DeleteEntity, (entity: Entity) => {
             this.mapEditorModeManager
@@ -248,7 +256,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         entityData,
                         undefined,
                         this.entitiesManager,
-                        data.centerCoordinates
+                        data.entityDimensions
                     )
                 )
                 .catch((e) => console.error(e));
@@ -369,21 +377,6 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         this.changePreviewTint();
     }
 
-    private canEntityBePlaced(): boolean {
-        const gameMapFrontWrapper = this.scene.getGameMapFrontWrapper();
-        if (!this.entityPrefabPreview || !this.entityPrefab) {
-            return false;
-        }
-        return gameMapFrontWrapper.canEntityBePlacedOnMap(
-            this.entityPrefabPreview.getTopLeft(),
-            this.entityPrefabPreview.displayWidth,
-            this.entityPrefabPreview.displayHeight,
-            this.entityPrefab.collisionGrid,
-            undefined,
-            this.shiftKey?.isDown
-        );
-    }
-
     protected changePreviewTint(): void {
         if (!this.entityPrefabPreview || !this.entityPrefab) {
             return;
@@ -448,16 +441,10 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                     entityData,
                     undefined,
                     this.entitiesManager,
-                    this.entityPrefabPreview.getCenter()
+                    { width: this.entityPrefabPreview.width, height: this.entityPrefabPreview.height }
                 )
             )
             .catch((e) => console.error(e));
-    }
-
-    private unsubscribeStore() {
-        this.mapEntityEditorModeStoreUnsubscriber();
-        this.mapEditorModifyCustomEntityEventStoreUnsubscriber();
-        this.mapEditorDeleteCustomEntityEventStoreUnsubscriber();
     }
 
     protected unbindEventHandlers(): void {
@@ -508,11 +495,24 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         });
     }
 
-    public destroy() {
-        super.destroy();
-        this.unbindEventHandlers();
-        this.unsubscribeStore();
-        this.setAreaPreviewsVisibility(false);
-        this.deleteAreaPreview();
+    private canEntityBePlaced(): boolean {
+        const gameMapFrontWrapper = this.scene.getGameMapFrontWrapper();
+        if (!this.entityPrefabPreview || !this.entityPrefab) {
+            return false;
+        }
+        return gameMapFrontWrapper.canEntityBePlacedOnMap(
+            this.entityPrefabPreview.getTopLeft(),
+            this.entityPrefabPreview.displayWidth,
+            this.entityPrefabPreview.displayHeight,
+            this.entityPrefab.collisionGrid,
+            undefined,
+            this.shiftKey?.isDown
+        );
+    }
+
+    private unsubscribeStore() {
+        this.mapEntityEditorModeStoreUnsubscriber();
+        this.mapEditorModifyCustomEntityEventStoreUnsubscriber();
+        this.mapEditorDeleteCustomEntityEventStoreUnsubscriber();
     }
 }

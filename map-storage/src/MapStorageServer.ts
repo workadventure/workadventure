@@ -14,6 +14,8 @@ import {
     UpdateWAMSettingCommand,
     WAMEntityData,
     EntityPermissions,
+    EntityCoordinates,
+    EntityDimensions,
 } from "@workadventure/map-editor";
 import {
     EditMapCommandMessage,
@@ -174,10 +176,10 @@ const mapStorageServer: MapStorageServer = {
                     }
                     const entity = gameMap.getGameMapEntities()?.getEntity(message.id);
                     if (entity) {
-                        const { xCenter: entityXCenter, yCenter: entityYCenter } = message;
+                        const { x, y, width, height } = message;
                         if (
                             entityCommandPermissions &&
-                            !entityCommandPermissions.canEdit({ x: entityXCenter, y: entityYCenter })
+                            !entityCommandPermissions.canEdit(getEntityCenterCoordinates({ x, y }, { width, height }))
                         ) {
                             Sentry.captureException("User is not allowed to modify the entity on map");
                             break;
@@ -194,10 +196,10 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "createEntityMessage": {
                     const message = editMapMessage.createEntityMessage;
-                    const { xCenter: entityXCenter, yCenter: entityYcenter } = message;
+                    const { x, y, width, height } = message;
                     if (
                         entityCommandPermissions &&
-                        !entityCommandPermissions.canEdit({ x: entityXCenter, y: entityYcenter })
+                        !entityCommandPermissions.canEdit(getEntityCenterCoordinates({ x, y }, { width, height }))
                     ) {
                         Sentry.captureException("User is not allowed to create entity on map");
                         break;
@@ -316,6 +318,13 @@ function getMessageFromError(error: unknown): string {
     } else {
         return "Unknown error";
     }
+}
+
+function getEntityCenterCoordinates(entityCoordinates: EntityCoordinates, entityDimensions: EntityDimensions) {
+    return {
+        x: entityCoordinates.x + entityDimensions.width * 0.5,
+        y: entityCoordinates.y + entityDimensions.height * 0.5,
+    };
 }
 
 export { mapStorageServer };

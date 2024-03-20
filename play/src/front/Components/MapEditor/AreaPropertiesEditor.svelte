@@ -6,7 +6,7 @@
         AreaDataProperties,
         OpenWebsiteTypePropertiesKeys,
         PlayAudioPropertyData,
-        AreaRightPropertyData,
+        RestrictedRightsPropertyData,
     } from "@workadventure/map-editor";
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
     import { InfoIcon } from "svelte-feather-icons";
@@ -83,11 +83,11 @@
 
             const rightsProperty = $mapEditorSelectedAreaPreviewStore
                 ?.getProperties()
-                .find((property) => property.type === "areaRightPropertyData");
+                .find((property) => property.type === "restrictedRightsPropertyData");
             if (rightsProperty == undefined) {
                 $mapEditorSelectedAreaPreviewStore?.addProperty({
                     id: crypto.randomUUID(),
-                    type: "areaRightPropertyData",
+                    type: "restrictedRightsPropertyData",
                     writeTags: [],
                     readTags: [],
                     searchable: false,
@@ -355,7 +355,7 @@
                 readTags: [],
                 writeTags: [],
                 searchable: false,
-            } as AreaRightPropertyData;
+            } as RestrictedRightsPropertyData;
             $mapEditorSelectedAreaPreviewStore?.addProperty(areaRightProperties);
         }
 
@@ -746,8 +746,8 @@
         background-color: rgb(65 86 246 / var(--tw-bg-opacity));
         content: var(--tw-content);
         /*--tw-shadow: 0 0 7px 0 rgba(4, 255, 210, 1);
-    --tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
-    box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
+--tw-shadow-colored: 0 0 7px 0 var(--tw-shadow-color);
+box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);*/
     }
 
     .input-switch:disabled {

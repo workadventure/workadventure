@@ -41,7 +41,7 @@ export class DeleteEntityFrontCommand extends DeleteEntityCommand implements Fro
             this.entityData,
             undefined,
             this.entitiesManager,
-            entity.getCenter()
+            { width: entity.width, height: entity.height }
         );
     }
 
