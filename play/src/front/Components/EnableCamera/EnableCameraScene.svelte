@@ -166,19 +166,23 @@
 
 <form class="enableCameraScene pointer-events-auto relative z-30 m-0" on:submit|preventDefault={submit}>
     <section class="flex items-center justify-center min-h-screen ">
-        <div class="text-white container mx-auto flex flex-col items-center justify-center">
+        <div class="text-white container w-full mx-auto flex flex-col items-center justify-center">
             <section class="mb-4 text-center">
                 <h2 class="h4">{$LL.camera.enable.title()}</h2>
-                <p class="opacity-50 w-2/3 m-auto">
+                <p class="opacity-50 w-2/3 m-auto hidden lg:block">
                     {$LL.camera.enable.start()}
                 </p>
             </section>
 
-            <div class="flex space-x-4 items-start">
-                <div class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 flex flex-col justify-center items-center">
+            <div
+                class="flex xl:overflow-x-none overflow-x-scroll space-x-4 items-start px-4 xl:px-0 pb-4 xl:pb-0 w-full xl:w-auto snap-x"
+            >
+                <div
+                    class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 flex flex-col justify-center items-center snap-center"
+                >
                     <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
                         <MicOnIcon height="h-8" width="w-8" />
-                        <div class="grow pr-8">{$LL.actionbar.subtitle.microphone()}/div>
+                        <div class="grow pr-8">{$LL.actionbar.subtitle.microphone()}</div>
                         <button
                             class="btn {!microphoneEdit ? 'btn-secondary' : 'btn-light btn-ghost'}"
                             on:click|stopPropagation|preventDefault={() => (microphoneEdit = !microphoneEdit)}
@@ -209,7 +213,7 @@
                                         ? 'bg-secondary border-secondary'
                                         : 'border-white'}"
                                 >
-                                    {#if selectedMicrophone == undefined}
+                                    {#if selectedMicrophone === undefined}
                                         <CheckIcon width="w-4" height="h-4" />
                                     {/if}
                                 </div>
@@ -220,7 +224,7 @@
                                         <MicOffIcon height="h-4" width="w-4" />
                                         {$LL.audio.disable()}
                                     </div>
-                                    {#if selectedMicrophone == undefined}
+                                    {#if selectedMicrophone === undefined}
                                         <span class="chip chip-sm chip-secondary !inline-block">
                                             <span class="chip-label">{$LL.camera.active()}</span>
                                         </span>
@@ -284,7 +288,9 @@
                     </div>
                 </div>
 
-                <div class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 flex flex-col justify-center items-center">
+                <div
+                    class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 flex flex-col justify-center items-center snap-center"
+                >
                     <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
                         <CamOnIcon height="h-8" width="w-8" />
                         <div class="grow pr-8">{$LL.camera.editCam()}</div>
@@ -413,7 +419,9 @@
                 </div>
 
                 {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
-                    <div class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 flex flex-col justify-center items-center">
+                    <div
+                        class="px-4 pt-4 pb-2 rounded-lg bg-white/10 mt-4 flex flex-col justify-center items-center snap-center"
+                    >
                         <div class="text-lg bold flex items-center justify-center space-x-3 mb-2 pl-2">
                             <MicOnIcon height="h-8" width="w-8" />
                             <div class="grow pr-8">{$LL.camera.editSpeaker()}</div>
@@ -485,9 +493,13 @@
             <section
                 class="flex items-center space-x-4 justify-between border border-t border-white pt-8 min-w-[402px]"
             >
-                <button type="submit" class="btn btn-light btn-lg btn-ghost min-w-[175px] rounded block">{$LL.actionbar.cancel()}</button>
+                <button type="submit" class="btn btn-light btn-lg btn-ghost min-w-[175px] rounded block"
+                    >{$LL.actionbar.cancel()}</button
+                >
                 <!-- TODO ACTION -->
-                <button type="submit" class="btn btn-secondary btn-lg min-w-[175px] rounded block">{$LL.menu.settings.save()}</button>
+                <button type="submit" class="btn btn-secondary btn-lg min-w-[175px] rounded block"
+                    >{$LL.menu.settings.save()}</button
+                >
             </section>
         </div>
     </section>
@@ -496,7 +508,7 @@
 <div class="absolute left-0 top-0 w-screen h-screen bg-contrast/80 z-20" style="background-color: '{bgColor}';" />
 
 {#if legalString}
-    <section class="terms-and-conditions h-fit absolute z-40 bottom-0 text-center w-full">
+    <section class="terms-and-conditions h-fit absolute z-40 bottom-0 text-center w-full hidden xl:block">
         <a style="display: none;" href="traduction">Need for traduction</a>
         <p class="text-white text-xs italic opacity-50">
             {$LL.login.terms({
@@ -508,8 +520,6 @@
 
 <style lang="scss">
     .enableCameraScene {
-
-
         h2 {
             margin: 1px;
         }
@@ -517,6 +527,5 @@
         section.text-center {
             text-align: center;
         }
-
     }
 </style>
