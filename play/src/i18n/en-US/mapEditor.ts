@@ -173,12 +173,12 @@ const mapEditor: BaseTranslation = {
         rightTitle: "Right by user tag (write / read)",
         rightDescription:
             "Rights define who can interact with the area. If you leave it empty, everyone can use it. If you set it, only users who have at least one of these 'tags' can use it.",
-        rightWriteTitle: "Write rights",
+        rightWriteTitle: "Edition rights",
         rightWriteDescription:
-            "Write rights define who can modify the area. The user who have at least on of these tags can create, update or delete an object in the area.",
-        rightReadTitle: "Read rights",
+            "Edition rights define who can modify the area. Users matching one of these tags can create, update or delete an object in the area.",
+        rightReadTitle: "Access rights",
         rightReadDescription:
-            "Read rights define who can interact with the area. The user who have at least on of these tags can only interact with the area and object in the area.",
+            "Access rights define who can interact with the area. Users matching one of these tags can enter the area and use objects whithin the area.",
     },
     areaEditorInstructions: {
         title: "How it works ?",
