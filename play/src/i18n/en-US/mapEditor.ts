@@ -170,7 +170,7 @@ const mapEditor: BaseTranslation = {
         areaSerchable: "Searchable in the exploration mode",
         addDescriptionField: "Add description field",
         addRight: "Add rights",
-        rightTitle: "Right by user tag (write / read)",
+        rightTitle: "Access / edition rights by user tag",
         rightDescription:
             "Rights define who can interact with the area. If you leave it empty, everyone can use it. If you set it, only users who have at least one of these 'tags' can use it.",
         rightWriteTitle: "Edition rights",
