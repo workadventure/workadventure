@@ -4,7 +4,7 @@ import { GameScene } from "../GameScene";
 import { mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
 
 /**
- * This class handle the display
+ * This class handles the display
  * of Phaser Areas objects
  */
 export class AreasManager {

@@ -168,7 +168,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaSerchable: "Recherchable dans le mode exploration",
         addDescriptionField: "Ajouter une description",
         addRight: "Ajouter des droits",
-        rightTitle: "Droit via les tags utilisateur (écriture / lecture)",
+        rightTitle: "Droit d'accès et d'édion via les tags utilisateur",
         rightWriteTitle: "Droits d'édition",
         rightWriteDescription:
             "Les droits d'édition définissent qui peut modifier la zone. Les utilisateurs correspondant à l'un de ces tags peuvent créer, mettre à jour ou supprimer un objet dans la zone.",
