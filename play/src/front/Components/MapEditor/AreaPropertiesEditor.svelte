@@ -10,6 +10,7 @@
     } from "@workadventure/map-editor";
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
     import { InfoIcon } from "svelte-feather-icons";
+    import { IconChevronDown, IconChevronUp } from "@tabler/icons-svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import { FEATURE_FLAG_BROADCAST_AREAS } from "../../Enum/EnvironmentVariable";
@@ -26,6 +27,7 @@
     import StartPropertyEditor from "./PropertyEditor/StartPropertyEditor.svelte";
     import ExitPropertyEditor from "./PropertyEditor/ExitPropertyEditor.svelte";
     import AddPropertyButtonWrapper from "./PropertyEditor/AddPropertyButtonWrapper.svelte";
+    import PersonalAreaPropertyEditor from "./PersonalAreaPropertyEditor.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -352,6 +354,14 @@
         areaRightProperties.writeTags = writeTags?.map((tag) => tag.value) ?? [];
         $mapEditorSelectedAreaPreviewStore?.updateProperty(areaRightProperties);
     }
+
+    function displayRightCounter(writeTags: Option[] = [], readTags: Option[] = []) {
+        const rightSum = writeTags.length + readTags.length;
+        if (rightSum > 0) {
+            return `(${rightSum})`;
+        }
+        return "";
+    }
 </script>
 
 {#if $mapEditorSelectedAreaPreviewStore === undefined}
@@ -495,12 +505,12 @@
         </div>
         <div class="area-name-container">
             {#if !showDescriptionField}
-                <a href="#addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
-                    >+ {$LL.mapEditor.areaEditor.addDescriptionField()}</a
+                <button class="tw-pl-0 tw-text-blue-500" on:click={toggleDescriptionField}>
+                    <IconChevronDown />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
             {:else}
-                <a href="#addDescriptionField" on:click|preventDefault|stopPropagation={toggleDescriptionField}
-                    >- {$LL.mapEditor.areaEditor.addDescriptionField()}</a
+                <button class="tw-pl-0 tw-text-blue-500" on:click={toggleDescriptionField}>
+                    <IconChevronUp />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
                 <label for="objectDescription">{$LL.mapEditor.areaEditor.areaDescription()}</label>
                 <textarea
@@ -523,13 +533,15 @@
         </div>
         <div class="properties-container">
             {#if !addRights}
-                <a href="#toggleRight" on:click|preventDefault|stopPropagation={toggleRight} data-testid="addRights"
-                    >+ {$LL.mapEditor.areaEditor.addRight()} ({(writeTags?.length ?? 0) + (readTags?.length ?? 0)})</a
-                >
+                <button class="tw-pl-0 tw-text-blue-500" on:click={toggleRight} data-testid="addRights">
+                    <IconChevronDown />{$LL.mapEditor.areaEditor.addRight()}
+                    {displayRightCounter(writeTags, readTags)}
+                </button>
             {:else}
-                <a href="#toggleRight" class="tw-cursor-pointer" on:click|preventDefault|stopPropagation={toggleRight}
-                    >- {$LL.mapEditor.areaEditor.rightTitle()}</a
-                >
+                <button class="tw-pl-0 tw-text-blue-500" on:click={toggleRight} data-testid="addRights">
+                    <IconChevronUp />{$LL.mapEditor.areaEditor.addRight()}
+                    {displayRightCounter(writeTags, readTags)}
+                </button>
                 <p class="help-text">
                     <InfoIcon size="18" />
                     {$LL.mapEditor.areaEditor.rightWriteDescription()}
@@ -552,7 +564,7 @@
                     handleChange={onChangeWriteReadTags}
                     testId="readTags"
                 />
-                {#if writeTags != undefined && writeTags.length > 0}
+                {#if writeTags !== undefined && writeTags.length > 0}
                     <div class="tw-flex tw-flex-wrap tw-gap-1">
                         {#each writeTags as tag, index (`${index}-${tag.value}`)}
                             <span class="tw-py-1 tw-px-2 tw-bg-gray-400 tw-text-black tw-rounded-lg">{tag.label}</span>
@@ -560,6 +572,7 @@
                     </div>
                 {/if}
             {/if}
+            <PersonalAreaPropertyEditor />
         </div>
         <div class="properties-container">
             {#each properties as property (property.id)}
