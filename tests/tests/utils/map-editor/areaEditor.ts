@@ -34,7 +34,7 @@ class AreaEditor {
   }
 
   async setAreaDescription(page: Page, Description: string) {
-    await page.getByText("+ Add description field").click();
+    await page.getByText("Add description field").click();
     await page.getByPlaceholder("My area is a...").click();
     await page.getByPlaceholder("My area is a...").fill(Description);
     await page.getByPlaceholder("My area is a...").press("Enter");
