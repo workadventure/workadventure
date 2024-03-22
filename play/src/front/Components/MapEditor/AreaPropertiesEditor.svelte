@@ -10,7 +10,7 @@
     } from "@workadventure/map-editor";
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
     import { InfoIcon } from "svelte-feather-icons";
-    import { IconChevronDown, IconChevronUp } from "@tabler/icons-svelte";
+    import { IconChevronRight, IconChevronDown } from "@tabler/icons-svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import { FEATURE_FLAG_BROADCAST_AREAS } from "../../Enum/EnvironmentVariable";
@@ -506,11 +506,11 @@
         <div class="area-name-container">
             {#if !showDescriptionField}
                 <button class="tw-pl-0 tw-text-blue-500" on:click={toggleDescriptionField}>
-                    <IconChevronDown />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
+                    <IconChevronRight />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
             {:else}
                 <button class="tw-pl-0 tw-text-blue-500" on:click={toggleDescriptionField}>
-                    <IconChevronUp />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
+                    <IconChevronDown />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
                 <label for="objectDescription">{$LL.mapEditor.areaEditor.areaDescription()}</label>
                 <textarea
@@ -534,12 +534,12 @@
         <div class="properties-container">
             {#if !addRights}
                 <button class="tw-pl-0 tw-text-blue-500" on:click={toggleRight} data-testid="addRights">
-                    <IconChevronDown />{$LL.mapEditor.areaEditor.addRight()}
+                    <IconChevronRight />{$LL.mapEditor.areaEditor.addRight()}
                     {displayRightCounter(writeTags, readTags)}
                 </button>
             {:else}
                 <button class="tw-pl-0 tw-text-blue-500" on:click={toggleRight} data-testid="addRights">
-                    <IconChevronUp />{$LL.mapEditor.areaEditor.addRight()}
+                    <IconChevronDown />{$LL.mapEditor.areaEditor.addRight()}
                     {displayRightCounter(writeTags, readTags)}
                 </button>
                 <p class="help-text">

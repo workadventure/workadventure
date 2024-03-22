@@ -16,7 +16,7 @@ export class PersonalAreaPropertyEditorRules {
         accessClaimMode: "dynamic",
         allowedTags: [],
         isPersonalArea: false,
-        owner: "",
+        ownerId: "",
     };
 
     constructor() {
@@ -82,11 +82,11 @@ export class PersonalAreaPropertyEditorRules {
         }
     }
 
-    public setOwner(owner: string) {
+    public setOwner(ownerId: string) {
         const areaPreview = get(mapEditorSelectedAreaPreviewStore);
         const personalAreaPropertyData = get(this.selectedAreaPersonalAreaPropertyStore);
         if (areaPreview !== undefined && personalAreaPropertyData !== undefined) {
-            areaPreview.updateProperty({ id: personalAreaPropertyData.id, owner });
+            areaPreview.updateProperty({ id: personalAreaPropertyData.id, ownerId });
         }
     }
 
@@ -105,7 +105,7 @@ export class PersonalAreaPropertyEditorRules {
         const areaPreview = get(mapEditorSelectedAreaPreviewStore);
         const personalAreaPropertyData = get(this.selectedAreaPersonalAreaPropertyStore);
         if (areaPreview !== undefined && personalAreaPropertyData !== undefined) {
-            areaPreview.updateProperty({ id: personalAreaPropertyData.id, owner: "" });
+            areaPreview.updateProperty({ id: personalAreaPropertyData.id, ownerId: "" });
         }
     }
 }
