@@ -4,14 +4,17 @@
     import ExternalLinkIcon from "../Icons/ExternalLinkIcon.svelte";
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
-    import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
+    // import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
+    import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
 
     export let coWebsite: CoWebsite;
     export let isLoading = false;
     export let isClosable = true;
+    export let isDuplicable = true;
     export let active = false;
+    let cowebsiteNew: CoWebsite;
     let isJitsi: boolean = coWebsite instanceof JitsiCoWebsite;
     let isBBB: boolean = coWebsite instanceof BBBCoWebsite;
     let cowebsiteName: string;
@@ -26,6 +29,7 @@
             }
             cowebsiteName = "Jitsi meeting";
             isClosable = false;
+            isDuplicable = false;
         } else if (isBBB) {
             console.log(isBBB);
             const favicon = `https://s2.googleusercontent.com/s2/favicons?domain=${urlForFavicon}`;
@@ -35,6 +39,7 @@
             }
             cowebsiteName = "BigBlueButton meeting";
             isClosable = false;
+            isDuplicable = false;
         } else {
             const favicon = `https://s2.googleusercontent.com/s2/favicons?domain=${urlForFavicon}`;
             const cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
@@ -45,6 +50,7 @@
             cowebsiteName = cowebsiteName.replace(/.+\/\/|www.|\..+/g, "");
             cowebsiteName = cowebsiteName.charAt(0).toUpperCase() + cowebsiteName.slice(1);
             isClosable = true;
+            isDuplicable = true;
         }
     });
 
@@ -54,11 +60,29 @@
         dispatch("close");
     }
 
+    function duplicateTab() {
+        dispatch("duplicate");
+    }
+
     function toggleActive() {
         active = !active;
     }
 
     // function duplicateTab() {
+    //     console.log("duplicate");
+    //     // const map = new Map();
+    //     // const result = coWebsites.map((currentCowebsite) => {
+    //     //     map.set(currentCowebsite.getId(), (map.get(currentCowebsite.getId()) ?? -1) + 1);
+    //     //     return currentCowebsite;
+    //     // });
+
+    //     dispatch("duplicate");
+    // }
+
+    // function duplicateTab(cowebsite: CoWebsite) {
+    //     console.log("duplicate");
+    //     let duplicateCoWebsite = { ...cowebsite };
+    //     coWebsites.add(duplicateCoWebsite);
     //     dispatch("duplicate");
     // }
 </script>
@@ -69,7 +93,6 @@
     class="text flex items-center px-2 mr-2 rounded transition-all {active
         ? 'text-contrast bg-white hover:bg-white/90 translate-y-2 rounded-b-none pt-1 bg-white'
         : 'text-white hover:bg-white/10'}"
-    class:active
     on:click={toggleActive}
 >
     {#if isLoading}
@@ -104,22 +127,22 @@
         </div>
     </div>
     <div class="flex gap-0.5">
+        {#if isDuplicable}
+            <div
+                class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
+                class:active
+                on:click={duplicateTab}
+            >
+                <ExternalLinkIcon
+                    classList="h-4 w-4 aspect-ratio transition-all {active
+                        ? 'group-hover:stroke-white stroke-contrast fill-transparent'
+                        : 'stroke-contrast fill-transparent'}"
+                />
+            </div>
+        {/if}
         <div
-            class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center {active
-                ? 'bg-contrast/90'
-                : ''}"
-        >
-            <!-- on:click={duplicateTab} -->
-            <ExternalLinkIcon
-                classList="h-4 w-4 aspect-ratio transition-all {active
-                    ? 'group-hover:stroke-white stroke-contrast fill-transparent'
-                    : 'stroke-contrast fill-transparent'}"
-            />
-        </div>
-        <div
-            class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center {active
-                ? 'bg-contrast/90'
-                : ''}"
+            class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
+            class:active
             on:click={() => window.open(coWebsite.getUrl().toString(), "_blank")}
         >
             <CopyIcon
@@ -130,12 +153,15 @@
         </div>
         {#if isClosable}
             <div
-                class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center {active
-                    ? 'bg-contrast/90'
-                    : ''}"
+                class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
+                class:active
                 on:click={closeTab}
             >
-                <XIcon classList="h-4 w-4 aspect-ratio transition-all" />
+                <XIcon
+                    classList="h-4 w-4 aspect-ratio transition-all {active
+                        ? 'group-hover:stroke-white stroke-contrast fill-transparent'
+                        : 'stroke-white fill-transparent'}"
+                />
             </div>
         {/if}
     </div>

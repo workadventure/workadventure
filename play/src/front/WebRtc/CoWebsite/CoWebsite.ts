@@ -1,11 +1,11 @@
 import type CancelablePromise from "cancelable-promise";
-import type { Readable } from "svelte/store";
 
 // export type CoWebsiteState = "asleep" | "loading" | "ready";
 
 export interface CoWebsite {
     // getTitle(): string;
     getId(): string;
+    getDuplicateId(): string;
     getUrl(): URL;
     // getState(): CoWebsiteState;
     // getStateSubscriber(): Readable<CoWebsiteState>;

@@ -28,10 +28,13 @@ export class SimpleCoWebsite implements CoWebsite {
         return this.id;
     }
 
+    getDuplicateId(): string {
+        return this.id + "-duplicate";
+    }
+
     getUrl(): URL {
         return this.url;
     }
-
 
     getIframe(): HTMLIFrameElement | undefined {
         return this.iframe;
