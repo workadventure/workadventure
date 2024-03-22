@@ -1,9 +1,8 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
-    import CoWebsiteTab from "./CoWebsiteTab.svelte";
-    import { coWebsites } from "../../Stores/CoWebsiteStore";
     import { onMount } from "svelte";
+    import { coWebsites } from "../../Stores/CoWebsiteStore";
+    import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
     import SimpleCowebsiteComponent from "../Cowebsites/SimpleCowebsiteComponent.svelte";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
@@ -11,12 +10,13 @@
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
     import BigBlueButtonCowebsiteComponent from "../Cowebsites/BigBlueButtonCowebsiteComponent.svelte";
     import { CoWebsite } from "../../../iframe_api";
+    import CoWebsiteTab from "./CoWebsiteTab.svelte";
 
     export let vertical = false;
     export let activeCowebsite = $coWebsites[0].getId();
     let cowebsiteContainer: HTMLElement | null;
     let container: HTMLElement;
-    let resizeBar: HTMLElement;
+    let resizeBar: HTMLInputElement;
     let startX: number;
     let startWidth: number;
     let coWebsiteNew: CoWebsite;
@@ -56,35 +56,65 @@
         activeCowebsite = arr[arr.length - 1]?.getId();
     });
 
+    // function toggleFullScreen() {
+    //     cowebsiteContainer = document.getElementById("cowebsites-container");
+    //     resizeBar = document.getElementById("resize-bar") as HTMLInputElement;
+
+    //     if (!document.fullscreenElement) {
+    //         if (cowebsiteContainer && cowebsiteContainer.requestFullscreen) {
+    //             cowebsiteContainer.requestFullscreen().catch((e) => {
+    //                 console.error(e);
+    //             });
+    //             resizeBar.style.display = "none";
+    //             resizeBar.disabled = true;
+    //             resizeBar.style.cursor = "not-allowed";
+    //         }
+    //     } else if (document.exitFullscreen) {
+    //         document.exitFullscreen().catch((e) => {
+    //             console.error(e);
+    //         });
+    //         resizeBar.style.display = "block";
+    //         resizeBar.disabled = false;
+    //         resizeBar.style.cursor = "col-resize";
+    //     }
+    // }
+
     function toggleFullScreen() {
         cowebsiteContainer = document.getElementById("cowebsites-container");
-        resizeBar = document.getElementById("resize-bar") as HTMLElement;
-
-        document.addEventListener("keydown", (e) => {
-            if (document.exitFullscreen && e.key === "Escape") {
-                document.exitFullscreen().catch((e) => {
-                    console.error(e);
-                    resizeBar.style.display = "block";
-                });
-            }
-        });
+        resizeBar = document.getElementById("resize-bar") as HTMLInputElement;
 
         if (!document.fullscreenElement) {
             if (cowebsiteContainer && cowebsiteContainer.requestFullscreen) {
                 cowebsiteContainer.requestFullscreen().catch((e) => {
                     console.error(e);
                 });
-                resizeBar.style.display = "none";
+                hideResizeBar();
             }
         } else if (document.exitFullscreen) {
-            // if () {
-
             document.exitFullscreen().catch((e) => {
                 console.error(e);
             });
-            resizeBar.style.display = "block";
+            showResizeBar();
         }
     }
+
+    function hideResizeBar() {
+        resizeBar.style.display = "none";
+        resizeBar.disabled = true;
+        resizeBar.style.cursor = "not-allowed";
+    }
+
+    function showResizeBar() {
+        resizeBar.style.display = "block";
+        resizeBar.disabled = false;
+        resizeBar.style.cursor = "col-resize";
+    }
+
+    document.addEventListener("fullscreenchange", function () {
+        if (!document.fullscreenElement) {
+            showResizeBar();
+        }
+    });
 
     function addDivForResize() {
         const div = document.createElement("div");
