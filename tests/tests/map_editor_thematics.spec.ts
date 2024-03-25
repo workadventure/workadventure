@@ -431,14 +431,26 @@ test.describe("Map editor thematics @oidc", () => {
 
     // Add area with admin rights
     await Menu.openMapEditor(page);
-    await thematics.openAreaEditorAndAddAreaWithRights(page, [], []);
-    await page.getByTestId("expandPersonalAreaProperty").click();
-    await page.getByTestId("isPersonalArea").click();
+    await thematics.openAreaEditorAndAddArea(page);
+
+    // Mock api
+    await page.route("*/**/members?playUri=*&searchText=*", async (route) => {
+      const json = [
+        {
+          name: "playwright",
+          id: "playwright",
+          email: "playwright@workadventu.re",
+        },
+      ];
+      await route.fulfill({ json });
+    });
+
+    await page.getByTestId("personalAreaPropertyData").click();
     await page.getByTestId("accessClaimMode").selectOption({ label: "Static" });
     await page
-      .getByTestId("allowedUserInput")
+      .getByTestId("memberAutoCompleteInput")
       .fill("playwright@workadventu.re");
-    await page.press("body", "Enter");
+    await page.press("body", "Tab");
     await expect(page.getByTestId("revokeAccessButton")).toBeAttached();
   });
 });

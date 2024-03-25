@@ -28,16 +28,37 @@ class Thematics {
     y: this.entityPositionOutsideArea.y,
   };
 
-  async openAreaEditorAndAddAreaWithRights(page, writeRights: string[] = [], readRights: string[] = []) {
+  async openAreaEditorAndAddAreaWithRights(
+    page,
+    writeRights: string[] = [],
+    readRights: string[] = []
+  ) {
     await MapEditor.openAreaEditor(page);
-    await AreaEditor.drawArea(page, this.areaSize.topLeft, this.areaSize.bottomRight);
+    await AreaEditor.drawArea(
+      page,
+      this.areaSize.topLeft,
+      this.areaSize.bottomRight
+    );
     await AreaEditor.setAreaRightProperty(page, writeRights, readRights);
+  }
+
+  async openAreaEditorAndAddArea(page) {
+    await MapEditor.openAreaEditor(page);
+    await AreaEditor.drawArea(
+      page,
+      this.areaSize.topLeft,
+      this.areaSize.bottomRight
+    );
   }
 
   async openEntityEditorAndAddEntityWithOpenLinkPropertyOutsideArea(page) {
     await MapEditor.openEntityEditor(page);
     await EntityEditor.selectEntity(page, 0, "small table");
-    await EntityEditor.moveAndClick(page, this.entityPositionOutsideArea.x, this.entityPositionOutsideArea.y);
+    await EntityEditor.moveAndClick(
+      page,
+      this.entityPositionOutsideArea.x,
+      this.entityPositionOutsideArea.y
+    );
     await EntityEditor.clearEntitySelection(page);
     await EntityEditor.moveAndClick(
       page,
@@ -45,20 +66,29 @@ class Thematics {
       this.mouseCoordinatesToClickOnEntityOutsideArea.y
     );
     await EntityEditor.addProperty(page, "Open Link");
-    await page.getByPlaceholder("https://workadventu.re").first().fill("https://workadventu.re");
+    await page
+      .getByPlaceholder("https://workadventu.re")
+      .first()
+      .fill("https://workadventu.re");
     await Menu.closeMapEditor(page);
     await EntityEditor.moveAndClick(
       page,
       this.mouseCoordinatesToClickOnEntityOutsideArea.x,
       this.mouseCoordinatesToClickOnEntityOutsideArea.y
     );
-    await expect(page.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
+    await expect(
+      page.locator(".actions-menu .actions button").nth(0)
+    ).toContainText("Open Link");
   }
 
   async openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(page) {
     await MapEditor.openEntityEditor(page);
     await EntityEditor.selectEntity(page, 0, "small table");
-    await EntityEditor.moveAndClick(page, this.entityPositionInArea.x, this.entityPositionInArea.y);
+    await EntityEditor.moveAndClick(
+      page,
+      this.entityPositionInArea.x,
+      this.entityPositionInArea.y
+    );
     await EntityEditor.clearEntitySelection(page);
     await EntityEditor.moveAndClick(
       page,
@@ -66,14 +96,19 @@ class Thematics {
       this.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await EntityEditor.addProperty(page, "Open Link");
-    await page.getByPlaceholder("https://workadventu.re").first().fill("https://workadventu.re");
+    await page
+      .getByPlaceholder("https://workadventu.re")
+      .first()
+      .fill("https://workadventu.re");
     await Menu.closeMapEditor(page);
     await EntityEditor.moveAndClick(
       page,
       this.mouseCoordinatesToClickOnEntityInsideArea.x,
       this.mouseCoordinatesToClickOnEntityInsideArea.y
     );
-    await expect(page.locator(".actions-menu .actions button").nth(0)).toContainText("Open Link");
+    await expect(
+      page.locator(".actions-menu .actions button").nth(0)
+    ).toContainText("Open Link");
   }
 }
 

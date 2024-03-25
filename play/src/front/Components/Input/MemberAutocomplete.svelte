@@ -46,5 +46,6 @@
     --item-hover-color="black"
     --clear-select-color="red"
     loadOptions={searchMembers}
+    inputAttributes={{ "data-testid": "memberAutoCompleteInput" }}
     {placeholder}
 />

@@ -229,6 +229,7 @@
         descriptionText={$LL.mapEditor.properties.personalAreaConfiguration.description()}
         img={workerWhiteSvg}
         style={`z-index: 10;${isActive ? "background-color: #4156f6;" : ""}`}
+        testId="personalAreaPropertyData"
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -240,6 +241,7 @@
         descriptionText={$LL.mapEditor.properties.restrictedRightsProperties.rightTitle()}
         img={teamWhiteSvg}
         style={`z-index: 10;${isActive ? "background-color: #4156f6;" : ""}`}
+        testId="restrictedRightsPropertyData"
         on:click={(event) => {
             dispatch("click", event);
         }}
