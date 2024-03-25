@@ -15,7 +15,7 @@
     export let activeCowebsite = $coWebsites[0].getId();
     let cowebsiteContainer: HTMLElement | null;
     let container: HTMLElement;
-    let resizeBar: HTMLInputElement;
+    let resizeBar: HTMLDivElement;
     let startX: number;
     let startWidth: number;
 
