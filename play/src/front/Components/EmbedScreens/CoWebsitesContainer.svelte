@@ -55,6 +55,14 @@
         console.log(typeof activeCowebsite, ": ", activeCowebsite);
     });
 
+    function checkActiveCowebsite(coWebsiteId: string) {
+        return activeCowebsite === coWebsiteId.toString();
+    }
+
+    // function checkActiveCowebsite() {
+    //     if ($coWebsites.getId().toString() === activeCowebsite.toString())
+    // }
+
     function toggleFullScreen() {
         cowebsiteContainer = document.getElementById("cowebsites-container");
         resizeBar = document.getElementById("resize-bar") as HTMLInputElement;
@@ -128,7 +136,7 @@
             {#each $coWebsites.slice().reverse() as coWebsite (coWebsite.getId())}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
-                    class={coWebsite.getId().toString() === activeCowebsite.toString()}
+                    class:active={checkActiveCowebsite(coWebsite.getId().toString())}
                     on:click={() => setActiveCowebsite(coWebsite.getId())}
                 >
                     <CoWebsiteTab
