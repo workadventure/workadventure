@@ -1443,7 +1443,8 @@ export class GameScene extends DirtyScene {
             this.entityPermissions = new EntityPermissions(
                 gameMapAreas,
                 this.connection.getAllTags() ?? [],
-                userCanEdit
+                userCanEdit,
+                localUserStore.getLocalUser()?.uuid
             );
             this.entityPermissionsDeferred.resolve(this.entityPermissions);
         }

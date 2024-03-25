@@ -111,11 +111,11 @@ const mapStorageServer: MapStorageServer = {
 
             const gameMap = await mapsManager.getOrLoadGameMap(mapKey);
 
-            const { connectedUserTags, userCanEdit } = call.request;
+            const { connectedUserTags, userCanEdit, userUUID } = call.request;
 
             const gameMapAreas = gameMap.getGameMapAreas();
             const entityCommandPermissions = gameMapAreas
-                ? new EntityPermissions(gameMapAreas, connectedUserTags, userCanEdit)
+                ? new EntityPermissions(gameMapAreas, connectedUserTags, userCanEdit, userUUID)
                 : undefined;
 
             const editMapMessage = editMapCommandMessage.editMapMessage.message;
