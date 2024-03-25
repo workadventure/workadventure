@@ -20,7 +20,7 @@
     let startWidth: number;
 
     onMount(() => {
-        const handleMouseDown = (e) => {
+        const handleMouseDown = (e: { clientX: number }) => {
             startX = e.clientX;
             startWidth = parseInt(getComputedStyle(container).width);
             document.addEventListener("mousemove", handleMouseMove);
@@ -29,7 +29,7 @@
 
         resizeBar.addEventListener("mousedown", handleMouseDown);
 
-        const handleMouseMove = (e) => {
+        const handleMouseMove = (e: { clientX: number }) => {
             const width = startWidth - (e.clientX - startX);
             container.style.width = width + "px";
         };
@@ -52,6 +52,7 @@
 
     const subscription = coWebsites.subscribe((arr) => {
         activeCowebsite = arr[arr.length - 1]?.getId();
+        console.log(typeof activeCowebsite, ": ", activeCowebsite);
     });
 
     function toggleFullScreen() {
@@ -125,7 +126,7 @@
             {#each $coWebsites.slice().reverse() as coWebsite (coWebsite.getId())}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
-                    class={activeCowebsite === coWebsite.getId().toString()}
+                    class={coWebsite.getId().toString() === activeCowebsite}
                     on:click={() => setActiveCowebsite(coWebsite.getId())}
                 >
                     <CoWebsiteTab
