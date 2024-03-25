@@ -33,7 +33,6 @@
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
     import WarningBanner from "./WarningContainer/WarningBanner.svelte";
-    import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import BanMessageContainer from "./TypeMessage/BanMessageContainer.svelte";
     import TextMessageContainer from "./TypeMessage/TextMessageContainer.svelte";
     import AudioPlaying from "./UI/AudioPlaying.svelte";
@@ -56,7 +55,7 @@
 
     let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
-        isMobile = isMediaBreakpointUp("md");
+        let isMobile = isMediaBreakpointUp("md");
     });
 
     onMount(() => {
@@ -77,9 +76,11 @@
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
     {/if}
 
-    <aside id="main-layout-left-aside">
-        <CoWebsitesContainer vertical={isMobile} />
-    </aside>
+    <!-- <aside id="main-layout-left-aside"> -->
+    <!-- {#if $coWebsites.length > 0}
+            <CoWebsitesContainer vertical={isMobile} />
+        {/if} -->
+    <!-- </aside> -->
 
     <section id="main-layout-main" class="pb-0 pointer-events-none">
         <Lazy

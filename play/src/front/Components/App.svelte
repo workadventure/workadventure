@@ -4,7 +4,6 @@
     import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
     import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
     import { DEBUG_MODE, SENTRY_DSN_FRONT, SENTRY_ENVIRONMENT, SENTRY_RELEASE } from "../Enum/EnvironmentVariable";
-    import { coWebsiteManager } from "../WebRtc/CoWebsiteManager";
     import { HdpiManager } from "../Phaser/Services/HdpiManager";
     import { EntryScene } from "../Phaser/Login/EntryScene";
     import { LoginScene } from "../Phaser/Login/LoginScene";
@@ -21,6 +20,7 @@
     import { desktopApi } from "../Api/Desktop";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
+    import { coWebsiteManager, coWebsites } from "../Stores/CoWebsiteStore";
 
     let WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
     let game: Game;
@@ -196,9 +196,9 @@
     <!-- Create the editor container -->
     <GameOverlay {game} />
     <div id="game" bind:this={gameDiv} class="absolute top-0 -z-10" />
-    <GameOverlay {game} />
-    <div id="game" bind:this={gameDiv} class="absolute top-0 -z-10" />
-    <CoWebsitesContainer />
+    {#if $coWebsites.length > 0}
+        <CoWebsitesContainer />
+    {/if}
 </div>
 
 <style lang="scss">

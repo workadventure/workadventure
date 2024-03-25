@@ -3,7 +3,8 @@ import { z } from "zod";
 import { get } from "svelte/store";
 import { randomDelay } from "@workadventure/shared-utils/src/RandomDelay/RandomDelay";
 import { inExternalServiceStore } from "../../Stores/MyMediaStore";
-import { coWebsiteManager } from "../CoWebsiteManager";
+// import { coWebsiteManager } from "../CoWebsiteManager";
+import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import { jitsiExternalApiFactory } from "../JitsiExternalApiFactory";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
@@ -40,7 +41,7 @@ interface JitsiOptions {
     onload?: () => void;
 }
 
-interface JitsiApi {
+export interface JitsiApi {
     executeCommand: (command: string, ...args: Array<unknown>) => void;
     addListener: (type: string, callback: Function) => void; //eslint-disable-line @typescript-eslint/ban-types
     removeListener: (type: string, callback: Function) => void; //eslint-disable-line @typescript-eslint/ban-types
@@ -131,6 +132,7 @@ const defaultInterfaceConfig = {
 };
 
 export class JitsiCoWebsite extends SimpleCoWebsite {
+
     private jitsiApi?: JitsiApi;
     private audioCallback = this.onAudioChange.bind(this);
     private videoCallback = this.onVideoChange.bind(this);
@@ -158,7 +160,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
     load(): CancelablePromise<HTMLIFrameElement> {
         let cancelled = false;
         return (this.loadPromise = new CancelablePromise((resolve, reject, cancel) => {
-            this.state.set("loading");
+            // this.state.set("loading");
 
             inExternalServiceStore.set(true);
 
@@ -171,7 +173,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
                         jwt: this.jwt,
                         width: "100%",
                         height: "100%",
-                        parentNode: coWebsiteManager.getCoWebsiteBuffer(),
+                        parentNode: HTMLElement.prototype,
                         configOverwrite: mergeConfig(this.jitsiConfig),
                         interfaceConfigOverwrite: { ...defaultInterfaceConfig, ...this.jitsiInterfaceConfig },
                     };
@@ -219,10 +221,9 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
 
                     Promise.race([timemoutPromise, jistiMeetLoadedPromise])
                         .then(async () => {
+
                             await randomDelay();
-                            const iframe = coWebsiteManager
-                                .getCoWebsiteBuffer()
-                                .querySelector<HTMLIFrameElement>('[id*="jitsi" i]');
+                            const iframe = <HTMLIFrameElement><unknown>('[id*="jitsi" i]');
 
                             if (cancelled /*&& iframe*/) {
                                 console.info("CLOSING BECAUSE CANCELLED AFTER LOAD");
@@ -242,7 +243,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
 
                                 this.iframe = iframe;
                                 this.iframe.classList.add("pixel");
-                                this.state.set("ready");
+                                // this.state.set("ready");
                                 return resolve(iframe);
                             } else {
                                 console.error("No iframe or no jitsiApi. We may have a problem.");
@@ -301,6 +302,22 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         }
     }
 
+    getOptions(): JitsiOptions {
+        return {
+            roomName: this.roomName,
+            jwt: this.jwt,
+            width: "100%",
+            height: "100%",
+            parentNode: HTMLDivElement.prototype,  //a voir avant c'était coWebsiteManager.getCoWebsiteBuffer()
+            configOverwrite: mergeConfig(this.jitsiConfig),
+            interfaceConfigOverwrite: { ...defaultInterfaceConfig, ...this.jitsiInterfaceConfig }
+        };
+    }
+
+    getDomain(): string {
+        return this.domain;
+    }
+
     public stop() {
         if (!this.jitsiApi) {
             return;
@@ -320,6 +337,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         this.stop();
         this.jitsiApi?.dispose();
     }
+
 
     private onAudioChange({ muted }: { muted: boolean }): void {
         if (muted) {

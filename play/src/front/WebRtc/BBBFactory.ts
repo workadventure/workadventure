@@ -1,4 +1,4 @@
-import { coWebsiteManager } from "./CoWebsiteManager";
+import { coWebsiteManager } from "../Stores/CoWebsiteStore";
 import { BBBCoWebsite } from "./CoWebsite/BBBCoWebsite";
 
 class BBBFactory {
@@ -12,9 +12,15 @@ class BBBFactory {
 
         const allowPolicy =
             "microphone *; camera *; display-capture *; clipboard-read *; clipboard-write *; screen-wake-lock *; fullscreen *";
+
+        console.log("BBBFactory start");
         const coWebsite = new BBBCoWebsite(new URL(clientURL), false, allowPolicy, undefined, false);
-        coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
-        coWebsiteManager.loadCoWebsite(coWebsite).catch((e) => console.error(`Error on opening co-website: ${e}`));
+        coWebsiteManager.addCoWebsiteToStore(coWebsite);
+        try {
+            coWebsiteManager.loadCoWebsite(coWebsite);
+        } catch (e) {
+            console.error(`Error on opening co-website: ${e}`);
+        }
     }
 
     public stop() {

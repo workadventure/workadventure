@@ -5,7 +5,7 @@ import { Jitsi } from "@workadventure/shared-utils";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { z } from "zod";
 import { scriptUtils } from "../../Api/ScriptUtils";
-import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
@@ -21,15 +21,14 @@ import { inJitsiStore, inBbbStore, silentStore, inOpenWebsite, isSpeakerStore } 
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { currentLiveStreamingNameStore } from "../../Stores/MegaphoneStore";
 import { popupStore } from "../../Stores/PopupStore";
+import PopUpJitsi from "../../Components/PopUp/PopUpJitsi.svelte";
+import PopUpTab from "../../Components/PopUp/PopUpTab.svelte";
+import PopUpCowebsite from "../../Components/PopUp/PopupCowebsite.svelte";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
 import { AreasPropertiesListener } from "./MapEditor/AreasPropertiesListener";
 import { gameManager } from "./GameManager";
-import PopUpJitsi from "../../Components/PopUp/PopUpJitsi.svelte"
-import PopUpTab from "../../Components/PopUp/PopUpTab.svelte";
-import PopUpCowebsite from "../../Components/PopUp/PopupCowebsite.svelte"
-
 
 export interface OpenCoWebsite {
     actionId: string;
@@ -64,15 +63,18 @@ export class GameMapPropertiesListener {
                         message = get(LL).trigger.newTab();
                     }
 
-                    popupStore.addPopup(PopUpTab, {
-                        message: message,
-                        click: () => {
-                            popupStore.removePopup("openTab");
-                            scriptUtils.openTab(newValue)
+                    popupStore.addPopup(
+                        PopUpTab,
+                        {
+                            message: message,
+                            click: () => {
+                                popupStore.removePopup("openTab");
+                                scriptUtils.openTab(newValue);
+                            },
+                            userInputManager: this.scene.userInputManager,
                         },
-                        userInputManager: this.scene.userInputManager,
-                    },
-                    "openTab");
+                        "openTab"
+                    );
                 } else {
                     scriptUtils.openTab(newValue);
                 }
@@ -172,11 +174,13 @@ export class GameMapPropertiesListener {
                     domainWithoutProtocol
                 );
 
-                coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
+                coWebsiteManager.addCoWebsiteToStore(coWebsite);
 
-                coWebsiteManager.loadCoWebsite(coWebsite).catch((err) => {
-                    console.error(err);
-                });
+                // coWebsiteManager.loadCoWebsite(coWebsite);
+
+                // .catch((err) => {
+                //     console.error(err);
+                // });
 
                 analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
@@ -188,17 +192,19 @@ export class GameMapPropertiesListener {
             if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                 let message = allProps.get(GameMapProperties.JITSI_TRIGGER_MESSAGE);
                 if (message === undefined) {
-                  message = get(LL).trigger.jitsiRoom();
+                    message = get(LL).trigger.jitsiRoom();
                 }
-                popupStore.addPopup(PopUpJitsi, {
-                    message: message,
-                    click: () => {
-                        openJitsiRoomFunction().catch((e) => console.error(e));
+                popupStore.addPopup(
+                    PopUpJitsi,
+                    {
+                        message: message,
+                        click: () => {
+                            openJitsiRoomFunction().catch((e) => console.error(e));
+                        },
+                        userInputManager: this.scene.userInputManager,
                     },
-                    userInputManager: this.scene.userInputManager,
-                },
-                "jitsi");
-
+                    "jitsi"
+                );
             } else {
                 openJitsiRoomFunction().catch((e) => console.error(e));
             }
@@ -206,7 +212,6 @@ export class GameMapPropertiesListener {
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
             if (newValue === undefined || newValue !== oldValue) {
-                // layoutManagerActionStore.removeAction("bbbMeeting"); // A voir pour enlever et faire un popup
                 inBbbStore.set(false);
                 bbbFactory.setStopped(true);
                 bbbFactory.stop();
@@ -222,8 +227,10 @@ export class GameMapPropertiesListener {
                     if (this.scene.connection === undefined) {
                         throw new Error("No more connection to open BBB");
                     }
+                    console.log("hashedMeetingId", hashedMeetingId);
                     return this.scene.connection.queryBBBMeetingUrl(hashedMeetingId, allProps);
                 })
+
                 .then((bbbAnswer) => {
                     bbbFactory.start(bbbAnswer.clientURL);
                 })
@@ -400,7 +407,7 @@ export class GameMapPropertiesListener {
         let allowApiProperty: boolean | undefined;
         let websitePolicyProperty: string | undefined;
         let websiteWidthProperty: number | undefined;
-        let websitePositionProperty: number | undefined;
+        // let websitePositionProperty: number | undefined;
         let websiteTriggerProperty: string | undefined;
         let websiteTriggerMessageProperty: string | undefined;
         let websiteClosableProperty: boolean | undefined;
@@ -419,9 +426,9 @@ export class GameMapPropertiesListener {
                 case GameMapProperties.OPEN_WEBSITE_WIDTH:
                     websiteWidthProperty = property.value as number | undefined;
                     break;
-                case GameMapProperties.OPEN_WEBSITE_POSITION:
-                    websitePositionProperty = property.value as number | undefined;
-                    break;
+                // case GameMapProperties.OPEN_WEBSITE_POSITION:
+                //     websitePositionProperty = property.value as number | undefined;
+                //     break;
                 case GameMapProperties.OPEN_WEBSITE_TRIGGER:
                     websiteTriggerProperty = property.value as string | undefined;
                     break;
@@ -446,14 +453,16 @@ export class GameMapPropertiesListener {
 
         const coWebsiteOpen: OpenCoWebsite = {
             actionId: actionId,
+            // websitePositionProperty,
         };
 
         this.coWebsitesOpenByPlace.set(this.getIdFromPlace(place), coWebsiteOpen);
 
         const loadCoWebsiteFunction = (coWebsite: CoWebsite) => {
-            coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
-                console.error("Error during loading a co-website: " + coWebsite.getUrl());
-            });
+            coWebsiteManager.loadCoWebsite(coWebsite);
+            // .catch(() => {
+            //     console.error("Error during loading a co-website: " + coWebsite.getUrl());
+            // });
             popupStore.removePopup(actionId);
         };
 
@@ -468,7 +477,7 @@ export class GameMapPropertiesListener {
 
             coWebsiteOpen.coWebsite = coWebsite;
 
-            coWebsiteManager.addCoWebsiteToStore(coWebsite, websitePositionProperty);
+            coWebsiteManager.addCoWebsiteToStore(coWebsite);
 
             loadCoWebsiteFunction(coWebsite);
 
@@ -486,17 +495,17 @@ export class GameMapPropertiesListener {
 
             this.coWebsitesActionTriggerByPlace.set(this.getIdFromPlace(place), actionId);
 
-            popupStore.addPopup(PopUpCowebsite, {
-                message: websiteTriggerMessageProperty,
-                click: () => {
-                    openCoWebsiteFunction();
+            popupStore.addPopup(
+                PopUpCowebsite,
+                {
+                    message: websiteTriggerMessageProperty,
+                    click: () => {
+                        openCoWebsiteFunction();
+                    },
+                    userInputManager: this.scene.userInputManager,
                 },
-                userInputManager: this.scene.userInputManager,
-            },
-            actionId);
-
-
-
+                actionId
+            );
         } else if (websiteTriggerProperty === ON_ICON_TRIGGER_BUTTON) {
             const coWebsite = new SimpleCoWebsite(
                 new URL(openWebsiteProperty ?? "", this.scene.mapUrlFile),
@@ -508,7 +517,7 @@ export class GameMapPropertiesListener {
 
             coWebsiteOpen.coWebsite = coWebsite;
 
-            coWebsiteManager.addCoWebsiteToStore(coWebsite, websitePositionProperty);
+            coWebsiteManager.addCoWebsiteToStore(coWebsite);
 
             //user in zone to open cowesite with only icone
             inOpenWebsite.set(true);

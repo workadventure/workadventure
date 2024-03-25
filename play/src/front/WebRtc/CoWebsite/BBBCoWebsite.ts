@@ -1,7 +1,7 @@
 import type CancelablePromise from "cancelable-promise";
 import { inExternalServiceStore } from "../../Stores/MyMediaStore";
 import { screenWakeLock } from "../../Utils/ScreenWakeLock";
-import { coWebsiteManager } from "../CoWebsiteManager";
+import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 
 export class BBBCoWebsite extends SimpleCoWebsite {
