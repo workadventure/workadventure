@@ -437,9 +437,9 @@ test.describe("Map editor thematics @oidc", () => {
     await page.route("*/**/members?playUri=*&searchText=*", async (route) => {
       const json = [
         {
-          name: "playwright",
-          id: "playwright",
-          email: "playwright@workadventu.re",
+          name: "alice.doe@example.com",
+          id: "alice.doe@example.com",
+          email: "alice.doe@example.com",
         },
       ];
       await route.fulfill({ json });
@@ -447,10 +447,15 @@ test.describe("Map editor thematics @oidc", () => {
 
     await page.getByTestId("personalAreaPropertyData").click();
     await page.getByTestId("accessClaimMode").selectOption({ label: "Static" });
+    const memberAutoCompleteResponse = page.waitForResponse(
+      (response) =>
+        response.url().includes("/members?playUri") && response.status() === 200
+    );
     await page
       .getByTestId("memberAutoCompleteInput")
-      .fill("playwright@workadventu.re");
-    await page.press("body", "Tab");
+      .fill("alice.doe@example.com");
+    await memberAutoCompleteResponse;
+    await page.press("body", "Enter");
     await expect(page.getByTestId("revokeAccessButton")).toBeAttached();
   });
 });
