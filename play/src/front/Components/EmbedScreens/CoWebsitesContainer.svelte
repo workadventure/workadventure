@@ -128,7 +128,7 @@
             {#each $coWebsites.slice().reverse() as coWebsite (coWebsite.getId())}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
-                    class={coWebsite.getId().toString() === activeCowebsite}
+                    class={coWebsite.getId().toString() === activeCowebsite.toString()}
                     on:click={() => setActiveCowebsite(coWebsite.getId())}
                 >
                     <CoWebsiteTab
@@ -136,7 +136,6 @@
                         isLoading={true}
                         active={activeCowebsite === coWebsite.getId().toString()}
                         on:close={() => coWebsites.remove(coWebsite)}
-                        on:duplicate={() => console.log("faire la fonction de duplication ici")}
                     />
                 </div>
             {/each}
