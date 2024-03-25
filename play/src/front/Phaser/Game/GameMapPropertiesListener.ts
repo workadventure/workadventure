@@ -212,7 +212,6 @@ export class GameMapPropertiesListener {
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
             if (newValue === undefined || newValue !== oldValue) {
-                // layoutManagerActionStore.removeAction("bbbMeeting"); // A voir pour enlever et faire un popup
                 inBbbStore.set(false);
                 bbbFactory.setStopped(true);
                 bbbFactory.stop();
@@ -228,8 +227,10 @@ export class GameMapPropertiesListener {
                     if (this.scene.connection === undefined) {
                         throw new Error("No more connection to open BBB");
                     }
+                    console.log("hashedMeetingId", hashedMeetingId);
                     return this.scene.connection.queryBBBMeetingUrl(hashedMeetingId, allProps);
                 })
+
                 .then((bbbAnswer) => {
                     bbbFactory.start(bbbAnswer.clientURL);
                 })
@@ -406,7 +407,7 @@ export class GameMapPropertiesListener {
         let allowApiProperty: boolean | undefined;
         let websitePolicyProperty: string | undefined;
         let websiteWidthProperty: number | undefined;
-        let websitePositionProperty: number | undefined;
+        // let websitePositionProperty: number | undefined;
         let websiteTriggerProperty: string | undefined;
         let websiteTriggerMessageProperty: string | undefined;
         let websiteClosableProperty: boolean | undefined;
@@ -425,9 +426,9 @@ export class GameMapPropertiesListener {
                 case GameMapProperties.OPEN_WEBSITE_WIDTH:
                     websiteWidthProperty = property.value as number | undefined;
                     break;
-                case GameMapProperties.OPEN_WEBSITE_POSITION:
-                    websitePositionProperty = property.value as number | undefined;
-                    break;
+                // case GameMapProperties.OPEN_WEBSITE_POSITION:
+                //     websitePositionProperty = property.value as number | undefined;
+                //     break;
                 case GameMapProperties.OPEN_WEBSITE_TRIGGER:
                     websiteTriggerProperty = property.value as string | undefined;
                     break;
@@ -452,7 +453,7 @@ export class GameMapPropertiesListener {
 
         const coWebsiteOpen: OpenCoWebsite = {
             actionId: actionId,
-            websitePositionProperty,
+            // websitePositionProperty,
         };
 
         this.coWebsitesOpenByPlace.set(this.getIdFromPlace(place), coWebsiteOpen);

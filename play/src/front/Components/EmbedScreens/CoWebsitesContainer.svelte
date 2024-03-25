@@ -9,7 +9,6 @@
     import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
     import BigBlueButtonCowebsiteComponent from "../Cowebsites/BigBlueButtonCowebsiteComponent.svelte";
-    import { CoWebsite } from "../../../iframe_api";
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
 
     export let vertical = false;
@@ -19,7 +18,6 @@
     let resizeBar: HTMLInputElement;
     let startX: number;
     let startWidth: number;
-    let coWebsiteNew: CoWebsite;
 
     onMount(() => {
         const handleMouseDown = (e) => {
@@ -52,32 +50,9 @@
         activeCowebsite = coWebsiteId;
     };
 
-    coWebsites.subscribe((arr) => {
+    const subscription = coWebsites.subscribe((arr) => {
         activeCowebsite = arr[arr.length - 1]?.getId();
     });
-
-    // function toggleFullScreen() {
-    //     cowebsiteContainer = document.getElementById("cowebsites-container");
-    //     resizeBar = document.getElementById("resize-bar") as HTMLInputElement;
-
-    //     if (!document.fullscreenElement) {
-    //         if (cowebsiteContainer && cowebsiteContainer.requestFullscreen) {
-    //             cowebsiteContainer.requestFullscreen().catch((e) => {
-    //                 console.error(e);
-    //             });
-    //             resizeBar.style.display = "none";
-    //             resizeBar.disabled = true;
-    //             resizeBar.style.cursor = "not-allowed";
-    //         }
-    //     } else if (document.exitFullscreen) {
-    //         document.exitFullscreen().catch((e) => {
-    //             console.error(e);
-    //         });
-    //         resizeBar.style.display = "block";
-    //         resizeBar.disabled = false;
-    //         resizeBar.style.cursor = "col-resize";
-    //     }
-    // }
 
     function toggleFullScreen() {
         cowebsiteContainer = document.getElementById("cowebsites-container");
@@ -160,37 +135,6 @@
                         on:close={() => coWebsites.remove(coWebsite)}
                         on:duplicate={() => console.log("faire la fonction de duplication ici")}
                     />
-
-                    <!-- coWebsiteNew = Object.assign({}, coWebsite);
-                            coWebsiteBis = coWebsite.getDuplicateId();
-                            console.log(coWebsiteBis);
-                            coWebsites.add(); -->
-
-                    <!-- const newObj = Object.assign({}, coWebsite);
-                            console.log(newObj);
-                            const newObjId = newObj.getDuplicateId(); // Modifier l'ID de la nouvelle instance
-                            console.log(newObjId); -->
-                    <!-- duplicateObjectWithNewId(originalObj, 2); -->
-
-                    <!-- on:duplicate={() =>
-                        map = new Map();
-                        coWebsites.map((currCowebsite: object) => {
-                            map.set(currCowebsite.getId(), (map.get(currCowebsite.getId()) ?? -1) + 1);
-                            return currCowebsite;
-                        })
-                    } -->
-                    <!-- key={coWebsite.getId().toString()} -->
-
-                    <!-- on:duplicate={duplicateTab} -->
-
-                    <!-- on:duplicate={() => coWebsites.duplicate(coWebsite)} -->
-
-                    <!-- on:duplicate={() => coWebsites.add(coWebsite)} -->
-
-                    <!-- on:duplicate={() => {
-                        coWebsite = Object.assign({}, coWebsite);
-                        coWebsites.add(coWebsite);
-                    }} -->
                 </div>
             {/each}
         </div>

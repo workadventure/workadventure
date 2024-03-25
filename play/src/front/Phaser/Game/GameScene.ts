@@ -20,7 +20,6 @@ import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@w
 import { GameMap, GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
-import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { urlManager } from "../../Url/UrlManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
 import { UserInputManager } from "../UserInput/UserInputManager";
@@ -181,6 +180,7 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -2098,7 +2098,7 @@ ${escapedMessage}
             })
         );
 
-        iframeListener.registerAnswerer("openCoWebsite", async (openCoWebsite, source) => {
+        iframeListener.registerAnswerer("openCoWebsite", (openCoWebsite, source) => {
             if (!source) {
                 throw new Error("Unknown query source");
             }
@@ -2111,10 +2111,10 @@ ${escapedMessage}
                 openCoWebsite.closable
             );
 
-            coWebsiteManager.addCoWebsiteToStore(coWebsite, openCoWebsite.position);
+            coWebsiteManager.addCoWebsiteToStore(coWebsite);
 
             if (openCoWebsite.lazy === undefined || !openCoWebsite.lazy) {
-                await coWebsiteManager.loadCoWebsite(coWebsite);
+                coWebsiteManager.loadCoWebsite(coWebsite);
             }
 
             return {

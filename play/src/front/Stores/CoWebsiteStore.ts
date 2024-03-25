@@ -1,5 +1,6 @@
 import { get, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
+import { Subject } from "rxjs";
 
 // nouveau store
 
@@ -30,21 +31,6 @@ export function createCoWebsiteStore() {
 
     const empty = () => set([]);
 
-
-    // Adding fonction for duplicate coWebsite and tab in store
-
-    // const duplicate = (coWebsite: CoWebsite) => {
-    //     coWebsite = Object.assign({}, coWebsite);
-        // const newCoWebsite = coWebsite.clone();
-        // add(newCoWebsite);
-        // add(coWebsite);
-    // }
-
-
-    // const duplicate = (coWebsite: CoWebsite) => {
-    //     add(coWebsite.clone());
-    // }
-
     return {
         subscribe,
         add,
@@ -57,30 +43,6 @@ export function createCoWebsiteStore() {
 
 
 export const coWebsites = createCoWebsiteStore();
-
-// export const coWebsitesNotAsleep = derived([coWebsites], ([$coWebsites]) =>
-//     $coWebsites.filter((coWebsite) => coWebsite.getState() !== "asleep")
-// );
-
-// export const mainCoWebsite = derived([coWebsites], ([$coWebsites]) =>
-//     $coWebsites.find((coWebsite) => coWebsite.getState() !== "asleep")
-// );
-
-
-
-
-
-
-
-// export enum iframeStates {
-//     closed = 1,
-//     loading, // loading an iframe can be slow, so we show some placeholder until it is ready
-//     opened,
-// }
-
-
-// const cowebsiteDomId = "cowebsites-container";
-
 
 export class CoWebsiteManager {
 
@@ -117,9 +79,8 @@ export class CoWebsiteManager {
         return get(coWebsites);
     }
 
-    public getCoWebsiteBuffer(): HTMLDivElement {
+    public getCoWebsiteBuffer()  {
         console.log("method cowebsite buffer")
-        // return this.cowebsiteBufferDom;
     }
 
     public closeCoWebsites(): void {
@@ -131,12 +92,14 @@ export class CoWebsiteManager {
 
     public closeCoWebsite(coWebsite: CoWebsite): void {
         this.removeCoWebsiteToStore(coWebsite);
-        // coWebsites.remove(coWebsite);
-        // console.log(coWebsites);
     }
 
 
     public unloadCoWebsite(coWebsite: CoWebsite): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+
+        });
+    }
         // this.removeHighlightCoWebsite(coWebsite);
 
         // return coWebsite
@@ -160,7 +123,73 @@ export class CoWebsiteManager {
         //     .catch(() => {
         //         console.error();
         //     });
+
+
+
+
+
+    //Fonction dans le fichier WaScaleManager.ts
+
+    public getGameSize(): { width: number; height: number } {
+
+        return {
+            width: window.innerWidth,
+            height: window.innerHeight,
+        };
+        // if (this.getMainState() === iframeStates.closed) {
+        //     return {
+        //         width: window.innerWidth,
+        //         height: window.innerHeight,
+        //     };
+        // }
+        // if (!this.verticalMode) {
+        //     return {
+        //         width: window.innerWidth /*- this.width*/,
+        //         height: window.innerHeight,
+        //     };
+        // } else {
+        //     return {
+        //         width: window.innerWidth,
+        //         height: window.innerHeight /*- this.height*/,
+        //     };
+        // }
     }
+
+
+    // public getMainState() {
+    //     return get(this.openedMain);
+    // }
+
+
+
+
+
+    //Fichier App.svelte dans component
+
+
+    private _onResize: Subject<void> = new Subject();
+    public onResize = this._onResize.asObservable();
+
+    private fire(): void {
+        // this._onResize.next();
+        // waScaleManager.applyNewSize();
+        // // TODO: this line because the refresh focus should be emited with an event
+        // waScaleManager.refreshFocusOnTarget(gameManager.getCurrentGameScene().cameras.main);
+    }
+
+
+
+    // Fonction dans la game scene
+
+    public cleanup(): void {
+        this.closeCoWebsites();
+    }
+
+
+
+
 }
+
+
 
 export const coWebsiteManager = new CoWebsiteManager();

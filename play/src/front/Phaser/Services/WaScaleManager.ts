@@ -1,5 +1,5 @@
-import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import type { Game } from "../Game/Game";
+import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import { ResizableScene } from "../Login/ResizableScene";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { HdpiManager } from "./HdpiManager";

@@ -173,7 +173,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
                         jwt: this.jwt,
                         width: "100%",
                         height: "100%",
-                        parentNode: coWebsiteManager.getCoWebsiteBuffer(),
+                        parentNode: HTMLElement.prototype,
                         configOverwrite: mergeConfig(this.jitsiConfig),
                         interfaceConfigOverwrite: { ...defaultInterfaceConfig, ...this.jitsiInterfaceConfig },
                     };
@@ -223,7 +223,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
                         .then(async () => {
 
                             await randomDelay();
-                            const iframe = coWebsiteManager.getCoWebsiteBuffer().querySelector<HTMLIFrameElement>('[id*="jitsi" i]');
+                            const iframe = <HTMLIFrameElement><unknown>('[id*="jitsi" i]');
 
                             if (cancelled /*&& iframe*/) {
                                 console.info("CLOSING BECAUSE CANCELLED AFTER LOAD");
@@ -308,7 +308,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
             jwt: this.jwt,
             width: "100%",
             height: "100%",
-            parentNode: coWebsiteManager.getCoWebsiteBuffer(), //a voir
+            parentNode: HTMLDivElement.prototype,  //a voir avant c'était coWebsiteManager.getCoWebsiteBuffer()
             configOverwrite: mergeConfig(this.jitsiConfig),
             interfaceConfigOverwrite: { ...defaultInterfaceConfig, ...this.jitsiInterfaceConfig }
         };

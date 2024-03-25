@@ -12,6 +12,8 @@ class BBBFactory {
 
         const allowPolicy =
             "microphone *; camera *; display-capture *; clipboard-read *; clipboard-write *; screen-wake-lock *; fullscreen *";
+
+        console.log("BBBFactory start");
         const coWebsite = new BBBCoWebsite(new URL(clientURL), false, allowPolicy, undefined, false);
         coWebsiteManager.addCoWebsiteToStore(coWebsite);
         try {

@@ -4,7 +4,6 @@
     import ExternalLinkIcon from "../Icons/ExternalLinkIcon.svelte";
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
-    // import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
@@ -14,11 +13,11 @@
     export let isClosable = true;
     export let isDuplicable = true;
     export let active = false;
-    let cowebsiteNew: CoWebsite;
     let isJitsi: boolean = coWebsite instanceof JitsiCoWebsite;
     let isBBB: boolean = coWebsite instanceof BBBCoWebsite;
     let cowebsiteName: string;
     let urlForFavicon = coWebsite.getUrl().toString();
+    let url: string;
 
     onMount(() => {
         if (isJitsi) {
@@ -28,18 +27,17 @@
                 cowebsiteTabIcon.src = favicon;
             }
             cowebsiteName = "Jitsi meeting";
-            isClosable = false;
-            isDuplicable = false;
+            isClosable = true;
+            isDuplicable = true;
         } else if (isBBB) {
-            console.log(isBBB);
             const favicon = `https://s2.googleusercontent.com/s2/favicons?domain=${urlForFavicon}`;
             const cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
             if (cowebsiteTabIcon) {
                 cowebsiteTabIcon.src = favicon;
             }
             cowebsiteName = "BigBlueButton meeting";
-            isClosable = false;
-            isDuplicable = false;
+            isClosable = true;
+            isDuplicable = true;
         } else {
             const favicon = `https://s2.googleusercontent.com/s2/favicons?domain=${urlForFavicon}`;
             const cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
@@ -60,35 +58,18 @@
         dispatch("close");
     }
 
-    function duplicateTab() {
-        dispatch("duplicate");
-    }
-
     function toggleActive() {
         active = !active;
     }
 
-    // function duplicateTab() {
-    //     console.log("duplicate");
-    //     // const map = new Map();
-    //     // const result = coWebsites.map((currentCowebsite) => {
-    //     //     map.set(currentCowebsite.getId(), (map.get(currentCowebsite.getId()) ?? -1) + 1);
-    //     //     return currentCowebsite;
-    //     // });
-
-    //     dispatch("duplicate");
-    // }
-
-    // function duplicateTab(cowebsite: CoWebsite) {
-    //     console.log("duplicate");
-    //     let duplicateCoWebsite = { ...cowebsite };
-    //     coWebsites.add(duplicateCoWebsite);
-    //     dispatch("duplicate");
-    // }
+    function copyUrl() {
+        url = coWebsite.getUrl().toString();
+        navigator.clipboard.writeText(url).catch((e) => console.error(e));
+        alert("URL copied to clipboard");
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- Pour effet clic onglets -->
 <div
     class="text flex items-center px-2 mr-2 rounded transition-all {active
         ? 'text-contrast bg-white hover:bg-white/90 translate-y-2 rounded-b-none pt-1 bg-white'
@@ -130,36 +111,33 @@
         {#if isDuplicable}
             <div
                 class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
-                class:active
-                on:click={duplicateTab}
+                on:click={copyUrl}
             >
                 <ExternalLinkIcon
                     classList="h-4 w-4 aspect-ratio transition-all {active
-                        ? 'group-hover:stroke-white stroke-contrast fill-transparent'
-                        : 'stroke-contrast fill-transparent'}"
+                        ? 'group-hover:stroke-white stroke-black'
+                        : 'stroke-white fill-transparent'}"
                 />
             </div>
         {/if}
         <div
             class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
-            class:active
             on:click={() => window.open(coWebsite.getUrl().toString(), "_blank")}
         >
             <CopyIcon
                 classList="h-4 w-4 aspect-ratio transition-all {active
-                    ? 'group-hover:stroke-white stroke-contrast fill-transparent'
+                    ? 'group-hover:stroke-white stroke-black'
                     : 'stroke-white fill-transparent'}"
             />
         </div>
         {#if isClosable}
             <div
                 class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
-                class:active
                 on:click={closeTab}
             >
                 <XIcon
                     classList="h-4 w-4 aspect-ratio transition-all {active
-                        ? 'group-hover:stroke-white stroke-contrast fill-transparent'
+                        ? 'group-hover:stroke-white stroke-black'
                         : 'stroke-white fill-transparent'}"
                 />
             </div>
@@ -169,9 +147,3 @@
         <SettingsIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
     </div> -->
 </div>
-
-<!--{active ? 'fill-contrast' : 'fill-white' }  {active ? '' : 'stroke-white fill-transparent' }-->
-
-<!-- {active
-    ? 'group-hover:stroke-white stroke-contrast fill-transparent'
-    : 'stroke-white fill-transparent'}" -->

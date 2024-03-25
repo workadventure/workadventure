@@ -4,14 +4,10 @@
 
     export let actualCowebsite: BBBCoWebsite;
 
-    // But est de trouver comme dans le jitsi le domaine de la conférence avec je pense l'id mais ausii le screenWakeLock
-    // Potentiellement pas beosin d'iframe car dans le load il y a deja cancelable promise, verifier avec le jitsi
-    // faire chargcer la fonction load de BBBCoWebsite
-    // voir comment tester cela avec le server du AWS
-    // voir info dans le cahier pour le fichier BBBcowebsite.
-
     onMount(() => {
-        actualCowebsite.load();
+        actualCowebsite.load().catch((e) => {
+            console.error(e);
+        });
     });
 </script>
 
