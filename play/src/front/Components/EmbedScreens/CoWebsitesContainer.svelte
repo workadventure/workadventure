@@ -15,7 +15,7 @@
     export let activeCowebsite = $coWebsites[0].getId();
     let cowebsiteContainer: HTMLElement | null;
     let container: HTMLElement;
-    let resizeBar: HTMLDivElement;
+    let resizeBar: HTMLElement;
     let startX: number;
     let startWidth: number;
 
@@ -75,14 +75,16 @@
     }
 
     function hideResizeBar() {
+        const resizeBarInput = resizeBar as HTMLInputElement;
         resizeBar.style.display = "none";
-        resizeBar.disabled = true;
+        resizeBarInput.disabled = true;
         resizeBar.style.cursor = "not-allowed";
     }
 
     function showResizeBar() {
+        const resizeBarInput = resizeBar as HTMLInputElement;
         resizeBar.style.display = "block";
-        resizeBar.disabled = false;
+        resizeBarInput.disabled = false;
         resizeBar.style.cursor = "col-resize";
     }
 
