@@ -314,8 +314,10 @@ export class ExplorerTool implements MapEditorTool {
         if (this.defineZoomToCenterCameraPositionTimeOut) clearTimeout(this.defineZoomToCenterCameraPositionTimeOut);
         // FIXME from the svelte component, the udate isn't dispatch in totaly at the same time after to move the camera
         this.defineZoomToCenterCameraPositionTimeOut = setTimeout(() => {
-            const cameraCenterXToZoom = this.scene.cameras.main.worldView.x + this.scene.cameras.main.width / 2;
-            const cameraCenterYToZoom = this.scene.cameras.main.worldView.y + this.scene.cameras.main.height / 2;
+            const cameraCenterXToZoom =
+                this.scene.cameras.main.worldView.x + this.scene.cameras.main.worldView.width / 2;
+            const cameraCenterYToZoom =
+                this.scene.cameras.main.worldView.y + this.scene.cameras.main.worldView.height / 2;
             if (
                 cameraCenterXToZoom != this.lastCameraCenterXToZoom ||
                 cameraCenterYToZoom != this.lastCameraCenterYToZoom
