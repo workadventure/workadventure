@@ -49,6 +49,7 @@
             bottom: 0;
             padding: 0.5rem 0.25rem;
             height: fit-content;
+
             &::after {
                 bottom: 100%;
                 top: auto;
@@ -69,6 +70,7 @@
             opacity: 0.5;
             cursor: default;
         }
+
         .tooltiptext {
             cursor: default;
         }

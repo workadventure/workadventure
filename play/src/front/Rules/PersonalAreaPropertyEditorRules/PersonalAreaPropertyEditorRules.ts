@@ -15,7 +15,6 @@ export class PersonalAreaPropertyEditorRules {
         type: "personalAreaPropertyData",
         accessClaimMode: "dynamic",
         allowedTags: [],
-        isPersonalArea: false,
         ownerId: "",
     };
 
@@ -64,14 +63,6 @@ export class PersonalAreaPropertyEditorRules {
         onEvent: (personalAreaPropertyData: PersonalAreaPropertyData | undefined) => void
     ) {
         return this.selectedAreaPersonalAreaPropertyStore.subscribe(onEvent);
-    }
-
-    public setIsPersonalArea(isPersonalArea: boolean) {
-        const areaPreview = get(mapEditorSelectedAreaPreviewStore);
-        const personalAreaPropertyData = get(this.selectedAreaPersonalAreaPropertyStore);
-        if (areaPreview !== undefined && personalAreaPropertyData !== undefined) {
-            areaPreview.updateProperty({ id: personalAreaPropertyData.id, isPersonalArea: isPersonalArea });
-        }
     }
 
     public setAccessClaimMode(claimMode: PersonalAreaAccessClaimMode) {

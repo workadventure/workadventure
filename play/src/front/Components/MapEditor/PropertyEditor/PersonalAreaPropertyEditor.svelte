@@ -1,15 +1,15 @@
 <script lang="ts">
-    import { onDestroy } from "svelte";
-    import { IconChevronRight, IconChevronDown } from "@tabler/icons-svelte";
+    import { createEventDispatcher, onDestroy } from "svelte";
     import { InfoIcon } from "svelte-feather-icons";
     import { PersonalAreaAccessClaimMode, PersonalAreaPropertyData } from "@workadventure/map-editor";
-    import LL from "../../../i18n/i18n-svelte";
-    import InputTags from "../Input/InputTags.svelte";
+    import LL from "../../../../i18n/i18n-svelte";
+    import InputTags from "../../Input/InputTags.svelte";
     import {
         PersonalAreaPropertyEditorRules,
         Option,
-    } from "../../Rules/PersonalAreaPropertyEditorRules/PersonalAreaPropertyEditorRules";
-    import MemberAutocomplete from "../Input/MemberAutocomplete.svelte";
+    } from "../../../Rules/PersonalAreaPropertyEditorRules/PersonalAreaPropertyEditorRules";
+    import MemberAutocomplete from "../../Input/MemberAutocomplete.svelte";
+    import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     const personalAreaPropertyEditorRules = new PersonalAreaPropertyEditorRules();
 
@@ -28,53 +28,31 @@
             }
         });
 
-    let isPersonalAreaPropertyEditorExpanded = false;
-
-    function expandCollapsePersonalAreaPropertyEditor() {
-        isPersonalAreaPropertyEditorExpanded = !isPersonalAreaPropertyEditorExpanded;
-    }
-
     onDestroy(() => {
         personalAreaPropertyDataUnSubscriber();
     });
+
+    const dispatch = createEventDispatcher();
 </script>
 
-{#if personalAreaPropertyData !== undefined}
-    <div class="tw-overflow-y-auto tw-overflow-x-hidden tw-flex tw-flex-col tw-gap-2">
-        {#if !isPersonalAreaPropertyEditorExpanded}
-            <button
-                class="tw-pl-0 tw-text-blue-500"
-                data-testid="expandPersonalAreaProperty"
-                on:click={expandCollapsePersonalAreaPropertyEditor}
-            >
-                <IconChevronRight />
-                {$LL.mapEditor.areaEditor.personalAreaConfiguration.title()}
-            </button>
-        {:else}
-            <button class="tw-pl-0 tw-text-blue-500" on:click={expandCollapsePersonalAreaPropertyEditor}>
-                <IconChevronDown />
-                {$LL.mapEditor.areaEditor.personalAreaConfiguration.title()}
-            </button>
-            <p class="help-text">
-                <InfoIcon size="18" />
-                {$LL.mapEditor.areaEditor.personalAreaConfiguration.description()}
-            </p>
-            <div class="tw-self-center">
-                <input
-                    id="isPersonalArea"
-                    data-testid="isPersonalArea"
-                    type="checkbox"
-                    bind:checked={personalAreaPropertyData.isPersonalArea}
-                    on:click={(event) => personalAreaPropertyEditorRules.setIsPersonalArea(event.currentTarget.checked)}
-                />
-                <label for="isPersonalArea"
-                    >{$LL.mapEditor.areaEditor.personalAreaConfiguration.setAsPersonalArea()}</label
-                >
-            </div>
-            {#if personalAreaPropertyData.isPersonalArea}
+<PropertyEditorBase
+    on:close={() => {
+        dispatch("close");
+    }}
+>
+    <span slot="header" class="tw-flex tw-justify-center tw-items-center">
+        {$LL.mapEditor.properties.personalAreaConfiguration.label()}
+    </span>
+    <span slot="content">
+        {#if personalAreaPropertyData !== undefined}
+            <div class="tw-overflow-y-auto tw-overflow-x-hidden tw-flex tw-flex-col tw-gap-2">
+                <p class="help-text">
+                    <InfoIcon size="18" />
+                    {$LL.mapEditor.properties.personalAreaConfiguration.description()}
+                </p>
                 {#if personalAreaPropertyData.ownerId.trim().length !== 0}
                     <div class="tw-flex tw-flex-col">
-                        <label for="ownerInput">{$LL.mapEditor.areaEditor.personalAreaConfiguration.owner()}</label>
+                        <label for="ownerInput">{$LL.mapEditor.properties.personalAreaConfiguration.owner()}</label>
                         <input
                             id="ownerInput"
                             value={areaOwnerId}
@@ -86,13 +64,13 @@
                             data-testid="revokeAccessButton"
                             on:click={() => personalAreaPropertyEditorRules.removeOwner()}
                         >
-                            {$LL.mapEditor.areaEditor.personalAreaConfiguration.revokeAccess()}
+                            {$LL.mapEditor.properties.personalAreaConfiguration.revokeAccess()}
                         </button>
                     </div>
                 {:else}
                     <div>
                         <p class="tw-p-0">
-                            {$LL.mapEditor.areaEditor.personalAreaConfiguration.accessClaimMode()}
+                            {$LL.mapEditor.properties.personalAreaConfiguration.accessClaimMode()}
                         </p>
                         <select
                             data-testid="accessClaimMode"
@@ -105,7 +83,7 @@
                         >
                             {#each PersonalAreaAccessClaimMode.options as claimMode (claimMode)}
                                 <option value={claimMode}
-                                    >{$LL.mapEditor.areaEditor.personalAreaConfiguration[
+                                    >{$LL.mapEditor.properties.personalAreaConfiguration[
                                         `${claimMode}AccessClaimMode`
                                     ]()}</option
                                 >
@@ -113,7 +91,7 @@
                         </select>
                         <p class="help-text">
                             <InfoIcon size="18" />
-                            {$LL.mapEditor.areaEditor.personalAreaConfiguration[
+                            {$LL.mapEditor.properties.personalAreaConfiguration[
                                 `${personalAreaPropertyData.accessClaimMode}AccessDescription`
                             ]()}
                         </p>
@@ -121,17 +99,17 @@
                     <div>
                         {#if personalAreaPropertyData.accessClaimMode === PersonalAreaAccessClaimMode.enum.static}
                             <label for="allowedUserInput"
-                                >{$LL.mapEditor.areaEditor.personalAreaConfiguration.allowedUser()}</label
+                                >{$LL.mapEditor.properties.personalAreaConfiguration.allowedUser()}</label
                             >
                             <MemberAutocomplete
                                 value={areaOwnerId}
-                                placeholder={$LL.mapEditor.areaEditor.personalAreaConfiguration.allowedUser()}
+                                placeholder={$LL.mapEditor.properties.personalAreaConfiguration.allowedUser()}
                                 on:onSelect={({ detail: selectedUserId }) =>
                                     personalAreaPropertyEditorRules.setOwner(selectedUserId)}
                             />
                         {:else}
                             <InputTags
-                                label={$LL.mapEditor.areaEditor.personalAreaConfiguration.allowedTags()}
+                                label={$LL.mapEditor.properties.personalAreaConfiguration.allowedTags()}
                                 options={personalAreaPropertyEditorRules.defaultAllowedTags}
                                 bind:value={existingTags}
                                 handleChange={() => personalAreaPropertyEditorRules.setAllowedTags(existingTags)}
@@ -140,7 +118,7 @@
                         {/if}
                     </div>
                 {/if}
-            {/if}
+            </div>
         {/if}
-    </div>
-{/if}
+    </span>
+</PropertyEditorBase>
