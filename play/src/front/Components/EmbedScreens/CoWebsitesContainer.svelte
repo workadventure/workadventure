@@ -52,16 +52,11 @@
 
     const subscription = coWebsites.subscribe((arr) => {
         activeCowebsite = arr[arr.length - 1]?.getId();
-        console.log(typeof activeCowebsite, ": ", activeCowebsite);
     });
 
     function checkActiveCowebsite(coWebsiteId: string) {
         return activeCowebsite === coWebsiteId.toString();
     }
-
-    // function checkActiveCowebsite() {
-    //     if ($coWebsites.getId().toString() === activeCowebsite.toString())
-    // }
 
     function toggleFullScreen() {
         cowebsiteContainer = document.getElementById("cowebsites-container");
@@ -125,7 +120,7 @@
 </script>
 
 <div
-    class="w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500] left_panel"
+    class="w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500] left_panel responsive-container"
     id="cowebsites-container"
     class:vertical
     transition:fly={{ duration: 750, x: 1000 }}
@@ -158,8 +153,7 @@
         </div>
     </div>
 
-    <!-- Probleme avec l'appel en double de l'instance dans le tab voir pourquoi je ne sais pas encore trop -->
-    <div class="h-full ml-3">
+    <div class="h-full ml-3 responsive-website">
         {#each $coWebsites as coWebsite (coWebsite.getId())}
             {#if activeCowebsite === coWebsite.getId()}
                 {#if coWebsite instanceof JitsiCoWebsite}
@@ -174,10 +168,38 @@
     </div>
 
     <div
-        class="absolute left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize test-resize"
+        class="absolute left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize test-resize responsive-resize-bar"
         id="resize-bar"
         bind:this={resizeBar}
         on:mousedown={addDivForResize}
         on:dragend={removeDivForResize}
     />
 </div>
+
+<style>
+    /* Voir pour utiliser les container queries ou les medias queries pour le responsive */
+    @media (max-width: 480px) {
+        .responsive-container {
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 50%;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(0);
+        }
+
+        .responsive-resize-bar {
+            position: relative;
+            rotate: 90deg;
+            display: flex;
+            flex-direction: column;
+            height: 10rem;
+            margin: -3rem auto -3rem auto;
+        }
+
+        .responsive-website {
+            width: 94%;
+        }
+    }
+</style>

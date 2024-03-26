@@ -2,7 +2,6 @@ import { get, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { Subject } from "rxjs";
 
-// nouveau store
 
 export function createCoWebsiteStore() {
     const { subscribe, set, update } = writable<Array<CoWebsite>>([]);
@@ -36,7 +35,6 @@ export function createCoWebsiteStore() {
         add,
         remove,
         empty,
-        // duplicate
     };
 }
 
@@ -46,19 +44,26 @@ export const coWebsites = createCoWebsiteStore();
 
 export class CoWebsiteManager {
 
+//Fichier App.svelte dans component
+    private _onResize: Subject<void> = new Subject();
+    public onResize = this._onResize.asObservable();
+
 
 //Méthode pour ajout load et retrait au store
     public addCoWebsiteToStore(coWebsite: CoWebsite) {
         coWebsites.add(coWebsite);
     }
 
+
     public loadCoWebsite(coWebsite: CoWebsite) {
-        coWebsite.load().catch(() => {"error"});
+        coWebsite.load().catch(() => {"error loading coWebsite"});
     }
+
 
     public removeCoWebsiteToStore(coWebsite: CoWebsite) {
         coWebsites.remove(coWebsite);
     }
+
 
     public generateUniqueId() {
         let id = undefined;
@@ -69,19 +74,18 @@ export class CoWebsiteManager {
         return id;
     }
 
+
     public getCoWebsiteById(coWebsiteId: string): CoWebsite | undefined {
         return get(coWebsites).find((coWebsite: CoWebsite) => {
             return coWebsite.getId() === coWebsiteId;
         });
     }
 
+
     public getCoWebsites() {
         return get(coWebsites);
     }
 
-    public getCoWebsiteBuffer()  {
-        console.log("method cowebsite buffer")
-    }
 
     public closeCoWebsites(): void {
         get(coWebsites).forEach((coWebsite: CoWebsite) => {
@@ -100,83 +104,15 @@ export class CoWebsiteManager {
 
         });
     }
-        // this.removeHighlightCoWebsite(coWebsite);
-
-        // return coWebsite
-        //     .unload()
-        //     .then(async () => {
-        //         await randomDelay();
-
-        //         coWebsites.remove(coWebsite);
-        //         const mainCoWebsite = this.getMainCoWebsite();
-
-        //         if (mainCoWebsite) {
-        //             this.removeHighlightCoWebsite(mainCoWebsite);
-        //             this.goToMain(mainCoWebsite);
-        //             this.resizeAllIframes();
-        //         } else {
-        //             this.closeMain();
-        //         }
-
-        //         coWebsites.add(coWebsite, get(coWebsites).length);
-        //     })
-        //     .catch(() => {
-        //         console.error();
-        //     });
-
-
-
-
 
     //Fonction dans le fichier WaScaleManager.ts
 
     public getGameSize(): { width: number; height: number } {
-
         return {
             width: window.innerWidth,
             height: window.innerHeight,
         };
-        // if (this.getMainState() === iframeStates.closed) {
-        //     return {
-        //         width: window.innerWidth,
-        //         height: window.innerHeight,
-        //     };
-        // }
-        // if (!this.verticalMode) {
-        //     return {
-        //         width: window.innerWidth /*- this.width*/,
-        //         height: window.innerHeight,
-        //     };
-        // } else {
-        //     return {
-        //         width: window.innerWidth,
-        //         height: window.innerHeight /*- this.height*/,
-        //     };
-        // }
     }
-
-
-    // public getMainState() {
-    //     return get(this.openedMain);
-    // }
-
-
-
-
-
-    //Fichier App.svelte dans component
-
-
-    private _onResize: Subject<void> = new Subject();
-    public onResize = this._onResize.asObservable();
-
-    private fire(): void {
-        // this._onResize.next();
-        // waScaleManager.applyNewSize();
-        // // TODO: this line because the refresh focus should be emited with an event
-        // waScaleManager.refreshFocusOnTarget(gameManager.getCurrentGameScene().cameras.main);
-    }
-
 
 
     // Fonction dans la game scene
@@ -184,9 +120,6 @@ export class CoWebsiteManager {
     public cleanup(): void {
         this.closeCoWebsites();
     }
-
-
-
 
 }
 
