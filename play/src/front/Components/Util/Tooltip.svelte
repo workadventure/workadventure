@@ -33,7 +33,9 @@
 </script>
 
 <div bind:this={tooltipElement} class="tooltip tw-w-fit">
-    <span bind:this={textElement} class="tooltiptext {toolTipPosition}">{text}</span>
+    <span bind:this={textElement} class="tooltiptext {toolTipPosition}" class:tw-ml-2={rightPosition === "true"}
+        >{text}</span
+    >
 </div>
 
 <style lang="scss">
@@ -45,7 +47,7 @@
             position: absolute;
             align-items: center;
             border-radius: 0.25rem;
-            --tw-bg-opacity: 1;
+            --tw-bg-opacity: 0.8;
             background-color: rgb(56 56 74 / var(--tw-bg-opacity));
             padding-left: 0.75rem;
             padding-right: 0.75rem;
