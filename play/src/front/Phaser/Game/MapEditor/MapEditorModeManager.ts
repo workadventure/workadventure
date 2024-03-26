@@ -5,7 +5,11 @@ import pLimit from "p-limit";
 import debug from "debug";
 import type { RoomConnection } from "../../../Connection/RoomConnection";
 import type { GameScene } from "../GameScene";
-import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
+import {
+    mapEditorModeStore,
+    mapEditorSelectedToolStore,
+    mapEditorVisibilityStore,
+} from "../../../Stores/MapEditorStore";
 import { mapEditorActivated } from "../../../Stores/MenuStore";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
@@ -235,11 +239,14 @@ export class MapEditorModeManager {
 
     public handleKeyDownEvent(event: KeyboardEvent): void {
         this.currentlyActiveTool?.handleKeyDownEvent(event);
+        const mapEditorVisibilityStoreValue = get(mapEditorVisibilityStore);
+        if (!mapEditorVisibilityStoreValue) return;
+
         const mapEditorModeActivated = get(mapEditorActivated);
-        if (!mapEditorModeActivated || this.currentlyActiveTool != undefined) return;
         switch (event.key.toLowerCase()) {
+            case "dead":
             case "`": {
-                this.equipTool(undefined);
+                this.equipTool(EditorToolName.CloseMapEditor);
                 break;
             }
             case "1": {
