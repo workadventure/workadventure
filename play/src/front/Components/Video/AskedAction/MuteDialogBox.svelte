@@ -12,7 +12,7 @@
 </script>
 
 {#if $askDialogStore.size > 0}
-    {#each [...$askDialogStore] as askDialog (askDialog.userId)}
+    {#each [...$askDialogStore] as askDialog (askDialog.uuid)}
         <div
             class="interact-menu blue-dialog-box outline-light tw-text-center tw-w-72 tw-absolute tw-bottom-36 tw-left-0 tw-right-0 tw-pointer-events-auto tw-z-[150] tw-m-auto"
         >
