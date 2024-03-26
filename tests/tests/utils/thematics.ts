@@ -19,12 +19,12 @@ class Thematics {
   public entityPositionOutsideArea: Coordinates = { x: 6 * 32, y: 8 * 32 };
 
   public mouseCoordinatesToClickOnEntityInsideArea = {
-    x: this.entityPositionInArea.x + 16,
+    x: this.entityPositionInArea.x + 10,
     y: this.entityPositionInArea.y,
   };
 
   public mouseCoordinatesToClickOnEntityOutsideArea = {
-    x: this.entityPositionOutsideArea.x + 16,
+    x: this.entityPositionOutsideArea.x + 10,
     y: this.entityPositionOutsideArea.y,
   };
 
