@@ -119,7 +119,7 @@
             >
                 <ExternalLinkIcon
                     classList="h-4 w-4 aspect-ratio transition-all {active
-                        ? 'group-hover:stroke-white stroke-gray-900'
+                        ? 'group-hover:stroke-white stroke-gray-950'
                         : 'stroke-white fill-transparent'}"
                 />
             </div>
@@ -130,7 +130,7 @@
         >
             <CopyIcon
                 classList="h-4 w-4 aspect-ratio transition-all {active
-                    ? 'group-hover:stroke-white stroke-gray-900'
+                    ? 'group-hover:stroke-white stroke-gray-950'
                     : 'stroke-white fill-transparent'}"
             />
         </div>
@@ -141,7 +141,7 @@
             >
                 <XIcon
                     classList="h-4 w-4 aspect-ratio transition-all {active
-                        ? 'group-hover:stroke-white stroke-gray-900'
+                        ? 'group-hover:stroke-white stroke-gray-950'
                         : 'stroke-white fill-transparent'}"
                 />
             </div>

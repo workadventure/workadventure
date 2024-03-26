@@ -10,7 +10,7 @@
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
     import BigBlueButtonCowebsiteComponent from "../Cowebsites/BigBlueButtonCowebsiteComponent.svelte";
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
-    import { min } from "lodash";
+    import { max, min } from "lodash";
 
     let activeCowebsite = $coWebsites[0].getId();
     let vertical = false;
@@ -29,24 +29,39 @@
             cowebsiteContainer = document.getElementById("cowebsites-container");
 
             if (cowebsiteContainer) {
-                resizeBar = document.getElementById("resize-bar") as HTMLInputElement;
-
-                resizeBar.addEventListener("mousedown", (e) => {
-                    startY = e.clientY;
+                function handleMouseDown(e: TouchEvent) {
+                    let clientY = e.touches[0].clientY;
+                    startY = clientY;
                     startHeight = parseInt(getComputedStyle(container).height);
-                    document.addEventListener("mousemove", (e) => {
-                        const height = startHeight - (e.clientY - startY);
-                        container.style.height = height + "px";
-                    });
-                    document.addEventListener("mouseup", () => {
-                        document.removeEventListener("mousemove", (e) => {
-                            const height = startHeight - (e.clientY - startY);
-                            container.style.height = height + "px";
-                        });
-                    });
-                });
+                    document.addEventListener("touchmove", handleMouseMove);
+                    document.addEventListener("touchend", handleMouseUp);
+                }
+
+                resizeBar.addEventListener("touchstart", handleMouseDown, false);
+
+                function handleMouseMove(e: TouchEvent) {
+                    let clientY = e.touches[0].clientY;
+                    const height = startHeight + (clientY - startY);
+                    container.style.height = height + "px";
+                    const minHeight = max([height, window.innerHeight - 600]);
+                    container.style.height = minHeight + "px";
+                    // const maxHeight = min([height, window.innerHeight - 150]);
+                    // container.style.height = maxHeight + "px";
+                }
+
+                const handleMouseUp = () => {
+                    document.removeEventListener("touchmove", handleMouseMove);
+                    document.removeEventListener("touchend", handleMouseUp);
+                };
+
+                return () => {
+                    resizeBar.removeEventListener("touchstart", handleMouseDown);
+                    document.removeEventListener("touchmove", handleMouseMove);
+                    document.removeEventListener("touchend", handleMouseUp);
+                };
             }
         } else {
+            vertical = false;
             const handleMouseDown = (e: { clientX: number }) => {
                 startX = e.clientX;
                 startWidth = parseInt(getComputedStyle(container).width);
@@ -151,7 +166,7 @@
         ? "w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500] left_panel responsive-container"
         : "w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500] left_panel"}
     id="cowebsites-container"
-    transition:fly={vertical ? { duration: 750, x: 1000 } : { duration: 750, y: -1000 }}
+    transition:fly={vertical ? { duration: 750, y: -1000 } : { duration: 750, x: 1000 }}
     bind:this={container}
 >
     <div class="flex py-2 ml-3 items-center overflow-auto">
@@ -176,7 +191,6 @@
         <div
             class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
             on:click={toggleFullScreen}
-            on:touchstart={toggleFullScreen}
         >
             <FullScreenIcon />
         </div>
