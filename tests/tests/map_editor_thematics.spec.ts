@@ -423,28 +423,35 @@ test.describe("Map editor thematics @oidc", () => {
   });
 
   test("Set area as personal area", async ({ page, browser, request }) => {
+    //Mocking the route api members is not working with firefox
+    if (browser.browserType().name() === "firefox") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
+    // Mock api
+    await page.route(
+      "**/members?playUri=*&searchText=*",
+      async (route, request) => {
+        const json = [
+          {
+            name: "alice.doe@example.com",
+            id: "alice.doe@example.com",
+            email: "alice.doe@example.com",
+          },
+        ];
+        await route.fulfill({ json });
+      }
+    );
+
     await resetWamMaps(request);
 
     await page.goto(Map.url("empty"));
     await login(page, "test", 3);
     await oidcAdminTagLogin(page);
 
-    // Add area with admin rights
     await Menu.openMapEditor(page);
     await thematics.openAreaEditorAndAddArea(page);
-
-    // Mock api
-    await page.route("*/**/members?playUri=*&searchText=*", async (route) => {
-      const json = [
-        {
-          name: "alice.doe@example.com",
-          id: "alice.doe@example.com",
-          email: "alice.doe@example.com",
-        },
-      ];
-      await route.fulfill({ json });
-    });
-
     await page.getByTestId("personalAreaPropertyData").click();
     await page.getByTestId("accessClaimMode").selectOption({ label: "Static" });
     const memberAutoCompleteResponse = page.waitForResponse(
@@ -457,5 +464,32 @@ test.describe("Map editor thematics @oidc", () => {
     await memberAutoCompleteResponse;
     await page.press("body", "Enter");
     await expect(page.getByTestId("revokeAccessButton")).toBeAttached();
+
+    // Second browser with member user trying to read the object
+    const newBrowser = await browser.browserType().launch({});
+    const page2 = await newBrowser.newPage();
+    await page2.goto(Map.url("empty"));
+    await login(page2, "test2", 5);
+    await oidcMemberTagLogin(page2);
+
+    await Menu.openMapEditor(page2);
+    await EntityEditor.selectEntity(page2, 0, "small table");
+    await EntityEditor.moveAndClick(
+      page2,
+      thematics.mouseCoordinatesToClickOnEntityInsideArea.x,
+      thematics.mouseCoordinatesToClickOnEntityInsideArea.y
+    );
+    await EntityEditor.clearEntitySelection(page2);
+    await EntityEditor.moveAndClick(
+      page2,
+      thematics.mouseCoordinatesToClickOnEntityInsideArea.x,
+      thematics.mouseCoordinatesToClickOnEntityInsideArea.y
+    );
+    await expect(
+      page2.locator(
+        ".map-editor .sidebar .properties-buttons .add-property-button",
+        { hasText: "Open Link" }
+      )
+    ).toBeAttached();
   });
 });
