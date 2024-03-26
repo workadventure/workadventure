@@ -355,7 +355,10 @@ export abstract class Character extends Container implements OutlineableInterfac
         return body;
     }
 
-    move(x: number, y: number) {
+    /**
+     * Moves the character by the given speed amount.
+     */
+    moveBy(x: number, y: number) {
         const body = this.getBody();
 
         body.setVelocity(x, y);
@@ -370,6 +373,40 @@ export abstract class Character extends Container implements OutlineableInterfac
             if (body.velocity.y < 0) {
                 this._lastDirection = PositionMessage_Direction.UP;
             } else if (body.velocity.y > 0) {
+                this._lastDirection = PositionMessage_Direction.DOWN;
+            }
+        }
+        this.playAnimation(this._lastDirection, true);
+
+        this.setDepth(this.y + 16);
+
+        if (this.companion) {
+            this.companion.setTarget(this.x, this.y, this._lastDirection);
+        }
+    }
+
+    /**
+     * Moves the character to the given position.
+     */
+    moveToPos(x: number, y: number) {
+        const oldX = this.x;
+        const oldY = this.y;
+        this.x = x;
+        this.y = y;
+        // The 1.1 ratio to y is applied here because in path finding mode, the player often moves in diagonal.
+        // In diagonal, the amount of x and y are almost equal. This produces a graphical glitch where on one frame,
+        // the player goes left, and on the next frame, the player goes up. This is because the x and y are almost equal.
+        // To fix this, we apply a ratio of 1.1 to y to make sure that the player goes up/down when the y and x are almost equal.
+        if (Math.abs(x - oldX) > Math.abs((y - oldY) * 1.1)) {
+            if (x < oldX) {
+                this._lastDirection = PositionMessage_Direction.LEFT;
+            } else if (x > oldX) {
+                this._lastDirection = PositionMessage_Direction.RIGHT;
+            }
+        } else {
+            if (y < oldY) {
+                this._lastDirection = PositionMessage_Direction.UP;
+            } else if (y > oldY) {
                 this._lastDirection = PositionMessage_Direction.DOWN;
             }
         }

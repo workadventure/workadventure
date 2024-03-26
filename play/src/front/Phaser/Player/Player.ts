@@ -16,6 +16,8 @@ export const requestEmoteEventName = "requestEmote";
 
 export class Player extends Character {
     private pathToFollow?: { x: number; y: number }[];
+    // Number of pixels the player has walked on the current path segment
+    private currentPathSegmentDistanceFromStart = 0;
     private followingPathPromiseResolve?: (result: { x: number; y: number; cancelled: boolean }) => void;
     private pathWalkingSpeed?: number;
     private readonly unsubscribeVisibilityStore: Unsubscriber;
@@ -64,9 +66,10 @@ export class Player extends Character {
             [x, y] = this.computeFollowMovement();
         }
         if (this.pathToFollow) {
-            [x, y] = this.computeFollowPathMovement();
+            this.followPath(delta);
+        } else {
+            this.inputStep(activeUserInputEvents, x, y);
         }
-        this.inputStep(activeUserInputEvents, x, y);
     }
 
     public rotate(): void {
@@ -96,10 +99,13 @@ export class Player extends Character {
         path: { x: number; y: number }[],
         speed?: number
     ): Promise<{ x: number; y: number; cancelled: boolean }> {
+        this.getBody().setDirectControl(true);
         const isPreviousPathInProgress = this.pathToFollow !== undefined && this.pathToFollow.length > 0;
         // take collider offset into consideration
         this.pathToFollow = this.adjustPathToFollowToColliderBounds(path);
+        this.pathToFollow.unshift({ x: this.x, y: this.y });
         this.pathWalkingSpeed = speed;
+        this.currentPathSegmentDistanceFromStart = 0;
         return new Promise((resolve) => {
             this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled: isPreviousPathInProgress });
             this.followingPathPromiseResolve = resolve;
@@ -116,7 +122,10 @@ export class Player extends Character {
     public finishFollowingPath(cancelled = false): void {
         this.pathToFollow = undefined;
         this.pathWalkingSpeed = undefined;
+        this.currentPathSegmentDistanceFromStart = 0;
+        this.stop();
         this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled });
+        this.getBody().setDirectControl(false);
     }
 
     private deduceSpeed(speedUp: boolean, followMode: boolean): number {
@@ -167,7 +176,7 @@ export class Player extends Character {
         // Send movement events
         const emit = () => this.emit(hasMovedEventName, { moving, direction, x: this.x, y: this.y });
         if (moving) {
-            this.move(x, y);
+            this.moveBy(x, y);
             emit();
         } else if (get(userMovingStore)) {
             this.stop();
@@ -197,23 +206,57 @@ export class Player extends Character {
         return this.getMovementDirection(xDistance, yDistance, distance);
     }
 
-    private computeFollowPathMovement(): number[] {
-        if (this.pathToFollow !== undefined && this.pathToFollow.length === 0) {
+    private followPath(delta: number): void {
+        if (this.pathToFollow !== undefined && this.pathToFollow.length === 1) {
             this.finishFollowingPath();
         }
         if (!this.pathToFollow) {
-            return [0, 0];
+            return;
         }
-        const nextStep = this.pathToFollow[0];
+        let segmentStartPos = this.pathToFollow[0];
+        let segmentEndPos = this.pathToFollow[1];
 
         // Compute movement direction
-        const xDistance = nextStep.x - this.x;
-        const yDistance = nextStep.y - this.y;
-        const distance = Math.pow(xDistance, 2) + Math.pow(yDistance, 2);
-        if (distance < 200) {
+        let xDistance = segmentEndPos.x - segmentStartPos.x;
+        let yDistance = segmentEndPos.y - segmentStartPos.y;
+        let pathSegmentLength = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
+
+        this.currentPathSegmentDistanceFromStart += (this.deduceSpeed(false, false) * delta * 20) / 1000;
+
+        while (this.currentPathSegmentDistanceFromStart >= pathSegmentLength) {
+            this.currentPathSegmentDistanceFromStart -= pathSegmentLength;
+
+            this.pathToFollow.shift();
+            if (this.pathToFollow.length === 1) {
+                this.x = this.pathToFollow[0].x;
+                this.y = this.pathToFollow[0].y;
+                this.finishFollowingPath();
+                return;
+            }
+            segmentStartPos = this.pathToFollow[0];
+            segmentEndPos = this.pathToFollow[1];
+
+            // Compute movement direction
+            xDistance = segmentEndPos.x - segmentStartPos.x;
+            yDistance = segmentEndPos.y - segmentStartPos.y;
+            pathSegmentLength = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
+        }
+
+        const newX =
+            segmentStartPos.x +
+            (this.currentPathSegmentDistanceFromStart / pathSegmentLength) * (segmentEndPos.x - segmentStartPos.x);
+        const newY =
+            segmentStartPos.y +
+            (this.currentPathSegmentDistanceFromStart / pathSegmentLength) * (segmentEndPos.y - segmentStartPos.y);
+
+        this.moveToPos(newX, newY);
+
+        this.emit(hasMovedEventName, { moving: true, direction: this._lastDirection, x: this.x, y: this.y });
+        this.scene.markDirty();
+        /*if (distance < 200) {
             this.pathToFollow.shift();
         }
-        return this.getMovementDirection(xDistance, yDistance, distance);
+        return this.getMovementDirection(xDistance, yDistance, distance);*/
     }
 
     private getMovementDirection(xDistance: number, yDistance: number, distance: number): [number, number] {
