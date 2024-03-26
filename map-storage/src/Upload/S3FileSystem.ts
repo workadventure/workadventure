@@ -238,6 +238,7 @@ export class S3FileSystem implements FileSystemInterface {
             if (objects) {
                 allObjects.push(...objects);
             }
+            pageMarker = listObjectsResponse.NextMarker;
         } while (listObjectsResponse.IsTruncated);
 
         const recordsPaths: string[] = allObjects.map((record) => record.Key ?? "") ?? [];
