@@ -277,6 +277,7 @@ const mapEditor: BaseTranslation = {
             // Translate previous sentence to english
             // "The explorer mode allows you to visualize the map, find objects and areas. There are 2 systems in the explorer mode, the free exploration system or the object and area search system. The video above shows you how to use the explorer mode 💪"
         },
+        closeSearchMode: "Close search mode",
     },
     listRoom: {
         isFetching: "Room list is fetching... ⤵️",
