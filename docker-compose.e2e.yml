@@ -30,7 +30,8 @@ services:
       STARTUP_COMMAND_3: ""
       STARTUP_COMMAND_4: ""
       STARTUP_COMMAND_5: ""
-      WOKA_SPEED: 3
+      # Increasing Woka speed to make tests faster
+      WOKA_SPEED: 27
 
     labels:
       - "traefik.enable=true"
