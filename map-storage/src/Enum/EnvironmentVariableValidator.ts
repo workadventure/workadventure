@@ -59,6 +59,11 @@ const BasicEnvironmentVariables = z.object({
         .describe(
             "The (optional) API token to use when calling the webhook. The token will be sent in the Authorization header of the POST request."
         ),
+    MAX_SIMULTANEOUS_FS_READS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 100))
+        .describe(
+            "The maximum number of simultaneous file system (local or S3) reads when regenerating the cache file. Defaults to 100."
+        ),
     SENTRY_DSN: z.string().optional().describe("If set, WorkAdventure will send errors to Sentry"),
     SENTRY_RELEASE: z
         .string()
