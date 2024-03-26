@@ -989,6 +989,7 @@
                                             {$LL.actionbar.subtitle.speaker()}
                                         </div>
                                         {#each $speakerListStore as speaker, index (index)}
+                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                                             <div
                                                 class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$speakerSelectedStore ===
                                                 speaker.deviceId
