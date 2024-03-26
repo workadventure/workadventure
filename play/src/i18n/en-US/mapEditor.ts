@@ -179,6 +179,21 @@ const mapEditor: BaseTranslation = {
         rightReadTitle: "Access rights",
         rightReadDescription:
             "Access rights define who can interact with the area. Users matching one of these tags can enter the area and use objects whithin the area.",
+        personalAreaConfiguration: {
+            title: "Personal area configuration",
+            description:
+                "Users can claim personal areas as their own space. As an administrator, you can set/revoke ownership of an area",
+            setAsPersonalArea: "Set as personal area",
+            accessClaimMode: "Access claim mode",
+            dynamicAccessClaimMode: "Dynamic",
+            staticAccessClaimMode: "Static",
+            dynamicAccessDescription: "Anyone with appropriate user tags can claim the property of the zone.",
+            staticAccessDescription: "Manually define the owner of the zone.",
+            allowedTags: "Allowed user tags",
+            allowedUser: "Allowed user",
+            owner: "Owner",
+            revokeAccess: "Revoke access",
+        },
     },
     areaEditorInstructions: {
         title: "How it works ?",
