@@ -216,6 +216,8 @@ export const EntityCollectionRaw = z.object({
     version: z.string().optional(),
 });
 
+export const InputTagOption = z.object({ value: z.string(), label: z.string(), created: z.boolean().default(false) });
+
 // TODO: get rid of this type and use only WAMEntityData
 export const EntityData = z.object({
     id: z.string(),
@@ -366,6 +368,7 @@ export type AreaDescriptionPropertyData = z.infer<typeof AreaDescriptionProperty
 export type RestrictedRightsPropertyData = z.infer<typeof RestrictedRightsPropertyData>;
 export type PersonalAreaPropertyData = z.infer<typeof PersonalAreaPropertyData>;
 export type PersonalAreaAccessClaimMode = z.infer<typeof PersonalAreaAccessClaimMode>;
+export type InputTagOption = z.infer<typeof InputTagOption>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",
