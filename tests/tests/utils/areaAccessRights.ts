@@ -9,7 +9,7 @@ interface Coordinates {
   y: number;
 }
 
-class Thematics {
+class AreaAccessRights {
   private areaSize: { topLeft: Coordinates; bottomRight: Coordinates } = {
     topLeft: { x: 1, y: 5 },
     bottomRight: { x: 9 * 32 * 1.5, y: 4 * 32 * 1.5 },
@@ -112,4 +112,4 @@ class Thematics {
   }
 }
 
-export default new Thematics();
+export default new AreaAccessRights();

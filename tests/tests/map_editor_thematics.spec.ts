@@ -11,7 +11,7 @@ import {
   oidcMemberTagLogin,
 } from "./utils/oidc";
 import EntityEditor from "./utils/map-editor/entityEditor";
-import thematics from "./utils/thematics";
+import AreaAccessRights from "./utils/areaAccessRights";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -51,7 +51,7 @@ test.describe("Map editor thematics @oidc", () => {
     await oidcAdminTagLogin(page);
 
     await Menu.openMapEditor(page);
-    await thematics.openAreaEditorAndAddAreaWithRights(
+    await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
       page,
       ["admin"],
       ["admin"]
@@ -106,12 +106,12 @@ test.describe("Map editor thematics @oidc", () => {
 
     // Add area with admin rights
     await Menu.openMapEditor(page);
-    await thematics.openAreaEditorAndAddAreaWithRights(
+    await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
       page,
       ["admin"],
       ["admin"]
     );
-    await thematics.openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(
+    await AreaAccessRights.openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(
       page
     );
     await oidcLogout(page);
@@ -120,8 +120,8 @@ test.describe("Map editor thematics @oidc", () => {
     // to read the object
     await EntityEditor.moveAndClick(
       page2,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.x,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.y
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await expect(
       page2.locator(".actions-menu .actions button").nth(0)
@@ -148,12 +148,12 @@ test.describe("Map editor thematics @oidc", () => {
 
     // Add area with admin rights
     await Menu.openMapEditor(page);
-    await thematics.openAreaEditorAndAddAreaWithRights(
+    await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
       page,
       ["admin"],
       ["member"]
     );
-    await thematics.openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(
+    await AreaAccessRights.openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(
       page
     );
     await oidcLogout(page);
@@ -162,8 +162,8 @@ test.describe("Map editor thematics @oidc", () => {
     // to read the object
     await EntityEditor.moveAndClick(
       page2,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.x,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.y
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await expect(
       page2.locator(".actions-menu .actions button").nth(0)
@@ -190,7 +190,7 @@ test.describe("Map editor thematics @oidc", () => {
 
     // Add area with admin rights
     await Menu.openMapEditor(page);
-    await thematics.openAreaEditorAndAddAreaWithRights(
+    await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
       page,
       ["admin"],
       ["admin"]
@@ -206,14 +206,14 @@ test.describe("Map editor thematics @oidc", () => {
     await EntityEditor.selectEntity(page2, 0, "small table");
     await EntityEditor.moveAndClick(
       page2,
-      thematics.entityPositionInArea.x,
-      thematics.entityPositionInArea.y
+      AreaAccessRights.entityPositionInArea.x,
+      AreaAccessRights.entityPositionInArea.y
     );
     await EntityEditor.clearEntitySelection(page2);
     await EntityEditor.moveAndClick(
       page2,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.x,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.y
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await expect(
       page2.locator(
@@ -243,7 +243,11 @@ test.describe("Map editor thematics @oidc", () => {
 
     // Add area with admin rights
     await Menu.openMapEditor(page);
-    await thematics.openAreaEditorAndAddAreaWithRights(page, ["member"], []);
+    await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
+      page,
+      ["member"],
+      []
+    );
     await oidcLogout(page);
 
     // From browser 2
@@ -255,14 +259,14 @@ test.describe("Map editor thematics @oidc", () => {
     await EntityEditor.selectEntity(page2, 0, "small table");
     await EntityEditor.moveAndClick(
       page2,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.x,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.y
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await EntityEditor.clearEntitySelection(page2);
     await EntityEditor.moveAndClick(
       page2,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.x,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.y
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await expect(
       page2.locator(
@@ -292,12 +296,12 @@ test.describe("Map editor thematics @oidc", () => {
 
     // Add area with admin rights
     await Menu.openMapEditor(page);
-    await thematics.openAreaEditorAndAddAreaWithRights(
+    await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
       page,
       ["admin"],
       ["member"]
     );
-    await thematics.openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(
+    await AreaAccessRights.openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(
       page
     );
     await oidcLogout(page);
@@ -310,14 +314,14 @@ test.describe("Map editor thematics @oidc", () => {
     await MapEditor.openTrashEditor(page2);
     await EntityEditor.moveAndClick(
       page2,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.x,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.y
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await Menu.closeMapEditor(page2);
     await EntityEditor.moveAndClick(
       page2,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.x,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.y
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await expect(
       page2.locator(".actions-menu .actions button").nth(0)
@@ -344,8 +348,12 @@ test.describe("Map editor thematics @oidc", () => {
 
     // Add area with admin rights
     await Menu.openMapEditor(page);
-    await thematics.openAreaEditorAndAddAreaWithRights(page, ["member"], []);
-    await thematics.openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(
+    await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
+      page,
+      ["member"],
+      []
+    );
+    await AreaAccessRights.openEntityEditorAndAddEntityWithOpenLinkPropertyInsideArea(
       page
     );
     await oidcLogout(page);
@@ -358,14 +366,14 @@ test.describe("Map editor thematics @oidc", () => {
     await MapEditor.openTrashEditor(page2);
     await EntityEditor.moveAndClick(
       page2,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.x,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.y
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await Menu.closeMapEditor(page2);
     await EntityEditor.moveAndClick(
       page2,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.x,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.y
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
 
     await expect(
@@ -393,8 +401,12 @@ test.describe("Map editor thematics @oidc", () => {
 
     // Add area with admin rights
     await Menu.openMapEditor(page);
-    await thematics.openAreaEditorAndAddAreaWithRights(page, ["admin"], []);
-    await thematics.openEntityEditorAndAddEntityWithOpenLinkPropertyOutsideArea(
+    await AreaAccessRights.openAreaEditorAndAddAreaWithRights(
+      page,
+      ["admin"],
+      []
+    );
+    await AreaAccessRights.openEntityEditorAndAddEntityWithOpenLinkPropertyOutsideArea(
       page
     );
     await oidcLogout(page);
@@ -407,14 +419,14 @@ test.describe("Map editor thematics @oidc", () => {
     await MapEditor.openTrashEditor(page2);
     await EntityEditor.moveAndClick(
       page2,
-      thematics.mouseCoordinatesToClickOnEntityOutsideArea.x,
-      thematics.mouseCoordinatesToClickOnEntityOutsideArea.y
+      AreaAccessRights.mouseCoordinatesToClickOnEntityOutsideArea.x,
+      AreaAccessRights.mouseCoordinatesToClickOnEntityOutsideArea.y
     );
     await Menu.closeMapEditor(page2);
     await EntityEditor.moveAndClick(
       page2,
-      thematics.mouseCoordinatesToClickOnEntityOutsideArea.x,
-      thematics.mouseCoordinatesToClickOnEntityOutsideArea.y
+      AreaAccessRights.mouseCoordinatesToClickOnEntityOutsideArea.x,
+      AreaAccessRights.mouseCoordinatesToClickOnEntityOutsideArea.y
     );
 
     await expect(
@@ -451,7 +463,7 @@ test.describe("Map editor thematics @oidc", () => {
     await oidcAdminTagLogin(page);
 
     await Menu.openMapEditor(page);
-    await thematics.openAreaEditorAndAddArea(page);
+    await AreaAccessRights.openAreaEditorAndAddArea(page);
     await page.getByTestId("personalAreaPropertyData").click();
     await page.getByTestId("accessClaimMode").selectOption({ label: "Static" });
     const memberAutoCompleteResponse = page.waitForResponse(
@@ -476,14 +488,14 @@ test.describe("Map editor thematics @oidc", () => {
     await EntityEditor.selectEntity(page2, 0, "small table");
     await EntityEditor.moveAndClick(
       page2,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.x,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.y
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await EntityEditor.clearEntitySelection(page2);
     await EntityEditor.moveAndClick(
       page2,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.x,
-      thematics.mouseCoordinatesToClickOnEntityInsideArea.y
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.x,
+      AreaAccessRights.mouseCoordinatesToClickOnEntityInsideArea.y
     );
     await expect(
       page2.locator(
