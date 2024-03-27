@@ -189,6 +189,8 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import { getCoWebSite, openCoWebSite } from "../../Chat/Utils";
+import { chatConnectionManager } from "../../Chat/Connection/ChatConnectionManager";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -1495,6 +1497,22 @@ export class GameScene extends DirtyScene {
                     await this.mapEditorModeManager?.updateMapToNewest(commandsToApply);
                 }
 
+                const spaceStream = this.connection.getSpaceStreams();
+                const eventEmitter = this.connection.getSpaceEventEmitter();
+
+                const spaceProvider = LocalSpaceProviderSingleton.getInstance(eventEmitter);
+                StreamSpaceWatcherSingleton.getInstance(spaceStream);
+
+                spaceProvider.add("worldSpace");
+
+                console.log(`Join ${WORLD_SPACE_NAME}`);
+                spaceProvider.add(WORLD_SPACE_NAME);
+
+                connectionManager.getListOfMembersForChat()
+                .then((data: unknown) => {
+                    console.log(data);
+                });
+
                 this.tryOpenMapEditorWithToolEditorParameter();
 
                 this.subscribeToStores();
@@ -1638,7 +1656,7 @@ export class GameScene extends DirtyScene {
                 // The joinMucRoomMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.joinMucRoomMessageStream.subscribe((mucRoomDefinitionMessage) => {
-                    iframeListener.sendJoinMucEventToChatIframe(
+                    void iframeListener.sendJoinMucEventToChatIframe(
                         mucRoomDefinitionMessage.url,
                         mucRoomDefinitionMessage.name,
                         mucRoomDefinitionMessage.type,
@@ -1649,7 +1667,7 @@ export class GameScene extends DirtyScene {
                 // The leaveMucRoomMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.leaveMucRoomMessageStream.subscribe((leaveMucRoomMessage) => {
-                    iframeListener.sendLeaveMucEventToChatIframe(leaveMucRoomMessage.url);
+                    void iframeListener.sendLeaveMucEventToChatIframe(leaveMucRoomMessage.url);
                 });
 
                 // The worldFullMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
@@ -1731,7 +1749,7 @@ export class GameScene extends DirtyScene {
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.xmppSettingsMessageStream.subscribe((xmppSettingsMessage) => {
                     if (xmppSettingsMessage) {
-                        iframeListener.sendXmppSettingsToChatIframe(xmppSettingsMessage);
+                        chatConnectionManager.initXmppSettings(xmppSettingsMessage);
                     }
                 });
 
@@ -1744,7 +1762,7 @@ export class GameScene extends DirtyScene {
                         broadcastService: BroadcastService,
                         playSound: boolean
                     ) => {
-                        return new JitsiBroadcastSpace(connection, spaceName, spaceFilter, broadcastService, playSound);
+                        return new JitsiBroadcastSpace(spaceName, spaceFilter, broadcastService, playSound);
                     }
                 );
                 this._broadcastService = broadcastService;
@@ -2424,12 +2442,15 @@ ${escapedMessage}
                 _newChatMessageSubject.next(text);
             })
         );
-
-        this.iframeSubscriptionList.push(
+        /**
+ *         this.iframeSubscriptionList.push(
             iframeListener.newChatMessageWritingStatusStream.subscribe((status) => {
                 _newChatMessageWritingStatusSubject.next(status);
             })
         );
+ * 
+ * 
+ */
 
         this.iframeSubscriptionList.push(
             iframeListener.disablePlayerControlStream.subscribe(() => {
@@ -2657,37 +2678,11 @@ ${escapedMessage}
         );
 
         iframeListener.registerAnswerer("openCoWebsite", async (openCoWebsite, source) => {
-            if (!source) {
-                throw new Error("Unknown query source");
-            }
-
-            const coWebsite: SimpleCoWebsite = new SimpleCoWebsite(
-                new URL(openCoWebsite.url, iframeListener.getBaseUrlFromSource(source)),
-                openCoWebsite.allowApi,
-                openCoWebsite.allowPolicy,
-                openCoWebsite.widthPercent,
-                openCoWebsite.closable
-            );
-
-            coWebsiteManager.addCoWebsiteToStore(coWebsite, openCoWebsite.position);
-
-            if (openCoWebsite.lazy === undefined || !openCoWebsite.lazy) {
-                await coWebsiteManager.loadCoWebsite(coWebsite);
-            }
-
-            return {
-                id: coWebsite.getId(),
-            };
+            return openCoWebSite(openCoWebsite, source);
         });
 
         iframeListener.registerAnswerer("getCoWebsites", () => {
-            const coWebsites = coWebsiteManager.getCoWebsites();
-
-            return coWebsites.map((coWebsite: CoWebsite) => {
-                return {
-                    id: coWebsite.getId(),
-                };
-            });
+            return getCoWebSite();
         });
 
         iframeListener.registerAnswerer("closeCoWebsite", (coWebsiteId) => {
@@ -3023,6 +3018,183 @@ ${escapedMessage}
 
     private setAreaProperty(areaName: string, propertyName: string, propertyValue: unknown): void {
         this.gameMapFrontWrapper.setDynamicAreaProperty(areaName, propertyName, propertyValue);
+    }
+
+    public getMapUrl(): string {
+        if (!this.mapUrlFile) {
+            throw new Error("Trying to access mapUrl before it was fetched");
+        }
+        return this.mapUrlFile;
+    }
+
+    public async onMapExit(roomUrl: URL) {
+        if (this.mapTransitioning) return;
+        this.mapTransitioning = true;
+
+        this.gameMapFrontWrapper.triggerExitCallbacks();
+
+        let targetRoom: Room;
+        try {
+            targetRoom = await Room.createRoom(roomUrl);
+        } catch (e /*: unknown*/) {
+            console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);
+
+            //show information room access denied
+            layoutManagerActionStore.addAction({
+                uuid: "roomAccessDenied",
+                type: "warning",
+                message: get(LL).warning.accessDenied.room(),
+                callback: () => {
+                    layoutManagerActionStore.removeAction("roomAccessDenied");
+                },
+                userInputManager: this.userInputManager,
+            });
+
+            this.mapTransitioning = false;
+            return;
+        }
+
+        urlManager.pushStartLayerNameToUrl(roomUrl.hash);
+
+        if (!targetRoom.isEqual(this._room)) {
+            if (this.scene.get(targetRoom.key) === null) {
+                console.error("next room not loaded", targetRoom.key);
+                // Try to load next game room from exit URL
+                // The policy of room can to be updated during a session and not load before
+                await this.loadNextGameFromExitUrl(targetRoom.key);
+            }
+            this.cleanupClosingScene();
+            this.scene.stop();
+            this.scene.start(targetRoom.key);
+            this.scene.remove(this.scene.key);
+            forceRefreshChatStore.forceRefresh();
+        } else {
+            //if the exit points to the current map, we simply teleport the user back to the startLayer
+            this.startPositionCalculator.initStartXAndStartY(urlManager.getStartPositionNameFromUrl());
+            this.CurrentPlayer.x = this.startPositionCalculator.startPosition.x;
+            this.CurrentPlayer.y = this.startPositionCalculator.startPosition.y;
+            this.CurrentPlayer.finishFollowingPath(true);
+            // clear properties in case we are moved on the same layer / area in order to trigger them
+            this.gameMapFrontWrapper.clearCurrentProperties();
+            this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
+
+            // TODO: we should have a "teleport" parameter to explicitly say the user teleports and should not be moved in 200ms to the new place.
+            this.handleCurrentPlayerHasMovedEvent({
+                x: this.CurrentPlayer.x,
+                y: this.CurrentPlayer.y,
+                direction: this.CurrentPlayer.lastDirection,
+                moving: false,
+            });
+
+            this.markDirty();
+            setTimeout(() => (this.mapTransitioning = false), 500);
+        }
+    }
+
+    public playSound(sound: string) {
+        this.sound.play(sound, {
+            volume: 0.2,
+        });
+    }
+
+    public getSimplePeer() {
+        return this.simplePeer;
+    }
+
+    public cleanupClosingScene(): void {
+        // make sure we restart own medias
+        mediaManager.disableMyCamera();
+        mediaManager.disableMyMicrophone();
+        // stop playing audio, close any open website, stop any open Jitsi, unsubscribe
+        coWebsiteManager.cleanup();
+        // Stop the script, if any
+        if (this.mapFile) {
+            const scripts = this.getScriptUrls(this.mapFile);
+            for (const script of scripts) {
+                iframeListener.unregisterScript(script);
+            }
+        }
+
+        uiWebsiteManager.closeAll();
+        followUsersStore.stopFollowing();
+
+        audioManagerFileStore.unloadAudio();
+        layoutManagerActionStore.clearActions();
+
+        // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
+        this.connection?.closeConnection();
+        this.simplePeer?.closeAllConnections();
+        this.simplePeer?.unregister();
+        this.outlineManager?.clear();
+        this.userInputManager?.destroy();
+        this.pinchManager?.destroy();
+        this.emoteManager?.destroy();
+        this.cameraManager?.destroy();
+        this.mapEditorModeManager?.destroy();
+        this._broadcastService?.destroy();
+        this.peerStoreUnsubscriber?.();
+        this.mapEditorModeStoreUnsubscriber?.();
+        this.refreshPromptStoreStoreUnsubscriber?.();
+        this.emoteUnsubscriber?.();
+        this.emoteMenuUnsubscriber?.();
+        this.followUsersColorStoreUnsubscriber?.();
+        this.modalVisibilityStoreUnsubscriber?.();
+        this.highlightedEmbedScreenUnsubscriber?.();
+        this.embedScreenLayoutStoreUnsubscriber?.();
+        this.userIsJitsiDominantSpeakerStoreUnsubscriber?.();
+        this.jitsiParticipantsCountStoreUnsubscriber?.();
+        this.availabilityStatusStoreUnsubscriber?.();
+        this.mapExplorationStoreUnsubscriber?.();
+        for (const unsubscriber of this.unsubscribers) {
+            unsubscriber();
+        }
+        this.unsubscribers = [];
+        iframeListener.unregisterAnswerer("getState");
+        iframeListener.unregisterAnswerer("loadTileset");
+        iframeListener.unregisterAnswerer("getMapData");
+        iframeListener.unregisterAnswerer("triggerActionMessage");
+        iframeListener.unregisterAnswerer("removeActionMessage");
+        iframeListener.unregisterAnswerer("openCoWebsite");
+        iframeListener.unregisterAnswerer("getCoWebsites");
+        iframeListener.unregisterAnswerer("setPlayerOutline");
+        iframeListener.unregisterAnswerer("setVariable");
+        iframeListener.unregisterAnswerer("openUIWebsite");
+        iframeListener.unregisterAnswerer("getUIWebsites");
+        iframeListener.unregisterAnswerer("getUIWebsiteById");
+        iframeListener.unregisterAnswerer("closeUIWebsite");
+        iframeListener.unregisterAnswerer("enablePlayersTracking");
+        iframeListener.unregisterAnswerer("goToLogin");
+        iframeListener.unregisterAnswerer("playSoundInBubble");
+        this.sharedVariablesManager?.close();
+        this.playerVariablesManager?.close();
+        this.scriptingEventsManager?.close();
+        this.embeddedWebsiteManager?.close();
+        this.areaManager?.close();
+        this.playersEventDispatcher.cleanup();
+        this.playersMovementEventDispatcher.cleanup();
+        this.gameMapFrontWrapper?.close();
+
+        //When we leave game, the camera is stop to be reopen after.
+        // I think that we could keep camera status and the scene can manage camera setup
+        //TODO find wy chrome don't manage correctly a multiple ask mediaDevices
+        //mediaManager.hideMyCamera();
+
+        for (const iframeEvents of this.iframeSubscriptionList) {
+            iframeEvents.unsubscribe();
+        }
+        for (const subscription of this.rxJsSubscriptions) {
+            subscription.unsubscribe();
+        }
+        this.rxJsSubscriptions = [];
+        this.gameMapChangedSubscription?.unsubscribe();
+        this.messageSubscription?.unsubscribe();
+        gameSceneIsLoadedStore.set(false);
+        gameSceneStore.set(undefined);
+        this.cleanupDone = true;
+        if (this.hideTimeout) {
+            clearTimeout(this.hideTimeout);
+            this.hideTimeout = undefined;
+        }
     }
 
     private removeAllRemotePlayers(): void {

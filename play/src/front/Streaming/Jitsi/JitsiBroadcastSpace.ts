@@ -4,9 +4,7 @@ import pLimit from "p-limit";
 import { derived, get, Readable, Unsubscriber } from "svelte/store";
 import type JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import { ForwardableStore } from "@workadventure/store-utils";
-import { RoomConnection } from "../../Connection/RoomConnection";
 import { gameManager } from "../../Phaser/Game/GameManager";
-import { Space } from "../../Space/Space";
 import { liveStreamingEnabledStore } from "../../Stores/MegaphoneStore";
 import { BroadcastService, jitsiLoadingStore } from "../BroadcastService";
 import { BroadcastSpace } from "../Common/BroadcastSpace";
@@ -15,6 +13,8 @@ import { jitsiConferencesStore } from "./JitsiConferencesStore";
 import { JitsiConferenceWrapper } from "./JitsiConferenceWrapper";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 import { libJitsiFactory } from "./LibJitsiFactory";
+import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
+import { SpaceInterface } from "../../Space/SpaceInterface";
 // eslint-disable-next-line import/no-unresolved
 
 const limit = pLimit(1);
@@ -32,26 +32,28 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
     private conference: JitsiConferenceWrapper | undefined;
     private unsubscribes: Unsubscriber[] = [];
     private jitsiTracks: ForwardableStore<Map<string, JitsiTrackWrapper>>;
-    readonly space: Space;
+    readonly space: SpaceInterface;
     readonly provider = "jitsi";
 
     constructor(
-        private roomConnection: RoomConnection,
         spaceName: string,
-        spaceFilter: SpaceFilterMessage,
+        private spaceFilter: SpaceFilterMessage,
         private broadcastService: BroadcastService,
         private playSound: boolean
     ) {
         super();
-        this.space = new Space(roomConnection, spaceName, spaceFilter);
-        this.roomConnection.emitUpdateSpaceMetadata(this.space.name, {
-            test: "test",
-        });
+        
+        this.space = LocalSpaceProviderSingleton.getInstance().add(spaceName);
+
+        this.space.watch(spaceFilter.filterName).setFilter(spaceFilter.filter);
+
+        this.space.setMetadata(new Map([['test','test']]));
+
         this.jitsiTracks = new ForwardableStore<Map<string, JitsiTrackWrapper>>(new Map());
 
         // When the user leaves the space, we leave the Jitsi conference
         this.unsubscribes.push(
-            this.space.users.subscribe((users) => {
+            this.space.getSpaceFilter(spaceFilter.filterName).users.subscribe((users) => {
                 if (users.size === 0) {
                     if (this.conference !== undefined) {
                         limit(() => this.conference?.leave("Nobody is streaming anymore ..."))
@@ -72,7 +74,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                         if (this.conference === undefined) {
                             jitsiLoadingStore.set(true);
                             this.conference = await this.joinJitsiConference(spaceName);
-                            this.emitJitsiParticipantIdSpace(spaceName, this.conference.participantId);
+                            this.space.emitJitsiParticipantId(this.conference.participantId);
                             jitsiLoadingStore.set(false);
                         }
                     }).catch((e) => {
@@ -124,7 +126,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         }
 
         const associatedStreamStore: Readable<Map<string, JitsiTrackWrapper>> = derived(
-            [jitsiConference.streamStore, this.space.users],
+            [jitsiConference.streamStore, this.space.getSpaceFilter(this.spaceFilter.filterName).users],
             ([$streamStore, $users]) => {
                 const filtered = new Map<string, JitsiTrackWrapper>();
                 for (const [participantId, stream] of $streamStore) {
@@ -163,9 +165,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
         return this.jitsiTracks;
     }
 
-    emitJitsiParticipantIdSpace(spaceName: string, participantId: string) {
-        this.roomConnection.emitJitsiParticipantIdSpace(spaceName, participantId);
-    }
+
 
     destroy() {
         limit(() => this.conference?.leave("I want to leave this space ..."))
@@ -179,7 +179,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                 this.broadcastService.checkIfCanDisconnect(this.provider);
                 jitsiLoadingStore.set(false);
             });
-        jitsiConferencesStore.delete(this.space.name);
+        jitsiConferencesStore.delete(this.space.getName());
         this.unsubscribes.forEach((unsubscribe) => unsubscribe());
         this.space.destroy();
     }

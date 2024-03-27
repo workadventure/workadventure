@@ -24,10 +24,10 @@ class AdminWokaService implements WokaServiceInterface {
          *     parameters:
          *      - name: "roomUrl"
          *        in: "query"
-         *        description: "The room URL"
+         *        description: "The slug of the room"
          *        type: "string"
          *        required: true
-         *        example: "https://play.workadventu.re/@/teamSlug/worldSlug/roomSlug"
+         *        example: "/@/teamSlug/worldSlug/roomSlug"
          *      - name: "uuid"
          *        in: "query"
          *        description: "The uuid of the user \n It can be an uuid or an email"
@@ -38,7 +38,9 @@ class AdminWokaService implements WokaServiceInterface {
          *       200:
          *         description: The list of the woka
          *         schema:
-         *             $ref: '#/definitions/WokaList'
+         *             type: array
+         *             items:
+         *                 $ref: '#/definitions/WokaList'
          *       404:
          *         description: Error while retrieving the data
          *         schema:

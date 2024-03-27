@@ -4,8 +4,10 @@ import { ChatMessagePrompt, RoomsList } from "@workadventure/messages";
 import { z } from "zod";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import { adminToken } from "../middlewares/AdminToken";
-import { validatePostQuery } from "../services/QueryValidator";
+import { validatePostQuery, validateQuery } from "../services/QueryValidator";
+import { adminService } from "../services/AdminService";
 import { BaseHttpController } from "./BaseHttpController";
+import cors from "cors";
 
 export class AdminController extends BaseHttpController {
     routes(): void {
@@ -14,6 +16,7 @@ export class AdminController extends BaseHttpController {
         this.getRoomsList();
         this.sendChatMessagePrompt();
         this.dispatchGlobalEvent();
+        this.getMembersOfTheActualWorld();
     }
 
     /**
@@ -393,6 +396,48 @@ export class AdminController extends BaseHttpController {
             res.atomic(() => {
                 res.send("ok");
             });
+            return;
+        });
+    }
+
+    getMembersOfTheActualWorld(): void {
+        this.app.options("/members", (req, res) => {
+            res.atomic(() => {
+                res.status(200).send();
+            });
+        });
+
+        this.app.get("/members", async (req: Request, res: Response) => {
+            //TODO : Validate Query Object with zod
+
+            const query = validateQuery(req,res,z.object({
+                playUri: z.string(),
+                searchText : z.string().optional()
+            }))
+
+            if(!query)return ;
+
+            
+            const { members, total } = await adminService.getMembersOfWorld(query.playUri);
+
+            const MAX_USER_TO_DISPLAY = 200;
+
+            if (total > MAX_USER_TO_DISPLAY) {
+                res.status(403).json({
+                    message: "Too many members search a member",
+                });
+            }
+
+            if (total === 0) {
+                res.status(204).json({
+                    message: "No members for this world",
+                });
+            }
+
+            res.atomic(() => {
+                res.setHeader("Content-Type", "application/json").send(JSON.stringify({ members }));
+            });
+
             return;
         });
     }

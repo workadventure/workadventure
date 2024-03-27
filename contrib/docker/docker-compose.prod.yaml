@@ -51,7 +51,6 @@ services:
       - SECRET_KEY
       - API_URL=back:50051
       - FRONT_URL=/
-      - CHAT_URL=/chat/
       - INTERNAL_MAP_STORAGE_URL=http://map-storage:3000
       - PUBLIC_MAP_STORAGE_URL=https://${DOMAIN}/map-storage
       - START_ROOM_URL
@@ -130,38 +129,6 @@ services:
       traefik.http.routers.room-api.tls: "true"
       traefik.http.routers.room-api.tls.certresolver: "myresolver"
     restart: ${RESTART_POLICY}
-
-  chat:
-    image: thecodingmachine/workadventure-chat:${VERSION}
-    environment:
-      - PUSHER_URL=/
-      - UPLOADER_URL=/uploader
-      - EMBEDLY_KEY=${EMBEDLY_KEY}
-      - ENABLE_CHAT_UPLOAD=${ENABLE_CHAT_UPLOAD}
-      - EJABBERD_DOMAIN=${EJABBERD_DOMAIN}
-      - EJABBERD_WS_URI=wss://${DOMAIN}/xmpp/ws
-      - SENTRY_DSN=${SENTRY_DSN_CHAT}
-      - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT}
-      - SENTRY_ORG=${SENTRY_ORG}
-      - SENTRY_PROJECT=${SENTRY_PROJECT}
-      - SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
-      - SENTRY_RELEASE=${SENTRY_RELEASE}
-      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
-    labels:
-      traefik.enable: "true"
-      traefik.http.middlewares.strip-chat-prefix.stripprefix.prefixes: "/chat"
-      traefik.http.routers.chat.rule: "Host(`${DOMAIN}`) && PathPrefix(`/chat`)"
-      traefik.http.routers.chat.middlewares: "strip-chat-prefix@docker"
-      traefik.http.routers.chat.entryPoints: "web"
-      traefik.http.services.chat.loadbalancer.server.port: "80"
-      traefik.http.routers.chat-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/chat`)"
-      traefik.http.routers.chat-ssl.middlewares: "strip-chat-prefix@docker"
-      traefik.http.routers.chat-ssl.entryPoints: "websecure"
-      traefik.http.routers.chat-ssl.service: "chat"
-      traefik.http.routers.chat-ssl.tls: "true"
-      traefik.http.routers.chat-ssl.tls.certresolver: "myresolver"
-    restart: ${RESTART_POLICY}
-
   back:
     image: thecodingmachine/workadventure-back:${VERSION}
     environment:

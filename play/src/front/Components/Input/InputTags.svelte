@@ -1,7 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
     import Select from "svelte-select";
-    const dispatch = createEventDispatcher();
 
     type Option = {
         value: string;
@@ -9,12 +7,11 @@
         created: undefined | boolean;
     };
     export let label: string;
-    export let value: Option[] | undefined;
+    export let value: Option[];
     export let options: Option[];
     export let onFocus = () => {};
     export let onBlur = () => {};
     export let handleChange = () => {};
-    export let testId: string | undefined = undefined;
 
     let filterText = "";
 
@@ -31,7 +28,7 @@
             delete i.created;
             return { ...i, label: i.label.toLowerCase() };
         });
-        dispatch("change", value);
+        handleChange();
     }
 </script>
 
@@ -55,8 +52,6 @@
         showChevron={true}
         --icons-color="var(--brand-blue)"
         --text-color="var(--brand-blue)"
-        listAutoWidth={false}
-        inputAttributes={{ "data-testid": testId }}
     >
         <div slot="item" let:item>
             {item.created ? "Add new : " : ""}

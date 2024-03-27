@@ -1,6 +1,6 @@
-import { Subject } from "rxjs";
-import { availabilityStatusToJSON, XmppSettingsMessage } from "@workadventure/messages";
-import { KLAXOON_ACTIVITY_PICKER_EVENT, ChatMessage, BanEvent } from "@workadventure/shared-utils";
+import { Subject, Subscription } from "rxjs";
+import { availabilityStatusToJSON } from "@workadventure/messages";
+import { KLAXOON_ACTIVITY_PICKER_EVENT, ChatMessage, BanEvent ,ChatMessageTypes } from "@workadventure/shared-utils";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import {
     additionnalButtonsMenu,
@@ -9,15 +9,17 @@ import {
     handleOpenMenuEvent,
     warningBannerStore,
 } from "../Stores/MenuStore";
-import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import type { MessageUserJoined } from "../Connection/ConnexionModels";
-import { localUserStore } from "../Connection/LocalUserStore";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { bannerStore, requestVisitCardsStore } from "../Stores/GameStore";
 import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connection/ConnectionManager";
+import { chatConnectionManager } from "../Chat/Connection/ChatConnectionManager";
+import { mucRoomsStore } from "../Chat/Stores/MucRoomsStore";
+import { newChatMessageSubject } from "../Stores/ChatStore";
+import { chatMessagesStore } from "../Chat/Stores/ChatStore";
 import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
 import type { OpenPopupEvent } from "./Events/OpenPopupEvent";
 import type { OpenTabEvent } from "./Events/OpenTabEvent";
@@ -55,6 +57,7 @@ import type { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { ModalEvent } from "./Events/ModalEvent";
 import { AddButtonActionBarEvent } from "./Events/Ui/ButtonActionBarEvent";
 import { ReceiveEventEvent } from "./Events/ReceiveEventEvent";
+
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -212,8 +215,10 @@ class IframeListener {
     private readonly scripts = new Map<string, HTMLIFrameElement>();
 
     private chatIframe: HTMLIFrameElement | null = null;
+    private chatReady =false;
+    private  unsubscribeNewChatMessageSubject  : Subscription|null = null
 
-    private chatReady = false;
+
 
     private sendPlayerMove = false;
 
@@ -344,6 +349,7 @@ class IframeListener {
                     }
 
                     const iframeEvent = iframeEventGuarded.data;
+                    
                     if (iframeEvent.type === "showLayer") {
                         this._showLayerStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "hideLayer") {
@@ -366,7 +372,7 @@ class IframeListener {
                         this._openChatStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "closeChat") {
                         this._closeChatStream.next(iframeEvent.data);
-                    } else if (iframeEvent.type === "addPersonnalMessage") {
+                    } else if (iframeEvent.type === "addPersonnalMessage"){
                         this._addPersonnalMessageStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "newChatMessageWritingStatus") {
                         this._newChatMessageWritingStatusStream.next(iframeEvent.data);
@@ -485,14 +491,6 @@ class IframeListener {
                         additionnalButtonsMenu.addAdditionnalButtonActionBar(iframeEvent.data);
                     } else if (iframeEvent.type == "removeButtonActionBar") {
                         additionnalButtonsMenu.removeAdditionnalButtonActionBar(iframeEvent.data);
-                    } else if (iframeEvent.type == "chatReady") {
-                        this.chatReady = true;
-                        if (this.messagesToChatQueue.length > 0) {
-                            for (const message of this.messagesToChatQueue) {
-                                this.postMessageToChat(message);
-                            }
-                            this.messagesToChatQueue = [];
-                        }
                     } else if (iframeEvent.type == "openBanner") {
                         warningBannerStore.activateWarningContainer(iframeEvent.data.timeToClose);
                         bannerStore.set(iframeEvent.data);
@@ -526,7 +524,10 @@ class IframeListener {
                         this._inviteUserButtonStream.next(false);
                     } else if (iframeEvent.type == "restoreInviteUserButton") {
                         this._inviteUserButtonStream.next(true);
-                    } else {
+                    } else if (iframeEvent.type == "chatReady") {
+                        console.log('chatReady')
+                    }
+                    else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
                     }
@@ -534,6 +535,10 @@ class IframeListener {
             },
             false
         );
+        
+         this.unsubscribeNewChatMessageSubject = newChatMessageSubject.subscribe((message) => {
+            this._addPersonnalMessageStream.next(message);
+        });
     }
 
     /**
@@ -663,13 +668,7 @@ class IframeListener {
         this.scripts.delete(scriptUrl);
     }
 
-    cleanup() {
-        this.chatReady = false;
-        if (this.chatIframe) {
-            this.unregisterIframe(this.chatIframe);
-            this.chatIframe = null;
-        }
-    }
+
 
     /**
      * @param message The message to dispatch
@@ -888,122 +887,72 @@ class IframeListener {
             },
         });
     }
-
-    sendChatVisibilityToChatIframe(visibility: boolean) {
-        this.postMessageToChat({
-            type: "chatVisibility",
-            data: {
-                visibility,
-            },
-        });
-    }
-    sendSettingsToChatIframe() {
-        if (!connectionManager.currentRoom) {
-            throw new Error("Race condition : Current room is not defined yet");
-        }
-
-        this.postMessageToChat({
-            type: "settings",
-            data: {
-                notification: localUserStore.getNotification(),
-                chatSounds: localUserStore.getChatSounds(),
-                enableChat: connectionManager.currentRoom?.enableChat,
-                enableChatUpload: connectionManager.currentRoom?.enableChatUpload,
-                enableChatOnlineList: connectionManager.currentRoom?.enableChatOnlineList,
-                enableChatDisconnectedList: connectionManager.currentRoom?.enableChatDisconnectedList,
-            },
-        });
-    }
-
-    sendXmppSettingsToChatIframe(xmppSettingsMessage: XmppSettingsMessage) {
-        this.postMessageToChat({
-            type: "xmppSettingsMessage",
-            data: xmppSettingsMessage,
-        });
-    }
-
-    sendLeaveMucEventToChatIframe(url: string) {
+    async sendLeaveMucEventToChatIframe(url: string) {
         if (!connectionManager.currentRoom) {
             throw new Error("Race condition : Current room is not defined yet");
         } else if (!connectionManager.currentRoom.enableChat) {
             return;
         }
-        this.postMessageToChat({
-            type: "leaveMuc",
-            data: {
-                url,
-            },
-        });
+        (await chatConnectionManager.connectionPromise).leaveMuc(url);
     }
 
-    sendJoinMucEventToChatIframe(url: string, name: string, type: string, subscribe: boolean) {
+    async sendJoinMucEventToChatIframe(url: string, name: string, type: string, subscribe: boolean) {
         if (!connectionManager.currentRoom) {
             throw new Error("Race condition : Current room is not defined yet");
         } else if (!connectionManager.currentRoom.enableChat) {
             return;
         }
-        this.postMessageToChat({
-            type: "joinMuc",
-            data: {
-                url,
-                name,
-                type,
-                subscribe,
-            },
-        });
-    }
-
-    sendAvailabilityStatusToChatIframe(status: number) {
-        this.postMessageToChat({
-            type: "availabilityStatus",
-            data: status,
-        });
-    }
-
-    // << TODO delete with chat XMPP integration for the discussion circle
-    sendWritingStatusToChatIframe(list: Set<PlayerInterface>) {
-        const usersTyping: Array<{
-            jid?: string;
-            name?: string;
-        }> = [];
-        list.forEach((user) =>
-            usersTyping.push({
-                jid: user.userJid === "fake" ? undefined : user.userJid,
-                name: user.name,
-            })
+        (await chatConnectionManager.connectionPromise).joinMuc(
+            name,
+            url,
+            type,
+            subscribe
         );
-        this.postMessageToChat({
-            type: "updateWritingStatusChatList",
-            data: {
-                users: usersTyping,
-            },
-        });
     }
+
 
     sendMessageToChatIframe(chatMessage: ChatMessage) {
-        this.postMessageToChat({
-            type: "addChatMessage",
-            data: chatMessage,
-        });
+        if (chatMessage.text == undefined) {
+            return;
+        }
+        const mucRoomDefault = mucRoomsStore.getDefaultRoom();
+        let userData = undefined;
+        if (
+            mucRoomDefault &&
+            chatMessage.author &&
+            chatMessage.author.jid !== "fake"
+        ) {
+            try {
+                userData = mucRoomDefault.getUserByJid(chatMessage.author.jid);
+            } catch (e) {
+                console.warn("Can't fetch user data from Ejabberd", e);
+                userData = chatMessage.author;
+            }
+        } else {
+            userData = chatMessage.author;
+        }
+
+        if (chatMessage.type === ChatMessageTypes.text) {
+            if (!userData) {
+                throw new Error("Received a message from the scripting API without an author");
+            }
+            for (const chatMessageText of chatMessage.text) {
+                chatMessagesStore.addExternalMessage(userData, chatMessageText, userData.name);
+            }
+        } else if (chatMessage.type === ChatMessageTypes.me) {
+            for (const chatMessageText of chatMessage.text) {
+                chatMessagesStore.addPersonalMessage(chatMessageText);
+            }
+        }
     }
 
-    sendComingUserToChatIframe(chatMessage: ChatMessage) {
-        this.postMessageToChat({
-            type: "comingUser",
-            data: chatMessage,
-        });
-    }
-    sendPeerConnexionStatusToChatIframe(status: boolean) {
-        this.postMessageToChat({
-            type: "peerConnectionStatus",
-            data: status,
-        });
-    }
+
     sendButtonActionBarTriggered(buttonActionBar: AddButtonActionBarEvent): void {
         this.postMessage({
             type: "buttonActionBarTrigger",
             data: buttonActionBar,
         });
+
     }
     sendModalCloseTriggered(modal: ModalEvent): void {
         this.postMessage({
@@ -1013,19 +962,6 @@ class IframeListener {
     }
     // end delete >>
 
-    /**
-     * Sends the message... to the chat iFrame.
-     */
-    postMessageToChat(message: IframeResponseEvent) {
-        if (!this.chatIframe) {
-            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
-        }
-        if (!this.chatReady || !this.chatIframe) {
-            this.messagesToChatQueue.push(message);
-        } else {
-            this.chatIframe.contentWindow?.postMessage(message, this.chatIframe?.src);
-        }
-    }
 
     /**
      * Sends the message... to all allowed iframes and not the chat.
@@ -1088,6 +1024,16 @@ class IframeListener {
             source ?? undefined
         );
     }
+    
+    cleanup() {
+        this.chatReady = false;
+        if (this.chatIframe) {
+            this.unregisterIframe(this.chatIframe);
+            this.chatIframe = null;
+        }
+        this.unsubscribeNewChatMessageSubject?.unsubscribe();
+    }
+
 
     /*dispatchScriptableEventToOtherIframes(
         key: string,

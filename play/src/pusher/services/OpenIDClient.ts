@@ -13,7 +13,6 @@ import {
     OPID_SCOPE,
     OPID_PROMPT,
     SECRET_KEY,
-    OPID_TAGS_CLAIM,
 } from "../enums/EnvironmentVariable";
 
 class OpenIDClient {
@@ -105,14 +104,7 @@ class OpenIDClient {
     public getUserInfo(
         req: Request,
         res: Response
-    ): Promise<{
-        tags: string[] | undefined;
-        email: string;
-        sub: string;
-        access_token: string;
-        username: string;
-        locale: string;
-    }> {
+    ): Promise<{ email: string; sub: string; access_token: string; username: string; locale: string }> {
         const fullUrl = req.url;
         const cookies = req.cookies;
 
@@ -146,7 +138,6 @@ class OpenIDClient {
                         access_token: tokenSet.access_token ?? "",
                         username: res[OPID_USERNAME_CLAIM] as string,
                         locale: res[OPID_LOCALE_CLAIM] as string,
-                        tags: res[OPID_TAGS_CLAIM] as string[],
                     };
                 });
             });

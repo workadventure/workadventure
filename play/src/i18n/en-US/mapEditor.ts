@@ -169,31 +169,6 @@ const mapEditor: BaseTranslation = {
         areaDescriptionPlaceholder: "My area is a...",
         areaSerchable: "Searchable in the exploration mode",
         addDescriptionField: "Add description field",
-        addRight: "Add rights",
-        rightTitle: "Access / edition rights by user tag",
-        rightDescription:
-            "Rights define who can interact with the area. If you leave it empty, everyone can use it. If you set it, only users who have at least one of these 'tags' can use it.",
-        rightWriteTitle: "Edition rights",
-        rightWriteDescription:
-            "Edition rights define who can modify the area. Users matching one of these tags can create, update or delete an object in the area.",
-        rightReadTitle: "Access rights",
-        rightReadDescription:
-            "Access rights define who can interact with the area. Users matching one of these tags can enter the area and use objects whithin the area.",
-        personalAreaConfiguration: {
-            title: "Personal area configuration",
-            description:
-                "Users can claim personal areas as their own space. As an administrator, you can set/revoke ownership of an area",
-            setAsPersonalArea: "Set as personal area",
-            accessClaimMode: "Access claim mode",
-            dynamicAccessClaimMode: "Dynamic",
-            staticAccessClaimMode: "Static",
-            dynamicAccessDescription: "Anyone with appropriate user tags can claim the property of the zone.",
-            staticAccessDescription: "Manually define the owner of the zone.",
-            allowedTags: "Allowed user tags",
-            allowedUser: "Allowed user",
-            owner: "Owner",
-            revokeAccess: "Revoke access",
-        },
     },
     areaEditorInstructions: {
         title: "How it works ?",

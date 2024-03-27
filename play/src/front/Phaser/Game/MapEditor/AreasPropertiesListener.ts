@@ -1,3 +1,4 @@
+import { get } from "svelte/store";
 import {
     AreaData,
     AreaDataProperties,
@@ -9,31 +10,29 @@ import {
     PlayAudioPropertyData,
     SpeakerMegaphonePropertyData,
 } from "@workadventure/map-editor";
-import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { Jitsi } from "@workadventure/shared-utils";
+import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import { get } from "svelte/store";
-import { LL } from "../../../../i18n/i18n-svelte";
-import { analyticsClient } from "../../../Administration/AnalyticsClient";
-import { iframeListener } from "../../../Api/IframeListener";
-import { scriptUtils } from "../../../Api/ScriptUtils";
-import { localUserStore } from "../../../Connection/LocalUserStore";
-import { Room } from "../../../Connection/Room";
-import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
-import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
-import { chatZoneLiveStore } from "../../../Stores/ChatStore";
-import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
-import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
-import { currentLiveStreamingNameStore } from "../../../Stores/MegaphoneStore";
-import { notificationPlayingStore } from "../../../Stores/NotificationStore";
-import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
-import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
-import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
-import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
-import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
-import { gameManager } from "../GameManager";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
+import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
+import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
+import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
+import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
+import { analyticsClient } from "../../../Administration/AnalyticsClient";
+import { localUserStore } from "../../../Connection/LocalUserStore";
+import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
+import { LL } from "../../../../i18n/i18n-svelte";
 import { GameScene } from "../GameScene";
+import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
+import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
+import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
+import { scriptUtils } from "../../../Api/ScriptUtils";
+import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
+import { currentLiveStreamingNameStore } from "../../../Stores/MegaphoneStore";
+import { gameManager } from "../GameManager";
+import { iframeListener } from "../../../Api/IframeListener";
+import { chatZoneLiveStore } from "../../../Stores/ChatStore";
+import { Room } from "../../../Connection/Room";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -55,11 +54,6 @@ export class AreasPropertiesListener {
 
             if (!area.properties) {
                 continue;
-            }
-
-            // Add new notification to show at the user that he entered a new area
-            if (area.name && area.name !== "") {
-                notificationPlayingStore.playNotification(area.name);
             }
             for (const property of area.properties) {
                 this.addPropertyFilter(property, area);
@@ -110,7 +104,6 @@ export class AreasPropertiesListener {
             // analytics event for area
             analyticsClient.leaveAreaMapEditor(area.id, area.name);
 
-            //Init mapEditor store value
             if (!area.properties) {
                 continue;
             }
@@ -548,6 +541,8 @@ export class AreasPropertiesListener {
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
+            // TODO remove this console.log after testing
+            console.info("handleSpeakerMegaphonePropertyOnEnter => uniqRoomName : ", uniqRoomName);
             currentLiveStreamingNameStore.set(uniqRoomName);
             this.scene.broadcastService.joinSpace(uniqRoomName, false);
             isSpeakerStore.set(true);
@@ -562,6 +557,8 @@ export class AreasPropertiesListener {
         if (property.name !== undefined && property.id !== undefined) {
             isSpeakerStore.set(false);
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
+            // TODO remove this console.log after testing
+            console.info("handleSpeakerMegaphonePropertyOnEnter => uniqRoomName : ", uniqRoomName);
             currentLiveStreamingNameStore.set(undefined);
             this.scene.broadcastService.leaveSpace(uniqRoomName);
             if (property.chatEnabled) {
@@ -578,6 +575,8 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
+                // TODO remove this console.log after testing
+                console.info("handleListenerMegaphonePropertyOnEnter => uniqRoomName", uniqRoomName);
                 currentLiveStreamingNameStore.set(uniqRoomName);
                 this.scene.broadcastService.joinSpace(uniqRoomName, false);
                 if (property.chatEnabled) {
@@ -595,6 +594,8 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
+                // TODO remove this console.log after testing
+                console.info("handleListenerMegaphonePropertyOnLeave => uniqRoomName", uniqRoomName);
                 currentLiveStreamingNameStore.set(undefined);
                 this.scene.broadcastService.leaveSpace(uniqRoomName);
                 if (property.chatEnabled) {

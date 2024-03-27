@@ -8,6 +8,8 @@
     import { mapEditorEntityUploadEventStore } from "../../../../Stores/MapEditorStore";
     import CustomEntityEditionForm from "../CustomEntityEditionForm/CustomEntityEditionForm.svelte";
 
+
+
     let files: FileList | undefined = undefined;
     let dropZoneRef: HTMLDivElement;
     let customEntityToUpload: EntityPrefab | undefined = undefined;
@@ -15,19 +17,16 @@
 
     $: {
         if (files) {
-            const file = files.item(0);
-            if (file) {
-                customEntityToUpload = {
-                    collectionName: "custom entities",
-                    name: file.name,
-                    imagePath: URL.createObjectURL(file),
-                    id: uuidv4(),
-                    direction: Direction.Down,
-                    tags: [],
-                    color: "",
-                    type: "Custom",
-                };
-            }
+            customEntityToUpload = {
+                collectionName: "custom entities",
+                name: files.item(0)!.name,
+                imagePath: URL.createObjectURL(files.item(0)!),
+                id: uuidv4(),
+                direction: Direction.Down,
+                tags: [],
+                color: "",
+                type: "Custom",
+            };
         }
     }
 

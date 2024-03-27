@@ -3,6 +3,7 @@ import { CompanionTextureDescriptionInterface } from "../Companion/CompanionText
 import type { WokaTextureDescriptionInterface } from "../Entity/PlayerTextures";
 
 export interface PlayerInterface {
+    //jid: any;
     userId: number;
     userJid: string;
     name: string;
@@ -14,4 +15,7 @@ export interface PlayerInterface {
     color?: string | null;
     outlineColor?: number;
     isLogged?: boolean;
+    //chat interface
+    //companion: string | null;
+    //wokaSrc?: string;
 }

@@ -48,12 +48,12 @@ class LocalAdmin implements AdminInterface {
         ipAddress: string,
         characterTextureIds: string[],
         companionTextureId?: string,
-        locale?: string,
-        tags?: string[]
+        locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
         let canEdit = false;
         const roomUrl = new URL(playUri);
         const match = /\/~\/(.+)/.exec(roomUrl.pathname);
+
         if (
             match &&
             ENABLE_MAP_EDITOR &&
@@ -83,17 +83,11 @@ class LocalAdmin implements AdminInterface {
             }
         }
 
-        if (tags) {
-            if (tags?.includes("admin") || tags?.includes("editor")) {
-                canEdit = true;
-            }
-        }
-
         return {
             status: "ok",
             email: userIdentifier,
             userUuid: userIdentifier,
-            tags: tags ?? [],
+            tags: [],
             messages: [],
             visitCardUrl: null,
             isCharacterTexturesValid,

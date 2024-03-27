@@ -87,9 +87,7 @@ export const EnvironmentVariables = z.object({
     POSTHOG_API_KEY: z.string().optional(),
     POSTHOG_URL: z.string().url().optional().or(z.literal("")),
     FALLBACK_LOCALE: z.string().optional(),
-    CHAT_URL: AbsoluteOrRelativeUrl,
     OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional(),
-    OPID_TAGS_CLAIM: z.string().optional(),
     ENABLE_REPORT_ISSUES_MENU: BoolAsString.optional().transform((val) => toBool(val, false)),
     REPORT_ISSUES_URL: z.string().url().optional().or(z.literal("")),
     LOGROCKET_ID: z.string().optional(),
@@ -142,6 +140,9 @@ export const EnvironmentVariables = z.object({
     GOOGLE_DRIVE_PICKER_CLIENT_ID: z.string().optional(),
     GOOGLE_DRIVE_PICKER_API_KEY: z.string().optional(),
     GOOGLE_DRIVE_PICKER_APP_ID: z.string().optional(),
+
+    EMBEDLY_KEY: z.string().optional(),
+    EJABBERD_WS_URI: z.string().optional(),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

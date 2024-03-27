@@ -1,6 +1,6 @@
 import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
-import type { AdminApiData, MapDetailsData, RoomRedirect } from "@workadventure/messages";
+import type { AdminApiData, MapDetailsData, RoomRedirect, UserData } from "@workadventure/messages";
 import {
     Capabilities,
     CompanionDetail,
@@ -105,13 +105,22 @@ export const isFetchMemberDataByUuidSuccessResponse = z.object({
     canEdit: extendApi(z.boolean().nullable().optional(), {
         description: "True if the user can edit the map",
     }),
+    world: extendApi(z.string(), {
+        description: "name of the world",
+    }),
 });
 
+export const isFetchMemberDataForAWorld = z.object({
+    total: z.number().positive(),
+    members: z.array(isFetchMemberDataByUuidSuccessResponse),
+});
 export type FetchMemberDataByUuidSuccessResponse = z.infer<typeof isFetchMemberDataByUuidSuccessResponse>;
 
 export const isFetchMemberDataByUuidResponse = z.union([isFetchMemberDataByUuidSuccessResponse, ErrorApiData]);
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
+
+export type FetchMemberDataForAWorld = z.infer<typeof isFetchMemberDataForAWorld>;
 
 class AdminApi implements AdminInterface {
     private capabilities: Capabilities = {};
@@ -348,8 +357,7 @@ class AdminApi implements AdminInterface {
         ipAddress: string,
         characterTextureIds: string[],
         companionTextureId?: string,
-        locale?: string,
-        tags?: string[]
+        locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
         try {
             /**
@@ -699,13 +707,7 @@ class AdminApi implements AdminInterface {
          *                     type: string
          *                     description: Name of a room
          *                     example: "My office"
-         *                     required: true
-         *                   roomUrl:
-         *                     type: string
-         *                     description: URL of a room
-         *                     example: "http://example.com/@/teamSlug/worldSlug/room2Slug"
-         *                     required: true
-         *                   wamUrl:
+         *                   url:
          *                     type: string
          *                     description: URL of a room
          *                     example: "http://example.com/@/teamSlug/worldSlug/room2Slug"
@@ -989,6 +991,27 @@ class AdminApi implements AdminInterface {
             );
         }
         return;
+    }
+    async getMembersOfWorld(playUri : string, searchText : string = ""): Promise<FetchMemberDataForAWorld> {
+        console.log({playUri});
+        const response: { total: number; data: UserData[] } = await axios.get(
+            `${ADMIN_API_URL}/api/chat/members`,
+            {
+                headers: { Authorization: `${ADMIN_API_TOKEN}` },
+                params : {
+                    playUri,
+                    searchText
+                } 
+            }
+        );
+
+        console.log({response});
+        //TODO: Validate data object with zod 
+
+        return {
+            total: response.total,
+            members: response.data,
+        };
     }
 }
 

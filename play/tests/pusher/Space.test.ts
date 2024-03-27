@@ -102,6 +102,7 @@ describe("Space", () => {
         emitInBatch: (payload: SubMessage) => {
             eventsClient.push(payload);
         },
+        world : "testWorld"
     };
     const client = mock<Socket>({
         getUserData: vi.fn().mockReturnValue(clientData),

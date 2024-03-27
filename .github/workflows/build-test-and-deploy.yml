@@ -115,81 +115,6 @@ jobs:
           name: play
           path: /tmp/play.tar.gz
 
-  build-chat:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      # docker
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]') }}
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - uses: rlespinasse/github-slug-action@4.2.3
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: thecodingmachine/workadventure-chat
-
-      - name: Build and push
-        uses: docker/build-push-action@v3
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'build')) }}
-        with:
-          context: .
-          file: chat/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: thecodingmachine/workadventure-chat:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          cache-from: |
-            type=registry,ref=thecodingmachine/workadventure-chat:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-            type=registry,ref=thecodingmachine/workadventure-chat:develop
-          cache-to: type=inline
-          labels: ${{ steps.meta.outputs.labels }}
-          secrets: |
-            "SENTRY_URL=${{ secrets.SENTRY_URL }}"
-            "SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}"
-            "SENTRY_ORG=${{ secrets.SENTRY_ORG }}"
-            "SENTRY_PROJECT=chat"
-            "SENTRY_ENVIRONMENT=${{ github.event_name == 'release' && 'production' || env.GITHUB_REF_NAME == 'master' && 'staging' || 'testing' }}"
-            "SENTRY_RELEASE=${{ github.event_name == 'release' && env.GITHUB_REF_NAME || format('{0}@{1}', env.GITHUB_REF_NAME, env.GITHUB_SHA) }}"
-
-      - name: Build test image
-        uses: docker/build-push-action@v3
-        with:
-          context: .
-          file: chat/Dockerfile
-          platforms: linux/amd64
-          push: false
-          tags: thecodingmachine/workadventure-chat:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          cache-from: |
-            type=registry,ref=thecodingmachine/workadventure-chat:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-            type=registry,ref=thecodingmachine/workadventure-chat:develop
-          cache-to: type=inline
-          labels: ${{ steps.meta.outputs.labels }}
-          outputs: type=docker,dest=/tmp/chat.tar
-
-      - name: Zip image
-        run: gzip chat.tar
-        working-directory: /tmp
-
-      - name: Upload image as artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: chat
-          path: /tmp/chat.tar.gz
-
   build-back:
     runs-on: ubuntu-latest
     steps:
@@ -642,7 +567,6 @@ jobs:
             renderer: auto
     needs:
       - build-play
-      - build-chat
       - build-back
       - build-maps
       - build-uploader
@@ -695,11 +619,6 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v3
         with:
-          name: chat
-          path: /tmp
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
           name: back
           path: /tmp
       - name: Download artifact
@@ -725,7 +644,6 @@ jobs:
       - name: Load image
         run: |
           docker load --input /tmp/play.tar.gz
-          docker load --input /tmp/chat.tar.gz
           docker load --input /tmp/back.tar.gz
           docker load --input /tmp/maps.tar.gz
           docker load --input /tmp/map-storage.tar.gz
@@ -782,7 +700,6 @@ jobs:
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     needs:
       - build-play
-      - build-chat
       - build-back
       - build-maps
       - build-uploader
@@ -880,7 +797,6 @@ jobs:
     name: "Deploy in Kubernetes"
     needs:
       - build-play
-      - build-chat
       - build-back
       - build-maps
       - build-uploader

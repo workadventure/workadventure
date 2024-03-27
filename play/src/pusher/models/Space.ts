@@ -48,11 +48,10 @@ export class Space implements CustomJsonReplacerInterface {
                 const filtersTargeted = filterOfThisSpace.filter((spaceFilter) =>
                     this.filterOneUser(spaceFilter, user)
                 );
-                if (filtersTargeted.length > 0) {
-                    filtersTargeted.forEach((spaceFilter) => {
-                        this.notifyMeAddUser(watcher, user, spaceFilter.filterName);
-                    });
-                }
+
+                filtersTargeted.forEach((spaceFilter) => {
+                    this.notifyMeAddUser(watcher, user, spaceFilter.filterName);
+                });
             }
         });
         debug(`${this.name} : watcher added ${socketData.name}`);
@@ -115,72 +114,33 @@ export class Space implements CustomJsonReplacerInterface {
         this.localUpdateUser(spaceUser);
     }
     public localUpdateUser(spaceUser: PartialSpaceUser) {
-        let oldUser: SpaceUserExtended | undefined;
         const user = this.users.get(spaceUser.id);
-        if (user) {
-            oldUser = structuredClone(user);
-            if (spaceUser.tags.length > 0) {
-                user.tags = spaceUser.tags;
-            }
-            if (spaceUser.name) {
-                user.name = spaceUser.name;
-                user.lowercaseName = spaceUser.name.toLowerCase();
-            }
-            if (spaceUser.playUri) {
-                user.playUri = spaceUser.playUri;
-            }
-            if (spaceUser.color) {
-                user.color = spaceUser.color;
-            }
-            if (spaceUser.characterTextures.length > 0) {
-                user.characterTextures = spaceUser.characterTextures;
-            }
-            if (spaceUser.isLogged !== undefined) {
-                user.isLogged = spaceUser.isLogged;
-            }
-            if (spaceUser.availabilityStatus !== undefined) {
-                user.availabilityStatus = spaceUser.availabilityStatus;
-            }
-            if (spaceUser.roomName) {
-                user.roomName = spaceUser.roomName;
-            }
-            if (spaceUser.visitCardUrl) {
-                user.visitCardUrl = spaceUser.visitCardUrl;
-            }
-            if (spaceUser.screenSharingState !== undefined) {
-                user.screenSharingState = spaceUser.screenSharingState;
-            }
-            if (spaceUser.microphoneState !== undefined) {
-                user.microphoneState = spaceUser.microphoneState;
-            }
-            if (spaceUser.cameraState !== undefined) {
-                user.cameraState = spaceUser.cameraState;
-            }
-            if (spaceUser.megaphoneState !== undefined) {
-                user.megaphoneState = spaceUser.megaphoneState;
-            }
-            if (spaceUser.jitsiParticipantId) {
-                user.jitsiParticipantId = spaceUser.jitsiParticipantId;
-            }
-            if (spaceUser.uuid) {
-                user.uuid = spaceUser.uuid;
-            }
-            debug(`${this.name} : user updated ${spaceUser.id}`);
 
-            const subMessage: SubMessage = {
-                message: {
-                    $case: "updateSpaceUserMessage",
-                    updateSpaceUserMessage: {
-                        spaceName: this.name,
-                        user: spaceUser,
-                        filterName: undefined,
-                    },
-                },
-            };
-            this.notifyAll(subMessage, user, oldUser);
-        } else {
+        if (!user) {
             console.error("User not found in this space", spaceUser);
+            return;
         }
+
+        const updatedUser = {
+            ...user,
+            ...spaceUser,
+        } as SpaceUserExtended;
+
+        if (spaceUser.name) user.lowercaseName = spaceUser.name.toLowerCase();
+
+        debug(`${this.name} : user updated ${spaceUser.id}`);
+
+        const subMessage: SubMessage = {
+            message: {
+                $case: "updateSpaceUserMessage",
+                updateSpaceUserMessage: {
+                    spaceName: this.name,
+                    user: spaceUser,
+                    filterName: undefined,
+                },
+            },
+        };
+        this.notifyAll(subMessage, updatedUser, user);
     }
 
     public removeUser(userId: number) {
@@ -235,11 +195,20 @@ export class Space implements CustomJsonReplacerInterface {
         this.notifyAllMetadata(subMessage);
     }
 
+    private removeSpaceNamePrefix(spaceName: string, prefix: string): string {
+        return spaceName.substring(prefix.length + 1);
+    }
+
     private notifyAllMetadata(subMessage: SubMessage) {
         this.clientWatchers.forEach((watcher) => {
             const socketData = watcher.getUserData();
             if (subMessage.message?.$case === "updateSpaceMetadataMessage") {
                 debug(`${this.name} : metadata update sent to ${socketData.name}`);
+                subMessage.message.updateSpaceMetadataMessage.spaceName = this.removeSpaceNamePrefix(
+                    subMessage.message.updateSpaceMetadataMessage.spaceName,
+                    socketData.world
+                );
+
                 socketData.emitInBatch(subMessage);
             }
         });
@@ -259,10 +228,19 @@ export class Space implements CustomJsonReplacerInterface {
                 if (filtersTargeted.length > 0) {
                     filtersTargeted.forEach((spaceFilter) => {
                         if (subMessage.message?.$case === "addSpaceUserMessage") {
+                            subMessage.message.addSpaceUserMessage.spaceName = this.removeSpaceNamePrefix(
+                                subMessage.message.addSpaceUserMessage.spaceName,
+                                socketData.world
+                            );
                             subMessage.message.addSpaceUserMessage.filterName = spaceFilter.filterName;
+
                             debug(`${this.name} : user ${youngUser.lowercaseName} add sent to ${socketData.name}`);
                             socketData.emitInBatch(subMessage);
                         } else if (subMessage.message?.$case === "updateSpaceUserMessage") {
+                            subMessage.message.updateSpaceUserMessage.spaceName = this.removeSpaceNamePrefix(
+                                subMessage.message.updateSpaceUserMessage.spaceName,
+                                socketData.world
+                            );
                             if (
                                 oldUser &&
                                 !this.filterOneUser(spaceFilter, oldUser) &&
@@ -283,6 +261,11 @@ export class Space implements CustomJsonReplacerInterface {
                                 );
                             }
                         } else if (subMessage.message?.$case === "removeSpaceUserMessage") {
+                            subMessage.message.removeSpaceUserMessage.spaceName = this.removeSpaceNamePrefix(
+                                subMessage.message.removeSpaceUserMessage.spaceName,
+                                socketData.world
+                            );
+                            console.log('removeSpaceUserMessage',subMessage.message.removeSpaceUserMessage.spaceName);
                             subMessage.message.removeSpaceUserMessage.filterName = spaceFilter.filterName;
                             socketData.emitInBatch(subMessage);
                             debug(`${this.name} : user ${youngUser.lowercaseName} remove sent to ${socketData.name}`);
@@ -359,20 +342,19 @@ export class Space implements CustomJsonReplacerInterface {
                 ?.find((filter) => filter.filterName === newFilter.filterName);
             if (oldFilter) {
                 debug(`${this.name} : filter updated (${newFilter.filterName}) for ${watcher.getUserData().userId}`);
-                const oldData = this.filter(oldFilter);
-                const newData = this.filter(newFilter);
-                this.delta(watcher, oldData, newData, newFilter.filterName);
+                const usersInOldFilter = this.filter(oldFilter);
+                const usersInNewFilter = this.filter(newFilter);
+                this.delta(watcher, usersInOldFilter, usersInNewFilter, newFilter.filterName);
             }
         }
     }
 
     public handleRemoveFilter(watcher: Socket, removeSpaceFilterMessage: RemoveSpaceFilterMessage) {
         const oldFilter = removeSpaceFilterMessage.spaceFilterMessage;
-        if (oldFilter) {
-            debug(`${this.name} : filter removed (${oldFilter.filterName}) for ${watcher.getUserData().userId}`);
-            const oldData = this.filter(oldFilter);
-            this.delta(watcher, oldData, this.users, undefined);
-        }
+        if (!oldFilter) return;
+        debug(`${this.name} : filter removed (${oldFilter.filterName}) for ${watcher.getUserData().userId}`);
+        const oldUsers = this.filter(oldFilter);
+        this.delta(watcher, oldUsers, this.users, undefined);
     }
 
     private delta(
@@ -410,7 +392,7 @@ export class Space implements CustomJsonReplacerInterface {
             message: {
                 $case: "addSpaceUserMessage",
                 addSpaceUserMessage: {
-                    spaceName: this.name,
+                    spaceName:this.removeSpaceNamePrefix(this.name, watcher.getUserData().world),
                     user,
                     filterName,
                 },
@@ -424,7 +406,7 @@ export class Space implements CustomJsonReplacerInterface {
             message: {
                 $case: "removeSpaceUserMessage",
                 removeSpaceUserMessage: {
-                    spaceName: this.name,
+                    spaceName: this.removeSpaceNamePrefix(this.name, watcher.getUserData().world),
                     userId: user.id,
                     filterName,
                 },
@@ -549,6 +531,7 @@ export class Space implements CustomJsonReplacerInterface {
         this.clientWatchers.forEach((watcher) => {
             const socketData = watcher.getUserData();
             debug(`${this.name} : kickOff sent to ${socketData.name}`);
+
             socketData.emitInBatch(subMessage);
         });
     }

@@ -2,7 +2,7 @@ import {ChildProcess} from "child_process";
 import {StartedTestContainer} from "testcontainers";
 import AWS from "aws-sdk";
 import {describe, expect, jest, it, beforeAll, beforeEach, afterAll, afterEach} from '@jest/globals';
-import {AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, CHAT_URL} from "../src/Enum/EnvironmentVariable";
+import {AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, PLAY_URL} from "../src/Enum/EnvironmentVariable";
 import {LocalStackContainer} from "./utils/LocalStackContainer";
 import {uploadMultipleFilesTest, uploadSingleFileTest} from "./UploaderTestCommon";
 import startTestServer from "./startTestServer";
@@ -10,8 +10,8 @@ import isPortReachable from "./utils/isPortReachable";
 
 
 jest.mock('../src/Enum/EnvironmentVariable', () => ({
-    get CHAT_URL() {
-        return "http://chat.location"
+    get PLAY_URL() {
+        return "http://PLAY.location"
     },
     get AWS_ACCESS_KEY_ID() {
         return "mock"
@@ -47,7 +47,7 @@ describe("S3 Uploader tests", () => {
             UPLOADER_AWS_SIGNED_URL_EXPIRATION: "60",
             ENABLE_CHAT_UPLOAD: "true",
             UPLOADER_URL: UPLOADER_URL,
-            CHAT_URL: CHAT_URL
+            PLAY_URL: PLAY_URL
          })
         await isPortReachable(APP_PORT, {host: "localhost"});
     })

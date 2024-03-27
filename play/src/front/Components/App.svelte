@@ -20,9 +20,9 @@
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import ErrorScreen from "./UI/ErrorScreen.svelte";
-    import Chat from "./Chat/Chat.svelte";
     import MapEditor from "./MapEditor/MapEditor.svelte";
     import RefreshPrompt from "./RefreshPrompt.svelte";
+    import Chat from "../Chat/Chat.svelte";
 
     export let game: Game;
 

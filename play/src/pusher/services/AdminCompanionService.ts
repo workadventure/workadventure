@@ -39,7 +39,7 @@ class AdminCompanionService implements CompanionServiceInterface {
          *         schema:
          *             type: array
          *             items:
-         *                 $ref: '#/definitions/CompanionTextureCollection'
+         *                 $ref: '#/definitions/CompanionCollection'
          *       404:
          *         description: Error while retrieving the data
          *         schema:

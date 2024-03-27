@@ -576,6 +576,24 @@ class ConnectionManager {
         }
     }
 
+    async getListOfMembersForChat(): Promise<unknown> {
+            await axiosToPusher
+                .get("/members", {
+                    headers: {
+                        Authorization: this.authToken,
+                    },
+                    params: {
+                        playUri: this.currentRoom?.key,
+                    },
+                })
+                .then((data: unknown) => {
+                    return data
+                })
+                .catch((e) => {
+                    console.error(e);
+                });
+    }
+
     get currentRoom() {
         return this._currentRoom;
     }

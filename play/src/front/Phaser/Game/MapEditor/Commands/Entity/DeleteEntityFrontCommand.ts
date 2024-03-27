@@ -31,17 +31,12 @@ export class DeleteEntityFrontCommand extends DeleteEntityCommand implements Fro
         if (!this.entityData) {
             return new VoidFrontCommand();
         }
-        const entity = this.entitiesManager.getEntities().get(this.entityData.prefabRef.id);
-        if (!entity) {
-            return new VoidFrontCommand();
-        }
         return new CreateEntityFrontCommand(
             this.gameMap,
             this.entityId,
             this.entityData,
             undefined,
-            this.entitiesManager,
-            { width: entity.width, height: entity.height }
+            this.entitiesManager
         );
     }
 

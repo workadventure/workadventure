@@ -167,30 +167,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescriptionPlaceholder: "Description de la zone",
         areaSerchable: "Recherchable dans le mode exploration",
         addDescriptionField: "Ajouter une description",
-        addRight: "Ajouter des droits",
-        rightTitle: "Droit d'accès et d'édion via les tags utilisateur",
-        rightWriteTitle: "Droits d'édition",
-        rightWriteDescription:
-            "Les droits d'édition définissent qui peut modifier la zone. Les utilisateurs correspondant à l'un de ces tags peuvent créer, mettre à jour ou supprimer un objet dans la zone.",
-        rightReadTitle: "Droits d'accès",
-        rightReadDescription:
-            "Les droits d'accès définissent qui peut interagir avec la zone. Les utilisateurs correspondant à l'un de ces tags peuvent entrer dans la zone et utiliser les objets qui s'y trouvent.",
-        personalAreaConfiguration: {
-            title: "Configuration d'une zone personnelle",
-            description:
-                "La définition d'une zone personnelle permet à l'utilisateur de revendiquer cette zone comme son propre espace. En tant qu'administrateur, vous pouvez définir/révoquer un espace à un utilisateur.",
-            setAsPersonalArea: "Définir comme zone personnelle",
-            accessClaimMode: "Mode d'attribution de l'accès",
-            dynamicAccessClaimMode: "Dynamique",
-            staticAccessClaimMode: "Statique",
-            dynamicAccessDescription:
-                "Définir les tags d'utilisateur autorisées à revendiquer la propriété de la zone.",
-            staticAccessDescription: "Définir l'utilisateur qui est le propriétaire de la zone.",
-            allowedTags: "Tags utilisateur autorisés",
-            allowedUser: "Utilisateur autorisé",
-            owner: "Propriétaire",
-            revokeAccess: "Révoquer l'accès",
-        },
     },
     areaEditorInstructions: {
         title: "Comment ca marche ?",
