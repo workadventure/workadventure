@@ -27,7 +27,7 @@ import Sprite = Phaser.GameObjects.Sprite;
 import DOMElement = Phaser.GameObjects.DOMElement;
 
 const playerNameY = -25;
-const interactiveRadius = 35;
+const interactiveRadius = 25;
 
 export abstract class Character extends Container implements OutlineableInterface {
     private bubble: SpeechBubble | null = null;

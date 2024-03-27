@@ -757,7 +757,6 @@ export class GameScene extends DirtyScene {
         }
 
         this.pathfindingManager = new PathfindingManager(
-            this,
             this.gameMapFrontWrapper.getCollisionGrid(),
             this.gameMapFrontWrapper.getTileDimensions()
         );
@@ -2391,14 +2390,7 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("movePlayerTo", async (message) => {
-            const startTileIndex = this.getGameMap().getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y);
-            const destinationTileIndex = this.getGameMap().getTileIndexAt(message.x, message.y);
-            const path = await this.getPathfindingManager().findPath(startTileIndex, destinationTileIndex, true, true);
-            path.shift();
-            if (path.length === 0) {
-                throw new Error("no path available");
-            }
-            return this.CurrentPlayer.setPathToFollow(path, message.speed);
+            return this.moveTo({ x: message.x, y: message.y }, true, message.speed);
         });
 
         iframeListener.registerAnswerer("teleportPlayerTo", (message) => {
@@ -2743,7 +2735,7 @@ ${escapedMessage}
                 let endPos: { x: number; y: number };
                 const posFromParam = StringUtils.parsePointFromParam(moveToParam);
                 if (posFromParam) {
-                    endPos = this.gameMapFrontWrapper.getTileIndexAt(posFromParam.x, posFromParam.y);
+                    endPos = posFromParam;
                 } else {
                     // First, try by id
                     let areaData = this.gameMapFrontWrapper.getAreas()?.get(moveToParam);
@@ -2751,19 +2743,18 @@ ${escapedMessage}
                         areaData = this.gameMapFrontWrapper.getAreaByName(moveToParam);
                     }
                     if (areaData) {
-                        const pixelEndPos = MathUtils.randomPositionFromRect(areaData);
-                        endPos = this.gameMapFrontWrapper.getTileIndexAt(pixelEndPos.x, pixelEndPos.y);
+                        endPos = MathUtils.randomPositionFromRect(areaData);
                     } else {
                         const destinationObject = this.gameMapFrontWrapper.getObjectWithName(moveToParam);
                         if (destinationObject) {
-                            endPos = this.gameMapFrontWrapper.getTileIndexAt(destinationObject.x, destinationObject.y);
+                            endPos = destinationObject;
                         } else {
-                            endPos = this.gameMapFrontWrapper.getRandomPositionFromLayer(moveToParam);
+                            endPos = this.pathfindingManager.mapTileUnitToPixels(this.gameMapFrontWrapper.getRandomPositionFromLayer(moveToParam));
                         }
                     }
                 }
 
-                this.moveTo(endPos);
+                this.moveTo(endPos).catch((e) => console.warn(e));
 
                 urlManager.clearHashParameter();
             } catch (err) {
@@ -2780,20 +2771,15 @@ ${escapedMessage}
         }
     }
 
-    public moveTo(position: { x: number; y: number }, measuredInPixels = true, tryFindingNearestAvailable = false) {
-        this.pathfindingManager
-            .findPath(
-                this.gameMapFrontWrapper.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y),
-                position,
-                measuredInPixels,
-                tryFindingNearestAvailable
-            )
-            .then((path) => {
-                if (path && path.length > 0) {
-                    this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
-                }
-            })
-            .catch((reason) => console.warn(reason));
+    /**
+     * Walk the player to position x,y expressed in Game pixels.
+     */
+    public async moveTo(position: { x: number; y: number }, tryFindingNearestAvailable = false, speed: number|undefined = undefined): Promise<{x: number, y: number, cancelled: boolean}> {
+        const path = await this.getPathfindingManager().findPathFromGameCoordinates({
+            x: this.CurrentPlayer.x,
+            y: this.CurrentPlayer.y,
+        }, position, tryFindingNearestAvailable);
+        return this.CurrentPlayer.setPathToFollow(path, speed);
     }
 
     private getExitUrl(layer: ITiledMapLayer): string | undefined {
@@ -3152,14 +3138,7 @@ ${escapedMessage}
                 this.markDirty();
                 const playerDestination = this.CurrentPlayer.getCurrentPathDestinationPoint();
                 if (playerDestination) {
-                    const startTileIndex = this.getGameMap().getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y);
-                    const endTileIndex = this.getGameMap().getTileIndexAt(playerDestination.x, playerDestination.y);
-                    this.pathfindingManager
-                        .findPath(startTileIndex, endTileIndex)
-                        .then((path) => {
-                            this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
-                        })
-                        .catch((reason) => console.warn(reason));
+                    this.moveTo(playerDestination, true).catch((reason) => console.warn(reason));
                 }
             });
     }

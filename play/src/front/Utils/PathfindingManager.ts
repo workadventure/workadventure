@@ -8,14 +8,11 @@ export enum PathTileType {
 }
 
 export class PathfindingManager {
-    private scene: Phaser.Scene;
-
     private easyStar: EasyStar.js;
     private grid: number[][];
     private tileDimensions: { width: number; height: number };
 
-    constructor(scene: Phaser.Scene, collisionsGrid: number[][], tileDimensions: { width: number; height: number }) {
-        this.scene = scene;
+    constructor(collisionsGrid: number[][], tileDimensions: { width: number; height: number }) {
 
         this.easyStar = new EasyStar.js();
         this.easyStar.enableDiagonals();
@@ -30,6 +27,21 @@ export class PathfindingManager {
 
     public setCollisionGrid(collisionGrid: number[][]): void {
         this.setEasyStarGrid(collisionGrid);
+    }
+
+    public async findPathFromGameCoordinates(
+        start: { x: number; y: number },
+        end: { x: number; y: number },
+        tryFindingNearestAvailable = false
+    ): Promise<{ x: number; y: number }[]> {
+        const startTile = this.mapPixelsToTileUnits(this.clampToMap(start));
+        const endTile = this.mapPixelsToTileUnits(this.clampToMap(end));
+        const path = await this.findPath(startTile, endTile, true, tryFindingNearestAvailable);
+        // Replace the first element of the path with the actual start position
+        path[0] = { x: start.x, y: start.y + this.tileDimensions.height * 0.5 }; // We need to add half of the tile height to get the bottom center of the tile as long as the player origin is centered
+        // Replace the last element of the path with the actual end position
+        path[path.length - 1] = { x: end.x, y: end.y };
+        return path;
     }
 
     public async findPath(
@@ -72,12 +84,21 @@ export class PathfindingManager {
     }
 
     private mapTileUnitsToPixels(path: { x: number; y: number }[]): { x: number; y: number }[] {
-        return path.map((step) => {
-            return {
-                x: step.x * this.tileDimensions.width + this.tileDimensions.width * 0.5,
-                y: step.y * this.tileDimensions.height + this.tileDimensions.height * 0.5,
-            };
-        });
+        return path.map(this.mapTileUnitToPixels.bind(this));
+    }
+
+    public mapTileUnitToPixels(tilePosition: { x: number; y: number }): { x: number; y: number } {
+        return {
+            x: tilePosition.x * this.tileDimensions.width + this.tileDimensions.width * 0.5,
+            y: tilePosition.y * this.tileDimensions.height + this.tileDimensions.height * 0.5,
+        };
+    }
+
+    private mapPixelsToTileUnits(position: { x: number; y: number }): { x: number; y: number } {
+        return {
+            x: Math.floor(position.x / this.tileDimensions.width),
+            y: Math.floor(position.y / this.tileDimensions.height),
+        };
     }
 
     private getNeighbouringTiles(tile: { x: number; y: number }): { x: number; y: number }[] {
@@ -99,6 +120,32 @@ export class PathfindingManager {
         const mapWidth = this.grid[0]?.length ?? 0;
 
         return MathUtils.isBetween(tile.x, 0, mapWidth) && MathUtils.isBetween(tile.y, 0, mapHeight);
+    }
+
+    /**
+     * Takes a position in pixels and returns it.
+     * It the position is out of the bounds of the map, takes the closest position within the map.
+     */
+    private clampToMap(position: { x: number; y: number }): { x: number; y: number } {
+        let x = position.x;
+        let y = position.y;
+        const mapHeight = this.grid.length;
+        const mapWidth = this.grid[0].length;
+
+        if (x < 0) {
+            x = 0;
+        }
+        if (y < 0) {
+            y = 0;
+        }
+        if (x > mapWidth * this.tileDimensions.width) {
+            x = mapWidth * this.tileDimensions.width - 1;
+        }
+        if (y > mapHeight * this.tileDimensions.height) {
+            y = mapHeight * this.tileDimensions.height - 1;
+        }
+
+        return { x, y };
     }
 
     /**

@@ -713,14 +713,7 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "moveToPositionMessage": {
                     if (message.moveToPositionMessage && message.moveToPositionMessage.position) {
-                        const tileIndex = gameManager
-                            .getCurrentGameScene()
-                            .getGameMap()
-                            .getTileIndexAt(
-                                message.moveToPositionMessage.position.x,
-                                message.moveToPositionMessage.position.y
-                            );
-                        gameManager.getCurrentGameScene().moveTo(tileIndex);
+                        gameManager.getCurrentGameScene().moveTo(message.moveToPositionMessage.position);
                     }
                     this._moveToPositionMessageStream.next(message.moveToPositionMessage);
                     break;
