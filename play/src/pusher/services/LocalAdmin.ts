@@ -31,7 +31,7 @@ import {
     ERASER_ENABLED,
 } from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
-import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import type { AdminBannedData, FetchMemberDataByUuidResponse, FetchMemberDataForAWorld } from "./AdminApi";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 import { localCompanionService } from "./LocalCompanionSevice";
@@ -98,6 +98,7 @@ class LocalAdmin implements AdminInterface {
             mucRooms,
             activatedInviteUser: true,
             canEdit,
+            world : 'localWorld'
         };
     }
 
@@ -275,6 +276,13 @@ class LocalAdmin implements AdminInterface {
         return Promise.resolve({
             "api/woka/list": "v1",
             "api/companion/list": "v1",
+        });
+    }
+
+    async getMembersOfWorld(playUri: string, searchText: string = ""): Promise<FetchMemberDataForAWorld> {
+        return Promise.resolve({
+            total: 0,
+            members: [],
         });
     }
 }

@@ -578,7 +578,7 @@ class ConnectionManager {
 
     async getListOfMembersForChat(): Promise<unknown> {
             await axiosToPusher
-                .get("/members", {
+                .get("chat/members", {
                     headers: {
                         Authorization: this.authToken,
                     },

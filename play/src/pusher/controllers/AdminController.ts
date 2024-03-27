@@ -5,9 +5,8 @@ import { z } from "zod";
 import { apiClientRepository } from "../services/ApiClientRepository";
 import { adminToken } from "../middlewares/AdminToken";
 import { validatePostQuery, validateQuery } from "../services/QueryValidator";
-import { adminService } from "../services/AdminService";
 import { BaseHttpController } from "./BaseHttpController";
-import cors from "cors";
+import { adminService } from "../services/AdminService";
 
 export class AdminController extends BaseHttpController {
     routes(): void {
@@ -399,26 +398,27 @@ export class AdminController extends BaseHttpController {
             return;
         });
     }
-
     getMembersOfTheActualWorld(): void {
-        this.app.options("/members", (req, res) => {
+        this.app.options("/chat/members", (req, res) => {
             res.atomic(() => {
                 res.status(200).send();
             });
         });
-
-        this.app.get("/members", async (req: Request, res: Response) => {
+        this.app.get("/chat/members", async (req: Request, res: Response) => {
             //TODO : Validate Query Object with zod
 
-            const query = validateQuery(req,res,z.object({
-                playUri: z.string(),
-                searchText : z.string().optional()
-            }))
+            const query = validateQuery(
+                req,
+                res,
+                z.object({
+                    playUri: z.string(),
+                    searchText: z.string().optional(),
+                })
+            );
 
-            if(!query)return ;
+            if (!query) return;
 
-            
-            const { members, total } = await adminService.getMembersOfWorld(query.playUri);
+            const { members, total } = await adminService.getMembersOfWorld(query.playUri,query.searchText);
 
             const MAX_USER_TO_DISPLAY = 200;
 

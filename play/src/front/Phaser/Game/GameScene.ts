@@ -191,6 +191,9 @@ import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { getCoWebSite, openCoWebSite } from "../../Chat/Utils";
 import { chatConnectionManager } from "../../Chat/Connection/ChatConnectionManager";
+import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
+import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/StreamSpaceWatcher";
+import { WORLD_SPACE_NAME } from "../../Space/Space";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
