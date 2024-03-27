@@ -2451,6 +2451,10 @@ ${escapedMessage}
             const soundUrl = new URL(message.url, this.mapUrlFile);
             await this.simplePeer.dispatchSound(soundUrl);
         });
+
+        iframeListener.registerAnswerer("followMe", () => {
+            this.connection?.emitFollowRequest(true);
+        });
     }
 
     private setPropertyLayer(

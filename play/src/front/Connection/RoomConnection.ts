@@ -75,7 +75,7 @@ import {
     menuVisiblilityStore,
     warningBannerStore,
 } from "../Stores/MenuStore";
-import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
+import { followRoleStore, followStateStore, followUsersStore } from "../Stores/FollowStore";
 import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
 import { ENABLE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
@@ -670,7 +670,14 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "followRequestMessage": {
                     if (!localUserStore.getIgnoreFollowRequests()) {
-                        followUsersStore.addFollowRequest(message.followRequestMessage.leader);
+                        if (message.followRequestMessage.forceFollow) {
+                            // If forceFollow, we emit directly back the followConfirmationMessage
+                            followUsersStore.addFollowRequest(message.followRequestMessage.leader);
+                            followStateStore.set("active");
+                            this.emitFollowConfirmation();
+                        } else {
+                            followUsersStore.addFollowRequest(message.followRequestMessage.leader);
+                        }
                     }
                     break;
                 }
@@ -1170,7 +1177,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitFollowRequest(): void {
+    public emitFollowRequest(forceFollow = false): void {
         if (!this.userId) {
             return;
         }
@@ -1180,6 +1187,7 @@ export class RoomConnection implements RoomConnection {
                 $case: "followRequestMessage",
                 followRequestMessage: {
                     leader: this.userId,
+                    forceFollow,
                 },
             },
         });

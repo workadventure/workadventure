@@ -80,7 +80,7 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
 
     /**
      * Detecting when the user leave on a meeting.
-     * {@link https://workadventu.re/map-building/api-player.md#detecting-when-the-user-entersleaves-a-meeting | Website documentation}
+     * {@link https://docs.workadventu.re/developer/map-scripting/references/api-player/#detecting-when-the-user-entersleaves-a-meeting | Website documentation}
      */
     onLeave(): Subject<void> {
         if (leaveStream === undefined) {
@@ -89,12 +89,27 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
         return leaveStream;
     }
 
+    /**
+     * Play a sound to all players in the current meeting.
+     * {@link https://docs.workadventu.re/developer/map-scripting/references/api-player/#playing-a-sound-to-players-in-the-same-meeting | Website documentation}
+     */
     async playSound(url: string): Promise<void> {
         await queryWorkadventure({
             type: "playSoundInBubble",
             data: {
                 url: url,
             },
+        });
+    }
+
+    /**
+     * Ask all players in the current meeting to follow the player.
+     * Note that unlike with the "follow" mode in the UI, the other players will automatically follow the player.
+     */
+    async followMe(): Promise<void> {
+        await queryWorkadventure({
+            type: "followMe",
+            data: undefined,
         });
     }
 }
