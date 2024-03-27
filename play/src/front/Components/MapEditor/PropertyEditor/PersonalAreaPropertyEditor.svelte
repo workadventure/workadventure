@@ -1,38 +1,49 @@
 <script lang="ts">
-    import { createEventDispatcher, onDestroy } from "svelte";
+    import { createEventDispatcher } from "svelte";
     import { InfoIcon } from "svelte-feather-icons";
-    import { PersonalAreaAccessClaimMode, PersonalAreaPropertyData } from "@workadventure/map-editor";
+    import { InputTagOption, PersonalAreaAccessClaimMode, PersonalAreaPropertyData } from "@workadventure/map-editor";
     import LL from "../../../../i18n/i18n-svelte";
     import InputTags from "../../Input/InputTags.svelte";
-    import {
-        PersonalAreaPropertyEditorRules,
-        Option,
-    } from "../../../Rules/PersonalAreaPropertyEditorRules/PersonalAreaPropertyEditorRules";
     import MemberAutocomplete from "../../Input/MemberAutocomplete.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
-    const personalAreaPropertyEditorRules = new PersonalAreaPropertyEditorRules();
+    export let personalAreaPropertyData: PersonalAreaPropertyData;
 
-    let personalAreaPropertyData: PersonalAreaPropertyData | undefined = undefined;
-    let areaOwnerId: string | undefined = undefined;
-    let existingTags: Option[] = [];
-
-    const personalAreaPropertyDataUnSubscriber =
-        personalAreaPropertyEditorRules.getPersonalAreaPropertyDataUnSubscriber((currentPersonalAreaPropertyData) => {
-            personalAreaPropertyData = currentPersonalAreaPropertyData;
-            if (currentPersonalAreaPropertyData) {
-                areaOwnerId = currentPersonalAreaPropertyData.ownerId;
-                existingTags = personalAreaPropertyEditorRules.mapExistingAllowedTagsToTagOption(
-                    currentPersonalAreaPropertyData.allowedTags
-                );
-            }
-        });
-
-    onDestroy(() => {
-        personalAreaPropertyDataUnSubscriber();
-    });
+    let areaOwnerIdInput: string | undefined = personalAreaPropertyData.ownerId;
+    let _tags: InputTagOption[] | undefined = personalAreaPropertyData.allowedTags
+        ? personalAreaPropertyData.allowedTags.map((allowedTag) => ({
+              value: allowedTag,
+              created: false,
+              label: allowedTag,
+          }))
+        : undefined;
 
     const dispatch = createEventDispatcher();
+
+    function setOwnerId(selectedOwnerId: string) {
+        personalAreaPropertyData.ownerId = selectedOwnerId;
+        areaOwnerIdInput = selectedOwnerId;
+        dispatch("change");
+    }
+
+    function handleTagChange(tags: InputTagOption[] | undefined) {
+        if (tags) {
+            personalAreaPropertyData.allowedTags = tags.map((tag) => tag.value);
+        } else {
+            personalAreaPropertyData.allowedTags = [];
+        }
+        dispatch("change");
+    }
+
+    function revokeOwner() {
+        personalAreaPropertyData.ownerId = "";
+        areaOwnerIdInput = "";
+        dispatch("change");
+    }
+
+    function onClaimModeChange() {
+        dispatch("change");
+    }
 </script>
 
 <PropertyEditorBase
@@ -55,14 +66,14 @@
                         <label for="ownerInput">{$LL.mapEditor.properties.personalAreaConfiguration.owner()}</label>
                         <input
                             id="ownerInput"
-                            value={areaOwnerId}
+                            value={areaOwnerIdInput}
                             disabled
                             class="tw-p-1 tw-rounded-md tw-bg-dark-purple !tw-border-solid !tw-border !tw-border-gray-400 tw-text-white tw-min-w-full"
                         />
                         <button
                             class="tw-self-center tw-text-red-500"
                             data-testid="revokeAccessButton"
-                            on:click={() => personalAreaPropertyEditorRules.removeOwner()}
+                            on:click={revokeOwner}
                         >
                             {$LL.mapEditor.properties.personalAreaConfiguration.revokeAccess()}
                         </button>
@@ -75,10 +86,7 @@
                         <select
                             data-testid="accessClaimMode"
                             bind:value={personalAreaPropertyData.accessClaimMode}
-                            on:change={(event) =>
-                                personalAreaPropertyEditorRules.setAccessClaimMode(
-                                    PersonalAreaAccessClaimMode.parse(event.currentTarget.value)
-                                )}
+                            on:change={onClaimModeChange}
                             class="tw-p-1 tw-rounded-md tw-bg-dark-purple !tw-border-solid !tw-border !tw-border-gray-400 tw-text-white tw-min-w-full"
                         >
                             {#each PersonalAreaAccessClaimMode.options as claimMode (claimMode)}
@@ -102,17 +110,15 @@
                                 >{$LL.mapEditor.properties.personalAreaConfiguration.allowedUser()}</label
                             >
                             <MemberAutocomplete
-                                value={areaOwnerId}
+                                value={areaOwnerIdInput}
                                 placeholder={$LL.mapEditor.properties.personalAreaConfiguration.allowedUser()}
-                                on:onSelect={({ detail: selectedUserId }) =>
-                                    personalAreaPropertyEditorRules.setOwner(selectedUserId)}
+                                on:onSelect={({ detail: selectedUserId }) => setOwnerId(selectedUserId)}
                             />
                         {:else}
                             <InputTags
                                 label={$LL.mapEditor.properties.personalAreaConfiguration.allowedTags()}
-                                options={personalAreaPropertyEditorRules.defaultAllowedTags}
-                                bind:value={existingTags}
-                                handleChange={() => personalAreaPropertyEditorRules.setAllowedTags(existingTags)}
+                                bind:value={_tags}
+                                handleChange={() => handleTagChange(_tags)}
                                 testId="allowedTags"
                             />
                         {/if}

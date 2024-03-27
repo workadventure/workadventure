@@ -1,52 +1,32 @@
 <script lang="ts">
     import { InfoIcon } from "svelte-feather-icons";
-    import { RestrictedRightsPropertyData } from "@workadventure/map-editor";
-    import { createEventDispatcher, onDestroy } from "svelte";
+    import { InputTagOption, RestrictedRightsPropertyData } from "@workadventure/map-editor";
+    import { createEventDispatcher } from "svelte";
     import InputTags from "../../Input/InputTags.svelte";
     import LL from "../../../../i18n/i18n-svelte";
-    import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
-    type Option = {
-        value: string;
-        label: string;
-        created: undefined | boolean;
-    };
-    let writeTags: Option[] | undefined = [];
-    let readTags: Option[] | undefined = [];
-    let _tag: Option[] = [];
-    let restrictedRightsProperty: RestrictedRightsPropertyData | undefined = undefined;
+    export let restrictedRightsPropertyData: RestrictedRightsPropertyData;
 
-    const mapEditorSelectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe(
-        (currentSelectedArea) => {
-            const rightsProperty = currentSelectedArea
-                ?.getProperties()
-                .find((property) => property.type === "restrictedRightsPropertyData");
-            if (rightsProperty !== undefined) {
-                restrictedRightsProperty = RestrictedRightsPropertyData.parse(rightsProperty);
-                writeTags = restrictedRightsProperty.writeTags.map((tag) => {
-                    return { value: tag, label: tag, created: false };
-                });
-                readTags = restrictedRightsProperty.readTags.map((tag) => {
-                    return { value: tag, label: tag, created: false };
-                });
-            }
-        }
-    );
+    let writeTags: InputTagOption[] | undefined = restrictedRightsPropertyData.writeTags.map((writeTag) => ({
+        value: writeTag,
+        label: writeTag,
+        created: false,
+    }));
+    let readTags: InputTagOption[] | undefined = restrictedRightsPropertyData.readTags.map((readTag) => ({
+        value: readTag,
+        label: readTag,
+        created: false,
+    }));
+    let _tag: InputTagOption[] = [];
 
     function onChangeWriteReadTags() {
-        if (restrictedRightsProperty !== undefined) {
-            restrictedRightsProperty.readTags = readTags?.map((tag) => tag.value) ?? [];
-            restrictedRightsProperty.writeTags = writeTags?.map((tag) => tag.value) ?? [];
-            $mapEditorSelectedAreaPreviewStore?.updateProperty(restrictedRightsProperty);
-        }
+        restrictedRightsPropertyData.readTags = readTags?.map((tag) => tag.value) ?? [];
+        restrictedRightsPropertyData.writeTags = writeTags?.map((tag) => tag.value) ?? [];
+        dispatch("change");
     }
 
     const dispatch = createEventDispatcher();
-
-    onDestroy(() => {
-        mapEditorSelectedAreaPreviewUnsubscriber();
-    });
 </script>
 
 <PropertyEditorBase

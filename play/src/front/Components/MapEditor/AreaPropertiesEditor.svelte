@@ -573,15 +573,19 @@
                         />
                     {:else if property.type === "restrictedRightsPropertyData"}
                         <RightsPropertyEditor
+                            restrictedRightsPropertyData={property}
                             on:close={() => {
                                 onDeleteProperty(property.id);
                             }}
+                            on:change={() => onUpdateProperty(property)}
                         />
                     {:else if property.type === "personalAreaPropertyData"}
                         <PersonalAreaPropertyEditor
+                            personalAreaPropertyData={property}
                             on:close={() => {
                                 onDeleteProperty(property.id);
                             }}
+                            on:change={() => onUpdateProperty(property)}
                         />
                     {/if}
                 </div>
