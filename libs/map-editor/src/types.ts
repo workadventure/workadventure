@@ -215,7 +215,11 @@ export const EntityCollectionRaw = z.object({
     version: z.string().optional(),
 });
 
-export const InputTagOption = z.object({ value: z.string(), label: z.string(), created: z.boolean().default(false) });
+export const InputTagOption = z.object({
+    value: z.string(),
+    label: z.string(),
+    created: z.boolean().optional(),
+});
 
 // TODO: get rid of this type and use only WAMEntityData
 export const EntityData = z.object({
