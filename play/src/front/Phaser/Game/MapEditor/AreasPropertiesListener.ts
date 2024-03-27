@@ -256,9 +256,13 @@ export class AreasPropertiesListener {
     }
 
     private handleOpenWebsitePropertyOnEnter(property: OpenWebsitePropertyData): void {
+        if (!property.link) {
+            return;
+        }
+
         const actionId = "openWebsite-" + (Math.random() + 1).toString(36).substring(7);
 
-        if (property.newTab && property.link != undefined) {
+        if (property.newTab) {
             const forceTrigger = localUserStore.getForceCowebsiteTrigger();
             if (forceTrigger || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
                 this.coWebsitesActionTriggers.set(property.id, actionId);
