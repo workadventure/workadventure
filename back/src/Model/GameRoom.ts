@@ -218,9 +218,11 @@ export class GameRoom implements BrothersFinder {
         const [user] = users;
         return user;
     }
+
     public getUserById(id: number): User | undefined {
         return this.users.get(id);
     }
+
     public getUsersByUuid(uuid: string): Set<User> {
         return this.usersByUuid.get(uuid) ?? new Set();
     }
@@ -1137,6 +1139,7 @@ export class GameRoom implements BrothersFinder {
                 editMapCommandMessage: message,
                 connectedUserTags: user.tags,
                 userCanEdit: user.canEdit,
+                userUUID: user.uuid,
             },
             (err: unknown, editMapCommandMessage: EditMapCommandMessage) => {
                 if (err) {

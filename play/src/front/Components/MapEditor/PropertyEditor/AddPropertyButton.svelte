@@ -6,12 +6,13 @@
     export let img;
     export let style;
     export let disabled = false;
-
+    export let testId = undefined;
     const dispatch = createEventDispatcher();
 </script>
 
 <button
     class="add-property-button tooltip tw-p-4 tw-flex tw-justify-center tw-items-center"
+    data-testid={testId}
     {style}
     on:click={() => {
         if (disabled) return;
@@ -49,6 +50,7 @@
             bottom: 0;
             padding: 0.5rem 0.25rem;
             height: fit-content;
+
             &::after {
                 bottom: 100%;
                 top: auto;
@@ -69,6 +71,7 @@
             opacity: 0.5;
             cursor: default;
         }
+
         .tooltiptext {
             cursor: default;
         }

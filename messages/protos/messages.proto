@@ -185,6 +185,7 @@ message EditMapCommandWithKeyMessage {
   EditMapCommandMessage editMapCommandMessage = 2;
   repeated string connectedUserTags = 3;
   bool userCanEdit = 4;
+  string userUUID = 5;
 }
 
 message ModifyAreaMessage {

@@ -23,7 +23,7 @@ export class AreasManager {
 
     public addArea(areaData: AreaData): void {
         this.areas.push(new Area(this.scene, areaData, this.areaPermissions.isUserHasAreaAccess(areaData.id)));
-        this.updateMapEditorOptionForThematics();
+        this.updateMapEditorOptionForSpecificAreas();
     }
 
     public updateArea(updatedArea: AtLeast<AreaData, "id">): void {
@@ -34,7 +34,7 @@ export class AreasManager {
         }
         const areaToUpdate = this.areas[indexOfAreaToUpdate];
         areaToUpdate.updateArea(updatedArea, !this.areaPermissions.isUserHasAreaAccess(updatedArea.id));
-        this.updateMapEditorOptionForThematics();
+        this.updateMapEditorOptionForSpecificAreas();
     }
 
     public removeArea(deletedAreaId: string): void {
@@ -45,7 +45,7 @@ export class AreasManager {
         }
         this.areas[removedAreaIndex].destroy();
         this.areas = this.areas.filter((area) => area.areaData.id === deletedAreaId);
-        this.updateMapEditorOptionForThematics();
+        this.updateMapEditorOptionForSpecificAreas();
     }
 
     private initializeAreas() {
@@ -53,11 +53,11 @@ export class AreasManager {
         gameMapAreas.forEach((areaData) =>
             this.areas.push(new Area(this.scene, areaData, !this.areaPermissions.isUserHasAreaAccess(areaData.id)))
         );
-        this.updateMapEditorOptionForThematics();
+        this.updateMapEditorOptionForSpecificAreas();
     }
 
-    private updateMapEditorOptionForThematics() {
-        const isGameMapHasThematics = this.gameMapAreas.isGameMapContainsThematics();
-        mapEditorActivatedForThematics.set(isGameMapHasThematics);
+    private updateMapEditorOptionForSpecificAreas() {
+        const isGameMapHasSpecificAreas = this.gameMapAreas.isGameMapContainsSpecificAreas();
+        mapEditorActivatedForThematics.set(isGameMapHasSpecificAreas);
     }
 }

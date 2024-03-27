@@ -6,17 +6,15 @@
         AreaDataProperties,
         OpenWebsiteTypePropertiesKeys,
         PlayAudioPropertyData,
-        RestrictedRightsPropertyData,
+        PersonalAreaAccessClaimMode,
     } from "@workadventure/map-editor";
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
-    import { InfoIcon } from "svelte-feather-icons";
-    import { IconChevronDown, IconChevronUp } from "@tabler/icons-svelte";
+    import { IconChevronRight, IconChevronDown } from "@tabler/icons-svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import { FEATURE_FLAG_BROADCAST_AREAS } from "../../Enum/EnvironmentVariable";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { connectionManager } from "../../Connection/ConnectionManager";
-    import InputTags from "../Input/InputTags.svelte";
     import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
@@ -27,7 +25,8 @@
     import StartPropertyEditor from "./PropertyEditor/StartPropertyEditor.svelte";
     import ExitPropertyEditor from "./PropertyEditor/ExitPropertyEditor.svelte";
     import AddPropertyButtonWrapper from "./PropertyEditor/AddPropertyButtonWrapper.svelte";
-    import PersonalAreaPropertyEditor from "./PersonalAreaPropertyEditor.svelte";
+    import PersonalAreaPropertyEditor from "./PropertyEditor/PersonalAreaPropertyEditor.svelte";
+    import RightsPropertyEditor from "./PropertyEditor/RightsPropertyEditor.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -42,16 +41,8 @@
     let hasExitProperty: boolean;
     let hasplayAudioProperty: boolean;
     let showDescriptionField = false;
-    let addRights = false;
-
-    type Option = {
-        value: string;
-        label: string;
-        created: undefined | boolean;
-    };
-    let writeTags: Option[] | undefined = [];
-    let readTags: Option[] | undefined = [];
-    let _tag: Option[] = [];
+    let hasPersonalAreaProperty: boolean;
+    let hasRightsProperty: boolean;
 
     let selectedAreaPreviewUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((currentAreaPreview) => {
         if (currentAreaPreview) {
@@ -70,26 +61,6 @@
             } else if (descriptionProperty.type === "areaDescriptionProperties") {
                 areaDescription = descriptionProperty.description ?? "";
                 areaSearchable = descriptionProperty.searchable ?? false;
-            }
-
-            const rightsProperty = $mapEditorSelectedAreaPreviewStore
-                ?.getProperties()
-                .find((property) => property.type === "restrictedRightsPropertyData");
-            if (rightsProperty == undefined) {
-                $mapEditorSelectedAreaPreviewStore?.addProperty({
-                    id: crypto.randomUUID(),
-                    type: "restrictedRightsPropertyData",
-                    writeTags: [],
-                    readTags: [],
-                    searchable: false,
-                });
-            } else if (rightsProperty.type === "restrictedRightsPropertyData") {
-                writeTags = rightsProperty.writeTags.map((tag) => {
-                    return { value: tag, label: tag, created: false };
-                });
-                readTags = rightsProperty.readTags.map((tag) => {
-                    return { value: tag, label: tag, created: false };
-                });
             }
             refreshFlags();
         }
@@ -204,6 +175,21 @@
                     url: "",
                     areaName: "",
                 };
+            case "restrictedRightsPropertyData":
+                return {
+                    id,
+                    type,
+                    readTags: [],
+                    writeTags: [],
+                };
+            case "personalAreaPropertyData":
+                return {
+                    id,
+                    type,
+                    accessClaimMode: PersonalAreaAccessClaimMode.enum.dynamic,
+                    ownerId: "",
+                    allowedTags: [],
+                };
             default:
                 throw new Error(`Unknown property type ${type}`);
         }
@@ -294,6 +280,8 @@
         hasStartProperty = hasProperty("start");
         hasExitProperty = hasProperty("exit");
         hasplayAudioProperty = hasProperty("playAudio");
+        hasPersonalAreaProperty = hasProperty("personalAreaPropertyData");
+        hasRightsProperty = hasProperty("restrictedRightsPropertyData");
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
@@ -326,41 +314,6 @@
 
     function toggleDescriptionField() {
         showDescriptionField = !showDescriptionField;
-    }
-
-    function toggleRight() {
-        addRights = !addRights;
-    }
-
-    function onChangeWriteReadTags() {
-        let areaRightProperties = $mapEditorSelectedAreaPreviewStore
-            ?.getProperties()
-            .find((p) => p.type === "restrictedRightsPropertyData");
-        if (
-            !areaRightProperties ||
-            (areaRightProperties && areaRightProperties.type !== "restrictedRightsPropertyData")
-        ) {
-            areaRightProperties = {
-                id: crypto.randomUUID(),
-                type: "restrictedRightsPropertyData",
-                readTags: [],
-                writeTags: [],
-                searchable: false,
-            } as RestrictedRightsPropertyData;
-            $mapEditorSelectedAreaPreviewStore?.addProperty(areaRightProperties);
-        }
-
-        areaRightProperties.readTags = readTags?.map((tag) => tag.value) ?? [];
-        areaRightProperties.writeTags = writeTags?.map((tag) => tag.value) ?? [];
-        $mapEditorSelectedAreaPreviewStore?.updateProperty(areaRightProperties);
-    }
-
-    function displayRightCounter(writeTags: Option[] = [], readTags: Option[] = []) {
-        const rightSum = writeTags.length + readTags.length;
-        if (rightSum > 0) {
-            return `(${rightSum})`;
-        }
-        return "";
     }
 </script>
 
@@ -441,6 +394,18 @@
                     onAddProperty("openWebsite");
                 }}
             />
+            {#if !hasPersonalAreaProperty && !hasRightsProperty}
+                <AddPropertyButtonWrapper
+                    property="personalAreaPropertyData"
+                    on:click={() => onAddProperty("personalAreaPropertyData")}
+                />
+            {/if}
+            {#if !hasPersonalAreaProperty && !hasRightsProperty}
+                <AddPropertyButtonWrapper
+                    property="restrictedRightsPropertyData"
+                    on:click={() => onAddProperty("restrictedRightsPropertyData")}
+                />
+            {/if}
         </div>
         <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
             <AddPropertyButtonWrapper
@@ -506,11 +471,11 @@
         <div class="area-name-container">
             {#if !showDescriptionField}
                 <button class="tw-pl-0 tw-text-blue-500" on:click={toggleDescriptionField}>
-                    <IconChevronDown />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
+                    <IconChevronRight />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
             {:else}
                 <button class="tw-pl-0 tw-text-blue-500" on:click={toggleDescriptionField}>
-                    <IconChevronUp />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
+                    <IconChevronDown />{$LL.mapEditor.areaEditor.addDescriptionField()}</button
                 >
                 <label for="objectDescription">{$LL.mapEditor.areaEditor.areaDescription()}</label>
                 <textarea
@@ -530,49 +495,6 @@
                 bind:checked={areaSearchable}
                 on:change={onUpdateAreaSearchable}
             />
-        </div>
-        <div class="properties-container">
-            {#if !addRights}
-                <button class="tw-pl-0 tw-text-blue-500" on:click={toggleRight} data-testid="addRights">
-                    <IconChevronDown />{$LL.mapEditor.areaEditor.addRight()}
-                    {displayRightCounter(writeTags, readTags)}
-                </button>
-            {:else}
-                <button class="tw-pl-0 tw-text-blue-500" on:click={toggleRight} data-testid="addRights">
-                    <IconChevronUp />{$LL.mapEditor.areaEditor.addRight()}
-                    {displayRightCounter(writeTags, readTags)}
-                </button>
-                <p class="help-text">
-                    <InfoIcon size="18" />
-                    {$LL.mapEditor.areaEditor.rightWriteDescription()}
-                </p>
-                <InputTags
-                    label={$LL.mapEditor.areaEditor.rightWriteTitle()}
-                    options={_tag}
-                    bind:value={writeTags}
-                    handleChange={onChangeWriteReadTags}
-                    testId="writeTags"
-                />
-                <p class="help-text">
-                    <InfoIcon size="18" />
-                    {$LL.mapEditor.areaEditor.rightReadDescription()}
-                </p>
-                <InputTags
-                    label={$LL.mapEditor.areaEditor.rightReadTitle()}
-                    options={_tag}
-                    bind:value={readTags}
-                    handleChange={onChangeWriteReadTags}
-                    testId="readTags"
-                />
-                {#if writeTags !== undefined && writeTags.length > 0}
-                    <div class="tw-flex tw-flex-wrap tw-gap-1">
-                        {#each writeTags as tag, index (`${index}-${tag.value}`)}
-                            <span class="tw-py-1 tw-px-2 tw-bg-gray-400 tw-text-black tw-rounded-lg">{tag.label}</span>
-                        {/each}
-                    </div>
-                {/if}
-            {/if}
-            <PersonalAreaPropertyEditor />
         </div>
         <div class="properties-container">
             {#each properties as property (property.id)}
@@ -644,6 +566,22 @@
                     {:else if property.type === "exit"}
                         <ExitPropertyEditor
                             {property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "restrictedRightsPropertyData"}
+                        <RightsPropertyEditor
+                            restrictedRightsPropertyData={property}
+                            on:close={() => {
+                                onDeleteProperty(property.id);
+                            }}
+                            on:change={() => onUpdateProperty(property)}
+                        />
+                    {:else if property.type === "personalAreaPropertyData"}
+                        <PersonalAreaPropertyEditor
+                            personalAreaPropertyData={property}
                             on:close={() => {
                                 onDeleteProperty(property.id);
                             }}
