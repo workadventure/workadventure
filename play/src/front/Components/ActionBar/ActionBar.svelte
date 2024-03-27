@@ -431,10 +431,19 @@
                     on:click={() => analyticsClient.follow()}
                     on:click={followClick}
                 >
-                    <Tooltip text={$LL.actionbar.follow()} />
+                    {#if $followStateStore === "active"}
+                        <Tooltip text={$LL.actionbar.unfollow()} />
+                    {:else}
+                        <Tooltip text={$LL.actionbar.follow()} />
+                    {/if}
 
                     <button class:border-top-light={$followStateStore === "active"}>
-                        <img draggable="false" src={followImg} style="padding: 2px" alt="Toggle follow" />
+                        <img
+                            draggable="false"
+                            src={followImg}
+                            style="padding: 2px"
+                            alt={$followStateStore === "active" ? $LL.actionbar.unfollow() : $LL.actionbar.follow()}
+                        />
                     </button>
                 </div>
 

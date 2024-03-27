@@ -33,16 +33,67 @@ test.describe('Scripting follow functions', () => {
             timeout: 10000
         });
 
+        const waitForFollowPromise = evaluateScript(page, async () => {
+            return new Promise<void>((resolve) => {
+                WA.player.proximityMeeting.onFollowed().subscribe(() => {
+                    resolve();
+                });
+            });
+        });
+
         await evaluateScript(page, async () => {
             await WA.player.proximityMeeting.followMe();
             await WA.player.moveTo(300, 300);
         });
 
-        const position = await evaluateScript(page2, async () => {
-            await WA.onInit();
-            return await WA.player.getPosition();
-        });
+        await waitForFollowPromise;
+
+        let position = await Map.getPosition(page2);
+
+        if (position.x < 100) {
+            // Wait a bit, maybe Bob was slow to start
+            await page2.waitForTimeout(2000);
+            position = await Map.getPosition(page2);
+        }
 
         expect(position.x).toBeGreaterThan(100);
+
+        // Now, let's stop loading the users and move to the top right of the map
+        await evaluateScript(page, async () => {
+            await WA.player.proximityMeeting.stopLeading();
+            await WA.player.moveTo(300, 32);
+        });
+
+        // Let's check that Bob is not following us anymore
+        position = await Map.getPosition(page2);
+
+        expect(position.y).toBeGreaterThan(100);
+
+        // Lets move back Bob in the same position as Alice
+        await Map.teleportToPosition(page2, 300, 32);
+
+        // Alice triggers a follow request and bob cancels it
+        await evaluateScript(page, async () => {
+            await WA.player.proximityMeeting.followMe();
+        });
+
+        const waitForUnfollowPromise = evaluateScript(page, async () => {
+            return new Promise<void>((resolve) => {
+                WA.player.proximityMeeting.onUnfollowed().subscribe(() => {
+                    resolve();
+                });
+            });
+        });
+
+        // The follow button is not displayed on mobile
+        if(project.name === "mobilechromium") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
+        await page2.getByRole('button', { name: 'Unfollow' }).click();
+
+        await waitForUnfollowPromise;
     });
 });
