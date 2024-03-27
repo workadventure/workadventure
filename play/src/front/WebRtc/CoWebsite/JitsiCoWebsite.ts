@@ -1,19 +1,18 @@
 import CancelablePromise from "cancelable-promise";
 import { z } from "zod";
 import { get } from "svelte/store";
-import { randomDelay } from "@workadventure/shared-utils/src/RandomDelay/RandomDelay";
-import { inExternalServiceStore } from "../../Stores/MyMediaStore";
-// import { coWebsiteManager } from "../CoWebsiteManager";
+// import { randomDelay } from "@workadventure/shared-utils/src/RandomDelay/RandomDelay";
+// import { inExternalServiceStore } from "../../Stores/MyMediaStore";
 import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
-import { jitsiExternalApiFactory } from "../JitsiExternalApiFactory";
+// import { jitsiExternalApiFactory } from "../JitsiExternalApiFactory";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
-import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
+import { jitsiParticipantsCountStore } from "../../Stores/GameStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
-import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { screenWakeLock } from "../../Utils/ScreenWakeLock";
+// import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
+// import { screenWakeLock } from "../../Utils/ScreenWakeLock";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 
-const JitsiConfig = z
+export const JitsiConfig = z
     .object({
         startWithAudioMuted: z.boolean().optional(),
         startWithVideoMuted: z.boolean().optional(),
@@ -30,7 +29,7 @@ const JitsiConfig = z
 
 type JitsiConfig = z.infer<typeof JitsiConfig>;
 
-interface JitsiOptions {
+export interface JitsiOptions {
     jwt?: string;
     roomName: string;
     width: string;
@@ -67,7 +66,7 @@ const getDefaultConfig = (): JitsiConfig => {
     };
 };
 
-const mergeConfig = (config?: object) => {
+export const mergeConfig = (config?: object) => {
     const currentDefaultConfig = getDefaultConfig();
     if (!config) {
         return currentDefaultConfig;
@@ -84,7 +83,7 @@ const mergeConfig = (config?: object) => {
     };
 };
 
-const defaultInterfaceConfig = {
+export const defaultInterfaceConfig = {
     SHOW_CHROME_EXTENSION_BANNER: false,
     MOBILE_APP_PROMO: false,
 
@@ -134,12 +133,13 @@ const defaultInterfaceConfig = {
 export class JitsiCoWebsite extends SimpleCoWebsite {
 
     private jitsiApi?: JitsiApi;
-    private audioCallback = this.onAudioChange.bind(this);
-    private videoCallback = this.onVideoChange.bind(this);
-    private dominantSpeakerChangedCallback = this.onDominantSpeakerChanged.bind(this);
-    private participantsCountChangeCallback = this.onParticipantsCountChange.bind(this);
+    // private audioCallback = this.onAudioChange.bind(this);
+    // private videoCallback = this.onVideoChange.bind(this);
+    // private dominantSpeakerChangedCallback = this.onDominantSpeakerChanged.bind(this);
+    // private participantsCountChangeCallback = this.onParticipantsCountChange.bind(this);
 
-    private screenWakeRelease: (() => Promise<void>) | undefined;
+    public screenWakeRelease: (() => Promise<void>) | undefined;
+    private loadPromise: CancelablePromise | undefined;
 
     constructor(
         url: URL,
@@ -155,119 +155,118 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         super(url, false, undefined, widthPercent, closable);
     }
 
-    private loadPromise: CancelablePromise | undefined;
 
-    load(): CancelablePromise<HTMLIFrameElement> {
-        let cancelled = false;
-        return (this.loadPromise = new CancelablePromise((resolve, reject, cancel) => {
-            // this.state.set("loading");
+    // load(): CancelablePromise<HTMLIFrameElement> {
+    //     let cancelled = false;
+    //     return (this.loadPromise = new CancelablePromise((resolve, reject, cancel) => {
+    //         // this.state.set("loading");
 
-            inExternalServiceStore.set(true);
+    //         inExternalServiceStore.set(true);
 
-            jitsiExternalApiFactory
-                .loadJitsiScript(this.domain)
-                .then(async () => {
-                    await randomDelay();
-                    const options: JitsiOptions = {
-                        roomName: this.roomName,
-                        jwt: this.jwt,
-                        width: "100%",
-                        height: "100%",
-                        parentNode: HTMLElement.prototype,
-                        configOverwrite: mergeConfig(this.jitsiConfig),
-                        interfaceConfigOverwrite: { ...defaultInterfaceConfig, ...this.jitsiInterfaceConfig },
-                    };
+    //         jitsiExternalApiFactory
+    //             .loadJitsiScript(this.domain)
+    //             .then(async () => {
+    //                 await randomDelay();
+    //                 const options: JitsiOptions = {
+    //                     roomName: this.roomName,
+    //                     jwt: this.jwt,
+    //                     width: "100%",
+    //                     height: "100%",
+    //                     parentNode: HTMLElement.prototype,
+    //                     configOverwrite: mergeConfig(this.jitsiConfig),
+    //                     interfaceConfigOverwrite: { ...defaultInterfaceConfig, ...this.jitsiInterfaceConfig },
+    //                 };
 
-                    if (!options.jwt) {
-                        delete options.jwt;
-                    }
+    //                 if (!options.jwt) {
+    //                     delete options.jwt;
+    //                 }
 
-                    this.jitsiApi = undefined;
+    //                 this.jitsiApi = undefined;
 
-                    const timemoutPromise = new Promise<void>((resolve, reject) => {
-                        setTimeout(() => {
-                            resolve();
-                        }, 2000);
-                    }); //failsafe in case the iframe is deleted before loading or too long to load
+    //                 const timemoutPromise = new Promise<void>((resolve, reject) => {
+    //                     setTimeout(() => {
+    //                         resolve();
+    //                     }, 2000);
+    //                 }); //failsafe in case the iframe is deleted before loading or too long to load
 
-                    const jistiMeetLoadedPromise = new Promise<void>((resolve, reject) => {
-                        options.onload = () => {
-                            resolve();
-                        }; //we want for the iframe to be loaded before triggering animations.
-                        this.jitsiApi = new window.JitsiMeetExternalAPI(this.domain, options);
+    //                 const jistiMeetLoadedPromise = new Promise<void>((resolve, reject) => {
+    //                     options.onload = () => {
+    //                         resolve();
+    //                     }; //we want for the iframe to be loaded before triggering animations.
+    //                     this.jitsiApi = new window.JitsiMeetExternalAPI(this.domain, options);
 
-                        this.jitsiApi.addListener("videoConferenceJoined", () => {
-                            this.jitsiApi?.executeCommand("displayName", this.playerName);
-                            this.jitsiApi?.executeCommand("avatarUrl", get(currentPlayerWokaStore));
-                            this.jitsiApi?.executeCommand("setNoiseSuppressionEnabled", {
-                                enabled: window.navigator.userAgent.toLowerCase().indexOf("firefox") === -1,
-                            });
+    //                     this.jitsiApi.addListener("videoConferenceJoined", () => {
+    //                         this.jitsiApi?.executeCommand("displayName", this.playerName);
+    //                         this.jitsiApi?.executeCommand("avatarUrl", get(currentPlayerWokaStore));
+    //                         this.jitsiApi?.executeCommand("setNoiseSuppressionEnabled", {
+    //                             enabled: window.navigator.userAgent.toLowerCase().indexOf("firefox") === -1,
+    //                         });
 
-                            screenWakeLock
-                                .requestWakeLock()
-                                .then((release) => (this.screenWakeRelease = release))
-                                .catch((error) => console.error(error));
+    //                         screenWakeLock
+    //                             .requestWakeLock()
+    //                             .then((release) => (this.screenWakeRelease = release))
+    //                             .catch((error) => console.error(error));
 
-                            this.updateParticipantsCountStore();
-                        });
+    //                         this.updateParticipantsCountStore();
+    //                     });
 
-                        this.jitsiApi.addListener("audioMuteStatusChanged", this.audioCallback);
-                        this.jitsiApi.addListener("videoMuteStatusChanged", this.videoCallback);
-                        this.jitsiApi.addListener("dominantSpeakerChanged", this.dominantSpeakerChangedCallback);
-                        this.jitsiApi.addListener("participantJoined", this.participantsCountChangeCallback);
-                        this.jitsiApi.addListener("participantLeft", this.participantsCountChangeCallback);
-                        this.jitsiApi.addListener("participantKickedOut", this.participantsCountChangeCallback);
-                    });
+    //                     this.jitsiApi.addListener("audioMuteStatusChanged", this.audioCallback);
+    //                     this.jitsiApi.addListener("videoMuteStatusChanged", this.videoCallback);
+    //                     this.jitsiApi.addListener("dominantSpeakerChanged", this.dominantSpeakerChangedCallback);
+    //                     this.jitsiApi.addListener("participantJoined", this.participantsCountChangeCallback);
+    //                     this.jitsiApi.addListener("participantLeft", this.participantsCountChangeCallback);
+    //                     this.jitsiApi.addListener("participantKickedOut", this.participantsCountChangeCallback);
+    //                 });
 
-                    Promise.race([timemoutPromise, jistiMeetLoadedPromise])
-                        .then(async () => {
+    //                 Promise.race([timemoutPromise, jistiMeetLoadedPromise])
+    //                     .then(async () => {
 
-                            await randomDelay();
-                            const iframe = <HTMLIFrameElement><unknown>('[id*="jitsi" i]');
+    //                         await randomDelay();
+    //                         const iframe = <HTMLIFrameElement><unknown>('[id*="jitsi" i]');
 
-                            if (cancelled /*&& iframe*/) {
-                                console.info("CLOSING BECAUSE CANCELLED AFTER LOAD");
-                                //this.closeOrUnload(iframe);
-                                this.destroy();
-                                return;
-                            }
+    //                         if (cancelled /*&& iframe*/) {
+    //                             console.info("CLOSING BECAUSE CANCELLED AFTER LOAD");
+    //                             //this.closeOrUnload(iframe);
+    //                             this.destroy();
+    //                             return;
+    //                         }
 
-                            if (iframe && this.jitsiApi) {
-                                this.jitsiApi.addListener("videoConferenceLeft", () => {
-                                    this.closeOrUnload();
-                                });
+    //                         if (iframe && this.jitsiApi) {
+    //                             this.jitsiApi.addListener("videoConferenceLeft", () => {
+    //                                 this.closeOrUnload();
+    //                             });
 
-                                this.jitsiApi.addListener("readyToClose", () => {
-                                    this.closeOrUnload();
-                                });
+    //                             this.jitsiApi.addListener("readyToClose", () => {
+    //                                 this.closeOrUnload();
+    //                             });
 
-                                this.iframe = iframe;
-                                this.iframe.classList.add("pixel");
-                                // this.state.set("ready");
-                                return resolve(iframe);
-                            } else {
-                                console.error("No iframe or no jitsiApi. We may have a problem.");
-                            }
-                        })
-                        .catch((e) => {
-                            return reject(e);
-                        });
-                })
-                .catch((e) => {
-                    reject(e);
-                });
+    //                             this.iframe = iframe;
+    //                             this.iframe.classList.add("pixel");
+    //                             // this.state.set("ready");
+    //                             return resolve(iframe);
+    //                         } else {
+    //                             console.error("No iframe or no jitsiApi. We may have a problem.");
+    //                         }
+    //                     })
+    //                     .catch((e) => {
+    //                         return reject(e);
+    //                     });
+    //             })
+    //             .catch((e) => {
+    //                 reject(e);
+    //             });
 
-            cancel(() => {
-                console.info("CLOSING Canceling JitsiCoWebsite");
-                cancelled = true;
-                this.unload().catch((err) => {
-                    console.error("Cannot unload Jitsi co-website while cancel loading", err);
-                });
-            });
-        }));
-    }
+    //         cancel(() => {
+    //             console.info("CLOSING Canceling JitsiCoWebsite");
+    //             cancelled = true;
+    //             this.unload().catch((err) => {
+    //                 console.error("Cannot unload Jitsi co-website while cancel loading", err);
+    //             });
+    //         });
+    //     }));
+    // }
 
-    private closeOrUnload() {
+    closeOrUnload() {
         if (this.screenWakeRelease) {
             this.screenWakeRelease()
                 .then(() => {
@@ -284,94 +283,82 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         }
     }
 
-    unload(): Promise<void> {
-        if (this.loadPromise) {
-            console.info("CLOSING unload JitsiCoWebsite");
-        } else {
-            console.info("CLOSING NOOOOT unload JitsiCoWebsite");
-        }
-        try {
-            this.loadPromise?.cancel();
-            this.destroy();
-            inExternalServiceStore.set(false);
+    // unload(): Promise<void> {
+    //     if (this.loadPromise) {
+    //         console.info("CLOSING unload JitsiCoWebsite");
+    //     } else {
+    //         console.info("CLOSING NOOOOT unload JitsiCoWebsite");
+    //     }
+    //     try {
+    //         this.loadPromise?.cancel();
+    //         this.destroy();
+    //         inExternalServiceStore.set(false);
 
-            return super.unload();
-        } catch (e) {
-            console.error("Cannot unload Jitsi co-website", e);
-            return Promise.reject(e);
-        }
-    }
-
-    getOptions(): JitsiOptions {
-        return {
-            roomName: this.roomName,
-            jwt: this.jwt,
-            width: "100%",
-            height: "100%",
-            parentNode: HTMLDivElement.prototype,  //a voir avant c'était coWebsiteManager.getCoWebsiteBuffer()
-            configOverwrite: mergeConfig(this.jitsiConfig),
-            interfaceConfigOverwrite: { ...defaultInterfaceConfig, ...this.jitsiInterfaceConfig }
-        };
-    }
+    //         return super.unload();
+    //     } catch (e) {
+    //         console.error("Cannot unload Jitsi co-website", e);
+    //         return Promise.reject(e);
+    //     }
+    // }
 
     getDomain(): string {
         return this.domain;
     }
 
-    public stop() {
-        if (!this.jitsiApi) {
-            return;
-        }
+    // public stop() {
+    //     if (!this.jitsiApi) {
+    //         return;
+    //     }
 
-        this.jitsiApi.removeListener("audioMuteStatusChanged", this.audioCallback);
-        this.jitsiApi.removeListener("videoMuteStatusChanged", this.videoCallback);
-    }
+    //     this.jitsiApi.removeListener("audioMuteStatusChanged", this.audioCallback);
+    //     this.jitsiApi.removeListener("videoMuteStatusChanged", this.videoCallback);
+    // }
 
-    public destroy() {
-        userIsJitsiDominantSpeakerStore.set(false);
-        jitsiParticipantsCountStore.set(0);
-        if (!this.jitsiApi) {
-            return;
-        }
+    // destroy() {
+    //     userIsJitsiDominantSpeakerStore.set(false);
+    //     jitsiParticipantsCountStore.set(0);
+    //     if (!this.jitsiApi) {
+    //         return;
+    //     }
 
-        this.stop();
-        this.jitsiApi?.dispose();
-    }
+    //     this.stop();
+    //     this.jitsiApi?.dispose();
+    // }
 
 
-    private onAudioChange({ muted }: { muted: boolean }): void {
-        if (muted) {
-            requestedMicrophoneState.disableMicrophone();
-        } else {
-            requestedMicrophoneState.enableMicrophone();
-        }
-    }
+    // private onAudioChange({ muted }: { muted: boolean }): void {
+    //     if (muted) {
+    //         requestedMicrophoneState.disableMicrophone();
+    //     } else {
+    //         requestedMicrophoneState.enableMicrophone();
+    //     }
+    // }
 
-    private onVideoChange({ muted }: { muted: boolean }): void {
-        if (muted) {
-            requestedCameraState.disableWebcam();
-        } else {
-            requestedCameraState.enableWebcam();
-        }
-    }
+    // private onVideoChange({ muted }: { muted: boolean }): void {
+    //     if (muted) {
+    //         requestedCameraState.disableWebcam();
+    //     } else {
+    //         requestedCameraState.enableWebcam();
+    //     }
+    // }
 
-    private onDominantSpeakerChanged(data: { id: string }): void {
-        if (this.jitsiApi) {
-            userIsJitsiDominantSpeakerStore.set(
-                data.id === this.getCurrentParticipantId(this.jitsiApi.getParticipantsInfo())
-            );
-        }
-    }
+    // onDominantSpeakerChanged(data: { id: string }): void {
+    //     if (this.jitsiApi) {
+    //         userIsJitsiDominantSpeakerStore.set(
+    //             data.id === this.getCurrentParticipantId(this.jitsiApi.getParticipantsInfo())
+    //         );
+    //     }
+    // }
 
-    private onParticipantsCountChange(): void {
+    public onParticipantsCountChange(): void {
         this.updateParticipantsCountStore();
     }
 
-    private updateParticipantsCountStore(): void {
+    public updateParticipantsCountStore(): void {
         jitsiParticipantsCountStore.set(this.jitsiApi?.getParticipantsInfo().length ?? 0);
     }
 
-    private getCurrentParticipantId(
+    getCurrentParticipantId(
         participants: { displayName: string; participantId: string }[]
     ): string | undefined {
         const currentPlayerName = gameManager.getPlayerName();

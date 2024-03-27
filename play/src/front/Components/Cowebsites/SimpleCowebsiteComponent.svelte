@@ -1,15 +1,16 @@
 <script lang="ts">
-    import { onMount } from "svelte";
     import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 
     export let actualCowebsite: SimpleCoWebsite;
 
-    onMount(() => {
-        actualCowebsite.load().catch((e) => {
-            console.error(e);
-        });
-    });
+    // Mettre la fonction load du SimpleCoWebsite dans le onMount et le unload dans le onDestroy
 </script>
 
-<!-- svelte-ignore a11y-missing-attribute -->
-<iframe src={actualCowebsite.getUrl().toString()} frameborder="0" width="100%" height="100%" />
+<iframe
+    src={actualCowebsite.getUrl().toString()}
+    frameborder="0"
+    width="100%"
+    height="100%"
+    class="bg-white"
+    title="Cowebsite"
+/>
