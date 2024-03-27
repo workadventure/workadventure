@@ -112,8 +112,6 @@ export class PathfindingManager {
             this.easyStar.findPath(start.x, start.y, end.x, end.y, (path) => {
                 if (path === null) {
                     resolve([]);
-                } else if (!Array.isArray(path)) {
-                    resolve([path]);
                 } else {
                     resolve(path);
                 }

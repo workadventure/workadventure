@@ -101,9 +101,7 @@
                 .getCurrentGameScene()
                 .getGameMapFrontWrapper()
                 .getTileIndexAt($mapExplorationObjectSelectedStore.x, $mapExplorationObjectSelectedStore.y);
-            gameManager
-                .getCurrentGameScene()
-                .moveTo(position, true, $mapExplorationObjectSelectedStore instanceof Entity);
+            gameManager.getCurrentGameScene().moveTo(position, true, true);
             gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
 
             // Close map editor to walk on the entity or zone
