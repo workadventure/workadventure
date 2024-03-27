@@ -133,17 +133,6 @@ export const PersonalAreaPropertyData = PropertyBase.extend({
     allowedTags: z.array(z.string()).default([]),
     ownerId: z.string().default(""),
 });
-
-export const PersonalAreaAccessClaimMode = z.enum(["dynamic", "static"]);
-
-export const PersonalAreaPropertyData = PropertyBase.extend({
-    type: z.literal("personalAreaPropertyData"),
-    isPersonalArea: z.boolean().default(false),
-    accessClaimMode: PersonalAreaAccessClaimMode,
-    allowedTags: z.array(z.string()).default([]),
-    owner: z.string().default(""),
-});
-
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,

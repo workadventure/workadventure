@@ -1,9 +1,9 @@
 <script lang="ts">
     import { mapEditorAskToClaimPersonalAreaStore } from "../../Stores/MapEditorStore";
-    import { PersonalAreaPropertyEditorRules } from "../../Rules/PersonalAreaPropertyEditorRules/PersonalAreaPropertyEditorRules";
     import LL from "../../../i18n/i18n-svelte";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
-    const personalAreaPropertyEditorRules = new PersonalAreaPropertyEditorRules();
+    const mapEditorModeManager = gameManager.getCurrentGameScene().getMapEditorModeManager();
 </script>
 
 <div
@@ -11,10 +11,7 @@
 >
     <p class="tw-mt-2">{$LL.area.personalArea.claimDescription()}</p>
     <div class="tw-flex tw-flex-row tw-justify-evenly">
-        <button
-            type="button"
-            class="btn light accept-request"
-            on:click={() => personalAreaPropertyEditorRules.claimArea()}
+        <button type="button" class="btn light accept-request" on:click={() => mapEditorModeManager.claimPersonalArea()}
             >{$LL.area.personalArea.buttons.yes()}
         </button>
         <button
