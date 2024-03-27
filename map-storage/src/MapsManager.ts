@@ -96,10 +96,6 @@ class MapsManager {
 
     public async loadWAMToMemory(key: string): Promise<GameMap> {
         const file = await fileSystem.readFileAsString(key);
-        const oldGameMap = this.loadedMaps.get(key);
-        if (oldGameMap) {
-            return oldGameMap;
-        }
         const wam = WAMFileFormat.parse(JSON.parse(file));
 
         const gameMap = new GameMap(this.getMockITiledMap(), wam);
