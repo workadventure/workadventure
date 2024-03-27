@@ -340,6 +340,7 @@ export enum GameMapProperties {
     JITSI_URL = "jitsiUrl",
     JITSI_WIDTH = "jitsiWidth",
     JITSI_NO_PREFIX = "jitsiNoPrefix",
+    JITSI_CLOSABLE = "jitsiClosable",
     LISTENER_MEGAPHONE = "listenerMegaphone",
     NAME = "name",
     OPEN_TAB = "openTab",
