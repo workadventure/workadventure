@@ -1,4 +1,4 @@
-import {expect, test} from '@playwright/test';
+import {expect, test, webkit} from '@playwright/test';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
 import Map from './utils/map';
@@ -6,6 +6,13 @@ import {publicTestMapUrl} from "./utils/urls";
 
 test.describe('Scripting follow functions', () => {
     test('can trigger follow from script', async ({ page, browser}, { project }) => {
+        // It seems WebRTC fails to start on Webkit
+        if(browser.browserType() === webkit) {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+        }
+
         await page.goto(
             publicTestMapUrl("tests/E2E/empty.json", "scripting_follow")
         );
