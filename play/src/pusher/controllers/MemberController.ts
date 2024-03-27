@@ -34,8 +34,9 @@ export class MemberController extends BaseHttpController {
      *        type: "string"
      *     responses:
      *       200:
-     *         description: Member list or empty list.
-     *         example: "ok"
+     *        description: Member list or empty list.
+     *        schema:
+     *            $ref: '#/definitions/MemberData'
      */
     searchMembers(): void {
         this.app.options("/members", (req, res) => {
