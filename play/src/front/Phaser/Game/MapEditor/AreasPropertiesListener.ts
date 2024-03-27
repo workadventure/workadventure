@@ -451,9 +451,10 @@ export class AreasPropertiesListener {
 
     private handlePersonalAreaPropertyOnEnter(property: PersonalAreaPropertyData, area: AreaData): void {
         if (property.accessClaimMode === PersonalAreaAccessClaimMode.enum.dynamic) {
-            const userHasAllowedTagToClaimTheArea = property.allowedTags.some((tag) =>
-                this.scene.connection?.hasTag(tag)
-            );
+            const userHasAllowedTagToClaimTheArea =
+                localUserStore.isLogged() &&
+                (property.allowedTags.length === 0 ||
+                    property.allowedTags.some((tag) => this.scene.connection?.hasTag(tag)));
             const areaHasNoOwner = property.ownerId.trim().length === 0;
             if (userHasAllowedTagToClaimTheArea && areaHasNoOwner) {
                 mapEditorAskToClaimPersonalAreaStore.set(area);
