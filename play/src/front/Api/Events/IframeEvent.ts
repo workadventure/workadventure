@@ -387,6 +387,14 @@ export const isIframeResponseEvent = z.union([
         data: z.undefined(),
     }),
     z.object({
+        type: z.literal("onFollowed"),
+        data: isParticipantProximityMeetingEvent,
+    }),
+    z.object({
+        type: z.literal("onUnfollowed"),
+        data: isParticipantProximityMeetingEvent,
+    }),
+    z.object({
         type: z.literal("enterEvent"),
         data: isEnterLeaveEvent,
     }),
@@ -663,6 +671,10 @@ export const iframeQueryMapTypeGuards = {
         answer: z.undefined(),
     },
     followMe: {
+        query: z.undefined(),
+        answer: z.undefined(),
+    },
+    stopLeading: {
         query: z.undefined(),
         answer: z.undefined(),
     },

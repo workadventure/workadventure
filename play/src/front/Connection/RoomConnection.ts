@@ -60,6 +60,9 @@ import {
     AskMutedMessage,
     AskMutedVideoMessage,
     ModifiyWAMMetadataMessage,
+    FollowRequestMessage,
+    FollowConfirmationMessage,
+    FollowAbortMessage,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
@@ -75,7 +78,7 @@ import {
     menuVisiblilityStore,
     warningBannerStore,
 } from "../Stores/MenuStore";
-import { followRoleStore, followStateStore, followUsersStore } from "../Stores/FollowStore";
+import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
 import { ENABLE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
@@ -89,7 +92,6 @@ import { currentLiveStreamingNameStore } from "../Stores/MegaphoneStore";
 import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
 import { isSpeakerStore } from "../Stores/MediaStore";
 import { chatZoneLiveStore } from "../Stores/ChatStore";
-import { localUserStore } from "./LocalUserStore";
 import { connectionManager } from "./ConnectionManager";
 import { adminMessagesService } from "./AdminMessagesService";
 import type {
@@ -172,6 +174,15 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _refreshRoomMessageStream = new Subject<RefreshRoomMessage>();
     public readonly refreshRoomMessageStream = this._refreshRoomMessageStream.asObservable();
+
+    private readonly _followRequestMessageStream = new Subject<FollowRequestMessage>();
+    public readonly followRequestMessageStream = this._followRequestMessageStream.asObservable();
+
+    private readonly _followConfirmationMessageStream = new Subject<FollowConfirmationMessage>();
+    public readonly followConfirmationMessageStream = this._followConfirmationMessageStream.asObservable();
+
+    private readonly _followAbortMessageStream = new Subject<FollowAbortMessage>();
+    public readonly followAbortMessageStream = this._followAbortMessageStream.asObservable();
 
     private readonly _itemEventMessageStream = new Subject<{
         itemId: number;
@@ -669,28 +680,15 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "followRequestMessage": {
-                    if (!localUserStore.getIgnoreFollowRequests()) {
-                        if (message.followRequestMessage.forceFollow) {
-                            // If forceFollow, we emit directly back the followConfirmationMessage
-                            followUsersStore.addFollowRequest(message.followRequestMessage.leader);
-                            followStateStore.set("active");
-                            this.emitFollowConfirmation();
-                        } else {
-                            followUsersStore.addFollowRequest(message.followRequestMessage.leader);
-                        }
-                    }
+                    this._followRequestMessageStream.next(message.followRequestMessage);
                     break;
                 }
                 case "followConfirmationMessage": {
-                    followUsersStore.addFollower(message.followConfirmationMessage.follower);
+                    this._followConfirmationMessageStream.next(message.followConfirmationMessage);
                     break;
                 }
                 case "followAbortMessage": {
-                    if (get(followRoleStore) === "follower") {
-                        followUsersStore.stopFollowing();
-                    } else {
-                        followUsersStore.removeFollower(message.followAbortMessage.follower);
-                    }
+                    this._followAbortMessageStream.next(message.followAbortMessage);
                     break;
                 }
                 case "errorMessage": {
@@ -1191,7 +1189,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitFollowConfirmation(): void {
+    public emitFollowConfirmation(leaderId: number): void {
         if (!this.userId) {
             return;
         }
@@ -1200,7 +1198,7 @@ export class RoomConnection implements RoomConnection {
             message: {
                 $case: "followConfirmationMessage",
                 followConfirmationMessage: {
-                    leader: get(followUsersStore)[0],
+                    leader: leaderId,
                     follower: this.userId,
                 },
             },

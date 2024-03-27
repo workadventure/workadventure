@@ -171,6 +171,7 @@ import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManag
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { faviconManager } from "./../../WebRtc/FaviconManager";
+import { FollowManager } from "./FollowManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -276,6 +277,7 @@ export class GameScene extends DirtyScene {
     private sharedVariablesManager!: SharedVariablesManager;
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
+    private followManager!: FollowManager;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private areaManager!: DynamicAreaManager;
@@ -1126,6 +1128,9 @@ export class GameScene extends DirtyScene {
 
                 // Set up events manager
                 this.scriptingEventsManager = new ScriptingEventsManager(this.connection);
+
+                // Set up follow manager
+                this.followManager = new FollowManager(this.connection, this.remotePlayersRepository);
 
                 // Set up variables manager
                 this.sharedVariablesManager = new SharedVariablesManager(
@@ -2443,10 +2448,6 @@ ${escapedMessage}
             const soundUrl = new URL(message.url, this.mapUrlFile);
             await this.simplePeer.dispatchSound(soundUrl);
         });
-
-        iframeListener.registerAnswerer("followMe", () => {
-            this.connection?.emitFollowRequest(true);
-        });
     }
 
     private setPropertyLayer(
@@ -2618,6 +2619,7 @@ ${escapedMessage}
         this.playersEventDispatcher.cleanup();
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
+        this.followManager?.close();
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup

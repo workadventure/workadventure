@@ -2,7 +2,8 @@ import type { BaseTranslation } from "../i18n-types";
 
 const actionbar: BaseTranslation = {
     chat: "Chat wótcyniś / zacyniś",
-    follow: "Folgen / Entfolgen",
+    follow: "Folgen",
+    unfollow: "Entfolgen",
     lock: "Diskusiju blokěrowaś / naspjet aktiwěrowaś",
     screensharing: "Pśenosowanje wobrazowki aktiwěrowaś/deaktiwěrowaś",
     layout: "Kachlowy naglěd aktiwěrowaś/deaktiwěrowaś",
