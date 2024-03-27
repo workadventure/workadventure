@@ -662,6 +662,10 @@ export const iframeQueryMapTypeGuards = {
         query: isPlaySoundInBubbleEvent,
         answer: z.undefined(),
     },
+    followMe: {
+        query: z.undefined(),
+        answer: z.undefined(),
+    },
 };
 
 type IframeQueryMapTypeGuardsType = typeof iframeQueryMapTypeGuards;

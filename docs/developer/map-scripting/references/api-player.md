@@ -501,3 +501,17 @@ await WA.player.proximityMeeting.playSound("https://example.com/my_sound.mp3");
 ```
 
 The method returns a promise that resolves when the sound has been played.
+
+## Asking users to follow you
+
+:::warning
+This feature is experimental. The signature of the function might change in the future.
+:::
+
+```ts
+WA.player.proximityMeeting.followMe(): Promise<void>
+```
+
+The `followMe` function asks all the players in the same bubble to follow the player who called the function.
+Unlike the "follow" button in the UI, all the players in the bubble will be forced to follow the player who called the function.
+They can still stop following the player by clicking on the "stop following" button in the UI.
