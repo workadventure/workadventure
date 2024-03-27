@@ -1014,7 +1014,8 @@ export class GameMapFrontWrapper {
     }
 
     public triggerAllProperties(): void {
-        const newProps = this.getProperties(this.key ?? 0);
+        if (this.key === undefined) return;
+        const newProps = this.getProperties(this.key);
         const oldProps = this.lastProperties;
         this.lastProperties = newProps;
 
