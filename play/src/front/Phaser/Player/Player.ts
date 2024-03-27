@@ -92,7 +92,7 @@ export class Player extends Character {
 
     public startFollowing() {
         followStateStore.set("active");
-        this.scene.connection?.emitFollowConfirmation();
+        this.scene.connection?.emitFollowConfirmation(get(followUsersStore)[0]);
     }
 
     public async setPathToFollow(

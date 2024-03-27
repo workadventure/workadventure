@@ -9,6 +9,8 @@ import { apiCallback } from "../registeredCallbacks";
 let joinStream: Subject<RemotePlayer[]>;
 let participantJoinStream: Subject<RemotePlayer>;
 let participantLeaveStream: Subject<RemotePlayer>;
+let followedStream: Subject<RemotePlayer>;
+let unfollowedStream: Subject<RemotePlayer>;
 let leaveStream: Subject<void>;
 
 export class WorkadventureProximityMeetingCommands extends IframeApiContribution<WorkadventureProximityMeetingCommands> {
@@ -35,6 +37,18 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
             type: "leaveProximityMeetingEvent",
             callback: () => {
                 leaveStream?.next();
+            },
+        }),
+        apiCallback({
+            type: "onFollowed",
+            callback: (payloadData: ParticipantProximityMeetingEvent) => {
+                followedStream?.next(new RemotePlayer(payloadData.user));
+            },
+        }),
+        apiCallback({
+            type: "onUnfollowed",
+            callback: (payloadData: ParticipantProximityMeetingEvent) => {
+                unfollowedStream?.next(new RemotePlayer(payloadData.user));
             },
         }),
     ];
@@ -111,6 +125,33 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
             type: "followMe",
             data: undefined,
         });
+    }
+
+    async stopLeading(): Promise<void> {
+        await queryWorkadventure({
+            type: "stopLeading",
+            data: undefined,
+        });
+    }
+
+    /**
+     * Triggered when a player starts following us.
+     */
+    onFollowed(): Subject<RemotePlayer> {
+        if (followedStream === undefined) {
+            followedStream = new Subject<RemotePlayer>();
+        }
+        return followedStream;
+    }
+
+    /**
+     * Triggered when a player stops following us.
+     */
+    onUnfollowed(): Subject<RemotePlayer> {
+        if (unfollowedStream === undefined) {
+            unfollowedStream = new Subject<RemotePlayer>();
+        }
+        return unfollowedStream;
     }
 }
 

@@ -40,6 +40,13 @@ class Map {
         });
     }
 
+    async getPosition(page: Page){
+        return await evaluateScript(page, async () => {
+            await WA.onInit();
+            return await WA.player.getPosition();
+        });
+    }
+
     url(end: string){
         return `${play_url}/~/maps/${end}.wam?phaserMode=${RENDERER_MODE}`;
     }

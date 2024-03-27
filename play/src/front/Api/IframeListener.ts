@@ -751,6 +751,24 @@ class IframeListener {
         });
     }
 
+    sendFollowedEvent(follower: AddPlayerEvent) {
+        this.postMessage({
+            type: "onFollowed",
+            data: {
+                user: follower,
+            },
+        });
+    }
+
+    sendUnfollowedEvent(follower: AddPlayerEvent) {
+        this.postMessage({
+            type: "onUnfollowed",
+            data: {
+                user: follower,
+            },
+        });
+    }
+
     sendEnterEvent(name: string) {
         this.postMessage({
             type: "enterEvent",
