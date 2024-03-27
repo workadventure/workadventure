@@ -7,10 +7,9 @@ import {
     DeleteObjectsCommand,
     GetObjectCommand,
     HeadObjectCommand,
-    ListObjectsCommand,
-    ListObjectsCommandInput,
-    ListObjectsCommandOutput,
     ListObjectsV2Command,
+    ListObjectsV2CommandInput,
+    ListObjectsV2CommandOutput,
     NoSuchKey,
     PutObjectCommand,
     S3,
@@ -46,19 +45,17 @@ export class S3FileSystem implements FileSystemInterface {
         }
 
         // Delete all files in the S3 bucket
-        let listObjectsResponse: ListObjectsCommandOutput;
-        let pageMarker: string | undefined;
+        let listObjectsResponse: ListObjectsV2CommandOutput;
+        let continuationToken: string | undefined;
         do {
-            const command: ListObjectsCommandInput = {
+            const command: ListObjectsV2CommandInput = {
                 Bucket: this.bucketName,
                 MaxKeys: 1000,
                 Prefix: directory,
+                ContinuationToken: continuationToken,
             };
-            if (pageMarker) {
-                command.Marker = pageMarker;
-            }
 
-            listObjectsResponse = await this.s3.send(new ListObjectsCommand(command));
+            listObjectsResponse = await this.s3.send(new ListObjectsV2Command(command));
             const objects = listObjectsResponse.Contents;
 
             if (objects && objects.length > 0) {
@@ -68,11 +65,8 @@ export class S3FileSystem implements FileSystemInterface {
                         Delete: { Objects: objects.map((o) => ({ Key: o.Key })) },
                     })
                 );
-
-                if (listObjectsResponse.IsTruncated) {
-                    pageMarker = objects.slice(-1)[0].Key;
-                }
             }
+            continuationToken = listObjectsResponse.NextContinuationToken;
         } while (listObjectsResponse.IsTruncated);
     }
 
@@ -94,18 +88,16 @@ export class S3FileSystem implements FileSystemInterface {
         }
 
         // Delete all files in the S3 bucket
-        let listObjectsResponse: ListObjectsCommandOutput;
-        let pageMarker: string | undefined;
+        let listObjectsResponse: ListObjectsV2CommandOutput;
+        let continuationToken: string | undefined;
         do {
-            const command: ListObjectsCommandInput = {
+            const command: ListObjectsV2CommandInput = {
                 Bucket: this.bucketName,
                 MaxKeys: 1000,
                 Prefix: directory,
+                ContinuationToken: continuationToken,
             };
-            if (pageMarker) {
-                command.Marker = pageMarker;
-            }
-            listObjectsResponse = await this.s3.send(new ListObjectsCommand(command));
+            listObjectsResponse = await this.s3.send(new ListObjectsV2Command(command));
             const objects = listObjectsResponse.Contents;
 
             if (objects && objects.length > 0) {
@@ -129,11 +121,8 @@ export class S3FileSystem implements FileSystemInterface {
                         },
                     })
                 );
-
-                if (listObjectsResponse.IsTruncated) {
-                    pageMarker = objects.slice(-1)[0].Key;
-                }
             }
+            continuationToken = listObjectsResponse.NextContinuationToken;
         } while (listObjectsResponse.IsTruncated);
     }
 
@@ -221,24 +210,22 @@ export class S3FileSystem implements FileSystemInterface {
     }
 
     async listFiles(virtualDirectory: string, extension?: string): Promise<string[]> {
-        let listObjectsResponse: ListObjectsCommandOutput;
-        let pageMarker: string | undefined;
+        let listObjectsResponse: ListObjectsV2CommandOutput;
+        let continuationToken: string | undefined;
         const allObjects = [];
         do {
-            const command: ListObjectsCommandInput = {
+            const command: ListObjectsV2CommandInput = {
                 Bucket: this.bucketName,
                 MaxKeys: 1000,
                 Prefix: virtualDirectory,
+                ContinuationToken: continuationToken,
             };
-            if (pageMarker) {
-                command.Marker = pageMarker;
-            }
-            listObjectsResponse = await this.s3.send(new ListObjectsCommand(command));
+            listObjectsResponse = await this.s3.send(new ListObjectsV2Command(command));
             const objects = listObjectsResponse.Contents;
             if (objects) {
                 allObjects.push(...objects);
             }
-            pageMarker = listObjectsResponse.NextMarker;
+            continuationToken = listObjectsResponse.NextContinuationToken;
         } while (listObjectsResponse.IsTruncated);
 
         const recordsPaths: string[] = allObjects.map((record) => record.Key ?? "") ?? [];
@@ -328,18 +315,16 @@ export class S3FileSystem implements FileSystemInterface {
         }
 
         // Zip all files in the S3 bucket
-        let listObjectsResponse: ListObjectsCommandOutput;
-        let pageMarker: string | undefined;
+        let listObjectsResponse: ListObjectsV2CommandOutput;
+        let continuationToken: string | undefined;
         do {
-            const command: ListObjectsCommandInput = {
+            const command: ListObjectsV2CommandInput = {
                 Bucket: this.bucketName,
                 MaxKeys: 1000,
                 Prefix: virtualPath,
+                ContinuationToken: continuationToken,
             };
-            if (pageMarker) {
-                command.Marker = pageMarker;
-            }
-            listObjectsResponse = await this.s3.send(new ListObjectsCommand(command));
+            listObjectsResponse = await this.s3.send(new ListObjectsV2Command(command));
             const objects = listObjectsResponse.Contents;
 
             if (objects) {
@@ -363,10 +348,8 @@ export class S3FileSystem implements FileSystemInterface {
                     }
                     archiver.append(Body as Readable, { name: file.Key.substring(virtualPath.length) });
                 }
-                if (listObjectsResponse.IsTruncated) {
-                    pageMarker = objects.slice(-1)[0].Key;
-                }
             }
+            continuationToken = listObjectsResponse.NextContinuationToken;
         } while (listObjectsResponse.IsTruncated);
     }
 }
