@@ -58,23 +58,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             }
         }
         const camera = this.gameScene.getCameraManager().getCamera();
-        const index = this.gameScene
-            .getGameMap()
-            .getTileIndexAt(pointer.x + camera.scrollX, pointer.y + camera.scrollY);
-        const startTile = this.gameScene
-            .getGameMap()
-            .getTileIndexAt(this.gameScene.CurrentPlayer.x, this.gameScene.CurrentPlayer.y);
-        this.gameScene
-            .getPathfindingManager()
-            .findPath(startTile, index, true, true)
-            .then((path) => {
-                // Remove first step as it is for the tile we are currently standing on
-                path.shift();
-                this.gameScene.CurrentPlayer.setPathToFollow(path).catch(() => {});
-            })
-            .catch((reason) => {
-                console.warn(reason);
-            });
+        this.gameScene.moveTo({
+            x: pointer.x + camera.scrollX,
+            y: pointer.y + camera.scrollY,
+        }, true).catch((reason) => {
+            console.warn(reason);
+        });
     }
 
     public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
