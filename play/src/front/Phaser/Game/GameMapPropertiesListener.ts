@@ -134,9 +134,6 @@ export class GameMapPropertiesListener {
 
                 inJitsiStore.set(true);
 
-                // TODO create new property to allow to close the jitsi room
-                //const closable = allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined;
-
                 const isJitsiConfig = z.string().optional().safeParse(allProps.get(GameMapProperties.JITSI_CONFIG));
                 const isJitsiInterfaceConfig = z
                     .string()
@@ -153,10 +150,16 @@ export class GameMapPropertiesListener {
                     GameMapProperties.JITSI_INTERFACE_CONFIG
                 );
 
+                const isJitsiClosable = z
+                    .boolean()
+                    .optional()
+                    .safeParse(allProps.get(GameMapProperties.JITSI_CLOSABLE));
+                const jitsiClosable = isJitsiClosable.success ? isJitsiClosable.data : true;
+
                 const coWebsite = new JitsiCoWebsite(
                     new URL(domain),
                     jitsiWidth,
-                    true,
+                    jitsiClosable,
                     roomName,
                     gameManager.getPlayerName() ?? "unknown",
                     jwt,
