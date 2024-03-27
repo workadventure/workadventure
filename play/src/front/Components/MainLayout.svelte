@@ -38,7 +38,7 @@
         changeStatusConfirmationModalVisibility,
         notificationPermissionModalVisibility,
     } from "../Stores/AvailabilityStatusModalsStore";
-    import { mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
+    import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import ActionBar from "./ActionBar/ActionBar.svelte";
@@ -72,6 +72,7 @@
     import Popup from "./Modal/Popup.svelte";
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
+    import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -177,6 +178,10 @@
 
         {#if $askDialogStore}
             <MuteDialogBox />
+        {/if}
+
+        {#if $mapEditorAskToClaimPersonalAreaStore}
+            <ClaimPersonalAreaDialogBox />
         {/if}
 
         {#if $showModalGlobalComminucationVisibilityStore}

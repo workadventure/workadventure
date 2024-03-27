@@ -1,4 +1,4 @@
-import { Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
+import { AreaData, Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
 import { Unsubscriber, get } from "svelte/store";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import pLimit from "p-limit";
@@ -17,6 +17,7 @@ import { FrontCommand } from "./Commands/FrontCommand";
 import { TrashEditorTool } from "./Tools/TrashEditorTool";
 import { ExplorerTool } from "./Tools/ExplorerTool";
 import { CloseTool } from "./Tools/CloseTool";
+import { UpdateAreaFrontCommand } from "./Commands/Area/UpdateAreaFrontCommand";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
@@ -439,5 +440,17 @@ export class MapEditorModeManager {
 
     public getScene(): GameScene {
         return this.scene;
+    }
+
+    public claimPersonalArea(newAreaData: AreaData, oldAreaData: AreaData) {
+        this.executeCommand(
+            new UpdateAreaFrontCommand(
+                this.getScene().getGameMap(),
+                newAreaData,
+                undefined,
+                oldAreaData,
+                this.editorTools.AreaEditor as AreaEditorTool
+            )
+        ).catch((error) => console.error(error));
     }
 }
