@@ -6,6 +6,7 @@
         defaultInterfaceConfig,
         mergeConfig,
         JitsiOptions,
+        JitsiConfig,
     } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { jitsiExternalApiFactory } from "../../WebRtc/JitsiExternalApiFactory";
     import { screenWakeLock } from "../../Utils/ScreenWakeLock";
@@ -31,30 +32,34 @@
             );
         }
     };
-    let dominantSpeakerChangedCallback = onDominantSpeakerChanged.bind(this);
+    let dominantSpeakerChangedCallback = onDominantSpeakerChanged.bind(actualCowebsite);
 
     const onAudioChange = (muted: boolean) => {
         if (muted) {
+            console.log("MICRO MUTED");
             requestedMicrophoneState.disableMicrophone();
         } else {
+            console.log("MICRO UNMUTED");
             requestedMicrophoneState.enableMicrophone();
         }
     };
-    let audioCallback = onAudioChange.bind(this);
+    let audioCallback = onAudioChange.bind(actualCowebsite);
 
     const onVideoChange = (muted: boolean) => {
         if (muted) {
+            console.log("VIDEO MUTED");
             requestedCameraState.disableWebcam();
         } else {
+            console.log("VIDEO UNMUTED");
             requestedCameraState.enableWebcam();
         }
     };
-    let videoCallback = onVideoChange.bind(this);
+    let videoCallback = onVideoChange.bind(actualCowebsite);
 
     const onParticipantsCountChange = () => {
         actualCowebsite.updateParticipantsCountStore();
     };
-    let participantsCountChangeCallback = onParticipantsCountChange.bind(this);
+    let participantsCountChangeCallback = onParticipantsCountChange.bind(actualCowebsite);
 
     onMount(() => {
         let cancelled = false;
@@ -77,6 +82,10 @@
                     },
                 };
                 console.log("OPTIONS :", options);
+
+                if (!options.jwt) {
+                    delete options.jwt;
+                }
 
                 const timemoutPromise = new Promise<void>((resolve) => {
                     setTimeout(() => {
@@ -113,6 +122,7 @@
                     jitsiApi.addListener("participantLeft", participantsCountChangeCallback);
                     jitsiApi.addListener("participantKickedOut", participantsCountChangeCallback);
                 });
+                console.log(options);
 
                 Promise.race([timemoutPromise, jistiMeetLoadedPromise])
                     .then(async () => {
