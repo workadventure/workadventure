@@ -22,10 +22,7 @@
     let roomName: string;
     let playerName = gameManager.getPlayerName();
     let jwt: string | undefined;
-    let jitsiConfig: object | undefined;
-    let jitsiInterfaceConfig: object | undefined;
     let jitsiApi: JitsiApi;
-    let defaultInterfaceConfigCopy = { ...defaultInterfaceConfig };
 
     const onDominantSpeakerChanged = (data: { id: string }) => {
         if (jitsiApi) {
@@ -73,10 +70,10 @@
                     width: "100%",
                     height: "100%",
                     parentNode: jitsiContainer,
-                    configOverwrite: mergeConfig(jitsiConfig),
+                    configOverwrite: mergeConfig(actualCowebsite.jitsiConfig),
                     interfaceConfigOverwrite: {
-                        ...defaultInterfaceConfigCopy,
-                        ...jitsiInterfaceConfig,
+                        ...defaultInterfaceConfig,
+                        ...actualCowebsite.jitsiInterfaceConfig,
                     },
                 };
                 console.log("OPTIONS :", options);
@@ -95,7 +92,6 @@
                     jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
 
                     jitsiApi.addListener("videoConferenceJoined", () => {
-                        console.log("video conference joined");
                         jitsiApi.executeCommand("displayName", playerName);
                         jitsiApi.executeCommand("avatarUrl", get(currentPlayerWokaStore));
                         jitsiApi.executeCommand("setNoiseSuppressionEnabled", {
@@ -116,7 +112,6 @@
                     jitsiApi.addListener("participantJoined", participantsCountChangeCallback);
                     jitsiApi.addListener("participantLeft", participantsCountChangeCallback);
                     jitsiApi.addListener("participantKickedOut", participantsCountChangeCallback);
-                    console.log(jitsiApi);
                 });
 
                 Promise.race([timemoutPromise, jistiMeetLoadedPromise])
@@ -151,10 +146,7 @@
                 console.error("Error loading Jitsi Meeting:", e);
             });
     });
-    //Fonctionne sana le onDestroy bizzare ? Mon t'es débile ca fait juste appel au jitsi cowebsite lol
-
-    // onDestroy(() => {
-    // });
+    // Appel a la fonction closeOrUnload pour stopper le jitsi
 </script>
 
 <div bind:this={jitsiContainer} class="w-full height" />

@@ -148,8 +148,8 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         private roomName: string,
         private playerName: string,
         private jwt: string | undefined,
-        private jitsiConfig: object | undefined,
-        private jitsiInterfaceConfig: object | undefined,
+        public jitsiConfig: object | undefined,
+        public jitsiInterfaceConfig: object | undefined,
         private domain: string
     ) {
         super(url, false, undefined, widthPercent, closable);
@@ -283,72 +283,13 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         }
     }
 
-    // unload(): Promise<void> {
-    //     if (this.loadPromise) {
-    //         console.info("CLOSING unload JitsiCoWebsite");
-    //     } else {
-    //         console.info("CLOSING NOOOOT unload JitsiCoWebsite");
-    //     }
-    //     try {
-    //         this.loadPromise?.cancel();
-    //         this.destroy();
-    //         inExternalServiceStore.set(false);
 
-    //         return super.unload();
-    //     } catch (e) {
-    //         console.error("Cannot unload Jitsi co-website", e);
-    //         return Promise.reject(e);
-    //     }
-    // }
 
     getDomain(): string {
         return this.domain;
     }
 
-    // public stop() {
-    //     if (!this.jitsiApi) {
-    //         return;
-    //     }
 
-    //     this.jitsiApi.removeListener("audioMuteStatusChanged", this.audioCallback);
-    //     this.jitsiApi.removeListener("videoMuteStatusChanged", this.videoCallback);
-    // }
-
-    // destroy() {
-    //     userIsJitsiDominantSpeakerStore.set(false);
-    //     jitsiParticipantsCountStore.set(0);
-    //     if (!this.jitsiApi) {
-    //         return;
-    //     }
-
-    //     this.stop();
-    //     this.jitsiApi?.dispose();
-    // }
-
-
-    // private onAudioChange({ muted }: { muted: boolean }): void {
-    //     if (muted) {
-    //         requestedMicrophoneState.disableMicrophone();
-    //     } else {
-    //         requestedMicrophoneState.enableMicrophone();
-    //     }
-    // }
-
-    // private onVideoChange({ muted }: { muted: boolean }): void {
-    //     if (muted) {
-    //         requestedCameraState.disableWebcam();
-    //     } else {
-    //         requestedCameraState.enableWebcam();
-    //     }
-    // }
-
-    // onDominantSpeakerChanged(data: { id: string }): void {
-    //     if (this.jitsiApi) {
-    //         userIsJitsiDominantSpeakerStore.set(
-    //             data.id === this.getCurrentParticipantId(this.jitsiApi.getParticipantsInfo())
-    //         );
-    //     }
-    // }
 
     public onParticipantsCountChange(): void {
         this.updateParticipantsCountStore();

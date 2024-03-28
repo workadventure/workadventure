@@ -737,6 +737,7 @@
                                 <div
                                     class="group/btn-follow bg-contrast/80 transition-all backdrop-blur p-2 pr-0 last:pr-2 rounded-l-lg sm:rounded-l-none sm:first:rounded-l-lg sm:last:rounded-r-lg  aspect-square"
                                 >
+                                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                                     <div
                                         class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 rounded group-hover/btn-follow:bg-white/10 aspect-square flex items-center justify-center transition-all {$followStateStore ===
                                         'active'
@@ -761,6 +762,7 @@
                                         />
                                     {/if}
                                 </div>
+                                <!-- svelte-ignore a11y-click-events-have-key-events -->
                                 <div
                                     class="group/btn-lock relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 rounded-none sm:first:rounded-l-lg sm:last:rounded-r-lg aspect-square"
                                     class:disabled={$currentPlayerGroupLockStateStore}
@@ -796,42 +798,42 @@
                 <div in:fly={{ delay: 1000, y: -200, duration: 750 }}>
                     <!-- ACTION WRAPPER : CAM & MIC -->
                     <div class="group/hardware flex items-center relative">
-                        {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
-                            <!-- NAV : MICROPHONE START -->
-                            {#if $myMicrophoneStore}
-                                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore} -->
+                        <!-- NAV : MICROPHONE START -->
+                        {#if $myMicrophoneStore}
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <div
+                                class="group/btn-mic peer/mic relative bg-contrast/80 backdrop-blur p-2 sm:pr-0 sm:last:pr-2 aspect-square {$bottomActionBarVisibilityStore
+                                    ? 'rounded-none sm:rounded-l-lg'
+                                    : 'rounded-l-lg'}"
+                                class:disabled={!$requestedMicrophoneState || $silentStore}
+                            >
                                 <div
-                                    class="group/btn-mic peer/mic relative bg-contrast/80 backdrop-blur p-2 sm:pr-0 sm:last:pr-2 aspect-square {$bottomActionBarVisibilityStore
-                                        ? 'rounded-none sm:rounded-l-lg'
-                                        : 'rounded-l-lg'}"
-                                    class:disabled={!$requestedMicrophoneState || $silentStore}
+                                    class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 rounded group-[.disabled]/btn-mic:bg-danger hover:bg-white/10 flex items-center justify-center transition-all"
+                                    on:click={() => analyticsClient.microphone()}
+                                    on:click={microphoneClick}
+                                    on:mouseenter={() => {
+                                        !navigating ? (helpActive = "mic") : "";
+                                    }}
+                                    on:mouseleave={() => {
+                                        !navigating ? (helpActive = undefined) : "";
+                                    }}
                                 >
-                                    <div
-                                        class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 rounded group-[.disabled]/btn-mic:bg-danger hover:bg-white/10 flex items-center justify-center transition-all"
-                                        on:click={() => analyticsClient.microphone()}
-                                        on:click={microphoneClick}
-                                        on:mouseenter={() => {
-                                            !navigating ? (helpActive = "mic") : "";
-                                        }}
-                                        on:mouseleave={() => {
-                                            !navigating ? (helpActive = undefined) : "";
-                                        }}
-                                    >
-                                        {#if $requestedMicrophoneState && !$silentStore}
-                                            <MicOnIcon />
-                                        {:else}
-                                            <MicOffIcon />
-                                        {/if}
-                                    </div>
-                                    {#if helpActive === "mic" || !emoteMenuSubStore}
-                                        <HelpTooltip
-                                            title={$LL.actionbar.help.mic.title()}
-                                            desc={$LL.actionbar.help.mic.desc()}
-                                        />
+                                    {#if $requestedMicrophoneState && !$silentStore}
+                                        <MicOnIcon />
+                                    {:else}
+                                        <MicOffIcon />
                                     {/if}
                                 </div>
-                            {/if}
+                                {#if helpActive === "mic" || !emoteMenuSubStore}
+                                    <HelpTooltip
+                                        title={$LL.actionbar.help.mic.title()}
+                                        desc={$LL.actionbar.help.mic.desc()}
+                                    />
+                                {/if}
+                            </div>
                         {/if}
+                        <!-- {/if} -->
                         <!-- NAV : MICROPHONE END -->
                         <!--{#if $microphoneListStore.length > 1 || $cameraListStore.length > 1 || $speakerListStore.length > 0}
                         {/if}-->
@@ -840,6 +842,7 @@
                                 ? 'opacity-100'
                                 : 'group-hover/hardware:opacity-100'}"
                         >
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <div
                                 class="absolute bottom-1 left-0 right-0 m-auto hover:bg-white/10 h-5 w-5 flex items-center justify-center rounded-sm"
                                 on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}

@@ -101,7 +101,6 @@ export class CoWebsiteManager {
 
     public unloadCoWebsite(coWebsite: CoWebsite): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-
         });
     }
 

@@ -5,9 +5,8 @@
     import { inExternalServiceStore } from "../../Stores/MyMediaStore";
 
     export let actualCowebsite: BBBCoWebsite;
-    let iframeBBBCowebsite: HTMLIFrameElement;
 
-    onMount(async () => {
+    onMount(() => {
         console.log("BBB Meeting loading...");
         try {
             screenWakeLock
@@ -15,10 +14,9 @@
                 .then((release) => (actualCowebsite.screenWakeRelease = release))
                 .catch((error) => console.error(error));
             inExternalServiceStore.set(true);
-            await actualCowebsite.load();
-            console.log("BBB Meeting loaded successfully!");
+            console.log("BBB Screen Wake Lock requested successfully!");
         } catch (e) {
-            console.error("Error loading BBB Meeting:", e);
+            console.error("Error with Screen Wake Lock :", e);
         }
     });
 
@@ -29,105 +27,13 @@
                 actualCowebsite.screenWakeRelease = undefined;
             }
             inExternalServiceStore.set(false);
-            await actualCowebsite.unload();
-            console.log("BBB Meeting unloaded successfully!");
+            console.log("BBB Screen Wake off successfully!");
         } catch (e) {
-            console.error("Error unloading BBB Meeting:", e);
+            console.error("BBB Screen Wake off not successfully!", e);
         }
+
+        //quand on clique sur le bouton leave du BBB cela ne ferme pas le cowebsite.
     });
 </script>
 
-<iframe bind:this={iframeBBBCowebsite} class="w-full height" title="Cowebsite" frameborder="none" />
-
-<!-- <div bind:this={BBBContainer} class="w-full height" /> -->
-<!-- <script lang="ts">
-    import { onMount, onDestroy } from "svelte";
-    import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
-
-    export let actualCowebsite: BBBCoWebsite;
-
-    onMount(() => {
-        actualCowebsite.load()
-            .then(() => {
-                console.log("BBB Meeting loaded successfully!");
-            })
-            .catch((e) => {
-                console.error("Error loading BBB Meeting:", e);
-            });
-    });
-
-    onDestroy(() => {
-        actualCowebsite.unload()
-            .then(() => {
-                console.log("BBB Meeting unloaded successfully!");
-            })
-            .catch((e) => {
-                console.error("Error unloading BBB Meeting:", e);
-            });
-    });
-</script>
-
-<iframe src={actualCowebsite.getUrl().toString()} frameborder="0" height="100%" width="100%" title="Big Blue Button" /> -->
-
-<!-- <script lang="ts">
-    import { onMount } from "svelte";
-    import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
-
-    export let actualCowebsite: BBBCoWebsite;
-
-    onMount(() => {
-        actualCowebsite.load().catch((e) => {
-            console.error(e);
-        });
-    });
-
-    // Mettre la fonction load du SimpleCoWebsite dans le onMount et le unload dans le onDestroy
-</script>
-
-<iframe src={actualCowebsite.getUrl().toString()} frameborder="0" height="100%" width="100%" title="Big Blue Button" /> -->
-
-<!-- <script lang="ts">
-    import { onMount, onDestroy } from "svelte";
-    import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
-
-    export let actualCowebsite: BBBCoWebsite;
-
-    onMount(() => {
-        actualCowebsite.load()
-            .then(() => {
-                console.log("BBB Meeting loaded successfully!");
-            })
-            .catch((e) => {
-                console.error("Error loading BBB Meeting:", e);
-            });
-    });
-
-    onDestroy(() => {
-        actualCowebsite.unload()
-            .then(() => {
-                console.log("BBB Meeting unloaded successfully!");
-            })
-            .catch((e) => {
-                console.error("Error unloading BBB Meeting:", e);
-            });
-    });
-</script>
-
-<iframe src={actualCowebsite.getUrl().toString()} frameborder="0" height="100%" width="100%" title="Big Blue Button" /> -->
-
-<!-- <script lang="ts">
-    import { onMount } from "svelte";
-    import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
-
-    export let actualCowebsite: BBBCoWebsite;
-
-    onMount(() => {
-        actualCowebsite.load().catch((e) => {
-            console.error(e);
-        });
-    });
-
-    // Mettre la fonction load du SimpleCoWebsite dans le onMount et le unload dans le onDestroy
-</script>
-
-<iframe src={actualCowebsite.getUrl().toString()} frameborder="0" height="100%" width="100%" title="Big Blue Button" /> -->
+<iframe src={actualCowebsite.getUrl().toString()} class="w-full height" title="Cowebsite" frameborder="none" />
