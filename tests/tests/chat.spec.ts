@@ -165,11 +165,11 @@ test.describe('Chat @chat', () => {
       // Exit of liveZone
       await page.locator('#game canvas').click();
       await Map.goToRoom(page, '#Out_LiveZone_a');
-      await Chat.slideToChat(page);
+      //await Chat.slideToChat(page);
       await Chat.noChatZone(page);
       await page2.locator('#game canvas').click();
       await Map.goToRoom(page2, '#Out_LiveZone_b');
-      await Chat.slideToChat(page2);
+      //await Chat.slideToChat(page2);
       await Chat.noChatZone(page2);
     });
 

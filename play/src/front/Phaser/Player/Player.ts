@@ -126,6 +126,7 @@ export class Player extends Character {
         this.stop();
         this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled });
         this.getBody().setDirectControl(false);
+        this.emit(hasMovedEventName, { moving: false, direction: this._lastDirection, x: this.x, y: this.y });
     }
 
     private deduceSpeed(speedUp: boolean, followMode: boolean): number {
@@ -134,7 +135,7 @@ export class Player extends Character {
 
     private adjustPathToFollowToColliderBounds(path: { x: number; y: number }[]): { x: number; y: number }[] {
         return path.map((step) => {
-            return { x: step.x, y: step.y - this.getBody().offset.y };
+            return { x: step.x, y: step.y - this.getBody().height / 2 - this.getBody().offset.y };
         });
     }
 
