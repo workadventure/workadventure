@@ -1,5 +1,5 @@
 import CancelablePromise from "cancelable-promise";
-import { iframeListener } from "../../Api/IframeListener";
+// import { iframeListener } from "../../Api/IframeListener";
 import type { CoWebsite } from "./CoWebsite";
 import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 
@@ -85,7 +85,7 @@ export class SimpleCoWebsite implements CoWebsite {
     //             setTimeout(() => resolve(), 2000);
     //         });
 
-    //         //coWebsiteManager.getCoWebsiteBuffer().appendChild(this.iframe);
+            // coWebsiteManager.getCoWebsiteBuffer().appendChild(this.iframe);
 
     //         const race = CancelablePromise.race([onloadPromise, onTimeoutPromise])
     //             .then(() => {
@@ -107,23 +107,23 @@ export class SimpleCoWebsite implements CoWebsite {
     //     return this.loadIframe;
     // }
 
-    unload(): Promise<void> {
-        return new Promise((resolve) => {
-            if (this.iframe) {
-                if (this.allowApi) {
-                    iframeListener.unregisterIframe(this.iframe);
-                }
-                this.iframe.parentNode?.removeChild(this.iframe);
-            }
+    // unload(): Promise<void> {
+    //     return new Promise((resolve) => {
+    //         if (this.iframe) {
+    //             if (this.allowApi) {
+    //                 iframeListener.unregisterIframe(this.iframe);
+    //             }
+    //             this.iframe.parentNode?.removeChild(this.iframe);
+    //         }
 
-            if (this.loadIframe) {
-                this.loadIframe.cancel();
-                this.loadIframe = undefined;
-            }
+    //         if (this.loadIframe) {
+    //             this.loadIframe.cancel();
+    //             this.loadIframe = undefined;
+    //         }
 
-            // this.state.set("asleep");
+    //         // this.state.set("asleep");
 
-            resolve();
-        });
-    }
+    //         resolve();
+    //     });
+    // }
 }

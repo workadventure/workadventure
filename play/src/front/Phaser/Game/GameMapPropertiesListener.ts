@@ -458,8 +458,10 @@ export class GameMapPropertiesListener {
 
         this.coWebsitesOpenByPlace.set(this.getIdFromPlace(place), coWebsiteOpen);
 
-        const loadCoWebsiteFunction = (coWebsite: CoWebsite) => {
-            coWebsiteManager.loadCoWebsite(coWebsite);
+        const loadCoWebsiteFunction = () => {
+
+            // coWebsite: CoWebsite --> Arguments
+            // coWebsiteManager.loadCoWebsite(coWebsite);
             // .catch(() => {
             //     console.error("Error during loading a co-website: " + coWebsite.getUrl());
             // });

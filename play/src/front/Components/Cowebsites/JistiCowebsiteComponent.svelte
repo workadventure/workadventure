@@ -14,12 +14,13 @@
     import { get } from "svelte/store";
     import { userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
     import { inExternalServiceStore } from "../../Stores/MyMediaStore";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     export let actualCowebsite: JitsiCoWebsite;
     let domain = actualCowebsite.getDomain();
     let jitsiContainer: HTMLDivElement;
     let roomName: string;
-    let playerName: string;
+    let playerName = gameManager.getPlayerName();
     let jwt: string | undefined;
     let jitsiConfig: object | undefined;
     let jitsiInterfaceConfig: object | undefined;
