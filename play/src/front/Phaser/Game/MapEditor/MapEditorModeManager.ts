@@ -1,4 +1,4 @@
-import { AreaData, Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
+import { Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
 import { Unsubscriber, get } from "svelte/store";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import pLimit from "p-limit";
