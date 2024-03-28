@@ -20,3 +20,5 @@ export * from "./Constants/CustomEntityCollectionConstants";
 export * from "./FunctionalTypes/Result";
 export * from "./WAMSettingsUtils";
 export * from "./Constants/EntityUploadSupportedFormats";
+export * from "./Permissions/EntityPermissions";
+export * from "./Permissions/AreaPermissions";

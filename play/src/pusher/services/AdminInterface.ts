@@ -18,7 +18,8 @@ export interface AdminInterface {
         ipAddress: string,
         characterTextureIds: string[],
         companionTextureId?: string,
-        locale?: string
+        locale?: string,
+        tags?: string[]
     ): Promise<FetchMemberDataByUuidResponse>;
 
     /**

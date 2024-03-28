@@ -3,7 +3,7 @@
     import { warningMessageStore } from "../../Stores/ErrorStore";
 </script>
 
-<div class="warning-toast" transition:fly={{ y: -200, duration: 500 }}>
+<div class="warning-toast" transition:fly={{ y: -200, duration: 500 }} data-testid="warning-toast">
     {#each $warningMessageStore as warningMessage, key (warningMessage.id ?? key)}
         <div
             class="tw-text-center tw-flex tw-justify-center tw-text-danger tw-h-6 tw-whitespace-pre-line tw-truncate tw-text-ellipsis"

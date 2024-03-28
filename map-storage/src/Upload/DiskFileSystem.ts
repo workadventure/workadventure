@@ -1,8 +1,8 @@
+import path from "path";
 import { Archiver } from "archiver";
 import { NextFunction, Response } from "express";
 import * as fs from "fs-extra";
 import { StreamZipAsync, ZipEntry } from "node-stream-zip";
-import path from "path";
 import { MapListService } from "../Services/MapListService";
 import { FileNotFoundError } from "./FileNotFoundError";
 import { FileSystemInterface } from "./FileSystemInterface";

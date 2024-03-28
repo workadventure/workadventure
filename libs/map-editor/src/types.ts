@@ -119,6 +119,23 @@ export const AreaDescriptionPropertyData = PropertyBase.extend({
     searchable: z.boolean().default(false),
 });
 
+export const RestrictedRightsPropertyData = PropertyBase.extend({
+    type: z.literal("restrictedRightsPropertyData"),
+    writeTags: z.array(z.string()).default([]),
+    readTags: z.array(z.string()).default([]),
+    searchable: z.boolean().default(false),
+});
+
+export const PersonalAreaAccessClaimMode = z.enum(["dynamic", "static"]);
+
+export const PersonalAreaPropertyData = PropertyBase.extend({
+    type: z.literal("personalAreaPropertyData"),
+    isPersonalArea: z.boolean().default(false),
+    accessClaimMode: PersonalAreaAccessClaimMode,
+    allowedTags: z.array(z.string()).default([]),
+    owner: z.string().default(""),
+});
+
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,
@@ -130,6 +147,8 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     SpeakerMegaphonePropertyData,
     ListenerMegaphonePropertyData,
     AreaDescriptionPropertyData,
+    RestrictedRightsPropertyData,
+    PersonalAreaPropertyData,
 ]);
 
 export const AreaDataProperties = z.array(AreaDataProperty);
@@ -208,6 +227,16 @@ export const EntityData = z.object({
     properties: EntityDataProperties.optional(),
     prefab: EntityRawPrefab,
     prefabRef: EntityPrefabRef,
+});
+
+export const EntityDimensions = z.object({
+    width: z.number(),
+    height: z.number(),
+});
+
+export const EntityCoordinates = z.object({
+    x: z.number(),
+    y: z.number(),
 });
 
 export const WAMEntityData = EntityData.omit({ prefab: true, id: true });
@@ -299,6 +328,8 @@ export type EntityCollectionRaw = z.infer<typeof EntityCollectionRaw>;
 export type CollectionUrl = z.infer<typeof CollectionUrl>;
 export type CollisionGrid = z.infer<typeof CollisionGrid>;
 export type EntityData = z.infer<typeof EntityData>;
+export type EntityDimensions = z.infer<typeof EntityDimensions>;
+export type EntityCoordinates = z.infer<typeof EntityCoordinates>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
 export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite";
@@ -334,6 +365,9 @@ export type SpeakerMegaphonePropertyData = z.infer<typeof SpeakerMegaphoneProper
 export type ListenerMegaphonePropertyData = z.infer<typeof ListenerMegaphonePropertyData>;
 export type EntityDescriptionPropertyData = z.infer<typeof EntityDescriptionPropertyData>;
 export type AreaDescriptionPropertyData = z.infer<typeof AreaDescriptionPropertyData>;
+export type RestrictedRightsPropertyData = z.infer<typeof RestrictedRightsPropertyData>;
+export type PersonalAreaPropertyData = z.infer<typeof PersonalAreaPropertyData>;
+export type PersonalAreaAccessClaimMode = z.infer<typeof PersonalAreaAccessClaimMode>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",

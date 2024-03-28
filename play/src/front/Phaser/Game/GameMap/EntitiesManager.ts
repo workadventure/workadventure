@@ -1,14 +1,16 @@
 import {
     AreaDataProperties,
+    EntityDimensions,
     EntityData,
     EntityDataProperties,
     EntityPrefabRef,
     WAMEntityData,
 } from "@workadventure/map-editor";
 import { Observable, Subject } from "rxjs";
-import { get, Unsubscriber } from "svelte/store";
+import { Unsubscriber, get } from "svelte/store";
 import { z } from "zod";
 import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
+import { gameSceneIsLoadedStore } from "../../../Stores/GameSceneStore";
 import {
     mapEditorEntityModeStore,
     mapEditorModeStore,
@@ -30,6 +32,7 @@ export const CopyEntityEventData = z.object({
     }),
     prefabRef: EntityPrefabRef,
     properties: EntityDataProperties.optional(),
+    entityDimensions: EntityDimensions,
 });
 
 export const CopyAreaEventData = z.object({
@@ -65,12 +68,14 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     private properties: Map<string, string | boolean | number>;
     private actionsMenuStoreUnsubscriber: Unsubscriber;
+    private gameSceneIsLoadedStoreUnsubscriber: Unsubscriber;
 
     /**
      * Firing on map change, containing newest collision grid array
      */
     private pointerOverEntitySubject = new Subject<Entity>();
     private pointerOutEntitySubject = new Subject<Entity>();
+
     constructor(scene: GameScene, gameMapFrontWrapper: GameMapFrontWrapper) {
         super();
         this.scene = scene;
@@ -85,6 +90,13 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         this.actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((data) => {
             this.clearProperties();
             this.gameMapFrontWrapper.handleEntityActionTrigger();
+        });
+
+        // When the gamescene is loaded (connection realy defined, etc.), we update all entities
+        this.gameSceneIsLoadedStoreUnsubscriber = gameSceneIsLoadedStore.subscribe((isLoaded) => {
+            if (isLoaded) {
+                this.makeAllEntitiesInteractive(true);
+            }
         });
 
         this.bindEventHandlers();
@@ -212,6 +224,43 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         });
     }
 
+    public getEntities(): Map<string, Entity> {
+        return this.entities;
+    }
+
+    public getActivatableEntities(): Entity[] {
+        return this.activatableEntities;
+    }
+
+    public getPointerOverEntityObservable(): Observable<Entity> {
+        return this.pointerOverEntitySubject.asObservable();
+    }
+
+    public getPointerOutEntityObservable(): Observable<Entity> {
+        return this.pointerOutEntitySubject.asObservable();
+    }
+
+    public clearProperties(): void {
+        this.properties.clear();
+    }
+
+    public close() {
+        this.actionsMenuStoreUnsubscriber();
+        this.gameSceneIsLoadedStoreUnsubscriber();
+    }
+
+    public setAllEntitiesPointedToEditColor(color: number) {
+        for (const entity of this.entities.values()) {
+            entity.setPointedToEditColor(color);
+        }
+    }
+
+    public removeAllEntitiesPointedToEditColor() {
+        for (const entity of this.entities.values()) {
+            entity.removePointedToEditColor();
+        }
+    }
+
     private bindEventHandlers(): void {
         this.ctrlKey?.on("down", () => {
             if (!this.scene.input.activePointer.leftButtonDown()) {
@@ -260,6 +309,9 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.emit(EntitiesManagerEvent.UpdateEntity, data);
         });
         entity.on(Phaser.Input.Events.DRAG, (pointer: Phaser.Input.Pointer, dragX: number, dragY: number) => {
+            if (!entity.canEdit) {
+                return;
+            }
             if (
                 get(mapEditorModeStore) &&
                 this.isEntityEditorToolActive() &&
@@ -291,8 +343,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 if (
                     !this.scene
                         .getGameMapFrontWrapper()
-                        .canEntityBePlaced(
-                            entity.getPosition(),
+                        .canEntityBePlacedOnMap(
+                            entity.getTopLeft(),
                             entity.displayWidth,
                             entity.displayHeight,
                             entity.getCollisionGrid(),
@@ -323,6 +375,10 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                 return;
             }
 
+            if (!entity.canEdit) {
+                return;
+            }
+
             if (
                 get(mapEditorModeStore) &&
                 this.isEntityEditorToolActive() &&
@@ -336,6 +392,10 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
                     return;
                 }
 
+                if (!entity.canEdit) {
+                    return;
+                }
+
                 mapEditorEntityModeStore.set("EDIT");
                 mapEditorSelectedEntityDraggedStore.set(true);
                 mapEditorSelectedEntityStore.set(entity);
@@ -344,6 +404,9 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         entity.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
             this.pointerOverEntitySubject.next(entity);
             if (get(mapEditorModeStore) && this.isEntityEditorToolActive()) {
+                if (!entity.canEdit) {
+                    return;
+                }
                 entity.setPointedToEditColor(this.isTrashEditorToolActive() ? 0xff0000 : 0x00ff00);
                 this.scene.markDirty();
             }
@@ -367,9 +430,9 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         mapEditorSelectedEntityStore.set(undefined);
         const eventData: CopyEntityEventData = {
             position: positionToPlaceCopyAt,
-            //prefab: entity.getEntityData().prefab,
             prefabRef: entity.getEntityData().prefabRef,
             properties: entity.getEntityData().properties,
+            entityDimensions: { width: entity.width, height: entity.height },
         };
         this.emit(EntitiesManagerEvent.CopyEntity, eventData);
     }
@@ -378,8 +441,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         if (
             !this.scene
                 .getGameMapFrontWrapper()
-                .canEntityBePlaced(
-                    entity.getPosition(),
+                .canEntityBePlacedOnMap(
+                    entity.getTopLeft(),
                     entity.displayWidth,
                     entity.displayHeight,
                     entity.getCollisionGrid(),
@@ -407,40 +470,5 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     private isTrashEditorToolActive(): boolean {
         return get(mapEditorSelectedToolStore) === EditorToolName.TrashEditor;
-    }
-
-    public getEntities(): Map<string, Entity> {
-        return this.entities;
-    }
-
-    public getActivatableEntities(): Entity[] {
-        return this.activatableEntities;
-    }
-
-    public getPointerOverEntityObservable(): Observable<Entity> {
-        return this.pointerOverEntitySubject.asObservable();
-    }
-
-    public getPointerOutEntityObservable(): Observable<Entity> {
-        return this.pointerOutEntitySubject.asObservable();
-    }
-
-    public clearProperties(): void {
-        this.properties.clear();
-    }
-
-    public close() {
-        this.actionsMenuStoreUnsubscriber();
-    }
-
-    public setAllEntitiesPointedToEditColor(color: number) {
-        for (const entity of this.entities.values()) {
-            entity.setPointedToEditColor(color);
-        }
-    }
-    public removeAllEntitiesPointedToEditColor() {
-        for (const entity of this.entities.values()) {
-            entity.removePointedToEditColor();
-        }
     }
 }

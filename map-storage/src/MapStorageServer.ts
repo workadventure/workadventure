@@ -13,6 +13,9 @@ import {
     UpdateWAMMetadataCommand,
     UpdateWAMSettingCommand,
     WAMEntityData,
+    EntityPermissions,
+    EntityCoordinates,
+    EntityDimensions,
 } from "@workadventure/map-editor";
 import {
     EditMapCommandMessage,
@@ -108,6 +111,13 @@ const mapStorageServer: MapStorageServer = {
 
             const gameMap = await mapsManager.getOrLoadGameMap(mapKey);
 
+            const { connectedUserTags, userCanEdit } = call.request;
+
+            const gameMapAreas = gameMap.getGameMapAreas();
+            const entityCommandPermissions = gameMapAreas
+                ? new EntityPermissions(gameMapAreas, connectedUserTags, userCanEdit)
+                : undefined;
+
             const editMapMessage = editMapCommandMessage.editMapMessage.message;
             const commandId = editMapCommandMessage.id;
             switch (editMapMessage.$case) {
@@ -166,6 +176,14 @@ const mapStorageServer: MapStorageServer = {
                     }
                     const entity = gameMap.getGameMapEntities()?.getEntity(message.id);
                     if (entity) {
+                        const { x, y, width, height } = message;
+                        if (
+                            entityCommandPermissions &&
+                            !entityCommandPermissions.canEdit(getEntityCenterCoordinates({ x, y }, { width, height }))
+                        ) {
+                            Sentry.captureException("User is not allowed to modify the entity on map");
+                            break;
+                        }
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
@@ -178,6 +196,14 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "createEntityMessage": {
                     const message = editMapMessage.createEntityMessage;
+                    const { x, y, width, height } = message;
+                    if (
+                        entityCommandPermissions &&
+                        !entityCommandPermissions.canEdit(getEntityCenterCoordinates({ x, y }, { width, height }))
+                    ) {
+                        Sentry.captureException("User is not allowed to create entity on map");
+                        break;
+                    }
                     await mapsManager.executeCommand(
                         mapKey,
                         mapUrl.host,
@@ -292,6 +318,13 @@ function getMessageFromError(error: unknown): string {
     } else {
         return "Unknown error";
     }
+}
+
+function getEntityCenterCoordinates(entityCoordinates: EntityCoordinates, entityDimensions: EntityDimensions) {
+    return {
+        x: entityCoordinates.x + entityDimensions.width * 0.5,
+        y: entityCoordinates.y + entityDimensions.height * 0.5,
+    };
 }
 
 export { mapStorageServer };

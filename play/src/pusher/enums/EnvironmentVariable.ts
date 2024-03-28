@@ -55,11 +55,12 @@ export const OPID_CLIENT_REDIRECT_URL = PUSHER_URL + "/openid-callback";
 export const OPID_CLIENT_REDIRECT_LOGOUT_URL = PUSHER_URL + "/logout-callback";
 export const OPID_PROFILE_SCREEN_PROVIDER =
     env.OPID_PROFILE_SCREEN_PROVIDER || (ADMIN_URL ? ADMIN_URL + "/profile" : undefined);
-export const OPID_SCOPE = env.OPID_SCOPE || "openid email";
+export const OPID_SCOPE = env.OPID_SCOPE || "openid email profile ";
 export const OPID_PROMPT = env.OPID_PROMPT || "login";
 export const OPID_USERNAME_CLAIM = env.OPID_USERNAME_CLAIM || "username";
 export const OPID_LOCALE_CLAIM = env.OPID_LOCALE_CLAIM || "locale";
 export const OPID_WOKA_NAME_POLICY = env.OPID_WOKA_NAME_POLICY || "user_input";
+export const OPID_TAGS_CLAIM = env.OPID_TAGS_CLAIM || "tags";
 export const DISABLE_ANONYMOUS: boolean = env.DISABLE_ANONYMOUS;
 export const PROMETHEUS_AUTHORIZATION_TOKEN = env.PROMETHEUS_AUTHORIZATION_TOKEN;
 export const EJABBERD_DOMAIN: string = env.EJABBERD_DOMAIN || "";
