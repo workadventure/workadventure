@@ -48,7 +48,7 @@
                             WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.RoomSettings
                         )}
                 >
-                    <span>Room settings</span>
+                    <span>{$LL.mapEditor.settings.room.title()}</span>
                     <ChevronRightIcon class={`tw--mr-2`} />
                 </li>
             {/if}

@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/svelte";
-import type { AvailabilityStatus } from "@workadventure/messages";
+import type { ApplicationDefinitionInterface, AvailabilityStatus } from "@workadventure/messages";
 import {
     ErrorApiErrorData,
     ErrorApiRetryData,
@@ -13,7 +13,17 @@ import { subMenusStore, userIsConnected, warningBannerStore } from "../Stores/Me
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
-import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
+import {
+    ENABLE_OPENID,
+    ERASER_ENABLED,
+    GOOGLE_DOCS_ENABLED,
+    GOOGLE_DRIVE_ENABLED,
+    GOOGLE_SHEETS_ENABLED,
+    GOOGLE_SLIDES_ENABLED,
+    KLAXOON_CLIENT_ID,
+    KLAXOON_ENABLED,
+    YOUTUBE_ENABLED,
+} from "../Enum/EnvironmentVariable";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
 import { gameManager } from "../Phaser/Game/GameManager";
@@ -29,6 +39,16 @@ import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import { hasCapability } from "./Capabilities";
 
+const defautlIntegrationAppName = [
+    "Klaxoon",
+    "Youtube",
+    "Google Drive",
+    "Google Docs",
+    "Google Sheets",
+    "Google Slides",
+    "Eraser",
+];
+
 class ConnectionManager {
     private localUser!: LocalUser;
 
@@ -40,6 +60,17 @@ class ConnectionManager {
 
     private serviceWorker?: _ServiceWorker;
 
+    private _klaxoonToolActivated: boolean | undefined;
+    private _klaxoonToolClientId: string | undefined;
+    private _youtubeToolActivated: boolean | undefined;
+    private _googleDocsToolActivated: boolean | undefined;
+    private _googleSheetsToolActivated: boolean | undefined;
+    private _googleSlidesToolActivated: boolean | undefined;
+    private _eraserToolActivated: boolean | undefined;
+    private _googleDriveActivated: boolean | undefined;
+
+    private _applications: ApplicationDefinitionInterface[] = [];
+
     get unloading() {
         return this._unloading;
     }
@@ -49,6 +80,16 @@ class ConnectionManager {
             this._unloading = true;
             if (this.reconnectingTimeout) clearTimeout(this.reconnectingTimeout);
         });
+
+        // Initialise default application
+        this.klaxoonToolActivated = KLAXOON_ENABLED;
+        this.klaxoonToolClientId = KLAXOON_CLIENT_ID;
+        this.youtubeToolActivated = YOUTUBE_ENABLED;
+        this.googleDriveToolActivated = GOOGLE_DRIVE_ENABLED;
+        this.googleDocsToolActivated = GOOGLE_DOCS_ENABLED;
+        this.googleSheetsToolActivated = GOOGLE_SHEETS_ENABLED;
+        this.googleSlidesToolActivated = GOOGLE_SLIDES_ENABLED;
+        this.eraserToolActivated = ERASER_ENABLED;
     }
 
     /**
@@ -406,6 +447,40 @@ class ConnectionManager {
             // The roomJoinedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
             //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
             connection.roomJoinedMessageStream.subscribe((connect: OnConnectInterface) => {
+                // Set the default application integration for the room
+                const KlaxoonApp = connect.room.applications?.find((app) => app.name === "Klaxoon");
+                this.klaxoonToolActivated = KlaxoonApp?.enabled ?? KLAXOON_ENABLED;
+
+                const YoutubeApp = connect.room.applications?.find((app) => app.name === "Youtube");
+                this.youtubeToolActivated = YoutubeApp?.enabled ?? YOUTUBE_ENABLED;
+
+                const GoogleDriveApp = connect.room.applications?.find((app) => app.name === "Google Drive");
+                this.googleDriveToolActivated = GoogleDriveApp?.enabled ?? GOOGLE_DRIVE_ENABLED;
+
+                const GoogleDocsApp = connect.room.applications?.find((app) => app.name === "Google Docs");
+                this.googleDocsToolActivated = GoogleDocsApp?.enabled ?? GOOGLE_DOCS_ENABLED;
+
+                const GoogleSheetsApp = connect.room.applications?.find((app) => app.name === "Google Sheets");
+                this.googleSheetsToolActivated = GoogleSheetsApp?.enabled ?? GOOGLE_SHEETS_ENABLED;
+
+                const GoogleSlidesApp = connect.room.applications?.find((app) => app.name === "Google Slides");
+                this.googleSlidesToolActivated = GoogleSlidesApp?.enabled ?? GOOGLE_SLIDES_ENABLED;
+
+                const EraserApp = connect.room.applications?.find((app) => app.name === "Eraser");
+                this.eraserToolActivated = EraserApp?.enabled ?? ERASER_ENABLED;
+
+                // Set other applications
+                for (const app of connect.room.applications ?? []) {
+                    if (defautlIntegrationAppName.includes(app.name)) {
+                        continue;
+                    }
+
+                    // Save applications in the connection manager to use it in the map editor
+                    if (this._applications.find((a) => a.name === app.name) === undefined) {
+                        this._applications.push(app);
+                    }
+                }
+
                 resolve(connect);
             });
         }).catch((err) => {
@@ -578,6 +653,65 @@ class ConnectionManager {
 
     get currentRoom() {
         return this._currentRoom;
+    }
+
+    get klaxoonToolActivated(): boolean {
+        return this._klaxoonToolActivated ?? false;
+    }
+    set klaxoonToolActivated(activated: boolean | undefined) {
+        this._klaxoonToolActivated = activated;
+    }
+    get klaxoonToolClientId(): string | undefined {
+        return this._klaxoonToolClientId;
+    }
+    set klaxoonToolClientId(id: string | undefined) {
+        this._klaxoonToolClientId = id;
+    }
+
+    get youtubeToolActivated(): boolean {
+        return this._youtubeToolActivated ?? false;
+    }
+    set youtubeToolActivated(activated: boolean | undefined) {
+        this._youtubeToolActivated = activated;
+    }
+
+    get googleDocsToolActivated(): boolean {
+        return this._googleDocsToolActivated ?? false;
+    }
+    set googleDocsToolActivated(activated: boolean | undefined) {
+        this._googleDocsToolActivated = activated;
+    }
+
+    get googleSheetsToolActivated(): boolean {
+        return this._googleSheetsToolActivated ?? false;
+    }
+    set googleSheetsToolActivated(activated: boolean | undefined) {
+        this._googleSheetsToolActivated = activated;
+    }
+
+    get googleSlidesToolActivated(): boolean {
+        return this._googleSlidesToolActivated ?? false;
+    }
+    set googleSlidesToolActivated(activated: boolean | undefined) {
+        this._googleSlidesToolActivated = activated;
+    }
+
+    get eraserToolActivated(): boolean {
+        return this._eraserToolActivated ?? false;
+    }
+    set eraserToolActivated(activated: boolean | undefined) {
+        this._eraserToolActivated = activated;
+    }
+
+    get googleDriveToolActivated(): boolean {
+        return this._googleDriveActivated ?? false;
+    }
+    set googleDriveToolActivated(activated: boolean | undefined) {
+        this._googleDriveActivated = activated;
+    }
+
+    get applications(): ApplicationDefinitionInterface[] {
+        return this._applications;
     }
 }
 

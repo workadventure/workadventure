@@ -7,10 +7,12 @@
         OpenWebsiteTypePropertiesKeys,
         PlayAudioPropertyData,
         RestrictedRightsPropertyData,
+        OpenWebsitePropertyData,
     } from "@workadventure/map-editor";
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
     import { InfoIcon } from "svelte-feather-icons";
     import { IconChevronDown, IconChevronUp } from "@tabler/icons-svelte";
+    import { ApplicationDefinitionInterface } from "@workadventure/messages";
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import { FEATURE_FLAG_BROADCAST_AREAS } from "../../Enum/EnvironmentVariable";
@@ -28,6 +30,7 @@
     import ExitPropertyEditor from "./PropertyEditor/ExitPropertyEditor.svelte";
     import AddPropertyButtonWrapper from "./PropertyEditor/AddPropertyButtonWrapper.svelte";
     import PersonalAreaPropertyEditor from "./PersonalAreaPropertyEditor.svelte";
+    import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -230,6 +233,31 @@
         }
     }
 
+    function onAddSpecificProperty(app: ApplicationDefinitionInterface) {
+        if (!$mapEditorSelectedAreaPreviewStore) return;
+        analyticsClient.addMapEditorProperty("entity", app.name);
+        const property: OpenWebsitePropertyData = {
+            id: crypto.randomUUID(),
+            type: "openWebsite",
+            application: app.name,
+            closable: true,
+            buttonLabel: app.name,
+            link: "",
+            newTab: false,
+            placeholder: app.description,
+            label: app.name,
+            policy: undefined,
+            icon: app.image,
+            regexUrl: app.regexUrl,
+            targetEmbedableUrl: app.targetUrl,
+        };
+        $mapEditorSelectedAreaPreviewStore.addProperty(property);
+
+        // refresh properties
+        properties = $mapEditorSelectedAreaPreviewStore.getProperties();
+        refreshFlags();
+    }
+
     function onDeleteProperty(id: string) {
         if ($mapEditorSelectedAreaPreviewStore) {
             analyticsClient.removeMapEditorProperty(
@@ -297,26 +325,16 @@
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
-        if (
-            !connectionManager.currentRoom?.klaxoonToolClientId ||
-            app.type !== "openWebsite" ||
-            app.application !== "klaxoon"
-        ) {
+        if (!connectionManager.klaxoonToolClientId || app.type !== "openWebsite" || app.application !== "klaxoon") {
             console.info("openKlaxoonActivityPicker: app is not a klaxoon app");
             return;
         }
-        KlaxoonService.openKlaxoonActivityPicker(
-            connectionManager.currentRoom?.klaxoonToolClientId,
-            (payload: KlaxoonEvent) => {
-                app.link = KlaxoonService.getKlaxoonEmbedUrl(
-                    new URL(payload.url),
-                    connectionManager.currentRoom?.klaxoonToolClientId
-                );
-                app.poster = payload.imageUrl ?? undefined;
-                app.buttonLabel = payload.title ?? undefined;
-                onUpdateProperty(app);
-            }
-        );
+        KlaxoonService.openKlaxoonActivityPicker(connectionManager.klaxoonToolClientId, (payload: KlaxoonEvent) => {
+            app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(payload.url), connectionManager.klaxoonToolClientId);
+            app.poster = payload.imageUrl ?? undefined;
+            app.buttonLabel = payload.title ?? undefined;
+            onUpdateProperty(app);
+        });
     }
 
     // Fixme: this is a hack to force the map editor to update the property
@@ -442,7 +460,7 @@
                 }}
             />
         </div>
-        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="klaxoon"
@@ -492,6 +510,19 @@
                     onAddProperty("openWebsite", "eraser");
                 }}
             />
+        </div>
+        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
+            {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
+                <AddPropertyButton
+                    headerText={app.name}
+                    descriptionText={app.description}
+                    img={app.image}
+                    style={`z-index: ${16 + index};`}
+                    on:click={() => {
+                        onAddSpecificProperty(app);
+                    }}
+                />
+            {/each}
         </div>
         <div class="area-name-container">
             <label for="objectName">{$LL.mapEditor.areaEditor.nameLabel()}</label>

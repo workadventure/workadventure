@@ -126,12 +126,12 @@
 {#if property === "openWebsite" && subProperty === "klaxoon"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.klaxoonProperties.label()}
-        descriptionText={connectionManager.currentRoom?.klaxoonToolActivated
+        descriptionText={connectionManager.klaxoonToolActivated
             ? $LL.mapEditor.properties.klaxoonProperties.description()
             : $LL.mapEditor.properties.klaxoonProperties.disabled()}
         img={klaxoonSvg}
         style={`z-index: 7;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.currentRoom?.klaxoonToolActivated}
+        disabled={!connectionManager.klaxoonToolActivated}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -140,12 +140,12 @@
 {#if property === "openWebsite" && subProperty === "youtube"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.youtubeProperties.label()}
-        descriptionText={connectionManager.currentRoom?.youtubeToolActivated
+        descriptionText={connectionManager.youtubeToolActivated
             ? $LL.mapEditor.properties.youtubeProperties.description()
             : $LL.mapEditor.properties.youtubeProperties.disabled()}
         img={youtubeSvg}
         style={`z-index: 6;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.currentRoom?.youtubeToolActivated}
+        disabled={!connectionManager.youtubeToolActivated}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -154,12 +154,12 @@
 {#if property === "openWebsite" && subProperty === "googleDrive"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.googleDriveProperties.label()}
-        descriptionText={connectionManager.currentRoom?.googleDocsToolActivated
+        descriptionText={connectionManager.googleDocsToolActivated
             ? $LL.mapEditor.properties.googleDriveProperties.description()
             : $LL.mapEditor.properties.googleDriveProperties.disabled()}
         img={googleDriveSvg}
         style={`z-index: 5;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.currentRoom?.googleDocsToolActivated}
+        disabled={!connectionManager.googleDocsToolActivated}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -168,12 +168,12 @@
 {#if property === "openWebsite" && subProperty === "googleDocs"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.googleDocsProperties.label()}
-        descriptionText={connectionManager.currentRoom?.googleDocsToolActivated
+        descriptionText={connectionManager.googleDocsToolActivated
             ? $LL.mapEditor.properties.googleDocsProperties.description()
             : $LL.mapEditor.properties.googleDocsProperties.disabled()}
         img={googleDocsSvg}
         style={`z-index: 4;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.currentRoom?.googleDocsToolActivated}
+        disabled={!connectionManager.googleDocsToolActivated}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -182,12 +182,12 @@
 {#if property === "openWebsite" && subProperty === "googleSheets"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.googleSheetsProperties.label()}
-        descriptionText={connectionManager.currentRoom?.googleSheetsToolActivated
+        descriptionText={connectionManager.googleSheetsToolActivated
             ? $LL.mapEditor.properties.googleSheetsProperties.description()
             : $LL.mapEditor.properties.googleSheetsProperties.disabled()}
         img={googleSheetsSvg}
         style={`z-index: 3;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.currentRoom?.googleSheetsToolActivated}
+        disabled={!connectionManager.googleSheetsToolActivated}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -196,12 +196,12 @@
 {#if property === "openWebsite" && subProperty === "googleSlides"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.googleSlidesProperties.label()}
-        descriptionText={connectionManager.currentRoom?.googleSlidesToolActivated
+        descriptionText={connectionManager.googleSlidesToolActivated
             ? $LL.mapEditor.properties.googleSlidesProperties.description()
             : $LL.mapEditor.properties.googleSlidesProperties.disabled()}
         img={googleSlidesSvg}
         style={`z-index: 2;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.currentRoom?.googleSlidesToolActivated}
+        disabled={!connectionManager.googleSlidesToolActivated}
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -210,12 +210,12 @@
 {#if property === "openWebsite" && subProperty === "eraser"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.eraserProperties.label()}
-        descriptionText={connectionManager.currentRoom?.eraserToolActivated
+        descriptionText={connectionManager.eraserToolActivated
             ? $LL.mapEditor.properties.eraserProperties.description()
             : $LL.mapEditor.properties.eraserProperties.disabled()}
         img={eraserSvg}
         style={`z-index: 1;${isActive ? "background-color: #4156f6;" : ""}`}
-        disabled={!connectionManager.currentRoom?.eraserToolActivated}
+        disabled={!connectionManager.eraserToolActivated}
         on:click={(event) => {
             dispatch("click", event);
         }}

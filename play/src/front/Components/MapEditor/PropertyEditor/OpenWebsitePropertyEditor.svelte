@@ -142,7 +142,7 @@
                 } else if (property.application == "klaxoon") {
                     property.link = KlaxoonService.getKlaxoonEmbedUrl(
                         new URL(property.link),
-                        connectionManager.currentRoom?.klaxoonToolClientId
+                        connectionManager.klaxoonToolClientId
                     );
                 }
             }
@@ -244,7 +244,7 @@
             try {
                 const link = KlaxoonService.getKlaxoonEmbedUrl(
                     new URL(property.link as string),
-                    connectionManager.currentRoom?.klaxoonToolClientId
+                    connectionManager.klaxoonToolClientId
                 );
                 embeddable = true;
                 optionAdvancedActivated = false;
@@ -276,6 +276,41 @@
                         ? $LL.mapEditor.properties.eraserProperties.error()
                         : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
                 console.info("Error to check embeddable website", e);
+                property.link = null;
+            }
+            embeddableLoading = false;
+            onValueChange();
+        }
+
+        if (property.regexUrl) {
+            try {
+                const regex = new RegExp(property.regexUrl);
+                if (regex.test(property.link as string)) {
+                    // if property has "targetEmbedableLink" transform the link to embedable link with regex
+                    if (property.targetEmbedableUrl) {
+                        const matches = regex.exec(property.link as string);
+                        if (matches) {
+                            property.link = property.targetEmbedableUrl.replace(/\$[0-9]+/g, (match) => {
+                                const index = parseInt(match.substring(1));
+                                return matches[index] ?? "";
+                            });
+                        }
+                    }
+                } else if (property.targetEmbedableUrl) {
+                    const url = new URL(property.link as string);
+                    if (property.targetEmbedableUrl?.indexOf(url.host) == -1) {
+                        // If the link exists but is not the same of embedable link target, their is an error
+                        error = `${$LL.mapEditor.properties.linkProperties.errorEmbeddableLink()} (${
+                            property.regexUrl
+                        })`;
+                        property.link = null;
+                    }
+                }
+                embeddable = false;
+            } catch (e) {
+                console.info("Error to check embeddable website", e);
+                embeddable = false;
+                error = $LL.mapEditor.properties.linkProperties.errorInvalidUrl();
                 property.link = null;
             }
             embeddableLoading = false;
@@ -345,28 +380,25 @@
 
     function openKlaxoonActivityPicker() {
         if (
-            !connectionManager.currentRoom?.klaxoonToolClientId ||
+            !connectionManager.klaxoonToolClientId ||
             property.type !== "openWebsite" ||
             property.application !== "klaxoon"
         ) {
             console.info("openKlaxoonActivityPicker: app is not a klaxoon app");
             return;
         }
-        KlaxoonService.openKlaxoonActivityPicker(
-            connectionManager.currentRoom?.klaxoonToolClientId,
-            (payload: KlaxoonEvent) => {
-                property.link = KlaxoonService.getKlaxoonEmbedUrl(
-                    new URL(payload.url),
-                    connectionManager.currentRoom?.klaxoonToolClientId
-                );
-                property.poster = payload.imageUrl ?? undefined;
-                property.buttonLabel = payload.title ?? undefined;
-                // check if the link is embeddable
-                checkWebsiteProperty().catch((e) => {
-                    console.error("Error checking embeddable website", e);
-                });
-            }
-        );
+        KlaxoonService.openKlaxoonActivityPicker(connectionManager.klaxoonToolClientId, (payload: KlaxoonEvent) => {
+            property.link = KlaxoonService.getKlaxoonEmbedUrl(
+                new URL(payload.url),
+                connectionManager.klaxoonToolClientId
+            );
+            property.poster = payload.imageUrl ?? undefined;
+            property.buttonLabel = payload.title ?? undefined;
+            // check if the link is embeddable
+            checkWebsiteProperty().catch((e) => {
+                console.error("Error checking embeddable website", e);
+            });
+        });
     }
 
     function openPicker() {
@@ -490,9 +522,12 @@
         {:else if property.application === "eraser"}
             <img class="tw-w-6 tw-mr-1" src={eraserSvg} alt={$LL.mapEditor.properties.eraserProperties.description()} />
             {$LL.mapEditor.properties.eraserProperties.label()}
-        {:else}
+        {:else if property.application === "website"}
             <img class="tw-w-6 tw-mr-1" src={icon} alt={$LL.mapEditor.properties.linkProperties.description()} />
             {$LL.mapEditor.properties.linkProperties.label()}
+        {:else}
+            <img class="tw-w-6 tw-mr-1" src={property.icon} alt={property.label} />
+            {property.label}
         {/if}
     </span>
     <span slot="content">

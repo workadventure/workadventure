@@ -8,6 +8,7 @@
     } from "@workadventure/map-editor";
     import { onDestroy } from "svelte";
     import { ArrowLeftIcon } from "svelte-feather-icons";
+    import { ApplicationDefinitionInterface } from "@workadventure/messages";
     import {
         mapEditorEntityModeStore,
         mapEditorSelectedEntityPrefabStore,
@@ -19,6 +20,8 @@
     import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
+    import AddPropertyButton from "../PropertyEditor/AddPropertyButton.svelte";
+    import { connectionManager } from "../../../Connection/ConnectionManager";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
@@ -57,6 +60,31 @@
             properties = $mapEditorSelectedEntityStore?.getProperties();
             refreshFlags();
         }
+    }
+
+    function onAddSpecificProperty(app: ApplicationDefinitionInterface) {
+        if (!$mapEditorSelectedEntityStore) return;
+        analyticsClient.addMapEditorProperty("entity", app.name);
+        const property: EntityDataProperty = {
+            id: crypto.randomUUID(),
+            type: "openWebsite",
+            application: app.name,
+            closable: true,
+            buttonLabel: app.name,
+            link: "",
+            newTab: false,
+            placeholder: app.description,
+            label: app.name,
+            policy: undefined,
+            icon: app.image,
+            regexUrl: app.regexUrl,
+            targetEmbedableUrl: app.targetUrl,
+        };
+        $mapEditorSelectedEntityStore.addProperty(property);
+
+        // refresh properties
+        properties = $mapEditorSelectedEntityStore?.getProperties();
+        refreshFlags();
     }
 
     function onUpdateName() {
@@ -246,7 +274,20 @@
             }}
         />
     </div>
-    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-m-2">
+        {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
+            <AddPropertyButton
+                headerText={app.name}
+                descriptionText={app.description}
+                img={app.image}
+                style={`z-index: ${16 + index};`}
+                on:click={() => {
+                    onAddSpecificProperty(app);
+                }}
+            />
+        {/each}
+    </div>
+    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-m-2">
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="klaxoon"
