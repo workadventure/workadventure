@@ -58,12 +58,17 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             }
         }
         const camera = this.gameScene.getCameraManager().getCamera();
-        this.gameScene.moveTo({
-            x: pointer.x + camera.scrollX,
-            y: pointer.y + camera.scrollY,
-        }, true).catch((reason) => {
-            console.warn(reason);
-        });
+        this.gameScene
+            .moveTo(
+                {
+                    x: pointer.x + camera.scrollX,
+                    y: pointer.y + camera.scrollY,
+                },
+                true
+            )
+            .catch((reason) => {
+                console.warn(reason);
+            });
     }
 
     public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}

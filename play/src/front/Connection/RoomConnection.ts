@@ -713,7 +713,12 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "moveToPositionMessage": {
                     if (message.moveToPositionMessage && message.moveToPositionMessage.position) {
-                        gameManager.getCurrentGameScene().moveTo(message.moveToPositionMessage.position);
+                        gameManager
+                            .getCurrentGameScene()
+                            .moveTo(message.moveToPositionMessage.position)
+                            .catch((error) => {
+                                console.warn(error);
+                            });
                     }
                     this._moveToPositionMessageStream.next(message.moveToPositionMessage);
                     break;

@@ -13,7 +13,6 @@ export class PathfindingManager {
     private tileDimensions: { width: number; height: number };
 
     constructor(collisionsGrid: number[][], tileDimensions: { width: number; height: number }) {
-
         this.easyStar = new EasyStar.js();
         this.easyStar.enableDiagonals();
         this.easyStar.disableCornerCutting();

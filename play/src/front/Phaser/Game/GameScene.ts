@@ -2400,12 +2400,12 @@ ${escapedMessage}
             // clear properties in case we are moved on the same layer / area in order to trigger them
             //this.gameMapFrontWrapper.clearCurrentProperties();
 
-            this.handleCurrentPlayerHasMovedEvent({
+            /*this.handleCurrentPlayerHasMovedEvent({
                 x: message.x,
                 y: message.y,
                 direction: this.CurrentPlayer.lastDirection,
                 moving: false,
-            });
+            });*/
             this.markDirty();
         });
 
@@ -2749,7 +2749,9 @@ ${escapedMessage}
                         if (destinationObject) {
                             endPos = destinationObject;
                         } else {
-                            endPos = this.pathfindingManager.mapTileUnitToPixels(this.gameMapFrontWrapper.getRandomPositionFromLayer(moveToParam));
+                            endPos = this.pathfindingManager.mapTileUnitToPixels(
+                                this.gameMapFrontWrapper.getRandomPositionFromLayer(moveToParam)
+                            );
                         }
                     }
                 }
@@ -2774,11 +2776,19 @@ ${escapedMessage}
     /**
      * Walk the player to position x,y expressed in Game pixels.
      */
-    public async moveTo(position: { x: number; y: number }, tryFindingNearestAvailable = false, speed: number|undefined = undefined): Promise<{x: number, y: number, cancelled: boolean}> {
-        const path = await this.getPathfindingManager().findPathFromGameCoordinates({
-            x: this.CurrentPlayer.x,
-            y: this.CurrentPlayer.y,
-        }, position, tryFindingNearestAvailable);
+    public async moveTo(
+        position: { x: number; y: number },
+        tryFindingNearestAvailable = false,
+        speed: number | undefined = undefined
+    ): Promise<{ x: number; y: number; cancelled: boolean }> {
+        const path = await this.getPathfindingManager().findPathFromGameCoordinates(
+            {
+                x: this.CurrentPlayer.x,
+                y: this.CurrentPlayer.y,
+            },
+            position,
+            tryFindingNearestAvailable
+        );
         return this.CurrentPlayer.setPathToFollow(path, speed);
     }
 

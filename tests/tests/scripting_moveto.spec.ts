@@ -1,6 +1,5 @@
-import {expect, test, webkit} from '@playwright/test';
+import {test} from '@playwright/test';
 import { login } from './utils/roles';
-import {evaluateScript} from "./utils/scripting";
 import Map from './utils/map';
 import {publicTestMapUrl} from "./utils/urls";
 
