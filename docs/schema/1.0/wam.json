@@ -532,10 +532,6 @@
                             "type": "string"
                           },
                           "default": []
-                        },
-                        "searchable": {
-                          "type": "boolean",
-                          "default": false
                         }
                       },
                       "required": [
@@ -560,10 +556,6 @@
                           "type": "string",
                           "const": "personalAreaPropertyData"
                         },
-                        "isPersonalArea": {
-                          "type": "boolean",
-                          "default": false
-                        },
                         "accessClaimMode": {
                           "type": "string",
                           "enum": [
@@ -578,7 +570,7 @@
                           },
                           "default": []
                         },
-                        "owner": {
+                        "ownerId": {
                           "type": "string",
                           "default": ""
                         }

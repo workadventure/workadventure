@@ -123,19 +123,16 @@ export const RestrictedRightsPropertyData = PropertyBase.extend({
     type: z.literal("restrictedRightsPropertyData"),
     writeTags: z.array(z.string()).default([]),
     readTags: z.array(z.string()).default([]),
-    searchable: z.boolean().default(false),
 });
 
 export const PersonalAreaAccessClaimMode = z.enum(["dynamic", "static"]);
 
 export const PersonalAreaPropertyData = PropertyBase.extend({
     type: z.literal("personalAreaPropertyData"),
-    isPersonalArea: z.boolean().default(false),
     accessClaimMode: PersonalAreaAccessClaimMode,
     allowedTags: z.array(z.string()).default([]),
-    owner: z.string().default(""),
+    ownerId: z.string().default(""),
 });
-
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,
@@ -216,6 +213,12 @@ export const EntityCollectionRaw = z.object({
     tags: z.array(z.string()),
     collection: z.array(EntityRawPrefab),
     version: z.string().optional(),
+});
+
+export const InputTagOption = z.object({
+    value: z.string(),
+    label: z.string(),
+    created: z.boolean().optional(),
 });
 
 // TODO: get rid of this type and use only WAMEntityData
@@ -368,6 +371,7 @@ export type AreaDescriptionPropertyData = z.infer<typeof AreaDescriptionProperty
 export type RestrictedRightsPropertyData = z.infer<typeof RestrictedRightsPropertyData>;
 export type PersonalAreaPropertyData = z.infer<typeof PersonalAreaPropertyData>;
 export type PersonalAreaAccessClaimMode = z.infer<typeof PersonalAreaAccessClaimMode>;
+export type InputTagOption = z.infer<typeof InputTagOption>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",

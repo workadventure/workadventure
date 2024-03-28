@@ -1,6 +1,6 @@
 import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
-import type { AdminApiData, MapDetailsData, RoomRedirect } from "@workadventure/messages";
+import type { AdminApiData, MapDetailsData, MemberData, RoomRedirect } from "@workadventure/messages";
 import {
     Capabilities,
     CompanionDetail,
@@ -989,6 +989,14 @@ class AdminApi implements AdminInterface {
             );
         }
         return;
+    }
+
+    async searchMembers(playUri: string | null, searchText: string): Promise<MemberData[]> {
+        const response = await axios.get<MemberData[]>(ADMIN_API_URL + "/api/members", {
+            params: { playUri, searchText },
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        });
+        return response.data ? response.data : [];
     }
 }
 
