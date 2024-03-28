@@ -575,7 +575,7 @@ jobs:
           path: /tmp/ejabberd.tar.gz
 
   end-to-end-tests:
-    name: "End to end tests with ${{ matrix.browser }} (${{ matrix.shard }}/${{ matrix.nbShards }})"
+    name: "End to end tests with ${{ matrix.project }} (${{ matrix.shard }}/${{ matrix.nbShards }})"
     strategy:
       fail-fast: false
       matrix:
@@ -765,7 +765,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: playwright-report-${{ matrix.browser }}-${{ matrix.shard }}-${{ matrix.nbShards }}
+          name: playwright-report-${{ matrix.project }}-${{ matrix.shard }}-${{ matrix.nbShards }}
           path: tests/playwright-report/
           retention-days: 30
 

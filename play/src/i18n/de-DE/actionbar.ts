@@ -2,7 +2,8 @@ import type { BaseTranslation } from "../i18n-types";
 
 const actionbar: BaseTranslation = {
     chat: "Chat öffnen / schließen",
-    follow: "Folgen / Entfolgen",
+    follow: "Folgen",
+    unfollow: "Entfolgen",
     lock: "Konversation sperren / entsperren",
     screensharing: "Bildschirmfreigabe ein-/ausschalten",
     layout: "Kachelansicht ein-/ausschalten",
