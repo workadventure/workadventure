@@ -59,24 +59,6 @@ export const openKlaxoonActivityPicker = (clientId: string, successCallback: (ar
             width: 639,
         },
     });
-    // TODO delete after test
-    /*setTimeout(() => {
-        window.postMessage(
-            {
-                type: "activity-picker-result",
-                payload: {
-                    access_code: "KXEWMSE3NF2M",
-                    author: {firstname: 'Klaxoon', lastname: 'Academy'},
-                    imageUrl: "https://app.klaxoon.com/manager/media/cache/200c/mediabundle/71/7112410a023fefe90e955d37b7417623.jpg",
-                    lang: "fr",
-                    title: "Feedback is a gift ! Nous serions ravis d'avoir votre avis sur la Klaxoon Academy.",
-                    type: "survey",
-                    url: "https://app.klaxoon.com/join/KXEWMSE3NF2M?from=aG3stVtZnDmhrhqKc17to1OlfvyyEUeV"
-                },
-            },
-            "*"
-        );
-    }, 1000);*/
 };
 
 // Create function to get url with embedded parameter

@@ -56,6 +56,9 @@ message ApplicationMessage {
   optional string doc = 3;
   optional string description = 4;
   optional string image = 5;
+  optional bool enabled = 6;
+  optional string regexUrl = 7;
+  optional string targetUrl = 8;
 }
 
 message CompanionTextureMessage {

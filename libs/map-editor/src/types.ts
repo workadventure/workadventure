@@ -89,10 +89,15 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
             z.literal("googleSlides"),
             z.literal("googleForms"),
             z.literal("eraser"),
+            z.string(),
         ])
         .default("website"),
     poster: z.string().optional(),
     placeholder: z.string().optional(),
+    icon: z.string().optional(),
+    label: z.string().optional(),
+    regexUrl: z.string().optional(),
+    targetEmbedableUrl: z.string().optional(),
 });
 
 export const SpeakerMegaphonePropertyData = PropertyBase.extend({
