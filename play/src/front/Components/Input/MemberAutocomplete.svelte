@@ -23,7 +23,11 @@
                 return (await connection.queryMembers(filterText)).map((member, index) => ({
                     index,
                     value: member.id,
-                    label: member.email,
+                    label: member.name
+                    ? `${member.name} ${member.email ? `(${member.email})` : ""}`
+                    : member.email
+                    ? member.email
+                    : member.id,
                 }));
             } catch (error) {
                 console.error(error);
@@ -33,7 +37,7 @@
     }
 
     function handleSelectOption() {
-        dispatch("onSelect", selectedValue?.value ?? "");
+        dispatch("onSelect", selectedValue);
     }
 </script>
 
