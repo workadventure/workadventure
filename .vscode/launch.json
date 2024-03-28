@@ -4,6 +4,7 @@
         {
             "name": "Debug: Play (Pusher)",
             "type": "node",
+            "nodeVersionHint": 20,
             "request": "attach",
             "remoteRoot": "/usr/src/app",
             "localRoot": "${workspaceFolder}",

@@ -3,10 +3,17 @@ import { Unsubscriber, get } from "svelte/store";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import pLimit from "p-limit";
 import debug from "debug";
+import _ from "lodash";
 import type { RoomConnection } from "../../../Connection/RoomConnection";
 import type { GameScene } from "../GameScene";
-import { mapEditorModeStore, mapEditorSelectedToolStore } from "../../../Stores/MapEditorStore";
+import {
+    mapEditorAskToClaimPersonalAreaStore,
+    mapEditorModeStore,
+    mapEditorSelectedToolStore,
+} from "../../../Stores/MapEditorStore";
 import { mapEditorActivated, mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
+import { localUserStore } from "../../../Connection/LocalUserStore";
+import { gameManager } from "../GameManager";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
@@ -17,6 +24,7 @@ import { FrontCommand } from "./Commands/FrontCommand";
 import { TrashEditorTool } from "./Tools/TrashEditorTool";
 import { ExplorerTool } from "./Tools/ExplorerTool";
 import { CloseTool } from "./Tools/CloseTool";
+import { UpdateAreaFrontCommand } from "./Commands/Area/UpdateAreaFrontCommand";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
@@ -439,5 +447,46 @@ export class MapEditorModeManager {
 
     public getScene(): GameScene {
         return this.scene;
+    }
+
+    public claimPersonalArea() {
+        const areaDataToClaim = get(mapEditorAskToClaimPersonalAreaStore);
+        const userUUID = localUserStore.getLocalUser()?.uuid;
+        if (areaDataToClaim === undefined) {
+            console.error("No area to claim");
+            return;
+        }
+        if (userUUID === undefined) {
+            console.error("Unable to claim the area, your UUID is undefined");
+            return;
+        }
+        const areaPersonalPropertyData = areaDataToClaim.properties.find(
+            (property) => property.type === "personalAreaPropertyData"
+        );
+        if (!areaPersonalPropertyData) {
+            console.error("No area property data");
+            return;
+        }
+        const scene = gameManager.getCurrentGameScene();
+
+        if (scene === undefined) {
+            console.error("GameScene is undefined");
+        }
+
+        const oldAreaData = structuredClone(areaDataToClaim);
+        const property = areaDataToClaim.properties.find((property) => property.type === "personalAreaPropertyData");
+        if (property) {
+            _.merge(property, { ownerId: userUUID });
+        }
+
+        this.executeCommand(
+            new UpdateAreaFrontCommand(
+                this.getScene().getGameMap(),
+                areaDataToClaim,
+                undefined,
+                oldAreaData,
+                this.editorTools.AreaEditor as AreaEditorTool
+            )
+        ).catch((error) => console.error(error));
     }
 }

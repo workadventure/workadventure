@@ -1,4 +1,4 @@
-import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData } from "@workadventure/messages";
+import type { MapDetailsData, RoomRedirect, AdminApiData, ErrorApiData, MemberData } from "@workadventure/messages";
 import { Capabilities } from "@workadventure/messages";
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { ShortMapDescriptionList } from "./ShortMapDescription";
@@ -115,4 +115,6 @@ export interface AdminInterface {
     saveCompanionTexture(userIdentifier: string, texture: string, roomUrl: string): Promise<void>;
 
     getCapabilities(): Promise<Capabilities>;
+
+    searchMembers(roomUrl: string, searchText: string): Promise<MemberData[]>;
 }

@@ -6,6 +6,8 @@ import {
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
     OpenWebsitePropertyData,
+    PersonalAreaAccessClaimMode,
+    PersonalAreaPropertyData,
     PlayAudioPropertyData,
     SpeakerMegaphonePropertyData,
 } from "@workadventure/map-editor";
@@ -34,6 +36,9 @@ import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRt
 import { gameManager } from "../GameManager";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
 import { GameScene } from "../GameScene";
+import { mapEditorAskToClaimPersonalAreaStore } from "../../../Stores/MapEditorStore";
+import { connectionManager } from "../../../Connection/ConnectionManager";
+import { requestVisitCardsStore } from "../../../Stores/GameStore";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -158,6 +163,11 @@ export class AreasPropertiesListener {
                 this.handleExitPropertyOnEnter(url);
                 break;
             }
+            case "personalAreaPropertyData": {
+                this.handlePersonalAreaPropertyOnEnter(property, area);
+
+                break;
+            }
             default: {
                 break;
             }
@@ -213,6 +223,12 @@ export class AreasPropertiesListener {
                 this.handleExitPropertyOnEnter(url);
                 break;
             }
+            case "personalAreaPropertyData": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handlePersonalAreaPropertyOnLeave();
+                this.handlePersonalAreaPropertyOnEnter(newProperty, area);
+                break;
+            }
             case "silent":
             default: {
                 break;
@@ -248,6 +264,10 @@ export class AreasPropertiesListener {
             }
             case "listenerMegaphone": {
                 this.handleListenerMegaphonePropertyOnLeave(property);
+                break;
+            }
+            case "personalAreaPropertyData": {
+                this.handlePersonalAreaPropertyOnLeave();
                 break;
             }
             default: {
@@ -431,6 +451,38 @@ export class AreasPropertiesListener {
         }
     }
 
+    private handlePersonalAreaPropertyOnEnter(property: PersonalAreaPropertyData, areaData: AreaData): void {
+        if (property.ownerId !== undefined) {
+            this.displayPersonalAreaOwnerVisitCard(property.ownerId);
+        } else if (property.accessClaimMode === PersonalAreaAccessClaimMode.enum.dynamic) {
+            this.displayPersonalAreaClaimDialogBox(property, areaData);
+        }
+    }
+
+    private displayPersonalAreaOwnerVisitCard(ownerId: string) {
+        const connectedUserUUID = localUserStore.getLocalUser()?.uuid;
+        if (connectedUserUUID != ownerId) {
+            connectionManager
+                .getMember(ownerId)
+                .then((member) => {
+                    if (member?.visitCardUrl) {
+                        requestVisitCardsStore.set(member.visitCardUrl);
+                    }
+                })
+                .catch((error) => console.error(error));
+        }
+    }
+
+    private displayPersonalAreaClaimDialogBox(property: PersonalAreaPropertyData, areaData: AreaData) {
+        const userHasAllowedTagToClaimTheArea =
+            localUserStore.isLogged() &&
+            (property.allowedTags.length === 0 ||
+                property.allowedTags.some((tag) => this.scene.connection?.hasTag(tag)));
+        if (userHasAllowedTagToClaimTheArea) {
+            mapEditorAskToClaimPersonalAreaStore.set(areaData);
+        }
+    }
+
     private handleSilentPropertyOnEnter(): void {
         silentStore.setAreaSilent(true);
     }
@@ -509,6 +561,13 @@ export class AreasPropertiesListener {
             }
         });
         inJitsiStore.set(false);
+    }
+
+    private handlePersonalAreaPropertyOnLeave(): void {
+        mapEditorAskToClaimPersonalAreaStore.set(undefined);
+        if (get(requestVisitCardsStore)) {
+            requestVisitCardsStore.set(null);
+        }
     }
 
     private openCoWebsiteFunction(
