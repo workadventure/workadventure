@@ -1022,6 +1022,13 @@ class AdminApi implements AdminInterface {
         });
         return response.data ? response.data : [];
     }
+
+    async getMember(memberUUID: string): Promise<MemberData[]> {
+        const response = await axios.get<MemberData[]>(`${ADMIN_API_URL}/api/members/${memberUUID}`, {
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        });
+        return response.data ? response.data : [];
+    }
 }
 
 export const adminApi = new AdminApi();

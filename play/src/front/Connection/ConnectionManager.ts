@@ -591,6 +591,13 @@ class ConnectionManager {
         return response.data ? response.data : [];
     }
 
+    async getMember(memberUUID: string): Promise<MemberData | undefined> {
+        const response = await axiosToPusher.get<MemberData>(`members/${memberUUID}`, {
+            headers: { Authorization: this.authToken },
+        });
+        return response.data ? response.data : undefined;
+    }
+
     get currentRoom() {
         return this._currentRoom;
     }
