@@ -12,6 +12,7 @@ import { BaseHttpController } from "./BaseHttpController";
 export class MemberController extends BaseHttpController {
     routes(): void {
         this.searchMembers();
+        this.getMember();
     }
 
     /**
@@ -58,6 +59,45 @@ export class MemberController extends BaseHttpController {
             }
 
             const members = await adminApi.searchMembers(query.playUri, query.searchText);
+
+            res.atomic(() => {
+                res.setHeader("Content-Type", "application/json").send(JSON.stringify(members));
+            });
+
+            return;
+        });
+    }
+
+    /**
+     * @openapi
+     * /members:
+     *   get:
+     *     description: Search members from search term.
+     *     tags:
+     *      - Admin endpoint
+     *     parameters:
+     *      - name: "memberUUID"
+     *        in: "path"
+     *        required: true
+     *        type: "string"
+     *        description: The member UUID
+     *     responses:
+     *       200:
+     *        description: Member.
+     *        schema:
+     *            $ref: '#/definitions/MemberData'
+     *       404:
+     *         description: No member found
+     *
+     */
+    getMember(): void {
+        this.app.options("/members/:memberUUID", (req, res) => {
+            res.atomic(() => {
+                res.status(200).send();
+            });
+        });
+        this.app.get("/members/:memberUUID", [authenticated], async (req: Request, res: Response) => {
+            const members = await adminApi.getMember(req.path_parameters.memberUUID);
 
             res.atomic(() => {
                 res.setHeader("Content-Type", "application/json").send(JSON.stringify(members));
