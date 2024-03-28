@@ -18,7 +18,7 @@ test.use({
   baseURL: map_storage_url,
 });
 
-test.describe("Map editor thematics @oidc", () => {
+test.describe("Map editor area with rights @oidc", () => {
   test.beforeEach(
     "Ignore tests on mobilechromium because map editor not available for mobile devices",
     ({}, { project }) => {
@@ -585,14 +585,57 @@ test.describe("Map editor thematics @oidc", () => {
     await page2.goto(Map.url("empty"));
     await login(page2, "test2", 5);
 
-    // Move to area and claim it
-    await Map.teleportToPosition(
-      page2,
-      AreaAccessRights.entityPositionInArea.x,
-      AreaAccessRights.entityPositionInArea.y
+        // Move to area and claim it
+        await Map.teleportToPosition(
+            page2,
+            AreaAccessRights.entityPositionInArea.x,
+            AreaAccessRights.entityPositionInArea.y
     );
-    await expect(
+    await  expect(
       page2.getByTestId("claimPersonalAreaButton")
     ).not.toBeAttached();
   });
+
+  /*  test("Enter in personal area display the visit card owner", async ({
+        page,
+        browser,
+        request,
+      }) => {
+        await resetWamMaps(request);
+
+        await page.goto(Map.url("empty"));
+        await login(page, "test", 3);
+        await oidcAdminTagLogin(page);
+
+        await Menu.openMapEditor(page);
+        await AreaAccessRights.openAreaEditorAndAddArea(page);
+        await page.getByTestId("personalAreaPropertyData").click();
+        await page.getByTestId("allowedTags").fill("member");
+        await page.press("body", "Enter");
+        await Menu.closeMenu(page);
+        await Map.teleportToPosition(
+          page,
+          AreaAccessRights.entityPositionInArea.x,
+          AreaAccessRights.entityPositionInArea.y
+        );
+        await page.getByTestId("claimPersonalAreaButton").click();
+        await oidcLogout(page);
+        await page.close();
+
+        // Second browser with member user trying to read the object
+        const newBrowser = await browser.browserType().launch({});
+        const page2 = await newBrowser.newPage();
+        await page2.goto(Map.url("empty"));
+        await login(page2, "test2", 5);
+        await oidcMemberTagLogin(page2);
+
+        // Move to area and claim it
+        await Map.teleportToPosition(
+          page2,
+          AreaAccessRights.entityPositionInArea.x,
+          AreaAccessRights.entityPositionInArea.y
+        );
+
+        await expect(page2.getByTitle("visitCard")).toBeAttached();
+      });*/
 });
