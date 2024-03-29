@@ -1,7 +1,7 @@
 <script lang="ts">
     import Select from "svelte-select";
     import { createEventDispatcher } from "svelte";
-    import { connectionManager } from "../../Connection/ConnectionManager";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     export let placeholder: string;
     export let value: string | undefined = undefined;
@@ -17,14 +17,17 @@
     const dispatch = createEventDispatcher();
 
     async function searchMembers(filterText: string) {
-        try {
-            return (await connectionManager.searchMembers(filterText)).map((member, index) => ({
-                index,
-                value: member.id,
-                label: member.email,
-            }));
-        } catch (error) {
-            console.error(error);
+        const connection = gameManager.getCurrentGameScene().connection;
+        if (connection) {
+            try {
+                return (await connection.queryMembers(filterText)).map((member, index) => ({
+                    index,
+                    value: member.id,
+                    label: member.email,
+                }));
+            } catch (error) {
+                console.error(error);
+            }
         }
         return [];
     }

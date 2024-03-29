@@ -22,7 +22,6 @@ import { jwtTokenManager } from "./services/JWTTokenManager";
 import { CompanionService } from "./services/CompanionService";
 import { WokaService } from "./services/WokaService";
 import { UserController } from "./controllers/UserController";
-import { MemberController } from "./controllers/MemberController";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LiveDirectory = require("live-directory");
 
@@ -86,7 +85,6 @@ class App {
         // Http controllers
         new AuthenticateController(this.webserver);
         new MapController(this.webserver);
-        new MemberController(this.webserver);
         new PrometheusController(this.webserver);
         new DebugController(this.webserver);
         new AdminController(this.webserver);

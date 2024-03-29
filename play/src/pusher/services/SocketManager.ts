@@ -33,6 +33,9 @@ import {
     MegaphoneStateMessage,
     UpdateSpaceMetadataMessage,
     BanPlayerMessage,
+    SearchMemberQuery,
+    SearchMemberAnswer,
+    MemberData,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { isAxiosError } from "axios";
@@ -1510,6 +1513,18 @@ export class SocketManager implements ZoneEventListener {
             return;
         }
         space.muteVideoEverybodyUser(socketData, participantId);
+    }
+
+    async handleSearchMemberQuery(client: Socket, searchMemberQuery: SearchMemberQuery): Promise<SearchMemberAnswer> {
+        const { roomId } = client.getUserData();
+        const members = await adminService.searchMembers(roomId, searchMemberQuery.searchText);
+        return {
+            members: members.map((member: MemberData) => ({
+                name: member.name ?? undefined,
+                id: member.id,
+                email: member.email ?? undefined,
+            })),
+        };
     }
 }
 
