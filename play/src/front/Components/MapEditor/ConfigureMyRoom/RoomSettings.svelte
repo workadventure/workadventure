@@ -2,7 +2,6 @@
     import { InfoIcon } from "svelte-feather-icons";
     import { onMount } from "svelte";
     import { writable } from "svelte/store";
-    import { InputTagOption } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import InputText from "../../Input/InputText.svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -10,6 +9,7 @@
     import InputTags from "../../Input/InputTags.svelte";
     import { UpdateWAMMetadataFrontCommand } from "../../../Phaser/Game/MapEditor/Commands/WAM/UpdateWAMMetadataFrontCommand";
     import ButtonState from "../../Input/ButtonState.svelte";
+    import { InputTagOption } from "../../Input/InputTagOption";
 
     let dynamicStrings = {
         error: {

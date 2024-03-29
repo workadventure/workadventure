@@ -1,9 +1,10 @@
 <script lang="ts">
     import { InfoIcon } from "svelte-feather-icons";
-    import { InputTagOption, RestrictedRightsPropertyData } from "@workadventure/map-editor";
+    import { RestrictedRightsPropertyData } from "@workadventure/map-editor";
     import { createEventDispatcher } from "svelte";
     import InputTags from "../../Input/InputTags.svelte";
     import LL from "../../../../i18n/i18n-svelte";
+    import { InputTagOption, toTags } from "../../Input/InputTagOption";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let restrictedRightsPropertyData: RestrictedRightsPropertyData;
@@ -21,8 +22,8 @@
     let _tag: InputTagOption[] = [];
 
     function onChangeWriteReadTags() {
-        restrictedRightsPropertyData.readTags = readTags?.map((tag) => tag.value) ?? [];
-        restrictedRightsPropertyData.writeTags = writeTags?.map((tag) => tag.value) ?? [];
+        restrictedRightsPropertyData.readTags = readTags ? toTags(readTags) : [];
+        restrictedRightsPropertyData.writeTags = writeTags ? toTags(writeTags) : [];
         dispatch("change");
     }
 

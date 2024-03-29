@@ -1,10 +1,11 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import { InfoIcon } from "svelte-feather-icons";
-    import { InputTagOption, PersonalAreaAccessClaimMode, PersonalAreaPropertyData } from "@workadventure/map-editor";
+    import { PersonalAreaAccessClaimMode, PersonalAreaPropertyData } from "@workadventure/map-editor";
     import LL from "../../../../i18n/i18n-svelte";
     import InputTags from "../../Input/InputTags.svelte";
     import MemberAutocomplete from "../../Input/MemberAutocomplete.svelte";
+    import { InputTagOption, toTags } from "../../Input/InputTagOption";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let personalAreaPropertyData: PersonalAreaPropertyData;
@@ -28,7 +29,7 @@
 
     function handleTagChange(tags: InputTagOption[] | undefined) {
         if (tags) {
-            personalAreaPropertyData.allowedTags = tags.map((tag) => tag.value);
+            personalAreaPropertyData.allowedTags = toTags(tags);
         } else {
             personalAreaPropertyData.allowedTags = [];
         }

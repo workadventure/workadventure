@@ -1,7 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import Select from "svelte-select";
-    import { InputTagOption } from "@workadventure/map-editor";
+    import { InputTagOption } from "./InputTagOption";
 
     const dispatch = createEventDispatcher();
 

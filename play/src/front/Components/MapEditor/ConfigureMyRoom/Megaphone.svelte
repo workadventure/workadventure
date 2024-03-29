@@ -2,7 +2,6 @@
     import { fade } from "svelte/transition";
     import { UpdateMegaphoneSettingMessage } from "@workadventure/messages";
     import { InfoIcon } from "svelte-feather-icons";
-    import { InputTagOption } from "@workadventure/map-editor";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { LL } from "../../../../i18n/i18n-svelte";
     import InputText from "../../Input/InputText.svelte";
@@ -11,6 +10,7 @@
     import PureLoader from "../../PureLoader.svelte";
     import ButtonState from "../../Input/ButtonState.svelte";
     import { executeUpdateWAMSettings } from "../../../Phaser/Game/MapEditor/Commands/Facades";
+    import { InputTagOption } from "../../Input/InputTagOption";
 
     let enabled: boolean = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.enabled ?? false;
     const oldRights: string[] = gameManager.getCurrentGameScene().wamFile?.settings?.megaphone?.rights ?? [];
