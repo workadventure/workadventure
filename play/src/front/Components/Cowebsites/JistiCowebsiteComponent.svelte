@@ -6,7 +6,6 @@
         defaultInterfaceConfig,
         mergeConfig,
         JitsiOptions,
-        JitsiConfig,
     } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { jitsiExternalApiFactory } from "../../WebRtc/JitsiExternalApiFactory";
     import { screenWakeLock } from "../../Utils/ScreenWakeLock";
