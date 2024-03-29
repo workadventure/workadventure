@@ -25,6 +25,7 @@
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
     import Tooltip from "../../Util/Tooltip.svelte";
     import InputTags from "../../Input/InputTags.svelte";
+    import { InputTagOption } from "../../Input/InputTagOption";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenWebsitePropertyData;
@@ -45,7 +46,7 @@
     let oldNewTabValue = property.newTab;
     let linkElement: HTMLInputElement;
     let policy: Option[] | undefined = undefined;
-    let policyOption: Option[] = [
+    let policyOption: InputTagOption[] = [
         { value: "accelerometer", label: "accelerometer", created: undefined },
         { value: "ambient-light-sensor", label: "ambient-light-sensor", created: undefined },
         { value: "autoplay", label: "autoplay", created: undefined },
@@ -667,20 +668,25 @@
         margin-bottom: 0.5em;
         margin-top: 0.5em;
         flex-direction: column;
+
         label {
             min-width: fit-content;
             margin-right: 0.5em;
         }
+
         input {
             flex-grow: 1;
             min-width: 0;
         }
+
         * {
             margin-bottom: 0;
         }
     }
+
     .advanced-option {
         display: none;
+
         &.active {
             display: block;
         }

@@ -185,6 +185,7 @@ message EditMapCommandWithKeyMessage {
   EditMapCommandMessage editMapCommandMessage = 2;
   repeated string connectedUserTags = 3;
   bool userCanEdit = 4;
+  string userUUID = 5;
 }
 
 message ModifyAreaMessage {
@@ -390,6 +391,7 @@ message QueryMessage {
     EmbeddableWebsiteQuery embeddableWebsiteQuery = 4;
     RoomsFromSameWorldQuery roomsFromSameWorldQuery = 5;
     SendEventQuery sendEventQuery = 6;
+    SearchMemberQuery searchMemberQuery = 7;
   }
 }
 
@@ -421,6 +423,10 @@ message SendEventQuery {
   repeated int32 targetUserIds = 3;
 }
 
+message SearchMemberQuery {
+  string searchText = 1;
+}
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
@@ -431,6 +437,7 @@ message AnswerMessage {
     EmbeddableWebsiteAnswer embeddableWebsiteAnswer = 6;
     RoomsFromSameWorldAnswer roomsFromSameWorldAnswer = 7;
     SendEventAnswer sendEventAnswer = 8;
+    SearchMemberAnswer searchMemberAnswer = 9;
   }
 }
 
@@ -471,6 +478,16 @@ message RoomsFromSameWorldAnswer {
 }
 
 message SendEventAnswer {
+}
+
+message SearchMemberAnswer {
+  repeated Member members = 1;
+}
+
+message Member {
+  string id = 1;
+  optional string name = 2;
+  optional string email = 3;
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/

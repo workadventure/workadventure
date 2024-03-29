@@ -8,6 +8,7 @@ import {
     GameMapProperties,
     WAMFileFormat,
     EntityCoordinates,
+    PersonalAreaPropertyData,
 } from "../types";
 
 export type AreaChangeCallback = (
@@ -100,13 +101,17 @@ export class GameMapAreas {
 
     public isUserHasWriteAccessOnAreaForEntityCoordinates(
         entityCenterCoordinates: EntityCoordinates,
-        userConnectedTags: string[]
+        userConnectedTags: string[],
+        userUUID = ""
     ): boolean {
         const areas = this.getAreasOnPosition(entityCenterCoordinates);
         if (areas?.length === 0) {
             return false;
         }
-        return areas.some((area) => this.isUserHasWriteAccessOnAreaByUserTags(area, userConnectedTags));
+        return (
+            areas.some((area) => this.isUserHasWriteAccessOnAreaByUserTags(area, userConnectedTags)) ||
+            areas.some((area) => this.isAreaOwner(area, userUUID))
+        );
     }
 
     public isUserHasReadAccessOnAreaForEntityCoordinates(
@@ -134,15 +139,19 @@ export class GameMapAreas {
         return areaRightTags.some((tag) => userConnectedTags.includes(tag));
     }
 
-    public isGameMapContainsThematics(): boolean {
-        let hasThematics = false;
+    public isGameMapContainsSpecificAreas(): boolean {
+        let hasSpecificAreas = false;
         this.areas.forEach((area) => {
             if (this.getAreaRightPropertyData(area) !== undefined) {
-                hasThematics = true;
+                hasSpecificAreas = true;
+                return;
+            }
+            if (this.getPersonalAreaRightPropertyData(area) !== undefined) {
+                hasSpecificAreas = true;
                 return;
             }
         });
-        return hasThematics;
+        return hasSpecificAreas;
     }
 
     public isPlayerInsideArea(id: string, playerPosition: { x: number; y: number }): boolean {
@@ -276,6 +285,14 @@ export class GameMapAreas {
         return areaRights.writeTags.some((tag) => userTags.includes(tag));
     }
 
+    private isAreaOwner(area: AreaData, userUUID: string): boolean {
+        const personalAreaRightPropertyData = this.getPersonalAreaRightPropertyData(area);
+        if (personalAreaRightPropertyData === undefined) {
+            return false;
+        }
+        return personalAreaRightPropertyData.ownerId === userUUID;
+    }
+
     private isUserHasReadAccessOnAreaByTags(area: AreaData, userTags: string[]): boolean {
         const areaRights = this.getAreaRightPropertyData(area);
         if (areaRights === undefined) {
@@ -297,6 +314,16 @@ export class GameMapAreas {
                 return;
             }
             return RestrictedRightsPropertyData.parse(areaRightPropertyData);
+        }
+        return;
+    }
+
+    private getPersonalAreaRightPropertyData(area: AreaData): PersonalAreaPropertyData | undefined {
+        const personalAreaPropertyData = area.properties.find(
+            (property) => property.type === "personalAreaPropertyData"
+        );
+        if (personalAreaPropertyData !== undefined) {
+            return PersonalAreaPropertyData.parse(personalAreaPropertyData);
         }
         return;
     }

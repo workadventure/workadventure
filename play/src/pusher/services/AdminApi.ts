@@ -1,6 +1,6 @@
 import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
-import type { AdminApiData, MapDetailsData, RoomRedirect } from "@workadventure/messages";
+import type { AdminApiData, MapDetailsData, MemberData, RoomRedirect } from "@workadventure/messages";
 import {
     Capabilities,
     CompanionDetail,
@@ -989,6 +989,38 @@ class AdminApi implements AdminInterface {
             );
         }
         return;
+    }
+
+    /**
+     * @openapi
+     * /api/members:
+     *   get:
+     *     description: Search members from search term.
+     *     tags:
+     *      - Admin endpoint
+     *     parameters:
+     *      - name: "playUri"
+     *        in: "request"
+     *        required: true
+     *        type: "string"
+     *        description: The room url
+     *      - name: "searchText"
+     *        in: "request"
+     *        description: search text use for user search (name, email, etc)
+     *        required: true
+     *        type: "string"
+     *     responses:
+     *       200:
+     *        description: Member list or empty list.
+     *        schema:
+     *            $ref: '#/definitions/MemberData'
+     */
+    async searchMembers(playUri: string | null, searchText: string): Promise<MemberData[]> {
+        const response = await axios.get<MemberData[]>(ADMIN_API_URL + "/api/members", {
+            params: { playUri, searchText },
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        });
+        return response.data ? response.data : [];
     }
 }
 

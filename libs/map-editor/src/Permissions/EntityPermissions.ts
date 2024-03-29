@@ -5,7 +5,8 @@ export class EntityPermissions {
     constructor(
         private gameMapAreas: GameMapAreas,
         private userConnectedTags: string[],
-        private userCanEdit?: boolean
+        private userCanEdit?: boolean,
+        private userUUID?: string
     ) {}
 
     public canEdit(entityCenterCoordinates: EntityCoordinates): boolean {
@@ -25,7 +26,8 @@ export class EntityPermissions {
     private isEntityInsideAreaWithUserWriteAccess(entityCenterCoordinates: EntityCoordinates) {
         return this.gameMapAreas.isUserHasWriteAccessOnAreaForEntityCoordinates(
             entityCenterCoordinates,
-            this.userConnectedTags
+            this.userConnectedTags,
+            this.userUUID
         );
     }
 

@@ -160,30 +160,22 @@ const mapEditor: BaseTranslation = {
             error: "Please enter a valid Google Drive URL",
             disabled: "Google Drive integration is disabled.",
         },
-    },
-    areaEditor: {
-        editInstructions: "Click an area to modify its properties.",
-        nameLabel: "Name",
-        nameLabelPlaceholder: "MyArea",
-        areaDescription: "Description",
-        areaDescriptionPlaceholder: "My area is a...",
-        areaSerchable: "Searchable in the exploration mode",
-        addDescriptionField: "Add description field",
-        addRight: "Add rights",
-        rightTitle: "Access / edition rights by user tag",
-        rightDescription:
-            "Rights define who can interact with the area. If you leave it empty, everyone can use it. If you set it, only users who have at least one of these 'tags' can use it.",
-        rightWriteTitle: "Edition rights",
-        rightWriteDescription:
-            "Edition rights define who can modify the area. Users matching one of these tags can create, update or delete an object in the area.",
-        rightReadTitle: "Access rights",
-        rightReadDescription:
-            "Access rights define who can interact with the area. Users matching one of these tags can enter the area and use objects whithin the area.",
+        restrictedRightsProperties: {
+            label: "Add rights",
+            rightTitle: "Access / edition rights by user tag",
+            rightDescription:
+                "Rights define who can interact with the area. If you leave it empty, everyone can use it. If you set it, only users who have at least one of these 'tags' can use it.",
+            rightWriteTitle: "Edition rights",
+            rightWriteDescription:
+                "Edition rights define who can modify the area. Users matching one of these tags can create, update or delete an object in the area.",
+            rightReadTitle: "Access rights",
+            rightReadDescription:
+                "Access rights define who can interact with the area. Users matching one of these tags can enter the area and use objects whithin the area.",
+        },
         personalAreaConfiguration: {
-            title: "Personal area configuration",
+            label: "Personal area",
             description:
                 "Users can claim personal areas as their own space. As an administrator, you can set/revoke ownership of an area",
-            setAsPersonalArea: "Set as personal area",
             accessClaimMode: "Access claim mode",
             dynamicAccessClaimMode: "Dynamic",
             staticAccessClaimMode: "Static",
@@ -194,6 +186,15 @@ const mapEditor: BaseTranslation = {
             owner: "Owner",
             revokeAccess: "Revoke access",
         },
+    },
+    areaEditor: {
+        editInstructions: "Click an area to modify its properties.",
+        nameLabel: "Name",
+        nameLabelPlaceholder: "MyArea",
+        areaDescription: "Description",
+        areaDescriptionPlaceholder: "My area is a...",
+        areaSerchable: "Searchable in the exploration mode",
+        addDescriptionField: "Add description field",
     },
     areaEditorInstructions: {
         title: "How it works ?",
