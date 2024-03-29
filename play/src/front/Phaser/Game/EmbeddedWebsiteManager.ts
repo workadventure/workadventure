@@ -187,6 +187,9 @@ height,*/
         iframe.style.margin = "0";
         iframe.style.padding = "0";
         iframe.style.border = "none";
+        if (embeddedWebsiteEvent.allow) {
+            iframe.allow = embeddedWebsiteEvent.allow;
+        }
         // There is a small glitch in Phaser where the iframe appears for a split second before the scene is loaded.
         // We are dealing with this by hiding the iframe until the scene is loaded.
         if (this.gameScene.scene.getStatus(this.gameScene.scene.key) <= Phaser.Scenes.CREATING) {
