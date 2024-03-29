@@ -284,11 +284,9 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
     }
 
 
-
     getDomain(): string {
         return this.domain;
     }
-
 
 
     public onParticipantsCountChange(): void {

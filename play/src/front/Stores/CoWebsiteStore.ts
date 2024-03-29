@@ -113,7 +113,6 @@ export class CoWebsiteManager {
         };
     }
 
-
     // Fonction dans la game scene
 
     public cleanup(): void {

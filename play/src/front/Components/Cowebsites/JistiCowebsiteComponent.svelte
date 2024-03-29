@@ -33,12 +33,16 @@
     };
     let dominantSpeakerChangedCallback = onDominantSpeakerChanged.bind(actualCowebsite);
 
-    const onAudioChange = (muted: boolean) => {
+    let onAudioChange = (muted: boolean) => {
+        console.log(typeof muted);
+        console.log(muted.valueOf());
         if (muted) {
             console.log("MICRO MUTED");
+            console.log(typeof muted);
             requestedMicrophoneState.disableMicrophone();
         } else {
             console.log("MICRO UNMUTED");
+            console.log(muted);
             requestedMicrophoneState.enableMicrophone();
         }
     };
@@ -46,10 +50,8 @@
 
     const onVideoChange = (muted: boolean) => {
         if (muted) {
-            console.log("VIDEO MUTED");
             requestedCameraState.disableWebcam();
         } else {
-            console.log("VIDEO UNMUTED");
             requestedCameraState.enableWebcam();
         }
     };
@@ -82,9 +84,9 @@
                 };
                 console.log("OPTIONS :", options);
 
-                if (!options.jwt) {
-                    delete options.jwt;
-                }
+                // if (!options.jwt) {
+                //     delete options.jwt;
+                // }
 
                 const timemoutPromise = new Promise<void>((resolve) => {
                     setTimeout(() => {
@@ -98,6 +100,7 @@
                     };
 
                     jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
+                    console.log("JITSIAPIIIIIIII", jitsiApi);
 
                     jitsiApi.addListener("videoConferenceJoined", () => {
                         jitsiApi.executeCommand("displayName", playerName);
@@ -158,10 +161,7 @@
     // Appel a la fonction closeOrUnload pour stopper le jitsi
 </script>
 
-<div bind:this={jitsiContainer} class="w-full height" />
+<div bind:this={jitsiContainer} class="w-full h-full" />
 
 <style>
-    .height {
-        height: 90%;
-    }
 </style>

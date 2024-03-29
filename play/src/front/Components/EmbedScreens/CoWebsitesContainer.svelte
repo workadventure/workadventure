@@ -11,8 +11,11 @@
     import BigBlueButtonCowebsiteComponent from "../Cowebsites/BigBlueButtonCowebsiteComponent.svelte";
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
     import { max, min } from "lodash";
+    import { ArrowDownIcon } from "svelte-feather-icons";
 
     let activeCowebsite = $coWebsites[0].getId();
+    let showDropdown = false;
+
     let vertical = false;
     let cowebsiteContainer: HTMLElement | null;
     let container: HTMLElement;
@@ -24,6 +27,7 @@
     let mediaQuery = window.matchMedia("(max-width: 768px)");
 
     onMount(() => {
+        // console.log(secondCoWebsite);
         if (mediaQuery.matches) {
             vertical = true;
             cowebsiteContainer = document.getElementById("cowebsites-container");
@@ -90,6 +94,7 @@
 
     const setActiveCowebsite = (coWebsiteId: string) => {
         activeCowebsite = coWebsiteId;
+        showDropdown = false;
     };
 
     const subscription = coWebsites.subscribe((arr) => {
@@ -163,20 +168,17 @@
 
 <div
     class={vertical
-        ? "w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500] left_panel responsive-container"
-        : "w-1/2 h-screen absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500] left_panel"}
+        ? "w-1/2 h-full absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500] left_panel responsive-container"
+        : "w-1/2 h-full absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500] left_panel flex-col padding"}
     id="cowebsites-container"
     transition:fly={vertical ? { duration: 750, y: -1000 } : { duration: 750, x: 1000 }}
     bind:this={container}
 >
-    <div class="flex py-2 ml-3 items-center overflow-auto">
+    <div class="flex py-2 ml-3 items-center overflow-auto height-tab">
         <div class="grow flex">
-            {#each $coWebsites.slice().reverse() as coWebsite (coWebsite.getId())}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    class:active={checkActiveCowebsite(coWebsite.getId().toString())}
-                    on:click={() => setActiveCowebsite(coWebsite.getId())}
-                >
+            <!-- Affichez uniquement l'onglet actif dans la barre d'onglets -->
+            {#each $coWebsites as coWebsite}
+                <div>
                     <CoWebsiteTab
                         {coWebsite}
                         isLoading={true}
@@ -186,17 +188,41 @@
                 </div>
             {/each}
         </div>
-
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <div
-            class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
-            on:click={toggleFullScreen}
-        >
-            <FullScreenIcon />
-        </div>
+        <!-- Affichez l'icône du menu déroulant si le nombre d'onglets dépasse 1 -->
+        {#if $coWebsites.length > 1}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div
+                class="aspect-ratio h-10 w-10 fill-white rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer {showDropdown
+                    ? 'rotate-180'
+                    : ''}"
+                on:click={() => (showDropdown = !showDropdown)}
+            >
+                <ArrowDownIcon />
+            </div>
+        {/if}
     </div>
 
-    <div class={vertical ? "h-full ml-3 responsive-website" : "h-full ml-3"}>
+    <!-- Affichez les onglets supplémentaires dans le menu déroulant -->
+    {#if showDropdown}
+        <div id="dropdown" class="tab-drop-down">
+            {#each $coWebsites as coWebsite}
+                <!-- Excluez l'onglet actif du menu déroulant -->
+                {#if activeCowebsite !== coWebsite.getId().toString()}
+                    <div>
+                        <CoWebsiteTab
+                            {coWebsite}
+                            isLoading={true}
+                            active={activeCowebsite === coWebsite.getId().toString()}
+                            on:close={() => coWebsites.remove(coWebsite)}
+                        />
+                    </div>
+                {/if}
+            {/each}
+        </div>
+    {/if}
+    <!-- </div> -->
+
+    <div class={vertical ? "h-full ml-3 responsive-website" : "h-full object-contain ml-3"}>
         {#each $coWebsites as coWebsite (coWebsite.getId())}
             {#if activeCowebsite === coWebsite.getId()}
                 {#if coWebsite instanceof JitsiCoWebsite}
@@ -226,6 +252,30 @@
 <!-- transition:fly={{ duration: 750, y: -1000 }} Pour la transition en vertical -->
 <style>
     /* Voir pour utiliser les container queries ou les medias queries pour le responsive */
+    .padding {
+        padding-bottom: 76px;
+    }
+
+    .dropdown {
+        position: relative;
+        display: inline-block;
+        background-color: red;
+    }
+
+    .drop-down-content {
+        display: none;
+        position: absolute;
+        background-color: #f1f1f1;
+        min-width: 160px;
+        overflow: auto;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+    }
+
+    .tab-drop-down {
+        background-color: red;
+    }
+
     @media (max-width: 768px) {
         .responsive-container {
             width: 100%;

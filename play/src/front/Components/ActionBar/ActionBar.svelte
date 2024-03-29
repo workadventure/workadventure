@@ -1326,6 +1326,7 @@
                         {/if}
                     </div>
                 {/if}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     id="action-user"
                     class="flex items-center relative transition-all hidden @md/actions:flex"
