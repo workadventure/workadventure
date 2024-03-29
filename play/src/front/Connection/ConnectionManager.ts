@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/svelte";
-import type { AvailabilityStatus, MemberData } from "@workadventure/messages";
+import type { AvailabilityStatus } from "@workadventure/messages";
 import {
     ErrorApiErrorData,
     ErrorApiRetryData,
@@ -575,7 +575,7 @@ class ConnectionManager {
             );
         }
     }
-    
+
     get currentRoom() {
         return this._currentRoom;
     }

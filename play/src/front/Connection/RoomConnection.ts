@@ -1600,7 +1600,7 @@ export class RoomConnection implements RoomConnection {
         if (answer.$case !== "getMemberAnswer") {
             throw new Error("Unexpected answer");
         }
-        return answer.getMemberAnswer.member!;
+        return answer.getMemberAnswer.member;
     }
 
     public emitMuteParticipantIdSpace(spaceName: string, participantId: string) {

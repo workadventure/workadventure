@@ -37,7 +37,6 @@ import { gameManager } from "../GameManager";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
 import { GameScene } from "../GameScene";
 import { mapEditorAskToClaimPersonalAreaStore } from "../../../Stores/MapEditorStore";
-import { connectionManager } from "../../../Connection/ConnectionManager";
 import { requestVisitCardsStore } from "../../../Stores/GameStore";
 
 export class AreasPropertiesListener {

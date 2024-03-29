@@ -5,7 +5,6 @@
     import LL from "../../../../i18n/i18n-svelte";
     import InputTags from "../../Input/InputTags.svelte";
     import MemberAutocomplete from "../../Input/MemberAutocomplete.svelte";
-    import { connectionManager } from "../../../Connection/ConnectionManager";
     import { InputTagOption, toTags } from "../../Input/InputTagOption";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
