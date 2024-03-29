@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher, onMount } from "svelte";
-    import { InputTagOption, OpenWebsitePropertyData } from "@workadventure/map-editor";
+    import { OpenWebsitePropertyData } from "@workadventure/map-editor";
     import { AlertTriangleIcon } from "svelte-feather-icons";
     import {
         GoogleWorkSpaceException,
