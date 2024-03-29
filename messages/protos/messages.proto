@@ -392,6 +392,7 @@ message QueryMessage {
     RoomsFromSameWorldQuery roomsFromSameWorldQuery = 5;
     SendEventQuery sendEventQuery = 6;
     SearchMemberQuery searchMemberQuery = 7;
+    GetMemberQuery getMemberQuery = 8;
   }
 }
 
@@ -427,6 +428,10 @@ message SearchMemberQuery {
   string searchText = 1;
 }
 
+message GetMemberQuery {
+  string uuid = 1;
+}
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
@@ -438,6 +443,7 @@ message AnswerMessage {
     RoomsFromSameWorldAnswer roomsFromSameWorldAnswer = 7;
     SendEventAnswer sendEventAnswer = 8;
     SearchMemberAnswer searchMemberAnswer = 9;
+    GetMemberAnswer getMemberAnswer = 10;
   }
 }
 
@@ -484,10 +490,15 @@ message SearchMemberAnswer {
   repeated Member members = 1;
 }
 
+message GetMemberAnswer {
+  Member member = 1;
+}
+
 message Member {
   string id = 1;
   optional string name = 2;
   optional string email = 3;
+  optional string visitCardUrl = 4;
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/

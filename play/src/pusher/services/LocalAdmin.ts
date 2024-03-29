@@ -288,6 +288,10 @@ class LocalAdmin implements AdminInterface {
     searchMembers(roomUrl: string, searchText: string): Promise<MemberData[]> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
+
+    getMember(memberUUID: string): Promise<MemberData> {
+        return Promise.reject(new Error("No admin backoffice set!"));
+    }
 }
 
 export const localAdmin = new LocalAdmin();

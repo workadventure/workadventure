@@ -462,14 +462,17 @@ export class AreasPropertiesListener {
     private displayPersonalAreaOwnerVisitCard(ownerId: string) {
         const connectedUserUUID = localUserStore.getLocalUser()?.uuid;
         if (connectedUserUUID != ownerId) {
-            connectionManager
-                .getMember(ownerId)
-                .then((member) => {
-                    if (member?.visitCardUrl) {
-                        requestVisitCardsStore.set(member.visitCardUrl);
-                    }
-                })
-                .catch((error) => console.error(error));
+            const connection = this.scene.connection;
+            if (connection) {
+                connection
+                    .queryMember(ownerId)
+                    .then((member) => {
+                        if (member?.visitCardUrl) {
+                            requestVisitCardsStore.set(member.visitCardUrl);
+                        }
+                    })
+                    .catch((error) => console.error(error));
+            }
         }
     }
 

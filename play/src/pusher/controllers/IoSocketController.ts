@@ -850,13 +850,24 @@ export class IoSocketController {
                                         break;
                                     }
                                     case "searchMemberQuery": {
-                                        const searchMemberAnwser = await socketManager.handleSearchMemberQuery(
+                                        const searchMemberAnswer = await socketManager.handleSearchMemberQuery(
                                             socket,
                                             message.message.queryMessage.query.searchMemberQuery
                                         );
                                         answerMessage.answer = {
                                             $case: "searchMemberAnswer",
-                                            searchMemberAnswer: searchMemberAnwser,
+                                            searchMemberAnswer: searchMemberAnswer,
+                                        };
+                                        this.sendAnswerMessage(socket, answerMessage);
+                                        break;
+                                    }
+                                    case "getMemberQuery": {
+                                        const getMemberAnswer = await socketManager.handleGetMemberQuery(
+                                            message.message.queryMessage.query.getMemberQuery
+                                        );
+                                        answerMessage.answer = {
+                                            $case: "getMemberAnswer",
+                                            getMemberAnswer,
                                         };
                                         this.sendAnswerMessage(socket, answerMessage);
                                         break;

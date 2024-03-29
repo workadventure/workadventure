@@ -7,6 +7,7 @@
     import MemberAutocomplete from "../../Input/MemberAutocomplete.svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import { InputTagOption, toTags } from "../../Input/InputTagOption";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let personalAreaPropertyData: PersonalAreaPropertyData;
@@ -25,13 +26,16 @@
 
     onMount(async () => {
         if (personalAreaPropertyData.ownerId) {
-            const member = await connectionManager.getMember(personalAreaPropertyData.ownerId);
-            if (member) {
-                personalAreaOwner = member.name
-                    ? `${member.name} ${member.email ? `(${member.email})` : ""}`
-                    : member.email
-                    ? member.email
-                    : member.id;
+            const connection = gameManager.getCurrentGameScene().connection;
+            if (connection) {
+                const member = await connection.queryMember(personalAreaPropertyData.ownerId);
+                if (member) {
+                    personalAreaOwner = member.name
+                        ? `${member.name} ${member.email ? `(${member.email})` : ""}`
+                        : member.email
+                        ? member.email
+                        : member.id;
+                }
             }
         }
     });

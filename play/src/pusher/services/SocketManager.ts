@@ -36,6 +36,8 @@ import {
     SearchMemberQuery,
     SearchMemberAnswer,
     MemberData,
+    GetMemberQuery,
+    GetMemberAnswer,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
 import axios, { isAxiosError } from "axios";
@@ -1524,6 +1526,18 @@ export class SocketManager implements ZoneEventListener {
                 id: member.id,
                 email: member.email ?? undefined,
             })),
+        };
+    }
+
+    async handleGetMemberQuery(getMemberQuery: GetMemberQuery): Promise<GetMemberAnswer> {
+        const memberFromApi = await adminService.getMember(getMemberQuery.uuid);
+        return {
+            member: {
+                id: memberFromApi.id,
+                name: memberFromApi.name ?? undefined,
+                email: memberFromApi.email ?? undefined,
+                visitCardUrl: memberFromApi.visitCardUrl ?? undefined,
+            },
         };
     }
 }
