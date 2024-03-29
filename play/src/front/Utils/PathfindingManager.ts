@@ -35,20 +35,24 @@ export class PathfindingManager {
     ): Promise<{ x: number; y: number }[]> {
         const startTile = this.mapPixelsToTileUnits(this.clampToMap(start));
         const endTile = this.mapPixelsToTileUnits(this.clampToMap(end));
-        const path = await this.findPath(startTile, endTile, true, tryFindingNearestAvailable);
-        // Replace the first element of the path with the actual start position
-        path[0] = { x: start.x, y: start.y + this.tileDimensions.height * 0.5 }; // We need to add half of the tile height to get the bottom center of the tile as long as the player origin is centered
-        // Replace the last element of the path with the actual end position
-        path[path.length - 1] = { x: end.x, y: end.y };
+        const result = await this.findPath(startTile, endTile, tryFindingNearestAvailable);
+        const path = result.path;
+        if (path.length > 1) {
+            // Replace the first element of the path with the actual start position
+            path[0] = { x: start.x, y: start.y + this.tileDimensions.height * 0.5 }; // We need to add half of the tile height to get the bottom center of the tile as long as the player origin is centered
+            if (result.isExactTarget) {
+                path[path.length - 1] = { x: end.x, y: end.y };
+            }
+        }
         return path;
     }
 
-    public async findPath(
+    private async findPath(
         start: { x: number; y: number },
         end: { x: number; y: number },
-        measuredInPixels = true,
         tryFindingNearestAvailable = false
-    ): Promise<{ x: number; y: number }[]> {
+    ): Promise<{ path: { x: number; y: number }[]; isExactTarget: boolean }> {
+        let isExactTarget = true;
         let endPoints: { x: number; y: number }[] = [end];
         if (tryFindingNearestAvailable) {
             endPoints = [
@@ -70,16 +74,17 @@ export class PathfindingManager {
         while (endPoints.length > 0) {
             const endPoint = endPoints.shift();
             if (!endPoint) {
-                return [];
+                return { path: [], isExactTarget: false };
             }
             // rejected Promise will return undefined for path
             // eslint-disable-next-line no-await-in-loop
             path = await this.getPath(start, endPoint).catch();
             if (path && path.length > 0) {
-                return measuredInPixels ? this.mapTileUnitsToPixels(path) : path;
+                return { path: this.mapTileUnitsToPixels(path), isExactTarget };
             }
+            isExactTarget = false;
         }
-        return [];
+        return { path: [], isExactTarget: false };
     }
 
     private mapTileUnitsToPixels(path: { x: number; y: number }[]): { x: number; y: number }[] {
