@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { get } from "svelte/store";
     import {
         JitsiCoWebsite,
         JitsiApi,
@@ -11,7 +12,6 @@
     import { screenWakeLock } from "../../Utils/ScreenWakeLock";
     import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-    import { get } from "svelte/store";
     import { userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
     import { inExternalServiceStore } from "../../Stores/MyMediaStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -31,36 +31,25 @@
             );
         }
     };
-    let dominantSpeakerChangedCallback = onDominantSpeakerChanged.bind(actualCowebsite);
 
-    let onAudioChange = (muted: boolean) => {
-        console.log(typeof muted);
-        console.log(muted.valueOf());
-        if (muted) {
-            console.log("MICRO MUTED");
-            console.log(typeof muted);
+    let onAudioChange = (changeAudio: { muted: boolean }) => {
+        if (changeAudio.muted) {
             requestedMicrophoneState.disableMicrophone();
         } else {
-            console.log("MICRO UNMUTED");
-            console.log(muted);
             requestedMicrophoneState.enableMicrophone();
         }
     };
-    let audioCallback = onAudioChange.bind(actualCowebsite);
-
-    const onVideoChange = (muted: boolean) => {
-        if (muted) {
+    const onVideoChange = (changeVideo: { muted: boolean }) => {
+        if (changeVideo.muted) {
             requestedCameraState.disableWebcam();
         } else {
             requestedCameraState.enableWebcam();
         }
     };
-    let videoCallback = onVideoChange.bind(actualCowebsite);
 
     const onParticipantsCountChange = () => {
         actualCowebsite.updateParticipantsCountStore();
     };
-    let participantsCountChangeCallback = onParticipantsCountChange.bind(actualCowebsite);
 
     onMount(() => {
         let cancelled = false;
@@ -76,7 +65,7 @@
                     width: "100%",
                     height: "100%",
                     parentNode: jitsiContainer,
-                    configOverwrite: mergeConfig(actualCowebsite.jitsiConfig),
+                    configOverwrite: mergeConfig(),
                     interfaceConfigOverwrite: {
                         ...defaultInterfaceConfig,
                         ...actualCowebsite.jitsiInterfaceConfig,
@@ -117,12 +106,12 @@
                         actualCowebsite.updateParticipantsCountStore();
                     });
 
-                    jitsiApi.addListener("audioMuteStatusChanged", audioCallback);
-                    jitsiApi.addListener("videoMuteStatusChanged", videoCallback);
-                    jitsiApi.addListener("dominantSpeakerChanged", dominantSpeakerChangedCallback);
-                    jitsiApi.addListener("participantJoined", participantsCountChangeCallback);
-                    jitsiApi.addListener("participantLeft", participantsCountChangeCallback);
-                    jitsiApi.addListener("participantKickedOut", participantsCountChangeCallback);
+                    jitsiApi.addListener("audioMuteStatusChanged", onAudioChange);
+                    jitsiApi.addListener("videoMuteStatusChanged", onVideoChange);
+                    jitsiApi.addListener("dominantSpeakerChanged", onDominantSpeakerChanged);
+                    jitsiApi.addListener("participantJoined", onParticipantsCountChange);
+                    jitsiApi.addListener("participantLeft", onParticipantsCountChange);
+                    jitsiApi.addListener("participantKickedOut", onParticipantsCountChange);
                 });
                 console.log(options);
 

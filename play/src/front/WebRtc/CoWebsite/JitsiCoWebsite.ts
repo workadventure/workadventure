@@ -131,7 +131,6 @@ export const defaultInterfaceConfig = {
 };
 
 export class JitsiCoWebsite extends SimpleCoWebsite {
-
     private jitsiApi?: JitsiApi;
     // private audioCallback = this.onAudioChange.bind(this);
     // private videoCallback = this.onVideoChange.bind(this);
@@ -155,117 +154,6 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         super(url, false, undefined, widthPercent, closable);
     }
 
-
-    // load(): CancelablePromise<HTMLIFrameElement> {
-    //     let cancelled = false;
-    //     return (this.loadPromise = new CancelablePromise((resolve, reject, cancel) => {
-    //         // this.state.set("loading");
-
-    //         inExternalServiceStore.set(true);
-
-    //         jitsiExternalApiFactory
-    //             .loadJitsiScript(this.domain)
-    //             .then(async () => {
-    //                 await randomDelay();
-    //                 const options: JitsiOptions = {
-    //                     roomName: this.roomName,
-    //                     jwt: this.jwt,
-    //                     width: "100%",
-    //                     height: "100%",
-    //                     parentNode: HTMLElement.prototype,
-    //                     configOverwrite: mergeConfig(this.jitsiConfig),
-    //                     interfaceConfigOverwrite: { ...defaultInterfaceConfig, ...this.jitsiInterfaceConfig },
-    //                 };
-
-    //                 if (!options.jwt) {
-    //                     delete options.jwt;
-    //                 }
-
-    //                 this.jitsiApi = undefined;
-
-    //                 const timemoutPromise = new Promise<void>((resolve, reject) => {
-    //                     setTimeout(() => {
-    //                         resolve();
-    //                     }, 2000);
-    //                 }); //failsafe in case the iframe is deleted before loading or too long to load
-
-    //                 const jistiMeetLoadedPromise = new Promise<void>((resolve, reject) => {
-    //                     options.onload = () => {
-    //                         resolve();
-    //                     }; //we want for the iframe to be loaded before triggering animations.
-    //                     this.jitsiApi = new window.JitsiMeetExternalAPI(this.domain, options);
-
-    //                     this.jitsiApi.addListener("videoConferenceJoined", () => {
-    //                         this.jitsiApi?.executeCommand("displayName", this.playerName);
-    //                         this.jitsiApi?.executeCommand("avatarUrl", get(currentPlayerWokaStore));
-    //                         this.jitsiApi?.executeCommand("setNoiseSuppressionEnabled", {
-    //                             enabled: window.navigator.userAgent.toLowerCase().indexOf("firefox") === -1,
-    //                         });
-
-    //                         screenWakeLock
-    //                             .requestWakeLock()
-    //                             .then((release) => (this.screenWakeRelease = release))
-    //                             .catch((error) => console.error(error));
-
-    //                         this.updateParticipantsCountStore();
-    //                     });
-
-    //                     this.jitsiApi.addListener("audioMuteStatusChanged", this.audioCallback);
-    //                     this.jitsiApi.addListener("videoMuteStatusChanged", this.videoCallback);
-    //                     this.jitsiApi.addListener("dominantSpeakerChanged", this.dominantSpeakerChangedCallback);
-    //                     this.jitsiApi.addListener("participantJoined", this.participantsCountChangeCallback);
-    //                     this.jitsiApi.addListener("participantLeft", this.participantsCountChangeCallback);
-    //                     this.jitsiApi.addListener("participantKickedOut", this.participantsCountChangeCallback);
-    //                 });
-
-    //                 Promise.race([timemoutPromise, jistiMeetLoadedPromise])
-    //                     .then(async () => {
-
-    //                         await randomDelay();
-    //                         const iframe = <HTMLIFrameElement><unknown>('[id*="jitsi" i]');
-
-    //                         if (cancelled /*&& iframe*/) {
-    //                             console.info("CLOSING BECAUSE CANCELLED AFTER LOAD");
-    //                             //this.closeOrUnload(iframe);
-    //                             this.destroy();
-    //                             return;
-    //                         }
-
-    //                         if (iframe && this.jitsiApi) {
-    //                             this.jitsiApi.addListener("videoConferenceLeft", () => {
-    //                                 this.closeOrUnload();
-    //                             });
-
-    //                             this.jitsiApi.addListener("readyToClose", () => {
-    //                                 this.closeOrUnload();
-    //                             });
-
-    //                             this.iframe = iframe;
-    //                             this.iframe.classList.add("pixel");
-    //                             // this.state.set("ready");
-    //                             return resolve(iframe);
-    //                         } else {
-    //                             console.error("No iframe or no jitsiApi. We may have a problem.");
-    //                         }
-    //                     })
-    //                     .catch((e) => {
-    //                         return reject(e);
-    //                     });
-    //             })
-    //             .catch((e) => {
-    //                 reject(e);
-    //             });
-
-    //         cancel(() => {
-    //             console.info("CLOSING Canceling JitsiCoWebsite");
-    //             cancelled = true;
-    //             this.unload().catch((err) => {
-    //                 console.error("Cannot unload Jitsi co-website while cancel loading", err);
-    //             });
-    //         });
-    //     }));
-    // }
-
     closeOrUnload() {
         if (this.screenWakeRelease) {
             this.screenWakeRelease()
@@ -283,11 +171,9 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         }
     }
 
-
     getDomain(): string {
         return this.domain;
     }
-
 
     public onParticipantsCountChange(): void {
         this.updateParticipantsCountStore();
@@ -297,9 +183,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         jitsiParticipantsCountStore.set(this.jitsiApi?.getParticipantsInfo().length ?? 0);
     }
 
-    getCurrentParticipantId(
-        participants: { displayName: string; participantId: string }[]
-    ): string | undefined {
+    getCurrentParticipantId(participants: { displayName: string; participantId: string }[]): string | undefined {
         const currentPlayerName = gameManager.getPlayerName();
         for (const participant of participants) {
             if (participant.displayName === currentPlayerName) {
