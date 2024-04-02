@@ -4,7 +4,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
 
     export let placeholder: string;
-    export let value: string | undefined = undefined;
+    export let value: string | undefined | null = undefined;
 
     let selectedValue: { index: number; label: string; value: string } | undefined = value
         ? {

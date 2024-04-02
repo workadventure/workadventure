@@ -19,7 +19,7 @@
           }))
         : undefined;
 
-    let personalAreaOwner: string | undefined = personalAreaPropertyData.ownerId;
+    let personalAreaOwner: string | undefined | null = personalAreaPropertyData.ownerId;
 
     const dispatch = createEventDispatcher();
 
