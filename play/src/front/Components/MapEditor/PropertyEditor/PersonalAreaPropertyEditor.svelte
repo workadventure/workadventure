@@ -55,7 +55,7 @@
     }
 
     function revokeOwner() {
-        personalAreaPropertyData.ownerId = undefined;
+        personalAreaPropertyData.ownerId = null;
         personalAreaOwner = undefined;
         dispatch("change");
     }
