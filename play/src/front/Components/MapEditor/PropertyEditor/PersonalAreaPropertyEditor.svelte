@@ -28,12 +28,11 @@
             const connection = gameManager.getCurrentGameScene().connection;
             if (connection) {
                 const member = await connection.queryMember(personalAreaPropertyData.ownerId);
-                    personalAreaOwner = member.name
-                        ? `${member.name} ${member.email ? `(${member.email})` : ""}`
-                        : member.email
-                        ? member.email
-                        : member.id;
-                
+                personalAreaOwner = member.name
+                    ? `${member.name} ${member.email ? `(${member.email})` : ""}`
+                    : member.email
+                    ? member.email
+                    : member.id;
             }
         }
     });

@@ -6,7 +6,7 @@
         AreaDataProperty,
         OpenWebsiteTypePropertiesKeys,
         PersonalAreaAccessClaimMode,
-        PlayAudioPropertyData
+        PlayAudioPropertyData,
     } from "@workadventure/map-editor";
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
     import { IconChevronDown, IconChevronRight } from "@tabler/icons-svelte";
@@ -188,7 +188,7 @@
                     type,
                     accessClaimMode: PersonalAreaAccessClaimMode.enum.dynamic,
                     allowedTags: [],
-                    ownerId: null
+                    ownerId: null,
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);

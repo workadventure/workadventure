@@ -24,10 +24,10 @@
                     index,
                     value: member.id,
                     label: member.name
-                    ? `${member.name} ${member.email ? `(${member.email})` : ""}`
-                    : member.email
-                    ? member.email
-                    : member.id,
+                        ? `${member.name} ${member.email ? `(${member.email})` : ""}`
+                        : member.email
+                        ? member.email
+                        : member.id,
                 }));
             } catch (error) {
                 console.error(error);
