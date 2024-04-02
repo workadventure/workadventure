@@ -255,7 +255,7 @@
             descriptionText={app.description}
             img={app.image}
             style={`z-index: ${1 + index};`}
-            on:click={() => {
+            on:click={(event) => {
                 dispatch("click", event);
             }}
         />
