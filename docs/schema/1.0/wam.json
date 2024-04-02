@@ -181,17 +181,46 @@
                           "type": "number"
                         },
                         "application": {
-                          "type": "string",
-                          "enum": [
-                            "website",
-                            "youtube",
-                            "klaxoon",
-                            "googleDrive",
-                            "googleDocs",
-                            "googleSheets",
-                            "googleSlides",
-                            "googleForms",
-                            "eraser"
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "const": "website"
+                            },
+                            {
+                              "type": "string",
+                              "const": "youtube"
+                            },
+                            {
+                              "type": "string",
+                              "const": "klaxoon"
+                            },
+                            {
+                              "type": "string",
+                              "const": "googleDrive"
+                            },
+                            {
+                              "type": "string",
+                              "const": "googleDocs"
+                            },
+                            {
+                              "type": "string",
+                              "const": "googleSheets"
+                            },
+                            {
+                              "type": "string",
+                              "const": "googleSlides"
+                            },
+                            {
+                              "type": "string",
+                              "const": "googleForms"
+                            },
+                            {
+                              "type": "string",
+                              "const": "eraser"
+                            },
+                            {
+                              "type": "string"
+                            }
                           ],
                           "default": "website"
                         },
@@ -199,6 +228,18 @@
                           "type": "string"
                         },
                         "placeholder": {
+                          "type": "string"
+                        },
+                        "icon": {
+                          "type": "string"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "regexUrl": {
+                          "type": "string"
+                        },
+                        "targetEmbedableUrl": {
                           "type": "string"
                         }
                       },
