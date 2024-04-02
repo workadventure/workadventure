@@ -133,7 +133,6 @@ export const PersonalAreaPropertyData = PropertyBase.extend({
     allowedTags: z.array(z.string()).default([]),
     ownerId: z.string().default(""),
 });
-
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,

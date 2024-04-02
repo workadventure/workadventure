@@ -62,7 +62,7 @@
                     <InfoIcon size="18" />
                     {$LL.mapEditor.properties.personalAreaConfiguration.description()}
                 </p>
-                {#if personalAreaPropertyData.ownerId.trim().length !== 0}
+                {#if personalAreaPropertyData.ownerId?.trim().length !== 0}
                     <div class="tw-flex tw-flex-col">
                         <label for="ownerInput">{$LL.mapEditor.properties.personalAreaConfiguration.owner()}</label>
                         <input
