@@ -1,8 +1,11 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
+    import { onMount } from "svelte";
     import { helpWebRtcSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
+
+    let notAskAgain = false;
 
     function refresh() {
         window.location.reload();
@@ -16,6 +19,17 @@
         if (!gameManager.currentStartedRoom) return undefined;
         return gameManager.currentStartedRoom.backgroundColor;
     }
+
+    function onChangesAskAgain() {
+        localStorage.setItem("notAskAgainHelpWebRtcSettingsPopup", `${notAskAgain}`);
+    }
+
+    onMount(() => {
+        const notAskAgainValue = localStorage.getItem("notAskAgainHelpWebRtcSettingsPopup");
+        if (notAskAgainValue === "true") {
+            close();
+        }
+    });
 
     /* eslint-disable svelte/no-at-html-tags */
 </script>
@@ -62,6 +76,10 @@
             <!-- TODO: Bring the link to the network guide from the admin -->
             <!--<li>{@html $LL.camera.webrtc.solutionNetworkAdmin()}<a href="" target="_blank">{$LL.camera.webrtc.preparingYouNetworkGuide()}</a></li>-->
         </ul>
+    </section>
+    <section class="tw-flex tw-row tw-justify-center tw-content-center tw-items-center tw-text-xs">
+        <input type="checkbox" id="askagain" class="tw-mx-1" bind:checked={notAskAgain} on:change={onChangesAskAgain} />
+        <label for="askagain" class="tw-m-0 tw-mx-1">{$LL.camera.webrtc.solutionVpnNotAskAgain()}</label>
     </section>
     <section class="tw-flex tw-row tw-justify-center">
         <button class="light" on:click|preventDefault={refresh}>{$LL.camera.webrtc.refresh()}</button>
