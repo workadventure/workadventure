@@ -131,7 +131,7 @@ export const PersonalAreaPropertyData = PropertyBase.extend({
     type: z.literal("personalAreaPropertyData"),
     accessClaimMode: PersonalAreaAccessClaimMode,
     allowedTags: z.array(z.string()).default([]),
-    ownerId: z.string().optional().nullable(),
+    ownerId: z.string().nullable(),
 });
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,

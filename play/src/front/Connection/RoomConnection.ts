@@ -1600,6 +1600,9 @@ export class RoomConnection implements RoomConnection {
         if (answer.$case !== "getMemberAnswer") {
             throw new Error("Unexpected answer");
         }
+        if (answer.getMemberAnswer.member === undefined) {
+            throw new Error("Member is undefined.");
+        }
         return answer.getMemberAnswer.member;
     }
 

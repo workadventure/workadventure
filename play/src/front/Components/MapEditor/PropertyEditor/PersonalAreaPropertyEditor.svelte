@@ -19,7 +19,7 @@
           }))
         : undefined;
 
-    let personalAreaOwner: string | undefined | null = personalAreaPropertyData.ownerId;
+    let personalAreaOwner: string | null = personalAreaPropertyData.ownerId;
 
     const dispatch = createEventDispatcher();
 
@@ -28,13 +28,12 @@
             const connection = gameManager.getCurrentGameScene().connection;
             if (connection) {
                 const member = await connection.queryMember(personalAreaPropertyData.ownerId);
-                if (member) {
                     personalAreaOwner = member.name
                         ? `${member.name} ${member.email ? `(${member.email})` : ""}`
                         : member.email
                         ? member.email
                         : member.id;
-                }
+                
             }
         }
     });
@@ -56,7 +55,7 @@
 
     function revokeOwner() {
         personalAreaPropertyData.ownerId = null;
-        personalAreaOwner = undefined;
+        personalAreaOwner = null;
         dispatch("change");
     }
 

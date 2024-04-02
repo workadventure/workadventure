@@ -1,15 +1,15 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
     import {
-        AreaDataProperty,
-        AreaDataPropertiesKeys,
         AreaDataProperties,
+        AreaDataPropertiesKeys,
+        AreaDataProperty,
         OpenWebsiteTypePropertiesKeys,
-        PlayAudioPropertyData,
         PersonalAreaAccessClaimMode,
+        PlayAudioPropertyData
     } from "@workadventure/map-editor";
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
-    import { IconChevronRight, IconChevronDown } from "@tabler/icons-svelte";
+    import { IconChevronDown, IconChevronRight } from "@tabler/icons-svelte";
     import { LL } from "../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import { FEATURE_FLAG_BROADCAST_AREAS } from "../../Enum/EnvironmentVariable";
@@ -188,6 +188,7 @@
                     type,
                     accessClaimMode: PersonalAreaAccessClaimMode.enum.dynamic,
                     allowedTags: [],
+                    ownerId: null
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);

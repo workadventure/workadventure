@@ -571,27 +571,17 @@
                           "default": []
                         },
                         "ownerId": {
-                          "anyOf": [
-                            {
-                              "anyOf": [
-                                {
-                                  "not": {}
-                                },
-                                {
-                                  "type": "string"
-                                }
-                              ]
-                            },
-                            {
-                              "type": "null"
-                            }
+                          "type": [
+                            "string",
+                            "null"
                           ]
                         }
                       },
                       "required": [
                         "id",
                         "type",
-                        "accessClaimMode"
+                        "accessClaimMode",
+                        "ownerId"
                       ],
                       "additionalProperties": false
                     }

@@ -451,7 +451,7 @@ export class AreasPropertiesListener {
     }
 
     private handlePersonalAreaPropertyOnEnter(property: PersonalAreaPropertyData, areaData: AreaData): void {
-        if (property.ownerId !== undefined) {
+        if (property.ownerId !== null) {
             this.displayPersonalAreaOwnerVisitCard(property.ownerId);
         } else if (property.accessClaimMode === PersonalAreaAccessClaimMode.enum.dynamic) {
             this.displayPersonalAreaClaimDialogBox(property, areaData);
