@@ -10,7 +10,7 @@
         mapEditorVisibilityStore,
     } from "../../Stores/MapEditorStore";
     import Explorer from "../Exploration/Explorer.svelte";
-    import AreaEditor from "./AreaEditor.svelte";
+    import AreaEditor from "./AreaEditor/AreaEditor.svelte";
     import EntityEditor from "./EntityEditor/EntityEditor.svelte";
     import MapEditorSideBar from "./MapEditorSideBar.svelte";
     import TrashEditor from "./TrashEditor.svelte";

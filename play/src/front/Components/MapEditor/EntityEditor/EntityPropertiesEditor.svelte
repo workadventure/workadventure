@@ -20,7 +20,6 @@
     import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
-    import AddPropertyButton from "../PropertyEditor/AddPropertyButton.svelte";
     import { connectionManager } from "../../../Connection/ConnectionManager";
 
     let properties: EntityDataProperties = [];
@@ -275,19 +274,6 @@
         />
     </div>
     <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-m-2">
-        {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
-            <AddPropertyButton
-                headerText={app.name}
-                descriptionText={app.description}
-                img={app.image}
-                style={`z-index: ${16 + index};`}
-                on:click={() => {
-                    onAddSpecificProperty(app);
-                }}
-            />
-        {/each}
-    </div>
-    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-m-2">
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="klaxoon"
@@ -337,6 +323,17 @@
                 onAddProperty("openWebsite", "eraser");
             }}
         />
+    </div>
+    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-m-2">
+        {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty={app.name}
+                on:click={() => {
+                    onAddSpecificProperty(app);
+                }}
+            />
+        {/each}
     </div>
     <div class="entity-name-container">
         <label for="objectName">{$LL.mapEditor.entityEditor.objectName()}</label>

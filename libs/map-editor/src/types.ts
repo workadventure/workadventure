@@ -345,7 +345,8 @@ export type OpenWebsiteTypePropertiesKeys =
     | "googleSheets"
     | "googleSlides"
     | "googleForms"
-    | "eraser";
+    | "eraser"
+    | string;
 export type AreaCoordinates = z.infer<typeof AreaCoordinates>;
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;

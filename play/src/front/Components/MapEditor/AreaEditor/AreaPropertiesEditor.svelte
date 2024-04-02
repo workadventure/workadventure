@@ -12,24 +12,23 @@
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
     import { IconChevronDown, IconChevronRight } from "@tabler/icons-svelte";
     import { ApplicationDefinitionInterface } from "@workadventure/messages";
-    import { LL } from "../../../i18n/i18n-svelte";
-    import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
-    import { FEATURE_FLAG_BROADCAST_AREAS } from "../../Enum/EnvironmentVariable";
-    import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { connectionManager } from "../../Connection/ConnectionManager";
-    import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
-    import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
-    import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
-    import FocusablePropertyEditor from "./PropertyEditor/FocusablePropertyEditor.svelte";
-    import SilentPropertyEditor from "./PropertyEditor/SilentPropertyEditor.svelte";
-    import SpeakerMegaphonePropertyEditor from "./PropertyEditor/SpeakerMegaphonePropertyEditor.svelte";
-    import ListenerMegaphonePropertyEditor from "./PropertyEditor/ListenerMegaphonePropertyEditor.svelte";
-    import StartPropertyEditor from "./PropertyEditor/StartPropertyEditor.svelte";
-    import ExitPropertyEditor from "./PropertyEditor/ExitPropertyEditor.svelte";
-    import AddPropertyButtonWrapper from "./PropertyEditor/AddPropertyButtonWrapper.svelte";
-    import AddPropertyButton from "./PropertyEditor/AddPropertyButton.svelte";
-    import PersonalAreaPropertyEditor from "./PropertyEditor/PersonalAreaPropertyEditor.svelte";
-    import RightsPropertyEditor from "./PropertyEditor/RightsPropertyEditor.svelte";
+    import { LL } from "../../../../i18n/i18n-svelte";
+    import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
+    import { FEATURE_FLAG_BROADCAST_AREAS } from "../../../Enum/EnvironmentVariable";
+    import { analyticsClient } from "../../../Administration/AnalyticsClient";
+    import { connectionManager } from "../../../Connection/ConnectionManager";
+    import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
+    import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
+    import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
+    import FocusablePropertyEditor from "../PropertyEditor/FocusablePropertyEditor.svelte";
+    import SilentPropertyEditor from "../PropertyEditor/SilentPropertyEditor.svelte";
+    import SpeakerMegaphonePropertyEditor from "../PropertyEditor/SpeakerMegaphonePropertyEditor.svelte";
+    import ListenerMegaphonePropertyEditor from "../PropertyEditor/ListenerMegaphonePropertyEditor.svelte";
+    import StartPropertyEditor from "../PropertyEditor/StartPropertyEditor.svelte";
+    import ExitPropertyEditor from "../PropertyEditor/ExitPropertyEditor.svelte";
+    import AddPropertyButtonWrapper from "../PropertyEditor/AddPropertyButtonWrapper.svelte";
+    import PersonalAreaPropertyEditor from "../PropertyEditor/PersonalAreaPropertyEditor.svelte";
+    import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -340,6 +339,20 @@
 {:else}
     <div class="tw-overflow-auto">
         <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+            {#if !hasPersonalAreaProperty && !hasRightsProperty}
+                <AddPropertyButtonWrapper
+                    property="personalAreaPropertyData"
+                    on:click={() => onAddProperty("personalAreaPropertyData")}
+                />
+            {/if}
+            {#if !hasPersonalAreaProperty && !hasRightsProperty}
+                <AddPropertyButtonWrapper
+                    property="restrictedRightsPropertyData"
+                    on:click={() => onAddProperty("restrictedRightsPropertyData")}
+                />
+            {/if}
+        </div>
+        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
             {#if !hasFocusableProperty}
                 <AddPropertyButtonWrapper
                     property="focusable"
@@ -412,18 +425,6 @@
                     onAddProperty("openWebsite");
                 }}
             />
-            {#if !hasPersonalAreaProperty && !hasRightsProperty}
-                <AddPropertyButtonWrapper
-                    property="personalAreaPropertyData"
-                    on:click={() => onAddProperty("personalAreaPropertyData")}
-                />
-            {/if}
-            {#if !hasPersonalAreaProperty && !hasRightsProperty}
-                <AddPropertyButtonWrapper
-                    property="restrictedRightsPropertyData"
-                    on:click={() => onAddProperty("restrictedRightsPropertyData")}
-                />
-            {/if}
         </div>
         <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
             <AddPropertyButtonWrapper
@@ -478,11 +479,9 @@
         </div>
         <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
             {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
-                <AddPropertyButton
-                    headerText={app.name}
-                    descriptionText={app.description}
-                    img={app.image}
-                    style={`z-index: ${16 + index};`}
+                <AddPropertyButtonWrapper
+                    property="openWebsite"
+                    subProperty={app.name}
                     on:click={() => {
                         onAddSpecificProperty(app);
                     }}
