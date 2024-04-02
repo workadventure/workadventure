@@ -1,6 +1,3 @@
-// import type CancelablePromise from "cancelable-promise";
-// import { inExternalServiceStore } from "../../Stores/MyMediaStore";
-// import { screenWakeLock } from "../../Utils/ScreenWakeLock";
 import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 

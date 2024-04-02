@@ -21,11 +21,11 @@
 
         const coWebsite = new SimpleCoWebsite(new URL(link), undefined, undefined, 75, true);
         coWebsiteManager.addCoWebsiteToStore(coWebsite);
-        try {
-            coWebsiteManager.loadCoWebsite(coWebsite);
-        } catch (e) {
-            console.error("Error during loading a co-website: " + coWebsite.getUrl(), e);
-        }
+        // try {
+        //     coWebsiteManager.loadCoWebsite(coWebsite);
+        // } catch (e) {
+        //     console.error("Error during loading a co-website: " + coWebsite.getUrl(), e);
+        // }
     }
 </script>
 

@@ -7,7 +7,6 @@
     export let actualCowebsite: BBBCoWebsite;
 
     onMount(() => {
-        console.log("BBB Meeting loading...");
         try {
             screenWakeLock
                 .requestWakeLock()
@@ -31,9 +30,13 @@
         } catch (e) {
             console.error("BBB Screen Wake off not successfully!", e);
         }
-
-        //quand on clique sur le bouton leave du BBB cela ne ferme pas le cowebsite.
     });
 </script>
 
-<iframe src={actualCowebsite.getUrl().toString()} class="w-full height" title="Cowebsite" frameborder="none" />
+<iframe
+    src={actualCowebsite.getUrl().toString()}
+    frameborder="0"
+    allow="fullscreen"
+    title="Cowebsite"
+    class="pixel bg-white h-full w-full z-index-0"
+/>

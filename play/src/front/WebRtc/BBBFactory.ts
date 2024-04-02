@@ -14,9 +14,8 @@ class BBBFactory {
             "microphone *; camera *; display-capture *; clipboard-read *; clipboard-write *; screen-wake-lock *; fullscreen *";
 
         const coWebsite = new BBBCoWebsite(new URL(clientURL), false, allowPolicy, undefined, false);
-        coWebsiteManager.addCoWebsiteToStore(coWebsite);
         try {
-            coWebsiteManager.loadCoWebsite(coWebsite);
+            coWebsiteManager.addCoWebsiteToStore(coWebsite);
         } catch (e) {
             console.error(`Error on opening co-website: ${e}`);
         }

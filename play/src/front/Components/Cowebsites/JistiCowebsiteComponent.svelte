@@ -71,11 +71,6 @@
                         ...actualCowebsite.jitsiInterfaceConfig,
                     },
                 };
-                console.log("OPTIONS :", options);
-
-                // if (!options.jwt) {
-                //     delete options.jwt;
-                // }
 
                 const timemoutPromise = new Promise<void>((resolve) => {
                     setTimeout(() => {
@@ -89,7 +84,6 @@
                     };
 
                     jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
-                    console.log("JITSIAPIIIIIIII", jitsiApi);
 
                     jitsiApi.addListener("videoConferenceJoined", () => {
                         jitsiApi.executeCommand("displayName", playerName);
@@ -113,7 +107,6 @@
                     jitsiApi.addListener("participantLeft", onParticipantsCountChange);
                     jitsiApi.addListener("participantKickedOut", onParticipantsCountChange);
                 });
-                console.log(options);
 
                 Promise.race([timemoutPromise, jistiMeetLoadedPromise])
                     .then(async () => {
@@ -147,10 +140,8 @@
                 console.error("Error loading Jitsi Meeting:", e);
             });
     });
+
     // Appel a la fonction closeOrUnload pour stopper le jitsi
 </script>
 
 <div bind:this={jitsiContainer} class="w-full h-full" />
-
-<style>
-</style>

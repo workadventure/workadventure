@@ -406,7 +406,7 @@ export class AreasPropertiesListener {
             );
 
             try {
-                coWebsiteManager.loadCoWebsite(coWebsite);
+                coWebsiteManager.addCoWebsiteToStore(coWebsite);
             } catch (err) {
                 console.error(err);
             }
@@ -546,12 +546,12 @@ export class AreasPropertiesListener {
     }
 
     private loadCoWebsiteFunction(coWebsite: CoWebsite, actionId: string): void {
-        try {
-            coWebsiteManager.loadCoWebsite(coWebsite)
-        }
-        catch (e) {
-            console.error("Error during loading a co-website: " + coWebsite.getUrl(), e);
-        };
+        // try {
+        //     coWebsiteManager.loadCoWebsite(coWebsite)
+        // }
+        // catch (e) {
+        //     console.error("Error during loading a co-website: " + coWebsite.getUrl(), e);
+        // };
         popupStore.removePopup(actionId);
     }
 

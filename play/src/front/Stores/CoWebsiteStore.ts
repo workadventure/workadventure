@@ -49,16 +49,10 @@ export class CoWebsiteManager {
     public onResize = this._onResize.asObservable();
 
 
-//Méthode pour ajout load et retrait au store
+//Méthode pour ajout et retrait au store
     public addCoWebsiteToStore(coWebsite: CoWebsite) {
         coWebsites.add(coWebsite);
     }
-
-
-    public loadCoWebsite(coWebsite: CoWebsite) {
-        coWebsite.load().catch(() => {"error loading coWebsite"});
-    }
-
 
     public removeCoWebsiteToStore(coWebsite: CoWebsite) {
         coWebsites.remove(coWebsite);

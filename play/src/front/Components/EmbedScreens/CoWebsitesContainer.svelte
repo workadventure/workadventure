@@ -14,6 +14,7 @@
     import { ArrowDownIcon } from "svelte-feather-icons";
 
     let activeCowebsite = $coWebsites[0].getId();
+    // let lastActiveCoWebsite = $coWebsites[$coWebsites.length - 1].getId();
     let showDropdown = false;
 
     let vertical = false;
@@ -25,6 +26,7 @@
     let startWidth: number;
     let startHeight: number;
     let mediaQuery = window.matchMedia("(max-width: 768px)");
+    // let previousCowebsite = $coWebsites[1].getId();
 
     onMount(() => {
         // console.log(secondCoWebsite);
@@ -49,8 +51,6 @@
                     container.style.height = height + "px";
                     const minHeight = max([height, window.innerHeight - 600]);
                     container.style.height = minHeight + "px";
-                    // const maxHeight = min([height, window.innerHeight - 150]);
-                    // container.style.height = maxHeight + "px";
                 }
 
                 const handleMouseUp = () => {
@@ -101,9 +101,12 @@
         activeCowebsite = arr[arr.length - 1]?.getId();
     });
 
-    function checkActiveCowebsite(coWebsiteId: string) {
-        return activeCowebsite === coWebsiteId.toString();
-    }
+    // function lastActiveCowebsite() {
+    //     lastActiveCoWebsite = $coWebsites[$coWebsites.length - 1].getId();
+    // }
+    // function checkActiveCowebsite(coWebsiteId: string) {
+    //     return activeCowebsite === coWebsiteId.toString();
+    // }
 
     function toggleFullScreen() {
         cowebsiteContainer = document.getElementById("cowebsites-container");
@@ -176,20 +179,54 @@
 >
     <div class="flex py-2 ml-3 items-center overflow-auto height-tab">
         <div class="grow flex">
-            <!-- Affichez uniquement l'onglet actif dans la barre d'onglets -->
-            {#each $coWebsites as coWebsite}
+            <!-- {#if activeCowebsite === coWebsite.getId().toString()} -->
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            {#each $coWebsites as coWebsite (coWebsite.getId())}
                 <div>
-                    <CoWebsiteTab
-                        {coWebsite}
-                        isLoading={true}
-                        active={activeCowebsite === coWebsite.getId().toString()}
-                        on:close={() => coWebsites.remove(coWebsite)}
-                    />
+                    {#if $coWebsites.length < 3}
+                        <div on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                            <CoWebsiteTab
+                                {coWebsite}
+                                isLoading={true}
+                                active={activeCowebsite === coWebsite.getId().toString()}
+                                on:close={() => coWebsites.remove(coWebsite)}
+                            />
+                        </div>
+                    {:else if $coWebsites.length > 2 && activeCowebsite === coWebsite.getId().toString()}
+                        <div on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                            <CoWebsiteTab
+                                {coWebsite}
+                                isLoading={true}
+                                active={activeCowebsite === coWebsite.getId().toString()}
+                                on:close={() => coWebsites.remove(coWebsite)}
+                            />
+                        </div>
+                        <div class={"absolute other-tab"}>
+                            {#if showDropdown}
+                                <div id="dropdown" class={"tab-drop-down relative bg-contrast/80 backdrop-blur"}>
+                                    {#each $coWebsites as coWebsite (coWebsite.getId())}
+                                        {#if activeCowebsite !== coWebsite.getId().toString()}
+                                            <div on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                                                <CoWebsiteTab
+                                                    {coWebsite}
+                                                    isLoading={true}
+                                                    active={activeCowebsite === coWebsite.getId().toString()}
+                                                    on:close={() => coWebsites.remove(coWebsite)}
+                                                    on:click={() =>
+                                                        console.log("bonjour je suis dans le set active cowebsite")}
+                                                />
+                                            </div>
+                                        {/if}
+                                    {/each}
+                                </div>
+                            {/if}
+                        </div>
+                    {/if}
                 </div>
             {/each}
         </div>
-        <!-- Affichez l'icône du menu déroulant si le nombre d'onglets dépasse 1 -->
-        {#if $coWebsites.length > 1}
+
+        {#if $coWebsites.length > 2}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
                 class="aspect-ratio h-10 w-10 fill-white rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer {showDropdown
@@ -200,37 +237,25 @@
                 <ArrowDownIcon />
             </div>
         {/if}
-    </div>
 
-    <!-- Affichez les onglets supplémentaires dans le menu déroulant -->
-    {#if showDropdown}
-        <div id="dropdown" class="tab-drop-down">
-            {#each $coWebsites as coWebsite}
-                <!-- Excluez l'onglet actif du menu déroulant -->
-                {#if activeCowebsite !== coWebsite.getId().toString()}
-                    <div>
-                        <CoWebsiteTab
-                            {coWebsite}
-                            isLoading={true}
-                            active={activeCowebsite === coWebsite.getId().toString()}
-                            on:close={() => coWebsites.remove(coWebsite)}
-                        />
-                    </div>
-                {/if}
-            {/each}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <div
+            class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
+            on:click={toggleFullScreen}
+        >
+            <FullScreenIcon />
         </div>
-    {/if}
-    <!-- </div> -->
+    </div>
 
     <div class={vertical ? "h-full ml-3 responsive-website" : "h-full object-contain ml-3"}>
         {#each $coWebsites as coWebsite (coWebsite.getId())}
             {#if activeCowebsite === coWebsite.getId()}
                 {#if coWebsite instanceof JitsiCoWebsite}
                     <JitsiCowebsiteComponent actualCowebsite={coWebsite} />
-                {:else if coWebsite instanceof SimpleCoWebsite}
-                    <SimpleCowebsiteComponent actualCowebsite={coWebsite} />
                 {:else if coWebsite instanceof BBBCoWebsite}
                     <BigBlueButtonCowebsiteComponent actualCowebsite={coWebsite} />
+                {:else if coWebsite instanceof SimpleCoWebsite}
+                    <SimpleCowebsiteComponent actualCowebsite={coWebsite} />
                 {/if}
             {/if}
         {/each}
@@ -256,24 +281,13 @@
         padding-bottom: 76px;
     }
 
-    .dropdown {
-        position: relative;
-        display: inline-block;
-        background-color: red;
-    }
-
-    .drop-down-content {
-        display: none;
-        position: absolute;
-        background-color: #f1f1f1;
-        min-width: 160px;
-        overflow: auto;
-        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-        z-index: 1000;
-    }
-
     .tab-drop-down {
-        background-color: red;
+        width: 300px;
+        border-radius: 8px;
+    }
+
+    .other-tab {
+        border-radius: 8px;
     }
 
     @media (max-width: 768px) {

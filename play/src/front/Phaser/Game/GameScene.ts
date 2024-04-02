@@ -2113,9 +2113,9 @@ ${escapedMessage}
 
             coWebsiteManager.addCoWebsiteToStore(coWebsite);
 
-            if (openCoWebsite.lazy === undefined || !openCoWebsite.lazy) {
-                coWebsiteManager.loadCoWebsite(coWebsite);
-            }
+            // if (openCoWebsite.lazy === undefined || !openCoWebsite.lazy) {
+            //     coWebsiteManager.loadCoWebsite(coWebsite);
+            // }
 
             return {
                 id: coWebsite.getId(),

@@ -292,7 +292,6 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
                                 );
                                 try {
                                     coWebsiteManager.addCoWebsiteToStore(coWebsite);
-                                    coWebsiteManager.loadCoWebsite(coWebsite);
                                 } catch (error) {
                                     console.error("Error during loading a co-website: " + coWebsite.getUrl(), error);
                                 }

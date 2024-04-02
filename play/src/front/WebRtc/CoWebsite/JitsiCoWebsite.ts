@@ -131,6 +131,7 @@ export const defaultInterfaceConfig = {
 };
 
 export class JitsiCoWebsite extends SimpleCoWebsite {
+
     private jitsiApi?: JitsiApi;
     // private audioCallback = this.onAudioChange.bind(this);
     // private videoCallback = this.onVideoChange.bind(this);
@@ -154,6 +155,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         super(url, false, undefined, widthPercent, closable);
     }
 
+
     closeOrUnload() {
         if (this.screenWakeRelease) {
             this.screenWakeRelease()
@@ -171,9 +173,11 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         }
     }
 
+
     getDomain(): string {
         return this.domain;
     }
+
 
     public onParticipantsCountChange(): void {
         this.updateParticipantsCountStore();
@@ -183,7 +187,9 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         jitsiParticipantsCountStore.set(this.jitsiApi?.getParticipantsInfo().length ?? 0);
     }
 
-    getCurrentParticipantId(participants: { displayName: string; participantId: string }[]): string | undefined {
+    getCurrentParticipantId(
+        participants: { displayName: string; participantId: string }[]
+    ): string | undefined {
         const currentPlayerName = gameManager.getPlayerName();
         for (const participant of participants) {
             if (participant.displayName === currentPlayerName) {
