@@ -1,9 +1,9 @@
 import { Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
-import { Unsubscriber, get } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import pLimit from "p-limit";
 import debug from "debug";
-import _ from "lodash";
+import merge from "lodash/merge";
 import type { RoomConnection } from "../../../Connection/RoomConnection";
 import type { GameScene } from "../GameScene";
 import {
@@ -13,7 +13,6 @@ import {
 } from "../../../Stores/MapEditorStore";
 import { mapEditorActivated, mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
-import { gameManager } from "../GameManager";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
@@ -467,16 +466,11 @@ export class MapEditorModeManager {
             console.error("No area property data");
             return;
         }
-        const scene = gameManager.getCurrentGameScene();
-
-        if (scene === undefined) {
-            console.error("GameScene is undefined");
-        }
 
         const oldAreaData = structuredClone(areaDataToClaim);
         const property = areaDataToClaim.properties.find((property) => property.type === "personalAreaPropertyData");
         if (property) {
-            _.merge(property, { ownerId: userUUID });
+            merge(property, { ownerId: userUUID });
         }
 
         this.executeCommand(

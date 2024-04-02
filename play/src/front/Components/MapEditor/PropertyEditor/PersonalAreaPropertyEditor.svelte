@@ -45,8 +45,6 @@
     function onClaimModeChange() {
         dispatch("change");
     }
-
-    console.debug(personalAreaPropertyData);
 </script>
 
 <PropertyEditorBase
