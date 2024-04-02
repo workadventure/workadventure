@@ -187,7 +187,6 @@
                     id,
                     type,
                     accessClaimMode: PersonalAreaAccessClaimMode.enum.dynamic,
-                    ownerId: "",
                     allowedTags: [],
                 };
             default:
