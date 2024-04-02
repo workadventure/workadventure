@@ -99,7 +99,6 @@
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
-    import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -452,18 +451,16 @@
                     class="tw-transition-all bottom-action-button"
                     on:click={() => analyticsClient.layoutPresentChange()}
                     on:click={switchLayoutMode}
-                    class:disabled={$streamableCollectionStore.size <= 1}
                 >
                     <Tooltip text={$LL.actionbar.layout()} />
 
-                    <button disabled={$streamableCollectionStore.size <= 1}>
+                    <button>
                         {#if $embedScreenLayoutStore === LayoutMode.Presentation}
                             <img
                                 draggable="false"
                                 src={layoutChatImg}
                                 style="padding: 2px"
                                 alt="Switch to presentation mode"
-                                class:disable-opacity={$streamableCollectionStore.size <= 1}
                             />
                         {:else}
                             <img
@@ -471,7 +468,6 @@
                                 src={layoutPresentationImg}
                                 style="padding: 2px"
                                 alt="Switch to mosaic mode"
-                                class:disable-opacity={$streamableCollectionStore.size <= 1}
                             />
                         {/if}
                     </button>
