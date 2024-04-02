@@ -27,6 +27,7 @@ import {
     JoinBBBMeetingAnswer,
     LeaveMucRoomMessage,
     MegaphoneSettings,
+    Member,
     ModifiyWAMMetadataMessage,
     ModifyCustomEntityMessage,
     MoveToPositionMessage as MoveToPositionMessageProto,
@@ -1581,6 +1582,19 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.embeddableWebsiteAnswer;
+    }
+
+    public async queryMembers(searchText: string): Promise<Member[]> {
+        const answer = await this.query({
+            $case: "searchMemberQuery",
+            searchMemberQuery: {
+                searchText,
+            },
+        });
+        if (answer.$case !== "searchMemberAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.searchMemberAnswer.members;
     }
 
     public emitMuteParticipantIdSpace(spaceName: string, participantId: string) {

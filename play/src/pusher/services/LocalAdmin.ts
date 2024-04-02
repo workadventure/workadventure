@@ -5,6 +5,7 @@ import type {
     AdminApiData,
     ErrorApiData,
     CompanionDetail,
+    MemberData,
 } from "@workadventure/messages";
 import { Capabilities, OpidWokaNamePolicy } from "@workadventure/messages";
 import axios from "axios";
@@ -334,6 +335,10 @@ class LocalAdmin implements AdminInterface {
             "api/woka/list": "v1",
             "api/companion/list": "v1",
         });
+    }
+
+    searchMembers(roomUrl: string, searchText: string): Promise<MemberData[]> {
+        return Promise.reject(new Error("No admin backoffice set!"));
     }
 }
 

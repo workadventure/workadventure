@@ -1,16 +1,13 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import Select from "svelte-select";
+    import { InputTagOption } from "./InputTagOption";
+
     const dispatch = createEventDispatcher();
 
-    type Option = {
-        value: string;
-        label: string;
-        created: undefined | boolean;
-    };
     export let label: string;
-    export let value: Option[] | undefined;
-    export let options: Option[];
+    export let value: InputTagOption[] | undefined;
+    export let options: InputTagOption[] = [];
     export let onFocus = () => {};
     export let onBlur = () => {};
     export let handleChange = () => {};
