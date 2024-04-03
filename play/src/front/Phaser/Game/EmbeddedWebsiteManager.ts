@@ -1,5 +1,6 @@
 import type { Subscription } from "rxjs";
 import { iframeListener } from "../../Api/IframeListener";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
 import type { CreateEmbeddedWebsiteEvent, ModifyEmbeddedWebsiteEvent } from "../../Api/Events/EmbeddedWebsiteEvent";
 import type { GameScene } from "./GameScene";
 import DOMElement = Phaser.GameObjects.DOMElement;
@@ -82,8 +83,12 @@ export class EmbeddedWebsiteManager {
 
                 if (embeddedWebsiteEvent.url !== undefined) {
                     website.url = embeddedWebsiteEvent.url;
-                    const absoluteUrl = new URL(embeddedWebsiteEvent.url, this.gameScene.mapUrlFile).toString();
+                    const newUrl = new URL(embeddedWebsiteEvent.url, this.gameScene.mapUrlFile);
+                    const absoluteUrl = newUrl.toString();
                     website.iframe.src = absoluteUrl;
+
+                    // Analytics tracking for new url website
+                    analyticsClient.openedWebsite(newUrl);
                 }
 
                 if (embeddedWebsiteEvent.visible !== undefined) {

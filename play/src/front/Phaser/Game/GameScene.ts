@@ -1785,6 +1785,9 @@ ${escapedMessage}
                 });
 
                 this.popUpElements.set(openPopupEvent.popupId, domElement);
+
+                // Analytics tracking for popups
+                analyticsClient.openedPopup(openPopupEvent.targetObject, openPopupEvent.popupId);
             })
         );
 
@@ -2108,8 +2111,9 @@ ${escapedMessage}
                 throw new Error("Unknown query source");
             }
 
+            const url = new URL(openCoWebsite.url, iframeListener.getBaseUrlFromSource(source));
             const coWebsite: SimpleCoWebsite = new SimpleCoWebsite(
-                new URL(openCoWebsite.url, iframeListener.getBaseUrlFromSource(source)),
+                url,
                 openCoWebsite.allowApi,
                 openCoWebsite.allowPolicy,
                 openCoWebsite.widthPercent,
@@ -2121,6 +2125,9 @@ ${escapedMessage}
             if (openCoWebsite.lazy === undefined || !openCoWebsite.lazy) {
                 await coWebsiteManager.loadCoWebsite(coWebsite);
             }
+
+            // Analytics tracking for co-websites
+            analyticsClient.openedWebsite(url);
 
             return {
                 id: coWebsite.getId(),
