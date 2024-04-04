@@ -1025,7 +1025,7 @@ class AdminApi implements AdminInterface {
 
     /**
      * @openapi
-     * /members:
+     * /members/{memberUUID}:
      *   get:
      *     description: Get member by UUID
      *     tags:
