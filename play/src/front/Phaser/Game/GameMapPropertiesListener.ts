@@ -455,8 +455,9 @@ export class GameMapPropertiesListener {
         };
 
         const openCoWebsiteFunction = () => {
+            const url = new URL(openWebsiteProperty ?? "", this.scene.mapUrlFile);
             const coWebsite = new SimpleCoWebsite(
-                new URL(openWebsiteProperty ?? "", this.scene.mapUrlFile),
+                url,
                 allowApiProperty,
                 websitePolicyProperty,
                 websiteWidthProperty,
@@ -473,7 +474,7 @@ export class GameMapPropertiesListener {
             inOpenWebsite.set(true);
 
             // analytics event for open website
-            analyticsClient.openedWebsite(coWebsite.getUrl());
+            analyticsClient.openedWebsite(url);
         };
 
         if (localUserStore.getForceCowebsiteTrigger() || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {

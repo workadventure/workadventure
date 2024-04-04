@@ -513,8 +513,9 @@ export class AreasPropertiesListener {
         coWebsiteOpen: OpenCoWebsite,
         actionId: string
     ): void {
+        const url = new URL(property.link ?? "", this.scene.mapUrlFile);
         const coWebsite = new SimpleCoWebsite(
-            new URL(property.link ?? "", this.scene.mapUrlFile),
+            url,
             property.allowAPI,
             property.policy,
             property.width,
@@ -531,7 +532,7 @@ export class AreasPropertiesListener {
         inOpenWebsite.set(true);
 
         // analytics event for open website
-        analyticsClient.openedWebsite(coWebsite.getUrl());
+        analyticsClient.openedWebsite(url);
     }
 
     private loadCoWebsiteFunction(coWebsite: CoWebsite, actionId: string): void {
