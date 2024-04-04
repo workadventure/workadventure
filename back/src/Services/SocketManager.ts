@@ -793,6 +793,9 @@ export class SocketManager {
                 case "searchMemberQuery": {
                     break;
                 }
+                case "getMemberQuery": {
+                    break;
+                }
                 default: {
                     const _exhaustiveCheck: never = queryCase;
                 }

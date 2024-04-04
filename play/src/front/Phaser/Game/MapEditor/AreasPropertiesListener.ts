@@ -37,6 +37,7 @@ import { gameManager } from "../GameManager";
 import { OpenCoWebsite } from "../GameMapPropertiesListener";
 import { GameScene } from "../GameScene";
 import { mapEditorAskToClaimPersonalAreaStore } from "../../../Stores/MapEditorStore";
+import { requestVisitCardsStore } from "../../../Stores/GameStore";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -449,16 +450,38 @@ export class AreasPropertiesListener {
         }
     }
 
-    private handlePersonalAreaPropertyOnEnter(property: PersonalAreaPropertyData, area: AreaData): void {
-        if (property.accessClaimMode === PersonalAreaAccessClaimMode.enum.dynamic) {
-            const userHasAllowedTagToClaimTheArea =
-                localUserStore.isLogged() &&
-                (property.allowedTags.length === 0 ||
-                    property.allowedTags.some((tag) => this.scene.connection?.hasTag(tag)));
-            const areaHasNoOwner = property.ownerId.trim().length === 0;
-            if (userHasAllowedTagToClaimTheArea && areaHasNoOwner) {
-                mapEditorAskToClaimPersonalAreaStore.set(area);
+    private handlePersonalAreaPropertyOnEnter(property: PersonalAreaPropertyData, areaData: AreaData): void {
+        if (property.ownerId !== null) {
+            this.displayPersonalAreaOwnerVisitCard(property.ownerId);
+        } else if (property.accessClaimMode === PersonalAreaAccessClaimMode.enum.dynamic) {
+            this.displayPersonalAreaClaimDialogBox(property, areaData);
+        }
+    }
+
+    private displayPersonalAreaOwnerVisitCard(ownerId: string) {
+        const connectedUserUUID = localUserStore.getLocalUser()?.uuid;
+        if (connectedUserUUID != ownerId) {
+            const connection = this.scene.connection;
+            if (connection) {
+                connection
+                    .queryMember(ownerId)
+                    .then((member) => {
+                        if (member?.visitCardUrl) {
+                            requestVisitCardsStore.set(member.visitCardUrl);
+                        }
+                    })
+                    .catch((error) => console.error(error));
             }
+        }
+    }
+
+    private displayPersonalAreaClaimDialogBox(property: PersonalAreaPropertyData, areaData: AreaData) {
+        const userHasAllowedTagToClaimTheArea =
+            localUserStore.isLogged() &&
+            (property.allowedTags.length === 0 ||
+                property.allowedTags.some((tag) => this.scene.connection?.hasTag(tag)));
+        if (userHasAllowedTagToClaimTheArea) {
+            mapEditorAskToClaimPersonalAreaStore.set(areaData);
         }
     }
 
@@ -544,6 +567,9 @@ export class AreasPropertiesListener {
 
     private handlePersonalAreaPropertyOnLeave(): void {
         mapEditorAskToClaimPersonalAreaStore.set(undefined);
+        if (get(requestVisitCardsStore)) {
+            requestVisitCardsStore.set(null);
+        }
     }
 
     private openCoWebsiteFunction(

@@ -117,4 +117,6 @@ export interface AdminInterface {
     getCapabilities(): Promise<Capabilities>;
 
     searchMembers(roomUrl: string, searchText: string): Promise<MemberData[]>;
+
+    getMember(memberUUID: string): Promise<MemberData>;
 }

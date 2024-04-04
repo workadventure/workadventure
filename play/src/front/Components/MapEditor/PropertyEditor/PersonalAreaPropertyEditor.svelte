@@ -1,16 +1,16 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onMount } from "svelte";
     import { InfoIcon } from "svelte-feather-icons";
     import { PersonalAreaAccessClaimMode, PersonalAreaPropertyData } from "@workadventure/map-editor";
     import LL from "../../../../i18n/i18n-svelte";
     import InputTags from "../../Input/InputTags.svelte";
     import MemberAutocomplete from "../../Input/MemberAutocomplete.svelte";
     import { InputTagOption, toTags } from "../../Input/InputTagOption";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let personalAreaPropertyData: PersonalAreaPropertyData;
 
-    let areaOwnerIdInput: string | undefined = personalAreaPropertyData.ownerId;
     let _tags: InputTagOption[] | undefined = personalAreaPropertyData.allowedTags
         ? personalAreaPropertyData.allowedTags.map((allowedTag) => ({
               value: allowedTag,
@@ -19,11 +19,27 @@
           }))
         : undefined;
 
+    let personalAreaOwner: string | null = personalAreaPropertyData.ownerId;
+
     const dispatch = createEventDispatcher();
 
-    function setOwnerId(selectedOwnerId: string) {
-        personalAreaPropertyData.ownerId = selectedOwnerId;
-        areaOwnerIdInput = selectedOwnerId;
+    onMount(async () => {
+        if (personalAreaPropertyData.ownerId) {
+            const connection = gameManager.getCurrentGameScene().connection;
+            if (connection) {
+                const member = await connection.queryMember(personalAreaPropertyData.ownerId);
+                personalAreaOwner = member.name
+                    ? `${member.name} ${member.email ? `(${member.email})` : ""}`
+                    : member.email
+                    ? member.email
+                    : member.id;
+            }
+        }
+    });
+
+    function setOwnerId(selectedOwner: { value: string; label: string }) {
+        personalAreaPropertyData.ownerId = selectedOwner.value;
+        personalAreaOwner = selectedOwner.label;
         dispatch("change");
     }
 
@@ -37,8 +53,8 @@
     }
 
     function revokeOwner() {
-        personalAreaPropertyData.ownerId = "";
-        areaOwnerIdInput = "";
+        personalAreaPropertyData.ownerId = null;
+        personalAreaOwner = null;
         dispatch("change");
     }
 
@@ -62,15 +78,12 @@
                     <InfoIcon size="18" />
                     {$LL.mapEditor.properties.personalAreaConfiguration.description()}
                 </p>
-                {#if personalAreaPropertyData.ownerId?.trim().length !== 0}
+                {#if personalAreaOwner}
                     <div class="tw-flex tw-flex-col">
                         <label for="ownerInput">{$LL.mapEditor.properties.personalAreaConfiguration.owner()}</label>
-                        <input
-                            id="ownerInput"
-                            value={areaOwnerIdInput}
-                            disabled
-                            class="tw-p-1 tw-rounded-md tw-bg-dark-purple !tw-border-solid !tw-border !tw-border-gray-400 tw-text-white tw-min-w-full"
-                        />
+                        <p class="tw-m-0 tw-text-blue-500">
+                            {personalAreaOwner}
+                        </p>
                         <button
                             class="tw-self-center tw-text-red-500"
                             data-testid="revokeAccessButton"
@@ -111,7 +124,7 @@
                                 >{$LL.mapEditor.properties.personalAreaConfiguration.allowedUser()}</label
                             >
                             <MemberAutocomplete
-                                value={areaOwnerIdInput}
+                                value={personalAreaPropertyData.ownerId}
                                 placeholder={$LL.mapEditor.properties.personalAreaConfiguration.allowedUser()}
                                 on:onSelect={({ detail: selectedUserId }) => setOwnerId(selectedUserId)}
                             />

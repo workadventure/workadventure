@@ -1590,6 +1590,22 @@ export class RoomConnection implements RoomConnection {
         return answer.searchMemberAnswer.members;
     }
 
+    public async queryMember(memberUUID: string): Promise<Member> {
+        const answer = await this.query({
+            $case: "getMemberQuery",
+            getMemberQuery: {
+                uuid: memberUUID,
+            },
+        });
+        if (answer.$case !== "getMemberAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        if (answer.getMemberAnswer.member === undefined) {
+            throw new Error("Member is undefined.");
+        }
+        return answer.getMemberAnswer.member;
+    }
+
     public emitMuteParticipantIdSpace(spaceName: string, participantId: string) {
         this.send({
             message: {

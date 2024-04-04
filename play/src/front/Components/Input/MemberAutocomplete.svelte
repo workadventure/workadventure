@@ -4,7 +4,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
 
     export let placeholder: string;
-    export let value: string | undefined = undefined;
+    export let value: string | undefined | null = undefined;
 
     let selectedValue: { index: number; label: string; value: string } | undefined = value
         ? {
@@ -23,7 +23,11 @@
                 return (await connection.queryMembers(filterText)).map((member, index) => ({
                     index,
                     value: member.id,
-                    label: member.email,
+                    label: member.name
+                        ? `${member.name} ${member.email ? `(${member.email})` : ""}`
+                        : member.email
+                        ? member.email
+                        : member.id,
                 }));
             } catch (error) {
                 console.error(error);
@@ -33,7 +37,7 @@
     }
 
     function handleSelectOption() {
-        dispatch("onSelect", selectedValue?.value ?? "");
+        dispatch("onSelect", selectedValue);
     }
 </script>
 

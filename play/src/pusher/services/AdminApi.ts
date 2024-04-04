@@ -1022,6 +1022,34 @@ class AdminApi implements AdminInterface {
         });
         return response.data ? response.data : [];
     }
+
+    /**
+     * @openapi
+     * /members/{memberUUID}:
+     *   get:
+     *     description: Get member by UUID
+     *     tags:
+     *      - Admin endpoint
+     *     parameters:
+     *      - name: "memberUUID"
+     *        in: "path"
+     *        required: true
+     *        type: "string"
+     *        description: The member UUID
+     *     responses:
+     *       200:
+     *        description: Member list or empty list.
+     *        schema:
+     *            $ref: '#/definitions/MemberData'
+     *        404:
+     *        description: No member found.
+     */
+    async getMember(memberUUID: string): Promise<MemberData> {
+        const response = await axios.get<MemberData>(`${ADMIN_API_URL}/api/members/${memberUUID}`, {
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        });
+        return response.data;
+    }
 }
 
 export const adminApi = new AdminApi();

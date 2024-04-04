@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/svelte";
-import type { AvailabilityStatus, MemberData } from "@workadventure/messages";
+import type { AvailabilityStatus } from "@workadventure/messages";
 import {
     ErrorApiErrorData,
     ErrorApiRetryData,
@@ -574,21 +574,6 @@ class ConnectionManager {
                 }
             );
         }
-    }
-
-    async searchMembers(searchText: string): Promise<MemberData[]> {
-        const playUri = this.currentRoom?.key;
-        if (playUri == undefined) {
-            throw new Error("playUri is undefined");
-        }
-
-        const response = await axiosToPusher.get<MemberData[]>("members", {
-            params: { playUri, searchText },
-            headers: {
-                Authorization: this.authToken,
-            },
-        });
-        return response.data ? response.data : [];
     }
 
     get currentRoom() {
