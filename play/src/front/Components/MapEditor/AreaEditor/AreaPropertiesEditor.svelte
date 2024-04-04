@@ -133,6 +133,9 @@
                     case "eraser":
                         placeholder = "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU";
                         break;
+                    case "excalidraw":
+                        placeholder = "https://excalidraw.workadventu.re/";
+                        break;
                     default:
                         placeholder = "https://workadventu.re";
                         break;
@@ -474,6 +477,13 @@
                 subProperty="eraser"
                 on:click={() => {
                     onAddProperty("openWebsite", "eraser");
+                }}
+            />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="excalidraw"
+                on:click={() => {
+                    onAddProperty("openWebsite", "excalidraw");
                 }}
             />
         </div>

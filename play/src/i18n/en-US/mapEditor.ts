@@ -186,6 +186,12 @@ const mapEditor: BaseTranslation = {
             owner: "Owner",
             revokeAccess: "Revoke access",
         },
+        excalidrawProperties: {
+            label: "Open Excalidraw",
+            description: "An open source virtual hand-drawn style whiteboard. Collaborative and end-to-end encrypted.",
+            error: "Please enter a valid Excalidraw URL",
+            disabled: "Excalidraw integration is disabled.",
+        },
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",

@@ -73,8 +73,9 @@ class IframeListener {
                                     iframeEvent.data.googleSheetsToolActivated,
                                     iframeEvent.data.googleSlidesToolActivated,
                                     iframeEvent.data.eraserToolActivated,
+                                    iframeEvent.data.excalidrawToolActivated,
                                     iframeEvent.data.authToken,
-                                    iframeEvent.data.klaxoonToolClientId
+                                    iframeEvent.data.klaxoonToolClientId,
                                 );
                                 if (chatConnectionManager.connection) {
                                     mucRoomsStore.sendUserInfos();

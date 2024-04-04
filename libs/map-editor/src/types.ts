@@ -346,6 +346,7 @@ export type OpenWebsiteTypePropertiesKeys =
     | "googleSlides"
     | "googleForms"
     | "eraser"
+    | "escalidraw"
     | string;
 export type AreaCoordinates = z.infer<typeof AreaCoordinates>;
 export type AreaData = z.infer<typeof AreaData>;

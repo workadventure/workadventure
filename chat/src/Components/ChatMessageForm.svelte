@@ -18,6 +18,8 @@
     import {
         EraserException,
         EraserService,
+        ExcalidrawException,
+        ExcalidrawService,
         GoogleWorkSpaceException,
         GoogleWorkSpaceService,
         KlaxoonEvent,
@@ -372,10 +374,22 @@
                 break;
             case "Eraser":
                 try {
-                    EraserService.validateEraserLink(new URL(app.link));
+                    EraserService.validateLink(new URL(app.link));
                 } catch (err) {
                     if (err instanceof EraserException.EraserLinkException) {
                         app.error = $LL.form.application.eraser.error();
+                    } else {
+                        app.error = $LL.form.application.weblink.error();
+                    }
+                    app.link = undefined;
+                }
+                break;
+            case "Excalidraw":
+                try {
+                    ExcalidrawService.validateLink(new URL(app.link));
+                } catch (err) {
+                    if (err instanceof ExcalidrawException.ExcalidrawException) {
+                        app.error = $LL.form.application.excalidraw.error();
                     } else {
                         app.error = $LL.form.application.weblink.error();
                     }
@@ -502,6 +516,17 @@
                     icon: "./static/images/applications/eraser.svg",
                     example: "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU",
                     description: $LL.form.application.eraser.description(),
+                });
+                return apps;
+            });
+        }
+        if (chatConnectionManager.excalidrawToolIsActivated) {
+            applications.update((apps) => {
+                apps.add({
+                    name: "Excalidraw",
+                    icon: "./static/images/applications/excalidraw.svg",
+                    example: "https://excalidraw.com/#room=ExSd8Z4wPsaqMMgTN4VU",
+                    description: $LL.form.application.excalidraw.description(),
                 });
                 return apps;
             });

@@ -177,7 +177,11 @@
                         placeholder = "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU";
                         buttonLabel = $LL.mapEditor.properties.eraserProperties.label();
                         break;
-                    default:
+                    case "excalidraw":
+                        placeholder = "https://excalidraw.workadventu.re/";
+                        buttonLabel = $LL.mapEditor.properties.excalidrawProperties.label();
+                    break;
+                        default:
                         placeholder = "https://workadventu.re";
                         buttonLabel = $LL.mapEditor.properties.linkProperties.label();
                 }
@@ -321,6 +325,13 @@
             subProperty="eraser"
             on:click={() => {
                 onAddProperty("openWebsite", "eraser");
+            }}
+        />
+        <AddPropertyButtonWrapper
+            property="openWebsite"
+            subProperty="excalidraw"
+            on:click={() => {
+                onAddProperty("openWebsite", "excalidraw");
             }}
         />
     </div>

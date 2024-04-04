@@ -16,6 +16,7 @@ import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
 import {
     ENABLE_OPENID,
     ERASER_ENABLED,
+    EXCALIDRAW_ENABLED,
     GOOGLE_DOCS_ENABLED,
     GOOGLE_DRIVE_ENABLED,
     GOOGLE_SHEETS_ENABLED,
@@ -68,6 +69,7 @@ class ConnectionManager {
     private _googleSlidesToolActivated: boolean | undefined;
     private _eraserToolActivated: boolean | undefined;
     private _googleDriveActivated: boolean | undefined;
+    private _excalidrawToolActivated: boolean | undefined;
 
     private _applications: ApplicationDefinitionInterface[] = [];
 
@@ -90,6 +92,7 @@ class ConnectionManager {
         this.googleSheetsToolActivated = GOOGLE_SHEETS_ENABLED;
         this.googleSlidesToolActivated = GOOGLE_SLIDES_ENABLED;
         this.eraserToolActivated = ERASER_ENABLED;
+        this.excalidrawToolActivated = EXCALIDRAW_ENABLED;
     }
 
     /**
@@ -469,6 +472,9 @@ class ConnectionManager {
                 const EraserApp = connect.room.applications?.find((app) => app.name === "Eraser");
                 this.eraserToolActivated = EraserApp?.enabled ?? ERASER_ENABLED;
 
+                const ExcalidrawApp = connect.room.applications?.find((app) => app.name === "Excalidraw");
+                this.excalidrawToolActivated = ExcalidrawApp?.enabled ?? EXCALIDRAW_ENABLED;
+
                 // Set other applications
                 for (const app of connect.room.applications ?? []) {
                     if (defautlIntegrationAppName.includes(app.name)) {
@@ -723,6 +729,13 @@ class ConnectionManager {
     }
     set googleDriveToolActivated(activated: boolean | undefined) {
         this._googleDriveActivated = activated;
+    }
+
+    get excalidrawToolActivated(): boolean {
+        return this._excalidrawToolActivated ?? false;
+    }
+    set excalidrawToolActivated(activated: boolean | undefined) {
+        this._excalidrawToolActivated = activated;
     }
 
     get applications(): ApplicationDefinitionInterface[] {

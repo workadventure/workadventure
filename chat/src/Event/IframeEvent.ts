@@ -104,6 +104,10 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("eraserToolActivated"),
         data: z.boolean().optional().default(false),
     }),
+    z.object({
+        type: z.literal("excalidrawToolActivated"),
+        data: z.boolean().optional().default(false),
+    }),
 ]);
 
 export const isLookingLikeIframeEventWrapper = z.object({

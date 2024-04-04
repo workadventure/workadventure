@@ -90,6 +90,11 @@ const fr_FR: Translation = {
                 description: "Envoyer un tableau eraser dans le chat !",
                 error: "L'URL Eraser n'est pas valide",
             },
+            excalidraw: {
+                title: "Excalidraw",
+                description: "Envoyer un dessin excalidraw dans le chat !",
+                error: "L'URL Excalidraw n'est pas valide",
+            },
             weblink: {
                 error: "L'URL n'est pas valide",
             },

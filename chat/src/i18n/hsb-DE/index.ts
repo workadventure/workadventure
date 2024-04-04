@@ -91,6 +91,11 @@ const hsb_DE: DeepPartial<Translation> = {
                 description: "Pósćel Eraser-taflu do chata!",
                 error: "Prošu zapodaj płaćiwu Eraser-URL",
             },
+            excalidraw: {
+                title: "Excalidraw",
+                description: "Pósćel Excalidraw do chata!",
+                error: "Prošu zapodaj płaćiwu Excalidraw-URL",
+            },
             weblink: {
                 error: "Prošu zapodaj płaćiwu URL",
             },

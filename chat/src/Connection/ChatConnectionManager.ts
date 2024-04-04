@@ -24,6 +24,7 @@ class ChatConnectionManager {
     private _googleSheetsToolActivated = false;
     private _googleSlidesToolActivated = false;
     private _eraserToolActivated = false;
+    private _excalidrawToolActivated = false;
 
     constructor() {
         this.uuid = "";
@@ -40,8 +41,9 @@ class ChatConnectionManager {
         googleSheetsToolActivated: boolean,
         googleSlidesToolActivated: boolean,
         eraserToolActivated: boolean,
+        excalidrawToolActivated: boolean,
         authToken?: string,
-        klaxoonToolClientId?: string
+        klaxoonToolClientId?: string,
     ) {
         debug("chatConnectionManager => initUser");
         this.uuid = uuid;
@@ -58,6 +60,7 @@ class ChatConnectionManager {
         this._googleSheetsToolActivated = googleSheetsToolActivated;
         this._googleSlidesToolActivated = googleSlidesToolActivated;
         this._eraserToolActivated = eraserToolActivated;
+        this._excalidrawToolActivated = excalidrawToolActivated;
 
         this.start();
     }
@@ -162,6 +165,9 @@ class ChatConnectionManager {
     }
     get eraserToolIsActivated(): boolean {
         return this._eraserToolActivated;
+    }
+    get excalidrawToolIsActivated(): boolean {
+        return this._excalidrawToolActivated;
     }
 }
 export const chatConnectionManager = new ChatConnectionManager();

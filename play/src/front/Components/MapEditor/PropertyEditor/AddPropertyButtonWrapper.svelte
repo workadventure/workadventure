@@ -13,6 +13,7 @@
     import googleSheetsSvg from "../../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../../images/applications/icon_google_slides.svg";
     import eraserSvg from "../../images/applications/icon_eraser.svg";
+    import excalidrawSvg from "../../images/applications/icon_excalidraw.svg";
     import workerWhiteSvg from "../../images/applications/worker_white.svg";
     import teamWhiteSvg from "../../images/applications/team_white.svg";
     import LL from "../../../../i18n/i18n-svelte";
@@ -226,7 +227,7 @@
             ? $LL.mapEditor.properties.googleSlidesProperties.description()
             : $LL.mapEditor.properties.googleSlidesProperties.disabled()}
         img={googleSlidesSvg}
-        style={`z-index: 110;${isActive ? "background-color: #4156f6;" : ""}`}
+        style={`z-index: 120;${isActive ? "background-color: #4156f6;" : ""}`}
         disabled={!connectionManager.googleSlidesToolActivated}
         on:click={(event) => {
             dispatch("click", event);
@@ -240,8 +241,23 @@
             ? $LL.mapEditor.properties.eraserProperties.description()
             : $LL.mapEditor.properties.eraserProperties.disabled()}
         img={eraserSvg}
-        style={`z-index: 100;${isActive ? "background-color: #4156f6;" : ""}`}
+        style={`z-index: 110;${isActive ? "background-color: #4156f6;" : ""}`}
         disabled={!connectionManager.eraserToolActivated}
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+    />
+{/if}
+
+{#if property === "openWebsite" && subProperty === "escalidraw"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.excalidrawProperties.label()}
+        descriptionText={connectionManager.excalidrawToolActivated
+            ? $LL.mapEditor.properties.excalidrawProperties.description()
+            : $LL.mapEditor.properties.excalidrawProperties.disabled()}
+        img={excalidrawSvg}
+        style={`z-index: 100;${isActive ? "background-color: #4156f6;" : ""}`}
+        disabled={!connectionManager.excalidrawToolActivated}
         on:click={(event) => {
             dispatch("click", event);
         }}

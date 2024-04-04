@@ -11,6 +11,7 @@
     import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
     import eraserSvg from "../images/applications/icon_eraser.svg";
+    import excalidrawSvg from "../images/applications/icon_excalidraw.svg";
     import { emoteMenuSubStore } from "../../Stores/EmoteStore";
     import { helpSettingsPopupBlockedStore } from "../../Stores/HelpSettingsPopupBlockedStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
@@ -128,7 +129,7 @@
                             id={`button-app-klaxoon`}
                             disabled={!connectionManager.googleDocsToolActivated}
                         >
-                            <img draggable="false" src={googleDocsSvg} style="padding: 2px" alt="Klaxoon" />
+                            <img draggable="false" src={googleDocsSvg} style="padding: 2px" alt="Goodle Doc" />
                         </button>
                     </div>
                 {/if}
@@ -143,7 +144,7 @@
                             id={`button-app-klaxoon`}
                             disabled={!connectionManager.googleSheetsToolActivated}
                         >
-                            <img draggable="false" src={googleSheetsSvg} style="padding: 2px" alt="Klaxoon" />
+                            <img draggable="false" src={googleSheetsSvg} style="padding: 2px" alt="Google Sheet" />
                         </button>
                     </div>
                 {/if}
@@ -158,7 +159,7 @@
                             id={`button-app-klaxoon`}
                             disabled={!connectionManager.googleSlidesToolActivated}
                         >
-                            <img draggable="false" src={googleSlidesSvg} style="padding: 2px" alt="Klaxoon" />
+                            <img draggable="false" src={googleSlidesSvg} style="padding: 2px" alt="Google Slide" />
                         </button>
                     </div>
                 {/if}
@@ -173,7 +174,22 @@
                             id={`button-app-klaxoon`}
                             disabled={!connectionManager.eraserToolActivated}
                         >
-                            <img draggable="false" src={eraserSvg} style="padding: 2px" alt="Klaxoon" />
+                            <img draggable="false" src={eraserSvg} style="padding: 2px" alt="Eraser" />
+                        </button>
+                    </div>
+                {/if}
+                {#if connectionManager.excalidrawToolActivated}
+                    <div class="tw-transition-all bottom-action-button">
+                        <Tooltip text={$LL.mapEditor.properties.excalidrawProperties.label()} />
+                        <button
+                            on:click={() => {
+                                window.open(`https://excalidraw.com`, "_blanck");
+                                appMenuOpened = false;
+                            }}
+                            id={`button-app-klaxoon`}
+                            disabled={!connectionManager.excalidrawToolActivated}
+                        >
+                            <img draggable="false" src={excalidrawSvg} style="padding: 2px" alt="Excalidraw" />
                         </button>
                     </div>
                 {/if}

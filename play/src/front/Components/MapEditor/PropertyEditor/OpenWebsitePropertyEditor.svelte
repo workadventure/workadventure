@@ -11,6 +11,8 @@
         YoutubeService,
         EraserService,
         EraserException,
+        ExcalidrawService,
+        ExcalidrawException,
     } from "@workadventure/shared-utils";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -20,6 +22,7 @@
     import googleSheetsSvg from "../../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../../images/applications/icon_google_slides.svg";
     import eraserSvg from "../../images/applications/icon_eraser.svg";
+    import excalidrawSvg from "../../images/applications/icon_excalidraw.svg";
     import pickerSvg from "../../images/applications/picker.svg";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
@@ -266,7 +269,7 @@
 
         if (property.application == "eraser") {
             try {
-                EraserService.validateEraserLink(new URL(property.link as string));
+                EraserService.validateLink(new URL(property.link as string));
                 embeddable = true;
                 optionAdvancedActivated = false;
                 property.newTab = oldNewTabValue;
@@ -275,6 +278,25 @@
                 error =
                     e instanceof EraserException.EraserLinkException
                         ? $LL.mapEditor.properties.eraserProperties.error()
+                        : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                console.info("Error to check embeddable website", e);
+                property.link = null;
+            }
+            embeddableLoading = false;
+            onValueChange();
+        }
+
+        if (property.application == "excalidraw") {
+            try {
+                ExcalidrawService.validateLink(new URL(property.link as string));
+                embeddable = true;
+                optionAdvancedActivated = false;
+                property.newTab = oldNewTabValue;
+            } catch (e) {
+                embeddable = false;
+                error =
+                    e instanceof ExcalidrawException.ExcalidrawException
+                        ? $LL.mapEditor.properties.excalidrawProperties.error()
                         : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
                 console.info("Error to check embeddable website", e);
                 property.link = null;
@@ -522,6 +544,9 @@
             {$LL.mapEditor.properties.googleSlidesProperties.label()}
         {:else if property.application === "eraser"}
             <img class="tw-w-6 tw-mr-1" src={eraserSvg} alt={$LL.mapEditor.properties.eraserProperties.description()} />
+            {$LL.mapEditor.properties.eraserProperties.label()}
+        {:else if property.application === "excalidraw"}
+            <img class="tw-w-6 tw-mr-1" src={excalidrawSvg} alt={$LL.mapEditor.properties.eraserProperties.description()} />
             {$LL.mapEditor.properties.eraserProperties.label()}
         {:else if property.application === "website"}
             <img class="tw-w-6 tw-mr-1" src={icon} alt={$LL.mapEditor.properties.linkProperties.description()} />

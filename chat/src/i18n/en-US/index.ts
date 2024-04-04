@@ -90,6 +90,11 @@ const en_US: BaseTranslation = {
                 description: "Send embedded eraser in the chat!",
                 error: "Please enter a valid Eraser URL",
             },
+            excalidraw: {
+                title: "Excalidraw",
+                description: "Send embedded excalidraw in the chat!",
+                error: "Please enter a valid Excalidraw URL",
+            },
             weblink: {
                 error: "Please enter a valid URL",
             },

@@ -20,6 +20,7 @@ export const isUserData = z.object({
   googleSlidesToolActivated: z.boolean().optional().default(false),
   eraserToolActivated: z.boolean().optional().default(false),
   klaxoonToolClientId: z.string().optional(),
+  excalidrawToolActivated: z.boolean().optional().default(false),
 });
 
 export type UserData = z.infer<typeof isUserData>;
