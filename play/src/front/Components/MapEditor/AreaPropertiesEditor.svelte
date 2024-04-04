@@ -6,7 +6,7 @@
         AreaDataProperty,
         OpenWebsiteTypePropertiesKeys,
         PersonalAreaAccessClaimMode,
-        PlayAudioPropertyData
+        PlayAudioPropertyData,
     } from "@workadventure/map-editor";
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
     import { IconChevronDown, IconChevronRight } from "@tabler/icons-svelte";
