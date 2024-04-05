@@ -8,7 +8,6 @@
     let allowApi: boolean;
 
     onMount(() => {
-        console.log("SIMPLE COWEBSITE MOUNTED!");
         if (allowApi) {
             iframeListener.registerIframe(iframeSimpleCowebsite);
         }

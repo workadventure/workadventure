@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount } from "svelte";
+    import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import CopyIcon from "../Icons/CopyIcon.svelte";
     import ExternalLinkIcon from "../Icons/ExternalLinkIcon.svelte";
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
@@ -7,17 +7,23 @@
     import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
+    // import { handleTabResize } from "./CoWebsitesContainer";
 
     export let coWebsite: CoWebsite;
     export let isLoading = false;
     export let isClosable = true;
-    export let isDuplicable = true;
     export let active = false;
+
+    let tabWidth = 300;
+    let totalTabsWidth = 0;
+    let isDuplicable = true;
     let isJitsi: boolean = coWebsite instanceof JitsiCoWebsite;
     let isBBB: boolean = coWebsite instanceof BBBCoWebsite;
     let cowebsiteName: string;
     let urlForFavicon = coWebsite.getUrl().toString();
     let url: string;
+
+    const dispatch = createEventDispatcher();
 
     onMount(() => {
         if (isJitsi) {
@@ -50,9 +56,12 @@
             isClosable = true;
             isDuplicable = true;
         }
+        dispatch("tabMounted");
     });
 
-    const dispatch = createEventDispatcher();
+    onDestroy(() => {
+        dispatch("tabUnmounted");
+    });
 
     function closeTab() {
         dispatch("close");
@@ -91,71 +100,77 @@
             />
         </div>
     {/if}
-    <div class="p-2 text-ellipsis overflow-hidden">
-        <div
-            class="bold leading-3 text-ellipsis pb-1 max-w-[150px] whitespace-nowrap overflow-hidden {active
-                ? 'fill-white'
-                : ''}"
-        >
-            {#if isLoading}
-                {cowebsiteName}
-            {:else}
-                <div class="w-[100px] h-2 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}" />
-            {/if}
+
+    <div class="flex justify-between items-center w-full">
+        <div class="p-2 text-ellipsis overflow-hidden">
+            <div
+                class="bold leading-3 text-ellipsis pb-1 max-w-[150px] whitespace-nowrap overflow-hidden {active
+                    ? 'fill-white'
+                    : ''}"
+            >
+                {#if isLoading}
+                    {cowebsiteName}
+                {:else}
+                    <div class="w-[100px] h-2 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}" />
+                {/if}
+            </div>
+            <div class="text-xxs opacity-50 text-ellipsis max-w-[150px] whitespace-nowrap overflow-hidden">
+                {#if isLoading}
+                    {coWebsite.getUrl()}
+                {:else}
+                    <div
+                        class="w-[150px] h-1 mt-1 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}"
+                    />
+                {/if}
+            </div>
         </div>
-        <div class="text-xxs opacity-50 text-ellipsis max-w-[150px] whitespace-nowrap overflow-hidden">
-            {#if isLoading}
-                {coWebsite.getUrl()}
-            {:else}
-                <div class="w-[150px] h-1 mt-1 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}" />
+
+        <div class="flex gap-0.5">
+            {#if isDuplicable}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div
+                    class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
+                    on:click={copyUrl}
+                >
+                    <ExternalLinkIcon
+                        classList="h-4 w-4 aspect-ratio transition-all {active
+                            ? 'group-hover:stroke-white stroke-gray-900'
+                            : 'stroke-white fill-transparent'}"
+                    />
+                </div>
             {/if}
-        </div>
-    </div>
-    <div class="flex gap-0.5">
-        {#if isDuplicable}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
                 class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
-                on:click={copyUrl}
+                on:click={() => window.open(coWebsite.getUrl().toString(), "_blank")}
             >
-                <ExternalLinkIcon
+                <CopyIcon
                     classList="h-4 w-4 aspect-ratio transition-all {active
-                        ? 'group-hover:stroke-white stroke-gray-950'
+                        ? 'group-hover:stroke-white stroke-gray-900'
                         : 'stroke-white fill-transparent'}"
                 />
             </div>
-        {/if}
-        <div
-            class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
-            on:click={() => window.open(coWebsite.getUrl().toString(), "_blank")}
-        >
-            <CopyIcon
-                classList="h-4 w-4 aspect-ratio transition-all {active
-                    ? 'group-hover:stroke-white stroke-gray-950'
-                    : 'stroke-white fill-transparent'}"
-            />
+            {#if isClosable}
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <div
+                    class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
+                    on:click={closeTab}
+                >
+                    <XIcon
+                        classList="h-4 w-4 aspect-ratio transition-all {active
+                            ? 'group-hover:stroke-white stroke-gray-900'
+                            : 'stroke-white fill-transparent'}"
+                    />
+                </div>
+            {/if}
         </div>
-        {#if isClosable}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <div
-                class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
-                on:click={closeTab}
-            >
-                <XIcon
-                    classList="h-4 w-4 aspect-ratio transition-all {active
-                        ? 'group-hover:stroke-white stroke-gray-950'
-                        : 'stroke-white fill-transparent'}"
-                />
-            </div>
-        {/if}
     </div>
-    <!-- <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
-        <SettingsIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
-    </div> -->
 </div>
 
+<!-- <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
+<SettingsIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
+</div> -->
 <style>
     .tab {
-        max-width: 300px;
+        width: 300px;
     }
 </style>
