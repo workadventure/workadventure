@@ -76,6 +76,7 @@ class IframeListener {
                                     iframeEvent.data.excalidrawToolActivated,
                                     iframeEvent.data.authToken,
                                     iframeEvent.data.klaxoonToolClientId,
+                                    iframeEvent.data.applications
                                 );
                                 if (chatConnectionManager.connection) {
                                     mucRoomsStore.sendUserInfos();

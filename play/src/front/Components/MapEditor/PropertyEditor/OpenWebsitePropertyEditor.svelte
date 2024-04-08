@@ -323,8 +323,9 @@
 
             if (property.regexUrl) {
                 try {
-                    const regex = new RegExp(property.regexUrl);
-                    if (regex.test(property.link)) {
+                    const regexUrl = new URL(property.regexUrl);
+                    const regex = new RegExp(property.regexUrl.replace("?", "[?]"), "g");
+                    if (property.link.indexOf(regexUrl.host) != -1) {
                         // if property has "targetEmbedableLink" transform the link to embedable link with regex
                         if (property.targetEmbedableUrl) {
                             const matches = regex.exec(property.link);
@@ -343,13 +344,16 @@
                                 property.regexUrl
                             })`;
                             property.link = null;
+                            throw new Error(error);
                         }
+                    } else {
+                        throw new Error(error);
                     }
                     embeddable = false;
                 } catch (e) {
                     console.info("Error to check embeddable website", e);
                     embeddable = false;
-                    error = $LL.mapEditor.properties.linkProperties.errorInvalidUrl();
+                    error = error ?? $LL.mapEditor.properties.linkProperties.errorInvalidUrl();
                     property.link = null;
                     throw e;
                 } finally {

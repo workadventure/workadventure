@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isUserData } from "@workadventure/messages";
+import { isApplicationDefinitionInterface, isUserData } from "@workadventure/messages";
 import {
     KLAXOON_ACTIVITY_PICKER_EVENT,
     isKlaxoonEvent,
@@ -107,6 +107,10 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("excalidrawToolActivated"),
         data: z.boolean().optional().default(false),
+    }),
+    z.object({
+        type: z.literal("applications"),
+        data: z.array(isApplicationDefinitionInterface),
     }),
 ]);
 

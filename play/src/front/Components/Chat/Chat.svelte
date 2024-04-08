@@ -110,6 +110,8 @@
                                         googleSlidesToolActivated: connectionManager.googleSlidesToolActivated,
                                         klaxoonToolClientId: connectionManager.klaxoonToolClientId,
                                         eraserToolActivated: connectionManager.eraserToolActivated,
+                                        excalidrawToolActivated: connectionManager.excalidrawToolActivated,
+                                        applications: connectionManager.applications,
                                     },
                                 },
                                 "*"

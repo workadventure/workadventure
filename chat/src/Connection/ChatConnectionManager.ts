@@ -1,4 +1,4 @@
-import { XmppSettingsMessage } from "@workadventure/messages";
+import { ApplicationDefinitionInterface, XmppSettingsMessage } from "@workadventure/messages";
 import { KlaxoonService } from "@workadventure/shared-utils";
 import { get } from "svelte/store";
 import Debug from "debug";
@@ -26,6 +26,8 @@ class ChatConnectionManager {
     private _eraserToolActivated = false;
     private _excalidrawToolActivated = false;
 
+    private _applications: ApplicationDefinitionInterface[] = [];
+
     constructor() {
         this.uuid = "";
         this.playUri = "";
@@ -44,6 +46,7 @@ class ChatConnectionManager {
         excalidrawToolActivated: boolean,
         authToken?: string,
         klaxoonToolClientId?: string,
+        applications?: ApplicationDefinitionInterface[]
     ) {
         debug("chatConnectionManager => initUser");
         this.uuid = uuid;
@@ -61,6 +64,8 @@ class ChatConnectionManager {
         this._googleSlidesToolActivated = googleSlidesToolActivated;
         this._eraserToolActivated = eraserToolActivated;
         this._excalidrawToolActivated = excalidrawToolActivated;
+
+        this._applications = applications || [];
 
         this.start();
     }
@@ -168,6 +173,9 @@ class ChatConnectionManager {
     }
     get excalidrawToolIsActivated(): boolean {
         return this._excalidrawToolActivated;
+    }
+    get applications(): ApplicationDefinitionInterface[] {
+        return this._applications;
     }
 }
 export const chatConnectionManager = new ChatConnectionManager();
