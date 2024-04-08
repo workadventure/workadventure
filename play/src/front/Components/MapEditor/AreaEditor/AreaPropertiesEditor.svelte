@@ -234,11 +234,12 @@
             newTab: false,
             placeholder: app.description,
             label: app.name,
-            policy: undefined,
+            policy: app.policy,
             icon: app.image,
             regexUrl: app.regexUrl,
             targetEmbedableUrl: app.targetUrl,
             forceNewTab: app.forceNewTab,
+            allowAPI: app.allowAPI,
         };
         $mapEditorSelectedAreaPreviewStore.addProperty(property);
 

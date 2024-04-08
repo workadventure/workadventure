@@ -42,6 +42,14 @@ export const isApplicationDefinitionInterface = z.object({
     description: "Force the application to open in a new tab",
     example: true,
   }),
+  allowAPI: extendApi(z.boolean().optional().default(false), {
+    description: "Allow the application to use the WorkAdventure Scripting API",
+    example: true,
+  }),
+  policy: extendApi(z.string().optional(), {
+    description: "The permission policy use by the application. Exemple: fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture...",
+    example: "http://example.com/my/policy.html",
+  }),
 });
 export type ApplicationDefinitionInterface = z.infer<
   typeof isApplicationDefinitionInterface

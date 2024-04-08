@@ -108,7 +108,7 @@
             ?.split(";")
             .reduce(
                 (options: Option[], value) =>
-                    value != "" ? [...options, { value, label: value, created: undefined }] : options,
+                    value != "" ? [...options, { value: value.trim(), label: value.trim(), created: undefined }] : options,
                 []
             ) as Option[];
         
