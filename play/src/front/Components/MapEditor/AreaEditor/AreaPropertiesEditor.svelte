@@ -1,13 +1,13 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
     import {
-        AreaDataProperty,
-        AreaDataPropertiesKeys,
         AreaDataProperties,
+        AreaDataPropertiesKeys,
+        AreaDataProperty,
         OpenWebsiteTypePropertiesKeys,
-        PlayAudioPropertyData,
         PersonalAreaAccessClaimMode,
         OpenWebsitePropertyData,
+        PlayAudioPropertyData,
     } from "@workadventure/map-editor";
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
     import { IconChevronDown, IconChevronRight } from "@tabler/icons-svelte";
@@ -29,6 +29,7 @@
     import AddPropertyButtonWrapper from "../PropertyEditor/AddPropertyButtonWrapper.svelte";
     import PersonalAreaPropertyEditor from "../PropertyEditor/PersonalAreaPropertyEditor.svelte";
     import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
+    import { v4 as uuid } from "uuid";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -55,7 +56,7 @@
                 .find((property) => property.type === "areaDescriptionProperties");
             if (descriptionProperty == undefined) {
                 $mapEditorSelectedAreaPreviewStore?.addProperty({
-                    id: crypto.randomUUID(),
+                    id: uuid(),
                     type: "areaDescriptionProperties",
                     description: areaDescription,
                     searchable: areaSearchable,
@@ -72,7 +73,7 @@
         type: AreaDataPropertiesKeys,
         subtype?: OpenWebsiteTypePropertiesKeys
     ): AreaDataProperty {
-        const id = crypto.randomUUID();
+        const id = uuid();
         let placeholder: string;
         let policy: string | undefined;
         switch (type) {
@@ -192,8 +193,8 @@
                     id,
                     type,
                     accessClaimMode: PersonalAreaAccessClaimMode.enum.dynamic,
-                    ownerId: "",
                     allowedTags: [],
+                    ownerId: null,
                 };
             default:
                 throw new Error(`Unknown property type ${type}`);

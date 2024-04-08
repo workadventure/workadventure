@@ -2,9 +2,10 @@ import type { AreaData, AtLeast } from "@workadventure/map-editor";
 import type { EditMapCommandMessage } from "@workadventure/messages";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
+import { v4 as uuid } from "uuid";
 import {
-    MapEditorAreaToolMode,
     mapEditorAreaModeStore,
+    MapEditorAreaToolMode,
     mapEditorSelectedAreaPreviewStore,
 } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
@@ -505,7 +506,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private copyArea(data: CopyAreaEventData): void {
-        const id = crypto.randomUUID();
+        const id = uuid();
         this.mapEditorModeManager
             .executeCommand(
                 new CreateAreaFrontCommand(
@@ -529,7 +530,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private createNewArea(x: number, y: number, width: number, height: number): void {
-        const id = crypto.randomUUID();
+        const id = uuid();
         this.mapEditorModeManager
             .executeCommand(
                 new CreateAreaFrontCommand(

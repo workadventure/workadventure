@@ -1,4 +1,4 @@
-import { AtLeast, AreaData, AreaDataProperties, AreaDataPropertiesKeys, AreaDataProperty } from "../../types";
+import { AreaData, AreaDataProperties, AreaDataPropertiesKeys, AreaDataProperty, AtLeast } from "../../types";
 import type { GameMap } from "../../GameMap/GameMap";
 import { Command } from "../Command";
 
@@ -59,7 +59,14 @@ export class UpdateAreaCommand extends Command {
      * or "jitsi" property. If we somehow try to pass properties array which is not valid, we will catch it here.
      */
     private validateProperties(data: AreaDataProperties, areaId: string): AreaDataProperties {
-        const singleOnly: AreaDataPropertiesKeys[] = ["start", "focusable", "silent", "jitsiRoomProperty"];
+        const singleOnly: AreaDataPropertiesKeys[] = [
+            "start",
+            "focusable",
+            "silent",
+            "jitsiRoomProperty",
+            "personalAreaPropertyData",
+            "restrictedRightsPropertyData",
+        ];
         const foundKeys: AreaDataPropertiesKeys[] = [];
         const propertiesToRemove: string[] = [];
         for (const property of data) {
