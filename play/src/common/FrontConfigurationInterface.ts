@@ -57,6 +57,4 @@ export interface FrontConfigurationInterface {
     GOOGLE_DRIVE_PICKER_CLIENT_ID: string | undefined;
     GOOGLE_DRIVE_PICKER_APP_ID: string | undefined;
     EXCALIDRAW_ENABLED: boolean;
-    EMBEDLY_KEY: string | undefined;
-    IFRAMELY_KEY: string | undefined;
 }

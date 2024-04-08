@@ -99,6 +99,8 @@ class LocalAdmin implements AdminInterface {
                 description: "Klaxoon (Brainstorming, Quiz, Survey)",
                 enabled: true,
                 default: true,
+                forceNewTab: false,
+                allowAPI: false,
             });
         }
         if (YOUTUBE_ENABLED) {
@@ -109,6 +111,8 @@ class LocalAdmin implements AdminInterface {
                 description: "Youtube (Video sharing)",
                 enabled: true,
                 default: true,
+                forceNewTab: false,
+                allowAPI: false,
             });
         }
         if (GOOGLE_DRIVE_ENABLED) {
@@ -118,6 +122,8 @@ class LocalAdmin implements AdminInterface {
                 description: "Google Drive (Docs, Sheets, Slides)",
                 enabled: true,
                 default: true,
+                forceNewTab: false,
+                allowAPI: false
             });
         }
         if (GOOGLE_DOCS_ENABLED) {
@@ -127,6 +133,8 @@ class LocalAdmin implements AdminInterface {
                 description: "Google Docs (Word Processor)",
                 enabled: true,
                 default: true,
+                forceNewTab: false,
+                allowAPI: false
             });
         }
         if (GOOGLE_SHEETS_ENABLED) {
@@ -136,6 +144,8 @@ class LocalAdmin implements AdminInterface {
                 description: "Google Sheets (Spreadsheet)",
                 enabled: true,
                 default: true,
+                forceNewTab: false,
+                allowAPI: false
             });
         }
         if (GOOGLE_SLIDES_ENABLED) {
@@ -145,6 +155,8 @@ class LocalAdmin implements AdminInterface {
                 description: "Google Slides (Presentation)",
                 enabled: true,
                 default: true,
+                forceNewTab: false,
+                allowAPI: false
             });
         }
         if (ERASER_ENABLED) {
@@ -154,6 +166,8 @@ class LocalAdmin implements AdminInterface {
                 description: "Eraser (White board)",
                 enabled: true,
                 default: true,
+                forceNewTab: false,
+                allowAPI: false
             });
         }
         if (EXCALIDRAW_ENABLED) {
@@ -163,6 +177,8 @@ class LocalAdmin implements AdminInterface {
                 description: "Excalidraw (White board)",
                 enabled: true,
                 default: true,
+                forceNewTab: false,
+                allowAPI: false
             });
         }
 

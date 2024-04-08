@@ -150,6 +150,8 @@
                     hideButtonLabel: true,
                     application: subtype ?? "website",
                     placeholder,
+                    allowAPI: false,
+                    forceNewTab: false,
                     policy,
                 };
             case "playAudio":

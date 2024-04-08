@@ -196,6 +196,8 @@
                     newTab: false,
                     application: subtype ?? "website",
                     placeholder,
+                    forceNewTab: false,
+                    allowAPI: false,
                     policy,
                 };
             case "playAudio":
