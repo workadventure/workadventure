@@ -713,5 +713,13 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+
+    openedPopup(targetRectangle: string, id: number): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_opened_popup", { targetRectangle, id });
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();

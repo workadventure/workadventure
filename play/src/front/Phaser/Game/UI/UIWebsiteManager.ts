@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import type { CreateUIWebsiteEvent, ModifyUIWebsiteEvent, UIWebsiteEvent } from "../../../Api/Events/Ui/UIWebsiteEvent";
 import { iframeListener } from "../../../Api/IframeListener";
 import { uiWebsitesStore } from "../../../Stores/UIWebsiteStore";
+import { analyticsClient } from "../../../Administration/AnalyticsClient";
 
 class UIWebsiteManager {
     constructor() {
@@ -16,6 +17,9 @@ class UIWebsiteManager {
 
             if (websiteEvent.url) {
                 website.url = websiteEvent.url;
+
+                // Analytics tracking for new website
+                analyticsClient.openedWebsite(new URL(websiteEvent.url));
             }
 
             if (websiteEvent.visible !== undefined) {
@@ -75,6 +79,9 @@ class UIWebsiteManager {
             allowApi: websiteConfig.allowApi ?? false,
         };
         uiWebsitesStore.add(newWebsite);
+
+        // Analytics tracking opening a website
+        analyticsClient.openedWebsite(new URL(websiteConfig.url));
         return newWebsite;
     }
 
