@@ -1,5 +1,3 @@
-import { ExcalidrawException } from "./Application/Exception/ExcalidrawException";
-
 export * from "./types";
 export * as Color from "./String/color";
 export * as ShortHash from "./String/shortHash";

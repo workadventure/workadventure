@@ -108,11 +108,13 @@
             ?.split(";")
             .reduce(
                 (options: Option[], value) =>
-                    value != "" ? [...options, { value: value.trim(), label: value.trim(), created: undefined }] : options,
+                    value != ""
+                        ? [...options, { value: value.trim(), label: value.trim(), created: undefined }]
+                        : options,
                 []
             ) as Option[];
-        
-        if(property.forceNewTab == true) {
+
+        if (property.forceNewTab == true) {
             property.newTab = true;
         }
     });
@@ -353,11 +355,11 @@
                     } else {
                         throw new Error(error);
                     }
-                    if(property.forceNewTab == true) {
+                    if (property.forceNewTab == true) {
                         embeddable = false;
                         optionAdvancedActivated = false;
                         property.newTab = true;
-                    }else{
+                    } else {
                         embeddable = true;
                     }
                 } catch (e) {
@@ -380,7 +382,7 @@
     }
 
     function checkEmbeddableLink(): void {
-        if(property.forceNewTab) return;
+        if (property.forceNewTab) return;
         if (property.link == undefined || !linkElement.checkValidity()) {
             embeddableLoading = false;
             warning = warning ? warning : $LL.mapEditor.properties.linkProperties.errorInvalidUrl();

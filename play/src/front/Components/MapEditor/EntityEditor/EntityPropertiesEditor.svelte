@@ -182,8 +182,8 @@
                     case "excalidraw":
                         placeholder = "https://excalidraw.workadventu.re/";
                         buttonLabel = $LL.mapEditor.properties.excalidrawProperties.label();
-                    break;
-                        default:
+                        break;
+                    default:
                         placeholder = "https://workadventu.re";
                         buttonLabel = $LL.mapEditor.properties.linkProperties.label();
                 }

@@ -276,7 +276,7 @@
                 return apps;
             });
         }
-        if(chatConnectionManager.excalidrawToolIsActivated) {
+        if (chatConnectionManager.excalidrawToolIsActivated) {
             applications.update((apps) => {
                 apps.add({
                     name: "Excalidraw",

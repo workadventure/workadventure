@@ -186,7 +186,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         },
         excalidrawProperties: {
             label: "Ouvrir Excalidraw",
-            description: "Un outil de dessin à la main virtuel (preque comme un tableau blanc). Collaboratif et chiffré de bout en bout.",
+            description:
+                "Un outil de dessin à la main virtuel (preque comme un tableau blanc). Collaboratif et chiffré de bout en bout.",
             error: "Veuillez entrer une URL Excalidraw valide",
             disabled: "L'intégration Excalidraw est désactivée.",
         },
