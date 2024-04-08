@@ -51,6 +51,7 @@ export default defineConfig(({ mode }) => {
                     "FALLBACK_LOCALE",
                     "UPLOADER_URL",
                     "EMBEDLY_KEY",
+                    "IFRAMELY_KEY",
                     "ICON_URL",
                     "ENABLE_OPENID",
                     "ENABLE_CHAT_UPLOAD",
