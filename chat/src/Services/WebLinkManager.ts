@@ -1,7 +1,7 @@
 import axios from "axios";
 import { v4 as uuid } from "uuid";
 import { EraserService, ExcalidrawService, GoogleWorkSpaceService, YoutubeService } from "@workadventure/shared-utils";
-import { EMBEDLY_KEY } from "../Enum/EnvironmentVariable";
+import { EMBEDLY_KEY, IFRAMELY_KEY } from "../Enum/EnvironmentVariable";
 import { HtmlUtils } from "../Utils/HtmlUtils";
 import { FileMessageManager } from "./FileMessageManager";
 
@@ -173,60 +173,58 @@ export class WebLink {
 
     get contentWebsiteRenderer(): Promise<string> {
         return (async () => {
-            if (EMBEDLY_KEY != undefined && EMBEDLY_KEY !== "") {
-                try {
-                    const url = `https://api.embedly.com/1/oembed?url=${encodeURI(this.link)}&key=${EMBEDLY_KEY}`;
+            if (!this.oEmbedProviderEnabled) return (await this.getHyperLinkHTMLElement(false)).outerHTML;
 
-                    let result = null;
-                    if (webLinkCaches.has(url)) {
-                        result = webLinkCaches.get(url);
-                    } else {
-                        result = await axios.get(url);
-                        webLinkCaches.set(url, result);
-                    }
+            try {
+                const url = this.oEmbedProvider;
 
-                    if (result == undefined || result.data == undefined) {
-                        throw new Error(`Error get embed data from webiste: ${this.link}`);
-                    }
+                let result = null;
+                if (webLinkCaches.has(url)) {
+                    result = webLinkCaches.get(url);
+                } else {
+                    result = await axios.get(url);
+                    webLinkCaches.set(url, result);
+                }
 
-                    const data = result.data;
-                    if (data.html) {
-                        return await this.rendererFromHtml(data.url, data.html);
-                    } else if (data.type === "photo") {
+                if (result == undefined || result.data == undefined) {
+                    throw new Error(`Error get embed data from webiste: ${this.link}`);
+                }
+
+                const data = result.data;
+                if (data.html) {
+                    return await this.rendererFromHtml(data.url, data.html);
+                } else if (data.type === "photo") {
+                    return (
+                        (await this.getHyperLinkHTMLElement(false)).outerHTML +
+                        this.imageRendererHtml(uuid(), data.provider_name)
+                    );
+                } else {
+                    const extension = FileMessageManager.getExtension(data.url);
+                    if (extension != undefined && FileMessageManager.isImage(extension)) {
                         return (
                             (await this.getHyperLinkHTMLElement(false)).outerHTML +
                             this.imageRendererHtml(uuid(), data.provider_name)
                         );
-                    } else {
-                        const extension = FileMessageManager.getExtension(data.url);
-                        if (extension != undefined && FileMessageManager.isImage(extension)) {
-                            return (
-                                (await this.getHyperLinkHTMLElement(false)).outerHTML +
-                                this.imageRendererHtml(uuid(), data.provider_name)
-                            );
-                        }
-                        if (extension != undefined && FileMessageManager.isVideo(extension)) {
-                            return (
-                                (await this.getHyperLinkHTMLElement(false)).outerHTML +
-                                this.videoRendererHtml(uuid(), data.provider_name, extension)
-                            );
-                        }
-                        if (extension != undefined && FileMessageManager.isSound(extension)) {
-                            return (
-                                (await this.getHyperLinkHTMLElement(false)).outerHTML +
-                                this.audioRendererHtml(uuid(), data.provider_name)
-                            );
-                        }
-
-                        const { title, description, thumbnail_url, provider_name, author_name } = data;
-                        return this.cardRenderer(title, description, thumbnail_url, provider_name, author_name);
                     }
-                } catch (err) {
-                    console.error(err);
-                    console.error("Error get data from website: ", this.link);
-                    return (await this.getHyperLinkHTMLElement(false)).outerHTML;
+                    if (extension != undefined && FileMessageManager.isVideo(extension)) {
+                        return (
+                            (await this.getHyperLinkHTMLElement(false)).outerHTML +
+                            this.videoRendererHtml(uuid(), data.provider_name, extension)
+                        );
+                    }
+                    if (extension != undefined && FileMessageManager.isSound(extension)) {
+                        return (
+                            (await this.getHyperLinkHTMLElement(false)).outerHTML +
+                            this.audioRendererHtml(uuid(), data.provider_name)
+                        );
+                    }
+
+                    const { title, description, thumbnail_url, provider_name, author_name } = data;
+                    return this.cardRenderer(title, description, thumbnail_url, provider_name, author_name);
                 }
-            } else {
+            } catch (err) {
+                console.error(err);
+                console.error("Error get data from website: ", this.link);
                 return (await this.getHyperLinkHTMLElement(false)).outerHTML;
             }
         })();
@@ -286,5 +284,18 @@ export class WebLink {
             }
         }
         return false;
+    }
+
+    private get oEmbedProviderEnabled() {
+        return IFRAMELY_KEY != undefined || EMBEDLY_KEY != undefined;
+    }
+    private get oEmbedProvider() {
+        if (IFRAMELY_KEY) {
+            return `https://iframe.ly/api/oembed?url=${encodeURI(this.link)}&api_key=${IFRAMELY_KEY}`;
+        }
+        if (EMBEDLY_KEY) {
+            return `https://api.embedly.com/1/oembed?url=${encodeURI(this.link)}&key=${EMBEDLY_KEY}`;
+        }
+        throw new Error("No oEmbed provider found");
     }
 }
