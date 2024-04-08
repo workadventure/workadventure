@@ -34,6 +34,10 @@ export const isApplicationDefinitionInterface = z.object({
     description: "The target url",
     example: "https://www.youtube.com/embed/$1",
   }),
+  default: extendApi(z.boolean().optional().default(false), {
+    description: "Is the application the default one and shown in the menu, map edotor, map explorer, and chat. If disabled, the apllication is kept but with a different opacity and tooltip.",
+    example: true,
+  }),
 });
 export type ApplicationDefinitionInterface = z.infer<
   typeof isApplicationDefinitionInterface

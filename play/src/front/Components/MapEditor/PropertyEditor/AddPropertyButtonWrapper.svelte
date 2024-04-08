@@ -27,6 +27,30 @@
     const dispatch = createEventDispatcher();
 </script>
 
+{#if property === "personalAreaPropertyData"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.personalAreaConfiguration.label()}
+        descriptionText={$LL.mapEditor.properties.personalAreaConfiguration.description()}
+        img={workerWhiteSvg}
+        style={`z-index: 310;${isActive ? "background-color: #4156f6;" : ""}`}
+        testId="personalAreaPropertyData"
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+    />
+{/if}
+{#if property === "restrictedRightsPropertyData"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.restrictedRightsProperties.label()}
+        descriptionText={$LL.mapEditor.properties.restrictedRightsProperties.rightTitle()}
+        img={teamWhiteSvg}
+        style={`z-index: 300;${isActive ? "background-color: #4156f6;" : ""}`}
+        testId="restrictedRightsPropertyData"
+        on:click={(event) => {
+            dispatch("click", event);
+        }}
+    />
+{/if}
 {#if property === "focusable"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.focusableProperties.label()}
@@ -121,30 +145,6 @@
         descriptionText={$LL.mapEditor.properties.linkProperties.description()}
         img={"resources/icons/icon_link.png"}
         style={`z-index: 200;${isActive ? "background-color: #4156f6;" : ""}`}
-        on:click={(event) => {
-            dispatch("click", event);
-        }}
-    />
-{/if}
-{#if property === "personalAreaPropertyData"}
-    <AddPropertyButton
-        headerText={$LL.mapEditor.properties.personalAreaConfiguration.label()}
-        descriptionText={$LL.mapEditor.properties.personalAreaConfiguration.description()}
-        img={workerWhiteSvg}
-        style={`z-index: 190;${isActive ? "background-color: #4156f6;" : ""}`}
-        testId="personalAreaPropertyData"
-        on:click={(event) => {
-            dispatch("click", event);
-        }}
-    />
-{/if}
-{#if property === "restrictedRightsPropertyData"}
-    <AddPropertyButton
-        headerText={$LL.mapEditor.properties.restrictedRightsProperties.label()}
-        descriptionText={$LL.mapEditor.properties.restrictedRightsProperties.rightTitle()}
-        img={teamWhiteSvg}
-        style={`z-index: 180;${isActive ? "background-color: #4156f6;" : ""}`}
-        testId="restrictedRightsPropertyData"
         on:click={(event) => {
             dispatch("click", event);
         }}
@@ -249,7 +249,7 @@
     />
 {/if}
 
-{#if property === "openWebsite" && subProperty === "escalidraw"}
+{#if property === "openWebsite" && subProperty === "excalidraw"}
     <AddPropertyButton
         headerText={$LL.mapEditor.properties.excalidrawProperties.label()}
         descriptionText={connectionManager.excalidrawToolActivated

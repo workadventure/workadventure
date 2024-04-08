@@ -59,6 +59,7 @@ message ApplicationMessage {
   optional bool enabled = 6;
   optional string regexUrl = 7;
   optional string targetUrl = 8;
+  optional bool default = 9;
 }
 
 message CompanionTextureMessage {

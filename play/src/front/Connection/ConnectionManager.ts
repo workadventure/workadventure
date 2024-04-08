@@ -48,6 +48,7 @@ const defautlIntegrationAppName = [
     "Google Sheets",
     "Google Slides",
     "Eraser",
+    "Excalidraw",
 ];
 
 class ConnectionManager {

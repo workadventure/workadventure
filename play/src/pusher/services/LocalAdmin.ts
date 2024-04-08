@@ -29,6 +29,7 @@ import {
     GOOGLE_SHEETS_ENABLED,
     GOOGLE_SLIDES_ENABLED,
     ERASER_ENABLED,
+    EXCALIDRAW_ENABLED,
 } from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
@@ -97,6 +98,7 @@ class LocalAdmin implements AdminInterface {
                 image: "https://static.klaxoon.com/favicon.ico",
                 description: "Klaxoon (Brainstorming, Quiz, Survey)",
                 enabled: true,
+                default: true,
             });
         }
         if (YOUTUBE_ENABLED) {
@@ -106,6 +108,7 @@ class LocalAdmin implements AdminInterface {
                 image: "https://www.youtube.com/favicon.ico",
                 description: "Youtube (Video sharing)",
                 enabled: true,
+                default: true,
             });
         }
         if (GOOGLE_DRIVE_ENABLED) {
@@ -114,6 +117,7 @@ class LocalAdmin implements AdminInterface {
                 doc: "https://drive.google.com",
                 description: "Google Drive (Docs, Sheets, Slides)",
                 enabled: true,
+                default: true,
             });
         }
         if (GOOGLE_DOCS_ENABLED) {
@@ -122,6 +126,7 @@ class LocalAdmin implements AdminInterface {
                 doc: "https://docs.google.com",
                 description: "Google Docs (Word Processor)",
                 enabled: true,
+                default: true,
             });
         }
         if (GOOGLE_SHEETS_ENABLED) {
@@ -130,6 +135,7 @@ class LocalAdmin implements AdminInterface {
                 doc: "https://sheets.google.com",
                 description: "Google Sheets (Spreadsheet)",
                 enabled: true,
+                default: true,
             });
         }
         if (GOOGLE_SLIDES_ENABLED) {
@@ -138,6 +144,7 @@ class LocalAdmin implements AdminInterface {
                 doc: "https://slides.google.com",
                 description: "Google Slides (Presentation)",
                 enabled: true,
+                default: true,
             });
         }
         if (ERASER_ENABLED) {
@@ -146,6 +153,16 @@ class LocalAdmin implements AdminInterface {
                 doc: "https://workadventu.re",
                 description: "Eraser (White board)",
                 enabled: true,
+                default: true,
+            });
+        }
+        if (EXCALIDRAW_ENABLED) {
+            applications.push({
+                name: "Excalidraw",
+                doc: "https://excalidraw.com",
+                description: "Excalidraw (White board)",
+                enabled: true,
+                default: true,
             });
         }
 
