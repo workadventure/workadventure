@@ -86,6 +86,7 @@ const mapEditor: BaseTranslation = {
             errorInvalidUrl: 'Please enter a valid URL (starting with "https://")',
             findOutMoreHere: "Find out more here",
             openPickerSelector: "Open picker selector",
+            forcedInNewTab: "Forced in new tab",
         },
         advancedOptions: "Advanced Options",
         speakerMegaphoneProperties: {

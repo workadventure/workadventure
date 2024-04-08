@@ -72,6 +72,7 @@
         error?: string;
         targetEmbedableUrl?: string;
         regexUrl?: string;
+        forceNewTab?: boolean;
     }
     const applicationsSelected = writable<Set<Application>>(new Set());
     const applications = writable<Set<Application>>(new Set());

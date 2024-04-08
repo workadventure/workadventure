@@ -93,7 +93,7 @@
     function toggleSearchMode() {
         showSearchMode = !showSearchMode;
     }
-    function addFilter(filterName: string, subProperty?: string) {
+    function addFilter(filterName: string) {
         selectFilters.update((filters) => {
             if (filters.includes(filterName)) {
                 return filters.filter((f) => f !== filterName);

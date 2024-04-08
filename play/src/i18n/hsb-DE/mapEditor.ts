@@ -80,6 +80,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             errorInvalidUrl: 'Njepłaćiwa URL. Dyrbi so z "http: /" abo "https: / /" započeć.',
             findOutMoreHere: "Tu zhoniće wjace",
             openPickerSelector: "Wubrać",
+            forcedInNewTab: "W nowem tabje wočinić",
         },
         advancedOptions: "Rozšěrjene opcije",
         speakerMegaphoneProperties: {

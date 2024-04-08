@@ -111,6 +111,10 @@
                     value != "" ? [...options, { value, label: value, created: undefined }] : options,
                 []
             ) as Option[];
+        
+        if(property.forceNewTab == true) {
+            property.newTab = true;
+        }
     });
 
     function onTriggerValueChange() {
@@ -349,7 +353,13 @@
                     } else {
                         throw new Error(error);
                     }
-                    embeddable = false;
+                    if(property.forceNewTab == true) {
+                        embeddable = false;
+                        optionAdvancedActivated = false;
+                        property.newTab = true;
+                    }else{
+                        embeddable = true;
+                    }
                 } catch (e) {
                     console.info("Error to check embeddable website", e);
                     embeddable = false;
@@ -370,6 +380,7 @@
     }
 
     function checkEmbeddableLink(): void {
+        if(property.forceNewTab) return;
         if (property.link == undefined || !linkElement.checkValidity()) {
             embeddableLoading = false;
             warning = warning ? warning : $LL.mapEditor.properties.linkProperties.errorInvalidUrl();
@@ -689,11 +700,20 @@
                     class="input-switch"
                     bind:checked={property.newTab}
                     on:change={onNewTabValueChange}
+                    disabled={property.forceNewTab}
                 />
             </div>
+            {#if property.forceNewTab == true}
+                <div class="tw-mb-3">
+                    <span class="err tw-text-warning-900 tw-text-xs tw-italic">
+                        <AlertTriangleIcon size="12" />
+                        {$LL.mapEditor.properties.linkProperties.forcedInNewTab()}
+                    </span>
+                </div>
+            {/if}
             {#if !embeddable && !property.newTab}
                 <div class="tw-mb-3">
-                    <span class="err tw-text-orange tw-text-xs tw-italic"
+                    <span class="err tw-text-warning-900 tw-text-xs tw-italic"
                         ><AlertTriangleIcon size="12" />
                         {$LL.mapEditor.properties.linkProperties.warningEmbeddableLink()}.
                         <a

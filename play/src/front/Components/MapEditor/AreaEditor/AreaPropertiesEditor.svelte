@@ -238,6 +238,7 @@
             icon: app.image,
             regexUrl: app.regexUrl,
             targetEmbedableUrl: app.targetUrl,
+            forceNewTab: app.forceNewTab,
         };
         $mapEditorSelectedAreaPreviewStore.addProperty(property);
 

@@ -98,6 +98,7 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
     label: z.string().optional(),
     regexUrl: z.string().optional(),
     targetEmbedableUrl: z.string().optional(),
+    forceNewTab: z.boolean().optional().default(false),
 });
 
 export const SpeakerMegaphonePropertyData = PropertyBase.extend({

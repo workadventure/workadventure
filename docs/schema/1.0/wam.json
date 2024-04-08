@@ -241,6 +241,10 @@
                         },
                         "targetEmbedableUrl": {
                           "type": "string"
+                        },
+                        "forceNewTab": {
+                          "type": "boolean",
+                          "default": false
                         }
                       },
                       "required": [

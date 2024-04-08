@@ -38,6 +38,10 @@ export const isApplicationDefinitionInterface = z.object({
     description: "Is the application the default one and shown in the menu, map edotor, map explorer, and chat. If disabled, the apllication is kept but with a different opacity and tooltip.",
     example: true,
   }),
+  forceNewTab: extendApi(z.boolean().optional().default(false), {
+    description: "Force the application to open in a new tab",
+    example: true,
+  }),
 });
 export type ApplicationDefinitionInterface = z.infer<
   typeof isApplicationDefinitionInterface
