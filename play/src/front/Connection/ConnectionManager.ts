@@ -8,6 +8,7 @@ import {
     MeResponse,
 } from "@workadventure/messages";
 import { isAxiosError } from "axios";
+import { KlaxoonService } from "@workadventure/shared-utils";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { subMenusStore, userIsConnected, warningBannerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
@@ -86,7 +87,10 @@ class ConnectionManager {
 
         // Initialise default application
         this.klaxoonToolActivated = KLAXOON_ENABLED;
-        this.klaxoonToolClientId = KLAXOON_CLIENT_ID;
+        this._klaxoonToolClientId = KLAXOON_CLIENT_ID;
+        if (this._klaxoonToolClientId) {
+            KlaxoonService.initWindowKlaxoonActivityPicker();
+        }
         this.youtubeToolActivated = YOUTUBE_ENABLED;
         this.googleDriveToolActivated = GOOGLE_DRIVE_ENABLED;
         this.googleDocsToolActivated = GOOGLE_DOCS_ENABLED;
@@ -670,9 +674,6 @@ class ConnectionManager {
     }
     get klaxoonToolClientId(): string | undefined {
         return this._klaxoonToolClientId;
-    }
-    set klaxoonToolClientId(id: string | undefined) {
-        this._klaxoonToolClientId = id;
     }
 
     get youtubeToolActivated(): boolean {

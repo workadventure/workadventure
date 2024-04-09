@@ -319,7 +319,6 @@
             KlaxoonService.openKlaxoonActivityPicker(
                 chatConnectionManager.klaxoonToolClientId,
                 (event: KlaxoonEvent) => {
-                    console.log("KlaxoonService.openKlaxoonActivityPicker => event", event);
                     // Remove previous app
                     applicationsSelected.update((apps) => {
                         apps.delete(app);
