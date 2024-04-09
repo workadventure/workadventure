@@ -123,7 +123,7 @@ class LocalAdmin implements AdminInterface {
                 enabled: true,
                 default: true,
                 forceNewTab: false,
-                allowAPI: false
+                allowAPI: false,
             });
         }
         if (GOOGLE_DOCS_ENABLED) {
@@ -134,7 +134,7 @@ class LocalAdmin implements AdminInterface {
                 enabled: true,
                 default: true,
                 forceNewTab: false,
-                allowAPI: false
+                allowAPI: false,
             });
         }
         if (GOOGLE_SHEETS_ENABLED) {
@@ -145,7 +145,7 @@ class LocalAdmin implements AdminInterface {
                 enabled: true,
                 default: true,
                 forceNewTab: false,
-                allowAPI: false
+                allowAPI: false,
             });
         }
         if (GOOGLE_SLIDES_ENABLED) {
@@ -156,7 +156,7 @@ class LocalAdmin implements AdminInterface {
                 enabled: true,
                 default: true,
                 forceNewTab: false,
-                allowAPI: false
+                allowAPI: false,
             });
         }
         if (ERASER_ENABLED) {
@@ -167,7 +167,7 @@ class LocalAdmin implements AdminInterface {
                 enabled: true,
                 default: true,
                 forceNewTab: false,
-                allowAPI: false
+                allowAPI: false,
             });
         }
         if (EXCALIDRAW_ENABLED) {
@@ -178,7 +178,7 @@ class LocalAdmin implements AdminInterface {
                 enabled: true,
                 default: true,
                 forceNewTab: false,
-                allowAPI: false
+                allowAPI: false,
             });
         }
 

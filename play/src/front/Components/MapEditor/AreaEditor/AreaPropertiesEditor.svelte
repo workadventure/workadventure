@@ -12,6 +12,7 @@
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
     import { IconChevronDown, IconChevronRight } from "@tabler/icons-svelte";
     import { ApplicationDefinitionInterface } from "@workadventure/messages";
+    import { v4 as uuid } from "uuid";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
     import { FEATURE_FLAG_BROADCAST_AREAS } from "../../../Enum/EnvironmentVariable";
@@ -29,7 +30,6 @@
     import AddPropertyButtonWrapper from "../PropertyEditor/AddPropertyButtonWrapper.svelte";
     import PersonalAreaPropertyEditor from "../PropertyEditor/PersonalAreaPropertyEditor.svelte";
     import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
-    import { v4 as uuid } from "uuid";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
