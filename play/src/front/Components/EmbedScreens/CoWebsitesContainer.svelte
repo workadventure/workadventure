@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { onDestroy, onMount } from "svelte";
+    import { onMount } from "svelte";
     import { coWebsites } from "../../Stores/CoWebsiteStore";
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
@@ -14,21 +14,26 @@
     import { ArrowDownIcon } from "svelte-feather-icons";
 
     let activeCowebsite = $coWebsites[0].getId();
+    let lastCowebsite = $coWebsites[$coWebsites.length - 1];
     let showDropdown = false;
+    let lastTabs: any[] = [];
+    let tabBar: HTMLElement;
     let showArrow = false;
     let vertical = false;
     let cowebsiteContainer: HTMLElement | null;
     let container: HTMLElement;
-    let tabBar: HTMLElement;
+    let lastTab: object;
     let widthTabBar: number;
     let resizeBar: HTMLElement;
     let startY: number;
     let startX: number;
     let startWidthContainer: number;
+    let widthContainer: number;
     let startHeight: number;
     let mediaQuery = window.matchMedia("(max-width: 768px)");
     let totalTabsWidth = 0;
     let startWidthTabBar: number;
+    let tabDropDown: HTMLElement;
 
     onMount(() => {
         if (mediaQuery.matches) {
@@ -69,7 +74,6 @@
             vertical = false;
 
             startWidthTabBar = parseInt(getComputedStyle(tabBar).width);
-            console.log("START WIDTH BAR WIDTH INIT :", startWidthTabBar);
 
             const handleMouseDown = (e: { clientX: number }) => {
                 startX = e.clientX;
@@ -82,18 +86,22 @@
             resizeBar.addEventListener("mousedown", handleMouseDown);
 
             const handleMouseMove = (e: { clientX: number }) => {
-                const widthContainer = startWidthContainer - (e.clientX - startX);
+                widthContainer = startWidthContainer - (e.clientX - startX);
                 container.style.width = widthContainer + "px";
+                // console.log("WIDTH CONTAINER :", widthContainer);
+                // console.log(Math.floor(widthContainer / 300), $coWebsites.slice(Math.floor(widthContainer / 300)));
 
                 const maxWidth = min([widthContainer, window.innerWidth - 350]);
                 container.style.width = maxWidth + "px";
 
                 startWidthTabBar = startWidthTabBar - (e.clientX - startX);
                 tabBar.style.width = startWidthTabBar + "px";
-                handleTabResize();
+                console.log("START WIDTH BAR WIDTH :", startWidthTabBar);
             };
 
             const handleMouseUp = () => {
+                handleTabResize();
+                appearDropdown();
                 document.removeEventListener("mousemove", handleMouseMove);
                 document.removeEventListener("mouseup", handleMouseUp);
             };
@@ -108,47 +116,33 @@
         return () => {};
     });
 
-    onDestroy(() => {});
-
-    // je veux la largeur de mon tab container
-    // je veux ensuite calculer la largeur de mes tabs qui est égale à 300px par tab
-    // je veux ensuite calculer le nombre de tabs qui peuvent rentrer dans mon tab container
-    // je veux mettre les tabs restant dans mon dropdown
-
     function handleTabMounted() {
         totalTabsWidth += 300;
         handleTabResize();
-        console.log("totalTabsWidth Ajout: ", totalTabsWidth);
+        appearDropdown();
     }
 
     function handleTabDestroyed() {
         totalTabsWidth -= 300;
         handleTabResize();
-        console.log("totalTabsWidth Suppression: ", totalTabsWidth);
+        appearDropdown();
     }
 
-    function handleTabResize() {
-        const tabs = tabBar.querySelectorAll(".tab");
-        const dropdown = document.getElementById("dropdown");
-
-        console.log("WIDTH TAB BAR INSIDE LAST FUNCTION :", startWidthTabBar);
-
+    function appearDropdown() {
         if (totalTabsWidth > startWidthTabBar) {
-            console.log("tabBarWidth after inside :", startWidthTabBar);
-            tabs.forEach((tab, index) => {
-                const tabsArray = Array.from(tabs);
-                if (tabsArray.slice(-1)) {
-                    dropdown?.appendChild(tab);
-                    // tabBar.remove();
-                } else {
-                    tabBar.appendChild(tab);
-                    dropdown?.remove();
-                }
-            });
             showArrow = true;
+            showDropdown = true;
         } else {
             showArrow = false;
             showDropdown = false;
+        }
+    }
+
+    function handleTabResize() {
+        tabDropDown = document.getElementById("dropdown")!;
+        if (totalTabsWidth > startWidthTabBar) {
+            lastCowebsite = $coWebsites[$coWebsites.length - 1];
+            lastTabs.push(lastCowebsite);
         }
     }
 
@@ -159,6 +153,10 @@
 
     const subscription = coWebsites.subscribe((arr) => {
         activeCowebsite = arr[arr.length - 1]?.getId();
+    });
+
+    let subscription2 = coWebsites.subscribe((arr) => {
+        lastCowebsite = arr[arr.length - 1];
     });
 
     function toggleFullScreen() {
@@ -231,19 +229,8 @@
     bind:this={container}
 >
     <div class="flex py-2 ml-3 items-center height-tab overflow-hidden">
-        <!-- {#if showDropdown}
-            <div
-                class="aspect-ratio h-10 w-10 fill-white rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer {showDropdown
-                    ? 'rotate-180'
-                    : ''}"
-                on:click={() => (showDropdown = !showDropdown)}
-            >
-                <ArrowDownIcon />
-            </div>
-        {/if} -->
-
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
         {#if showArrow}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
                 class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer {showDropdown
                     ? 'rotate-180'
@@ -254,11 +241,10 @@
             </div>
         {/if}
 
-        <div class="grow flex" id="tabBar" bind:this={tabBar}>
-            {#each $coWebsites as coWebsite}
-                <!-- <div class="tab"> -->
+        <div class="grow flex tab" id="tabBar" bind:this={tabBar}>
+            {#each $coWebsites.slice(0, Math.floor(widthContainer / 300)) as coWebsite (coWebsite.getId())}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div on:click={() => setActiveCowebsite(coWebsite.getId())} class="tab">
+                <div on:click={() => setActiveCowebsite(coWebsite.getId())}>
                     <CoWebsiteTab
                         on:tabMounted={handleTabMounted}
                         on:tabUnmounted={handleTabDestroyed}
@@ -268,25 +254,26 @@
                         on:close={() => coWebsites.remove(coWebsite)}
                     />
                 </div>
-                <!-- </div> -->
             {/each}
         </div>
 
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
-            class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
+            class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer z-2000"
             on:click={toggleFullScreen}
         >
             <FullScreenIcon />
         </div>
+
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
     </div>
 
-    <div class="relative">
+    <div class="relative gap-x-11">
         {#if showDropdown}
-            <div id="dropdown" class="tab-drop-down absolute">
-                {#each $coWebsites as coWebsite}
+            <div id="dropdown" class="tab-drop-down bg-contrast/80  mt-4 absolute">
+                {#each $coWebsites.slice(Math.floor(widthContainer / 300)) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                    <div class="other-tab" on:click={() => setActiveCowebsite(coWebsite.getId())}>
                         <CoWebsiteTab
                             {coWebsite}
                             isLoading={true}
@@ -335,6 +322,7 @@
 
     .tab-drop-down {
         width: 300px;
+        height: 300px;
         border-radius: 8px;
     }
 

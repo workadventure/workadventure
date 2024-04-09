@@ -14,8 +14,6 @@
     export let isClosable = true;
     export let active = false;
 
-    let tabWidth = 300;
-    let totalTabsWidth = 0;
     let isDuplicable = true;
     let isJitsi: boolean = coWebsite instanceof JitsiCoWebsite;
     let isBBB: boolean = coWebsite instanceof BBBCoWebsite;

@@ -3,16 +3,11 @@ import type CancelablePromise from "cancelable-promise";
 // export type CoWebsiteState = "asleep" | "loading" | "ready";
 
 export interface CoWebsite {
-    // getTitle(): string;
     getId(): string;
     getDuplicateId(): string;
     getUrl(): URL;
-    // getState(): CoWebsiteState;
-    // getStateSubscriber(): Readable<CoWebsiteState>;
     getIframe(): HTMLIFrameElement | undefined;
     getLoadIframe(): CancelablePromise<HTMLIFrameElement> | undefined;
     getWidthPercent(): number | undefined;
     isClosable(): boolean;
-    // load(): CancelablePromise<HTMLIFrameElement>;
-    // unload(): Promise<void>;
 }
