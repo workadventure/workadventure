@@ -1,5 +1,6 @@
 <script lang="ts">
     import { LocalizedString } from "typesafe-i18n";
+    import { fly } from "svelte/transition";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
@@ -67,6 +68,25 @@
         gameScene.getMapEditorModeManager().equipTool(newTool);
     }
 </script>
+
+<div
+    class="!tw-flex !tw-fixed tw-justify-center !tw-w-full !tw-h-fit -tw-top-4"
+    in:fly={{ y: 100, duration: 250, delay: 200 }}
+    out:fly={{ y: 100, duration: 200 }}
+>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <div
+        class="!tw-h-fit !tw-w-fit tw-rounded-2xl tw-bg-dark-purple/80 tw-backdrop-blur-lg tw-text-white tw-p-4 tw-pt-6"
+    >
+        {$LL.mapEditor.sideBar.mapManagerActivated()}
+        <img
+            src={CloseImg}
+            class="tw-h-4 tw-ml-4 tw-pointer-events-auto tw-cursor-pointer"
+            alt="Map Editor mode activated"
+            on:click|preventDefault={() => switchTool(EditorToolName.CloseMapEditor)}
+        />
+    </div>
+</div>
 
 <section class="side-bar-container" class:!tw-right-20={!$mapEditorVisibilityStore}>
     <!--put a section to avoid lower div to be affected by some css-->

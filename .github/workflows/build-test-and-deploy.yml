@@ -575,7 +575,7 @@ jobs:
           path: /tmp/ejabberd.tar.gz
 
   end-to-end-tests:
-    name: "End to end tests with ${{ matrix.browser }} (${{ matrix.shard }}/${{ matrix.nbShards }})"
+    name: "End to end tests with ${{ matrix.project }} (${{ matrix.shard }}/${{ matrix.nbShards }})"
     strategy:
       fail-fast: false
       matrix:

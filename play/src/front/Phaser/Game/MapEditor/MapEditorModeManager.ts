@@ -10,6 +10,7 @@ import {
     mapEditorAskToClaimPersonalAreaStore,
     mapEditorModeStore,
     mapEditorSelectedToolStore,
+    mapEditorVisibilityStore,
 } from "../../../Stores/MapEditorStore";
 import { mapEditorActivated, mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
 import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -218,13 +219,13 @@ export class MapEditorModeManager {
      * are applied locally and are not being send further.
      */
     public async updateMapToNewest(commands: EditMapCommandMessage[]): Promise<void> {
-        if (!commands) {
-            return;
-        }
-        for (const command of commands) {
-            for (const tool of Object.values(this.editorTools)) {
-                //eslint-disable-next-line no-await-in-loop
-                await tool.handleIncomingCommandMessage(command);
+        if (commands.length !== 0) {
+            logger(`Map is not up to date. Updating by applying ${commands.length} missing commands.`);
+            for (const command of commands) {
+                for (const tool of Object.values(this.editorTools)) {
+                    //eslint-disable-next-line no-await-in-loop
+                    await tool.handleIncomingCommandMessage(command);
+                }
             }
         }
     }
@@ -242,11 +243,14 @@ export class MapEditorModeManager {
 
     public handleKeyDownEvent(event: KeyboardEvent): void {
         this.currentlyActiveTool?.handleKeyDownEvent(event);
+        const mapEditorVisibilityStoreValue = get(mapEditorVisibilityStore);
+        if (!mapEditorVisibilityStoreValue) return;
+
         const mapEditorModeActivated = get(mapEditorActivated);
-        if (!mapEditorModeActivated || this.currentlyActiveTool != undefined) return;
         switch (event.key.toLowerCase()) {
+            case "dead":
             case "`": {
-                this.equipTool(undefined);
+                this.equipTool(EditorToolName.CloseMapEditor);
                 break;
             }
             case "1": {

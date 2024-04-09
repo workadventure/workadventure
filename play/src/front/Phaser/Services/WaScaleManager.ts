@@ -55,9 +55,10 @@ export class WaScaleManager {
             this.scaleManager.setZoom(this.actualZoom);
             camera?.setZoom(1);
         } else {
-            camera?.setZoom(
-                this.hdpiManager.zoomModifier * this.hdpiManager.getOptimalZoomLevel(realSize.width * realSize.height)
-            );
+            const zoom =
+                this.hdpiManager.zoomModifier * this.hdpiManager.getOptimalZoomLevel(realSize.width * realSize.height);
+            this.scaleManager.setZoom(this.actualZoom);
+            camera?.setZoom(zoom);
         }
 
         // Override bug in canvas resizing in Phaser. Let's resize the canvas ourselves

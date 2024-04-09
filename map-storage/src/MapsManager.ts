@@ -67,7 +67,13 @@ class MapsManager {
                 return queue;
             }
             const commandIndex = queue.findIndex((command) => command.id === commandId);
-            return queue.slice(commandIndex !== -1 ? commandIndex + 1 : 0);
+            if (commandIndex === -1) {
+                // Most of the time, the last command id of the map will not be part of the queue
+                // This is always true unless the last change was done less that 30 seconds ago.
+                // In this case, let's apply the whole queue.
+                return queue;
+            }
+            return queue.slice(commandIndex + 1);
         }
         return [];
     }
@@ -90,10 +96,6 @@ class MapsManager {
 
     public async loadWAMToMemory(key: string): Promise<GameMap> {
         const file = await fileSystem.readFileAsString(key);
-        const oldGameMap = this.loadedMaps.get(key);
-        if (oldGameMap) {
-            return oldGameMap;
-        }
         const wam = WAMFileFormat.parse(JSON.parse(file));
 
         const gameMap = new GameMap(this.getMockITiledMap(), wam);
@@ -110,14 +112,13 @@ class MapsManager {
     }
 
     public addCommandToQueue(mapKey: string, message: EditMapCommandMessage): void {
-        if (!this.loadedMapsCommandsQueue.has(mapKey)) {
-            this.loadedMapsCommandsQueue.set(mapKey, []);
+        let queue = this.loadedMapsCommandsQueue.get(mapKey);
+        if (queue === undefined) {
+            queue = [];
+            this.loadedMapsCommandsQueue.set(mapKey, queue);
         }
-        const queue = this.loadedMapsCommandsQueue.get(mapKey);
-        if (queue !== undefined) {
-            queue.push(message);
-            this.setCommandDeletionTimeout(mapKey, message.id);
-        }
+        queue.push(message);
+        this.setCommandDeletionTimeout(mapKey, message.id);
         this.loadedMaps.get(mapKey)?.updateLastCommandIdProperty(message.id);
     }
 
@@ -149,6 +150,13 @@ class MapsManager {
             }
             if (queue[0].id === commandId) {
                 queue.splice(0, 1);
+            } else {
+                console.error(
+                    `Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`
+                );
+                Sentry.captureMessage(
+                    `Command with id ${commandId} that is scheduled from removal in the queue is not the first command. This should never happen (unless the queue was purged and recreated within 30 seconds... unlikely.`
+                );
             }
         }, this.COMMAND_TIME_IN_QUEUE_MS);
     }

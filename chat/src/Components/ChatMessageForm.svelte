@@ -705,6 +705,8 @@
                                     {$LL.file.notLogged()}
                                 {:else if fileUploaded.errorMessage === "disabled"}
                                     {$LL.disabled()}
+                                {:else}
+                                    {fileUploaded.errorMessage}
                                 {/if}
                             </p>
                             {#if fileUploaded.errorMessage === "not-logged"}

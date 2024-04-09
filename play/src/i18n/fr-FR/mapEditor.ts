@@ -13,6 +13,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         trashEditor: "Corbeille",
         exploreTheRoom: "Explorer le salon",
         closeMapEditor: "Fermer l'éditeur de carte",
+        mapManagerActivated: "Gestionnaire de carte activé",
     },
     properties: {
         silentProperty: {

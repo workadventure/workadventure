@@ -8,6 +8,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         tileEditor: "Kachel bearbeiten",
         trashEditor: "Papierkorb",
         closeMapEditor: "Karte schließen",
+        mapManagerActivated: "Kartenmanager aktiviert",
     },
     properties: {
         silentProperty: {

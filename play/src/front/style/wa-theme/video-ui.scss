@@ -41,7 +41,7 @@
 }
 
 .media-container {
-    @apply tw-max-w-full tw-h-auto tw-w-full tw-flex tw-flex-wrap tw-justify-center;
+    @apply tw-max-w-full tw-h-auto tw-w-full tw-flex tw-flex-wrap tw-justify-evenly;
 
     &.hightlighted {
         @apply tw-pointer-events-auto tw-h-full;

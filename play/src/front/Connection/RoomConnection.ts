@@ -65,6 +65,9 @@ import {
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnectionMessage,
     XmppSettingsMessage,
+    FollowRequestMessage,
+    FollowConfirmationMessage,
+    FollowAbortMessage,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -106,7 +109,6 @@ import type {
     ViewportInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
-import { localUserStore } from "./LocalUserStore";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
@@ -159,6 +161,16 @@ export class RoomConnection implements RoomConnection {
     public readonly userLeftMessageStream = this._userLeftMessageStream.asObservable();
     private readonly _refreshRoomMessageStream = new Subject<RefreshRoomMessage>();
     public readonly refreshRoomMessageStream = this._refreshRoomMessageStream.asObservable();
+
+    private readonly _followRequestMessageStream = new Subject<FollowRequestMessage>();
+    public readonly followRequestMessageStream = this._followRequestMessageStream.asObservable();
+
+    private readonly _followConfirmationMessageStream = new Subject<FollowConfirmationMessage>();
+    public readonly followConfirmationMessageStream = this._followConfirmationMessageStream.asObservable();
+
+    private readonly _followAbortMessageStream = new Subject<FollowAbortMessage>();
+    public readonly followAbortMessageStream = this._followAbortMessageStream.asObservable();
+
     private readonly _itemEventMessageStream = new Subject<{
         itemId: number;
         event: string;
@@ -657,21 +669,15 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "followRequestMessage": {
-                    if (!localUserStore.getIgnoreFollowRequests()) {
-                        followUsersStore.addFollowRequest(message.followRequestMessage.leader);
-                    }
+                    this._followRequestMessageStream.next(message.followRequestMessage);
                     break;
                 }
                 case "followConfirmationMessage": {
-                    followUsersStore.addFollower(message.followConfirmationMessage.follower);
+                    this._followConfirmationMessageStream.next(message.followConfirmationMessage);
                     break;
                 }
                 case "followAbortMessage": {
-                    if (get(followRoleStore) === "follower") {
-                        followUsersStore.stopFollowing();
-                    } else {
-                        followUsersStore.removeFollower(message.followAbortMessage.follower);
-                    }
+                    this._followAbortMessageStream.next(message.followAbortMessage);
                     break;
                 }
                 case "errorMessage": {
@@ -694,14 +700,12 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "moveToPositionMessage": {
                     if (message.moveToPositionMessage && message.moveToPositionMessage.position) {
-                        const tileIndex = gameManager
+                        gameManager
                             .getCurrentGameScene()
-                            .getGameMap()
-                            .getTileIndexAt(
-                                message.moveToPositionMessage.position.x,
-                                message.moveToPositionMessage.position.y
-                            );
-                        gameManager.getCurrentGameScene().moveTo(tileIndex);
+                            .moveTo(message.moveToPositionMessage.position)
+                            .catch((error) => {
+                                console.warn(error);
+                            });
                     }
                     this._moveToPositionMessageStream.next(message.moveToPositionMessage);
                     break;
@@ -1039,7 +1043,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitFollowRequest(): void {
+    public emitFollowRequest(forceFollow = false): void {
         if (!this.userId) {
             return;
         }
@@ -1049,12 +1053,13 @@ export class RoomConnection implements RoomConnection {
                 $case: "followRequestMessage",
                 followRequestMessage: {
                     leader: this.userId,
+                    forceFollow,
                 },
             },
         });
     }
 
-    public emitFollowConfirmation(): void {
+    public emitFollowConfirmation(leaderId: number): void {
         if (!this.userId) {
             return;
         }
@@ -1063,7 +1068,7 @@ export class RoomConnection implements RoomConnection {
             message: {
                 $case: "followConfirmationMessage",
                 followConfirmationMessage: {
-                    leader: get(followUsersStore)[0],
+                    leader: leaderId,
                     follower: this.userId,
                 },
             },

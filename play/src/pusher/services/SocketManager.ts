@@ -40,7 +40,7 @@ import {
     GetMemberAnswer,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
-import axios, { isAxiosError } from "axios";
+import axios, { AxiosResponse, isAxiosError } from "axios";
 import { z } from "zod";
 import { PusherRoom } from "../models/PusherRoom";
 import type { BackSpaceConnection, SocketData } from "../models/Websocket/SocketData";
@@ -1425,16 +1425,30 @@ export class SocketManager implements ZoneEventListener {
             }
         };
 
+        const isAllowed = (response: AxiosResponse) => {
+            const headers = response.headers;
+            if (!headers) {
+                return true;
+            }
+            let xFrameOption = headers["x-frame-options"];
+            if (!xFrameOption) {
+                return true;
+            }
+            xFrameOption = xFrameOption.toLowerCase();
+
+            return xFrameOption !== "deny" && xFrameOption !== "sameorigin";
+        };
+
         await axios
             .head(url, { timeout: 5_000 })
             // Klaxoon
-            .then((response) => emitAnswerMessage(true, !response.headers["x-frame-options"]))
+            .then((response) => emitAnswerMessage(true, isAllowed(response)))
             .catch(async (error) => {
                 // If response from server is "Method not allowed", we try to do a GET request
                 if (isAxiosError(error) && error.response?.status === 405) {
                     await axios
                         .get(url, { timeout: 5_000 })
-                        .then((response) => emitAnswerMessage(true, !response.headers["x-frame-options"]))
+                        .then((response) => emitAnswerMessage(true, isAllowed(response)))
                         .catch((error) => processError(error));
                 } else {
                     processError(error);

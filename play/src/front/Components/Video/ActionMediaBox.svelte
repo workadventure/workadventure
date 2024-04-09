@@ -92,7 +92,7 @@
             class="action-button tw-flex tw-flex-row tw-items-center tw-justify-center tw-p-0 tw-mx-1 tw-cursor-pointer"
         >
             <img src={MoreActionSvg} class="tw-w-4 tw-h-4 tw-rotate-90" alt="Ellipsis icon" />
-            <Tooltip text={$LL.camera.menu.closeMenu()} leftPosition="true" />
+            <Tooltip text={$LL.camera.menu.closeMenu()} rightPosition="true" />
         </button>
 
         <!-- Pin -->
@@ -104,7 +104,7 @@
                 on:click|preventDefault|stopPropagation={() => pin()}
             >
                 <img src={PinSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
-                <Tooltip text={$LL.camera.menu.pin()} leftPosition="true" />
+                <Tooltip text={$LL.camera.menu.pin()} rightPosition="true" />
             </button>
         {/if}
 
@@ -116,7 +116,7 @@
             on:click|preventDefault|stopPropagation={() => muteAudio()}
         >
             <img src={MicrophoneCloseSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
-            <Tooltip text={$LL.camera.menu.muteAudioUser()} leftPosition="true" />
+            <Tooltip text={$LL.camera.menu.muteAudioUser()} rightPosition="true" />
         </button>
 
         <!-- Mute audio every body -->
@@ -128,7 +128,7 @@
                 on:click|preventDefault|stopPropagation={() => muteAudioEveryBody()}
             >
                 <img src={MicrophoneCloseSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
-                <Tooltip text={$LL.camera.menu.muteAudioEveryBody()} leftPosition="true" />
+                <Tooltip text={$LL.camera.menu.muteAudioEveryBody()} rightPosition="true" />
             </button>
         {/if}
 
@@ -140,7 +140,7 @@
             on:click|preventDefault|stopPropagation={() => muteVideo()}
         >
             <img src={NoVideoSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
-            <Tooltip text={$LL.camera.menu.muteVideoUser()} leftPosition="true" />
+            <Tooltip text={$LL.camera.menu.muteVideoUser()} rightPosition="true" />
         </button>
 
         <!-- Mute video every body -->
@@ -152,7 +152,7 @@
                 on:click|preventDefault|stopPropagation={() => muteVideoEveryBody()}
             >
                 <img src={NoVideoSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
-                <Tooltip text={$LL.camera.menu.muteVideoEveryBody()} leftPosition="true" />
+                <Tooltip text={$LL.camera.menu.muteVideoEveryBody()} rightPosition="true" />
             </button>
         {/if}
 
@@ -165,7 +165,7 @@
                 on:click|preventDefault|stopPropagation={() => kickoff()}
             >
                 <img src={banUserSvg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
-                <Tooltip text={$LL.camera.menu.kickoffUser()} leftPosition="true" />
+                <Tooltip text={$LL.camera.menu.kickoffUser()} rightPosition="true" />
             </button>
         {/if}
 
@@ -177,7 +177,7 @@
             on:click|preventDefault|stopPropagation={() => sendPrivateMessage()}
         >
             <img src={BubbleTalkPng} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
-            <Tooltip text={$LL.camera.menu.senPrivateMessage()} leftPosition="true" />
+            <Tooltip text={$LL.camera.menu.senPrivateMessage()} rightPosition="true" />
         </button>
 
         <!-- Block or report user -->
@@ -189,7 +189,7 @@
                 on:click|preventDefault|stopPropagation={() => openBlockOrReportPopup()}
             >
                 <img src={reportImg} class="tw-w-4 tw-h-4" alt="Ellipsis icon" />
-                <Tooltip text={$LL.camera.menu.blockOrReportUser()} leftPosition="true" />
+                <Tooltip text={$LL.camera.menu.blockOrReportUser()} rightPosition="true" />
             </button>
         {/if}
     {/if}

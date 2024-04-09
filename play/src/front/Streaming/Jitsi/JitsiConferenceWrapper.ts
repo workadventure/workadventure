@@ -35,7 +35,7 @@ const JITSI_MIN_RESOLUTION = 180;
 //const JITSI_MAX_RESOLUTION = 720;
 
 //const JITSI_PRESENTATION_LASTN = 10;
-const JITSI_MOZAIC_LASTN = 4;
+//const JITSI_MOZAIC_LASTN = 4;
 
 export class JitsiConferenceWrapper {
     private myParticipantId: string | undefined;
@@ -85,7 +85,7 @@ export class JitsiConferenceWrapper {
             // To start the conference, we define the minim video quality
             room.setReceiverVideoConstraint(JITSI_MIN_RESOLUTION);
             room.setSenderVideoConstraint(JITSI_MIN_RESOLUTION).catch((e) => debug("setSenderVideoConstraint", e));
-            room.setLastN(JITSI_MOZAIC_LASTN);
+            //room.setLastN(JITSI_MOZAIC_LASTN);
 
             const jitsiConferenceWrapper = new JitsiConferenceWrapper(room, jitsiRoomName);
 

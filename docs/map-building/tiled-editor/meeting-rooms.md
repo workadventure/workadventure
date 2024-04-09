@@ -19,6 +19,7 @@ In order to create Jitsi meet zones:
 * Object must be of class "`area`"
 * In object properties, you MUST add a "`jitsiRoom`" property (of type "`string`"). The value of the property is the name of the room in Jitsi. Note: the name of the room will be "slugified" and prepended with a hash of the room URL
 * You may also use "jitsiWidth" property (of type "number" between 0 and 100) to control the width of the iframe containing the meeting room.
+* You may also use "jitsiClosable" property (of type "boolean" true or false) to control the close button of the iframe containing the meeting room.
 
 You can have this object (i.e. your meeting area) to be selectable as the precise location for your meeting using the [Google Calendar integration for Work Adventure](/integrations/google-calendar). To do so, you must set the `meetingRoomLabel` property. You can provide any name that you would like your meeting room to have (as a string).
 
