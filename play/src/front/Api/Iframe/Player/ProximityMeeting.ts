@@ -9,6 +9,8 @@ import { apiCallback } from "../registeredCallbacks";
 let joinStream: Subject<RemotePlayer[]>;
 let participantJoinStream: Subject<RemotePlayer>;
 let participantLeaveStream: Subject<RemotePlayer>;
+let followedStream: Subject<RemotePlayer>;
+let unfollowedStream: Subject<RemotePlayer>;
 let leaveStream: Subject<void>;
 
 export class WorkadventureProximityMeetingCommands extends IframeApiContribution<WorkadventureProximityMeetingCommands> {
@@ -35,6 +37,18 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
             type: "leaveProximityMeetingEvent",
             callback: () => {
                 leaveStream?.next();
+            },
+        }),
+        apiCallback({
+            type: "onFollowed",
+            callback: (payloadData: ParticipantProximityMeetingEvent) => {
+                followedStream?.next(new RemotePlayer(payloadData.user));
+            },
+        }),
+        apiCallback({
+            type: "onUnfollowed",
+            callback: (payloadData: ParticipantProximityMeetingEvent) => {
+                unfollowedStream?.next(new RemotePlayer(payloadData.user));
             },
         }),
     ];
@@ -80,7 +94,7 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
 
     /**
      * Detecting when the user leave on a meeting.
-     * {@link https://workadventu.re/map-building/api-player.md#detecting-when-the-user-entersleaves-a-meeting | Website documentation}
+     * {@link https://docs.workadventu.re/developer/map-scripting/references/api-player/#detecting-when-the-user-entersleaves-a-meeting | Website documentation}
      */
     onLeave(): Subject<void> {
         if (leaveStream === undefined) {
@@ -89,6 +103,10 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
         return leaveStream;
     }
 
+    /**
+     * Play a sound to all players in the current meeting.
+     * {@link https://docs.workadventu.re/developer/map-scripting/references/api-player/#playing-a-sound-to-players-in-the-same-meeting | Website documentation}
+     */
     async playSound(url: string): Promise<void> {
         await queryWorkadventure({
             type: "playSoundInBubble",
@@ -96,6 +114,44 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
                 url: url,
             },
         });
+    }
+
+    /**
+     * Ask all players in the current meeting to follow the player.
+     * Note that unlike with the "follow" mode in the UI, the other players will automatically follow the player.
+     */
+    async followMe(): Promise<void> {
+        await queryWorkadventure({
+            type: "followMe",
+            data: undefined,
+        });
+    }
+
+    async stopLeading(): Promise<void> {
+        await queryWorkadventure({
+            type: "stopLeading",
+            data: undefined,
+        });
+    }
+
+    /**
+     * Triggered when a player starts following us.
+     */
+    onFollowed(): Subject<RemotePlayer> {
+        if (followedStream === undefined) {
+            followedStream = new Subject<RemotePlayer>();
+        }
+        return followedStream;
+    }
+
+    /**
+     * Triggered when a player stops following us.
+     */
+    onUnfollowed(): Subject<RemotePlayer> {
+        if (unfollowedStream === undefined) {
+            unfollowedStream = new Subject<RemotePlayer>();
+        }
+        return unfollowedStream;
     }
 }
 

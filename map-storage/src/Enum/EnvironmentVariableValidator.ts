@@ -67,6 +67,11 @@ export const EnvironmentVariables = z.object({
             "The (optional) API token to use when calling the webhook. The token will be sent in the Authorization header of the POST request."
         )
         .transform(emptyStringToUndefined),
+    MAX_SIMULTANEOUS_FS_READS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 100))
+        .describe(
+            "The maximum number of simultaneous file system (local or S3) reads when regenerating the cache file. Defaults to 100."
+        ),
     SENTRY_DSN: z
         .string()
         .optional()

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { writable } from "svelte/store";
-    import { ChevronDownIcon, ChevronUpIcon } from "svelte-feather-icons";
+    import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon } from "svelte-feather-icons";
     import { onMount } from "svelte";
     import { fly } from "svelte/transition";
     import { LL } from "../../../i18n/i18n-svelte";
@@ -134,6 +134,18 @@
 <div class="tw-flex tw-flex-col">
     <div class="header-container">
         <h3 class="tw-text-l tw-text-left">{$LL.mapEditor.explorer.title()}</h3>
+        {#if showSearchMode}
+            <a
+                href="back"
+                class="tw-flex tw-items-center tw-text-white tw-text-xs"
+                in:fly={{ x: 100, duration: 250, delay: 200 }}
+                out:fly={{ x: 100, duration: 200 }}
+                on:click|preventDefault={toggleSearchMode}
+            >
+                <ArrowLeftIcon size="12" />
+                {$LL.mapEditor.explorer.closeSearchMode()}
+            </a>
+        {/if}
         {#if !showSearchMode}
             <p in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
                 {$LL.mapEditor.explorer.description()}
@@ -166,25 +178,30 @@
                         </span>
                     </button>
                 </div>
-            {/if}
-            <div
-                class="properties-buttons tw-flex tw-flex-row tw-z-10"
-                in:fly={{ x: 100, duration: 250, delay: 200 }}
-                out:fly={{ x: 100, duration: 200 }}
-            >
-                <button
-                    class="add-property-button tooltip tw-p-4 tw-flex tw-justify-center tw-items-center"
-                    on:click={toggleSearchMode}
+                <div
+                    class="properties-buttons tw-flex tw-flex-row tw-z-10"
+                    in:fly={{ x: 100, duration: 250, delay: 200 }}
+                    out:fly={{ x: 100, duration: 200 }}
                 >
-                    <div class="tw-w-10 tw-h-10 tw-flex tw-flex-wrap tw-items-center tw-justify-center">
-                        <img draggable="false" class="tw-max-w-[75%] tw-max-h-[75%]" src={visioSvg} alt="info icon" />
-                    </div>
-                    <span class="tooltiptext tw-text-xs">
-                        <p class="tw-text-sm tw-mb-2">{$LL.mapEditor.explorer.searchModeTitle()}</p>
-                        {$LL.mapEditor.explorer.searchModeDescription()}
-                    </span>
-                </button>
-            </div>
+                    <button
+                        class="add-property-button tooltip tw-p-4 tw-flex tw-justify-center tw-items-center"
+                        on:click={toggleSearchMode}
+                    >
+                        <div class="tw-w-10 tw-h-10 tw-flex tw-flex-wrap tw-items-center tw-justify-center">
+                            <img
+                                draggable="false"
+                                class="tw-max-w-[75%] tw-max-h-[75%]"
+                                src={visioSvg}
+                                alt="info icon"
+                            />
+                        </div>
+                        <span class="tooltiptext tw-text-xs">
+                            <p class="tw-text-sm tw-mb-2">{$LL.mapEditor.explorer.searchModeTitle()}</p>
+                            {$LL.mapEditor.explorer.searchModeDescription()}
+                        </span>
+                    </button>
+                </div>
+            {/if}
         </div>
 
         {#if showSearchMode}

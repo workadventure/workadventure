@@ -52,7 +52,6 @@
             class:media-box-camera-off-size={!isHightlighted && !videoEnabled}
             class:tw-max-w-sm={isHightlighted && !videoEnabled}
             class:tw-mx-auto={isHightlighted && !videoEnabled}
-            class:tw-m-auto={!isHightlighted && !videoEnabled}
             class:tw-h-12={!isHightlighted && !videoEnabled}
             class:clickable={isClickable}
             class:mozaic-duo={mozaicDuo}
@@ -86,8 +85,6 @@
         class:media-box-camera-on-size={!isHightlighted && streamable.getVideoTrack()}
         class:media-box-camera-off-size={!isHightlighted && !streamable.getVideoTrack()}
         class:tw-max-w-sm={isHightlighted && !streamable.getVideoTrack()}
-        class:tw-mx-auto={isHightlighted && !streamable.getVideoTrack()}
-        class:tw-m-auto={!isHightlighted && !streamable.getVideoTrack()}
         class:tw-h-12={!isHightlighted && !streamable.getVideoTrack()}
         class:clickable={isClickable}
         class:mozaic-full-width={mozaicSolo}

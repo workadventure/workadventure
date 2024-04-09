@@ -1,12 +1,12 @@
 import {expect, test} from '@playwright/test';
 import {login} from './utils/roles';
 import Map from "./utils/map";
-import {resetWamMaps} from './utils/map-editor/uploader';
+import {publicTestMapUrl} from "./utils/urls";
+/*import {oidcAdminTagLogin, oidcLogout} from "./utils/oidc";
+import { resetWamMaps } from './utils/map-editor/uploader';
 import Menu from "./utils/menu";
 import MapEditor from "./utils/mapeditor";
-import AreaEditor from "./utils/map-editor/areaEditor";
-import {publicTestMapUrl} from "./utils/urls";
-import {oidcAdminTagLogin, oidcLogout} from "./utils/oidc";
+import AreaEditor from "./utils/map-editor/areaEditor";*/
 
 test.describe('Meeting actions test', () => {
 
@@ -80,6 +80,14 @@ test.describe('Meeting actions test', () => {
         await page.close();
         await userBob.close();
     });
+  // TODO: this test is deprecated, Jitsi meeting not working for production
+  /*test('Jitsi meeting action to mute microphone & video', async ({ page, browser, request }, { project }) => {
+    // Skip test for mobile device
+    if(project.name === "mobilechromium") {
+      //eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
+    }
 
     test('Jitsi meeting action to mute microphone & video @oidc', async ({page, browser, request}, {project}) => {
         await resetWamMaps(request);
@@ -160,4 +168,5 @@ test.describe('Meeting actions test', () => {
         await expect(page.locator('.cameras-container .other-cameras .jitsi-video video')).toBeHidden({timeout: 20_000});
 
     });
+  });*/
 });

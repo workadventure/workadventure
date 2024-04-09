@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/svelte";
 import type { Subscription } from "rxjs";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
@@ -181,6 +182,7 @@ import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManag
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { faviconManager } from "./../../WebRtc/FaviconManager";
+import { FollowManager } from "./FollowManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -283,6 +285,7 @@ export class GameScene extends DirtyScene {
     private sharedVariablesManager!: SharedVariablesManager;
     private playerVariablesManager!: PlayerVariablesManager;
     private scriptingEventsManager!: ScriptingEventsManager;
+    private followManager!: FollowManager;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private areaManager!: DynamicAreaManager;
@@ -671,7 +674,6 @@ export class GameScene extends DirtyScene {
         }
 
         this.pathfindingManager = new PathfindingManager(
-            this,
             this.gameMapFrontWrapper.getCollisionGrid(),
             this.gameMapFrontWrapper.getTileDimensions()
         );
@@ -1006,22 +1008,6 @@ export class GameScene extends DirtyScene {
             clearTimeout(this.hideTimeout);
             this.hideTimeout = undefined;
         }
-    }
-
-    public moveTo(position: { x: number; y: number }, measuredInPixels = true, tryFindingNearestAvailable = false) {
-        this.pathfindingManager
-            .findPath(
-                this.gameMapFrontWrapper.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y),
-                position,
-                measuredInPixels,
-                tryFindingNearestAvailable
-            )
-            .then((path) => {
-                if (path && path.length > 0) {
-                    this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
-                }
-            })
-            .catch((reason) => console.warn(reason));
     }
 
     /**
@@ -1493,7 +1479,12 @@ export class GameScene extends DirtyScene {
                 this.mapEditorModeManager?.subscribeToRoomConnection(this.connection);
                 const commandsToApply = onConnect.room.commandsToApply;
                 if (commandsToApply) {
-                    await this.mapEditorModeManager?.updateMapToNewest(commandsToApply);
+                    try {
+                        await this.mapEditorModeManager?.updateMapToNewest(commandsToApply);
+                    } catch (e) {
+                        Sentry.captureException(e);
+                        console.error("Error while updating map to newest", e);
+                    }
                 }
 
                 this.tryOpenMapEditorWithToolEditorParameter();
@@ -1678,6 +1669,9 @@ export class GameScene extends DirtyScene {
 
                 // Set up events manager
                 this.scriptingEventsManager = new ScriptingEventsManager(this.connection);
+
+                // Set up follow manager
+                this.followManager = new FollowManager(this.connection, this.remotePlayersRepository);
 
                 // Set up variables manager
                 this.sharedVariablesManager = new SharedVariablesManager(
@@ -2340,6 +2334,9 @@ ${escapedMessage}
                 });
 
                 this.popUpElements.set(openPopupEvent.popupId, domElement);
+
+                // Analytics tracking for popups
+                analyticsClient.openedPopup(openPopupEvent.targetObject, openPopupEvent.popupId);
             })
         );
 
@@ -2458,7 +2455,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.cameraSetStream.subscribe((cameraSetEvent) => {
-                const duration = cameraSetEvent.smooth ? 1000 : 0;
+                const duration = cameraSetEvent.smooth ? cameraSetEvent.duration ?? 1000 : 0;
                 cameraSetEvent.lock
                     ? this.cameraManager.enterFocusMode({ ...cameraSetEvent }, undefined, duration)
                     : this.cameraManager.setPosition({ ...cameraSetEvent }, duration);
@@ -2467,7 +2464,8 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.cameraFollowPlayerStream.subscribe((cameraFollowPlayerEvent) => {
-                this.cameraManager.leaveFocusMode(this.CurrentPlayer, cameraFollowPlayerEvent.smooth ? 1000 : 0);
+                const duration = cameraFollowPlayerEvent.smooth ? cameraFollowPlayerEvent.duration ?? 1000 : 0;
+                this.cameraManager.leaveFocusMode(this.CurrentPlayer, duration);
             })
         );
 
@@ -2662,8 +2660,9 @@ ${escapedMessage}
                 throw new Error("Unknown query source");
             }
 
+            const url = new URL(openCoWebsite.url, iframeListener.getBaseUrlFromSource(source));
             const coWebsite: SimpleCoWebsite = new SimpleCoWebsite(
-                new URL(openCoWebsite.url, iframeListener.getBaseUrlFromSource(source)),
+                url,
                 openCoWebsite.allowApi,
                 openCoWebsite.allowPolicy,
                 openCoWebsite.widthPercent,
@@ -2675,6 +2674,9 @@ ${escapedMessage}
             if (openCoWebsite.lazy === undefined || !openCoWebsite.lazy) {
                 await coWebsiteManager.loadCoWebsite(coWebsite);
             }
+
+            // Analytics tracking for co-websites
+            analyticsClient.openedWebsite(url);
 
             return {
                 id: coWebsite.getId(),
@@ -2949,14 +2951,7 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("movePlayerTo", async (message) => {
-            const startTileIndex = this.getGameMap().getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y);
-            const destinationTileIndex = this.getGameMap().getTileIndexAt(message.x, message.y);
-            const path = await this.getPathfindingManager().findPath(startTileIndex, destinationTileIndex, true, true);
-            path.shift();
-            if (path.length === 0) {
-                throw new Error("no path available");
-            }
-            return this.CurrentPlayer.setPathToFollow(path, message.speed);
+            return this.moveTo({ x: message.x, y: message.y }, true, message.speed);
         });
 
         iframeListener.registerAnswerer("teleportPlayerTo", (message) => {
@@ -2966,12 +2961,12 @@ ${escapedMessage}
             // clear properties in case we are moved on the same layer / area in order to trigger them
             //this.gameMapFrontWrapper.clearCurrentProperties();
 
-            this.handleCurrentPlayerHasMovedEvent({
+            /*this.handleCurrentPlayerHasMovedEvent({
                 x: message.x,
                 y: message.y,
                 direction: this.CurrentPlayer.lastDirection,
                 moving: false,
-            });
+            });*/
             this.markDirty();
         });
 
@@ -3119,7 +3114,7 @@ ${escapedMessage}
                 let endPos: { x: number; y: number };
                 const posFromParam = StringUtils.parsePointFromParam(moveToParam);
                 if (posFromParam) {
-                    endPos = this.gameMapFrontWrapper.getTileIndexAt(posFromParam.x, posFromParam.y);
+                    endPos = posFromParam;
                 } else {
                     // First, try by id
                     let areaData = this.gameMapFrontWrapper.getAreas()?.get(moveToParam);
@@ -3127,19 +3122,20 @@ ${escapedMessage}
                         areaData = this.gameMapFrontWrapper.getAreaByName(moveToParam);
                     }
                     if (areaData) {
-                        const pixelEndPos = MathUtils.randomPositionFromRect(areaData);
-                        endPos = this.gameMapFrontWrapper.getTileIndexAt(pixelEndPos.x, pixelEndPos.y);
+                        endPos = MathUtils.randomPositionFromRect(areaData);
                     } else {
                         const destinationObject = this.gameMapFrontWrapper.getObjectWithName(moveToParam);
                         if (destinationObject) {
-                            endPos = this.gameMapFrontWrapper.getTileIndexAt(destinationObject.x, destinationObject.y);
+                            endPos = destinationObject;
                         } else {
-                            endPos = this.gameMapFrontWrapper.getRandomPositionFromLayer(moveToParam);
+                            endPos = this.pathfindingManager.mapTileUnitToPixels(
+                                this.gameMapFrontWrapper.getRandomPositionFromLayer(moveToParam)
+                            );
                         }
                     }
                 }
 
-                this.moveTo(endPos);
+                this.moveTo(endPos).catch((e) => console.warn(e));
 
                 urlManager.clearHashParameter();
             } catch (err) {
@@ -3154,6 +3150,25 @@ ${escapedMessage}
             this.connection?.emitAskPosition(uuidParam, this.roomUrl);
             urlManager.clearHashParameter();
         }
+    }
+
+    /**
+     * Walk the player to position x,y expressed in Game pixels.
+     */
+    public async moveTo(
+        position: { x: number; y: number },
+        tryFindingNearestAvailable = false,
+        speed: number | undefined = undefined
+    ): Promise<{ x: number; y: number; cancelled: boolean }> {
+        const path = await this.getPathfindingManager().findPathFromGameCoordinates(
+            {
+                x: this.CurrentPlayer.x,
+                y: this.CurrentPlayer.y,
+            },
+            position,
+            tryFindingNearestAvailable
+        );
+        return this.CurrentPlayer.setPathToFollow(path, speed);
     }
 
     private getExitUrl(layer: ITiledMapLayer): string | undefined {
@@ -3393,14 +3408,7 @@ ${escapedMessage}
                 this.markDirty();
                 const playerDestination = this.CurrentPlayer.getCurrentPathDestinationPoint();
                 if (playerDestination) {
-                    const startTileIndex = this.getGameMap().getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y);
-                    const endTileIndex = this.getGameMap().getTileIndexAt(playerDestination.x, playerDestination.y);
-                    this.pathfindingManager
-                        .findPath(startTileIndex, endTileIndex)
-                        .then((path) => {
-                            this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
-                        })
-                        .catch((reason) => console.warn(reason));
+                    this.moveTo(playerDestination, true).catch((reason) => console.warn(reason));
                 }
             });
     }

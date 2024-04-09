@@ -114,6 +114,7 @@ message EmoteEventMessage {
 
 message FollowRequestMessage {
   int32 leader = 1;
+  bool forceFollow = 2;
 }
 
 message FollowConfirmationMessage {

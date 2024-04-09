@@ -76,19 +76,29 @@ for (const passportStrategy of passportStrategies) {
 app.use(passport.initialize());
 
 app.get("*.wam", (req, res, next) => {
-    (async () => {
-        const wamPath = req.url;
-        const domain = req.hostname;
-        if (wamPath.includes("..") || domain.includes("..")) {
-            res.status(400).send("Invalid request");
-            return;
-        }
-        const key = mapPathUsingDomain(wamPath, domain);
+    const wamPath = req.url;
+    const domain = req.hostname;
+    if (wamPath.includes("..") || domain.includes("..")) {
+        res.status(400).send("Invalid request");
+        return;
+    }
+    const key = mapPathUsingDomain(wamPath, domain);
 
-        const gameMap = await mapsManager.loadWAMToMemory(key);
+    res.setHeader("Content-Type", "application/json");
+    // Let's disable any kind of cache (we allow for a 5 seconds cache just to avoid spamming the server and
+    // to allow a CDN to take over the load). 5 seconds is ok, because it is lower than the 30 seconds of
+    // the command queue.
+    res.setHeader("Cache-Control", "max-age=5");
 
+    // Maybe the map is already in memory (in case this map is edited by the current map storage)
+    const gameMap = mapsManager.getGameMap(key);
+    if (gameMap) {
         res.send(gameMap.getWam());
-    })().catch((e) => next());
+    } else {
+        // Let's load the map, but do not put it in memory (because it might become outdated if another map-storage
+        // changes the map)
+        fileSystem.serveStaticFile(key, res, next);
+    }
 });
 
 app.get("/ping", (req, res) => {

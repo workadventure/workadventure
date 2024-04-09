@@ -22,10 +22,10 @@ export class WorkAdventureCameraCommands extends IframeApiContribution<WorkAdven
      *
      * @param smooth Smooth transition
      */
-    public followPlayer(smooth = false): void {
+    public followPlayer(smooth = false, duration?: number): void {
         sendToWorkadventure({
             type: "cameraFollowPlayer",
-            data: { smooth },
+            data: { smooth, duration },
         });
     }
 
@@ -42,10 +42,10 @@ export class WorkAdventureCameraCommands extends IframeApiContribution<WorkAdven
      * @param {boolean} lock Zoom locked
      * @param {boolean} smooth Smooth transition
      */
-    set(x: number, y: number, width?: number, height?: number, lock = false, smooth = false): void {
+    set(x: number, y: number, width?: number, height?: number, lock = false, smooth = false, duration?: number): void {
         sendToWorkadventure({
             type: "cameraSet",
-            data: { x, y, width, height, lock, smooth },
+            data: { x, y, width, height, lock, smooth, duration },
         });
     }
 

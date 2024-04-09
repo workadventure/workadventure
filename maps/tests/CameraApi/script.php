@@ -15,6 +15,7 @@
                 const widthField = document.getElementById('width');
                 const heightField = document.getElementById('height');
                 const smoothField = document.getElementById('smooth');
+                const durationField = document.getElementById('duration');
                 const lockField = document.getElementById('lock');
 
                 setCameraButton.addEventListener('click', () => {
@@ -25,11 +26,12 @@
                         heightField.value ? parseInt(heightField.value) : undefined,
                         lockField.checked,
                         smoothField.checked,
+                        durationField.value ? parseInt(durationField.value) : undefined
                     );
                 });
 
                 followPlayerButton.addEventListener('click', () => {
-                    WA.camera.followPlayer(smoothField.checked);
+                    WA.camera.followPlayer(smoothField.checked, (durationField.value ? parseInt(durationField.value) : undefined));
                 });
             });
         })
@@ -41,6 +43,7 @@ Y: <input type="text" id="y" value="655" /><br/>
 width: <input type="text" id="width" value="480" /><br/>
 height: <input type="text" id="height" value="286" /><br/>
 Smooth: <input type="checkbox" id="smooth" value=1 /><br/>
+Duration: <input type="text" id="duration" value="1000" /><br/>
 Lock: <input type="checkbox" id="lock" value=1 /><br/>
 
 <button id="setCameraButton">Set Camera</button>

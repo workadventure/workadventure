@@ -6,21 +6,21 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
         selectCamera: "Sélectionnez une caméra 📹",
         selectMicrophone: "Sélectionnez un microphone 🎙️",
         liveMessage: {
-            startMegaphone: "Démarrer le mégaphone",
+            startMegaphone: "démarrer un live",
             goingToStream: "Vous allez diffuser",
             yourMicrophone: "votre microphone",
             yourCamera: "votre camera",
-            title: "Message en direct",
-            button: "Envoyer un message en direct",
+            title: "Live message",
+            button: "Démarer un live",
             and: "et",
             toAll: "à tous les participants",
             confirm: "Confirmer",
             cancel: "Annuler",
-            notice: `Le message en direct ou "Mégaphone" vous permet d'envoyer un message en direct avec votre caméra et votre microphone à toutes les personnes connectées dans le salon ou le world.
+            notice: `Le Live ou "Mégaphone" vous permet de streamer votre caméra et votre microphone à toutes les personnes connectées dans le salon et/ou le world.
             
             Ce message sera affiché en bas de l'écran, comme une vidéo ou une bulle de discussion.
             
-            Un exemple d'utilisation du message en direct : "Bonjour à tous, on commence la conférence ? 🎉 Suivez mon avatar jusqu'à la zone de conférence et ouvrez l'application de visio 🚀"
+            Un exemple d'utilisation du live : "Bonjour à tous, on commence la conférence ? 🎉 Suivez mon avatar jusqu'à la zone de conférence et ouvrez l'application de visio 🚀"
             `,
             settings: "Paramètres",
         },

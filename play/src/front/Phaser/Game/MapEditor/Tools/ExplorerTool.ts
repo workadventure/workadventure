@@ -238,11 +238,17 @@ export class ExplorerTool implements MapEditorTool {
         // Mark the scene as dirty
         this.scene.markDirty();
 
+        // Define new zone to zoom
+        this.defineZoomToCenterCameraPosition();
+
         // Create flash animation
         this.scene.cameras.main.flash();
 
-        // Define new zone to zoom
-        this.defineZoomToCenterCameraPosition();
+        // Use zoom factor to refresh the camera position
+        // FIXME: delete this timeout when the camera position will be updated in the same time
+        setTimeout(() => {
+            this.scene.zoomByFactor(1, 1);
+        }, 200);
 
         // Create subscribe to entities store
         this.mapExplorationEntitiesSubscribe = mapExplorationEntitiesStore.subscribe((entities) => {
@@ -303,11 +309,15 @@ export class ExplorerTool implements MapEditorTool {
         return new AreaPreview(this.scene, structuredClone(areaConfig));
     }
 
+    private defineZoomToCenterCameraPositionTimeOut?: NodeJS.Timeout;
     public defineZoomToCenterCameraPosition() {
+        if (this.defineZoomToCenterCameraPositionTimeOut) clearTimeout(this.defineZoomToCenterCameraPositionTimeOut);
         // FIXME from the svelte component, the udate isn't dispatch in totaly at the same time after to move the camera
-        setTimeout(() => {
-            const cameraCenterXToZoom = this.scene.cameras.main.worldView.x + this.scene.cameras.main.width / 2;
-            const cameraCenterYToZoom = this.scene.cameras.main.worldView.y + this.scene.cameras.main.height / 2;
+        this.defineZoomToCenterCameraPositionTimeOut = setTimeout(() => {
+            const cameraCenterXToZoom =
+                this.scene.cameras.main.worldView.x + this.scene.cameras.main.worldView.width / 2;
+            const cameraCenterYToZoom =
+                this.scene.cameras.main.worldView.y + this.scene.cameras.main.worldView.height / 2;
             if (
                 cameraCenterXToZoom != this.lastCameraCenterXToZoom ||
                 cameraCenterYToZoom != this.lastCameraCenterYToZoom
@@ -316,6 +326,7 @@ export class ExplorerTool implements MapEditorTool {
                 this.lastCameraCenterXToZoom = cameraCenterXToZoom;
                 this.lastCameraCenterYToZoom = cameraCenterYToZoom;
             }
+            this.defineZoomToCenterCameraPositionTimeOut = undefined;
         }, 100);
     }
 }

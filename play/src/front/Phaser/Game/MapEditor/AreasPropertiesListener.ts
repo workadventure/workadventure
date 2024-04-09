@@ -282,9 +282,13 @@ export class AreasPropertiesListener {
     }
 
     private handleOpenWebsitePropertyOnEnter(property: OpenWebsitePropertyData): void {
+        if (!property.link) {
+            return;
+        }
+
         const actionId = "openWebsite-" + (Math.random() + 1).toString(36).substring(7);
 
-        if (property.newTab && property.link != undefined) {
+        if (property.newTab) {
             const forceTrigger = localUserStore.getForceCowebsiteTrigger();
             if (forceTrigger || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
                 this.coWebsitesActionTriggers.set(property.id, actionId);
@@ -577,8 +581,9 @@ export class AreasPropertiesListener {
         coWebsiteOpen: OpenCoWebsite,
         actionId: string
     ): void {
+        const url = new URL(property.link ?? "", this.scene.mapUrlFile);
         const coWebsite = new SimpleCoWebsite(
-            new URL(property.link ?? "", this.scene.mapUrlFile),
+            url,
             property.allowAPI,
             property.policy,
             property.width,
@@ -595,7 +600,7 @@ export class AreasPropertiesListener {
         inOpenWebsite.set(true);
 
         // analytics event for open website
-        analyticsClient.openedWebsite(coWebsite.getUrl());
+        analyticsClient.openedWebsite(url);
     }
 
     private loadCoWebsiteFunction(coWebsite: CoWebsite, actionId: string): void {
@@ -609,6 +614,8 @@ export class AreasPropertiesListener {
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {
         if (property.name !== undefined && property.id !== undefined) {
             const uniqRoomName = Jitsi.slugifyJitsiRoomName(property.name, this.scene.roomUrl);
+            // TODO remove this console.log after testing
+            console.info("handleSpeakerMegaphonePropertyOnEnter => joinSpace => uniqRoomName : ", uniqRoomName);
             currentLiveStreamingNameStore.set(uniqRoomName);
             this.scene.broadcastService.joinSpace(uniqRoomName, false);
             isSpeakerStore.set(true);
@@ -639,6 +646,8 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
+                // TODO remove this log after testing
+                console.info("handleListenerMegaphonePropertyOnEnter => joinSpace => uniqRoomName", uniqRoomName);
                 currentLiveStreamingNameStore.set(uniqRoomName);
                 this.scene.broadcastService.joinSpace(uniqRoomName, false);
                 if (property.chatEnabled) {
@@ -656,6 +665,8 @@ export class AreasPropertiesListener {
             );
             if (speakerZoneName) {
                 const uniqRoomName = Jitsi.slugifyJitsiRoomName(speakerZoneName, this.scene.roomUrl);
+                // TODO remove this log after testing
+                console.info("handleListenerMegaphonePropertyOnLeave => uniqRoomName", uniqRoomName);
                 currentLiveStreamingNameStore.set(undefined);
                 this.scene.broadcastService.leaveSpace(uniqRoomName);
                 if (property.chatEnabled) {

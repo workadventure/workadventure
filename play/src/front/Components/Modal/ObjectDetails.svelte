@@ -97,13 +97,16 @@
     function goTo() {
         if ($mapExplorationObjectSelectedStore) {
             // Move to the selected entity or area
-            const position = gameManager
-                .getCurrentGameScene()
-                .getGameMapFrontWrapper()
-                .getTileIndexAt($mapExplorationObjectSelectedStore.x, $mapExplorationObjectSelectedStore.y);
             gameManager
                 .getCurrentGameScene()
-                .moveTo(position, true, $mapExplorationObjectSelectedStore instanceof Entity);
+                .moveTo(
+                    {
+                        x: $mapExplorationObjectSelectedStore.x,
+                        y: $mapExplorationObjectSelectedStore.y,
+                    },
+                    true
+                )
+                .catch((error) => console.warn(error));
             gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
 
             // Close map editor to walk on the entity or zone

@@ -442,8 +442,8 @@ browsers automatically).
 ## Detecting when the user enters/leaves a meeting
 
 ```ts
-WA.player.proximityMeeting.onJoin(): Subscription
-WA.player.proximityMeeting.onLeave(): Subscription
+WA.player.proximityMeeting.onJoin(): Subscription<RemotePlayerInterface[]>
+WA.player.proximityMeeting.onLeave(): Subscription<RemotePlayerInterface[]>
 ```
 
 The event is triggered when the user enters or leaves a proximity meeting.
@@ -463,8 +463,8 @@ WA.player.proximityMeeting.onLeave().subscribe(async () => {
 ## Detecting when a participant enters/leaves the current meeting
 
 ```ts
-WA.player.proximityMeeting.onParticipantJoin(): Subscription
-WA.player.proximityMeeting.onParticipantLeave(): Subscription
+WA.player.proximityMeeting.onParticipantJoin(): Subscription<RemotePlayerInterface>
+WA.player.proximityMeeting.onParticipantLeave(): Subscription<RemotePlayerInterface>
 ```
 
 The event is triggered when a user enters or leaves a proximity meeting.
@@ -473,11 +473,11 @@ Example:
 
 ```ts
 WA.player.proximityMeeting.onParticipantJoin().subscribe(async (player: RemotePlayerInterface) => {
-    WA.chat.sendChatMessage("A participant joined the proximity chat", "System");
+    WA.chat.sendChatMessage("A participant joined the proximity chat", { scope: 'local', author: 'System' });
 });
 
 WA.player.proximityMeeting.onParticipantLeave().subscribe(async (player: RemotePlayerInterface) => {
-    WA.chat.sendChatMessage("A participant left the proximity chat", "System");
+    WA.chat.sendChatMessage("A participant left the proximity chat", { scope: 'local', author: 'System' });
 });
 ```
 
@@ -501,3 +501,65 @@ await WA.player.proximityMeeting.playSound("https://example.com/my_sound.mp3");
 ```
 
 The method returns a promise that resolves when the sound has been played.
+
+## Asking users to follow you
+
+:::warning
+This feature is experimental. The signature of the function might change in the future.
+:::
+
+```ts
+WA.player.proximityMeeting.followMe(): Promise<void>
+```
+
+The `followMe` function asks all the players in the same bubble to follow the player who called the function.
+Unlike the "follow" button in the UI, all the players in the bubble will be forced to follow the player who called the function.
+They can still stop following the player by clicking on the "stop following" button in the UI.
+
+## Stop leading users
+
+:::warning
+This feature is experimental. The signature of the function might change in the future.
+:::
+
+```ts
+WA.player.proximityMeeting.stopLeading(): Promise<void>
+```
+
+This function is the opposite of `followMe`. It ends the "follow" state for all the players in the bubble.
+
+Example:
+
+```ts
+// Start leading the users
+await WA.player.proximityMeeting.followMe();
+// Move everybody to (250, 250)
+await WA.player.moveTo(250, 250);
+// Stop leading the users
+await WA.player.proximityMeeting.stopLeading();
+```
+
+## Tracking who is following you
+
+:::warning
+This feature is experimental. The signature of the function might change in the future.
+:::
+
+```ts
+WA.player.proximityMeeting.onFollowed(): Subscription<RemotePlayerInterface>
+WA.player.proximityMeeting.onUnfollowed(): Subscription<RemotePlayerInterface>
+```
+
+You can be notified when a player starts following you or stops following you.
+
+Example:
+
+```ts
+WA.player.proximityMeeting.onFollowed().subscribe(async (player: RemotePlayerInterface) => {
+    WA.chat.sendChatMessage(`${player.name} is now following you`, { scope: 'local', author: 'System' });
+});
+
+WA.player.proximityMeeting.onUnfollowed().subscribe(async (player: RemotePlayerInterface) => {
+    WA.chat.sendChatMessage(`${player.name} stopped following you`, { scope: 'local', author: 'System' });
+});
+```

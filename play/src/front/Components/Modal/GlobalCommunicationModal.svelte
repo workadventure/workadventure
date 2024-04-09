@@ -431,7 +431,8 @@
                         <button
                             class="light"
                             on:click={startLive}
-                            disabled={!$requestedCameraState && !$requestedMicrophoneState}>Start live message</button
+                            disabled={!$requestedCameraState && !$requestedMicrophoneState}
+                            >{$LL.megaphone.modal.liveMessage.startMegaphone()}</button
                         >
                     </div>
                 </div>
