@@ -7,9 +7,6 @@ import Map  from './utils/map';
 import { publicTestMapUrl } from './utils/urls';
 
 test.describe('Availability Status', () => {
-
-    
-    
     test.describe('Busy Status',()=>{
         test('should return to online status when you move',async({ page, browser,browserName },{project})=>{
             const statusName = "Busy";
@@ -27,14 +24,13 @@ test.describe('Availability Status', () => {
             await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
         
         
-            //move
- 
+            //move to trigger status change 
             const positionToDiscuss = {
                 x: 2 * 32,
                 y: 2 * 32
             };
             if(project.name === "mobilechromium" || browserName === "webkit" ) {
-                await Menu.closeNotificationPopUp
+                await Menu.closeNotificationPopUp(page);
                 await Map.walkToPosition(page,positionToDiscuss.x,positionToDiscuss.y)
             }else{
                 await Map.walkTo(page,'ArrowRight',100)
@@ -93,11 +89,18 @@ test.describe('Availability Status', () => {
 
             await Menu.clickOnStatus(page,statusName);
             //await Menu.closeNotificationPopUp(page);
+ 
+            //move to trigger status change 
             const positionToDiscuss = {
-                x: 3 * 32,
-                y: 4 * 32
+                x: 2 * 32,
+                y: 2 * 32
             };
-            await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
+            if(project.name === "mobilechromium" ) {
+                await Menu.closeNotificationPopUp(page);
+                await Map.walkToPosition(page,positionToDiscuss.x,positionToDiscuss.y)
+            }else{
+                await Map.walkTo(page,'ArrowRight',100)
+            }
 
             await expect(page.getByAltText('Turn off webcam')).toBeVisible();
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
@@ -344,13 +347,18 @@ test.describe('Availability Status', () => {
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
 
             await Menu.clickOnStatus(page,statusName); 
-                        //move
+
+            //move to trigger status change 
             const positionToDiscuss = {
-                x: 3 * 32,
-                y: 4 * 32
+                x: 2 * 32,
+                y: 2 * 32
             };
-            await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
-                        
+            if(project.name === "mobilechromium" ) {
+                await Menu.closeNotificationPopUp(page);
+                await Map.walkToPosition(page,positionToDiscuss.x,positionToDiscuss.y)
+            }else{
+                await Map.walkTo(page,'ArrowRight',100)
+            }
 
             await expect(page.getByAltText('Turn off webcam')).toBeVisible();
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
@@ -468,13 +476,17 @@ test.describe('Availability Status', () => {
 
             await Menu.clickOnStatus(page,statusName); 
 
-                        //move
+            //move to trigger status change 
             const positionToDiscuss = {
-                x: 3 * 32,
-                y: 4 * 32
+                x: 2 * 32,
+                y: 2 * 32
             };
-            await Map.walkToPosition(page, positionToDiscuss.x, positionToDiscuss.y);
-                        
+            if(project.name === "mobilechromium" ) {
+                await Menu.closeNotificationPopUp(page);
+                await Map.walkToPosition(page,positionToDiscuss.x,positionToDiscuss.y)
+            }else{
+                await Map.walkTo(page,'ArrowRight',100)
+            }           
 
             await expect(page.getByAltText('Turn off webcam')).toBeVisible();
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
@@ -507,9 +519,5 @@ test.describe('Availability Status', () => {
                 await newBrowser.close();
             })
         })
-
     })
 })
-
-
-
