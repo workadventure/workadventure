@@ -11,11 +11,15 @@
 
 <div>
     <Tooltip text={listStatusTitle} />
-    <button class=" large tw-flex tw-justify-around  tw-mx-1 " class:border-top-light={menuVisibility}>
+    <button class="large tw-flex tw-justify-around tw-mx-1" class:border-top-light={menuVisibility}>
         <AvailabilityStatusCircle position="absolute" colorHex={statusColorHex} />
         <WokaFromUserId userId={-1} customWidth="32px" customHeight="32px" placeholderSrc="" />
-        <div class=" tw-overflow-ellipsis tw-font-bold tw-text-white tw-leading-5 tw-whitespace-nowrap tw-select-none">
-            {currentPlayerName}
+        <div
+            class="tw-flex tw-max-w-14 tw-h-full tw-font-bold tw-text-white tw-leading-5 tw-whitespace-nowrap tw-select-none"
+        >
+            <p class="tw-text-ellipsis tw-overflow-hidden tw-py-auto tw-text-center tw-m-auto">
+                {currentPlayerName}
+            </p>
         </div>
     </button>
 </div>
