@@ -3,9 +3,8 @@ import { v4 as uuid } from "uuid";
 import { EraserService, ExcalidrawService, GoogleWorkSpaceService, YoutubeService } from "@workadventure/shared-utils";
 import { EMBEDLY_KEY, IFRAMELY_KEY } from "../Enum/EnvironmentVariable";
 import { HtmlUtils } from "../Utils/HtmlUtils";
+import { chatConnectionManager } from "../Connection/ChatConnectionManager";
 import { FileMessageManager } from "./FileMessageManager";
-import { connect } from "http2";
-import { chatConnectionManager } from "src/Connection/ChatConnectionManager";
 
 const webLinkCaches = new Map();
 
