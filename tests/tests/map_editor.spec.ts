@@ -92,21 +92,16 @@ test.describe("Map editor @oidc", () => {
 
         await Menu.toggleMegaphoneButton(page);
 
-    // Check that the live message is displayed
-    //await expect(page.locator('.menu-container #content-liveMessage h3')).toContainText('Live message', {timeout: 5_000});
-    // Click on the button to start live message
-    await page.locator('.menu-container #content-liveMessage').getByRole('button', {name: 'Start live message'}).click({timeout: 10_000});
-    await page.locator('.menu-container #active-liveMessage').getByRole('button', {name: 'Start megaphone'}).click({timeout: 10_000});
         // Check that the live message is displayed
         //await expect(page.locator('.menu-container #content-liveMessage h3')).toContainText('Live message', {timeout: 5_000});
         // Click on the button to start live message
         await page
             .locator(".menu-container #content-liveMessage")
-            .getByRole("button", {name: "Start a live message"})
+            .getByRole("button", {name: "Start live message"})
             .click({timeout: 10_000});
         await page
             .locator(".menu-container #active-liveMessage")
-            .getByRole("button", {name: "Start live message"})
+            .getByRole("button", {name: "Start megaphone"})
             .click({timeout: 10_000});
 
         // click on the megaphone button to start the streaming session
