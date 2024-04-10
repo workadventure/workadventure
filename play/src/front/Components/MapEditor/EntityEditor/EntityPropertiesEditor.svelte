@@ -4,7 +4,6 @@
         EntityDataPropertiesKeys,
         EntityDataProperty,
         EntityDescriptionPropertyData,
-        OpenWebsiteTypePropertiesKeys,
     } from "@workadventure/map-editor";
     import { onDestroy } from "svelte";
     import { ArrowLeftIcon } from "svelte-feather-icons";
@@ -49,7 +48,7 @@
         }
     });
 
-    function onAddProperty(type: EntityDataPropertiesKeys, subtype?: OpenWebsiteTypePropertiesKeys) {
+    function onAddProperty(type: EntityDataPropertiesKeys, subtype?: string) {
         if ($mapEditorSelectedEntityStore) {
             analyticsClient.addMapEditorProperty("entity", type || "unknown");
             const property = getPropertyFromType(type, subtype);
@@ -126,10 +125,7 @@
         }
     }
 
-    function getPropertyFromType(
-        type: EntityDataPropertiesKeys,
-        subtype?: OpenWebsiteTypePropertiesKeys
-    ): EntityDataProperty {
+    function getPropertyFromType(type: EntityDataPropertiesKeys, subtype?: string): EntityDataProperty {
         const id = crypto.randomUUID();
         let placeholder: string;
         let buttonLabel: string;

@@ -25,7 +25,11 @@
     import excalidrawSvg from "../../images/applications/icon_excalidraw.svg";
     import pickerSvg from "../../images/applications/picker.svg";
     import { connectionManager } from "../../../Connection/ConnectionManager";
-    import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
+    import {
+        EXCALIDRAW_DOMAINS,
+        GOOGLE_DRIVE_PICKER_APP_ID,
+        GOOGLE_DRIVE_PICKER_CLIENT_ID,
+    } from "../../../Enum/EnvironmentVariable";
     import Tooltip from "../../Util/Tooltip.svelte";
     import InputTags from "../../Input/InputTags.svelte";
     import { InputTagOption } from "../../Input/InputTagOption";
@@ -308,7 +312,7 @@
 
             if (property.application == "excalidraw") {
                 try {
-                    ExcalidrawService.validateLink(new URL(property.link));
+                    ExcalidrawService.validateLink(new URL(property.link), EXCALIDRAW_DOMAINS);
                     embeddable = true;
                     optionAdvancedActivated = false;
                     property.newTab = oldNewTabValue;

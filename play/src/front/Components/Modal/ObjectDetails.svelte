@@ -6,7 +6,6 @@
         AreaDataProperty,
         EntityDataPropertiesKeys,
         EntityDataProperty,
-        OpenWebsiteTypePropertiesKeys,
     } from "@workadventure/map-editor";
     import { fly } from "svelte/transition";
     import { mapEditorModeStore, mapExplorationObjectSelectedStore } from "../../Stores/MapEditorStore";
@@ -21,7 +20,7 @@
     // Create type for component AddPropertyButton
     type AddPropertyButtonType = {
         property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
-        subProperty?: OpenWebsiteTypePropertiesKeys;
+        subProperty?: string;
     };
 
     let iconProperties = writable<Map<string, AddPropertyButtonType>>(new Map());

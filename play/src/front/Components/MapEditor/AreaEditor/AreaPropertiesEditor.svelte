@@ -4,7 +4,6 @@
         AreaDataProperties,
         AreaDataPropertiesKeys,
         AreaDataProperty,
-        OpenWebsiteTypePropertiesKeys,
         PersonalAreaAccessClaimMode,
         OpenWebsitePropertyData,
         PlayAudioPropertyData,
@@ -69,10 +68,7 @@
         }
     });
 
-    function getPropertyFromType(
-        type: AreaDataPropertiesKeys,
-        subtype?: OpenWebsiteTypePropertiesKeys
-    ): AreaDataProperty {
+    function getPropertyFromType(type: AreaDataPropertiesKeys, subtype?: string): AreaDataProperty {
         const id = uuid();
         let placeholder: string;
         let policy: string | undefined;
@@ -207,7 +203,7 @@
         selectedAreaPreviewUnsubscriber();
     });
 
-    function onAddProperty(type: AreaDataPropertiesKeys, subtype?: OpenWebsiteTypePropertiesKeys) {
+    function onAddProperty(type: AreaDataPropertiesKeys, subtype?: string) {
         if ($mapEditorSelectedAreaPreviewStore) {
             analyticsClient.addMapEditorProperty("area", type || "unknown");
             const property = getPropertyFromType(type, subtype);

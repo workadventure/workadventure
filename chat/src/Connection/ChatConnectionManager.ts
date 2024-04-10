@@ -25,6 +25,7 @@ class ChatConnectionManager {
     private _googleSlidesToolActivated = false;
     private _eraserToolActivated = false;
     private _excalidrawToolActivated = false;
+    private _excalidrawToolDomains: string[] = [];
 
     private _applications: ApplicationDefinitionInterface[] = [];
 
@@ -44,6 +45,7 @@ class ChatConnectionManager {
         googleSlidesToolActivated: boolean,
         eraserToolActivated: boolean,
         excalidrawToolActivated: boolean,
+        excalidrawToolDomains: string[],
         authToken?: string,
         klaxoonToolClientId?: string,
         applications?: ApplicationDefinitionInterface[]
@@ -64,6 +66,7 @@ class ChatConnectionManager {
         this._googleSlidesToolActivated = googleSlidesToolActivated;
         this._eraserToolActivated = eraserToolActivated;
         this._excalidrawToolActivated = excalidrawToolActivated;
+        this._excalidrawToolDomains = excalidrawToolDomains;
 
         this._applications = applications || [];
 
@@ -173,6 +176,9 @@ class ChatConnectionManager {
     }
     get excalidrawToolIsActivated(): boolean {
         return this._excalidrawToolActivated;
+    }
+    get excalidrawToolDomains(): string[] {
+        return this._excalidrawToolDomains;
     }
     get applications(): ApplicationDefinitionInterface[] {
         return this._applications;

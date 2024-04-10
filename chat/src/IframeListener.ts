@@ -74,6 +74,7 @@ class IframeListener {
                                     iframeEvent.data.googleSlidesToolActivated,
                                     iframeEvent.data.eraserToolActivated,
                                     iframeEvent.data.excalidrawToolActivated,
+                                    iframeEvent.data.excalidrawToolDomains,
                                     iframeEvent.data.authToken,
                                     iframeEvent.data.klaxoonToolClientId,
                                     iframeEvent.data.applications

@@ -17,6 +17,7 @@ import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
 import {
     ENABLE_OPENID,
     ERASER_ENABLED,
+    EXCALIDRAW_DOMAINS,
     EXCALIDRAW_ENABLED,
     GOOGLE_DOCS_ENABLED,
     GOOGLE_DRIVE_ENABLED,
@@ -41,16 +42,16 @@ import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import { hasCapability } from "./Capabilities";
 
-const defautlIntegrationAppName = [
-    "Klaxoon",
-    "Youtube",
-    "Google Drive",
-    "Google Docs",
-    "Google Sheets",
-    "Google Slides",
-    "Eraser",
-    "Excalidraw",
-];
+const enum defautlNativeIntegrationAppName {
+    KLAXOON = "Klaxoon",
+    YOUTUBE = "Youtube",
+    GOOGLE_DRIVE = "Google Drive",
+    GOOGLE_DOCS = "Google Docs",
+    GOOGLE_SHEETS = "Google Sheets",
+    GOOGLE_SLIDES = "Google Slides",
+    ERASER = "Eraser",
+    EXCALIDRAW = "Excalidraw",
+}
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -72,6 +73,7 @@ class ConnectionManager {
     private _eraserToolActivated: boolean | undefined;
     private _googleDriveActivated: boolean | undefined;
     private _excalidrawToolActivated: boolean | undefined;
+    private _excalidrawToolDomains: string[] | undefined;
 
     private _applications: ApplicationDefinitionInterface[] = [];
 
@@ -98,6 +100,7 @@ class ConnectionManager {
         this.googleSlidesToolActivated = GOOGLE_SLIDES_ENABLED;
         this.eraserToolActivated = ERASER_ENABLED;
         this.excalidrawToolActivated = EXCALIDRAW_ENABLED;
+        this.excalidrawToolDomains = EXCALIDRAW_DOMAINS;
     }
 
     /**
@@ -456,33 +459,58 @@ class ConnectionManager {
             //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
             connection.roomJoinedMessageStream.subscribe((connect: OnConnectInterface) => {
                 // Set the default application integration for the room
-                const KlaxoonApp = connect.room.applications?.find((app) => app.name === "Klaxoon");
+                const KlaxoonApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.KLAXOON
+                );
                 this.klaxoonToolActivated = KlaxoonApp?.enabled ?? KLAXOON_ENABLED;
 
-                const YoutubeApp = connect.room.applications?.find((app) => app.name === "Youtube");
+                const YoutubeApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.YOUTUBE
+                );
                 this.youtubeToolActivated = YoutubeApp?.enabled ?? YOUTUBE_ENABLED;
 
-                const GoogleDriveApp = connect.room.applications?.find((app) => app.name === "Google Drive");
+                const GoogleDriveApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.GOOGLE_DRIVE
+                );
                 this.googleDriveToolActivated = GoogleDriveApp?.enabled ?? GOOGLE_DRIVE_ENABLED;
 
-                const GoogleDocsApp = connect.room.applications?.find((app) => app.name === "Google Docs");
+                const GoogleDocsApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.GOOGLE_DOCS
+                );
                 this.googleDocsToolActivated = GoogleDocsApp?.enabled ?? GOOGLE_DOCS_ENABLED;
 
-                const GoogleSheetsApp = connect.room.applications?.find((app) => app.name === "Google Sheets");
+                const GoogleSheetsApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.GOOGLE_SHEETS
+                );
                 this.googleSheetsToolActivated = GoogleSheetsApp?.enabled ?? GOOGLE_SHEETS_ENABLED;
 
-                const GoogleSlidesApp = connect.room.applications?.find((app) => app.name === "Google Slides");
+                const GoogleSlidesApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.GOOGLE_SHEETS
+                );
                 this.googleSlidesToolActivated = GoogleSlidesApp?.enabled ?? GOOGLE_SLIDES_ENABLED;
 
-                const EraserApp = connect.room.applications?.find((app) => app.name === "Eraser");
+                const EraserApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.ERASER
+                );
                 this.eraserToolActivated = EraserApp?.enabled ?? ERASER_ENABLED;
 
-                const ExcalidrawApp = connect.room.applications?.find((app) => app.name === "Excalidraw");
+                const ExcalidrawApp = connect.room.applications?.find(
+                    (app) => app.name === defautlNativeIntegrationAppName.EXCALIDRAW
+                );
                 this.excalidrawToolActivated = ExcalidrawApp?.enabled ?? EXCALIDRAW_ENABLED;
 
                 // Set other applications
                 for (const app of connect.room.applications ?? []) {
-                    if (defautlIntegrationAppName.includes(app.name)) {
+                    if (
+                        defautlNativeIntegrationAppName.KLAXOON === app.name ||
+                        defautlNativeIntegrationAppName.YOUTUBE === app.name ||
+                        defautlNativeIntegrationAppName.GOOGLE_DRIVE === app.name ||
+                        defautlNativeIntegrationAppName.GOOGLE_DOCS === app.name ||
+                        defautlNativeIntegrationAppName.GOOGLE_SHEETS === app.name ||
+                        defautlNativeIntegrationAppName.GOOGLE_SLIDES === app.name ||
+                        defautlNativeIntegrationAppName.ERASER === app.name ||
+                        defautlNativeIntegrationAppName.EXCALIDRAW === app.name
+                    ) {
                         continue;
                     }
 
@@ -723,6 +751,13 @@ class ConnectionManager {
     }
     set excalidrawToolActivated(activated: boolean | undefined) {
         this._excalidrawToolActivated = activated;
+    }
+
+    get excalidrawToolDomains(): string[] {
+        return this._excalidrawToolDomains ?? [];
+    }
+    set excalidrawToolDomains(domains: string[] | undefined) {
+        this._excalidrawToolDomains = domains;
     }
 
     get applications(): ApplicationDefinitionInterface[] {

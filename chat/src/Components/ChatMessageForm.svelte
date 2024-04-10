@@ -389,7 +389,7 @@
                 break;
             case "Excalidraw":
                 try {
-                    ExcalidrawService.validateLink(new URL(app.link));
+                    ExcalidrawService.validateLink(new URL(app.link), chatConnectionManager.excalidrawToolDomains);
                 } catch (err) {
                     if (err instanceof ExcalidrawException.ExcalidrawException) {
                         app.error = $LL.form.application.excalidraw.error();

@@ -1,15 +1,10 @@
 import { ExcalidrawException } from "./Exception/ExcalidrawException";
 
-export const validateLink = (url: URL) => {
-    if (isExcalidrawLink(url)) return true;
+export const validateLink = (url: URL, excalidrawDomains = ['excalidraw.com']) => {
+    if (isExcalidrawLink(url, excalidrawDomains)) return true;
     throw new ExcalidrawException();
 };
 
-export const isExcalidrawLink = (url: URL) => {
-    return (
-        url.hostname === "excalidraw.com" ||
-        url.hostname === "excalidraw.workadventu.re" ||
-        url.hostname === "excalidraw.staging.workadventu.re" ||
-        url.hostname === "excalidraw.workadventure.localhost"
-    );
+export const isExcalidrawLink = (url: URL, excalidrawDomains = ['excalidraw.com']) => {
+    return excalidrawDomains?.includes(url.hostname);
 };

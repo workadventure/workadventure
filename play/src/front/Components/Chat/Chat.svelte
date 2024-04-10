@@ -111,6 +111,7 @@
                                         klaxoonToolClientId: connectionManager.klaxoonToolClientId,
                                         eraserToolActivated: connectionManager.eraserToolActivated,
                                         excalidrawToolActivated: connectionManager.excalidrawToolActivated,
+                                        excalidrawToolDomains: connectionManager.excalidrawToolDomains,
                                         applications: connectionManager.applications,
                                     },
                                 },

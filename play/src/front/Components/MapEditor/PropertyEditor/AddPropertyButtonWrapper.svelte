@@ -1,10 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
-    import {
-        AreaDataPropertiesKeys,
-        EntityDataPropertiesKeys,
-        OpenWebsiteTypePropertiesKeys,
-    } from "@workadventure/map-editor";
+    import { AreaDataPropertiesKeys, EntityDataPropertiesKeys } from "@workadventure/map-editor";
     import audioSvg from "../../images/audio-white.svg";
     import youtubeSvg from "../../images/applications/icon_youtube.svg";
     import klaxoonSvg from "../../images/applications/icon_klaxoon.svg";
@@ -21,7 +17,7 @@
     import AddPropertyButton from "./AddPropertyButton.svelte";
 
     export let property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
-    export let subProperty: OpenWebsiteTypePropertiesKeys | undefined = undefined;
+    export let subProperty: string | undefined = undefined;
     export let isActive = false;
 
     const dispatch = createEventDispatcher();

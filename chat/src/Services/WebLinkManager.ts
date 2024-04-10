@@ -4,6 +4,8 @@ import { EraserService, ExcalidrawService, GoogleWorkSpaceService, YoutubeServic
 import { EMBEDLY_KEY, IFRAMELY_KEY } from "../Enum/EnvironmentVariable";
 import { HtmlUtils } from "../Utils/HtmlUtils";
 import { FileMessageManager } from "./FileMessageManager";
+import { connect } from "http2";
+import { chatConnectionManager } from "src/Connection/ChatConnectionManager";
 
 const webLinkCaches = new Map();
 
@@ -276,7 +278,7 @@ export class WebLink {
         } else if (ExcalidrawService.isExcalidrawLink(urlLink)) {
             // Return embedable Excalidraw link
             try {
-                ExcalidrawService.validateLink(urlLink);
+                ExcalidrawService.validateLink(urlLink, chatConnectionManager.excalidrawToolDomains);
                 return urlLink.toString();
             } catch (err) {
                 console.info("Excalidraw link is not embedable", err);
