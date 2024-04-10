@@ -86,15 +86,26 @@
             <p>Loading maps list...</p>
         {:then json}
             <h2>Maps list</h2>
-            <ul>
+            <table>
+                <tr>
+                    <th>
+                        WAM location
+                    </th>
+                    <th>
+                        map location
+                    </th>
+                </tr>
                 {#each Object.entries(json.maps) as [name, map]}
-                <li>
-                    <a href={"../" + name} target="_blank">{name}</a>
-                    &rarr;
-                    <a href={normalizeMapUrl(map.mapUrl, name)} target="_blank">{map.mapUrl}</a>
-                </li>
+                    <tr>
+                        <td>
+                            <a href={"../" + name} target="_blank">{name}</a>
+                        </td>
+                        <td>
+                            <a href={normalizeMapUrl(map.mapUrl, name)} target="_blank">{map.mapUrl}</a>
+                        </td>
+                    </tr>
                 {/each}
-            </ul>
+            </table>
         {:catch error}
             <p style="color: red">{error.message}</p>
         {/await}
@@ -147,5 +158,12 @@
 </main>
 
 <style>
-
+    table {
+        border-collapse: collapse;
+        text-align: left;
+    }
+    td, th {
+        padding: 0ex 1ex;
+        border: 1px solid;
+    }
 </style>
