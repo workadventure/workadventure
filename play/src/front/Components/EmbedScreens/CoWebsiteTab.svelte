@@ -2,7 +2,6 @@
     import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import CopyIcon from "../Icons/CopyIcon.svelte";
     import ExternalLinkIcon from "../Icons/ExternalLinkIcon.svelte";
-    import LoaderIcon from "../Icons/LoaderIcon.svelte";
     import XIcon from "../Icons/XIcon.svelte";
     import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
@@ -102,13 +101,13 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     class="text flex items-center px-2 rounded transition-all hover:stroke-white {active
-        ? 'text-contrast bg-white hover:bg-white/90 translate-y-2 rounded-b-none pt-1 bg-white tab justify-between'
+        ? 'text-contrast bg-white hover:bg-white/90 pt-1 bg-white tab justify-between' // translate-y-2 rounded-b-none for animation but not working inside dropdown
         : 'text-white cursor-pointer hover:bg-white/10 tab'}"
     on:click={toggleActive}
 >
-    {#if isLoading}
+    <!-- {#if isLoading}
         <img alt="icon" id="cowebsiteTabIcon" />
-    {/if}
+    {/if} -->
     <!--    {:else}
          <div class="h-6 w-6 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}">
             <LoaderIcon

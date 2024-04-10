@@ -46,7 +46,6 @@
                     startHeight = parseInt(getComputedStyle(container).height);
                     document.addEventListener("touchmove", handleMouseMove);
                     document.addEventListener("touchend", handleMouseUp);
-                    console.log(Math.floor(widthContainer / 300));
                 }
 
                 resizeBar.addEventListener("touchstart", handleMouseDown, false);
@@ -57,7 +56,6 @@
                     container.style.height = height + "px";
                     const minHeight = max([height, window.innerHeight - 600]);
                     container.style.height = minHeight + "px";
-                    initialWidth = parseInt(getComputedStyle(container).width);
                 }
 
                 const handleMouseUp = () => {
@@ -83,7 +81,6 @@
                 startWidthContainer = parseInt(getComputedStyle(container).width);
                 document.addEventListener("mousemove", handleMouseMove);
                 document.addEventListener("mouseup", handleMouseUp);
-                // console.log(Math.floor(widthContainer / 300));
             };
             resizeBar.addEventListener("mousedown", handleMouseDown);
 
@@ -114,9 +111,7 @@
 
     function handleTabMounted() {
         if (mediaQuery.matches) {
-            console.log("hello");
             totalTabsWidth += widthTabResponsive;
-            console.log("TOTAL TAB WIDTH RESPONSIVE", totalTabsWidth);
             appearDropdown();
         } else {
             totalTabsWidth += widthTab;
@@ -126,7 +121,6 @@
 
     function handleTabDestroyed() {
         if (mediaQuery.matches) {
-            console.log("hello");
             totalTabsWidth -= widthTabResponsive;
             appearDropdown();
         } else {
@@ -136,8 +130,7 @@
     }
 
     function appearDropdown() {
-        console.log("WIDTH CONTAINER ACTUALISE RESP:", startWidthContainer);
-        let div = document.getElementById("test-drop");
+        let div = document.getElementById("dropdown-container");
         if (totalTabsWidth > startWidthContainer) {
             if (div) {
                 div.classList.remove("hidden");
@@ -283,12 +276,12 @@
         </div>
     </div>
 
-    <div class="relative" id="test-drop">
-        <div id="dropdown" class="tab-drop-down bg-contrast/80 mt-4 absolute">
+    <div class="relative" id="dropdown-container">
+        <div id="dropdown" class="tab-drop-down bg-contrast/80 absolute {showDropdown ? '' : 'hidden'}">
             {#if !mediaQuery.matches}
                 {#each $coWebsites.slice(Math.floor(initialWidth / 300)) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div class="other-tab gap-x-11" on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                    <div class="" on:click={() => setActiveCowebsite(coWebsite.getId())}>
                         <CoWebsiteTab
                             on:tabMounted={handleTabMounted}
                             on:tabUnmounted={handleTabDestroyed}
@@ -302,7 +295,7 @@
             {:else}
                 {#each $coWebsites.slice(Math.floor(initialWidth / 200)) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div class="other-tab gap-x-11" on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                    <div class="" on:click={() => setActiveCowebsite(coWebsite.getId())}>
                         <CoWebsiteTab
                             on:tabMounted={handleTabMounted}
                             on:tabUnmounted={handleTabDestroyed}
@@ -352,12 +345,10 @@
     }
 
     .tab-drop-down {
+        margin-top: 8px;
+        padding-top: -48px;
         width: 300px;
-        height: 300px;
-        border-radius: 8px;
-    }
-
-    .other-tab {
+        height: auto;
         border-radius: 8px;
     }
 
@@ -383,7 +374,7 @@
 
         .tab-drop-down {
             width: 200px;
-            height: 300px;
+            height: auto;
             border-radius: 8px;
         }
     }
