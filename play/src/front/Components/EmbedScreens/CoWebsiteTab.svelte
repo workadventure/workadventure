@@ -20,10 +20,28 @@
     let cowebsiteName: string;
     let urlForFavicon = coWebsite.getUrl().toString();
     let url: string;
+    let mediaQuery = window.matchMedia("(max-width: 768px)");
 
     const dispatch = createEventDispatcher();
 
     onMount(() => {
+        if (!mediaQuery.matches) {
+            if (isJitsi) {
+                cowebsiteName = "Jitsi meeting";
+                isClosable = true;
+                isDuplicable = true;
+            } else if (isBBB) {
+                cowebsiteName = "BigBlueButton meeting";
+                isClosable = true;
+                isDuplicable = true;
+            } else {
+                cowebsiteName = coWebsite.getUrl().toString();
+                cowebsiteName = cowebsiteName.replace(/.+\/\/|www.|\..+/g, "");
+                cowebsiteName = cowebsiteName.charAt(0).toUpperCase() + cowebsiteName.slice(1);
+                isClosable = true;
+                isDuplicable = true;
+            }
+        }
         if (isJitsi) {
             const favicon = `https://s2.googleusercontent.com/s2/favicons?domain=${urlForFavicon}`;
             const cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
@@ -55,6 +73,7 @@
             isDuplicable = true;
         }
         dispatch("tabMounted");
+        console.log("tab mounted");
     });
 
     onDestroy(() => {
@@ -89,15 +108,16 @@
 >
     {#if isLoading}
         <img alt="icon" id="cowebsiteTabIcon" />
-    {:else}
-        <div class="h-6 w-6 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}">
+    {/if}
+    <!--    {:else}
+         <div class="h-6 w-6 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}">
             <LoaderIcon
                 size="24"
                 color1={active ? "stroke-contrast" : "stroke-white"}
                 color2={active ? "stroke-contrast" : "stroke-white"}
             />
         </div>
-    {/if}
+    {/if} -->
 
     <div class="flex justify-between items-center w-full">
         <div class="p-2 text-ellipsis overflow-hidden">
@@ -170,5 +190,11 @@
 <style>
     .tab {
         width: 300px;
+    }
+
+    @media (max-width: 768px) {
+        .tab {
+            width: 200px;
+        }
     }
 </style>

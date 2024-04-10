@@ -14,16 +14,12 @@
     import { ArrowDownIcon } from "svelte-feather-icons";
 
     let activeCowebsite = $coWebsites[0].getId();
-    let lastCowebsite = $coWebsites[$coWebsites.length - 1];
     let showDropdown = false;
-    let lastTabs: any[] = [];
     let tabBar: HTMLElement;
     let showArrow = false;
     let vertical = false;
     let cowebsiteContainer: HTMLElement | null;
     let container: HTMLElement;
-    let lastTab: object;
-    let widthTabBar: number;
     let resizeBar: HTMLElement;
     let startY: number;
     let startX: number;
@@ -32,13 +28,16 @@
     let startHeight: number;
     let mediaQuery = window.matchMedia("(max-width: 768px)");
     let totalTabsWidth = 0;
-    let startWidthTabBar: number;
-    let tabDropDown: HTMLElement;
+    let initialWidth: number;
+    let widthTab = 300;
+    let widthTabResponsive = 200;
 
     onMount(() => {
         if (mediaQuery.matches) {
             vertical = true;
             cowebsiteContainer = document.getElementById("cowebsites-container");
+            startWidthContainer = parseInt(getComputedStyle(container).width);
+            initialWidth = parseInt(getComputedStyle(container).width);
 
             if (cowebsiteContainer) {
                 function handleMouseDown(e: TouchEvent) {
@@ -47,6 +46,7 @@
                     startHeight = parseInt(getComputedStyle(container).height);
                     document.addEventListener("touchmove", handleMouseMove);
                     document.addEventListener("touchend", handleMouseUp);
+                    console.log(Math.floor(widthContainer / 300));
                 }
 
                 resizeBar.addEventListener("touchstart", handleMouseDown, false);
@@ -57,9 +57,11 @@
                     container.style.height = height + "px";
                     const minHeight = max([height, window.innerHeight - 600]);
                     container.style.height = minHeight + "px";
+                    initialWidth = parseInt(getComputedStyle(container).width);
                 }
 
                 const handleMouseUp = () => {
+                    appearDropdown();
                     document.removeEventListener("touchmove", handleMouseMove);
                     document.removeEventListener("touchend", handleMouseUp);
                 };
@@ -73,34 +75,28 @@
         } else {
             vertical = false;
 
-            startWidthTabBar = parseInt(getComputedStyle(tabBar).width);
+            initialWidth = parseInt(getComputedStyle(container).width);
+            startWidthContainer = parseInt(getComputedStyle(container).width);
 
             const handleMouseDown = (e: { clientX: number }) => {
                 startX = e.clientX;
-
                 startWidthContainer = parseInt(getComputedStyle(container).width);
-                startWidthTabBar = parseInt(getComputedStyle(tabBar).width);
                 document.addEventListener("mousemove", handleMouseMove);
                 document.addEventListener("mouseup", handleMouseUp);
+                // console.log(Math.floor(widthContainer / 300));
             };
             resizeBar.addEventListener("mousedown", handleMouseDown);
 
             const handleMouseMove = (e: { clientX: number }) => {
                 widthContainer = startWidthContainer - (e.clientX - startX);
                 container.style.width = widthContainer + "px";
-                // console.log("WIDTH CONTAINER :", widthContainer);
-                // console.log(Math.floor(widthContainer / 300), $coWebsites.slice(Math.floor(widthContainer / 300)));
+                initialWidth = parseInt(getComputedStyle(container).width);
 
                 const maxWidth = min([widthContainer, window.innerWidth - 350]);
                 container.style.width = maxWidth + "px";
-
-                startWidthTabBar = startWidthTabBar - (e.clientX - startX);
-                tabBar.style.width = startWidthTabBar + "px";
-                console.log("START WIDTH BAR WIDTH :", startWidthTabBar);
             };
 
             const handleMouseUp = () => {
-                handleTabResize();
                 appearDropdown();
                 document.removeEventListener("mousemove", handleMouseMove);
                 document.removeEventListener("mouseup", handleMouseUp);
@@ -117,32 +113,41 @@
     });
 
     function handleTabMounted() {
-        totalTabsWidth += 300;
-        handleTabResize();
-        appearDropdown();
-    }
-
-    function handleTabDestroyed() {
-        totalTabsWidth -= 300;
-        handleTabResize();
-        appearDropdown();
-    }
-
-    function appearDropdown() {
-        if (totalTabsWidth > startWidthTabBar) {
-            showArrow = true;
-            showDropdown = true;
+        if (mediaQuery.matches) {
+            console.log("hello");
+            totalTabsWidth += widthTabResponsive;
+            console.log("TOTAL TAB WIDTH RESPONSIVE", totalTabsWidth);
+            appearDropdown();
         } else {
-            showArrow = false;
-            showDropdown = false;
+            totalTabsWidth += widthTab;
+            appearDropdown();
         }
     }
 
-    function handleTabResize() {
-        tabDropDown = document.getElementById("dropdown")!;
-        if (totalTabsWidth > startWidthTabBar) {
-            lastCowebsite = $coWebsites[$coWebsites.length - 1];
-            lastTabs.push(lastCowebsite);
+    function handleTabDestroyed() {
+        if (mediaQuery.matches) {
+            console.log("hello");
+            totalTabsWidth -= widthTabResponsive;
+            appearDropdown();
+        } else {
+            totalTabsWidth -= widthTab;
+            appearDropdown();
+        }
+    }
+
+    function appearDropdown() {
+        console.log("WIDTH CONTAINER ACTUALISE RESP:", startWidthContainer);
+        let div = document.getElementById("test-drop");
+        if (totalTabsWidth > startWidthContainer) {
+            if (div) {
+                div.classList.remove("hidden");
+            }
+            showArrow = true;
+        } else {
+            if (div) {
+                div.classList.add("hidden");
+            }
+            showArrow = false;
         }
     }
 
@@ -153,10 +158,6 @@
 
     const subscription = coWebsites.subscribe((arr) => {
         activeCowebsite = arr[arr.length - 1]?.getId();
-    });
-
-    let subscription2 = coWebsites.subscribe((arr) => {
-        lastCowebsite = arr[arr.length - 1];
     });
 
     function toggleFullScreen() {
@@ -242,19 +243,35 @@
         {/if}
 
         <div class="grow flex tab" id="tabBar" bind:this={tabBar}>
-            {#each $coWebsites.slice(0, Math.floor(widthContainer / 300)) as coWebsite (coWebsite.getId())}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div on:click={() => setActiveCowebsite(coWebsite.getId())}>
-                    <CoWebsiteTab
-                        on:tabMounted={handleTabMounted}
-                        on:tabUnmounted={handleTabDestroyed}
-                        {coWebsite}
-                        isLoading={true}
-                        active={activeCowebsite === coWebsite.getId().toString()}
-                        on:close={() => coWebsites.remove(coWebsite)}
-                    />
-                </div>
-            {/each}
+            {#if !mediaQuery.matches}
+                {#each $coWebsites.slice(0, Math.floor(initialWidth / 300)) as coWebsite (coWebsite.getId())}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                        <CoWebsiteTab
+                            on:tabMounted={handleTabMounted}
+                            on:tabUnmounted={handleTabDestroyed}
+                            {coWebsite}
+                            isLoading={true}
+                            active={activeCowebsite === coWebsite.getId().toString()}
+                            on:close={() => coWebsites.remove(coWebsite)}
+                        />
+                    </div>
+                {/each}
+            {:else}
+                {#each $coWebsites.slice(0, Math.floor(initialWidth / 200)) as coWebsite (coWebsite.getId())}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                        <CoWebsiteTab
+                            on:tabMounted={handleTabMounted}
+                            on:tabUnmounted={handleTabDestroyed}
+                            {coWebsite}
+                            isLoading={true}
+                            active={activeCowebsite === coWebsite.getId().toString()}
+                            on:close={() => coWebsites.remove(coWebsite)}
+                        />
+                    </div>
+                {/each}
+            {/if}
         </div>
 
         <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -264,17 +281,17 @@
         >
             <FullScreenIcon />
         </div>
-
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
     </div>
 
-    <div class="relative gap-x-11">
-        {#if showDropdown}
-            <div id="dropdown" class="tab-drop-down bg-contrast/80  mt-4 absolute">
-                {#each $coWebsites.slice(Math.floor(widthContainer / 300)) as coWebsite (coWebsite.getId())}
+    <div class="relative" id="test-drop">
+        <div id="dropdown" class="tab-drop-down bg-contrast/80 mt-4 absolute">
+            {#if !mediaQuery.matches}
+                {#each $coWebsites.slice(Math.floor(initialWidth / 300)) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div class="other-tab" on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                    <div class="other-tab gap-x-11" on:click={() => setActiveCowebsite(coWebsite.getId())}>
                         <CoWebsiteTab
+                            on:tabMounted={handleTabMounted}
+                            on:tabUnmounted={handleTabDestroyed}
                             {coWebsite}
                             isLoading={true}
                             active={activeCowebsite === coWebsite.getId().toString()}
@@ -282,8 +299,22 @@
                         />
                     </div>
                 {/each}
-            </div>
-        {/if}
+            {:else}
+                {#each $coWebsites.slice(Math.floor(initialWidth / 200)) as coWebsite (coWebsite.getId())}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div class="other-tab gap-x-11" on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                        <CoWebsiteTab
+                            on:tabMounted={handleTabMounted}
+                            on:tabUnmounted={handleTabDestroyed}
+                            {coWebsite}
+                            isLoading={true}
+                            active={activeCowebsite === coWebsite.getId().toString()}
+                            on:close={() => coWebsites.remove(coWebsite)}
+                        />
+                    </div>
+                {/each}
+            {/if}
+        </div>
     </div>
 
     <div class={vertical ? "h-full ml-3 responsive-website" : "h-full object-contain ml-3"}>
@@ -347,6 +378,12 @@
 
         .responsive-website {
             width: 94%;
+            border-radius: 8px;
+        }
+
+        .tab-drop-down {
+            width: 200px;
+            height: 300px;
             border-radius: 8px;
         }
     }
