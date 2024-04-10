@@ -9,6 +9,12 @@ import { publicTestMapUrl } from './utils/urls';
 test.describe('Availability Status', () => {
     test.describe('Busy Status',()=>{
         test('should return to online status when you move',async({ page, browser,browserName },{project})=>{
+            // Skip webkit because the moving player with the keyboard doesn't work
+            if(browserName === "webkit"){
+                //eslint-disable-next-line playwright/no-skipped-test
+               test.skip();
+               return;
+           }
             const statusName = "Busy";
     
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
@@ -17,7 +23,7 @@ test.describe('Availability Status', () => {
             
 
             await Menu.clickOnStatus(page,statusName); 
-            if((browserName === "firefox" ||browserName === "webkit" ) && page.getByText(`Do you want to allow notification`).isVisible() ){
+            if((browserName === "firefox") && page.getByText(`Do you want to allow notification`).isVisible() ){
                 await  page.locator("section:has(#notificationPermission) + footer>button.outline").click();
             }
             await Menu.openStatusList(page);
@@ -249,6 +255,12 @@ test.describe('Availability Status', () => {
     })
     test.describe('Back in a moment Status',()=>{
         test('should return to online status when you move',async({ page, browser,browserName },{project})=>{
+            // Skip webkit because the moving player with the keyboard doesn't work
+            if(browserName === "webkit"){
+                //eslint-disable-next-line playwright/no-skipped-test
+                test.skip();
+                return;
+            }
             const statusName = "Back in a moment";
     
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
@@ -345,6 +357,12 @@ test.describe('Availability Status', () => {
     })
     test.describe('Do not disturb Status',()=>{
         test('should return to online status when you move',async({ page, browser,browserName },{project})=>{
+            // Skip webkit because the moving player with the keyboard doesn't work
+            if(browserName === "webkit"){
+                //eslint-disable-next-line playwright/no-skipped-test
+                test.skip();
+                return;
+            }
             const statusName = "Do not disturb";
     
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
