@@ -25,16 +25,7 @@ test.describe('Availability Status', () => {
         
         
             //move to trigger status change 
-            const positionToDiscuss = {
-                x: 2 * 32,
-                y: 2 * 32
-            };
-            if(project.name === "mobilechromium" || browserName === "webkit" ) {
-                await Menu.closeNotificationPopUp(page);
-                await Map.walkToPosition(page,positionToDiscuss.x,positionToDiscuss.y)
-            }else{
-                await Map.walkTo(page,'ArrowRight',100)
-            }
+            await Map.walkTo(page,'ArrowRight',100)
 
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
@@ -89,18 +80,7 @@ test.describe('Availability Status', () => {
 
             await Menu.clickOnStatus(page,statusName);
             //await Menu.closeNotificationPopUp(page);
- 
-            //move to trigger status change 
-            const positionToDiscuss = {
-                x: 2 * 32,
-                y: 2 * 32
-            };
-            if(project.name === "mobilechromium" ) {
-                await Menu.closeNotificationPopUp(page);
-                await Map.walkToPosition(page,positionToDiscuss.x,positionToDiscuss.y)
-            }else{
-                await Map.walkTo(page,'ArrowRight',100)
-            }
+            await Map.walkTo(page,'ArrowRight',100)
 
             await expect(page.getByAltText('Turn off webcam')).toBeVisible();
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
@@ -218,7 +198,7 @@ test.describe('Availability Status', () => {
                 
                 await page.locator('section:has(#acceptDiscussion) + footer>button.light').click();
                 await Menu.openStatusList(page);
-                await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')   
+                await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
                 await newBrowser.close();
             })
             test('should keep busy status  after refuse conversation',async({ page, browser,browserName})=>{
@@ -271,30 +251,17 @@ test.describe('Availability Status', () => {
         test('should return to online status when you move',async({ page, browser,browserName },{project})=>{
             const statusName = "Back in a moment";
     
-    
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
             await login(page, 'Alice');
-            
 
             await Menu.clickOnStatus(page,statusName);
 
             await Menu.openStatusList(page);
             
             await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
-            const positionToDiscuss = {
-                x: 2 * 32,
-                y: 2 * 32
-            };
 
-            if(project.name === "mobilechromium" || browserName === "webkit") {
-                await Menu.closeNotificationPopUp(page)
-                await Map.walkToPosition(page,positionToDiscuss.x,positionToDiscuss.y)
-            }else{
-                await Map.walkTo(page,'ArrowRight',100)
-            }
-
-            
+            await Map.walkTo(page,'ArrowRight',100)
 
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
@@ -320,10 +287,6 @@ test.describe('Availability Status', () => {
 
             await expect(page.getByAltText('Turn off webcam')).toBeHidden();
             await expect(page.getByAltText('Turn off microphone')).toBeHidden();
-            
-
-            
-
         })
 
         test('should keep same webcam and microphone config when you go back to online status',async({ page, browser,context,browserName },{project})=>{
@@ -338,10 +301,8 @@ test.describe('Availability Status', () => {
     
             await login(page, 'Alice');
             
-
             await Menu.turnOnCamera(page);
             await Menu.turnOffMicrophone(page)
-
 
             await expect(page.getByAltText('Turn off webcam')).toBeVisible();
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
@@ -349,16 +310,7 @@ test.describe('Availability Status', () => {
             await Menu.clickOnStatus(page,statusName); 
 
             //move to trigger status change 
-            const positionToDiscuss = {
-                x: 2 * 32,
-                y: 2 * 32
-            };
-            if(project.name === "mobilechromium" ) {
-                await Menu.closeNotificationPopUp(page);
-                await Map.walkToPosition(page,positionToDiscuss.x,positionToDiscuss.y)
-            }else{
-                await Map.walkTo(page,'ArrowRight',100)
-            }
+            await Map.walkTo(page,'ArrowRight',100)
 
             await expect(page.getByAltText('Turn off webcam')).toBeVisible();
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
@@ -399,8 +351,6 @@ test.describe('Availability Status', () => {
     
             await login(page, 'Alice');
             
-
-  
             await Menu.closeNotificationPopUp(page);
             await Menu.clickOnStatus(page,statusName);
             await page.waitForTimeout(500);
@@ -408,19 +358,8 @@ test.describe('Availability Status', () => {
             await Menu.openStatusList(page);
             await expect(page.getByText(statusName)).toHaveCSS('opacity','0.5')
         
-        
-            //move
-            
-            const positionToDiscuss = {
-                x: 2 * 32,
-                y: 2 * 32
-            };
-
-            if(project.name === "mobilechromium" || browserName === "webkit" ) {
-                await Map.walkToPosition(page,positionToDiscuss.x,positionToDiscuss.y)
-            }else{
-                await Map.walkTo(page,'ArrowRight',100)
-            }
+            //move to trigger status change 
+            await Map.walkTo(page,'ArrowRight',100)
 
             await expect(page.getByText("Online")).toHaveCSS('opacity','0.5')
 
@@ -436,7 +375,6 @@ test.describe('Availability Status', () => {
             await page.goto(publicTestMapUrl("tests/E2E/empty.json", "meeting"));
     
             await login(page, 'Alice');
-
 
             await Menu.turnOnCamera(page);
             await Menu.turnOnMicrophone(page);
@@ -477,16 +415,7 @@ test.describe('Availability Status', () => {
             await Menu.clickOnStatus(page,statusName); 
 
             //move to trigger status change 
-            const positionToDiscuss = {
-                x: 2 * 32,
-                y: 2 * 32
-            };
-            if(project.name === "mobilechromium" ) {
-                await Menu.closeNotificationPopUp(page);
-                await Map.walkToPosition(page,positionToDiscuss.x,positionToDiscuss.y)
-            }else{
-                await Map.walkTo(page,'ArrowRight',100)
-            }           
+            await Map.walkTo(page,'ArrowRight',100)
 
             await expect(page.getByAltText('Turn off webcam')).toBeVisible();
             await expect(page.getByAltText('Turn on microphone')).toBeVisible();
