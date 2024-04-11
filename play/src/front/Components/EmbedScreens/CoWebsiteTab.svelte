@@ -104,6 +104,7 @@
         ? 'text-contrast bg-white hover:bg-white/90 pt-1 bg-white tab justify-between' // translate-y-2 rounded-b-none for animation but not working inside dropdown
         : 'text-white cursor-pointer hover:bg-white/10 tab'}"
     on:click={toggleActive}
+    on:click={() => (active = !active)}
 >
     <!-- {#if isLoading}
         <img alt="icon" id="cowebsiteTabIcon" />
@@ -151,7 +152,7 @@
                 >
                     <ExternalLinkIcon
                         classList="h-4 w-4 aspect-ratio transition-all {active
-                            ? 'group-hover:stroke-white stroke-gray-900'
+                            ? 'group-hover:stroke-white stroke-contrast fill-transparent'
                             : 'stroke-white fill-transparent'}"
                     />
                 </div>
@@ -162,7 +163,7 @@
             >
                 <CopyIcon
                     classList="h-4 w-4 aspect-ratio transition-all {active
-                        ? 'group-hover:stroke-white stroke-gray-900'
+                        ? 'group-hover:stroke-white stroke-contrast fill-transparent'
                         : 'stroke-white fill-transparent'}"
                 />
             </div>
@@ -174,7 +175,7 @@
                 >
                     <XIcon
                         classList="h-4 w-4 aspect-ratio transition-all {active
-                            ? 'group-hover:stroke-white stroke-gray-900'
+                            ? 'group-hover:stroke-white stroke-contrast fill-transparent'
                             : 'stroke-white fill-transparent'}"
                     />
                 </div>

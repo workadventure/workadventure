@@ -226,7 +226,7 @@
         {#if showArrow}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
-                class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer {showDropdown
+                class="aspect-ratio stroke-white fill-transparent h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer {showDropdown
                     ? 'rotate-180'
                     : ''}"
                 on:click={() => (showDropdown = !showDropdown)}
