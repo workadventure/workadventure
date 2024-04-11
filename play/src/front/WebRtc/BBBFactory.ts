@@ -10,10 +10,7 @@ class BBBFactory {
             return;
         }
 
-        const allowPolicy =
-            "microphone *; camera *; display-capture *; clipboard-read *; clipboard-write *; screen-wake-lock *; fullscreen *";
-
-        const coWebsite = new BBBCoWebsite(new URL(clientURL), false, allowPolicy, undefined, false);
+        const coWebsite = new BBBCoWebsite(new URL(clientURL), false, undefined, );
         try {
             coWebsiteManager.addCoWebsiteToStore(coWebsite);
         } catch (e) {

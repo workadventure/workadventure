@@ -6,9 +6,9 @@
 
     export let actualCowebsite: BBBCoWebsite;
 
-    onMount(() => {
+    onMount(async () => {
         try {
-            screenWakeLock
+            await screenWakeLock
                 .requestWakeLock()
                 .then((release) => (actualCowebsite.screenWakeRelease = release))
                 .catch((error) => console.error(error));
@@ -36,7 +36,7 @@
 <iframe
     src={actualCowebsite.getUrl().toString()}
     frameborder="0"
-    allow="fullscreen"
+    allow="fullscreen, microphone, camera, display-capture, clipboard-read, clipboard-write, screen-wake-lock"
     title="Cowebsite"
     class="pixel bg-white h-full w-full z-index-0"
 />
