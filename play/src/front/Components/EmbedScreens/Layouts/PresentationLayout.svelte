@@ -52,9 +52,20 @@
     onMount(() => {
         resizeObserver.observe(layoutDom);
     });
+
+    // function right() {
+    //     rightMode = true;
+    // }
 </script>
 
-<div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias} class="flex flex-col">
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<div
+    id="presentation-layout"
+    bind:this={layoutDom}
+    class:full-medias={displayFullMedias}
+    class="flex flex-col"
+    on:click={() => (rightMode = !rightMode)}
+>
     {#if displayFullMedias}
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div id="full-medias" class="z-[300] relative mx-auto top-8 h-1/2 overflow-y-auto h-full">
@@ -74,7 +85,11 @@
         {/if}
     {:else}
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div class={rightMode ? "justify-end gap-x-4" : "grid grid-flow-col grid-flow-col gap-x-4 justify-center"}>
+            <div
+                class={rightMode
+                    ? "grid justify-end gap-y-4"
+                    : "grid grid-flow-col grid-flow-col gap-x-4 justify-center"}
+            >
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}
@@ -91,7 +106,11 @@
             </div>
         {/if}
         <div id="embed-left-block" class=" {$highlightedEmbedScreen ? 'block' : 'hidden'}">
-            <div id="main-embed-screen">
+            <div
+                id="main-embed-screen class={rightMode
+                    ? 'grid justify-end gap-y-4'
+                    : 'grid grid-flow-col grid-flow-col gap-x-4 justify-center'}"
+            >
                 {#if $highlightedEmbedScreen}
                     {#if $highlightedEmbedScreen.type === "streamable"}
                         {#key $highlightedEmbedScreen.embed.uniqueId}
@@ -161,7 +180,7 @@
 
     #embed-left-block {
         flex-direction: column;
-        flex: 0 0 75%;
+        // flex: 0 0 75%;
         height: 100%;
         width: 75%;
         padding-bottom: 4rem;
