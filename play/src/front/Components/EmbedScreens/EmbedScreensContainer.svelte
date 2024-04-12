@@ -5,10 +5,22 @@
     import PresentationLayout from "./Layouts/PresentationLayout.svelte";
     import MozaicLayout from "./Layouts/MozaicLayout.svelte";
     import "../../style/wa-theme/video-ui.scss";
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onMount } from "svelte";
 
     // DO for the focus mode
-    const dispatch = createEventDispatcher();
+
+    // let isBackgroundActive = false;
+
+    // function changeBackground() {
+    //     isBackgroundActive = !isBackgroundActive;
+    // }
+
+    // onMount(() => {
+    //     window.addEventListener("addFocus", changeBackground);
+    //     return () => {
+    //         window.removeEventListener("addFocus", changeBackground);
+    //     };
+    // });
 
     /*
      * Hugo :
@@ -65,15 +77,21 @@
     //     container = document.getElementById("embedScreensContainer") as HTMLDivElement;
     //     container.style.backgroundColor = "bg-contrast/80";
     // }
+
+    function focusMode() {
+        console.log("je suis dans focusMode");
+        const container = document.getElementById("embedScreensContainer") as HTMLDivElement;
+        container.style.backgroundColor = "bg-contrast/80";
+    }
 </script>
 
 <div
     id="embedScreensContainer"
-    class="group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 bg-contrast/80 flex justify-center items-center pointer-events-auto transition-all pb-7"
+    class="group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 items-center pointer-events-auto flex-col transition-all pb-7"
     style={$emoteMenuSubStore ? "padding-top:96px;" : ""}
+    on:focus={focusMode}
 >
     {#if $embedScreenLayoutStore === LayoutMode.Presentation}
-        <!-- <MozaicLayout /> -->
         <PresentationLayout />
     {:else}
         <MozaicLayout />

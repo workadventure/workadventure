@@ -11,6 +11,8 @@
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
 
+    let rightMode = false;
+
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
             /* if the co-website is closable, would like we to close it instead of unloading it?
@@ -72,7 +74,7 @@
         {/if}
     {:else}
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div class="grid gap-x-4 grid-flow-col auto-cols-auto">
+            <div class={rightMode ? "justify-end gap-x-4" : "grid grid-flow-col grid-flow-col gap-x-4 justify-center"}>
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}

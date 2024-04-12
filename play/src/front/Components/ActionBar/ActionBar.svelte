@@ -129,6 +129,14 @@
 
     const dispatch = createEventDispatcher();
 
+    function addFocus() {
+        dispatch("focus");
+    }
+
+    function rightMode() {
+        dispatch("rightMode");
+    }
+
     function screenSharingClick(): void {
         if ($silentStore) return;
         if ($requestedScreenSharingState === true) {
@@ -1146,7 +1154,7 @@
                                 <div class="p-0 m-0 list-none">
                                     <button
                                         class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
-                                        on:click={focusMode}
+                                        on:click={addFocus}
                                     >
                                         <div
                                             class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
@@ -1157,7 +1165,7 @@
                                     </button>
                                     <button
                                         class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
-                                        on:click={() => openEditSkinScene()}
+                                        on:click={rightMode}
                                     >
                                         <div
                                             class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
