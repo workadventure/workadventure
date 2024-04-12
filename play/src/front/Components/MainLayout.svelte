@@ -9,6 +9,7 @@
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
+    import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import {
         showLimitRoomModalStore,
         modalVisibilityStore,
@@ -50,6 +51,7 @@
     import Popup from "./Modal/Popup.svelte";
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
+    import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
 
     let mainLayout: HTMLDivElement;
     // export let message: string;
@@ -137,9 +139,9 @@
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
         {/if}
 
-        <!-- {#if $hasEmbedScreen}
+        {#if $hasEmbedScreen}
             <EmbedScreensContainer />
-        {/if} -->
+        {/if}
 
         {#if $uiWebsitesStore}
             <UiWebsiteContainer />

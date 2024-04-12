@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Unsubscriber } from "svelte/store";
     import { fly } from "svelte/transition";
-    import { onDestroy, onMount } from "svelte";
+    import { createEventDispatcher, onDestroy, onMount } from "svelte";
     import { writable } from "svelte/store";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
@@ -124,7 +124,10 @@
     let burgerOpen = false;
     let helpActive: string | undefined = undefined;
     let navigating = false;
+    let camMenuIsDropped = false;
     const sound = new Audio("/resources/objects/webrtc-out-button.mp3");
+
+    const dispatch = createEventDispatcher();
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -989,6 +992,7 @@
                                             {$LL.actionbar.subtitle.speaker()}
                                         </div>
                                         {#each $speakerListStore as speaker, index (index)}
+                                            <!-- svelte-ignore a11y-click-events-have-key-events -->
                                             <div
                                                 class="group flex items-center relative z-10 py-1 px-4 overflow-hidden {$speakerSelectedStore ===
                                                 speaker.deviceId
@@ -1106,6 +1110,97 @@
                                 {/if}
                             </div>
                         {/if}
+
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <div
+                            class="group/btn-menu-cam relative bg-contrast/80 backdrop-blur p-2 pr-0 last:pr-2 first:rounded-l-lg last:rounded-r-lg aspect-square hidden sm:block"
+                            on:click={() => (camMenuIsDropped = !camMenuIsDropped)}
+                        >
+                            <div
+                                class="h-12 w-12 @sm/actions:h-10 @sm/actions:w-10 @xl/actions:h-12 @xl/actions:w-12 p-1 m-0 rounded group-[.disabled]/btn-screen-share:bg-secondary hover:bg-white/10 flex items-center justify-center transition-all {$requestedScreenSharingState &&
+                                !$silentStore
+                                    ? 'bg-secondary hover:bg-danger'
+                                    : ''}"
+                            >
+                                {#if $requestedScreenSharingState && !$silentStore}
+                                    <ScreenShareOffIcon />
+                                {:else}
+                                    <ScreenShareIcon />
+                                {/if}
+                            </div>
+                            {#if helpActive === "share" || !emoteMenuSubStore}
+                                <HelpTooltip
+                                    title={$LL.actionbar.help.share.title()}
+                                    desc={$LL.actionbar.help.share.desc()}
+                                />
+                            {/if}
+                        </div>
+
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+
+                        {#if camMenuIsDropped}
+                            <div
+                                class="absolute mt-2 top-14 @xl/actions:top-16 bg-contrast/80 backdrop-blur rounded-lg py-2 w-56 left-24 text-white before:content-[''] before:absolute before:w-0 before:h-0 before:-top-[14px] before:right-6 before:border-solid before:border-8 before:border-solid before:border-transparent before:border-b-contrast/80 transition-all hidden @md/actions:block max-h-[calc(100vh-96px)] overflow-y-auto"
+                                transition:fly={{ y: 40, duration: 150 }}
+                            >
+                                <div class="p-0 m-0 list-none">
+                                    <button
+                                        class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                        on:click={focusMode}
+                                    >
+                                        <div
+                                            class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                        >
+                                            <ProfilIcon />
+                                        </div>
+                                        <div>{$LL.actionbar.profil()}</div>
+                                    </button>
+                                    <button
+                                        class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                        on:click={() => openEditSkinScene()}
+                                    >
+                                        <div
+                                            class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                        >
+                                            <Woka
+                                                userId={-1}
+                                                placeholderSrc=""
+                                                customWidth="26px"
+                                                customHeight="26px"
+                                            />
+                                        </div>
+                                        <div>{$LL.actionbar.woka()}</div>
+                                    </button>
+                                    <button
+                                        class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto"
+                                        on:click={() => openEditCompanionScene()}
+                                    >
+                                        <div
+                                            class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                        >
+                                            <Companion
+                                                userId={-1}
+                                                placeholderSrc="./static/images/default-companion.png"
+                                                width="26px"
+                                                height="26px"
+                                            />
+                                        </div>
+                                        <div>{$LL.actionbar.companion()}</div>
+                                    </button>
+                                    <button
+                                        class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto"
+                                    >
+                                        <div
+                                            class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                        >
+                                            <AchievementIcon />
+                                        </div>
+                                        <div>{$LL.actionbar.quest()}</div>
+                                    </button>
+                                </div>
+                            </div>
+                        {/if}
+
                         <!-- NAV : SCREENSHARING END -->
                     </div>
                 </div>
@@ -1214,6 +1309,7 @@
                     </div>
                 {/if}
                 {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         id="action-admin"
                         class="items-center relative transition-all hidden @lg/actions:block"
