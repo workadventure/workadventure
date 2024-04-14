@@ -3,6 +3,7 @@
     import { createEventDispatcher, onMount } from "svelte";
     import { JitsiRoomConfigData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
+    import { boolean } from "zod";
 
     const dispatch = createEventDispatcher();
 
@@ -10,6 +11,7 @@
         startWithAudioMuted: false,
         startWithVideoMuted: false,
     };
+    let jitsiRoomAdminTag = "";
 
     type JitsiRoomConfigDataKeys = "startWithAudioMuted" | "startWithVideoMuted";
 
@@ -22,9 +24,11 @@
     let currentConfig: JitsiRoomConfigData = {};
 
     onMount(() => {
+        console.log('config', config);
         currentConfig = {};
         if (config !== undefined) {
             currentConfig = structuredClone(config);
+            jitsiRoomAdminTag = config.jitsiRoomAdminTag ?? "";
         }
     });
 
@@ -50,7 +54,10 @@
         visibilityValue = false;
         let returnValue: JitsiRoomConfigData = structuredClone(currentConfig);
 
-        dispatch("change", returnValue);
+        dispatch("change", {
+            ...returnValue, 
+            jitsiRoomAdminTag: jitsiRoomAdminTag != "" ? jitsiRoomAdminTag : undefined
+        });
     }
 
     function onKeyDown(e: KeyboardEvent) {
@@ -94,6 +101,16 @@
                     {/if}
                 </div>
             {/each}
+            <div class="config-element">
+                <label class="config-element-label" for="jitsiAdminTag">
+                    {$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.jitsiRoomAdminTag()}
+                </label>
+                <input
+                    id="jitsiAdminTag"
+                    type="text"
+                    bind:value={jitsiRoomAdminTag}
+                />
+            </div>
         </div>
         <div class="action-buttons">
             <button on:click={close}>{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.cancel()}</button>
