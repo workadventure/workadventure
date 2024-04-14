@@ -22,7 +22,7 @@ export class ModeratorTagFinder {
         if (layer.type === "objectgroup") {
             for (const object of layer.objects) {
                 if (object.class === "area" || object.type === "area") {
-                    this.registerProperties(layer.properties ?? []);
+                    this.registerProperties(object.properties ?? []);
                 }
             }
         } else if (layer.type === "tilelayer") {
