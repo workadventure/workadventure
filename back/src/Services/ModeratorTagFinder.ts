@@ -1,4 +1,5 @@
 import { JitsiRoomPropertyData, WAMFileFormat } from "@workadventure/map-editor";
+import { slugifyJitsiRoomName } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
 
 export class ModeratorTagFinder {
@@ -10,6 +11,7 @@ export class ModeratorTagFinder {
     constructor(
         private map: ITiledMap,
         private parseProperty: (properties: ITiledMapProperty[]) => { mainValue: string; tagValue: string } | undefined,
+        private roomId?: string,
         private wamFileProperties?: WAMFileFormat
     ) {
         for (const layer of map.layers) {
@@ -18,7 +20,7 @@ export class ModeratorTagFinder {
         for (const tileset of map.tilesets) {
             this.findModeratorTagInTileset(tileset);
         }
-        if (wamFileProperties) {
+        if (wamFileProperties != undefined && roomId != undefined) {
             this.findModeratorTagInWamFile();
         }
     }
@@ -83,7 +85,8 @@ export class ModeratorTagFinder {
         }
         // Register the properties
         for (const jitsiRoom of jitsiRooms) {
-            this._roomModerators.set(jitsiRoom.roomName, jitsiRoom.jitsiRoomConfig.jitsiRoomAdminTag as string);
+            const jitsiRoomId = slugifyJitsiRoomName(jitsiRoom.roomName, this.roomId as string, jitsiRoom.noPrefix);
+            this._roomModerators.set(jitsiRoomId, jitsiRoom.jitsiRoomConfig.jitsiRoomAdminTag as string);
         }
     }
 }
