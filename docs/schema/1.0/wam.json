@@ -82,7 +82,21 @@
                               "type": "boolean"
                             },
                             "jitsiRoomAdminTag": {
-                              "type": "string"
+                              "anyOf": [
+                                {
+                                  "anyOf": [
+                                    {
+                                      "not": {}
+                                    },
+                                    {
+                                      "type": "string"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             }
                           },
                           "additionalProperties": false

@@ -1199,6 +1199,14 @@ export class GameRoom implements BrothersFinder {
                             editMapCommandMessage.editMapMessage.message.updateWAMSettingsMessage.message.updateMegaphoneSettingMessage;
                     }
                 }
+                if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyAreaMessage") {
+                    this.wamPromise = undefined;
+                    this.jitsiModeratorTagFinderPromise = undefined;
+                }
+                if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyEntityMessage") {
+                    this.wamPromise = undefined;
+                    this.jitsiModeratorTagFinderPromise = undefined;
+                }
                 this.dispatchRoomMessage({
                     message: {
                         $case: "editMapCommandMessage",

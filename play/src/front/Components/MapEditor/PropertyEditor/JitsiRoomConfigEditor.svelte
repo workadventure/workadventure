@@ -52,10 +52,9 @@
     function validate() {
         visibilityValue = false;
         let returnValue: JitsiRoomConfigData = structuredClone(currentConfig);
-
         dispatch("change", {
             ...returnValue,
-            jitsiRoomAdminTag: jitsiRoomAdminTag != "" ? jitsiRoomAdminTag : undefined,
+            jitsiRoomAdminTag: jitsiRoomAdminTag == "" ? null : jitsiRoomAdminTag,
         });
     }
 
