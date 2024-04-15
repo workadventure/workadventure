@@ -3,7 +3,6 @@
     import { createEventDispatcher, onMount } from "svelte";
     import { JitsiRoomConfigData } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { boolean } from "zod";
 
     const dispatch = createEventDispatcher();
 
@@ -24,7 +23,7 @@
     let currentConfig: JitsiRoomConfigData = {};
 
     onMount(() => {
-        console.log('config', config);
+        console.log("config", config);
         currentConfig = {};
         if (config !== undefined) {
             currentConfig = structuredClone(config);
@@ -55,8 +54,8 @@
         let returnValue: JitsiRoomConfigData = structuredClone(currentConfig);
 
         dispatch("change", {
-            ...returnValue, 
-            jitsiRoomAdminTag: jitsiRoomAdminTag != "" ? jitsiRoomAdminTag : undefined
+            ...returnValue,
+            jitsiRoomAdminTag: jitsiRoomAdminTag != "" ? jitsiRoomAdminTag : undefined,
         });
     }
 
@@ -105,11 +104,7 @@
                 <label class="config-element-label" for="jitsiAdminTag">
                     {$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.jitsiRoomAdminTag()}
                 </label>
-                <input
-                    id="jitsiAdminTag"
-                    type="text"
-                    bind:value={jitsiRoomAdminTag}
-                />
+                <input id="jitsiAdminTag" type="text" bind:value={jitsiRoomAdminTag} />
             </div>
         </div>
         <div class="action-buttons">

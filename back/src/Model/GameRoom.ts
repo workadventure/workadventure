@@ -803,6 +803,25 @@ export class GameRoom implements BrothersFinder {
         return this.mapPromise;
     }
 
+    private wamPromise: Promise<WAMFileFormat> | undefined;
+
+    /**
+     * Returns a promise to the WAM file.
+     * @throws LocalUrlError if the map we are trying to load is hosted on a local network
+     * @throws Error
+     */
+    private getWam(): Promise<WAMFileFormat | undefined> {
+        if (!this._wamUrl) return Promise.resolve(undefined);
+        if (!this.wamPromise) {
+            this.wamPromise = mapFetcher.fetchWamFile(
+                this._wamUrl,
+                INTERNAL_MAP_STORAGE_URL,
+                PUBLIC_MAP_STORAGE_PREFIX
+            );
+        }
+        return this.wamPromise;
+    }
+
     private variableManagerPromise: Promise<VariablesManager> | undefined;
     private variableManagerLastLoad: Date | undefined;
 
@@ -870,8 +889,8 @@ export class GameRoom implements BrothersFinder {
      */
     public async getModeratorTagForJitsiRoom(jitsiRoom: string): Promise<string | undefined> {
         if (this.jitsiModeratorTagFinderPromise === undefined) {
-            this.jitsiModeratorTagFinderPromise = this.getMap()
-                .then((map) => {
+            this.jitsiModeratorTagFinderPromise = Promise.all([this.getMap(), this.getWam()])
+                .then(([map, wam]) => {
                     return new ModeratorTagFinder(
                         map,
                         (properties: ITiledMapProperty[]): { mainValue: string; tagValue: string } | undefined => {
@@ -907,7 +926,8 @@ export class GameRoom implements BrothersFinder {
                                 };
                             }
                             return undefined;
-                        }
+                        },
+                        wam
                     );
                 })
                 .catch((e) => {

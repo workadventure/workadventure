@@ -80,6 +80,9 @@
                             },
                             "startWithVideoMuted": {
                               "type": "boolean"
+                            },
+                            "jitsiRoomAdminTag": {
+                              "type": "string"
                             }
                           },
                           "additionalProperties": false

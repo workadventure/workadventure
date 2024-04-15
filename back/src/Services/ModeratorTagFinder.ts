@@ -1,3 +1,4 @@
+import { JitsiRoomPropertyData, WAMFileFormat } from "@workadventure/map-editor";
 import { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
 
 export class ModeratorTagFinder {
@@ -8,13 +9,17 @@ export class ModeratorTagFinder {
 
     constructor(
         private map: ITiledMap,
-        private parseProperty: (properties: ITiledMapProperty[]) => { mainValue: string; tagValue: string } | undefined
+        private parseProperty: (properties: ITiledMapProperty[]) => { mainValue: string; tagValue: string } | undefined,
+        private wamFileProperties?: WAMFileFormat
     ) {
         for (const layer of map.layers) {
             this.findModeratorTagInLayer(layer);
         }
         for (const tileset of map.tilesets) {
             this.findModeratorTagInTileset(tileset);
+        }
+        if (wamFileProperties) {
+            this.findModeratorTagInWamFile();
         }
     }
 
@@ -53,6 +58,32 @@ export class ModeratorTagFinder {
                     this.registerProperties(tile.properties);
                 }
             }
+        }
+    }
+
+    // Find moderator tag in the WAM file
+    private findModeratorTagInWamFile(): void {
+        if (!this.wamFileProperties) return;
+        const jitsiRooms: JitsiRoomPropertyData[] = [];
+        // Get Area properties with type "jitsiRoomProperty"
+        for (const area of Object.values(this.wamFileProperties.areas)) {
+            const property = area.properties?.find((prop) => prop.type === "jitsiRoomProperty") as
+                | JitsiRoomPropertyData
+                | undefined;
+            if (property != undefined && property.jitsiRoomConfig.jitsiRoomAdminTag != undefined)
+                jitsiRooms.push(property);
+        }
+        // Get Entity properties with type "jitsiRoomProperty"
+        for (const entity of Object.values(this.wamFileProperties.entities)) {
+            const property = entity.properties?.find((prop) => prop.type === "jitsiRoomProperty") as
+                | JitsiRoomPropertyData
+                | undefined;
+            if (property != undefined && property.jitsiRoomConfig.jitsiRoomAdminTag != undefined)
+                jitsiRooms.push(property);
+        }
+        // Register the properties
+        for (const jitsiRoom of jitsiRooms) {
+            this._roomModerators.set(jitsiRoom.roomName, jitsiRoom.jitsiRoomConfig.jitsiRoomAdminTag as string);
         }
     }
 }
