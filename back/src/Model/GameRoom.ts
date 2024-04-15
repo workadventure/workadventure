@@ -1200,10 +1200,18 @@ export class GameRoom implements BrothersFinder {
                     }
                 }
                 if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyAreaMessage") {
+                    // If the area is modified, we need to reset the WAM and the moderator tag finder.
+                    // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
+                    // We also check if the settings like jitsi admin tag have been modified.
+                    // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
                     this.wamPromise = undefined;
                     this.jitsiModeratorTagFinderPromise = undefined;
                 }
                 if (editMapCommandMessage.editMapMessage?.message?.$case === "modifyEntityMessage") {
+                    // If the area is modified, we need to reset the WAM and the moderator tag finder.
+                    // So that the next call to getModeratorTagForJitsiRoom will reload the map and the WAM.
+                    // We also check if the settings like jitsi admin tag have been modified.
+                    // IMPROVE ME: We could imagine directly updating the jitsi admin tag in the finder moderator tag and don't have useless reloads or calls to get the WAM file.
                     this.wamPromise = undefined;
                     this.jitsiModeratorTagFinderPromise = undefined;
                 }
