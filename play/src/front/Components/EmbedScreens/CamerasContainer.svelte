@@ -6,10 +6,12 @@
 
     export let highlightedEmbedScreen: EmbedScreen | undefined;
     export let full = false;
+    let rightMode = false;
     $: clickable = !full;
 </script>
 
 <aside class:full in:fly|local={{ x: 200, duration: 100 }}>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="other-cameras overflow-visible flex content-center gap-4">
         {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
             {#if !highlightedEmbedScreen || highlightedEmbedScreen.type !== "streamable" || (highlightedEmbedScreen.type === "streamable" && highlightedEmbedScreen.embed !== peer)}
@@ -20,6 +22,3 @@
         {/each}
     </div>
 </aside>
-
-<style lang="scss">
-</style>

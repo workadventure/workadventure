@@ -106,11 +106,7 @@
             </div>
         {/if}
         <div id="embed-left-block" class=" {$highlightedEmbedScreen ? 'block' : 'hidden'}">
-            <div
-                id="main-embed-screen class={rightMode
-                    ? 'grid justify-end gap-y-4'
-                    : 'grid grid-flow-col grid-flow-col gap-x-4 justify-center'}"
-            >
+            <div id="main-embed-screen">
                 {#if $highlightedEmbedScreen}
                     {#if $highlightedEmbedScreen.type === "streamable"}
                         {#key $highlightedEmbedScreen.embed.uniqueId}
