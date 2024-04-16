@@ -48,6 +48,7 @@
     on:load={() => {
         dispatch("onImageLoad", imageElementRef);
         imageError = false;
+        imageRetry = false;
     }}
     bind:this={imageElementRef}
     on:error={() => retryImageLoading()}
