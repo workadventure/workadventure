@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { mapEditorAreaModeStore, mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
+    import { mapEditorAreaModeStore, mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
     import AreaPropertiesEditor from "./AreaPropertiesEditor.svelte";
     import AreaEditorInstructions from "./AreaEditorInstructions.svelte";
 </script>

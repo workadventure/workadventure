@@ -4,30 +4,31 @@
         AreaDataProperties,
         AreaDataPropertiesKeys,
         AreaDataProperty,
-        OpenWebsiteTypePropertiesKeys,
         PersonalAreaAccessClaimMode,
+        OpenWebsitePropertyData,
         PlayAudioPropertyData,
     } from "@workadventure/map-editor";
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
     import { IconChevronDown, IconChevronRight } from "@tabler/icons-svelte";
+    import { ApplicationDefinitionInterface } from "@workadventure/messages";
     import { v4 as uuid } from "uuid";
-    import { LL } from "../../../i18n/i18n-svelte";
-    import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
-    import { FEATURE_FLAG_BROADCAST_AREAS } from "../../Enum/EnvironmentVariable";
-    import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { connectionManager } from "../../Connection/ConnectionManager";
-    import JitsiRoomPropertyEditor from "./PropertyEditor/JitsiRoomPropertyEditor.svelte";
-    import PlayAudioPropertyEditor from "./PropertyEditor/PlayAudioPropertyEditor.svelte";
-    import OpenWebsitePropertyEditor from "./PropertyEditor/OpenWebsitePropertyEditor.svelte";
-    import FocusablePropertyEditor from "./PropertyEditor/FocusablePropertyEditor.svelte";
-    import SilentPropertyEditor from "./PropertyEditor/SilentPropertyEditor.svelte";
-    import SpeakerMegaphonePropertyEditor from "./PropertyEditor/SpeakerMegaphonePropertyEditor.svelte";
-    import ListenerMegaphonePropertyEditor from "./PropertyEditor/ListenerMegaphonePropertyEditor.svelte";
-    import StartPropertyEditor from "./PropertyEditor/StartPropertyEditor.svelte";
-    import ExitPropertyEditor from "./PropertyEditor/ExitPropertyEditor.svelte";
-    import AddPropertyButtonWrapper from "./PropertyEditor/AddPropertyButtonWrapper.svelte";
-    import PersonalAreaPropertyEditor from "./PropertyEditor/PersonalAreaPropertyEditor.svelte";
-    import RightsPropertyEditor from "./PropertyEditor/RightsPropertyEditor.svelte";
+    import { LL } from "../../../../i18n/i18n-svelte";
+    import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
+    import { FEATURE_FLAG_BROADCAST_AREAS } from "../../../Enum/EnvironmentVariable";
+    import { analyticsClient } from "../../../Administration/AnalyticsClient";
+    import { connectionManager } from "../../../Connection/ConnectionManager";
+    import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
+    import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
+    import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
+    import FocusablePropertyEditor from "../PropertyEditor/FocusablePropertyEditor.svelte";
+    import SilentPropertyEditor from "../PropertyEditor/SilentPropertyEditor.svelte";
+    import SpeakerMegaphonePropertyEditor from "../PropertyEditor/SpeakerMegaphonePropertyEditor.svelte";
+    import ListenerMegaphonePropertyEditor from "../PropertyEditor/ListenerMegaphonePropertyEditor.svelte";
+    import StartPropertyEditor from "../PropertyEditor/StartPropertyEditor.svelte";
+    import ExitPropertyEditor from "../PropertyEditor/ExitPropertyEditor.svelte";
+    import AddPropertyButtonWrapper from "../PropertyEditor/AddPropertyButtonWrapper.svelte";
+    import PersonalAreaPropertyEditor from "../PropertyEditor/PersonalAreaPropertyEditor.svelte";
+    import RightsPropertyEditor from "../PropertyEditor/RightsPropertyEditor.svelte";
 
     let properties: AreaDataProperties = [];
     let areaName = "";
@@ -67,10 +68,7 @@
         }
     });
 
-    function getPropertyFromType(
-        type: AreaDataPropertiesKeys,
-        subtype?: OpenWebsiteTypePropertiesKeys
-    ): AreaDataProperty {
+    function getPropertyFromType(type: AreaDataPropertiesKeys, subtype?: string): AreaDataProperty {
         const id = uuid();
         let placeholder: string;
         let policy: string | undefined;
@@ -132,6 +130,9 @@
                     case "eraser":
                         placeholder = "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU";
                         break;
+                    case "excalidraw":
+                        placeholder = "https://excalidraw.workadventu.re/";
+                        break;
                     default:
                         placeholder = "https://workadventu.re";
                         break;
@@ -145,6 +146,8 @@
                     hideButtonLabel: true,
                     application: subtype ?? "website",
                     placeholder,
+                    allowAPI: false,
+                    forceNewTab: false,
                     policy,
                 };
             case "playAudio":
@@ -200,7 +203,7 @@
         selectedAreaPreviewUnsubscriber();
     });
 
-    function onAddProperty(type: AreaDataPropertiesKeys, subtype?: OpenWebsiteTypePropertiesKeys) {
+    function onAddProperty(type: AreaDataPropertiesKeys, subtype?: string) {
         if ($mapEditorSelectedAreaPreviewStore) {
             analyticsClient.addMapEditorProperty("area", type || "unknown");
             const property = getPropertyFromType(type, subtype);
@@ -215,6 +218,33 @@
             properties = $mapEditorSelectedAreaPreviewStore.getProperties();
             refreshFlags();
         }
+    }
+
+    function onAddSpecificProperty(app: ApplicationDefinitionInterface) {
+        if (!$mapEditorSelectedAreaPreviewStore) return;
+        analyticsClient.addMapEditorProperty("entity", app.name);
+        const property: OpenWebsitePropertyData = {
+            id: crypto.randomUUID(),
+            type: "openWebsite",
+            application: app.name,
+            closable: true,
+            buttonLabel: app.name,
+            link: "",
+            newTab: false,
+            placeholder: app.description,
+            label: app.name,
+            policy: app.policy,
+            icon: app.image,
+            regexUrl: app.regexUrl,
+            targetEmbedableUrl: app.targetUrl,
+            forceNewTab: app.forceNewTab,
+            allowAPI: app.allowAPI,
+        };
+        $mapEditorSelectedAreaPreviewStore.addProperty(property);
+
+        // refresh properties
+        properties = $mapEditorSelectedAreaPreviewStore.getProperties();
+        refreshFlags();
     }
 
     function onDeleteProperty(id: string) {
@@ -286,26 +316,16 @@
     }
 
     function openKlaxoonActivityPicker(app: AreaDataProperty) {
-        if (
-            !connectionManager.currentRoom?.klaxoonToolClientId ||
-            app.type !== "openWebsite" ||
-            app.application !== "klaxoon"
-        ) {
+        if (!connectionManager.klaxoonToolClientId || app.type !== "openWebsite" || app.application !== "klaxoon") {
             console.info("openKlaxoonActivityPicker: app is not a klaxoon app");
             return;
         }
-        KlaxoonService.openKlaxoonActivityPicker(
-            connectionManager.currentRoom?.klaxoonToolClientId,
-            (payload: KlaxoonEvent) => {
-                app.link = KlaxoonService.getKlaxoonEmbedUrl(
-                    new URL(payload.url),
-                    connectionManager.currentRoom?.klaxoonToolClientId
-                );
-                app.poster = payload.imageUrl ?? undefined;
-                app.buttonLabel = payload.title ?? undefined;
-                onUpdateProperty(app);
-            }
-        );
+        KlaxoonService.openKlaxoonActivityPicker(connectionManager.klaxoonToolClientId, (payload: KlaxoonEvent) => {
+            app.link = KlaxoonService.getKlaxoonEmbedUrl(new URL(payload.url), connectionManager.klaxoonToolClientId);
+            app.poster = payload.imageUrl ?? undefined;
+            app.buttonLabel = payload.title ?? undefined;
+            onUpdateProperty(app);
+        });
     }
 
     // Fixme: this is a hack to force the map editor to update the property
@@ -322,6 +342,20 @@
     {$LL.mapEditor.areaEditor.editInstructions()}
 {:else}
     <div class="tw-overflow-auto">
+        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+            {#if !hasPersonalAreaProperty && !hasRightsProperty}
+                <AddPropertyButtonWrapper
+                    property="personalAreaPropertyData"
+                    on:click={() => onAddProperty("personalAreaPropertyData")}
+                />
+            {/if}
+            {#if !hasPersonalAreaProperty && !hasRightsProperty}
+                <AddPropertyButtonWrapper
+                    property="restrictedRightsPropertyData"
+                    on:click={() => onAddProperty("restrictedRightsPropertyData")}
+                />
+            {/if}
+        </div>
         <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
             {#if !hasFocusableProperty}
                 <AddPropertyButtonWrapper
@@ -395,20 +429,8 @@
                     onAddProperty("openWebsite");
                 }}
             />
-            {#if !hasPersonalAreaProperty && !hasRightsProperty}
-                <AddPropertyButtonWrapper
-                    property="personalAreaPropertyData"
-                    on:click={() => onAddProperty("personalAreaPropertyData")}
-                />
-            {/if}
-            {#if !hasPersonalAreaProperty && !hasRightsProperty}
-                <AddPropertyButtonWrapper
-                    property="restrictedRightsPropertyData"
-                    on:click={() => onAddProperty("restrictedRightsPropertyData")}
-                />
-            {/if}
         </div>
-        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
             <AddPropertyButtonWrapper
                 property="openWebsite"
                 subProperty="klaxoon"
@@ -458,6 +480,24 @@
                     onAddProperty("openWebsite", "eraser");
                 }}
             />
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty="excalidraw"
+                on:click={() => {
+                    onAddProperty("openWebsite", "excalidraw");
+                }}
+            />
+        </div>
+        <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-mt-2">
+            {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
+                <AddPropertyButtonWrapper
+                    property="openWebsite"
+                    subProperty={app.name}
+                    on:click={() => {
+                        onAddSpecificProperty(app);
+                    }}
+                />
+            {/each}
         </div>
         <div class="area-name-container">
             <label for="objectName">{$LL.mapEditor.areaEditor.nameLabel()}</label>

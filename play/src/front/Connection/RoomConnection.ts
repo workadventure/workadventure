@@ -6,6 +6,7 @@ import {
     AddSpaceUserMessage,
     AnswerMessage,
     apiVersionHash,
+    ApplicationMessage,
     AskMutedMessage,
     AskMutedVideoMessage,
     AskMuteMicrophoneMessage,
@@ -528,12 +529,17 @@ export class RoomConnection implements RoomConnection {
                     mapEditorActivated.set(ENABLE_MAP_EDITOR && this.canEdit);
 
                     // If there are scripts from the admin, run it
+                    const applications: ApplicationMessage[] = [];
                     if (roomJoinedMessage.applications != undefined) {
-                        for (const script of roomJoinedMessage.applications) {
-                            iframeListener.registerScript(script.script).catch((err) => {
+                        roomJoinedMessage.applications.forEach((application, index) => {
+                            if (application.script == undefined) {
+                                applications.push(application);
+                                return;
+                            }
+                            iframeListener.registerScript(application.script).catch((err) => {
                                 console.error("roomJoinedMessage => registerScript => err", err);
                             });
-                        }
+                        });
                     }
 
                     const characterTextures = roomJoinedMessage.characterTextures.map(
@@ -551,6 +557,7 @@ export class RoomConnection implements RoomConnection {
                             commandsToApply,
                             webrtcUserName: roomJoinedMessage.webrtcUserName,
                             webrtcPassword: roomJoinedMessage.webrtcPassword,
+                            applications: applications,
                         } as RoomJoinedMessageInterface,
                     });
 

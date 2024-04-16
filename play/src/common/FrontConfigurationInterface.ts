@@ -56,4 +56,6 @@ export interface FrontConfigurationInterface {
     PEER_SCREEN_SHARE_RECOMMENDED_BANDWIDTH: number;
     GOOGLE_DRIVE_PICKER_CLIENT_ID: string | undefined;
     GOOGLE_DRIVE_PICKER_APP_ID: string | undefined;
+    EXCALIDRAW_ENABLED: boolean;
+    EXCALIDRAW_DOMAINS: string[];
 }

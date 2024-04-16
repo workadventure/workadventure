@@ -81,6 +81,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             errorInvalidUrl: 'Njepłaśeca URL. Wóna musy se zachopiś z "http://" oder "https://".',
             findOutMoreHere: "How zgónijośo wěcej",
             openPickerSelector: "Wuzwóleński wuběraŕ wótcyniś",
+            forcedInNewTab: "W nowem woknje wótcyniś",
         },
         advancedOptions: "Rozšyrjone opcije",
         speakerMegaphoneProperties: {

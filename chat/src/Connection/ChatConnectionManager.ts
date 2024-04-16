@@ -1,4 +1,4 @@
-import { XmppSettingsMessage } from "@workadventure/messages";
+import { ApplicationDefinitionInterface, XmppSettingsMessage } from "@workadventure/messages";
 import { KlaxoonService } from "@workadventure/shared-utils";
 import { get } from "svelte/store";
 import Debug from "debug";
@@ -24,6 +24,10 @@ class ChatConnectionManager {
     private _googleSheetsToolActivated = false;
     private _googleSlidesToolActivated = false;
     private _eraserToolActivated = false;
+    private _excalidrawToolActivated = false;
+    private _excalidrawToolDomains: string[] = [];
+
+    private _applications: ApplicationDefinitionInterface[] = [];
 
     constructor() {
         this.uuid = "";
@@ -40,8 +44,11 @@ class ChatConnectionManager {
         googleSheetsToolActivated: boolean,
         googleSlidesToolActivated: boolean,
         eraserToolActivated: boolean,
+        excalidrawToolActivated: boolean,
+        excalidrawToolDomains: string[],
         authToken?: string,
-        klaxoonToolClientId?: string
+        klaxoonToolClientId?: string,
+        applications?: ApplicationDefinitionInterface[]
     ) {
         debug("chatConnectionManager => initUser");
         this.uuid = uuid;
@@ -58,6 +65,10 @@ class ChatConnectionManager {
         this._googleSheetsToolActivated = googleSheetsToolActivated;
         this._googleSlidesToolActivated = googleSlidesToolActivated;
         this._eraserToolActivated = eraserToolActivated;
+        this._excalidrawToolActivated = excalidrawToolActivated;
+        this._excalidrawToolDomains = excalidrawToolDomains;
+
+        this._applications = applications || [];
 
         this.start();
     }
@@ -162,6 +173,15 @@ class ChatConnectionManager {
     }
     get eraserToolIsActivated(): boolean {
         return this._eraserToolActivated;
+    }
+    get excalidrawToolIsActivated(): boolean {
+        return this._excalidrawToolActivated;
+    }
+    get excalidrawToolDomains(): string[] {
+        return this._excalidrawToolDomains;
+    }
+    get applications(): ApplicationDefinitionInterface[] {
+        return this._applications;
     }
 }
 export const chatConnectionManager = new ChatConnectionManager();

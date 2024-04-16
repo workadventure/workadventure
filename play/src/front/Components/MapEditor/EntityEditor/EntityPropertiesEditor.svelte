@@ -4,10 +4,10 @@
         EntityDataPropertiesKeys,
         EntityDataProperty,
         EntityDescriptionPropertyData,
-        OpenWebsiteTypePropertiesKeys,
     } from "@workadventure/map-editor";
     import { onDestroy } from "svelte";
     import { ArrowLeftIcon } from "svelte-feather-icons";
+    import { ApplicationDefinitionInterface } from "@workadventure/messages";
     import {
         mapEditorEntityModeStore,
         mapEditorSelectedEntityPrefabStore,
@@ -19,6 +19,7 @@
     import JitsiRoomPropertyEditor from "../PropertyEditor/JitsiRoomPropertyEditor.svelte";
     import PlayAudioPropertyEditor from "../PropertyEditor/PlayAudioPropertyEditor.svelte";
     import OpenWebsitePropertyEditor from "../PropertyEditor/OpenWebsitePropertyEditor.svelte";
+    import { connectionManager } from "../../../Connection/ConnectionManager";
 
     let properties: EntityDataProperties = [];
     let entityName = "";
@@ -47,7 +48,7 @@
         }
     });
 
-    function onAddProperty(type: EntityDataPropertiesKeys, subtype?: OpenWebsiteTypePropertiesKeys) {
+    function onAddProperty(type: EntityDataPropertiesKeys, subtype?: string) {
         if ($mapEditorSelectedEntityStore) {
             analyticsClient.addMapEditorProperty("entity", type || "unknown");
             const property = getPropertyFromType(type, subtype);
@@ -57,6 +58,33 @@
             properties = $mapEditorSelectedEntityStore?.getProperties();
             refreshFlags();
         }
+    }
+
+    function onAddSpecificProperty(app: ApplicationDefinitionInterface) {
+        if (!$mapEditorSelectedEntityStore) return;
+        analyticsClient.addMapEditorProperty("entity", app.name);
+        const property: EntityDataProperty = {
+            id: crypto.randomUUID(),
+            type: "openWebsite",
+            application: app.name,
+            closable: true,
+            buttonLabel: app.name,
+            link: "",
+            newTab: false,
+            placeholder: app.description,
+            label: app.name,
+            policy: app.policy,
+            icon: app.image,
+            regexUrl: app.regexUrl,
+            targetEmbedableUrl: app.targetUrl,
+            forceNewTab: app.forceNewTab,
+            allowAPI: app.allowAPI,
+        };
+        $mapEditorSelectedEntityStore.addProperty(property);
+
+        // refresh properties
+        properties = $mapEditorSelectedEntityStore?.getProperties();
+        refreshFlags();
     }
 
     function onUpdateName() {
@@ -97,10 +125,7 @@
         }
     }
 
-    function getPropertyFromType(
-        type: EntityDataPropertiesKeys,
-        subtype?: OpenWebsiteTypePropertiesKeys
-    ): EntityDataProperty {
+    function getPropertyFromType(type: EntityDataPropertiesKeys, subtype?: string): EntityDataProperty {
         const id = crypto.randomUUID();
         let placeholder: string;
         let buttonLabel: string;
@@ -150,6 +175,10 @@
                         placeholder = "https://app.eraser.io/workspace/ExSd8Z4wPsaqMMgTN4VU";
                         buttonLabel = $LL.mapEditor.properties.eraserProperties.label();
                         break;
+                    case "excalidraw":
+                        placeholder = "https://excalidraw.workadventu.re/";
+                        buttonLabel = $LL.mapEditor.properties.excalidrawProperties.label();
+                        break;
                     default:
                         placeholder = "https://workadventu.re";
                         buttonLabel = $LL.mapEditor.properties.linkProperties.label();
@@ -163,6 +192,8 @@
                     newTab: false,
                     application: subtype ?? "website",
                     placeholder,
+                    forceNewTab: false,
+                    allowAPI: false,
                     policy,
                 };
             case "playAudio":
@@ -246,7 +277,7 @@
             }}
         />
     </div>
-    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap">
+    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-m-2">
         <AddPropertyButtonWrapper
             property="openWebsite"
             subProperty="klaxoon"
@@ -296,6 +327,24 @@
                 onAddProperty("openWebsite", "eraser");
             }}
         />
+        <AddPropertyButtonWrapper
+            property="openWebsite"
+            subProperty="excalidraw"
+            on:click={() => {
+                onAddProperty("openWebsite", "excalidraw");
+            }}
+        />
+    </div>
+    <div class="properties-buttons tw-flex tw-flex-row tw-flex-wrap tw-m-2">
+        {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
+            <AddPropertyButtonWrapper
+                property="openWebsite"
+                subProperty={app.name}
+                on:click={() => {
+                    onAddSpecificProperty(app);
+                }}
+            />
+        {/each}
     </div>
     <div class="entity-name-container">
         <label for="objectName">{$LL.mapEditor.entityEditor.objectName()}</label>

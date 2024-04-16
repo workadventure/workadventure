@@ -87,6 +87,7 @@ const mapEditor: BaseTranslation = {
             errorInvalidUrl: 'Please enter a valid URL (starting with "https://")',
             findOutMoreHere: "Find out more here",
             openPickerSelector: "Open picker selector",
+            forcedInNewTab: "Forced in new tab",
         },
         advancedOptions: "Advanced Options",
         speakerMegaphoneProperties: {
@@ -186,6 +187,12 @@ const mapEditor: BaseTranslation = {
             allowedUser: "Allowed user",
             owner: "Owner",
             revokeAccess: "Revoke access",
+        },
+        excalidrawProperties: {
+            label: "Open Excalidraw",
+            description: "An open source virtual hand-drawn style whiteboard. Collaborative and end-to-end encrypted.",
+            error: "Please enter a valid Excalidraw URL",
+            disabled: "Excalidraw integration is disabled.",
         },
     },
     areaEditor: {

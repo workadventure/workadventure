@@ -36,7 +36,7 @@ class AreaEditor {
       .locator(
         ".map-editor .sidebar .properties-container select#speakerZoneSelector"
       )
-      .selectOption({ label: name });
+      .selectOption({ label: name.toLowerCase() });
   }
 
   async setAreaName(page: Page, name: string) {

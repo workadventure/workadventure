@@ -128,6 +128,11 @@ export const EnvironmentVariables = z.object({
     GOOGLE_SHEETS_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
     GOOGLE_SLIDES_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
     ERASER_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
+    EXCALIDRAW_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
+    EXCALIDRAW_DOMAINS: z
+        .string()
+        .optional()
+        .transform((val) => toArray(val)),
     EMBEDDED_DOMAINS_WHITELIST: z
         .string()
         .optional()

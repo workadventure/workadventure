@@ -3,6 +3,7 @@
     import { ArrowLeftIcon, ChevronDownIcon, ChevronUpIcon } from "svelte-feather-icons";
     import { onMount } from "svelte";
     import { fly } from "svelte/transition";
+    import { OpenWebsitePropertyData } from "@workadventure/map-editor";
     import { LL } from "../../../i18n/i18n-svelte";
     import visioSvg from "../images/loupe.svg";
     import ExplorerImg from "../images/explorer.svg";
@@ -19,6 +20,7 @@
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import { ExplorerTool } from "../../Phaser/Game/MapEditor/Tools/ExplorerTool";
     import AddPropertyButtonWrapper from "../MapEditor/PropertyEditor/AddPropertyButtonWrapper.svelte";
+    import { connectionManager } from "../../Connection/ConnectionManager";
 
     let filter = "";
     let selectFilters = writable<Array<string>>(new Array<string>());
@@ -49,7 +51,12 @@
             } else {
                 // Check if the entity has the selected properties
                 for (let filter of $selectFilters) {
-                    if (entity.getProperties().find((p) => p.type === filter)) $entitessListFiltered.set(key, entity);
+                    if (
+                        entity
+                            .getProperties()
+                            .find((p) => p.type === filter || (p as OpenWebsitePropertyData).application === filter)
+                    )
+                        $entitessListFiltered.set(key, entity);
                 }
             }
         }
@@ -68,7 +75,12 @@
                 } else {
                     // Check if the area has the selected properties
                     for (let filter of $selectFilters) {
-                        if (area.getProperties().find((p) => p.type === filter)) $areasListFiltered.set(key, area);
+                        if (
+                            area
+                                .getProperties()
+                                .find((p) => p.type === filter || (p as OpenWebsitePropertyData).application === filter)
+                        )
+                            $areasListFiltered.set(key, area);
                     }
                 }
             }
@@ -217,6 +229,14 @@
 
             <div class="tw-flex tw-flex-row tw-overflow-y-hidden tw-overflow-x-scroll">
                 <AddPropertyButtonWrapper
+                    property="personalAreaPropertyData"
+                    on:click={() => addFilter("personalAreaPropertyData")}
+                />
+                <AddPropertyButtonWrapper
+                    property="restrictedRightsPropertyData"
+                    on:click={() => addFilter("restrictedRightsPropertyData")}
+                />
+                <AddPropertyButtonWrapper
                     property="jitsiRoomProperty"
                     isActive={$selectFilters.includes("jitsiRoomProperty")}
                     on:click={() => {
@@ -272,6 +292,16 @@
                         addFilter("focusable");
                     }}
                 />
+
+                {#each connectionManager.applications as app, index (`my-own-app-${index}`)}
+                    <AddPropertyButtonWrapper
+                        property="openWebsite"
+                        subProperty={app.name}
+                        on:click={() => {
+                            addFilter(app.name);
+                        }}
+                    />
+                {/each}
             </div>
 
             <!-- svelte-ignore a11y-click-events-have-key-events -->

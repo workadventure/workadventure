@@ -78,21 +78,14 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
         .default("fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture")
         .optional(),
     position: z.number().optional(),
-    application: z
-        .union([
-            z.literal("website"),
-            z.literal("youtube"),
-            z.literal("klaxoon"),
-            z.literal("googleDrive"),
-            z.literal("googleDocs"),
-            z.literal("googleSheets"),
-            z.literal("googleSlides"),
-            z.literal("googleForms"),
-            z.literal("eraser"),
-        ])
-        .default("website"),
+    application: z.string().default("website"),
     poster: z.string().optional(),
     placeholder: z.string().optional(),
+    icon: z.string().optional(),
+    label: z.string().optional(),
+    regexUrl: z.string().optional(),
+    targetEmbedableUrl: z.string().optional(),
+    forceNewTab: z.boolean().optional().default(false),
 });
 
 export const SpeakerMegaphonePropertyData = PropertyBase.extend({
@@ -330,16 +323,6 @@ export type EntityCoordinates = z.infer<typeof EntityCoordinates>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
 export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite";
-export type OpenWebsiteTypePropertiesKeys =
-    | "website"
-    | "youtube"
-    | "klaxoon"
-    | "googleDrive"
-    | "googleDocs"
-    | "googleSheets"
-    | "googleSlides"
-    | "googleForms"
-    | "eraser";
 export type AreaCoordinates = z.infer<typeof AreaCoordinates>;
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;

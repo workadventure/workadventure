@@ -182,17 +182,6 @@
                         },
                         "application": {
                           "type": "string",
-                          "enum": [
-                            "website",
-                            "youtube",
-                            "klaxoon",
-                            "googleDrive",
-                            "googleDocs",
-                            "googleSheets",
-                            "googleSlides",
-                            "googleForms",
-                            "eraser"
-                          ],
                           "default": "website"
                         },
                         "poster": {
@@ -200,6 +189,22 @@
                         },
                         "placeholder": {
                           "type": "string"
+                        },
+                        "icon": {
+                          "type": "string"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "regexUrl": {
+                          "type": "string"
+                        },
+                        "targetEmbedableUrl": {
+                          "type": "string"
+                        },
+                        "forceNewTab": {
+                          "type": "boolean",
+                          "default": false
                         }
                       },
                       "required": [

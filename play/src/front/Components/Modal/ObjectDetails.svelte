@@ -3,8 +3,9 @@
     import { Unsubscriber, writable } from "svelte/store";
     import {
         AreaDataPropertiesKeys,
+        AreaDataProperty,
         EntityDataPropertiesKeys,
-        OpenWebsiteTypePropertiesKeys,
+        EntityDataProperty,
     } from "@workadventure/map-editor";
     import { fly } from "svelte/transition";
     import { mapEditorModeStore, mapExplorationObjectSelectedStore } from "../../Stores/MapEditorStore";
@@ -19,7 +20,7 @@
     // Create type for component AddPropertyButton
     type AddPropertyButtonType = {
         property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
-        subProperty?: OpenWebsiteTypePropertiesKeys;
+        subProperty?: string;
     };
 
     let iconProperties = writable<Map<string, AddPropertyButtonType>>(new Map());
@@ -73,16 +74,30 @@
         let newIconProperties = new Map<string, AddPropertyButtonType>();
         if ($mapExplorationObjectSelectedStore instanceof Entity) {
             for (const value of $mapExplorationObjectSelectedStore.getProperties()) {
-                newIconProperties.set(value.id, { property: value.type as EntityDataPropertiesKeys });
+                newIconProperties.set(value.id, createPropertyData(value));
             }
         }
 
         if ($mapExplorationObjectSelectedStore instanceof AreaPreview) {
             for (const value of $mapExplorationObjectSelectedStore.getAreaData().properties.values()) {
-                newIconProperties.set(value.id, { property: value.type });
+                console.log(value);
+                newIconProperties.set(value.id, createPropertyData(value));
             }
         }
         iconProperties.set(newIconProperties);
+        console.log($iconProperties);
+    }
+
+    function createPropertyData(value: EntityDataProperty | AreaDataProperty): AddPropertyButtonType {
+        console.log("createPropertyData", value);
+        const property: AddPropertyButtonType = {
+            property: value.type as EntityDataPropertiesKeys,
+            subProperty: undefined,
+        };
+        if (value.type === "openWebsite" && value.application !== undefined) {
+            property.subProperty = value.application;
+        }
+        return property;
     }
 
     function close() {

@@ -52,7 +52,17 @@ message CharacterTextureMessage {
 
 message ApplicationMessage {
   string name = 1;
-  string script = 2;
+  optional string script = 2;
+  optional string doc = 3;
+  optional string description = 4;
+  optional string image = 5;
+  optional bool enabled = 6;
+  optional string regexUrl = 7;
+  optional string targetUrl = 8;
+  optional bool default = 9;
+  optional bool forceNewTab = 10;
+  optional bool allowAPI = 11;
+  optional string policy = 12;
 }
 
 message CompanionTextureMessage {

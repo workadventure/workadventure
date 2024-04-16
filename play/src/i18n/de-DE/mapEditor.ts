@@ -80,6 +80,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             warningEmbeddableLink: "Dieser Link kann nicht eingebettet werden.",
             errorInvalidUrl: 'Ungültige URL. Es muss mit "http://" oder "https://" beginnen.',
             findOutMoreHere: "Hier erfahren Sie mehr",
+            openPickerSelector: "Auswählen",
+            forcedInNewTab: "In neuem Tab öffnen",
         },
         advancedOptions: "Erweiterte Optionen",
         speakerMegaphoneProperties: {

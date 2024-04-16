@@ -134,6 +134,9 @@ services:
       GOOGLE_DOCS_ENABLED: "$GOOGLE_DOCS_ENABLED"
       GOOGLE_SHEETS_ENABLED: "$GOOGLE_SHEETS_ENABLED"
       GOOGLE_SLIDES_ENABLED: "$GOOGLE_SLIDES_ENABLED"
+      ERASER_ENABLED: "$ERASER_ENABLED"
+      EXCALIDRAW_ENABLED: "$EXCALIDRAW_ENABLED"
+      EXCALIDRAW_DOMAINS: "$EXCALIDRAW_DOMAINS"
       EMBEDDED_DOMAINS_WHITELIST: "$EMBEDDED_DOMAINS_WHITELIST"
       # Report issues menu
       ACTIVE_REPORT_ISSUES_MENU: "true"
@@ -145,6 +148,9 @@ services:
       # Google drive picker
       GOOGLE_DRIVE_PICKER_CLIENT_ID: "$GOOGLE_DRIVE_PICKER_CLIENT_ID"
       GOOGLE_DRIVE_PICKER_APP_ID: "$GOOGLE_DRIVE_PICKER_APP_ID"
+      # oEmbed providers
+      EMBEDLY_KEY: "$EMBEDLY_KEY"
+      IFRAMELY_KEY: "$IFRAMELY_KEY"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"
@@ -170,6 +176,7 @@ services:
       PUSHER_URL: http://play.workadventure.localhost
       UPLOADER_URL: http://uploader.workadventure.localhost
       EMBEDLY_KEY: "$EMBEDLY_KEY"
+      IFRAMELY_KEY: "$IFRAMELY_KEY"
       ICON_URL: http://icon.workadventure.localhost
       EJABBERD_DOMAIN: $EJABBERD_DOMAIN
       EJABBERD_WS_URI: ws://xmpp.workadventure.localhost:5443/ws

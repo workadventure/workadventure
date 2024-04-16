@@ -74,6 +74,7 @@ export const defaultUserData: UserData = {
     googleSheetsToolActivated: false,
     googleSlidesToolActivated: false,
     eraserToolActivated: false,
+    excalidrawToolActivated: false,
 };
 
 export class AbstractRoom {

@@ -11,6 +11,7 @@
     import googleSheetsSvg from "../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../images/applications/icon_google_slides.svg";
     import eraserSvg from "../images/applications/icon_eraser.svg";
+    import excalidrawSvg from "../images/applications/icon_excalidraw.svg";
     import { emoteMenuSubStore } from "../../Stores/EmoteStore";
     import { helpSettingsPopupBlockedStore } from "../../Stores/HelpSettingsPopupBlockedStore";
     import { connectionManager } from "../../Connection/ConnectionManager";
@@ -29,26 +30,23 @@
     }
 
     function klaxoonButtonHandler() {
-        if (!connectionManager.currentRoom?.klaxoonToolClientId) return;
-        KlaxoonService.openKlaxoonActivityPicker(
-            connectionManager.currentRoom?.klaxoonToolClientId,
-            (payload: KlaxoonEvent) => {
-                if (!payload.url) return;
-                const openNewTab = window.open(payload.url, "_blank");
-                if (!openNewTab || openNewTab.closed || typeof openNewTab.closed == "undefined") {
-                    helpSettingsPopupBlockedStore.set(true);
-                }
+        if (!connectionManager.klaxoonToolClientId) return;
+        KlaxoonService.openKlaxoonActivityPicker(connectionManager.klaxoonToolClientId, (payload: KlaxoonEvent) => {
+            if (!payload.url) return;
+            const openNewTab = window.open(payload.url, "_blank");
+            if (!openNewTab || openNewTab.closed || typeof openNewTab.closed == "undefined") {
+                helpSettingsPopupBlockedStore.set(true);
             }
-        );
+        });
     }
 
     function oneApplicationIsActivated() {
         return (
-            connectionManager.currentRoom?.klaxoonToolActivated ||
-            connectionManager.currentRoom?.googleDocsToolActivated ||
-            connectionManager.currentRoom?.googleSheetsToolActivated ||
-            connectionManager.currentRoom?.googleSlidesToolActivated ||
-            connectionManager.currentRoom?.eraserToolActivated
+            connectionManager.klaxoonToolActivated ||
+            connectionManager.googleDocsToolActivated ||
+            connectionManager.googleSheetsToolActivated ||
+            connectionManager.googleSlidesToolActivated ||
+            connectionManager.eraserToolActivated
         );
     }
 
@@ -102,7 +100,7 @@
         style="margin-bottom: 4.5rem; height: auto;"
     >
         <div class="bottom-action-bar">
-            {#if connectionManager.currentRoom?.klaxoonToolActivated}
+            {#if connectionManager.klaxoonToolActivated}
                 <div class="bottom-action-section tw-flex animate">
                     <div class="tw-transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.klaxoonProperties.label()} />
@@ -112,7 +110,7 @@
                                 appMenuOpened = false;
                             }}
                             id={`button-app-klaxoon`}
-                            disabled={!connectionManager.currentRoom?.klaxoonToolActivated}
+                            disabled={!connectionManager.klaxoonToolActivated}
                         >
                             <img draggable="false" src={klaxoonImg} style="padding: 2px" alt="Klaxoon" />
                         </button>
@@ -120,7 +118,7 @@
                 </div>
             {/if}
             <div class="bottom-action-section tw-flex animate">
-                {#if connectionManager.currentRoom?.googleDocsToolActivated}
+                {#if connectionManager.googleDocsToolActivated}
                     <div class="tw-transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleDocsProperties.label()} />
                         <button
@@ -129,13 +127,13 @@
                                 appMenuOpened = false;
                             }}
                             id={`button-app-klaxoon`}
-                            disabled={!connectionManager.currentRoom?.googleDocsToolActivated}
+                            disabled={!connectionManager.googleDocsToolActivated}
                         >
-                            <img draggable="false" src={googleDocsSvg} style="padding: 2px" alt="Klaxoon" />
+                            <img draggable="false" src={googleDocsSvg} style="padding: 2px" alt="Goodle Doc" />
                         </button>
                     </div>
                 {/if}
-                {#if connectionManager.currentRoom?.googleSheetsToolActivated}
+                {#if connectionManager.googleSheetsToolActivated}
                     <div class="tw-transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleSheetsProperties.label()} />
                         <button
@@ -144,13 +142,13 @@
                                 appMenuOpened = false;
                             }}
                             id={`button-app-klaxoon`}
-                            disabled={!connectionManager.currentRoom?.googleSheetsToolActivated}
+                            disabled={!connectionManager.googleSheetsToolActivated}
                         >
-                            <img draggable="false" src={googleSheetsSvg} style="padding: 2px" alt="Klaxoon" />
+                            <img draggable="false" src={googleSheetsSvg} style="padding: 2px" alt="Google Sheet" />
                         </button>
                     </div>
                 {/if}
-                {#if connectionManager.currentRoom?.googleSlidesToolActivated}
+                {#if connectionManager.googleSlidesToolActivated}
                     <div class="tw-transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.googleSlidesProperties.label()} />
                         <button
@@ -159,13 +157,13 @@
                                 appMenuOpened = false;
                             }}
                             id={`button-app-klaxoon`}
-                            disabled={!connectionManager.currentRoom?.googleSlidesToolActivated}
+                            disabled={!connectionManager.googleSlidesToolActivated}
                         >
-                            <img draggable="false" src={googleSlidesSvg} style="padding: 2px" alt="Klaxoon" />
+                            <img draggable="false" src={googleSlidesSvg} style="padding: 2px" alt="Google Slide" />
                         </button>
                     </div>
                 {/if}
-                {#if connectionManager.currentRoom?.eraserToolActivated}
+                {#if connectionManager.eraserToolActivated}
                     <div class="tw-transition-all bottom-action-button">
                         <Tooltip text={$LL.mapEditor.properties.eraserProperties.label()} />
                         <button
@@ -174,9 +172,24 @@
                                 appMenuOpened = false;
                             }}
                             id={`button-app-klaxoon`}
-                            disabled={!connectionManager.currentRoom?.eraserToolActivated}
+                            disabled={!connectionManager.eraserToolActivated}
                         >
-                            <img draggable="false" src={eraserSvg} style="padding: 2px" alt="Klaxoon" />
+                            <img draggable="false" src={eraserSvg} style="padding: 2px" alt="Eraser" />
+                        </button>
+                    </div>
+                {/if}
+                {#if connectionManager.excalidrawToolActivated}
+                    <div class="tw-transition-all bottom-action-button">
+                        <Tooltip text={$LL.mapEditor.properties.excalidrawProperties.label()} />
+                        <button
+                            on:click={() => {
+                                window.open(`https://excalidraw.com`, "_blanck");
+                                appMenuOpened = false;
+                            }}
+                            id={`button-app-klaxoon`}
+                            disabled={!connectionManager.excalidrawToolActivated}
+                        >
+                            <img draggable="false" src={excalidrawSvg} style="padding: 2px" alt="Excalidraw" />
                         </button>
                     </div>
                 {/if}
