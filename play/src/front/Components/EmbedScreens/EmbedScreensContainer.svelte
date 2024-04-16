@@ -7,6 +7,8 @@
     import "../../style/wa-theme/video-ui.scss";
     import { createEventDispatcher, onMount } from "svelte";
 
+    let rightMode = false;
+
     // DO for the focus mode
 
     // let isBackgroundActive = false;
@@ -85,6 +87,7 @@
     }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     id="embedScreensContainer"
     class="group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 items-center pointer-events-auto flex-col transition-all pb-7"

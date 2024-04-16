@@ -59,13 +59,7 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div
-    id="presentation-layout"
-    bind:this={layoutDom}
-    class:full-medias={displayFullMedias}
-    class="flex flex-col"
-    on:click={() => (rightMode = !rightMode)}
->
+<div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias}>
     {#if displayFullMedias}
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div id="full-medias" class="z-[300] relative mx-auto top-8 h-1/2 overflow-y-auto h-full">
@@ -73,7 +67,7 @@
                     <Loading />
                 {/if}
                 {#if $streamableCollectionStore.size > 0}
-                    <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
+                    <CamerasContainer full={true} rightMode={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
                 {/if}
                 {#if $myCameraStore && $proximityMeetingStore === true}
                     <MyCamera />
@@ -85,16 +79,12 @@
         {/if}
     {:else}
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div
-                class={rightMode
-                    ? "grid justify-end gap-y-4"
-                    : "grid grid-flow-col grid-flow-col gap-x-4 justify-center"}
-            >
+            <div class={rightMode ? "grid gay-y-4 justify-end" : "grid grid-flow-col gap-x-4 justify-center"}>
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}
                 {#if $streamableCollectionStore.size > 0}
-                    <CamerasContainer highlightedEmbedScreen={$highlightedEmbedScreen} />
+                    <CamerasContainer full={true} rightMode={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
                 {/if}
                 {#if $myCameraStore}
                     <!-- && !$megaphoneEnabledStore TODO HUGO -->
