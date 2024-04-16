@@ -1,20 +1,11 @@
-/// <reference types="@playwright/test" />
-/// <reference path="../node_modules/@workadventure/iframe-api-typings/iframe_api.d.ts" />
-
-import {expect, test, webkit} from '@playwright/test';
+import {expect, test} from '@playwright/test';
 import Menu from "./utils/menu";
 import {hideNoCamera, login} from "./utils/roles";
 import MapEditor from "./utils/mapeditor";
-import Megaphone from "./utils/map-editor/megaphone";
 import AreaEditor from "./utils/map-editor/areaEditor";
-import EntityEditor from "./utils/map-editor/entityEditor";
-import Exploration from "./utils/map-editor/exploration";
 import Map from "./utils/map";
-import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import {resetWamMaps} from "./utils/map-editor/uploader";
 import {evaluateScript} from "./utils/scripting";
-import {map_storage_url} from "./utils/urls";
-import { ActionMessage } from '@workadventure/iframe-api-typings';
 
 test.describe('Scripting chat functions', () => {
     test('can catch event to enter and to leave one area created by the map editor ', async ({ page, browser, request, browserName }, { project }) => {
@@ -42,11 +33,13 @@ test.describe('Scripting chat functions', () => {
         // Move the player to the area
         await evaluateScript(page, async () => {
             await WA.onInit();
-            let triggerMessage: ActionMessage|undefined;
+            let triggerMessage;
             WA.room.area.onEnter('MyStartZone').subscribe(() => {
                 triggerMessage = WA.ui.displayActionMessage({
                     message: "Entered the area name: MyStartZone",
-                    callback: () => {}
+                    callback: () => {
+                        console.info("Message clicked");
+                    }
                 });
             });
 
