@@ -224,43 +224,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         });
     }
 
-    public getEntities(): Map<string, Entity> {
-        return this.entities;
-    }
-
-    public getActivatableEntities(): Entity[] {
-        return this.activatableEntities;
-    }
-
-    public getPointerOverEntityObservable(): Observable<Entity> {
-        return this.pointerOverEntitySubject.asObservable();
-    }
-
-    public getPointerOutEntityObservable(): Observable<Entity> {
-        return this.pointerOutEntitySubject.asObservable();
-    }
-
-    public clearProperties(): void {
-        this.properties.clear();
-    }
-
-    public close() {
-        this.actionsMenuStoreUnsubscriber();
-        this.gameSceneIsLoadedStoreUnsubscriber();
-    }
-
-    public setAllEntitiesPointedToEditColor(color: number) {
-        for (const entity of this.entities.values()) {
-            entity.setPointedToEditColor(color);
-        }
-    }
-
-    public removeAllEntitiesPointedToEditColor() {
-        for (const entity of this.entities.values()) {
-            entity.removePointedToEditColor();
-        }
-    }
-
     private bindEventHandlers(): void {
         this.ctrlKey?.on("down", () => {
             if (!this.scene.input.activePointer.leftButtonDown()) {
@@ -403,19 +366,31 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         });
         entity.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
             this.pointerOverEntitySubject.next(entity);
-            if (get(mapEditorModeStore) && this.isEntityEditorToolActive()) {
+            if (get(mapEditorModeStore)) {
                 if (!entity.canEdit) {
                     return;
                 }
-                entity.setPointedToEditColor(this.isTrashEditorToolActive() ? 0xff0000 : 0x00ff00);
-                this.scene.markDirty();
+                if (this.isEntityEditorToolActive()) {
+                    entity.setPointedToEditColor(this.isTrashEditorToolActive() ? 0xff0000 : 0x00ff00);
+                    this.scene.markDirty();
+                }
+                if (this.isExplorerToolActive()) {
+                    entity.setPointedToEditColor(0xf9e82d);
+                    this.scene.markDirty();
+                }
             }
         });
         entity.on(Phaser.Input.Events.POINTER_OUT, () => {
             this.pointerOutEntitySubject.next(entity);
-            if (get(mapEditorModeStore) && this.isEntityEditorToolActive()) {
-                entity.removePointedToEditColor();
-                this.scene.markDirty();
+            if (get(mapEditorModeStore)) {
+                if (this.isEntityEditorToolActive()) {
+                    entity.removePointedToEditColor();
+                    this.scene.markDirty();
+                }
+                if (this.isExplorerToolActive()) {
+                    entity.setPointedToEditColor(0x000000);
+                    this.scene.markDirty();
+                }
             }
         });
     }
@@ -470,5 +445,44 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     private isTrashEditorToolActive(): boolean {
         return get(mapEditorSelectedToolStore) === EditorToolName.TrashEditor;
+    }
+
+    private isExplorerToolActive(): boolean {
+        return get(mapEditorSelectedToolStore) === EditorToolName.ExploreTheRoom;
+    }
+
+    public getEntities(): Map<string, Entity> {
+        return this.entities;
+    }
+
+    public getActivatableEntities(): Entity[] {
+        return this.activatableEntities;
+    }
+
+    public getPointerOverEntityObservable(): Observable<Entity> {
+        return this.pointerOverEntitySubject.asObservable();
+    }
+
+    public getPointerOutEntityObservable(): Observable<Entity> {
+        return this.pointerOutEntitySubject.asObservable();
+    }
+
+    public clearProperties(): void {
+        this.properties.clear();
+    }
+
+    public close() {
+        this.actionsMenuStoreUnsubscriber();
+    }
+
+    public setAllEntitiesPointedToEditColor(color: number) {
+        for (const entity of this.entities.values()) {
+            entity.setPointedToEditColor(color);
+        }
+    }
+    public removeAllEntitiesPointedToEditColor() {
+        for (const entity of this.entities.values()) {
+            entity.removePointedToEditColor();
+        }
     }
 }

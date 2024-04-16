@@ -29,6 +29,7 @@ export const FocusablePropertyData = PropertyBase.extend({
 export const JitsiRoomConfigData = z.object({
     startWithAudioMuted: z.boolean().optional(),
     startWithVideoMuted: z.boolean().optional(),
+    jitsiRoomAdminTag: z.string().optional().nullable(),
 });
 
 export const SilentPropertyData = PropertyBase.extend({

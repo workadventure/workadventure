@@ -57,6 +57,9 @@ export class AreasPropertiesListener {
             // analytics event for area
             analyticsClient.enterAreaMapEditor(area.id, area.name);
 
+            // Send event to enter in the area
+            iframeListener.sendEnterAreaEvent(area.name);
+
             if (!area.properties) {
                 continue;
             }
@@ -114,7 +117,9 @@ export class AreasPropertiesListener {
             // analytics event for area
             analyticsClient.leaveAreaMapEditor(area.id, area.name);
 
-            //Init mapEditor store value
+            // Send event to leave the area
+            iframeListener.sendLeaveAreaEvent(area.name);
+
             if (!area.properties) {
                 continue;
             }

@@ -51,6 +51,7 @@ const mapEditor: BaseTranslation = {
                 addConfig: "Add an option",
                 startWithAudioMuted: "Start with microphone muted",
                 startWithVideoMuted: "Start with video closed",
+                jitsiRoomAdminTag: "Moderator tag for the meeting room",
                 cancel: "Cancel",
                 validate: "Validate",
             },

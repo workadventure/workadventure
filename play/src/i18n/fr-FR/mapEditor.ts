@@ -52,6 +52,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 addConfig: "Ajouter une option",
                 startWithAudioMuted: "Démarrer avec le microphone désactivé",
                 startWithVideoMuted: "Démarrer avec la vidéo désactivée",
+                jitsiRoomAdminTag: "Tag modérateur du meeting",
                 cancel: "Annuler",
                 validate: "Valider",
             },
