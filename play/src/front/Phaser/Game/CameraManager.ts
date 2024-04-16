@@ -211,7 +211,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         }
     }
 
-    public startFollowPlayer(player: Player, duration = 0): void {
+    public startFollowPlayer(player: Player, duration = 0, targetZoomLevel: number | undefined = undefined): void {
         this.playerToFollow = player;
         this.setCameraMode(CameraMode.Follow);
         if (duration === 0) {
@@ -220,6 +220,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             return;
         }
         const oldPos = { x: this.camera.scrollX, y: this.camera.scrollY };
+        const startZoomModifier = this.waScaleManager.zoomModifier;
         this.startFollowTween = this.scene.tweens.addCounter({
             from: 0,
             to: 1,
@@ -234,6 +235,10 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 const shiftY =
                     (this.playerToFollow.y - this.camera.worldView.height * 0.5 - oldPos.y) * tween.getValue();
                 this.camera.setScroll(oldPos.x + shiftX, oldPos.y + shiftY);
+                if (targetZoomLevel !== undefined) {
+                    this.waScaleManager.zoomModifier =
+                        (targetZoomLevel - startZoomModifier) * tween.getValue() + startZoomModifier;
+                }
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             },
             onComplete: () => {
@@ -378,22 +383,54 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         };
     }
 
-    private explorationMouseIsActive = false;
     // Create function to define the camera on exploration mode. The camera can be moved anywhere on the map. The camera is not locked on the player. The camera can be zoomed in and out. The camera can be moved with the mouse. The camera can be moved with the keyboard. The camera can be moved with the touchpad.
     public setExplorationMode(): void {
         this.cameraLocked = false;
         this.stopFollow();
         this.setCameraMode(CameraMode.Exploration);
-        this.scene.cameras.main.setBounds(
-            -this.cameraBounds.x,
-            -this.cameraBounds.y,
-            this.cameraBounds.x * 3,
-            this.cameraBounds.y * 3,
-            true
-        );
+
+        const { width: mapWidth, height: mapHeight } = this.getMapSize();
+
+        this.scene.cameras.main.setBounds(-mapWidth, -mapHeight, mapWidth * 3, mapHeight * 3, false);
 
         // Center the camera on the player
-        this.scene.cameras.main.centerOn(this.scene.CurrentPlayer.x, this.scene.CurrentPlayer.y);
+        //this.scene.cameras.main.centerOn(this.scene.CurrentPlayer.x, this.scene.CurrentPlayer.y);
+
+        const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(mapWidth, mapHeight);
+        this.waScaleManager.maxZoomOut = targetZoomModifier;
+
+        this.triggerMaxZoomOutAnimation();
+    }
+
+    private getMapSize(): { width: number; height: number } {
+        const map = this.scene.getGameMapFrontWrapper().getMap();
+
+        if (
+            map.width === undefined ||
+            map.height === undefined ||
+            map.tilewidth === undefined ||
+            map.tileheight === undefined
+        ) {
+            throw new Error("Map width, height, tilewidth or tileheight is undefined");
+        }
+
+        return {
+            width: map.width * map.tilewidth,
+            height: map.height * map.tileheight,
+        };
+    }
+
+    public triggerMaxZoomOutAnimation(): void {
+        const currentZoomModifier = this.waScaleManager.zoomModifier;
+        const { width: mapWidth, height: mapHeight } = this.getMapSize();
+        const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(mapWidth, mapHeight);
+
+        this.camera.pan(mapWidth / 2, mapHeight / 2, 1000, Easing.SineEaseOut, true, (camera, progress, x, y) => {
+            this.waScaleManager.zoomModifier =
+                (targetZoomModifier - currentZoomModifier) * progress + currentZoomModifier;
+            this.scene.markDirty();
+            this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
+        });
     }
 
     public goToEntity(entity: Entity): void {
