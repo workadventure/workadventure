@@ -5,7 +5,6 @@ import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { HdpiManager } from "./HdpiManager";
 import ScaleManager = Phaser.Scale.ScaleManager;
 
-export const MAX_ZOOM_OUT_EXPLORER_MODE = 0.4;
 export const INITIAL_ZOOM_OUT_EXPLORER_MODE = 1;
 
 export enum WaScaleManagerEvent {
@@ -121,7 +120,15 @@ export class WaScaleManager {
     }
 
     public set zoomModifier(zoomModifier: number) {
-        this.setZoomModifier(zoomModifier);
+        let camera = undefined;
+        // Let's attempt to get the camera
+        for (const scene of this.game.scene.getScenes(true)) {
+            if (scene.cameras.main) {
+                camera = scene.cameras.main;
+            }
+        }
+
+        this.setZoomModifier(zoomModifier, camera);
     }
 
     public setZoomModifier(zoomModifier: number, camera?: Phaser.Cameras.Scene2D.Camera): void {
@@ -133,7 +140,7 @@ export class WaScaleManager {
         if (zoomFactor > 1 && this.zoomModifier * zoomFactor - this.zoomModifier > 0.1)
             this.setZoomModifier(this.zoomModifier * 1.1, camera);
         else if (zoomFactor < 1 && this.zoomModifier - this.zoomModifier * zoomFactor > 0.1)
-            this.setZoomModifier(this.zoomModifier * 0.9, camera);
+            this.setZoomModifier(this.zoomModifier / 1.1, camera);
         else this.setZoomModifier(this.zoomModifier * zoomFactor, camera);
 
         if (this.focusTarget) {
