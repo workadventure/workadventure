@@ -10,6 +10,7 @@
         startWithAudioMuted: false,
         startWithVideoMuted: false,
     };
+    let jitsiRoomAdminTag = "";
 
     type JitsiRoomConfigDataKeys = "startWithAudioMuted" | "startWithVideoMuted";
 
@@ -22,9 +23,11 @@
     let currentConfig: JitsiRoomConfigData = {};
 
     onMount(() => {
+        console.log("config", config);
         currentConfig = {};
         if (config !== undefined) {
             currentConfig = structuredClone(config);
+            jitsiRoomAdminTag = config.jitsiRoomAdminTag ?? "";
         }
     });
 
@@ -49,8 +52,10 @@
     function validate() {
         visibilityValue = false;
         let returnValue: JitsiRoomConfigData = structuredClone(currentConfig);
-
-        dispatch("change", returnValue);
+        dispatch("change", {
+            ...returnValue,
+            jitsiRoomAdminTag: jitsiRoomAdminTag == "" ? null : jitsiRoomAdminTag,
+        });
     }
 
     function onKeyDown(e: KeyboardEvent) {
@@ -94,6 +99,12 @@
                     {/if}
                 </div>
             {/each}
+            <div class="config-element">
+                <label class="config-element-label" for="jitsiAdminTag">
+                    {$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.jitsiRoomAdminTag()}
+                </label>
+                <input id="jitsiAdminTag" type="text" bind:value={jitsiRoomAdminTag} />
+            </div>
         </div>
         <div class="action-buttons">
             <button on:click={close}>{$LL.mapEditor.properties.jitsiProperties.jitsiRoomConfig.cancel()}</button>
