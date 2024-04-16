@@ -202,14 +202,15 @@ export class MetaTagsBuilder {
 
     constructor(private url: string) {}
 
-    public async getMeta(userAgent: string): Promise<RequiredMetaTagsData> {
+    public async getMeta(userAgent: string | undefined): Promise<RequiredMetaTagsData> {
         if (ADMIN_API_URL) {
             const metaTags = await this.getMetaFromAdmin();
             if (metaTags) {
                 return { ...MetaTagsDefaultValue, ...metaTags };
             }
         }
-        // Let's only populate the metadata for bots. For normal users, this is useless and it wastes time
+        userAgent = userAgent || "";
+        // Let's only populate the metadata for bots. For normal users, this is useless, and it wastes time
         // downloading the map from the Pusher.
         userAgent = userAgent.toLowerCase();
         // "bot" covers Twitter and Google

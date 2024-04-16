@@ -1109,7 +1109,7 @@ export class SocketManager implements ZoneEventListener {
         const socketData = client.getUserData();
         if (!socketData.canEdit) {
             Sentry.captureException(
-                new Error(`Security esception, the client try to update the map: ${JSON.stringify(socketData)}`)
+                new Error(`Security exception, the client tried to update the map: ${JSON.stringify(socketData)}`)
             );
             // Emit error message
             socketData.emitInBatch({

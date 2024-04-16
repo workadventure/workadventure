@@ -255,7 +255,7 @@ export class SimplePeer {
             this.closeScreenSharingConnection(userId);
 
             // Close the ask dialog by user ID
-            askDialogStore.colseDialogByUserId(peer.userUuid);
+            askDialogStore.closeDialogByUserId(peer.userUuid);
         } catch (err) {
             console.error("An error occurred in closeConnection", err);
         }
