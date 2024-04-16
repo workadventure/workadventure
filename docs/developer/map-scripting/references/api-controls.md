@@ -104,9 +104,9 @@ WA.controls.disableMapEditor(): void
 WA.controls.restoreMapEditor(): void
 ```
 
-These 2 methods can be used to completely disable map editor and to enable them again.
+These 2 methods can be used to completely disable map editor and to enable it again.
 
-When map editor are disabled, the user cannot open the map editor and tools associated.
+When the map editor is disabled, the user cannot open the map editor and the tools associated.
 
 Example:
 
@@ -127,9 +127,9 @@ WA.controls.disableScreenSharing(): void
 WA.controls.restoreScreenSharing(): void
 ```
 
-These 2 methods can be used to completely disable screen sharing and to enable them again.
+These 2 methods can be used to completely disable screen sharing and to enable it again.
 
-When screen sharing are disabled, the user cannot share any screen in the meeting zone.
+When screen sharing is disabled, the user cannot share any screen in the meeting zone.
 
 Example:
 
@@ -150,9 +150,9 @@ WA.controls.disableWheelZoom(): void
 WA.controls.restoreWheelZoom(): void
 ```
 
-This feature allows or not users to zoom in or out of the map using the mouse wheel.
+This feature allows or disables the use of zoom in and zoom out using the mouse wheel.
 
-To enable or diable the wheel zoom feature, you can use the following code:
+To enable or disable the wheel zoom feature, you can use the following code:
 
 Example:
 
@@ -172,9 +172,10 @@ WA.controls.disableWheelZoom(): void
 WA.controls.restoreWheelZoom(): void
 ```
 
-These 2 methods can be used to completely disable right click and to enable them again.
+These 2 methods can be used to completely disable right click and to enable it again.
 
-When right click are disabled, the user cannot move on the right clicked zone.
+When right click is disabled, the user cannot move using the mouse by right clicking on the destination. It also disables
+moving with a "tap" on the screen in mobile mode.
 
 Example:
 
@@ -195,7 +196,7 @@ WA.controls.disableInviteButton(): void
 WA.controls.restoreInviteButton(): void
 ```
 
-These 2 methods can be used to completely disable invite button and to enable them again.
+These 2 methods can be used to completely disable invite button and to enable it again.
 
 Example:
 

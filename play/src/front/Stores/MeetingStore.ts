@@ -48,7 +48,7 @@ function createAskDialogStore() {
             askDialogs.delete(askDialog);
             set(askDialogs);
         },
-        colseDialogByUserId: (userId: string) => {
+        closeDialogByUserId: (userId: string) => {
             const askDialogs = get(askDialogStore);
             // find the askDialog with the userId
             const askDialog = Array.from(askDialogs).find((askDialog) => askDialog.userId === userId);
