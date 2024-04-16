@@ -327,16 +327,28 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         });
         entity.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
             this.pointerOverEntitySubject.next(entity);
-            if (get(mapEditorModeStore) && this.isEntityEditorToolActive()) {
-                entity.setPointedToEditColor(this.isTrashEditorToolActive() ? 0xff0000 : 0x00ff00);
-                this.scene.markDirty();
+            if (get(mapEditorModeStore)) {
+                if (this.isEntityEditorToolActive()) {
+                    entity.setPointedToEditColor(this.isTrashEditorToolActive() ? 0xff0000 : 0x00ff00);
+                    this.scene.markDirty();
+                }
+                if (this.isExplorerToolActive()) {
+                    entity.setPointedToEditColor(0xf9e82d);
+                    this.scene.markDirty();
+                }
             }
         });
         entity.on(Phaser.Input.Events.POINTER_OUT, () => {
             this.pointerOutEntitySubject.next(entity);
-            if (get(mapEditorModeStore) && this.isEntityEditorToolActive()) {
-                entity.removePointedToEditColor();
-                this.scene.markDirty();
+            if (get(mapEditorModeStore)) {
+                if (this.isEntityEditorToolActive()) {
+                    entity.removePointedToEditColor();
+                    this.scene.markDirty();
+                }
+                if (this.isExplorerToolActive()) {
+                    entity.setPointedToEditColor(0x000000);
+                    this.scene.markDirty();
+                }
             }
         });
     }
@@ -391,6 +403,10 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     private isTrashEditorToolActive(): boolean {
         return get(mapEditorSelectedToolStore) === EditorToolName.TrashEditor;
+    }
+
+    private isExplorerToolActive(): boolean {
+        return get(mapEditorSelectedToolStore) === EditorToolName.ExploreTheRoom;
     }
 
     public getEntities(): Map<string, Entity> {

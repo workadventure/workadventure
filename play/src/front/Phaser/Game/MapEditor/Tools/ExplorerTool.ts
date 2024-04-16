@@ -109,6 +109,16 @@ export class ExplorerTool implements MapEditorTool {
 
         this.scene.markDirty();
     };
+    private pointerOverHandler = (gameObject: AreaPreview) => {
+        if (gameObject.strokeColor === 0xf9e82d) return;
+        gameObject.setStrokeStyle(2, 0xf9e82d);
+        this.scene.markDirty();
+    };
+    private pointerOutHandler = (gameObject: AreaPreview) => {
+        if (gameObject.strokeColor === 0x000000) return;
+        gameObject.setStrokeStyle(2, 0x000000);
+        this.scene.markDirty();
+    };
 
     constructor(private mapEditorModeManager: MapEditorModeManager) {
         this.scene = gameManager.getCurrentGameScene();
@@ -289,7 +299,16 @@ export class ExplorerTool implements MapEditorTool {
             } else {
                 areaPreview = this.createAndSaveAreaPreview(config);
             }
+            areaPreview.on(Phaser.Input.Events.POINTER_OVER, () => {
+                this.pointerOverHandler(areaPreview as AreaPreview);
+            });
+            areaPreview.on(Phaser.Input.Events.POINTER_OUT, () => {
+                this.pointerOutHandler(areaPreview as AreaPreview);
+            });
             areaPreviews.set(key, areaPreview);
+
+            // Set the initial stroke color to edit color
+            areaPreview.setStrokeStyle(2, 0x000000);
         }
         mapExplorationAreasStore.set(areaPreviews);
     }
