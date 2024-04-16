@@ -11,7 +11,7 @@ import {evaluateScript} from "./utils/scripting";
 
 test.describe('Scripting chat functions', () => {
     test('can catch event to enter and to leave one area created by the map editor ', async ({ page, browser, request, browserName }, { project }) => {
-        // Skip test for mobile device
+        // Skip test for mobile device because the map editor is not available
         if(project.name === "mobilechromium") {
             //eslint-disable-next-line playwright/no-skipped-test
             test.skip();
