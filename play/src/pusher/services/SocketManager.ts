@@ -1110,6 +1110,26 @@ export class SocketManager implements ZoneEventListener {
         socketData.backConnection.write(pusherToBackMessage);
     }
 
+    forwardAdminMessageToBack(client: Socket, message: PusherToBackMessage["message"]): void {
+        const socketData = client.getUserData();
+        if (!socketData.canEdit) {
+            Sentry.captureException(
+                new Error(`Security exception, the client tried to update the map: ${JSON.stringify(socketData)}`)
+            );
+            // Emit error message
+            socketData.emitInBatch({
+                message: {
+                    $case: "errorMessage",
+                    errorMessage: {
+                        message: "You are not allowed to edit the map",
+                    },
+                },
+            });
+            return;
+        }
+        this.forwardMessageToBack(client, message);
+    }
+
     emitXMPPSettings(client: Socket): void {
         const socketData = client.getUserData();
         const xmppSettings: XmppSettingsMessage = {

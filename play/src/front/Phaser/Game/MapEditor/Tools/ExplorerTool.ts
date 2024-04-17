@@ -17,17 +17,12 @@ import { Entity } from "../../../ECS/Entity";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { EntitiesManager } from "../../GameMap/EntitiesManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
-import {
-    INITIAL_ZOOM_OUT_EXPLORER_MODE,
-    MAX_ZOOM_OUT_EXPLORER_MODE,
-    waScaleManager,
-} from "../../../Services/WaScaleManager";
+import { INITIAL_ZOOM_OUT_EXPLORER_MODE, waScaleManager } from "../../../Services/WaScaleManager";
 import { MapEditorTool } from "./MapEditorTool";
 
 const logger = debug("explorer-tool");
 
 export class ExplorerTool implements MapEditorTool {
-    private scene: GameScene;
     private downIsPressed = false;
     private upIsPressed = false;
     private leftIsPressed = false;
@@ -37,6 +32,7 @@ export class ExplorerTool implements MapEditorTool {
     private lastCameraCenterXToZoom = 0;
     private lastCameraCenterYToZoom = 0;
     private mapExplorationEntitiesSubscribe: Unsubscriber | undefined;
+    private zoomLevelBeforeExplorerMode: number | undefined;
 
     private keyDownHandler = (event: KeyboardEvent) => {
         if (event.key === "ArrowDown" || event.key === "s") {
@@ -120,8 +116,7 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.markDirty();
     };
 
-    constructor(private mapEditorModeManager: MapEditorModeManager) {
-        this.scene = gameManager.getCurrentGameScene();
+    constructor(private mapEditorModeManager: MapEditorModeManager, private readonly scene: GameScene) {
         this.entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
     }
 
@@ -165,7 +160,9 @@ export class ExplorerTool implements MapEditorTool {
         // Restore focus target
         waScaleManager.setFocusTarget(undefined);
         // Restore camera mode
-        this.scene.getCameraManager().startFollowPlayer(this.scene.CurrentPlayer, 1000);
+        this.scene
+            .getCameraManager()
+            .startFollowPlayer(this.scene.CurrentPlayer, 1000, this.zoomLevelBeforeExplorerMode);
 
         // Restore entities
         this.entitiesManager.removeAllEntitiesPointedToEditColor();
@@ -230,13 +227,9 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.input.on(Phaser.Input.Events.GAME_OUT, this.pointerUpHandler);
 
         // Define new camera mode
-        this.scene.getCameraManager().setExplorationMode();
+        //this.scene.getCameraManager().setExplorationMode();
 
-        // Rules: if the user click on the action bar to open the explorater mode, we define new zoom
-        if (waScaleManager.zoomModifier > MAX_ZOOM_OUT_EXPLORER_MODE) this.scene.zoomByFactor(0.5);
-
-        // Define new zoom max
-        waScaleManager.maxZoomOut = MAX_ZOOM_OUT_EXPLORER_MODE;
+        this.zoomLevelBeforeExplorerMode = waScaleManager.zoomModifier;
 
         // Make all entities interactive
         this.entitiesManager.makeAllEntitiesInteractive();
@@ -346,6 +339,6 @@ export class ExplorerTool implements MapEditorTool {
                 this.lastCameraCenterYToZoom = cameraCenterYToZoom;
             }
             this.defineZoomToCenterCameraPositionTimeOut = undefined;
-        }, 100);
+        }, 0);
     }
 }
