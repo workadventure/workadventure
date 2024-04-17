@@ -80,8 +80,15 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.zoomByFactor(zoomFactor, velocity);
     };
     private pointerDownHandler = (pointer: Phaser.Input.Pointer) => {
+        // The motion factor is used to smooth out the velocity of the camera.
+        // By default, the 0.2 value is too low and if we release the pointer when the mouse is not moving but has
+        // moved 0.1 second before, the camera will continue to move.
+        // 0.35 seems a more sensible default.
+        pointer.motionFactor = 0.35;
+
         this.explorationMouseIsActive = true;
         this.scene.input.setDefaultCursor("grabbing");
+        this.scene.cameras.main.panEffect.reset();
     };
     private pointerMoveHandler = (pointer: Phaser.Input.Pointer) => {
         if (!this.explorationMouseIsActive) return;
@@ -103,8 +110,22 @@ export class ExplorerTool implements MapEditorTool {
                 mapExplorationObjectSelectedStore.set(gameObject);
         }
 
+        // The velocity will be null if the cursor is no longer above the game when the button is released
+        if (pointer.velocity) {
+            // Let's compute the remaining velocity
+            const camera = this.scene.cameras.main;
+            camera.pan(
+                camera.scrollX + camera.width / 2 - pointer.velocity.x * 10,
+                camera.scrollY + camera.height / 2 - pointer.velocity.y * 10,
+                Math.sqrt((pointer.velocity.length() * 20) / 1000) * 1000,
+                "Sine",
+                true
+            );
+        }
+
         this.scene.markDirty();
     };
+
     private pointerOverHandler = (gameObject: AreaPreview) => {
         if (gameObject.strokeColor === 0xf9e82d) return;
         gameObject.setStrokeStyle(2, 0xf9e82d);
