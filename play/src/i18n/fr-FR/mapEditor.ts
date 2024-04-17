@@ -202,6 +202,15 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         areaDescriptionPlaceholder: "Description de la zone",
         areaSerchable: "Recherchable dans le mode exploration",
         addDescriptionField: "Ajouter une description",
+        actionPopupOnPersonalAreaWithEntities: {
+            title: "Action requise",
+            description: "Cette zone personnelle contient un ou plusieurs objets. Que souhaitez-vous faire avec ?",
+            buttons: {
+                keep: "Conserver",
+                remove: "Supprimer",
+                cancel: "Annuler",
+            },
+        },
     },
     areaEditorInstructions: {
         title: "Comment ca marche ?",

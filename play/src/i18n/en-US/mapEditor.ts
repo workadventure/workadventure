@@ -204,6 +204,15 @@ const mapEditor: BaseTranslation = {
         areaDescriptionPlaceholder: "My area is a...",
         areaSerchable: "Searchable in the exploration mode",
         addDescriptionField: "Add description field",
+        actionPopupOnPersonalAreaWithEntities: {
+            title: "Action required",
+            description: "This personal area contains one or more objects. What would you like to do with it/them ?",
+            buttons: {
+                keep: "Keep",
+                remove: "Remove",
+                cancel: "Cancel",
+            },
+        },
     },
     areaEditorInstructions: {
         title: "How it works ?",

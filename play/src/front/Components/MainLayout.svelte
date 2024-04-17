@@ -6,8 +6,8 @@
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import {
         helpCameraSettingsVisibleStore,
-        helpWebRtcSettingsVisibleStore,
         helpNotificationSettingsVisibleStore,
+        helpWebRtcSettingsVisibleStore
     } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
@@ -19,11 +19,11 @@
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
     import {
-        showLimitRoomModalStore,
-        modalVisibilityStore,
-        showModalGlobalComminucationVisibilityStore,
         modalPopupVisibilityStore,
+        modalVisibilityStore,
         roomListVisibilityStore,
+        showLimitRoomModalStore,
+        showModalGlobalComminucationVisibilityStore
     } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
@@ -36,7 +36,7 @@
     import {
         bubbleModalVisibility,
         changeStatusConfirmationModalVisibility,
-        notificationPermissionModalVisibility,
+        notificationPermissionModalVisibility
     } from "../Stores/AvailabilityStatusModalsStore";
     import { mapEditorAskToClaimPersonalAreaStore, mapExplorationObjectSelectedStore } from "../Stores/MapEditorStore";
     import { warningMessageStore } from "../Stores/ErrorStore";
@@ -64,7 +64,8 @@
     import HelpPopUpBlocked from "./HelpSettings/HelpPopUpBlocked.svelte";
     import Notification from "./UI/Notification.svelte";
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
-    import ChangeStatusConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/ChangeStatusConfirmationModal.svelte";
+    import ChangeStatusConfirmationModal
+        from "./ActionBar/AvailabilityStatus/Modals/ChangeStatusConfirmationModal.svelte";
     import BubbleConfirmationModal from "./ActionBar/AvailabilityStatus/Modals/BubbleConfirmationModal.svelte";
     import NotificationPermissionModal from "./ActionBar/AvailabilityStatus/Modals/NotificationPermissionModal.svelte";
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
@@ -73,6 +74,7 @@
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
+    import MainModal from "./Modal/MainModal.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -201,6 +203,9 @@
         {#if $warningMessageStore.length > 0}
             <WarningToast />
         {/if}
+
+        <MainModal/>
+
     </section>
 
     {#if $layoutManagerActionVisibilityStore}
@@ -236,40 +241,40 @@
 </div>
 
 <style lang="scss">
-    @import "../style/breakpoints.scss";
+  @import "../style/breakpoints.scss";
 
+  #main-layout {
+    display: grid;
+    grid-template-columns: 120px calc(100% - 120px);
+    grid-template-rows: 100%;
+    transition: all 0.2s ease-in-out;
+
+    &-left-aside {
+      min-width: 80px;
+    }
+  }
+
+  @include media-breakpoint-up(md) {
     #main-layout {
-        display: grid;
-        grid-template-columns: 120px calc(100% - 120px);
-        grid-template-rows: 100%;
-        transition: all 0.2s ease-in-out;
+      grid-template-columns: 15% 85%;
 
-        &-left-aside {
-            min-width: 80px;
-        }
+      &-left-aside {
+        min-width: auto;
+      }
+
+      &.not-cowebsite {
+        grid-template-columns: 0% 100%;
+      }
     }
+  }
 
-    @include media-breakpoint-up(md) {
-        #main-layout {
-            grid-template-columns: 15% 85%;
+  @include media-breakpoint-up(sm) {
+    #main-layout {
+      grid-template-columns: 20% 80%;
 
-            &-left-aside {
-                min-width: auto;
-            }
-
-            &.not-cowebsite {
-                grid-template-columns: 0% 100%;
-            }
-        }
+      &.not-cowebsite {
+        grid-template-columns: 0% 100%;
+      }
     }
-
-    @include media-breakpoint-up(sm) {
-        #main-layout {
-            grid-template-columns: 20% 80%;
-
-            &.not-cowebsite {
-                grid-template-columns: 0% 100%;
-            }
-        }
-    }
+  }
 </style>

@@ -93,12 +93,14 @@ export class MapEditorModeManager {
 
         this.active = false;
 
+        const areaEditorTool = new AreaEditorTool(this);
+
         this.editorTools = {
-            [EditorToolName.AreaEditor]: new AreaEditorTool(this),
+            [EditorToolName.AreaEditor]: areaEditorTool,
             [EditorToolName.EntityEditor]: new EntityEditorTool(this),
             [EditorToolName.FloorEditor]: new FloorEditorTool(this),
             [EditorToolName.WAMSettingsEditor]: new WAMSettingsEditorTool(this),
-            [EditorToolName.TrashEditor]: new TrashEditorTool(this),
+            [EditorToolName.TrashEditor]: new TrashEditorTool(this, areaEditorTool),
             [EditorToolName.ExploreTheRoom]: new ExplorerTool(this, this.scene),
             [EditorToolName.CloseMapEditor]: new CloseTool(),
         };
