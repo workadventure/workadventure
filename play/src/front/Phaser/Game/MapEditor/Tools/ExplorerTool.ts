@@ -51,7 +51,7 @@ export class ExplorerTool implements MapEditorTool {
     private keyUpHandler = (event: KeyboardEvent) => {
         // Define new zone to zoom
         if (this.downIsPressed || this.upIsPressed || this.leftIsPressed || this.rightIsPressed)
-            this.defineZoomToCenterCameraPosition();
+            this.doDefineZoomToCenterCameraPosition();
         if (event.key === "ArrowDown" || event.key === "s") {
             this.downIsPressed = false;
         }
@@ -85,11 +85,11 @@ export class ExplorerTool implements MapEditorTool {
     };
     private pointerMoveHandler = (pointer: Phaser.Input.Pointer) => {
         if (!this.explorationMouseIsActive) return;
-        this.scene.cameras.main.scrollX -= pointer.velocity.x / 10;
-        this.scene.cameras.main.scrollY -= pointer.velocity.y / 10;
+        this.scene.cameras.main.scrollX -= pointer.x - pointer.prevPosition.x;
+        this.scene.cameras.main.scrollY -= pointer.y - pointer.prevPosition.y;
 
         // Define new zone to zoom
-        this.defineZoomToCenterCameraPosition();
+        this.doDefineZoomToCenterCameraPosition();
 
         this.scene.markDirty();
     };
@@ -324,21 +324,23 @@ export class ExplorerTool implements MapEditorTool {
     private defineZoomToCenterCameraPositionTimeOut?: NodeJS.Timeout;
     public defineZoomToCenterCameraPosition() {
         if (this.defineZoomToCenterCameraPositionTimeOut) clearTimeout(this.defineZoomToCenterCameraPositionTimeOut);
-        // FIXME from the svelte component, the udate isn't dispatch in totaly at the same time after to move the camera
+        // FIXME from the svelte component, the update isn't dispatch in totally at the same time after to move the camera
         this.defineZoomToCenterCameraPositionTimeOut = setTimeout(() => {
-            const cameraCenterXToZoom =
-                this.scene.cameras.main.worldView.x + this.scene.cameras.main.worldView.width / 2;
-            const cameraCenterYToZoom =
-                this.scene.cameras.main.worldView.y + this.scene.cameras.main.worldView.height / 2;
-            if (
-                cameraCenterXToZoom != this.lastCameraCenterXToZoom ||
-                cameraCenterYToZoom != this.lastCameraCenterYToZoom
-            ) {
-                waScaleManager.setFocusTarget({ x: cameraCenterXToZoom, y: cameraCenterYToZoom });
-                this.lastCameraCenterXToZoom = cameraCenterXToZoom;
-                this.lastCameraCenterYToZoom = cameraCenterYToZoom;
-            }
+            this.doDefineZoomToCenterCameraPosition();
             this.defineZoomToCenterCameraPositionTimeOut = undefined;
         }, 0);
+    }
+
+    private doDefineZoomToCenterCameraPosition() {
+        const cameraCenterXToZoom = this.scene.cameras.main.worldView.x + this.scene.cameras.main.worldView.width / 2;
+        const cameraCenterYToZoom = this.scene.cameras.main.worldView.y + this.scene.cameras.main.worldView.height / 2;
+        if (
+            cameraCenterXToZoom != this.lastCameraCenterXToZoom ||
+            cameraCenterYToZoom != this.lastCameraCenterYToZoom
+        ) {
+            waScaleManager.setFocusTarget({ x: cameraCenterXToZoom, y: cameraCenterYToZoom });
+            this.lastCameraCenterXToZoom = cameraCenterXToZoom;
+            this.lastCameraCenterYToZoom = cameraCenterYToZoom;
+        }
     }
 }
