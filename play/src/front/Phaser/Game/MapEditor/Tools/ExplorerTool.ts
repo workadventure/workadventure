@@ -88,7 +88,7 @@ export class ExplorerTool implements MapEditorTool {
 
         this.explorationMouseIsActive = true;
         this.scene.input.setDefaultCursor("grabbing");
-        this.scene.cameras.main.panEffect.reset();
+        this.scene.getCameraManager().stopPan();
     };
     private pointerMoveHandler = (pointer: Phaser.Input.Pointer) => {
         if (!this.explorationMouseIsActive) return;
@@ -114,13 +114,13 @@ export class ExplorerTool implements MapEditorTool {
         if (pointer.velocity) {
             // Let's compute the remaining velocity
             const camera = this.scene.cameras.main;
-            camera.pan(
-                camera.scrollX + camera.width / 2 - pointer.velocity.x * 10,
-                camera.scrollY + camera.height / 2 - pointer.velocity.y * 10,
-                Math.sqrt((pointer.velocity.length() * 20) / 1000) * 1000,
-                "Sine",
-                true
-            );
+            this.scene
+                .getCameraManager()
+                .panTo(
+                    camera.scrollX + camera.width / 2 - pointer.velocity.x * 10,
+                    camera.scrollY + camera.height / 2 - pointer.velocity.y * 10,
+                    Math.sqrt((pointer.velocity.length() * 20) / 1000) * 1000
+                );
         }
 
         this.scene.markDirty();
