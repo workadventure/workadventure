@@ -488,7 +488,7 @@ export class IoSocketController {
                             userRoomToken: memberUserRoomToken,
                             jabberId: userData.jabberId,
                             jabberPassword: userData.jabberPassword,
-                            activatedInviteUser: userData.activatedInviteUser || undefined,
+                            activatedInviteUser: userData.activatedInviteUser ?? undefined,
                             mucRooms: userData.mucRooms || [],
                             applications: userData.applications,
                             canEdit: userData.canEdit ?? false,
