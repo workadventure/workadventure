@@ -417,10 +417,12 @@ export class MapEditorModeManager {
         this.mapEditorModeUnsubscriber = mapEditorModeStore.subscribe((active) => {
             this.active = active;
             if (!this.active) {
+                this.scene.getGameMapFrontWrapper().showRoofs();
                 this.lastlyUsedTool = get(mapEditorSelectedToolStore);
                 this.equipTool(undefined);
                 return;
             }
+            this.scene.getGameMapFrontWrapper().hideRoofs();
             this.equipTool(
                 this.lastlyUsedTool ??
                     (get(mapEditorActivated) ? EditorToolName.EntityEditor : EditorToolName.ExploreTheRoom)

@@ -85,6 +85,19 @@ export class GameMapFrontWrapper {
 
     private perLayerCollisionGridCache: Map<number, (0 | 2 | 1)[][]> = new Map<number, (0 | 2 | 1)[][]>();
 
+    /**
+     * A map of layer names and their visibility status as requested by the scripting API.
+     * We keep track of this because the visibility of a layer can be altered by the scripting API AND the map editor.
+     * When the map editor is disabled, we need to restore the visibility of the layers to the state requested by the scripting API.
+     */
+    private requestedLayerVisibilities: Map<string, boolean> = new Map<string, boolean>();
+
+    /**
+     * True when the roofs (anything above the Woka) should be hidden.
+     * This is set to true by the map editor.
+     */
+    private roofHidden = false;
+
     private lastProperties = new Map<string, string | boolean | number>();
     private propertiesChangeCallbacks = new Map<string, Array<PropertyChangeCallback>>();
 
@@ -148,6 +161,7 @@ export class GameMapFrontWrapper {
                             .setSize(layer.width, layer.height)
                     );
                 }
+                this.requestedLayerVisibilities.set(layer.name, layer.visible);
             }
             if (layer.type === "objectgroup" && layer.name === "floorLayer") {
                 depth = DEPTH_OVERLAY_INDEX;
@@ -216,6 +230,7 @@ export class GameMapFrontWrapper {
     public setLayerVisibility(layerName: string, visible: boolean): void {
         const phaserLayer = this.findPhaserLayer(layerName);
         if (phaserLayer != undefined) {
+            this.requestedLayerVisibilities.set(layerName, visible);
             phaserLayer.setVisible(visible);
             phaserLayer.setCollisionByProperty({ collides: true }, visible);
             this.updateCollisionGrid(phaserLayer);
@@ -230,11 +245,29 @@ export class GameMapFrontWrapper {
                 return;
             }
             for (let i = 0; i < phaserLayers.length; i++) {
+                this.requestedLayerVisibilities.set(phaserLayers[i].layer.name, visible);
                 phaserLayers[i].setVisible(visible);
                 phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
             }
             this.updateCollisionGrid(undefined, false);
         }
+    }
+
+    public hideRoofs(): void {
+        this.roofHidden = true;
+        this.findRoofLayers().forEach((layer) => layer.setVisible(false));
+    }
+
+    public showRoofs(): void {
+        this.roofHidden = false;
+        this.findRoofLayers().forEach((layer) => {
+            const visibility = this.requestedLayerVisibilities.get(layer.name) ?? true;
+            layer.setVisible(visibility);
+        });
+    }
+
+    private findRoofLayers(): TilemapLayer[] {
+        return this.phaserLayers.filter((layer) => layer.depth >= DEPTH_OVERLAY_INDEX);
     }
 
     /**
