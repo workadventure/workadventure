@@ -126,6 +126,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             });
             return;
         }
+        this.stopPan();
         this.camera.pan(setTo.x, setTo.y, duration, Easing.SineEaseOut, true, (camera, progress, x, y) => {
             if (this.cameraMode === CameraMode.Positioned) {
                 this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
@@ -167,6 +168,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             return;
         }
+        this.stopPan();
         this.camera.pan(focusOn.x, focusOn.y, duration, Easing.SineEaseOut, true, (camera, progress, x, y) => {
             this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
             if (progress === 1) {
@@ -425,12 +427,23 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         const { width: mapWidth, height: mapHeight } = this.getMapSize();
         const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(mapWidth, mapHeight);
 
+        this.stopPan();
         this.camera.pan(mapWidth / 2, mapHeight / 2, 1000, Easing.SineEaseOut, true, (camera, progress, x, y) => {
             this.waScaleManager.zoomModifier =
                 (targetZoomModifier - currentZoomModifier) * progress + currentZoomModifier;
-            this.scene.markDirty();
             this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
         });
+    }
+
+    public panTo(scrollX: number, scrollY: number, duration: number): void {
+        this.stopPan();
+        this.camera.pan(scrollX, scrollY, duration, Easing.SineEaseOut, true, () => {
+            this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
+        });
+    }
+
+    public stopPan(): void {
+        this.camera.panEffect.reset();
     }
 
     public goToEntity(entity: Entity): void {
