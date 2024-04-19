@@ -66,7 +66,7 @@ To complete the upload, you need to set your secrets variables in your github re
 
 [How to set your secrets in github](https://scribehow.com/shared/Upload_Map__Set_up_secrets_for_in_your_repository__FKsqAsrVQ_SzDavSudb19Q)
 
-> When your done you can just commit and push your changes and it's done !
+> Now for every change you only just have to commit and push all your changes !
 
 ## Need some help?
 

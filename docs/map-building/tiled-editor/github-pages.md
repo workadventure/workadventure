@@ -77,7 +77,9 @@ The local web server can only be used to test your map locally. In particular, t
 
 ### Pushing the map
 
-Ajouter le fait de mettre le déploiement sur GH PAGES ET DONC CONFIGURER SA VARIABLE D'ENV EN LANCANT LE SCRIPT
+:::caution Important
+Before your push on github pages, you need to configure your une variable d'environnement in your .env file. like this : UPLOAD_MODE=GH_PAGES !
+:::
 
 When your changes are ready, you need to "commit" and "push" (i.e. "upload") the changes back to GitHub. Just wait a few minutes, and your map will be propagated automatically to the GitHub pages web-server.
 

@@ -14,6 +14,8 @@ Ensuite cliquez sur le bouton Download ZIP
 
 ![Click "download" button](../images/download_repo.png)
 
+Make the changes that you wannt to do in any text editor and to push it you just need
+
 ## Need some help?
 
 WorkAdventure is a constantly evolving project and there is plenty of room for improvement regarding map editing.
