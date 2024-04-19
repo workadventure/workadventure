@@ -70,10 +70,10 @@
     import NotificationPermissionModal from "./ActionBar/AvailabilityStatus/Modals/NotificationPermissionModal.svelte";
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
     import ObjectDetails from "./Modal/ObjectDetails.svelte";
-    import Popup from "./Modal/Popup.svelte";
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
+    import MapExplorerPopup from "./Modal/MapExplorerPopup.svelte";
     import MainModal from "./Modal/MainModal.svelte";
 
     let mainLayout: HTMLDivElement;
@@ -195,7 +195,7 @@
         {/if}
 
         {#if $modalPopupVisibilityStore}
-            <Popup />
+            <MapExplorerPopup />
         {/if}
         {#if $roomListVisibilityStore}
             <MapList />

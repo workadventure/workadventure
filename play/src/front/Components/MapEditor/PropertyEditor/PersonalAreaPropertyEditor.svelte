@@ -2,6 +2,7 @@
     import { createEventDispatcher, onMount } from "svelte";
     import { InfoIcon } from "svelte-feather-icons";
     import { PersonalAreaAccessClaimMode, PersonalAreaPropertyData } from "@workadventure/map-editor";
+    // eslint-disable-next-line import/no-unresolved
     import { closeModal, openModal } from "svelte-modals";
     import LL from "../../../../i18n/i18n-svelte";
     import InputTags from "../../Input/InputTags.svelte";
