@@ -6,7 +6,7 @@
         AreaDataProperty,
         OpenWebsitePropertyData,
         PersonalAreaAccessClaimMode,
-        PlayAudioPropertyData
+        PlayAudioPropertyData,
     } from "@workadventure/map-editor";
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
     import { IconChevronDown, IconChevronRight } from "@tabler/icons-svelte";
@@ -247,13 +247,13 @@
         refreshFlags();
     }
 
-    function onDeleteProperty(id: string,removeAreaEntities?:boolean) {
+    function onDeleteProperty(id: string, removeAreaEntities?: boolean) {
         if ($mapEditorSelectedAreaPreviewStore) {
             analyticsClient.removeMapEditorProperty(
                 "area",
                 properties.find((property) => property.id === id)?.type || "unknown"
             );
-            $mapEditorSelectedAreaPreviewStore.deleteProperty(id,removeAreaEntities);
+            $mapEditorSelectedAreaPreviewStore.deleteProperty(id, removeAreaEntities);
             // refresh properties
             properties = $mapEditorSelectedAreaPreviewStore.getProperties();
             refreshFlags();
@@ -292,9 +292,9 @@
         }
     }
 
-    function onUpdateProperty(property: AreaDataProperty,removeAreaEntities?:boolean) {
+    function onUpdateProperty(property: AreaDataProperty, removeAreaEntities?: boolean) {
         if ($mapEditorSelectedAreaPreviewStore) {
-            $mapEditorSelectedAreaPreviewStore.updateProperty(property,removeAreaEntities);
+            $mapEditorSelectedAreaPreviewStore.updateProperty(property, removeAreaEntities);
         }
     }
 
@@ -623,10 +623,10 @@
                     {:else if property.type === "personalAreaPropertyData"}
                         <PersonalAreaPropertyEditor
                             personalAreaPropertyData={property}
-                            on:close={({detail}) => {
-                                onDeleteProperty(property.id,detail);
+                            on:close={({ detail }) => {
+                                onDeleteProperty(property.id, detail);
                             }}
-                            on:change={({detail}) => onUpdateProperty(property,detail)}
+                            on:change={({ detail }) => onUpdateProperty(property, detail)}
                         />
                     {/if}
                 </div>

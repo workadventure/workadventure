@@ -23,7 +23,6 @@
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.ExploreTheRoom);
         modalPopupVisibilityStore.set(false);
     }
-
 </script>
 
 <div class="popup-menu tw-min-h-fit tw-rounded-3xl tw-overflow-visible" transition:fly={{ x: 1000, duration: 500 }}>

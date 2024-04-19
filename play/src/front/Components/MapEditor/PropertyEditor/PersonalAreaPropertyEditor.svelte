@@ -17,10 +17,10 @@
 
     let _tags: InputTagOption[] | undefined = personalAreaPropertyData.allowedTags
         ? personalAreaPropertyData.allowedTags.map((allowedTag) => ({
-            value: allowedTag,
-            created: false,
-            label: allowedTag
-        }))
+              value: allowedTag,
+              created: false,
+              label: allowedTag,
+          }))
         : undefined;
 
     let personalAreaOwner: string | null = personalAreaPropertyData.ownerId;
@@ -36,8 +36,8 @@
                 personalAreaOwner = member.name
                     ? `${member.name} ${member.email ? `(${member.email})` : ""}`
                     : member.email
-                        ? member.email
-                        : member.id;
+                    ? member.email
+                    : member.id;
             }
         }
     });
@@ -101,7 +101,7 @@
             },
             onCancel: () => {
                 closeModal();
-            }
+            },
         });
     }
 
@@ -114,9 +114,7 @@
     }
 </script>
 
-<PropertyEditorBase
-    on:close={onRemoveProperty}
->
+<PropertyEditorBase on:close={onRemoveProperty}>
     <span slot="header" class="tw-flex tw-justify-center tw-items-center">
         {$LL.mapEditor.properties.personalAreaConfiguration.label()}
     </span>
@@ -154,8 +152,8 @@
                         >
                             {#each PersonalAreaAccessClaimMode.options as claimMode (claimMode)}
                                 <option value={claimMode}
-                                >{$LL.mapEditor.properties.personalAreaConfiguration[
-                                    `${claimMode}AccessClaimMode`
+                                    >{$LL.mapEditor.properties.personalAreaConfiguration[
+                                        `${claimMode}AccessClaimMode`
                                     ]()}</option
                                 >
                             {/each}
@@ -164,13 +162,13 @@
                             <InfoIcon size="18" />
                             {$LL.mapEditor.properties.personalAreaConfiguration[
                                 `${personalAreaPropertyData.accessClaimMode}AccessDescription`
-                                ]()}
+                            ]()}
                         </p>
                     </div>
                     <div>
                         {#if personalAreaPropertyData.accessClaimMode === PersonalAreaAccessClaimMode.enum.static}
                             <label for="allowedUserInput"
-                            >{$LL.mapEditor.properties.personalAreaConfiguration.allowedUser()}</label
+                                >{$LL.mapEditor.properties.personalAreaConfiguration.allowedUser()}</label
                             >
                             <MemberAutocomplete
                                 value={personalAreaPropertyData.ownerId}
