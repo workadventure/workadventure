@@ -3,7 +3,11 @@
     import { fly } from "svelte/transition";
     import { LL } from "../../../i18n/i18n-svelte";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import { mapEditorSelectedToolStore, mapEditorVisibilityStore } from "../../Stores/MapEditorStore";
+    import {
+        mapEditorSelectedToolStore,
+        mapEditorVisibilityStore,
+        mapExplorationModeStore,
+    } from "../../Stores/MapEditorStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import AreaToolImg from "../images/icon-tool-area.png";
     // import FloorToolImg from "../images/icon-tool-floor.png";
@@ -11,7 +15,8 @@
     import Tooltip from "../Util/Tooltip.svelte";
     import ConfigureImg from "../images/configure.svg";
     import TrashImg from "../images/trash.svg";
-    import ExplorerImg from "../images/explorer.svg";
+    //import ExplorerImg from "../images/explorer.svg";
+    import MagnifyingGlassSvg from "../images/loupe.svg";
     import CloseImg from "../images/close.png";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { mapEditorActivated } from "../../Stores/MenuStore";
@@ -22,7 +27,7 @@
 
     availableTools.push({
         toolName: EditorToolName.ExploreTheRoom,
-        img: ExplorerImg,
+        img: MagnifyingGlassSvg,
         tooltiptext: $LL.mapEditor.sideBar.exploreTheRoom(),
     });
     if ($mapEditorActivated) {
@@ -73,7 +78,11 @@
     <div
         class="!tw-h-fit !tw-w-fit tw-rounded-2xl tw-bg-dark-purple/80 tw-backdrop-blur-lg tw-text-white tw-p-4 tw-pt-6"
     >
-        {$LL.mapEditor.sideBar.mapManagerActivated()}
+        {#if $mapExplorationModeStore}
+            {$LL.mapEditor.sideBar.mapExplorerActivated()}
+        {:else}
+            {$LL.mapEditor.sideBar.mapManagerActivated()}
+        {/if}
         <img
             src={CloseImg}
             class="tw-h-4 tw-ml-4 tw-pointer-events-auto tw-cursor-pointer"

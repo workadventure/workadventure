@@ -1,5 +1,5 @@
 import type { EntityPrefab, EntityDataProperties } from "@workadventure/map-editor";
-import { writable } from "svelte/store";
+import { derived, writable } from "svelte/store";
 import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
 import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
 import { Entity } from "../Phaser/ECS/Entity";
@@ -82,3 +82,22 @@ export const mapExplorationModeStore = writable<boolean>(false);
 export const mapExplorationObjectSelectedStore = writable<Entity | AreaPreview | undefined>(undefined);
 export const mapExplorationEntitiesStore = writable<Map<string, Entity>>(new Map());
 export const mapExplorationAreasStore = writable<Map<string, AreaPreview> | undefined>(new Map());
+
+/**
+ * The resistance for the zoom.
+ * If we are in exploration mode, we resist zooming in.
+ * If we are in editor mode, we don't resist zooming.
+ * Otherwise, we are in normal mode, we resist zooming out.
+ */
+export const cameraResistanceModeStore = derived(
+    [mapEditorModeStore, mapExplorationModeStore],
+    ([$mapEditorMode, $mapExplorationMode]) => {
+        if ($mapExplorationMode === true) {
+            return "resist_zoom_in";
+        }
+        if ($mapEditorMode === true) {
+            return "no_resistance";
+        }
+        return "resist_zoom_out";
+    }
+);
