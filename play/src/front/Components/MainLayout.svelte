@@ -18,7 +18,6 @@
         showLimitRoomModalStore,
         modalVisibilityStore,
         showModalGlobalComminucationVisibilityStore,
-        modalPopupVisibilityStore,
         roomListVisibilityStore,
     } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
@@ -56,7 +55,6 @@
     import MuteDialogBox from "./Video/AskedAction/MuteDialogBox.svelte";
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
     import ObjectDetails from "./Modal/ObjectDetails.svelte";
-    import Popup from "./Modal/Popup.svelte";
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
 
@@ -74,7 +72,7 @@
 
 <!-- Components ordered by z-index -->
 <div id="main-layout" class={[...$coWebsites.values()].length === 0 ? "not-cowebsite" : ""} bind:this={mainLayout}>
-    {#if $modalVisibilityStore || $modalPopupVisibilityStore}
+    {#if $modalVisibilityStore}
         <div class="tw-bg-black/60 tw-w-full tw-h-full tw-fixed tw-left-0 tw-right-0" />
     {/if}
 
@@ -170,9 +168,6 @@
             <ObjectDetails />
         {/if}
 
-        {#if $modalPopupVisibilityStore}
-            <Popup />
-        {/if}
         {#if $roomListVisibilityStore}
             <MapList />
         {/if}

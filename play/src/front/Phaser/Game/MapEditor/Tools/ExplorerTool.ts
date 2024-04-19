@@ -17,7 +17,7 @@ import { Entity } from "../../../ECS/Entity";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { EntitiesManager } from "../../GameMap/EntitiesManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
-import { INITIAL_ZOOM_OUT_EXPLORER_MODE, waScaleManager } from "../../../Services/WaScaleManager";
+import { waScaleManager } from "../../../Services/WaScaleManager";
 import { MapEditorTool } from "./MapEditorTool";
 
 const logger = debug("explorer-tool");
@@ -180,10 +180,24 @@ export class ExplorerTool implements MapEditorTool {
 
         // Restore focus target
         waScaleManager.setFocusTarget(undefined);
+
+        const cameraManager = this.scene.getCameraManager();
+
+        let targetZoom = undefined;
+        // If the current zoom level is above the resistance level, we need to zoom back in.
+        // This happens when we close the explorer mode via a button.
+        // If we close by zooming in, there is no need to override the zoom level.
+        if (waScaleManager.zoomModifier < cameraManager.resistanceEndZoomLevel) {
+            targetZoom = this.zoomLevelBeforeExplorerMode;
+
+            if (targetZoom === undefined || targetZoom < cameraManager.resistanceEndZoomLevel) {
+                // In case we zoomed out with the mouse, but we closed
+                targetZoom = cameraManager.resistanceEndZoomLevel;
+            }
+        }
+
         // Restore camera mode
-        this.scene
-            .getCameraManager()
-            .startFollowPlayer(this.scene.CurrentPlayer, 1000, this.zoomLevelBeforeExplorerMode);
+        cameraManager.startFollowPlayer(this.scene.CurrentPlayer, 1000, targetZoom);
 
         // Restore entities
         this.entitiesManager.removeAllEntitiesPointedToEditColor();
@@ -193,10 +207,10 @@ export class ExplorerTool implements MapEditorTool {
         this.scene.input.setDefaultCursor("auto");
 
         // Restore zoom factor
-        if (waScaleManager.zoomModifier < INITIAL_ZOOM_OUT_EXPLORER_MODE) this.scene.zoomByFactor(3);
+        //if (waScaleManager.zoomModifier < INITIAL_ZOOM_OUT_EXPLORER_MODE) this.scene.zoomByFactor(3);
 
         // Define initial zoom max
-        waScaleManager.maxZoomOut = INITIAL_ZOOM_OUT_EXPLORER_MODE;
+        //waScaleManager.maxZoomOut = INITIAL_ZOOM_OUT_EXPLORER_MODE;
 
         // Mark the scene as dirty
         this.scene.markDirty();
@@ -216,7 +230,7 @@ export class ExplorerTool implements MapEditorTool {
 
         // Active store of map exploration mode
         mapExplorationModeStore.set(true);
-        mapEditorVisibilityStore.set(true);
+        mapEditorVisibilityStore.set(false);
 
         const entitySearchableMap = new Map<string, Entity>();
         gameManager
@@ -252,6 +266,14 @@ export class ExplorerTool implements MapEditorTool {
 
         this.zoomLevelBeforeExplorerMode = waScaleManager.zoomModifier;
 
+        const cameraManager = this.scene.getCameraManager();
+        // If the current zoom level is below the resistance level, we need to zoom out.
+        // This happens when we open the explorer mode via a button.
+        // If we open the explorer by zooming out, there is no need to perform the initial zoom out.
+        if (waScaleManager.zoomModifier > cameraManager.resistanceEndZoomLevel) {
+            cameraManager.triggerMaxZoomOutAnimation();
+        }
+
         // Make all entities interactive
         this.entitiesManager.makeAllEntitiesInteractive();
         this.entitiesManager.setAllEntitiesPointedToEditColor(0x000000);
@@ -270,9 +292,9 @@ export class ExplorerTool implements MapEditorTool {
 
         // Use zoom factor to refresh the camera position
         // FIXME: delete this timeout when the camera position will be updated in the same time
-        setTimeout(() => {
+        /*setTimeout(() => {
             this.scene.zoomByFactor(1, 1);
-        }, 200);
+        }, 200);*/
 
         // Create subscribe to entities store
         this.mapExplorationEntitiesSubscribe = mapExplorationEntitiesStore.subscribe((entities) => {
