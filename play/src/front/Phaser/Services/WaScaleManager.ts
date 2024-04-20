@@ -134,17 +134,18 @@ export class WaScaleManager {
         this.applyNewSize(camera);
     }
 
-    public handleZoomByFactor(zoomFactor: number, camera: Phaser.Cameras.Scene2D.Camera): void {
+    public handleZoom(zoomLevel: number, camera: Phaser.Cameras.Scene2D.Camera): void {
         const cameraCenter = {
             x: camera.worldView.x + camera.worldView.width / 2,
             y: camera.worldView.y + camera.worldView.height / 2,
         };
 
-        if (zoomFactor > 1 && this.zoomModifier * zoomFactor - this.zoomModifier > 0.1)
+        /*if (zoomFactor > 1 && this.zoomModifier * zoomFactor - this.zoomModifier > 0.1)
             this.setZoomModifier(this.zoomModifier * 1.1, camera);
         else if (zoomFactor < 1 && this.zoomModifier - this.zoomModifier * zoomFactor > 0.1)
             this.setZoomModifier(this.zoomModifier / 1.1, camera);
-        else this.setZoomModifier(this.zoomModifier * zoomFactor, camera);
+        else //this.setZoomModifier(this.zoomModifier * zoomFactor, camera);*/
+        this.setZoomModifier(zoomLevel, camera);
 
         camera.centerOn(cameraCenter.x, cameraCenter.y);
 

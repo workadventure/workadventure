@@ -77,7 +77,7 @@ export class ExplorerTool implements MapEditorTool {
         const velocity = deltaY / 53;
         const zoomFactor = 1 - velocity * 0.1;
         // Restore camera mode
-        this.scene.zoomByFactor(zoomFactor, velocity);
+        this.scene.zoomByFactor(zoomFactor, true);
     };
     private pointerDownHandler = (pointer: Phaser.Input.Pointer) => {
         // The motion factor is used to smooth out the velocity of the camera.
