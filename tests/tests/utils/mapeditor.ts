@@ -17,6 +17,7 @@ class MapEditor {
 
     async openExploration(page: Page) {
         await page.locator('section.side-bar-container .side-bar .tool-button button#ExploreTheRoom').first().click();
+        await page.locator('section.side-bar-container .side-bar .tool-button button#ExploreTheRoom').first().click();
     }
 }
 
