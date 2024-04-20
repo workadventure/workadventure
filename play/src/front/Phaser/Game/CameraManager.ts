@@ -68,16 +68,25 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     private unsubscribeMapEditorModeStore: () => void;
 
+    // Whether a pan or tween effect is in progress
     private animationInProgress = false;
+    // Are we yet arrived to targetZoomModifier?
+    private targetReachInProgress = false;
+    // The target zoom we should reach. Each step, we get closer to this target.
+    private targetZoomModifier;
+    private targetDirection: "zoom_out" | "zoom_in" | undefined;
+    private cameraSpeed = 1;
     private _resistanceStartZoomLevel = 0.6;
     private _resistanceEndZoomLevel = 0.3;
     // The resistance strength is the speed at which the camera will go back to the resistance start zoom level.
     private _resistanceStrength = 1;
     // The callback to be called when the resistance zone is overcome
     private resistanceCallback?: () => void;
+    private animateCallback: (time: number, delta: number) => void;
 
     constructor(scene: GameScene, cameraBounds: { x: number; y: number }, waScaleManager: WaScaleManager) {
         super();
+        this.animateCallback = this.animate.bind(this);
         this.scene = scene;
 
         this.camera = scene.cameras.main;
@@ -112,6 +121,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         const { width: mapWidth, height: mapHeight } = this.getMapSize();
         const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(mapWidth, mapHeight);
         this.waScaleManager.maxZoomOut = targetZoomModifier;
+        this.targetZoomModifier = this.waScaleManager.zoomModifier;
     }
 
     public destroy(): void {
@@ -493,13 +503,18 @@ export class CameraManager extends Phaser.Events.EventEmitter {
      * Is the final zoom level is greater than the max zoom level, an animation will slowly bring back the camera to the max zoom level
      * (if no animation is currently running)
      */
-    public zoomByFactor(zoomFactor: number): void {
-        waScaleManager.handleZoomByFactor(zoomFactor, this.camera);
+    public zoomByFactor(zoomFactor: number, smooth: boolean): void {
+        if (!smooth) {
+            waScaleManager.handleZoom(this.waScaleManager.zoomModifier * zoomFactor, this.camera);
+        } else {
+            this.animateToZoomLevel(this.waScaleManager.zoomModifier * zoomFactor);
+        }
 
         if (this.animationInProgress) {
             // Let's not trigger the resistance if the zoom in or out originates from an animation.
             return;
         }
+
         if (!this.resistanceCallback) {
             // If there is no resistance configured, let's return.
             return;
@@ -516,6 +531,42 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.resistZoomCallback);
             }
         }
+    }
+
+    private animateToZoomLevel(targetZoomModifier: number): void {
+        this.targetZoomModifier = targetZoomModifier;
+        this.targetDirection = this.targetZoomModifier > this.waScaleManager.zoomModifier ? "zoom_in" : "zoom_out";
+        if (!this.targetReachInProgress) {
+            this.targetReachInProgress = true;
+            this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.animateCallback);
+        }
+    }
+
+    private animate(time: number, delta: number): void {
+        let targetZoomModifier;
+        if (this.targetDirection === "zoom_in") {
+            targetZoomModifier = this.targetZoomModifier * 1.01;
+        } else {
+            targetZoomModifier = this.targetZoomModifier / 1.01;
+        }
+
+        let newZoom =
+            this.waScaleManager.zoomModifier +
+            (((targetZoomModifier - this.waScaleManager.zoomModifier) * delta) / 100) * this.cameraSpeed;
+
+        if (this.targetDirection === "zoom_in" && newZoom > this.targetZoomModifier) {
+            newZoom = this.targetZoomModifier;
+            this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.animateCallback);
+            this.targetReachInProgress = false;
+        }
+        if (this.targetDirection === "zoom_out" && newZoom <= this.targetZoomModifier) {
+            newZoom = this.targetZoomModifier;
+            this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.animateCallback);
+            this.targetReachInProgress = false;
+        }
+
+        //waScaleManager.handleZoomByFactor(newZoom, this.camera);
+        waScaleManager.handleZoom(newZoom, this.camera);
     }
 
     private resistZoomCallback: ((time: number, delta: number) => void) | undefined;
@@ -550,9 +601,11 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             this._resistanceStartZoomLevel - (this._resistanceEndZoomLevel - this._resistanceStartZoomLevel) * 0.1;
 
         const newZoom =
-            this.waScaleManager.zoomModifier +
-            (((targetZoom - this.waScaleManager.zoomModifier) * delta) / 250) * this._resistanceStrength;
-        this.waScaleManager.zoomModifier = newZoom;
+            this.targetZoomModifier +
+            (((targetZoom - this.targetZoomModifier) * delta) / 250) * this._resistanceStrength;
+        //this.targetZoomModifier = newZoom;
+
+        this.animateToZoomLevel(newZoom);
 
         // The alpha is calculated based on the distance between the current zoom level and the resistance zone
         // The closer we are to the resistance zone, the more the alpha is important.

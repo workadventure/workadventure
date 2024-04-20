@@ -3429,12 +3429,12 @@ ${escapedMessage}
         });
     }
 
-    zoomByFactor(zoomFactor: number, velocity?: number) {
+    zoomByFactor(zoomFactor: number, smooth: boolean) {
         if (this.cameraManager.isZoomLocked()) {
             return;
         }
 
-        this.cameraManager.zoomByFactor(zoomFactor);
+        this.cameraManager.zoomByFactor(zoomFactor, smooth);
     }
 
     public createSuccessorGameScene(autostart: boolean, reconnecting: boolean) {

@@ -26,7 +26,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         // Calculate the zoom factor
         const zoomFactor = 1 - velocity * 0.1;
         // Apply the zoom
-        this.gameScene.zoomByFactor(zoomFactor, velocity);
+        this.gameScene.zoomByFactor(zoomFactor, true);
     }
 
     public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {

@@ -28,7 +28,7 @@ export class PinchManager {
 
             smoothPinch = (3 / 5) * smoothPinch + (2 / 5) * pinch.scaleFactor;
             if (this.scene instanceof GameScene) {
-                this.scene.zoomByFactor(smoothPinch);
+                this.scene.zoomByFactor(smoothPinch, false);
             } else {
                 waScaleManager.zoomModifier *= smoothPinch;
             }
