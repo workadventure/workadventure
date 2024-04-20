@@ -5,7 +5,6 @@ import MapEditor from "./utils/mapeditor";
 import Megaphone from "./utils/map-editor/megaphone";
 import AreaEditor from "./utils/map-editor/areaEditor";
 import EntityEditor from "./utils/map-editor/entityEditor";
-import Exploration from "./utils/map-editor/exploration";
 import Map from "./utils/map";
 import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import {resetWamMaps} from "./utils/map-editor/uploader";
@@ -504,9 +503,8 @@ test.describe('Map editor', () => {
 
     // Open the map exploration mode
     await MapEditor.openExploration(page);
-    await Exploration.openSreachMode(page);
 
-    // Excpected 1 entity and 1 zone in the search result
+    // Expected 1 entity and 1 zone in the search result
     // With webkit, something wrong to put an object and clik on it, so in this case, we don't have an object
     if (browser.browserType() !== webkit) {
       // Test if the entity is searchable
