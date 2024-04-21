@@ -1,8 +1,8 @@
 <script lang="ts">
     import type { Unsubscriber } from "svelte/store";
     import { fly } from "svelte/transition";
-    import { createEventDispatcher, onDestroy, onMount } from "svelte";
-    import { writable } from "svelte/store";
+    import { onDestroy, onMount } from "svelte";
+    import { get, writable } from "svelte/store";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
         cameraListStore,
@@ -113,6 +113,7 @@
     import PenIcon from "../Icons/PenIcon.svelte";
     import { StringUtils } from "../../Utils/StringUtils";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
+    import { focusMode, rightMode, lightMode, hideMode } from "../../Stores/ActionsCamStore";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -127,15 +128,24 @@
     let camMenuIsDropped = false;
     const sound = new Audio("/resources/objects/webrtc-out-button.mp3");
 
-    const dispatch = createEventDispatcher();
-
-    function addFocus() {
-        dispatch("focus");
+    function focusModeOn() {
+        focusMode.set(!get(focusMode));
+        console.log("focusMode", focusMode);
     }
 
-    function rightMode() {
-        console.log("right mode");
-        dispatch("right");
+    function rightModeOn() {
+        rightMode.set(!get(rightMode));
+        console.log("rightMode", rightMode);
+    }
+
+    function lightModeOn() {
+        lightMode.set(!get(lightMode));
+        console.log("lightMode", lightMode);
+    }
+
+    function hideModeOn() {
+        hideMode.set(!get(hideMode));
+        console.log("hideMode", hideMode);
     }
 
     function screenSharingClick(): void {
@@ -1150,32 +1160,50 @@
                                     <div class="p-0 m-0 list-none">
                                         <button
                                             class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
-                                            on:click={addFocus}
+                                            on:click={() => lightModeOn}
                                         >
                                             <div
                                                 class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
                                             >
                                                 <ProfilIcon />
                                             </div>
-                                            <div>{$LL.actionbar.profil()}</div>
+                                            <div>{$LL.actionbar.lightMode()}</div>
                                         </button>
                                         <button
                                             class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
-                                            on:click={rightMode}
+                                            on:click={focusModeOn}
                                         >
                                             <div
                                                 class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
                                             >
-                                                <Woka
-                                                    userId={-1}
-                                                    placeholderSrc=""
-                                                    customWidth="26px"
-                                                    customHeight="26px"
-                                                />
+                                                <ProfilIcon />
                                             </div>
-                                            <div>{$LL.actionbar.woka()}</div>
+                                            <div>{$LL.actionbar.focusMode()}</div>
                                         </button>
                                         <button
+                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                            on:click={rightModeOn}
+                                        >
+                                            <div
+                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                            >
+                                                <ProfilIcon />
+                                            </div>
+                                            <div>{$LL.actionbar.rightMode()}</div>
+                                        </button>
+                                        <button
+                                            class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
+                                            on:click={hideModeOn}
+                                        >
+                                            <div
+                                                class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"
+                                            >
+                                                <ProfilIcon />
+                                            </div>
+                                            <div>{$LL.actionbar.hideMode()}</div>
+                                        </button>
+
+                                        <!-- <button
                                             class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto"
                                             on:click={() => openEditCompanionScene()}
                                         >
@@ -1190,8 +1218,8 @@
                                                 />
                                             </div>
                                             <div>{$LL.actionbar.companion()}</div>
-                                        </button>
-                                        <button
+                                        </button> -->
+                                        <!-- <button
                                             class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full pointer-events-auto"
                                         >
                                             <div
@@ -1200,15 +1228,11 @@
                                                 <AchievementIcon />
                                             </div>
                                             <div>{$LL.actionbar.quest()}</div>
-                                        </button>
+                                        </button> -->
                                     </div>
                                 </div>
                             {/if}
                         {/if}
-
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
 
                         <!-- NAV : SCREENSHARING END -->
                     </div>

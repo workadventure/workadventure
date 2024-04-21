@@ -5,9 +5,7 @@
     import PresentationLayout from "./Layouts/PresentationLayout.svelte";
     import MozaicLayout from "./Layouts/MozaicLayout.svelte";
     import "../../style/wa-theme/video-ui.scss";
-    import { createEventDispatcher, onMount } from "svelte";
-
-    let rightMode = false;
+    import { focusMode, rightMode, lightMode, hideMode } from "../../Stores/ActionsCamStore";
 
     // DO for the focus mode
 
@@ -79,21 +77,17 @@
     //     container = document.getElementById("embedScreensContainer") as HTMLDivElement;
     //     container.style.backgroundColor = "bg-contrast/80";
     // }
-
-    function focusMode() {
-        console.log("je suis dans focusMode");
-        const container = document.getElementById("embedScreensContainer") as HTMLDivElement;
-        container.style.backgroundColor = "bg-contrast/80";
-    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     id="embedScreensContainer"
-    class="group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 items-center pointer-events-auto transition-all pb-7"
+    class={$focusMode
+        ? `group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 items-center pointer-events-auto transition-all pb-7`
+        : `group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 items-center pointer-events-auto transition-all pb-7 bg-contrast/80`}
     style={$emoteMenuSubStore ? "padding-top:96px;" : ""}
-    on:focus={focusMode}
 >
+    {$focusMode}
     {#if $embedScreenLayoutStore === LayoutMode.Presentation}
         <PresentationLayout />
     {:else}

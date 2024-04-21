@@ -3,10 +3,10 @@
     import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MediaBox from "../Video/MediaBox.svelte";
     import { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import { focusMode, rightMode, lightMode, hideMode } from "../../Stores/ActionsCamStore";
 
     export let highlightedEmbedScreen: EmbedScreen | undefined;
     export let full = false;
-    export let rightMode = false;
     $: clickable = !full;
 </script>
 
@@ -14,10 +14,11 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- grid-flow-col grid-flow-col -->
     <div
-        class={rightMode
-            ? "other-cameras overflow-visible content-center grid justify-end gap-y-4}"
-            : "other-cameras overflow-visible content-center flex gap-x-4 justify-center"}
+        class={$rightMode
+            ? "other-cameras overflow-visible content-center flex justify-end gap-x-4"
+            : "other-cameras overflow-visible content-center flex flex-col gap-x-4 justify-center"}
     >
+        {$rightMode}
         {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
             {#if !highlightedEmbedScreen || highlightedEmbedScreen.type !== "streamable" || (highlightedEmbedScreen.type === "streamable" && highlightedEmbedScreen.embed !== peer)}
                 {#key uniqueId}
@@ -29,3 +30,5 @@
 </aside>
 
 <!-- isClickable={clickable} -->
+<style>
+</style>

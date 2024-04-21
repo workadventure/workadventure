@@ -67,7 +67,7 @@
                     <Loading />
                 {/if}
                 {#if $streamableCollectionStore.size > 0}
-                    <CamerasContainer full={true} rightMode={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
+                    <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
                 {/if}
                 {#if $myCameraStore && $proximityMeetingStore === true}
                     <MyCamera />
@@ -84,7 +84,7 @@
                     <Loading />
                 {/if}
                 {#if $streamableCollectionStore.size > 0}
-                    <CamerasContainer full={true} rightMode={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
+                    <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
                 {/if}
                 {#if $myCameraStore}
                     <!-- && !$megaphoneEnabledStore TODO HUGO -->
