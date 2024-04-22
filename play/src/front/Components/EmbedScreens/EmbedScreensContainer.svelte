@@ -72,26 +72,26 @@
     //         return;
     //     }
     // }
-
-    // export function focusMode() {
-    //     container = document.getElementById("embedScreensContainer") as HTMLDivElement;
-    //     container.style.backgroundColor = "bg-contrast/80";
-    // }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+
 <div
     id="embedScreensContainer"
-    class={$focusMode
+    class="{$focusMode
         ? `group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 items-center pointer-events-auto transition-all pb-7`
         : `group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 items-center pointer-events-auto transition-all pb-7 bg-contrast/80`}
-    style={$emoteMenuSubStore ? "padding-top:96px;" : ""}
+        {$rightMode
+        ? 'group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 items-center pointer-events-auto transition-all pb-7 flex flex-col'
+        : 'group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 items-center pointer-events-auto transition-all pb-7'}"
+    style={$lightMode
+        ? "group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 items-center pointer-events-auto transition-all pb-7"
+        : ""}
 >
-    {$focusMode}
     {#if $embedScreenLayoutStore === LayoutMode.Presentation}
         <PresentationLayout />
-    {:else}
-        <MozaicLayout />
+        <!-- {:else} -->
+        <!-- <MozaicLayout /> -->
     {/if}
 
     <div
@@ -104,3 +104,4 @@
         </div>
     </div>
 </div>
+<!-- style={$emoteMenuSubStore ? "padding-top:96px;" : ""} -->

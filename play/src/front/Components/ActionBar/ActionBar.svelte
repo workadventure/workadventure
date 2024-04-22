@@ -113,7 +113,7 @@
     import PenIcon from "../Icons/PenIcon.svelte";
     import { StringUtils } from "../../Utils/StringUtils";
     import MegaphoneConfirm from "./MegaphoneConfirm.svelte";
-    import { focusMode, rightMode, lightMode, hideMode } from "../../Stores/ActionsCamStore";
+    import { focusMode, rightMode, hideMode } from "../../Stores/ActionsCamStore";
 
     // gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
     let userName = gameManager.getPlayerName() || "";
@@ -139,8 +139,9 @@
     }
 
     function lightModeOn() {
-        lightMode.set(!get(lightMode));
-        console.log("lightMode", lightMode);
+        console.log("Je suis dans la fonction lightModeOn pour le focusMode");
+        focusMode.set(true);
+        console.log("focusMode", focusMode);
     }
 
     function hideModeOn() {
@@ -1160,7 +1161,7 @@
                                     <div class="p-0 m-0 list-none">
                                         <button
                                             class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold w-full"
-                                            on:click={() => lightModeOn}
+                                            on:click={lightModeOn}
                                         >
                                             <div
                                                 class="group-hover:mr-2 transition-all w-6 h-6 aspect-square mr-3 text-center"

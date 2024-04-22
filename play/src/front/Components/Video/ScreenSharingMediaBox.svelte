@@ -30,11 +30,7 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div
-    class="video-container screen-sharing flex w-full flex-col h-full"
-    style="height:192px;"
-    on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
->
+<div class="video-container screen-sharing flex w-full flex-col h-full">
     {#if $statusStore === "connecting"}
         <div class="connecting-spinner" />
     {/if}
@@ -61,3 +57,4 @@
         <BanReportBox {peer} />
     </div>
 </div>
+<!-- on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)} -->

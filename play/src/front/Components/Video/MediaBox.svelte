@@ -41,6 +41,7 @@
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
 </script>
 
+<!-- Si le streamable est une vidéo d'une autre personne -->
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
         <div
@@ -57,23 +58,28 @@
             class:mozaic-quarter={mozaicQuarter}
             transition:fly={{ y: 50, duration: 150 }}
         >
+            <!-- Video de l'autre personne-->
             <VideoMediaBox peer={streamable} clickable={isClickable} />
         </div>
     {/if}
+
+    <!-- Si le streamable est un partage d'écran de la part d'un autre utilisateur !-->
 {:else if streamable instanceof ScreenSharingPeer}
-    <div
-        class="media-container {isHightlighted ? 'hightlighted mr-6' : 'flex'}
-     media-box-shape-color
-"
-        class:clickable={isClickable}
-        class:mozaic-duo={mozaicDuo}
-        class:mozaic-full-width={mozaicSolo}
-        class:mozaic-quarter={mozaicQuarter}
-    >
-        <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'} w-full h-full flex screen-blocker">
-            <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
+    <div class="w-9/12 scale-75">
+        <div
+            class="media-container {isHightlighted ? 'hightlighted bg-yellow-500' : 'flex bg-pink-500'}
+            media-box-shape-color"
+            class:clickable={isClickable}
+            class:mozaic-duo={mozaicDuo}
+            class:mozaic-full-width={mozaicSolo}
+            class:mozaic-quarter={mozaicQuarter}
+        >
+            <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'} w-9/12 h-screen flex screen-blocker">
+                <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
+            </div>
         </div>
     </div>
+    <!-- Si le streamable est une vidéo de l'utilisateur-->
 {:else if streamable instanceof JitsiTrackStreamWrapper}
     <div
         class="media-container media-box-shape-color pointer-events-auto screen-blocker"

@@ -11,8 +11,6 @@
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
 
-    let rightMode = false;
-
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
             /* if the co-website is closable, would like we to close it instead of unloading it?
@@ -52,10 +50,6 @@
     onMount(() => {
         resizeObserver.observe(layoutDom);
     });
-
-    // function right() {
-    //     rightMode = true;
-    // }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -79,7 +73,7 @@
         {/if}
     {:else}
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div class={rightMode ? "grid gay-y-4 justify-end" : "grid grid-flow-col gap-x-4 justify-center"}>
+            <div class="grid grid-flow-col gap-x-4 justify-center">
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}
@@ -95,7 +89,10 @@
                 {/if}
             </div>
         {/if}
-        <div id="embed-left-block" class=" {$highlightedEmbedScreen ? 'block' : 'hidden'}">
+
+        <!-- Div pour la personne qui reçoit le partage d'écran -->
+
+        <div id="" class=" {$highlightedEmbedScreen ? 'block' : 'hidden'}">
             <div id="main-embed-screen">
                 {#if $highlightedEmbedScreen}
                     {#if $highlightedEmbedScreen.type === "streamable"}
@@ -120,7 +117,7 @@
                                             class="close-window top-right-btn"
                                             on:click={closeCoWebsite}
                                         >
-                                            &times;
+                                            <!-- &times; -->
                                         </button>
                                     {/if}
                                 </div>

@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
     import { onMount } from "svelte";
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
@@ -57,4 +57,4 @@
 </div>
 
 <style lang="scss">
-</style>
+</style> -->
