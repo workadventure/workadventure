@@ -180,6 +180,7 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import {ZodAccelerator} from "@duplojs/zod-accelerator";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -508,6 +509,21 @@ export class GameScene extends DirtyScene {
         if (!parseResult.success) {
             console.warn("Your map file seems to be invalid. Errors: ", parseResult.error);
         }*/
+
+        console.profile("parseMap");
+        data = ITiledMap.parse(data);
+        console.profileEnd("parseMap");
+
+        console.profile("build");
+        const build = ZodAccelerator.build(ITiledMap);
+        console.profileEnd("build");
+
+        console.profile("parseAccelerator");
+        data = build.parse(data);
+        console.profileEnd("parseAccelerator");
+
+
+
 
         const url = this.mapUrlFile.substring(0, this.mapUrlFile.lastIndexOf("/"));
         this.mapFile.tilesets.forEach((tileset) => {
