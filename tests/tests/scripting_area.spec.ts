@@ -30,7 +30,9 @@ test.describe("Scripting chat functions @oidc", () => {
     await oidcAdminTagLogin(page);
     if (browserName === "webkit") {
       // Because webkit in playwright does not support Camera/Microphone Permission by settings
-      await hideNoCamera(page);
+      // eslint-disable-next-line playwright/no-skipped-test
+      test.skip();
+      return;
     }
 
     await Menu.openMapEditor(page);
