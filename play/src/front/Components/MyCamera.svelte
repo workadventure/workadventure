@@ -58,7 +58,7 @@
 </script>
 
 <div
-    class="transition-all relative h-full aspect-video w-fit m-auto"
+    class="transition-all relative h-full aspect-video w-fit m-auto width"
     bind:this={cameraContainer}
     style={small ? "width:100%" : "height:" + $heightCamWrapper + "px;"}
 >
@@ -166,4 +166,8 @@
 
 <style lang="scss">
     @import "../style/breakpoints.scss";
+
+    .width {
+        width: 350px;
+    }
 </style>

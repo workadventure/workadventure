@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { type Readable } from "svelte/store";
-    import { onMount, onDestroy } from "svelte";
+    import { onMount, onDestroy, createEventDispatcher } from "svelte";
     import { PeerStatus, VideoPeer } from "../../WebRtc/VideoPeer";
     import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
@@ -19,6 +19,9 @@
     export let mozaicSolo = false;
     export let mozaicDuo = false;
     export let mozaicQuarter = false;
+    let camWidth;
+
+    const dispatch = createEventDispatcher();
 
     let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
     if (streamable instanceof VideoPeer) {
@@ -33,10 +36,23 @@
 
     onMount(() => {
         gameScene.reposition();
+        if (streamable instanceof VideoPeer) {
+            getWidthOfCam();
+            dispatch("camMounted");
+        }
     });
+
+    function getWidthOfCam() {
+        // camWidth = document.getElementById("width")?.offsetWidth;
+        camWidth = document.getElementById("width");
+        console.log("TTTEEEESSSSTTTTTT", camWidth);
+    }
 
     onDestroy(() => {
         gameScene.reposition();
+        if (streamable instanceof VideoPeer) {
+            dispatch("camUnmounted");
+        }
     });
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
 </script>
@@ -59,7 +75,9 @@
             transition:fly={{ y: 50, duration: 150 }}
         >
             <!-- Video de l'autre personne-->
-            <VideoMediaBox peer={streamable} clickable={isClickable} />
+            <div class="width">
+                <VideoMediaBox peer={streamable} clickable={isClickable} />
+            </div>
         </div>
     {/if}
 
@@ -128,5 +146,10 @@
         &.clickable {
             cursor: pointer;
         }
+    }
+
+    .width {
+        width: 350px;
+        background-color: red;
     }
 </style>

@@ -67,7 +67,13 @@
 
     let aspectRatio = 1;
 
+    let videoContainerTest;
+
     const debug = Debug("VideoMediaBox");
+
+    function getSize() {
+        videoContainerTest = document.getElementsByClassName("video-container").offsetWidth;
+    }
 
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
 

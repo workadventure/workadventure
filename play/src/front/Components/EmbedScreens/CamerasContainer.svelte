@@ -4,10 +4,20 @@
     import MediaBox from "../Video/MediaBox.svelte";
     import { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import { focusMode, rightMode, hideMode } from "../../Stores/ActionsCamStore";
+    import { createEventDispatcher } from "svelte";
 
     export let highlightedEmbedScreen: EmbedScreen | undefined;
     export let full = false;
     $: clickable = !full;
+    let camWidthOtherTot: number;
+
+    function camMountedWidth() {
+        console.log("camMountedWidth");
+    }
+
+    function camUnmountedWidth() {
+        console.log("camUnmountedWidth");
+    }
 </script>
 
 <aside class:full in:fly|local={{ x: 200, duration: 100 }}>
@@ -17,7 +27,7 @@
         {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
             {#if !highlightedEmbedScreen || highlightedEmbedScreen.type !== "streamable" || (highlightedEmbedScreen.type === "streamable" && highlightedEmbedScreen.embed !== peer)}
                 {#key uniqueId}
-                    <MediaBox streamable={peer} />
+                    <MediaBox streamable={peer} on:camMounted={camMountedWidth} />
                 {/key}
             {/if}
         {/each}

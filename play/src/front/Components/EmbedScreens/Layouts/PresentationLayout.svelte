@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { afterUpdate, onMount } from "svelte";
+    import { afterUpdate, onDestroy, onMount } from "svelte";
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
@@ -10,6 +10,12 @@
     import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
+
+    let widthWindow: number;
+    let totalCamWidth = 0;
+    let camWidthOther = 350;
+    let camWidth = 350;
+    let divWith;
 
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
@@ -49,7 +55,44 @@
 
     onMount(() => {
         resizeObserver.observe(layoutDom);
+        widthWindow = window.innerWidth;
+        console.log("width", widthWindow);
+        handleCamMounted();
+        getWidth();
     });
+
+    onDestroy(() => {
+        handleCamDestroy();
+    });
+
+    // Idée pour le responsive de cams
+
+    // Calculer la taille de la div de toutes les cam donc de grid flow col
+    // Si cette taille est supérieur a celle de l'écran alors on stack la camera en dessous
+    //
+
+    function getWidth() {
+        divWith = document.getElementById("presentation-layout")?.offsetWidth;
+        console.log("GET WIDTH OF PRESENTATION LAYOUT", divWith);
+    }
+
+    function handleCamMounted() {
+        totalCamWidth += camWidth;
+        totalCamWidth += camWidthOther;
+        console.log("totalCamWidth", totalCamWidth);
+    }
+
+    function handleCamDestroy() {
+        totalCamWidth -= camWidth;
+        console.log("totalCamWidth", totalCamWidth);
+    }
+
+    // function stackCam() {
+    //     if (totalCamWidth > widthWindow) {
+    //         return true;
+    //     }
+    //     return false;
+    // }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -73,7 +116,7 @@
         {/if}
     {:else}
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div class="grid grid-flow-col gap-x-4 justify-center">
+            <div class="grid grid-flow-col gap-x-4 justify-center container-cam">
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}
