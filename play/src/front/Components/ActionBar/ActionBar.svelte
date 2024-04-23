@@ -179,11 +179,11 @@
     }
 
     function switchLayoutMode() {
-        if ($embedScreenLayoutStore === LayoutMode.Presentation) {
-            $embedScreenLayoutStore = LayoutMode.VideoChat;
-        } else {
-            $embedScreenLayoutStore = LayoutMode.Presentation;
-        }
+        // if ($embedScreenLayoutStore === LayoutMode.Presentation) {
+        //     $embedScreenLayoutStore = LayoutMode.VideoChat;
+        // } else {
+        //     $embedScreenLayoutStore = LayoutMode.Presentation;
+        // }
     }
 
     function followClick() {

@@ -65,6 +65,16 @@
         resizeObserver.observe(mainLayout);
         // ...
     });
+
+    function calcMainLayout() {
+        const mainLayout = document.getElementById("main-layout");
+        if (mainLayout) {
+        }
+    }
+
+    onMount(() => {
+        calcMainLayout();
+    });
 </script>
 
 <!-- Components ordered by z-index -->

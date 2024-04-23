@@ -19,7 +19,6 @@ singleDomain: false
 # and creating "deep wildcard" DNS records is not an option.
 domainNamePrefix: "-"
 
-
 # Secret key used by the application to encode JWT tokens.
 # If empty, a secret key will be generated and stored in the "shared-env-secret" secret.
 secretKey: ""
@@ -47,7 +46,7 @@ serviceAccount:
 commonEnv:
   ENABLE_MAP_EDITOR: "true"
   JITSI_URL: https://meet.jit.si
-  MAX_PER_GROUP: 4
+  MAX_PER_GROUP: 8
   EJABBERD_USER: admin
   ENABLE_CHAT: "true"
   ENABLE_CHAT_UPLOAD: "true"
@@ -70,10 +69,12 @@ play:
 
   podAnnotations: {}
 
-  podSecurityContext: {}
+  podSecurityContext:
+    {}
     # fsGroup: 2000
 
-  securityContext: {}
+  securityContext:
+    {}
     # capabilities:
     #   drop:
     #   - ALL
@@ -91,7 +92,8 @@ play:
     annotations:
       "traefik.ingress.kubernetes.io/service.serversscheme": "h2c"
 
-  resources: {}
+  resources:
+    {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -175,10 +177,12 @@ chat:
 
   podAnnotations: {}
 
-  podSecurityContext: {}
+  podSecurityContext:
+    {}
     # fsGroup: 2000
 
-  securityContext: {}
+  securityContext:
+    {}
     # capabilities:
     #   drop:
     #   - ALL
@@ -190,7 +194,8 @@ chat:
     type: ClusterIP
     port: 80
 
-  resources: {}
+  resources:
+    {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -237,7 +242,6 @@ chat:
     # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
     className: ""
 
-
 # #########################################################
 # back service
 # #########################################################
@@ -252,10 +256,12 @@ back:
 
   podAnnotations: {}
 
-  podSecurityContext: {}
+  podSecurityContext:
+    {}
     # fsGroup: 2000
 
-  securityContext: {}
+  securityContext:
+    {}
     # capabilities:
     #   drop:
     #   - ALL
@@ -267,7 +273,8 @@ back:
     type: ClusterIP
     port: 8080
 
-  resources: {}
+  resources:
+    {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -311,10 +318,12 @@ uploader:
 
   podAnnotations: {}
 
-  podSecurityContext: {}
+  podSecurityContext:
+    {}
     # fsGroup: 2000
 
-  securityContext: {}
+  securityContext:
+    {}
     # capabilities:
     #   drop:
     #   - ALL
@@ -326,7 +335,8 @@ uploader:
     type: ClusterIP
     port: 8080
 
-  resources: {}
+  resources:
+    {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -352,7 +362,8 @@ uploader:
   affinity: {}
 
   # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
-  env: {}
+  env:
+    {}
     # AWS_DEFAULT_REGION:
     # AWS_BUCKET:
     # AWS_URL:
@@ -361,7 +372,8 @@ uploader:
     # REDIS_HOST:
     # REDIS_PORT:
 
-  secretEnv: {}
+  secretEnv:
+    {}
     # AWS_ACCESS_KEY_ID:
     # AWS_SECRET_ACCESS_KEY:
 
@@ -402,7 +414,8 @@ maps:
   podSecurityContext: {}
   # fsGroup: 2000
 
-  securityContext: {}
+  securityContext:
+    {}
     # capabilities:
     #   drop:
     #   - ALL
@@ -414,7 +427,8 @@ maps:
     type: ClusterIP
     port: 80
 
-  resources: {}
+  resources:
+    {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -440,7 +454,8 @@ maps:
   affinity: {}
 
   # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
-  env: {}
+  env:
+    {}
     # AWS_DEFAULT_REGION:
     # AWS_BUCKET:
     # AWS_URL:
@@ -449,7 +464,8 @@ maps:
     # REDIS_HOST:
   # REDIS_PORT:
 
-  secretEnv: {}
+  secretEnv:
+    {}
     # AWS_ACCESS_KEY_ID:
   # AWS_SECRET_ACCESS_KEY:
 
@@ -484,10 +500,12 @@ icon:
 
   podAnnotations: {}
 
-  podSecurityContext: {}
+  podSecurityContext:
+    {}
     # fsGroup: 2000
 
-  securityContext: {}
+  securityContext:
+    {}
     # capabilities:
     #   drop:
     #   - ALL
@@ -499,7 +517,8 @@ icon:
     type: ClusterIP
     port: 8080
 
-  resources: {}
+  resources:
+    {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -529,7 +548,6 @@ icon:
     # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
     className: ""
 
-
 # #########################################################
 # ejabberd service
 # #########################################################
@@ -545,10 +563,12 @@ ejabberd:
 
   podAnnotations: {}
 
-  podSecurityContext: {}
+  podSecurityContext:
+    {}
     # fsGroup: 2000
 
-  securityContext: {}
+  securityContext:
+    {}
     # capabilities:
     #   drop:
     #   - ALL
@@ -560,7 +580,8 @@ ejabberd:
     type: ClusterIP
     port: 5443
 
-  resources: {}
+  resources:
+    {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -607,7 +628,6 @@ ejabberd:
     # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
     className: ""
 
-
 # #########################################################
 # mapstorage service
 # #########################################################
@@ -622,10 +642,12 @@ mapstorage:
 
   podAnnotations: {}
 
-  podSecurityContext: {}
+  podSecurityContext:
+    {}
     # fsGroup: 2000
 
-  securityContext: {}
+  securityContext:
+    {}
     # capabilities:
     #   drop:
     #   - ALL
@@ -637,7 +659,8 @@ mapstorage:
     type: ClusterIP
     port: "3000"
 
-  resources: {}
+  resources:
+    {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -690,7 +713,6 @@ mapstorage:
     ENABLE_BEARER_AUTHENTICATION: "false"
     AUTHENTICATION_VALIDATOR_URL: ""
     ENABLE_DIGEST_AUTHENTICATION: "false"
-
 
   secretEnv:
     AUTHENTICATION_PASSWORD: ""

@@ -30,7 +30,7 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="video-container screen-sharing flex w-full flex-col h-full">
+<div class="video-container screen-sharing">
     {#if $statusStore === "connecting"}
         <div class="connecting-spinner" />
     {/if}
@@ -38,7 +38,7 @@
         <div class="rtc-error" />
     {/if}
     {#if $streamStore !== null}
-        <video use:srcObject={$streamStore} autoplay playsinline class="h-full max-w-full mx-auto rounded" muted />
+        <video use:srcObject={$streamStore} autoplay playsinline class="height mx-auto rounded" muted />
         <div
             class="nametag-screenshare-container container-end flex media-box-camera-on-size video-on-responsive-height"
         >
@@ -57,4 +57,12 @@
         <BanReportBox {peer} />
     </div>
 </div>
+
 <!-- on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)} -->
+<style>
+    .height {
+        height: 75vh;
+        width: 100%;
+        margin-top: -10%;
+    }
+</style>

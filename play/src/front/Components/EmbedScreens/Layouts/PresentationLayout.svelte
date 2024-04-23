@@ -92,8 +92,8 @@
 
         <!-- Div pour la personne qui reçoit le partage d'écran -->
 
-        <div id="" class=" {$highlightedEmbedScreen ? 'block' : 'hidden'}">
-            <div id="main-embed-screen">
+        <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
+            <div id="">
                 {#if $highlightedEmbedScreen}
                     {#if $highlightedEmbedScreen.type === "streamable"}
                         {#key $highlightedEmbedScreen.embed.uniqueId}
@@ -116,9 +116,7 @@
                                             type="button"
                                             class="close-window top-right-btn"
                                             on:click={closeCoWebsite}
-                                        >
-                                            <!-- &times; -->
-                                        </button>
+                                        />
                                     {/if}
                                 </div>
                             </div>
@@ -154,6 +152,10 @@
 <style lang="scss">
     @import "../../../style/breakpoints.scss";
 
+    #video-container-receive {
+        height: 55vh;
+        margin-top: 3vh;
+    }
     #presentation-layout {
         &.full-medias {
             overflow-y: auto;
@@ -170,9 +172,6 @@
     }
 
     #main-embed-screen {
-        height: 100%;
-        margin-bottom: 3%;
-
         .highlighted-cowebsite {
             height: 100% !important;
             width: 100% !important;

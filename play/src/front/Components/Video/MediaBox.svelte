@@ -65,20 +65,19 @@
 
     <!-- Si le streamable est un partage d'écran de la part d'un autre utilisateur !-->
 {:else if streamable instanceof ScreenSharingPeer}
-    <div class="w-9/12 scale-75">
-        <div
-            class="media-container {isHightlighted ? 'hightlighted bg-yellow-500' : 'flex bg-pink-500'}
+    <div
+        class="media-container flex justify-center {isHightlighted ? 'hightlighted bg-yellow-500' : 'flex bg-pink-500'}
             media-box-shape-color"
-            class:clickable={isClickable}
-            class:mozaic-duo={mozaicDuo}
-            class:mozaic-full-width={mozaicSolo}
-            class:mozaic-quarter={mozaicQuarter}
-        >
-            <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'} w-9/12 h-screen flex screen-blocker">
-                <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
-            </div>
+        class:clickable={isClickable}
+        class:mozaic-duo={mozaicDuo}
+        class:mozaic-full-width={mozaicSolo}
+        class:mozaic-quarter={mozaicQuarter}
+    >
+        <div class="{isHightlighted ? '' : ''} height flex screen-blocker">
+            <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
         </div>
     </div>
+
     <!-- Si le streamable est une vidéo de l'utilisateur-->
 {:else if streamable instanceof JitsiTrackStreamWrapper}
     <div
