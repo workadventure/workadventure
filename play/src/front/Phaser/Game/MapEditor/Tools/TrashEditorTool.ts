@@ -6,16 +6,16 @@ import { mapEditorSelectedAreaPreviewStore, mapEditorVisibilityStore } from "../
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
 import { Entity } from "../../../ECS/Entity";
-import { DeleteAreaFrontCommand } from "../Commands/Area/DeleteAreaFrontCommand";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { EntityRelatedEditorTool } from "./EntityRelatedEditorTool";
+import { AreaEditorTool } from "./AreaEditorTool";
 
 export class TrashEditorTool extends EntityRelatedEditorTool {
     protected ctrlKey?: Phaser.Input.Keyboard.Key;
     private areaPreviews: AreaPreview[] = [];
     private active = false;
 
-    constructor(mapEditorModeManager: MapEditorModeManager) {
+    constructor(mapEditorModeManager: MapEditorModeManager, private areaEditorTool: AreaEditorTool) {
         super(mapEditorModeManager);
 
         this.active = false;
@@ -143,19 +143,9 @@ export class TrashEditorTool extends EntityRelatedEditorTool {
     }
 
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
-        areaPreview.on(AreaPreviewEvent.Delete, () => {
-            this.mapEditorModeManager
-                .executeCommand(
-                    new DeleteAreaFrontCommand(
-                        this.scene.getGameMap(),
-                        areaPreview.getAreaData().id,
-                        undefined,
-                        this,
-                        true
-                    )
-                )
-                .catch((e) => console.error(e));
-        });
+        areaPreview.on(AreaPreviewEvent.Delete, () =>
+            this.areaEditorTool.handleDeleteAreaFrontCommandExecution(areaPreview.getAreaData().id, this)
+        );
     }
 
     private deleteAreaPreview(id: string): boolean {

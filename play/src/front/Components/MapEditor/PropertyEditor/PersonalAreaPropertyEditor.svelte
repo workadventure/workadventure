@@ -2,11 +2,15 @@
     import { createEventDispatcher, onMount } from "svelte";
     import { InfoIcon } from "svelte-feather-icons";
     import { PersonalAreaAccessClaimMode, PersonalAreaPropertyData } from "@workadventure/map-editor";
+    // eslint-disable-next-line import/no-unresolved
+    import { closeModal, openModal } from "svelte-modals";
     import LL from "../../../../i18n/i18n-svelte";
     import InputTags from "../../Input/InputTags.svelte";
     import MemberAutocomplete from "../../Input/MemberAutocomplete.svelte";
     import { InputTagOption, toTags } from "../../Input/InputTagOption";
     import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
+    import ActionPopupOnPersonalAreaWithEntities from "../ActionPopupOnPersonalAreaWithEntities.svelte";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let personalAreaPropertyData: PersonalAreaPropertyData;
@@ -22,6 +26,7 @@
     let personalAreaOwner: string | null = personalAreaPropertyData.ownerId;
 
     const dispatch = createEventDispatcher();
+    const entitiesManager = gameManager.getCurrentGameScene().getGameMapFrontWrapper().getEntitiesManager();
 
     onMount(async () => {
         if (personalAreaPropertyData.ownerId) {
@@ -53,21 +58,63 @@
     }
 
     function revokeOwner() {
-        personalAreaPropertyData.ownerId = null;
-        personalAreaOwner = null;
-        dispatch("change");
+        if (isPersonalAreaContainsEntities()) {
+            openModalForActionOnAreaEntities("change", resetAreaOwner);
+        } else {
+            resetAreaOwner();
+            dispatch("change");
+        }
+    }
+
+    function onRemoveProperty() {
+        if (personalAreaOwner !== null && isPersonalAreaContainsEntities()) {
+            openModalForActionOnAreaEntities("close");
+        } else {
+            dispatch("close");
+        }
     }
 
     function onClaimModeChange() {
         dispatch("change");
     }
+
+    function resetAreaOwner() {
+        personalAreaPropertyData.ownerId = null;
+        personalAreaOwner = null;
+    }
+
+    function openModalForActionOnAreaEntities(dispatchType: "change" | "close", callback?: () => void) {
+        openModal(ActionPopupOnPersonalAreaWithEntities, {
+            onDeleteEntities: () => {
+                if (callback) {
+                    callback();
+                }
+                dispatch(dispatchType, true);
+                closeModal();
+            },
+            onKeepEntities: () => {
+                if (callback) {
+                    callback();
+                }
+                dispatch(dispatchType);
+                closeModal();
+            },
+            onCancel: () => {
+                closeModal();
+            },
+        });
+    }
+
+    function isPersonalAreaContainsEntities() {
+        const areaId = $mapEditorSelectedAreaPreviewStore?.getId();
+        if (areaId) {
+            return entitiesManager.getEntitiesInsideArea(areaId).size > 0;
+        }
+        return false;
+    }
 </script>
 
-<PropertyEditorBase
-    on:close={() => {
-        dispatch("close");
-    }}
->
+<PropertyEditorBase on:close={onRemoveProperty}>
     <span slot="header" class="tw-flex tw-justify-center tw-items-center">
         {$LL.mapEditor.properties.personalAreaConfiguration.label()}
     </span>

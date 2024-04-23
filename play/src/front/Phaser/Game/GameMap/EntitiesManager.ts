@@ -1,13 +1,13 @@
 import {
     AreaDataProperties,
-    EntityDimensions,
     EntityData,
     EntityDataProperties,
+    EntityDimensions,
     EntityPrefabRef,
     WAMEntityData,
 } from "@workadventure/map-editor";
 import { Observable, Subject } from "rxjs";
-import { Unsubscriber, get } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 import { z } from "zod";
 import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
 import { gameSceneIsLoadedStore } from "../../../Stores/GameSceneStore";
@@ -453,6 +453,30 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     public getEntities(): Map<string, Entity> {
         return this.entities;
+    }
+
+    public getEntitiesInsideArea(areaId: string): Map<string, Entity> {
+        const entitiesInsideArea = new Map<string, Entity>();
+        const gameMapFrontWrapper = this.scene.getGameMapFrontWrapper();
+        const area = this.scene.getGameMap().getGameMapAreas()?.getArea(areaId);
+        if (area === undefined) {
+            return entitiesInsideArea;
+        }
+
+        this.entities.forEach((entity, entityId) => {
+            if (
+                gameMapFrontWrapper.isInsideAreaByCoordinates(
+                    { x: area.x, y: area.y, width: area.width, height: area.height },
+                    {
+                        x: entity.getBounds().centerX,
+                        y: entity.getBounds().centerY,
+                    }
+                )
+            ) {
+                entitiesInsideArea.set(entityId, entity);
+            }
+        });
+        return entitiesInsideArea;
     }
 
     public getActivatableEntities(): Entity[] {

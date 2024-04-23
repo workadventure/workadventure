@@ -22,7 +22,7 @@ export class CreateAreaFrontCommand extends CreateAreaCommand implements FrontCo
     }
 
     public getUndoCommand(): DeleteAreaFrontCommand {
-        return new DeleteAreaFrontCommand(this.gameMap, this.areaConfig.id, undefined, this.areaEditorTool, false);
+        return new DeleteAreaFrontCommand(this.gameMap, this.areaConfig.id, undefined, this.areaEditorTool);
     }
 
     public emitEvent(roomConnection: RoomConnection): void {

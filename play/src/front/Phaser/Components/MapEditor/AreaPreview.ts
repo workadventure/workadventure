@@ -149,7 +149,7 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
         this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData);
     }
 
-    public updateProperty(changes: AtLeast<AreaDataProperty, "id">): void {
+    public updateProperty(changes: AtLeast<AreaDataProperty, "id">, removeAreaEntities?: boolean): void {
         const oldAreaData = structuredClone(this.areaData);
         const property = this.areaData.properties.find((property) => property.id === changes.id);
         if (property) {
@@ -160,15 +160,15 @@ export class AreaPreview extends Phaser.GameObjects.Rectangle {
                 return;
             });
         }
-        this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData);
+        this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData, removeAreaEntities);
     }
 
-    public deleteProperty(id: string): boolean {
+    public deleteProperty(id: string, removeAreaEntities?: boolean): boolean {
         const oldAreaData = structuredClone(this.areaData);
         const index = this.areaData.properties.findIndex((property) => property.id === id);
         if (index !== -1) {
             this.areaData.properties.splice(index, 1);
-            this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData);
+            this.emit(AreaPreviewEvent.Updated, this.areaData, oldAreaData, removeAreaEntities);
             return true;
         } else {
             return false;

@@ -1286,7 +1286,7 @@ export class GameMapFrontWrapper {
         return properties;
     }
 
-    private isInsideAreaByCoordinates(
+    public isInsideAreaByCoordinates(
         areaCoordinates: { x: number; y: number; width: number; height: number },
         objectCoordinates: { x: number; y: number }
     ) {

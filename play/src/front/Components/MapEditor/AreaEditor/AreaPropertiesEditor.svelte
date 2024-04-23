@@ -4,8 +4,8 @@
         AreaDataProperties,
         AreaDataPropertiesKeys,
         AreaDataProperty,
-        PersonalAreaAccessClaimMode,
         OpenWebsitePropertyData,
+        PersonalAreaAccessClaimMode,
         PlayAudioPropertyData,
     } from "@workadventure/map-editor";
     import { KlaxoonEvent, KlaxoonService } from "@workadventure/shared-utils";
@@ -247,13 +247,13 @@
         refreshFlags();
     }
 
-    function onDeleteProperty(id: string) {
+    function onDeleteProperty(id: string, removeAreaEntities?: boolean) {
         if ($mapEditorSelectedAreaPreviewStore) {
             analyticsClient.removeMapEditorProperty(
                 "area",
                 properties.find((property) => property.id === id)?.type || "unknown"
             );
-            $mapEditorSelectedAreaPreviewStore.deleteProperty(id);
+            $mapEditorSelectedAreaPreviewStore.deleteProperty(id, removeAreaEntities);
             // refresh properties
             properties = $mapEditorSelectedAreaPreviewStore.getProperties();
             refreshFlags();
@@ -292,9 +292,9 @@
         }
     }
 
-    function onUpdateProperty(property: AreaDataProperty) {
+    function onUpdateProperty(property: AreaDataProperty, removeAreaEntities?: boolean) {
         if ($mapEditorSelectedAreaPreviewStore) {
-            $mapEditorSelectedAreaPreviewStore.updateProperty(property);
+            $mapEditorSelectedAreaPreviewStore.updateProperty(property, removeAreaEntities);
         }
     }
 
@@ -623,10 +623,10 @@
                     {:else if property.type === "personalAreaPropertyData"}
                         <PersonalAreaPropertyEditor
                             personalAreaPropertyData={property}
-                            on:close={() => {
-                                onDeleteProperty(property.id);
+                            on:close={({ detail }) => {
+                                onDeleteProperty(property.id, detail);
                             }}
-                            on:change={() => onUpdateProperty(property)}
+                            on:change={({ detail }) => onUpdateProperty(property, detail)}
                         />
                     {/if}
                 </div>
