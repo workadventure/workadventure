@@ -2,7 +2,7 @@
 
 import { expect, test } from "@playwright/test";
 import Menu from "./utils/menu";
-import { hideNoCamera, login } from "./utils/roles";
+import { login } from "./utils/roles";
 import MapEditor from "./utils/mapeditor";
 import AreaEditor from "./utils/map-editor/areaEditor";
 import Map from "./utils/map";
