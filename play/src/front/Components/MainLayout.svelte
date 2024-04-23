@@ -6,8 +6,8 @@
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import {
         helpCameraSettingsVisibleStore,
-        helpWebRtcSettingsVisibleStore,
         helpNotificationSettingsVisibleStore,
+        helpWebRtcSettingsVisibleStore,
     } from "../Stores/HelpSettingsStore";
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
@@ -19,11 +19,11 @@
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
     import {
-        showLimitRoomModalStore,
-        modalVisibilityStore,
-        showModalGlobalComminucationVisibilityStore,
         modalPopupVisibilityStore,
+        modalVisibilityStore,
         roomListVisibilityStore,
+        showLimitRoomModalStore,
+        showModalGlobalComminucationVisibilityStore,
     } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
@@ -69,10 +69,11 @@
     import NotificationPermissionModal from "./ActionBar/AvailabilityStatus/Modals/NotificationPermissionModal.svelte";
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
     import ObjectDetails from "./Modal/ObjectDetails.svelte";
-    import Popup from "./Modal/Popup.svelte";
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
+    import MapExplorerPopup from "./Modal/MapExplorerPopup.svelte";
+    import MainModal from "./Modal/MainModal.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -193,7 +194,7 @@
         {/if}
 
         {#if $modalPopupVisibilityStore}
-            <Popup />
+            <MapExplorerPopup />
         {/if}
         {#if $roomListVisibilityStore}
             <MapList />
@@ -201,6 +202,8 @@
         {#if $warningMessageStore.length > 0}
             <WarningToast />
         {/if}
+
+        <MainModal />
     </section>
 
     {#if $layoutManagerActionVisibilityStore}

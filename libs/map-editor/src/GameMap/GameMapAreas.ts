@@ -3,12 +3,12 @@ import * as _ from "lodash";
 import {
     AreaData,
     AreaDataProperties,
-    RestrictedRightsPropertyData,
     AtLeast,
-    GameMapProperties,
-    WAMFileFormat,
     EntityCoordinates,
+    GameMapProperties,
     PersonalAreaPropertyData,
+    RestrictedRightsPropertyData,
+    WAMFileFormat,
 } from "../types";
 
 export type AreaChangeCallback = (
@@ -299,6 +299,19 @@ export class GameMapAreas {
             return true;
         }
         return areaRights.readTags.some((tag) => userTags.includes(tag));
+    }
+
+    public isPersonalArea(areaId: string): boolean {
+        const area = this.getArea(areaId);
+        if (area) {
+            const personalAreaData = this.getPersonalAreaRightPropertyData(area);
+            if (personalAreaData !== undefined && personalAreaData.ownerId !== null) {
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private getAreaRightPropertyData(area: AreaData): RestrictedRightsPropertyData | undefined {

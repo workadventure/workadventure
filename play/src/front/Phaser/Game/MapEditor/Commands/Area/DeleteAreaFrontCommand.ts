@@ -11,8 +11,7 @@ export class DeleteAreaFrontCommand extends DeleteAreaCommand implements FrontCo
         gameMap: GameMap,
         areaId: string,
         commandId: string | undefined,
-        private editorTool: AreaEditorTool | TrashEditorTool,
-        private localCommand: boolean
+        private editorTool: AreaEditorTool | TrashEditorTool
     ) {
         super(gameMap, areaId, commandId);
     }
@@ -22,7 +21,6 @@ export class DeleteAreaFrontCommand extends DeleteAreaCommand implements FrontCo
         const returnVal = super.execute();
 
         this.editorTool.handleAreaDeletion(this.areaId, area);
-
         return returnVal;
     }
 
