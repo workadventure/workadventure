@@ -67,7 +67,7 @@ This will install the local web server.
 
 This command will start the web server and open the welcome page. You should see a page looking like this:
 
-![The welcome page of the "map start kit"](../images/starter_kit_start_screen.png)
+![The welcome page of the "map start kit"](../images/starter_kit_start_screen_gh_pages.png)
 
 From here, you simply need to click the "Test this map" button to test your map in WorkAdventure.
 
@@ -78,10 +78,8 @@ The local web server can only be used to test your map locally. In particular, t
 ### Pushing the map
 
 :::caution Important
-Before your push on github pages, you need to configure your une variable d'environnement in your .env file. like this : UPLOAD_MODE=GH_PAGES !
+Before your push on github pages, you need to set up your environment variable in .env file like this : UPLOAD_MODE=GH_PAGES
 :::
-
-When your changes are ready, you need to "commit" and "push" (i.e. "upload") the changes back to GitHub. Just wait a few minutes, and your map will be propagated automatically to the GitHub pages web-server.
 
 ## Testing your map
 

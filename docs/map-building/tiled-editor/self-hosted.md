@@ -4,7 +4,7 @@ sidebar_position: 13
 
 ## Getting started with self hosted Map
 
-Pour avoir votre map self hosted you need to follow these steps :
+To have your map self hosted you need to follow these steps :
 
 Start by [creating a GitHub account](https://github.com/join) if you don't already have one.
 
@@ -36,7 +36,7 @@ If you want ot use this package, you will need to install all dependencies relat
 
 :::
 
-To use this package run the command in your terminal :
+In order to use this package run the command in your terminal :
 
 > node_modules/.bin/upload-wa-map
 
@@ -60,13 +60,13 @@ It will ask you some questions:
    If you have any doubt about your upload mode you can check here for the others options.
    [Build your Map with Tiled](index.md)
 
-After answering these question, the script will start to upload your file. You need to see something like this : Upload done successfully
+After answering these questions, the script will start to upload your directory. To be sure that it worked, you need to see something like this in your terminal : 'Upload done successfully'
 
 To complete the upload, you need to set your secrets variables in your github repository. You need to set the URL of your map storage and your API Key to push your new release ! You can find here a tutoriel on how to set up your secrets variables in github.
 
 [How to set your secrets in github](https://scribehow.com/shared/Upload_Map__Set_up_secrets_for_in_your_repository__FKsqAsrVQ_SzDavSudb19Q)
 
-> Now for every change you only just have to commit and push all your changes !
+> Now for every change you only just have to commit and push all your changes ! Just wait a few minutes, and your map will be propagated automatically on your server.
 
 ## Need some help?
 

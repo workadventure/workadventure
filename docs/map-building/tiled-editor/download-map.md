@@ -10,11 +10,11 @@ Then, go to the [Github map starter kit repository page](https://github.com/work
 
 ![Open the "code" button](../images/navigate_to_repo.png)
 
-Ensuite cliquez sur le bouton Download ZIP
+Then click on the Download ZIP button
 
 ![Click "download" button](../images/download_repo.png)
 
-Make the changes that you wannt to do in any text editor and to push it you just need
+Make the changes that you want in Tiled and to upload you only need to
 
 ## Need some help?
 
