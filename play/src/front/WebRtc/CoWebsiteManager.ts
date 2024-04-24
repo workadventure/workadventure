@@ -1,5 +1,5 @@
 import { Subject } from "rxjs";
-import type { Readable, Unsubscriber, Writable } from "svelte/store";
+import type { Readable, Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
 import type CancelablePromise from "cancelable-promise";
 import { randomDelay } from "@workadventure/shared-utils/src/RandomDelay/RandomDelay";
@@ -71,9 +71,6 @@ class CoWebsiteManager {
         }
     });
 
-    private mainCoWebsiteUnsubscriber: Unsubscriber;
-    private highlightedEmbedScreenUnsubscriber: Unsubscriber;
-
     public getMainState() {
         return get(this.openedMain);
     }
@@ -138,7 +135,9 @@ class CoWebsiteManager {
             trails: undefined,
         };
 
-        this.mainCoWebsiteUnsubscriber = mainCoWebsite.subscribe((coWebsite) => {
+        // No need to unsubscribe, we are in a singleton.
+        // eslint-disable-next-line svelte/no-ignored-unsubscribe
+        mainCoWebsite.subscribe((coWebsite) => {
             this.buttonCloseCoWebsite.hidden = !coWebsite?.isClosable() ?? false;
         });
 
@@ -175,7 +174,9 @@ class CoWebsiteManager {
 
         const buttonSwipe = HtmlUtils.getElementByIdOrFail(cowebsiteSwipeButtonId);
 
-        this.highlightedEmbedScreenUnsubscriber = highlightedEmbedScreen.subscribe((value) => {
+        // No need to unsubscribe, we are in a singleton.
+        // eslint-disable-next-line svelte/no-ignored-unsubscribe
+        highlightedEmbedScreen.subscribe((value) => {
             if (!value || value.type !== "cowebsite") {
                 buttonSwipe.style.display = "none";
                 return;
@@ -203,8 +204,6 @@ class CoWebsiteManager {
 
     public cleanup(): void {
         this.closeCoWebsites();
-        this.mainCoWebsiteUnsubscriber();
-        this.highlightedEmbedScreenUnsubscriber();
     }
 
     public getCoWebsiteBuffer(): HTMLDivElement {
