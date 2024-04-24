@@ -73,11 +73,7 @@ export class ExplorerTool implements MapEditorTool {
         deltaY: number,
         deltaZ: number
     ) => {
-        // Calculate the velocity of the scroll
-        const velocity = deltaY / 53;
-        const zoomFactor = 1 - velocity * 0.1;
-        // Restore camera mode
-        this.scene.zoomByFactor(zoomFactor, true);
+        this.scene.handleMouseWheel(deltaY);
     };
     private pointerDownHandler = (pointer: Phaser.Input.Pointer) => {
         // The motion factor is used to smooth out the velocity of the camera.

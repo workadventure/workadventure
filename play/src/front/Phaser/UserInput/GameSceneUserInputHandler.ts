@@ -21,18 +21,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         deltaY: number,
         deltaZ: number
     ): void {
-        // Calculate the velocity of the zoom
-        //const velocity = Math.sign(deltaY) * Math.sqrt(Math.abs(deltaY)) / 5;
-        let velocity = deltaY / 53;
-        // Fine tuning: if the platform is a Mac, the trackpad is a bit slow so we need to increase the velocity
-        if (navigator.platform.toUpperCase().indexOf("MAC") >= 0) {
-            velocity = deltaY / 15;
-        }
-
-        // Calculate the zoom factor
-        const zoomFactor = 1 - velocity * 0.1;
-        // Apply the zoom
-        this.gameScene.zoomByFactor(zoomFactor, true);
+        this.gameScene.handleMouseWheel(deltaY);
     }
 
     public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
