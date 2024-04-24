@@ -52,6 +52,10 @@ export class WaScaleManager {
             this.scaleManager.setZoom(this.actualZoom);
             camera?.setZoom(1);
         } else {
+            if (this.scaleManager.width !== realSize.width || this.scaleManager.height !== realSize.height) {
+                this.scaleManager.resize(realSize.width, realSize.height);
+            }
+
             const zoom =
                 this.hdpiManager.zoomModifier * this.hdpiManager.getOptimalZoomLevel(realSize.width * realSize.height);
             this.scaleManager.setZoom(this.actualZoom);
