@@ -9,8 +9,8 @@ import {
 import { Observable, Subject } from "rxjs";
 import { get, Unsubscriber } from "svelte/store";
 import { z } from "zod";
+import * as Sentry from "@sentry/svelte";
 import { actionsMenuStore } from "../../../Stores/ActionsMenuStore";
-import { gameSceneIsLoadedStore } from "../../../Stores/GameSceneStore";
 import {
     mapEditorEntityModeStore,
     mapEditorModeStore,
@@ -68,7 +68,6 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     private properties: Map<string, string | boolean | number>;
     private actionsMenuStoreUnsubscriber: Unsubscriber;
-    private gameSceneIsLoadedStoreUnsubscriber: Unsubscriber;
 
     /**
      * Firing on map change, containing newest collision grid array
@@ -92,12 +91,15 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
             this.gameMapFrontWrapper.handleEntityActionTrigger();
         });
 
-        // When the gamescene is loaded (connection realy defined, etc.), we update all entities
-        this.gameSceneIsLoadedStoreUnsubscriber = gameSceneIsLoadedStore.subscribe((isLoaded) => {
-            if (isLoaded) {
+        // When the GameScene is loaded (connection established, etc.), we update all entities
+        this.scene.sceneReadyToStartPromise
+            .then(() => {
                 this.makeAllEntitiesInteractive(true);
-            }
-        });
+            })
+            .catch((e) => {
+                console.error(e);
+                Sentry.captureException(e);
+            });
 
         this.bindEventHandlers();
     }
