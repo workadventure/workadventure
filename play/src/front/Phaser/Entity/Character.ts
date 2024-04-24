@@ -592,4 +592,12 @@ export abstract class Character extends Container implements OutlineableInterfac
     public get lastDirection(): PositionMessage_Direction {
         return this._lastDirection;
     }
+
+    public hideName(): void {
+        this.playerNameText?.setVisible(false);
+    }
+
+    public showName(): void {
+        this.playerNameText?.setVisible(true);
+    }
 }

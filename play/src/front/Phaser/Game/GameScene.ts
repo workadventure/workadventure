@@ -2417,6 +2417,18 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            iframeListener.hideName.subscribe(() => {
+                this.CurrentPlayer.hideName();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.restoreName.subscribe(() => {
+                this.CurrentPlayer.showName();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
             iframeListener.addPersonnalMessageStream.subscribe((text) => {
                 iframeListener.sendUserInputChat(text, undefined);
                 _newChatMessageSubject.next(text);
