@@ -131,7 +131,7 @@ import {
     cameraResistanceModeStore,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
-import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer } from "../../Utils/Debuggers";
+import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
 import { megaphoneCanBeUsedStore, liveStreamingEnabledStore } from "../../Stores/MegaphoneStore";
@@ -3427,6 +3427,22 @@ ${escapedMessage}
                 throw new Error("Scene destroyed without cleanup!");
             }
         });
+    }
+
+    handleMouseWheel(deltaY: number) {
+        // Calculate the velocity of the zoom
+        //const velocity = deltaY / 30;
+
+        // Calculate the zoom factor
+        //const zoomFactor = 1 - velocity * 0.1;
+
+        // Explanation of the formula: to Zoom x 2, we need a delta of 300
+        const zoomFactor = Math.exp((-deltaY * Math.log(2)) / 200);
+
+        debugZoom("DeltaY: ", deltaY, "Zoom factor", zoomFactor);
+
+        // Apply the zoom
+        this.zoomByFactor(zoomFactor, true);
     }
 
     zoomByFactor(zoomFactor: number, smooth: boolean) {
