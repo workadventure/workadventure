@@ -133,12 +133,6 @@ export const defaultInterfaceConfig = {
 export class JitsiCoWebsite extends SimpleCoWebsite {
 
     private jitsiApi?: JitsiApi;
-    // private audioCallback = this.onAudioChange.bind(this);
-    // private videoCallback = this.onVideoChange.bind(this);
-    // private dominantSpeakerChangedCallback = this.onDominantSpeakerChanged.bind(this);
-    // private participantsCountChangeCallback = this.onParticipantsCountChange.bind(this);
-
-    public screenWakeRelease: (() => Promise<void>) | undefined;
     private loadPromise: CancelablePromise | undefined;
 
     constructor(
@@ -155,29 +149,9 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         super(url, false, undefined, widthPercent, closable);
     }
 
-
-    closeOrUnload() {
-        if (this.screenWakeRelease) {
-            this.screenWakeRelease()
-                .then(() => {
-                    this.screenWakeRelease = undefined;
-                })
-                .catch((error) => console.error(error));
-        }
-        if (this.isClosable()) {
-            coWebsiteManager.closeCoWebsite(this);
-        } else {
-            coWebsiteManager.unloadCoWebsite(this).catch((err) => {
-                console.error("Cannot unload co-website from the Jitsi factory", err);
-            });
-        }
-    }
-
-
     getDomain(): string {
         return this.domain;
     }
-
 
     public onParticipantsCountChange(): void {
         this.updateParticipantsCountStore();

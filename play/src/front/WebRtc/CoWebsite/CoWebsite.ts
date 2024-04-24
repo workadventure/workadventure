@@ -4,7 +4,6 @@ import type CancelablePromise from "cancelable-promise";
 
 export interface CoWebsite {
     getId(): string;
-    getDuplicateId(): string;
     getUrl(): URL;
     getIframe(): HTMLIFrameElement | undefined;
     getLoadIframe(): CancelablePromise<HTMLIFrameElement> | undefined;

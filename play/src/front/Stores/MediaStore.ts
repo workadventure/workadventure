@@ -25,12 +25,10 @@ function createRequestedCameraState() {
     return {
         subscribe,
         enableWebcam: () => {
-            console.log("ENABLE VIDEO !!!!!!! LILILIL");
             set(true);
             localUserStore.setRequestedCameraState(true);
         },
         disableWebcam: () => {
-            console.log("DISABLE VIDEO !!!!! LOLOLOL");
             set(false);
             localUserStore.setRequestedCameraState(false);
         },
@@ -46,12 +44,10 @@ function createRequestedMicrophoneState() {
     return {
         subscribe,
         enableMicrophone: () => {
-            console.log("ENABLE MICHOPHONE !!!!!!! LILILIL");
             set(true);
             localUserStore.setRequestedMicrophoneState(true);
         },
         disableMicrophone: () => {
-            console.log("DISABLE MICROPHONE !!!!! LOLOLOL");
             set(false);
             localUserStore.setRequestedMicrophoneState(false);
         },

@@ -15,6 +15,7 @@
     import { userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
     import { inExternalServiceStore } from "../../Stores/MyMediaStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 
     export let actualCowebsite: JitsiCoWebsite;
     let domain = actualCowebsite.getDomain();
@@ -23,6 +24,7 @@
     let playerName = gameManager.getPlayerName();
     let jwt: string | undefined;
     let jitsiApi: JitsiApi;
+    let screenWakeRelease: (() => Promise<void>) | undefined;
 
     const onDominantSpeakerChanged = (data: { id: string }) => {
         if (jitsiApi) {
@@ -94,7 +96,7 @@
 
                         screenWakeLock
                             .requestWakeLock()
-                            .then((release) => (actualCowebsite.screenWakeRelease = release))
+                            .then((release) => (screenWakeRelease = release))
                             .catch((error) => console.error(error));
 
                         actualCowebsite.updateParticipantsCountStore();
@@ -111,23 +113,20 @@
                 Promise.race([timemoutPromise, jistiMeetLoadedPromise])
                     .then(async () => {
                         await Promise.race([timemoutPromise, jistiMeetLoadedPromise]);
-                        let iframe = document.querySelector('[id*="jitsi" i]');
 
                         if (cancelled) {
                             console.info("CLOSING BECAUSE CANCELLED AFTER LOAD");
                             return;
                         }
 
-                        if (iframe && jitsiApi) {
+                        if (jitsiApi) {
                             jitsiApi.addListener("videoConferenceLeft", () => {
-                                actualCowebsite.closeOrUnload();
+                                coWebsiteManager.removeCoWebsiteToStore(actualCowebsite);
                             });
 
                             jitsiApi.addListener("readyToClose", () => {
-                                actualCowebsite.closeOrUnload();
+                                coWebsiteManager.removeCoWebsiteToStore(actualCowebsite);
                             });
-                            // Ajouter une classe CSS à l'iframe
-                            iframe.classList.add("pixel");
                         } else {
                             console.error("No iframe or no jitsiApi. We may have a problem.");
                         }
@@ -140,8 +139,6 @@
                 console.error("Error loading Jitsi Meeting:", e);
             });
     });
-
-    // Appel a la fonction closeOrUnload pour stopper le jitsi
 </script>
 
 <div bind:this={jitsiContainer} class="w-full h-full" />

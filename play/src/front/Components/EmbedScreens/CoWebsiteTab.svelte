@@ -6,6 +6,9 @@
     import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
+    import { LoaderIcon } from "svelte-feather-icons";
+    import axios from "axios";
+    import { ICON_URL } from "../../Enum/EnvironmentVariable";
     // import { handleTabResize } from "./CoWebsitesContainer";
 
     export let coWebsite: CoWebsite;
@@ -22,9 +25,10 @@
     let mediaQuery = window.matchMedia("(max-width: 768px)");
 
     const dispatch = createEventDispatcher();
+    let isVertical: boolean;
 
-    onMount(() => {
-        if (!mediaQuery.matches) {
+    onMount(async () => {
+        if (isVertical === true) {
             if (isJitsi) {
                 cowebsiteName = "Jitsi meeting";
                 isClosable = true;
@@ -41,17 +45,25 @@
                 isDuplicable = true;
             }
         }
+
         if (isJitsi) {
-            const favicon = `https://s2.googleusercontent.com/s2/favicons?domain=${urlForFavicon}`;
-            const cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
+            getFavicon(urlForFavicon);
+            let favicon = `https://icon.workadventu.re/icons?url=${urlForFavicon}`;
+            console.log("FAVICON :", favicon);
+            let faviconLink = urlForFavicon.replace("fr/", "favicon.ico");
+            // let faviconLink = `${urlForFavicon}/favicon.ico`;
+            console.log("FAVICON LINK :", faviconLink);
+            let cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
             if (cowebsiteTabIcon) {
                 cowebsiteTabIcon.src = favicon;
+                console.log(cowebsiteTabIcon);
             }
             cowebsiteName = "Jitsi meeting";
             isClosable = true;
             isDuplicable = true;
         } else if (isBBB) {
-            const favicon = `https://s2.googleusercontent.com/s2/favicons?domain=${urlForFavicon}`;
+            const favicon = `https://icon.workadventu.re/icons?url=${urlForFavicon}`;
+            console.log("FAVICON :", favicon);
             const cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
             if (cowebsiteTabIcon) {
                 cowebsiteTabIcon.src = favicon;
@@ -60,11 +72,28 @@
             isClosable = true;
             isDuplicable = true;
         } else {
-            const favicon = `https://s2.googleusercontent.com/s2/favicons?domain=${urlForFavicon}`;
-            const cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
-            if (cowebsiteTabIcon) {
-                cowebsiteTabIcon.src = favicon;
+            const favicon = await getFavicon(urlForFavicon);
+            console.log("FAVICON :", favicon);
+            if (favicon !== undefined) {
+                const cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
+                if (cowebsiteTabIcon) {
+                    cowebsiteTabIcon.src = favicon;
+                }
             }
+            // let favicon = getFavicon(urlForFavicon);
+            // console.log("FAVICON :", favicon);
+            // if (favicon) {
+            //     let cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
+            //     if (cowebsiteTabIcon) {
+            //         cowebsiteTabIcon.src = favicon;
+            //     }
+            // }
+            // let faviconLink = `${urlForFavicon}favicon.ico`;
+            // console.log("FAVICON LINK :", faviconLink);
+            const cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
+            // if (cowebsiteTabIcon) {
+            //     cowebsiteTabIcon.src = favicon;
+            // }
             cowebsiteName = coWebsite.getUrl().toString();
             cowebsiteName = cowebsiteName.replace(/.+\/\/|www.|\..+/g, "");
             cowebsiteName = cowebsiteName.charAt(0).toUpperCase() + cowebsiteName.slice(1);
@@ -72,7 +101,6 @@
             isDuplicable = true;
         }
         dispatch("tabMounted");
-        console.log("tab mounted");
     });
 
     onDestroy(() => {
@@ -96,6 +124,78 @@
         navigator.clipboard.writeText(url).catch((e) => console.error(e));
         alert("URL copied to clipboard");
     }
+
+    async function getFavicon(urlForFavicon: string) {
+        let urlForFaviconModified = urlForFavicon.replace("https://www.", "");
+        let link = ICON_URL + "/icons?url=" + urlForFaviconModified;
+        console.log("LINK :", link);
+        await axios
+            .get(link, {
+                method: "GET",
+                headers: {
+                    "Access-Control-Allow-Origin": "*",
+                },
+            })
+            .then((response) => {
+                console.log(response);
+            })
+            .catch((error) => {
+                if (!error.response) {
+                    // Network error occurred
+                    console.error("Network error:", error);
+                } else {
+                    // The server responded with a status other than 200 range
+                    console.error("Error response:", error.response);
+                }
+            });
+    }
+
+    // Try with fetch
+
+    // async function getFavicon(urlForFavicon: string) {
+    //     try {
+    //         let urlForFaviconModified = urlForFavicon.replace("https://www.", "");
+    //         let link = `${ICON_URL}/icons?url=${urlForFaviconModified}`;
+    //         console.log("LINK :", link);
+
+    //         const response = await fetch(link, {
+    //             method: "GET",
+    //             mode: "no-cors",
+    //         });
+
+    //         // Assuming the response is JSON
+    //         const faviconData = await response.json();
+    //         // Find the 32x32 favicon URL if available
+    //         let favicon32x32Url = "";
+    //         // Assuming faviconData is an array of objects with { size: string, url: string } structure
+    //         faviconData.forEach((favicon: any) => {
+    //             if (favicon.size === "32x32") {
+    //                 favicon32x32Url = favicon.url;
+    //             }
+    //         });
+
+    //         return favicon32x32Url;
+    //     } catch (error) {
+    //         console.error("Error fetching favicon:", error);
+    //         return undefined;
+    //     }
+    // }
+
+    // async function getFavicon(urlForFavicon: string) {
+    //     let urlForFaviconModified = urlForFavicon.replace("https://www.", "");
+    //     let link = ICON_URL + "/icons?url=" + urlForFaviconModified;
+    //     console.log("LINK :", link);
+    //     await fetch(link, {
+    //         method: "GET",
+    //         mode: "no-cors",
+    //     })
+    //         .then((response) => {
+    //             console.log(response);
+    //         })
+    //         .catch((err) => {
+    //             console.log("ERROR : ", err);
+    //         });
+    // }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -106,18 +206,17 @@
     on:click={toggleActive}
     on:click={() => (active = !active)}
 >
-    <!-- {#if isLoading}
+    {#if isLoading}
         <img alt="icon" id="cowebsiteTabIcon" />
-    {/if} -->
-    <!--    {:else}
-         <div class="h-6 w-6 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}">
+    {:else}
+        <div class="h-6 w-6 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}">
             <LoaderIcon
                 size="24"
                 color1={active ? "stroke-contrast" : "stroke-white"}
                 color2={active ? "stroke-contrast" : "stroke-white"}
             />
         </div>
-    {/if} -->
+    {/if}
 
     <div class="flex justify-between items-center w-full">
         <div class="p-2 text-ellipsis overflow-hidden">
@@ -168,7 +267,6 @@
                 />
             </div>
             {#if isClosable}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
                     on:click={closeTab}

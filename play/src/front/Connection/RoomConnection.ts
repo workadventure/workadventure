@@ -1524,9 +1524,6 @@ export class RoomConnection implements RoomConnection {
     ): Promise<JoinBBBMeetingAnswer> {
         const meetingName = props.get("meetingName") as string;
         const localMeetingId = props.get("bbbMeeting") as string;
-
-        console.log("queryBBBMeetingUrl", meetingId, localMeetingId, meetingName);
-
         const answer = await this.query({
             $case: "joinBBBMeetingQuery",
             joinBBBMeetingQuery: {

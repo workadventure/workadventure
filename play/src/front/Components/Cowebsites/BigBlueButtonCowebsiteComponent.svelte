@@ -5,30 +5,18 @@
     import { inExternalServiceStore } from "../../Stores/MyMediaStore";
 
     export let actualCowebsite: BBBCoWebsite;
+    let screenWakeRelease: (() => Promise<void>) | undefined;
 
     onMount(async () => {
+        console.log("mount BBB");
         try {
             await screenWakeLock
                 .requestWakeLock()
-                .then((release) => (actualCowebsite.screenWakeRelease = release))
+                .then((release) => (screenWakeRelease = release))
                 .catch((error) => console.error(error));
             inExternalServiceStore.set(true);
-            console.log("BBB Screen Wake Lock requested successfully!");
         } catch (e) {
             console.error("Error with Screen Wake Lock :", e);
-        }
-    });
-
-    onDestroy(async () => {
-        try {
-            if (actualCowebsite.screenWakeRelease) {
-                await actualCowebsite.screenWakeRelease();
-                actualCowebsite.screenWakeRelease = undefined;
-            }
-            inExternalServiceStore.set(false);
-            console.log("BBB Screen Wake off successfully!");
-        } catch (e) {
-            console.error("BBB Screen Wake off not successfully!", e);
         }
     });
 </script>
