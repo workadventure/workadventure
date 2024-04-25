@@ -14,6 +14,7 @@ import {
 } from "../Services/WaScaleManager";
 import type { ActiveEventList } from "../UserInput/UserInputManager";
 import { UserInputEvent } from "../UserInput/UserInputManager";
+import { debugZoom } from "../../Utils/Debuggers";
 import type { GameScene } from "./GameScene";
 import Clamp = Phaser.Math.Clamp;
 
@@ -50,9 +51,7 @@ export interface CameraManagerEventCameraUpdateData {
 }
 
 export class CameraManager extends Phaser.Events.EventEmitter {
-    private scene: GameScene;
     private camera: Phaser.Cameras.Scene2D.Camera;
-    private cameraBounds: { x: number; y: number };
     private waScaleManager: WaScaleManager;
 
     private cameraMode: CameraMode = CameraMode.Positioned;
@@ -85,14 +84,17 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private animateCallback: (time: number, delta: number) => void;
     // The date when the resistance wall was broken
     private wallDownDate = 0;
+    private resistanceZoneEnterDate = 0;
 
-    constructor(scene: GameScene, cameraBounds: { x: number; y: number }, waScaleManager: WaScaleManager) {
+    constructor(
+        private scene: GameScene,
+        private mapSize: { width: number; height: number },
+        waScaleManager: WaScaleManager
+    ) {
         super();
         this.animateCallback = this.animate.bind(this);
-        this.scene = scene;
 
         this.camera = scene.cameras.main;
-        this.cameraBounds = cameraBounds;
         this.cameraLocked = false;
         this.zoomLocked = false;
 
@@ -106,9 +108,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.unsubscribeMapEditorModeStore = mapEditorModeStore.subscribe((isOpened) => {
             // Define new bounds for camera if the map editor is opened
             if (isOpened) {
-                this.camera.setBounds(0, 0, this.cameraBounds.x * 2, this.cameraBounds.y);
+                this.camera.setBounds(0, 0, this.mapSize.width * 2, this.mapSize.height);
             } else {
-                this.camera.setBounds(0, 0, this.cameraBounds.x, this.cameraBounds.y);
+                this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
             }
         });
 
@@ -120,8 +122,10 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         });
 
         // Set zoom out to the maximum possible value
-        const { width: mapWidth, height: mapHeight } = this.getMapSize();
-        const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(mapWidth, mapHeight);
+        const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(
+            this.mapSize.width,
+            this.mapSize.height
+        );
         this.waScaleManager.maxZoomOut = targetZoomModifier;
         this.targetZoomModifier = this.waScaleManager.zoomModifier;
     }
@@ -166,7 +170,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.stopPan();
         this.camera.pan(setTo.x, setTo.y, duration, Easing.SineEaseOut, true, (camera, progress, x, y) => {
             if (this.cameraMode === CameraMode.Positioned) {
-                this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
+                if (zoomModifierChange !== 0) {
+                    this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
+                }
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             }
             if (progress === 1) {
@@ -401,7 +407,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     private initCamera() {
         this.camera = this.scene.cameras.main;
-        this.camera.setBounds(0, 0, this.cameraBounds.x, this.cameraBounds.y);
+        this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
     }
 
     private bindEventHandlers(): void {
@@ -438,9 +444,13 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.stopFollow();
         this.setCameraMode(CameraMode.Exploration);
 
-        const { width: mapWidth, height: mapHeight } = this.getMapSize();
-
-        this.scene.cameras.main.setBounds(-mapWidth, -mapHeight, mapWidth * 3, mapHeight * 3, false);
+        this.camera.setBounds(
+            -this.mapSize.width,
+            -this.mapSize.height,
+            this.mapSize.width * 3,
+            this.mapSize.height * 3,
+            false
+        );
 
         // Center the camera on the player
         //this.scene.cameras.main.centerOn(this.scene.CurrentPlayer.x, this.scene.CurrentPlayer.y);
@@ -449,35 +459,26 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         //this.waScaleManager.maxZoomOut = targetZoomModifier;
     }
 
-    private getMapSize(): { width: number; height: number } {
-        const map = this.scene.getGameMapFrontWrapper().getMap();
-
-        if (
-            map.width === undefined ||
-            map.height === undefined ||
-            map.tilewidth === undefined ||
-            map.tileheight === undefined
-        ) {
-            throw new Error("Map width, height, tilewidth or tileheight is undefined");
-        }
-
-        return {
-            width: map.width * map.tilewidth,
-            height: map.height * map.tileheight,
-        };
-    }
-
     public triggerMaxZoomOutAnimation(): void {
         const currentZoomModifier = this.waScaleManager.zoomModifier;
-        const { width: mapWidth, height: mapHeight } = this.getMapSize();
-        const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(mapWidth, mapHeight);
+        const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(
+            this.mapSize.width,
+            this.mapSize.height
+        );
 
         this.stopPan();
-        this.camera.pan(mapWidth / 2, mapHeight / 2, 1000, Easing.SineEaseOut, true, (camera, progress, x, y) => {
-            this.waScaleManager.zoomModifier =
-                (targetZoomModifier - currentZoomModifier) * progress + currentZoomModifier;
-            this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
-        });
+        this.camera.pan(
+            this.mapSize.width / 2,
+            this.mapSize.height / 2,
+            1000,
+            Easing.SineEaseOut,
+            true,
+            (camera, progress, x, y) => {
+                this.waScaleManager.zoomModifier =
+                    (targetZoomModifier - currentZoomModifier) * progress + currentZoomModifier;
+                this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
+            }
+        );
     }
 
     public panTo(scrollX: number, scrollY: number, duration: number): void {
@@ -537,6 +538,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             } else {
                 // We zoom in the opposite direction, let's break the wall for 10 seconds.
                 this.wallDownDate = Date.now();
+                debugZoom("Resistance wall is broken because we scrolled towards the start of the resistance zone");
             }
         }
 
@@ -566,6 +568,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             if (!this.resistZoomCallback) {
                 this.resistZoomCallback = this.resistZoom.bind(this);
                 this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.resistZoomCallback);
+                this.resistanceZoneEnterDate = Date.now();
             }
         }
     }
@@ -636,8 +639,18 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             ) {
                 this.resistanceCallback();
                 this.wallDownDate = 0;
+                this.resistanceZoneEnterDate = 0;
+                debugZoom("We passed through resistance zone. Resistance wall is back up");
+                console.log("this._resistanceStartZoomLevel", this._resistanceStartZoomLevel);
+                console.log("this._resistanceEndZoomLevel", this._resistanceEndZoomLevel);
+                console.log("this.waScaleManager.zoomModifier", this.waScaleManager.zoomModifier);
             } else {
                 this.wallDownDate = Date.now();
+                this.resistanceZoneEnterDate = 0;
+                debugZoom("Resistance wall is broken because we left the resistance zone");
+                console.log("this._resistanceStartZoomLevel", this._resistanceStartZoomLevel);
+                console.log("this._resistanceEndZoomLevel", this._resistanceEndZoomLevel);
+                console.log("this.waScaleManager.zoomModifier", this.waScaleManager.zoomModifier);
             }
 
             return;
@@ -654,6 +667,17 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         //this.targetZoomModifier = newZoom;
 
         this.animateToZoomLevel(newZoom);
+
+        // If the wall is not broken and we spent more than 2 seconds in the resistance zone, let's break the wall.
+        console.log(
+            "this.resistanceZoneEnterDate",
+            this.resistanceZoneEnterDate,
+            Date.now() - this.resistanceZoneEnterDate
+        );
+        if (this.wallDownDate === 0 && Date.now() - this.resistanceZoneEnterDate > 2000) {
+            this.wallDownDate = Date.now();
+            debugZoom("Resistance wall is broken because we spent 2 seconds in the resistance zone");
+        }
 
         // The alpha is calculated based on the distance between the current zoom level and the resistance zone
         // The closer we are to the resistance zone, the more the alpha is important.
