@@ -181,6 +181,7 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import Clamp = Phaser.Math.Clamp;
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -776,7 +777,7 @@ export class GameScene extends DirtyScene {
 
         this.cameraManager = new CameraManager(
             this,
-            { x: this.Map.widthInPixels, y: this.Map.heightInPixels },
+            { width: this.Map.widthInPixels, height: this.Map.heightInPixels },
             waScaleManager
         );
         this.configureResistanceToZoomOut();
@@ -3437,7 +3438,11 @@ ${escapedMessage}
         //const zoomFactor = 1 - velocity * 0.1;
 
         // Explanation of the formula: to Zoom x 2, we need a delta of 300
-        const zoomFactor = Math.exp((-deltaY * Math.log(2)) / 200);
+        let zoomFactor = Math.exp((-deltaY * Math.log(2)) / 200);
+
+        // Sometimes, deltaY can be really high (this happens when the browser is lagging for 1 second or so)
+        // Let's clamp the value to avoid zooming too much
+        zoomFactor = Clamp(zoomFactor, 0.5, 2);
 
         debugZoom("DeltaY: ", deltaY, "Zoom factor", zoomFactor);
 
