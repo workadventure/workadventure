@@ -16,5 +16,8 @@
     "benchmark",
     "uploader",
     "play/packages/iframe-api-typings"
-  ]
+  ],
+  "dependencies": {
+    "@workadventure/scripting-api-extra": "^1.8.1"
+  }
 }

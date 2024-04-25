@@ -99,12 +99,6 @@ class IframeListener {
     private readonly _restoreWebcamStream: Subject<void> = new Subject();
     public readonly restoreWebcamStream = this._restoreWebcamStream.asObservable();
 
-    private readonly _hideName: Subject<void> = new Subject();
-    public readonly hideName = this._hideName.asObservable();
-
-    private readonly _restoreName: Subject<void> = new Subject();
-    public readonly restoreName = this._restoreName.asObservable();
-
     private readonly _addPersonnalMessageStream: Subject<string> = new Subject();
     public readonly addPersonnalMessageStream = this._addPersonnalMessageStream.asObservable();
 
@@ -408,10 +402,6 @@ class IframeListener {
                         this._disableWebcamStream.next();
                     } else if (iframeEvent.type === "restoreWebcam") {
                         this._restoreWebcamStream.next();
-                    } else if (iframeEvent.type === "hideName") {
-                        this._hideName.next();
-                    } else if (iframeEvent.type === "restoreName") {
-                        this._restoreName.next();
                     } else if (iframeEvent.type === "disablePlayerProximityMeeting") {
                         this._disablePlayerProximityMeetingStream.next();
                     } else if (iframeEvent.type === "restorePlayerProximityMeeting") {

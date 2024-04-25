@@ -2417,18 +2417,6 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.hideName.subscribe(() => {
-                this.CurrentPlayer.hideName();
-            })
-        );
-
-        this.iframeSubscriptionList.push(
-            iframeListener.restoreName.subscribe(() => {
-                this.CurrentPlayer.showName();
-            })
-        );
-
-        this.iframeSubscriptionList.push(
             iframeListener.addPersonnalMessageStream.subscribe((text) => {
                 iframeListener.sendUserInputChat(text, undefined);
                 _newChatMessageSubject.next(text);
@@ -3015,6 +3003,16 @@ ${escapedMessage}
         iframeListener.registerAnswerer("playSoundInBubble", async (message) => {
             const soundUrl = new URL(message.url, this.mapUrlFile);
             await this.simplePeer.dispatchSound(soundUrl);
+        });
+
+        iframeListener.registerAnswerer("hideName", () => {
+            this.CurrentPlayer.hideName();
+            this.connection?.emitPlayerHideName(true);
+        });
+
+        iframeListener.registerAnswerer("restoreName", () => {
+            this.CurrentPlayer.showName();
+            this.connection?.emitPlayerHideName(false);
         });
     }
 

@@ -666,6 +666,14 @@ export const iframeQueryMapTypeGuards = {
         query: z.undefined(),
         answer: z.string(),
     },
+    hideName: {
+        query: z.undefined(),
+        answer: z.undefined(),
+    },
+    restoreName: {
+        query: z.undefined(),
+        answer: z.undefined(),
+    },
     playSoundInBubble: {
         query: isPlaySoundInBubbleEvent,
         answer: z.undefined(),
