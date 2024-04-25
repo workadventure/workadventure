@@ -1144,6 +1144,13 @@ export class GameScene extends DirtyScene {
         if (update.updated.availabilityStatus) {
             character.setAvailabilityStatus(update.player.availabilityStatus);
         }
+        if (update.updated.nameHidden) {
+            if (update.player.nameHidden) {
+                character.hideName();
+            } else {
+                character.showName();
+            }
+        }
         if (update.updated.outlineColor) {
             if (update.player.outlineColor === undefined) {
                 character.removeApiOutlineColor();

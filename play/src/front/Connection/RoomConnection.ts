@@ -1786,6 +1786,7 @@ export class RoomConnection implements RoomConnection {
             userUuid: message.userUuid,
             outlineColor: message.hasOutline ? message.outlineColor : undefined,
             variables: variables,
+            nameHidden: message.nameHidden,
         };
     }
 

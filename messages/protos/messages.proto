@@ -585,6 +585,7 @@ message UserJoinedMessage {
   bool hasOutline = 10;
   AvailabilityStatus availabilityStatus = 11;
   map<string, string> variables = 12;
+  bool nameHidden = 13;
 }
 
 message UserLeftMessage {
