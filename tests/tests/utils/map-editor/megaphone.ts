@@ -28,7 +28,7 @@ class Megaphone {
 
     async megaphoneAddNewRights(page: Page, tag = 'test') {
         await page.locator(".map-editor .configure-my-room .content .input-tags .value-container input").fill(tag);
-        await page.getByText(`add new: '${tag.toLowerCase()}'`).click();
+        await page.getByText(`add a new tag: '${tag.toLowerCase()}'`).click();
     }
 
     async megaphoneRemoveRights(page: Page, tag = 'test') {

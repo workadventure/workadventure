@@ -9,6 +9,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         trashEditor: "Zbórk",
         closeMapEditor: "Mapu zacyniś",
         mapManagerActivated: "Mapowy manager je aktiwěrowany",
+        exploreTheRoomActivated: "Wobłuk wužiwaś",
+        areaEditorActivated: "Areal wobźěłaś",
+        entityEditorActivated: "Entitu wobźěłaś",
+        trashEditorActivated: "Zbórk wužiwaś",
+        configureMyRoomActivated: "Mój rum wobźěłaś",
     },
     properties: {
         silentProperty: {
