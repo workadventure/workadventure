@@ -443,7 +443,7 @@ export class GameScene extends DirtyScene {
                         code: "NETWORK_ERROR",
                         title: "Network error",
                         subtitle: "An error occurred while loading a resource",
-                        details: 'Cannot load "' + (this.originalMapUrl ?? file.src) + '"',
+                        details: 'Cannot load "' + (file?.src ?? this.originalMapUrl) + '"',
                     })
                 );
                 this.cleanupClosingScene();

@@ -511,9 +511,8 @@ test.describe('Map-storage Upload API', () => {
 
         listOfMaps = await request.get("maps");
         maps = await listOfMaps.json();
-
-        for(const folder in maps["maps"]){
-            expect(folder.includes(folderName)).toBeFalsy();
+        for (const key in maps["maps"]) {
+            await expect(key).not.toContain("toDelete");
         }
     });
 
