@@ -344,6 +344,7 @@ const mapEditor: BaseTranslation = {
             close: "Close",
             moveToEntity: "Move to entity {name}",
             moveToArea: "Move to area {name}",
+            errorMovingToObject: "The object is not accessible yet 🚫",
         },
         popup: {
             title: "Do you intend to keep using Explorer mode? 🤔",

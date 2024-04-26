@@ -315,6 +315,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             close: "Fermer",
             moveToEntity: "Aller à l'entité {name}",
             moveToArea: "Aller à la zone {name}",
+            errorMovingToObject: "L'objet n'est pas accessible pour le moment 🚫",
         },
         popup: {
             title: "Est-ce que tu veux continuer avec le Map Explorer ? 🤔",

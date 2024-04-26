@@ -593,7 +593,7 @@ export class GameScene extends DirtyScene {
             this.Map,
             this.Terrains
         );
-        this.gameMapFrontWrapper.initialize();
+        this.gameMapFrontWrapper.initialize().catch((e) => console.error(e));
         for (const layer of this.gameMapFrontWrapper.getFlatLayers()) {
             if (layer.type === "tilelayer") {
                 const exitSceneUrl = this.getExitSceneUrl(layer);
@@ -3168,6 +3168,7 @@ ${escapedMessage}
             position,
             tryFindingNearestAvailable
         );
+        if(path.length === 0) throw new Error("No path found");
         return this.CurrentPlayer.setPathToFollow(path, speed);
     }
 
