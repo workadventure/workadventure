@@ -20,6 +20,7 @@ import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
 import { MegaphoneIcon } from "../Components/MegaphoneIcon";
 import { passStatusToOnlineWhenUserIsInSetableStatus } from "../../Rules/StatusRules/statusChangerFunctions";
+import { gameManager } from "../Game/GameManager";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
 import Text = Phaser.GameObjects.Text;
@@ -83,6 +84,9 @@ export abstract class Character extends Container implements OutlineableInterfac
         //textures are inside a Promise in case they need to be lazyloaded before use.
         this.texturePromise = texturesPromise
             .then((textures) => {
+                // Save the textures in the gameManager to be able to get them into SelectCharacterScene and CustomizationScene
+                gameManager.setCharacterTextureIds(textures);
+
                 this.addTextures(textures, frame);
                 this.invisible = false;
                 this.playAnimation(direction, moving);

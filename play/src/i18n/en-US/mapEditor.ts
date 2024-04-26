@@ -13,6 +13,11 @@ const mapEditor: BaseTranslation = {
         exploreTheRoom: "Explore the room",
         closeMapEditor: "Close map editor",
         mapManagerActivated: "Map manager activated",
+        exploreTheRoomActivated: "Explore the room activated",
+        areaEditorActivated: "Area editor activated",
+        entityEditorActivated: "Entity editor activated",
+        trashEditorActivated: "Trash editor activated",
+        configureMyRoomActivated: "Configure my room activated",
     },
     properties: {
         silentProperty: {
@@ -344,6 +349,7 @@ const mapEditor: BaseTranslation = {
             close: "Close",
             moveToEntity: "Move to entity {name}",
             moveToArea: "Move to area {name}",
+            errorMovingToObject: "The object is not accessible yet 🚫",
         },
         popup: {
             title: "Do you intend to keep using Explorer mode? 🤔",

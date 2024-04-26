@@ -5,11 +5,11 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import { mapEditorSelectedToolStore, mapEditorVisibilityStore } from "../../Stores/MapEditorStore";
-    import AreaToolImg from "../images/icon-tool-area.png";
     // import FloorToolImg from "../images/icon-tool-floor.png";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { mapEditorActivated, mapEditorActivatedForThematics } from "../../Stores/MenuStore";
     import Tooltip from "../Util/Tooltip.svelte";
+    import AreaToolImg from "../images/icon-tool-area.png";
     import CloseImg from "../images/close.png";
     import ConfigureImg from "../images/configure.svg";
     import ExplorerImg from "../images/explorer.svg";
@@ -76,9 +76,26 @@
 >
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
-        class="!tw-h-fit !tw-w-fit tw-rounded-2xl tw-bg-dark-purple/80 tw-backdrop-blur-lg tw-text-white tw-p-4 tw-pt-6"
+        class="tw-flex tw-items-center !tw-h-fit !tw-w-fit tw-rounded-2xl tw-bg-dark-purple/80 tw-backdrop-blur-lg tw-text-white tw-p-4 tw-pt-6 tw-gap-2"
     >
-        {$LL.mapEditor.sideBar.mapManagerActivated()}
+        {#each availableTools as tool (tool.toolName)}
+            {#if $mapEditorSelectedToolStore === tool.toolName}
+                <img src={tool.img} class="tw-w-fit tw-h-4" alt="open tool {tool.toolName}" />
+            {/if}
+        {/each}
+        {#if $mapEditorSelectedToolStore === EditorToolName.ExploreTheRoom}
+            {$LL.mapEditor.sideBar.exploreTheRoomActivated()}
+        {:else if $mapEditorSelectedToolStore === EditorToolName.AreaEditor}
+            {$LL.mapEditor.sideBar.areaEditorActivated()}
+        {:else if $mapEditorSelectedToolStore === EditorToolName.EntityEditor}
+            {$LL.mapEditor.sideBar.entityEditorActivated()}
+        {:else if $mapEditorSelectedToolStore === EditorToolName.TrashEditor}
+            {$LL.mapEditor.sideBar.trashEditorActivated()}
+        {:else if $mapEditorSelectedToolStore === EditorToolName.WAMSettingsEditor}
+            {$LL.mapEditor.sideBar.configureMyRoomActivated()}
+        {:else}
+            {$LL.mapEditor.sideBar.mapManagerActivated()}
+        {/if}
         <img
             src={CloseImg}
             class="tw-h-4 tw-ml-4 tw-pointer-events-auto tw-cursor-pointer"

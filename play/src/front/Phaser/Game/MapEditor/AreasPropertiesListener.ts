@@ -66,7 +66,7 @@ export class AreasPropertiesListener {
 
             // Add new notification to show at the user that he entered a new area
             if (area.name && area.name !== "") {
-                notificationPlayingStore.playNotification(area.name);
+                notificationPlayingStore.playNotification(area.name, "icon-tool-area.png");
             }
             for (const property of area.properties) {
                 this.addPropertyFilter(property, area);

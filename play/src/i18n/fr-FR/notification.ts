@@ -19,6 +19,7 @@ const notification: DeepPartial<Translation["notification"]> = {
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
     },
+    addNewTag: 'nouveau tag : "{tag}"',
 };
 
 export default notification;

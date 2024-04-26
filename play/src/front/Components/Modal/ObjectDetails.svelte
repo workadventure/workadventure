@@ -16,6 +16,7 @@
     import AddPropertyButtonWrapper from "../MapEditor/PropertyEditor/AddPropertyButtonWrapper.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { warningMessageStore } from "../../Stores/ErrorStore";
 
     // Create type for component AddPropertyButton
     type AddPropertyButtonType = {
@@ -80,16 +81,13 @@
 
         if ($mapExplorationObjectSelectedStore instanceof AreaPreview) {
             for (const value of $mapExplorationObjectSelectedStore.getAreaData().properties.values()) {
-                console.log(value);
                 newIconProperties.set(value.id, createPropertyData(value));
             }
         }
         iconProperties.set(newIconProperties);
-        console.log($iconProperties);
     }
 
     function createPropertyData(value: EntityDataProperty | AreaDataProperty): AddPropertyButtonType {
-        console.log("createPropertyData", value);
         const property: AddPropertyButtonType = {
             property: value.type as EntityDataPropertiesKeys,
             subProperty: undefined,
@@ -121,7 +119,12 @@
                     },
                     true
                 )
-                .catch((error) => console.warn(error));
+                .catch((error) => {
+                    console.warn("Error while moving to the entity or area", error);
+                    warningMessageStore.addWarningMessage($LL.mapEditor.explorer.details.errorMovingToObject(), {
+                        closable: true,
+                    });
+                });
             gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
 
             // Close map editor to walk on the entity or zone

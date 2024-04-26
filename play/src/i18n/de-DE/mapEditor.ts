@@ -9,6 +9,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         trashEditor: "Papierkorb",
         closeMapEditor: "Karte schließen",
         mapManagerActivated: "Kartenmanager aktiviert",
+        exploreTheRoomActivated: "Raum erkunden",
+        areaEditorActivated: "Fläche bearbeiten",
+        entityEditorActivated: "Entität bearbeiten",
+        trashEditorActivated: "Papierkorb aktiviert",
+        configureMyRoomActivated: "Meinen Raum konfigurieren",
     },
     properties: {
         silentProperty: {
