@@ -13,7 +13,7 @@
         ["camera-off.png", cameraOffImg],
         ["jitsi.png", jistiImg],
         ["jitsi.png", jistiImg],
-        ["icon-tool-area.png", AreaToolImg]
+        ["icon-tool-area.png", AreaToolImg],
     ]);
 
     export let notification: Notification;
