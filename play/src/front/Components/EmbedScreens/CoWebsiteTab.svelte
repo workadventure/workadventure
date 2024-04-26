@@ -6,10 +6,10 @@
     import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
-    import { LoaderIcon } from "svelte-feather-icons";
     import { ICON_URL } from "../../Enum/EnvironmentVariable";
     import jitsiIcon from "../images/jitsi.png";
     import meetingIcon from "../images/meeting.svg";
+    import LoaderIcon from "../Icons/LoaderIcon.svelte";
 
     export let coWebsite: CoWebsite;
     export let isLoading = false;
