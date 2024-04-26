@@ -3168,7 +3168,7 @@ ${escapedMessage}
             position,
             tryFindingNearestAvailable
         );
-        if(path.length === 0) throw new Error("No path found");
+        if (path.length === 0) throw new Error("No path found");
         return this.CurrentPlayer.setPathToFollow(path, speed);
     }
 

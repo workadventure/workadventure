@@ -108,7 +108,6 @@
         mapExplorationObjectSelectedStore.set(undefined);
     }
     function goTo() {
-        console.log('$mapExplorationObjectSelectedStore', $mapExplorationObjectSelectedStore);
         if ($mapExplorationObjectSelectedStore) {
             // Move to the selected entity or area
             gameManager
@@ -122,12 +121,9 @@
                 )
                 .catch((error) => {
                     console.warn("Error while moving to the entity or area", error);
-                    warningMessageStore.addWarningMessage(
-                        $LL.mapEditor.explorer.details.errorMovingToObject(),
-                        {
-                            closable: true,
-                        }
-                    );
+                    warningMessageStore.addWarningMessage($LL.mapEditor.explorer.details.errorMovingToObject(), {
+                        closable: true,
+                    });
                 });
             gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
 
