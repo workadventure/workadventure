@@ -30,7 +30,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
                 const remotePlayer = remotePlayers.get(payloadData.playerId);
                 if (remotePlayer === undefined) {
                     console.warn(
-                        "Received a variable message for a player that isn't connected. Ignoring.",
+                        'Received a variable message for a player that isn\'t connected. Did you forget to call "WA.players.configureTracking()"?. Ignoring.',
                         payloadData
                     );
                     return;

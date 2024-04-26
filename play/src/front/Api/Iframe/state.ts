@@ -17,7 +17,8 @@ export class WorkadventureStateCommands extends AbstractWorkadventureStateComman
     ];
 
     saveVariable(key: string, value: unknown): Promise<void> {
-        if (this.variables.get(key) === value) {
+        // Let's not save anything if the value has not changed (and if it is a primitive type)
+        if (this.variables.get(key) === value && typeof value !== "object") {
             return Promise.resolve();
         }
 
