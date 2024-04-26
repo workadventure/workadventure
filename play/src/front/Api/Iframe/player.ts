@@ -312,6 +312,13 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
             data: undefined,
         });
     }
+
+    public setTextures(textureUrls:string[]): Promise<void> {
+        return queryWorkadventure({
+            type: "setPlayerTextures",
+            data: textureUrls,
+        });
+    }
 }
 
 export type Position = {

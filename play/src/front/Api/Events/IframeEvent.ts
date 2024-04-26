@@ -674,6 +674,10 @@ export const iframeQueryMapTypeGuards = {
         query: z.undefined(),
         answer: z.undefined(),
     },
+    setPlayerTextures: {
+        query: z.array(z.string()),
+        answer: z.undefined(),
+    },
     playSoundInBubble: {
         query: isPlaySoundInBubbleEvent,
         answer: z.undefined(),

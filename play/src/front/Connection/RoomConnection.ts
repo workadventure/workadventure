@@ -817,6 +817,18 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitSetPlayerTextures(setTexture: string[]): void {
+        const message = SetPlayerDetailsMessageTsProto.fromPartial({
+            setPlayerTexture: setTexture,
+        });
+        this.send({
+            message: {
+                $case: "setPlayerDetailsMessage",
+                setPlayerDetailsMessage: message,
+            },
+        });
+    }
+
     public emitPlayerStatusChange(availabilityStatus: AvailabilityStatus): void {
         const message = SetPlayerDetailsMessageTsProto.fromPartial({
             availabilityStatus,
@@ -1787,6 +1799,7 @@ export class RoomConnection implements RoomConnection {
             outlineColor: message.hasOutline ? message.outlineColor : undefined,
             variables: variables,
             nameHidden: message.nameHidden,
+            setTextures: message.setTextures,
         };
     }
 

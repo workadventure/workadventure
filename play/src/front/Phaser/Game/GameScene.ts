@@ -1151,6 +1151,9 @@ export class GameScene extends DirtyScene {
                 character.showName();
             }
         }
+        if (update.updated.setTexture) {
+            character.setPlayerTextures(update.player.setTexture);
+        }
         if (update.updated.outlineColor) {
             if (update.player.outlineColor === undefined) {
                 character.removeApiOutlineColor();
@@ -3020,6 +3023,14 @@ ${escapedMessage}
         iframeListener.registerAnswerer("restoreName", () => {
             this.CurrentPlayer.showName();
             this.connection?.emitPlayerHideName(false);
+        });
+
+        iframeListener.registerAnswerer("setPlayerTextures", (textureUrls) => {
+            this.CurrentPlayer.setPlayerTextures(lazyLoadPlayerCharacterTextures(this.superLoad,textureUrls.map((url) => { return {
+                id: url,
+                url: url,
+            }})));
+            this.connection?.emitPlayerTextures(textureUrls);
         });
     }
 

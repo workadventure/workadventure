@@ -122,6 +122,7 @@ export class UserDescriptor {
             hasOutline: this.outlineColor !== undefined,
             variables: this.variables,
             nameHidden: this.nameHidden,
+            setTexture: this.setTexture,
         };
 
         return userJoinedMessage;

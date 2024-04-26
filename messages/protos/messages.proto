@@ -586,7 +586,7 @@ message UserJoinedMessage {
   AvailabilityStatus availabilityStatus = 11;
   map<string, string> variables = 12;
   bool nameHidden = 13;
-}
+  }
 
 message UserLeftMessage {
   int32 userId = 1;
@@ -864,6 +864,7 @@ message UserJoinedZoneMessage {
   AvailabilityStatus availabilityStatus = 12;
   map<string, string> variables = 13;
   bool nameHidden = 14;
+  string[string] setPlayerTexture = 15;
 }
 
 message UserLeftZoneMessage {
