@@ -18,6 +18,7 @@ import {
 } from "@workadventure/messages";
 import { z } from "zod";
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
+import { ITiledMap as ITiledMap2 } from "./TypeGuard/ITiledMap";
 import { GameMap, GameMapProperties, WAMFileFormat } from "@workadventure/map-editor";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connection/ConnectionManager";
@@ -181,6 +182,7 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import {ZodAccelerator} from "@duplojs/zod-accelerator";
+import {ITiledMapGroupLayer, JsonSchema} from "./TypeGuard";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -510,18 +512,22 @@ export class GameScene extends DirtyScene {
             console.warn("Your map file seems to be invalid. Errors: ", parseResult.error);
         }*/
 
-        console.profile("parseMap");
-        data = ITiledMap.parse(data);
-        console.profileEnd("parseMap");
+        const startParse = performance.now();
+        data = ITiledMap2.parse(data);
+        console.log("parse time", performance.now() - startParse);
 
-        console.profile("build");
-        const build = ZodAccelerator.build(ITiledMap);
-        console.profileEnd("build");
+        ZodAccelerator.injectZod(z);
 
-        console.profile("parseAccelerator");
+
+        const startBuild = performance.now();
+        ZodAccelerator.build(JsonSchema);
+        ZodAccelerator.build(ITiledMapGroupLayer);
+        const build = ZodAccelerator.build(ITiledMap2);
+        console.log("build time", performance.now() - startBuild);
+
+        const startParseAccelerator = performance.now();
         data = build.parse(data);
-        console.profileEnd("parseAccelerator");
-
+        console.log("parse accelerator time", performance.now() - startParseAccelerator);
 
 
 
