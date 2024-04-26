@@ -284,7 +284,10 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             actionsMenuStore.clear();
             return;
         }
-        actionsMenuStore.initialize(this.entityData.name ?? "");
+        const description = this.entityData.properties.find((p) => p.type === "entityDescriptionProperties") as
+            | EntityDescriptionPropertyData
+            | undefined;
+        actionsMenuStore.initialize(this.entityData.name ?? "", description?.description);
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
         }

@@ -53,7 +53,10 @@
         <div class="actions-menu tw-p-4 is-rounded tw-max-w-xs">
             <button type="button" class="close-window" on:click={closeActionsMenu}>×</button>
             {#if actionsMenuData.menuName}
-                <h2 class="name tw-mb-2 tw-mx-2 margin-close">{actionsMenuData.menuName}</h2>
+                <h2 class="name tw-mb-2 !tw-mt-0 tw-mx-2 margin-close">{actionsMenuData.menuName}</h2>
+            {/if}
+            {#if actionsMenuData.menuDescription}
+                <p class="tw-mb-2 tw-mx-2 margin-close tw-whitespace-pre-wrap">{actionsMenuData.menuDescription}</p>
             {/if}
             {#if sortedActions}
                 <div
