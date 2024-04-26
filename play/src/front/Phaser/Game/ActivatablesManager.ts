@@ -76,10 +76,12 @@ export class ActivatablesManager {
         }
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
             this.selectedActivatableObjectByDistance?.characterFarAwayOutline();
+            this.currentPlayer.destroyEmote();
         }
         this.selectedActivatableObjectByDistance = newNearestObject;
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
             this.selectedActivatableObjectByDistance?.characterCloseByOutline(this.outlineColor);
+            this.currentPlayer.playText("Press [SPACE] to interact");
         }
     }
 
