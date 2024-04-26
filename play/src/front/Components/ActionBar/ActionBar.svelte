@@ -31,12 +31,7 @@
     import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatVisibilityStore, chatZoneLiveStore } from "../../Stores/ChatStore";
-    import {
-        proximityMeetingStore,
-        inExternalServiceStore,
-        myCameraStore,
-        myMicrophoneStore,
-    } from "../../Stores/MyMediaStore";
+    import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import {
         activeSubMenuStore,
         menuVisiblilityStore,

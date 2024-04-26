@@ -33,7 +33,7 @@
     let vertical: boolean;
 
     onMount(() => {
-        mediaQuery.addEventListener("change", (e: MediaQueryListEvent) => handleTabletChange(e));
+        mediaQuery.addEventListener("change", (e: any) => handleTabletChange(e));
         handleTabletChange(mediaQuery);
     });
 
