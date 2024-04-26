@@ -7,9 +7,9 @@
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
     import { LoaderIcon } from "svelte-feather-icons";
-    import axios from "axios";
     import { ICON_URL } from "../../Enum/EnvironmentVariable";
-    // import { handleTabResize } from "./CoWebsitesContainer";
+    import jitsiIcon from "../images/jitsi.png";
+    import meetingIcon from "../images/meeting.svg";
 
     export let coWebsite: CoWebsite;
     export let isLoading = false;
@@ -20,82 +20,29 @@
     let isJitsi: boolean = coWebsite instanceof JitsiCoWebsite;
     let isBBB: boolean = coWebsite instanceof BBBCoWebsite;
     let cowebsiteName: string;
-    let urlForFavicon = coWebsite.getUrl().toString();
+    let alt: string;
+    let srcSimpleCowebsite = `${ICON_URL}/icon?url=${encodeURIComponent(
+        coWebsite.getUrl().toString()
+    )}&size=64..96..256&fallback_icon_color=14304c`;
     let url: string;
-    let mediaQuery = window.matchMedia("(max-width: 768px)");
+    let srcJitsi = jitsiIcon;
+    let srcMeeting = meetingIcon;
 
     const dispatch = createEventDispatcher();
-    let isVertical: boolean;
 
     onMount(async () => {
-        if (isVertical === true) {
-            if (isJitsi) {
-                cowebsiteName = "Jitsi meeting";
-                isClosable = true;
-                isDuplicable = true;
-            } else if (isBBB) {
-                cowebsiteName = "BigBlueButton meeting";
-                isClosable = true;
-                isDuplicable = true;
-            } else {
-                cowebsiteName = coWebsite.getUrl().toString();
-                cowebsiteName = cowebsiteName.replace(/.+\/\/|www.|\..+/g, "");
-                cowebsiteName = cowebsiteName.charAt(0).toUpperCase() + cowebsiteName.slice(1);
-                isClosable = true;
-                isDuplicable = true;
-            }
-        }
-
         if (isJitsi) {
-            getFavicon(urlForFavicon);
-            let favicon = `https://icon.workadventu.re/icons?url=${urlForFavicon}`;
-            console.log("FAVICON :", favicon);
-            let faviconLink = urlForFavicon.replace("fr/", "favicon.ico");
-            // let faviconLink = `${urlForFavicon}/favicon.ico`;
-            console.log("FAVICON LINK :", faviconLink);
-            let cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
-            if (cowebsiteTabIcon) {
-                cowebsiteTabIcon.src = favicon;
-                console.log(cowebsiteTabIcon);
-            }
-            cowebsiteName = "Jitsi meeting";
             isClosable = true;
             isDuplicable = true;
         } else if (isBBB) {
-            const favicon = `https://icon.workadventu.re/icons?url=${urlForFavicon}`;
-            console.log("FAVICON :", favicon);
-            const cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
-            if (cowebsiteTabIcon) {
-                cowebsiteTabIcon.src = favicon;
-            }
-            cowebsiteName = "BigBlueButton meeting";
             isClosable = true;
             isDuplicable = true;
         } else {
-            const favicon = await getFavicon(urlForFavicon);
-            console.log("FAVICON :", favicon);
-            if (favicon !== undefined) {
-                const cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
-                if (cowebsiteTabIcon) {
-                    cowebsiteTabIcon.src = favicon;
-                }
-            }
-            // let favicon = getFavicon(urlForFavicon);
-            // console.log("FAVICON :", favicon);
-            // if (favicon) {
-            //     let cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
-            //     if (cowebsiteTabIcon) {
-            //         cowebsiteTabIcon.src = favicon;
-            //     }
-            // }
-            // let faviconLink = `${urlForFavicon}favicon.ico`;
-            // console.log("FAVICON LINK :", faviconLink);
-            const cowebsiteTabIcon = document.getElementById("cowebsiteTabIcon") as HTMLImageElement;
-            // if (cowebsiteTabIcon) {
-            //     cowebsiteTabIcon.src = favicon;
-            // }
-            cowebsiteName = coWebsite.getUrl().toString();
-            cowebsiteName = cowebsiteName.replace(/.+\/\/|www.|\..+/g, "");
+            alt = coWebsite.getUrl().hostname;
+            cowebsiteName = coWebsite
+                .getUrl()
+                .toString()
+                .replace(/.+\/\/|www.|\..+/g, "");
             cowebsiteName = cowebsiteName.charAt(0).toUpperCase() + cowebsiteName.slice(1);
             isClosable = true;
             isDuplicable = true;
@@ -124,90 +71,25 @@
         navigator.clipboard.writeText(url).catch((e) => console.error(e));
         alert("URL copied to clipboard");
     }
-
-    async function getFavicon(urlForFavicon: string) {
-        let urlForFaviconModified = urlForFavicon.replace("https://www.", "");
-        let link = ICON_URL + "/icons?url=" + urlForFaviconModified;
-        console.log("LINK :", link);
-        await axios
-            .get(link, {
-                method: "GET",
-                headers: {
-                    "Access-Control-Allow-Origin": "*",
-                },
-            })
-            .then((response) => {
-                console.log(response);
-            })
-            .catch((error) => {
-                if (!error.response) {
-                    // Network error occurred
-                    console.error("Network error:", error);
-                } else {
-                    // The server responded with a status other than 200 range
-                    console.error("Error response:", error.response);
-                }
-            });
-    }
-
-    // Try with fetch
-
-    // async function getFavicon(urlForFavicon: string) {
-    //     try {
-    //         let urlForFaviconModified = urlForFavicon.replace("https://www.", "");
-    //         let link = `${ICON_URL}/icons?url=${urlForFaviconModified}`;
-    //         console.log("LINK :", link);
-
-    //         const response = await fetch(link, {
-    //             method: "GET",
-    //             mode: "no-cors",
-    //         });
-
-    //         // Assuming the response is JSON
-    //         const faviconData = await response.json();
-    //         // Find the 32x32 favicon URL if available
-    //         let favicon32x32Url = "";
-    //         // Assuming faviconData is an array of objects with { size: string, url: string } structure
-    //         faviconData.forEach((favicon: any) => {
-    //             if (favicon.size === "32x32") {
-    //                 favicon32x32Url = favicon.url;
-    //             }
-    //         });
-
-    //         return favicon32x32Url;
-    //     } catch (error) {
-    //         console.error("Error fetching favicon:", error);
-    //         return undefined;
-    //     }
-    // }
-
-    // async function getFavicon(urlForFavicon: string) {
-    //     let urlForFaviconModified = urlForFavicon.replace("https://www.", "");
-    //     let link = ICON_URL + "/icons?url=" + urlForFaviconModified;
-    //     console.log("LINK :", link);
-    //     await fetch(link, {
-    //         method: "GET",
-    //         mode: "no-cors",
-    //     })
-    //         .then((response) => {
-    //             console.log(response);
-    //         })
-    //         .catch((err) => {
-    //             console.log("ERROR : ", err);
-    //         });
-    // }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     class="text flex items-center px-2 rounded transition-all hover:stroke-white {active
-        ? 'text-contrast bg-white hover:bg-white/90 pt-1 bg-white tab justify-between' // translate-y-2 rounded-b-none for animation but not working inside dropdown
+        ? 'text-contrast bg-white hover:bg-white/90 bg-white tab justify-between bg-contrast/80' // translate-y-2 rounded-b-none for animation but not working inside dropdown
         : 'text-white cursor-pointer hover:bg-white/10 tab'}"
     on:click={toggleActive}
     on:click={() => (active = !active)}
 >
     {#if isLoading}
-        <img alt="icon" id="cowebsiteTabIcon" />
+        {#if isJitsi}
+            <img src={srcJitsi} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
+        {:else if isBBB}
+            <img src={srcMeeting} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
+        {:else}
+            <img src={srcSimpleCowebsite} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
+        {/if}
+        <!-- <img src={link} alt="icon" id="cowebsiteTabIcon" class="h-6 w-6 flex justify-center align-middle" /> -->
     {:else}
         <div class="h-6 w-6 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}">
             <LoaderIcon
@@ -221,12 +103,18 @@
     <div class="flex justify-between items-center w-full">
         <div class="p-2 text-ellipsis overflow-hidden">
             <div
-                class="bold leading-3 text-ellipsis pb-1 max-w-[150px] whitespace-nowrap overflow-hidden {active
+                class="bold leading-3 text-ellipsis pb-1 pt-1 max-w-[150px] whitespace-nowrap overflow-hidden {active
                     ? 'fill-white'
                     : ''}"
             >
                 {#if isLoading}
-                    {cowebsiteName}
+                    {#if isJitsi}
+                        Jitsi meeting
+                    {:else if isBBB}
+                        BigBlueButton meeting
+                    {:else}
+                        {cowebsiteName}
+                    {/if}
                 {:else}
                     <div class="w-[100px] h-2 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}" />
                 {/if}
@@ -268,7 +156,7 @@
             </div>
             {#if isClosable}
                 <div
-                    class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
+                    class="group hover:bg-contrast mr-8 transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
                     on:click={closeTab}
                 >
                     <XIcon
@@ -292,7 +180,7 @@
 
     @media (max-width: 768px) {
         .tab {
-            width: 200px;
+            width: 195px;
         }
     }
 </style>

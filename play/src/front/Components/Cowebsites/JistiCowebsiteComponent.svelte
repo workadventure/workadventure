@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { get } from "svelte/store";
     import {
         JitsiCoWebsite,
@@ -74,12 +74,6 @@
                     },
                 };
 
-                const timemoutPromise = new Promise<void>((resolve) => {
-                    setTimeout(() => {
-                        resolve();
-                    }, 2000);
-                });
-
                 const jistiMeetLoadedPromise = new Promise<void>((resolve) => {
                     options.onload = () => {
                         resolve();
@@ -110,10 +104,8 @@
                     jitsiApi.addListener("participantKickedOut", onParticipantsCountChange);
                 });
 
-                Promise.race([timemoutPromise, jistiMeetLoadedPromise])
+                jistiMeetLoadedPromise
                     .then(async () => {
-                        await Promise.race([timemoutPromise, jistiMeetLoadedPromise]);
-
                         if (cancelled) {
                             console.info("CLOSING BECAUSE CANCELLED AFTER LOAD");
                             return;
@@ -138,6 +130,29 @@
             .catch((e) => {
                 console.error("Error loading Jitsi Meeting:", e);
             });
+    });
+
+    onDestroy(() => {
+        if (jitsiApi) {
+            jitsiApi.removeListener("audioMuteStatusChanged", onAudioChange);
+            jitsiApi.removeListener("videoMuteStatusChanged", onVideoChange);
+            jitsiApi.removeListener("dominantSpeakerChanged", onDominantSpeakerChanged);
+            jitsiApi.removeListener("participantJoined", onParticipantsCountChange);
+            jitsiApi.removeListener("participantLeft", onParticipantsCountChange);
+            jitsiApi.removeListener("participantKickedOut", onParticipantsCountChange);
+            jitsiApi.removeListener("videoConferenceLeft", () => {
+                coWebsiteManager.removeCoWebsiteToStore(actualCowebsite);
+            });
+            jitsiApi.removeListener("readyToClose", () => {
+                coWebsiteManager.removeCoWebsiteToStore(actualCowebsite);
+            });
+            jitsiApi.dispose();
+        }
+
+        if (screenWakeRelease) {
+            screenWakeRelease().catch((e) => console.error(e));
+        }
+        inExternalServiceStore.set(false);
     });
 </script>
 

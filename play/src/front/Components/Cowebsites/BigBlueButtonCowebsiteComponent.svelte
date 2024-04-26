@@ -8,7 +8,6 @@
     let screenWakeRelease: (() => Promise<void>) | undefined;
 
     onMount(async () => {
-        console.log("mount BBB");
         try {
             await screenWakeLock
                 .requestWakeLock()
@@ -17,6 +16,18 @@
             inExternalServiceStore.set(true);
         } catch (e) {
             console.error("Error with Screen Wake Lock :", e);
+        }
+    });
+
+    onDestroy(() => {
+        try {
+            if (screenWakeRelease) {
+                screenWakeRelease();
+                screenWakeRelease = undefined;
+            }
+            inExternalServiceStore.set(false);
+        } catch (e) {
+            console.error("Screen Wake off not successfully!", e);
         }
     });
 </script>

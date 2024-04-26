@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
     import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 
@@ -10,6 +10,12 @@
     onMount(() => {
         if (allowApi) {
             iframeListener.registerIframe(iframeSimpleCowebsite);
+        }
+    });
+
+    onDestroy(() => {
+        if (allowApi) {
+            iframeListener.unregisterIframe(iframeSimpleCowebsite);
         }
     });
 </script>

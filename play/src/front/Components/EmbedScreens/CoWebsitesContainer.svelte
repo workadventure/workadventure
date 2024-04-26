@@ -17,8 +17,7 @@
     let showDropdown = false;
     let tabBar: HTMLElement;
     let showArrow = false;
-    let vertical = false;
-    let cowebsiteContainer: HTMLElement | null;
+    let cowebsiteContainer = document.getElementById("cowebsites-container");
     let container: HTMLElement;
     let resizeBar: HTMLElement;
     let startY: number;
@@ -26,101 +25,111 @@
     let startWidthContainer: number;
     let widthContainer: number;
     let startHeight: number;
-    let mediaQuery = window.matchMedia("(max-width: 768px)");
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
     let totalTabsWidth = 0;
     let initialWidth: number;
-    let widthTab = 300;
-    let widthTabResponsive = 200;
+    const widthTab = 300;
+    const widthTabResponsive = 195;
+    let vertical: boolean;
 
     onMount(() => {
-        if (mediaQuery.matches) {
-            vertical = true;
-            cowebsiteContainer = document.getElementById("cowebsites-container");
-            startWidthContainer = parseInt(getComputedStyle(container).width);
-            initialWidth = parseInt(getComputedStyle(container).width);
-
-            if (cowebsiteContainer) {
-                function handleMouseDown(e: TouchEvent) {
-                    let clientY = e.touches[0].clientY;
-                    startY = clientY;
-                    startHeight = parseInt(getComputedStyle(container).height);
-                    document.addEventListener("touchmove", handleMouseMove);
-                    document.addEventListener("touchend", handleMouseUp);
-                }
-
-                resizeBar.addEventListener("touchstart", handleMouseDown, false);
-
-                function handleMouseMove(e: TouchEvent) {
-                    let clientY = e.touches[0].clientY;
-                    const height = startHeight + (clientY - startY);
-                    container.style.height = height + "px";
-                    const minHeight = max([height, window.innerHeight - 600]);
-                    container.style.height = minHeight + "px";
-                }
-
-                const handleMouseUp = () => {
-                    appearDropdown();
-                    document.removeEventListener("touchmove", handleMouseMove);
-                    document.removeEventListener("touchend", handleMouseUp);
-                };
-
-                return () => {
-                    resizeBar.removeEventListener("touchstart", handleMouseDown);
-                    document.removeEventListener("touchmove", handleMouseMove);
-                    document.removeEventListener("touchend", handleMouseUp);
-                };
-            }
-        } else {
-            vertical = false;
-
-            initialWidth = parseInt(getComputedStyle(container).width);
-            startWidthContainer = parseInt(getComputedStyle(container).width);
-
-            const handleMouseDown = (e: { clientX: number }) => {
-                startX = e.clientX;
-                startWidthContainer = parseInt(getComputedStyle(container).width);
-                document.addEventListener("mousemove", handleMouseMove);
-                document.addEventListener("mouseup", handleMouseUp);
-            };
-            resizeBar.addEventListener("mousedown", handleMouseDown);
-
-            const handleMouseMove = (e: { clientX: number }) => {
-                widthContainer = startWidthContainer - (e.clientX - startX);
-                container.style.width = widthContainer + "px";
-                initialWidth = parseInt(getComputedStyle(container).width);
-
-                const maxWidth = min([widthContainer, window.innerWidth - 350]);
-                container.style.width = maxWidth + "px";
-            };
-
-            const handleMouseUp = () => {
-                appearDropdown();
-                document.removeEventListener("mousemove", handleMouseMove);
-                document.removeEventListener("mouseup", handleMouseUp);
-            };
-
-            return () => {
-                resizeBar.removeEventListener("mousedown", handleMouseDown);
-                document.removeEventListener("mousemove", handleMouseMove);
-                document.removeEventListener("mouseup", handleMouseUp);
-            };
-        }
-
-        return () => {};
+        mediaQuery.addEventListener("change", (e: MediaQueryListEvent) => handleTabletChange(e));
+        handleTabletChange(mediaQuery);
     });
 
+    function handleTabletChange(e: MediaQueryList) {
+        if (e.matches) {
+            vertical = true;
+            resizeMobile();
+        } else {
+            vertical = false;
+            resizeDesktop();
+        }
+    }
+
+    function resizeDesktop() {
+        initialWidth = parseInt(getComputedStyle(container).width);
+        startWidthContainer = parseInt(getComputedStyle(container).width);
+
+        const handleMouseDown = (e: { clientX: number }) => {
+            startX = e.clientX;
+            startWidthContainer = parseInt(getComputedStyle(container).width);
+            document.addEventListener("mousemove", handleMouseMove);
+            document.addEventListener("mouseup", handleMouseUp);
+        };
+        resizeBar.addEventListener("mousedown", handleMouseDown);
+
+        const handleMouseMove = (e: { clientX: number }) => {
+            widthContainer = startWidthContainer - (e.clientX - startX);
+            container.style.width = widthContainer + "px";
+            initialWidth = parseInt(getComputedStyle(container).width);
+
+            const maxWidth = min([widthContainer, window.innerWidth - 350]);
+            container.style.width = maxWidth + "px";
+        };
+
+        const handleMouseUp = () => {
+            appearDropdown();
+            document.removeEventListener("mousemove", handleMouseMove);
+            document.removeEventListener("mouseup", handleMouseUp);
+        };
+
+        return () => {
+            resizeBar.removeEventListener("mousedown", handleMouseDown);
+            document.removeEventListener("mousemove", handleMouseMove);
+            document.removeEventListener("mouseup", handleMouseUp);
+        };
+    }
+
+    function resizeMobile() {
+        startWidthContainer = parseInt(getComputedStyle(container).width);
+        initialWidth = parseInt(getComputedStyle(container).width);
+
+        function handleMouseDown(e: TouchEvent) {
+            let clientY = e.touches[0].clientY;
+            startY = clientY;
+            startHeight = parseInt(getComputedStyle(container).height);
+            document.addEventListener("touchmove", handleMouseMove);
+            document.addEventListener("touchend", handleMouseUp);
+        }
+
+        resizeBar.addEventListener("touchstart", handleMouseDown, false);
+
+        function handleMouseMove(e: TouchEvent) {
+            let clientY = e.touches[0].clientY;
+            const height = startHeight + (clientY - startY);
+            container.style.height = height + "px";
+            const minHeight = max([height, window.innerHeight - 600]);
+            container.style.height = minHeight + "px";
+            // const maxHeight = min([height, window.innerHeight - 100]);
+            // container.style.height = maxHeight + "px";
+        }
+
+        const handleMouseUp = () => {
+            appearDropdown();
+            document.removeEventListener("touchmove", handleMouseMove);
+            document.removeEventListener("touchend", handleMouseUp);
+        };
+
+        return () => {
+            resizeBar.removeEventListener("touchstart", handleMouseDown);
+            document.removeEventListener("touchmove", handleMouseMove);
+            document.removeEventListener("touchend", handleMouseUp);
+        };
+    }
+
     function handleTabMounted() {
-        if (mediaQuery.matches) {
-            totalTabsWidth += widthTabResponsive;
+        if (!vertical) {
+            totalTabsWidth += widthTab;
             appearDropdown();
         } else {
-            totalTabsWidth += widthTab;
+            totalTabsWidth += widthTabResponsive;
             appearDropdown();
         }
     }
 
     function handleTabDestroyed() {
-        if (mediaQuery.matches) {
+        if (vertical) {
             totalTabsWidth -= widthTabResponsive;
             appearDropdown();
         } else {
@@ -154,11 +163,11 @@
     });
 
     function toggleFullScreen() {
-        cowebsiteContainer = document.getElementById("cowebsites-container");
         resizeBar = document.getElementById("resize-bar") as HTMLInputElement;
+        cowebsiteContainer = document.getElementById("cowebsites-container");
 
         if (!document.fullscreenElement) {
-            if (cowebsiteContainer && cowebsiteContainer.requestFullscreen) {
+            if (cowebsiteContainer?.requestFullscreen) {
                 cowebsiteContainer.requestFullscreen().catch((e) => {
                     console.error(e);
                 });
@@ -219,8 +228,8 @@
         ? "w-1/2 h-full absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500] left_panel responsive-container"
         : "w-1/2 h-full absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500] left_panel flex-col padding"}
     id="cowebsites-container"
-    transition:fly={vertical ? { duration: 750, y: -1000 } : { duration: 750, x: 1000 }}
     bind:this={container}
+    in:fly|local={vertical ? { duration: 750, y: -1000 } : { duration: 750, x: 1000 }}
 >
     <div class="flex py-2 ml-3 items-center height-tab overflow-hidden">
         {#if showArrow}
@@ -236,7 +245,7 @@
         {/if}
 
         <div class="grow flex tab" id="tabBar" bind:this={tabBar}>
-            {#if !mediaQuery.matches}
+            {#if !vertical}
                 {#each $coWebsites.slice(0, Math.floor(initialWidth / 300)) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div on:click={() => setActiveCowebsite(coWebsite.getId())}>
@@ -251,7 +260,7 @@
                     </div>
                 {/each}
             {:else}
-                {#each $coWebsites.slice(0, Math.floor(initialWidth / 200)) as coWebsite (coWebsite.getId())}
+                {#each $coWebsites.slice(0, Math.floor(initialWidth / 195)) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div on:click={() => setActiveCowebsite(coWebsite.getId())}>
                         <CoWebsiteTab
@@ -278,10 +287,10 @@
 
     <div class="relative" id="dropdown-container">
         <div id="dropdown" class="tab-drop-down bg-contrast/80 absolute {showDropdown ? '' : 'hidden'}">
-            {#if !mediaQuery.matches}
+            {#if !vertical}
                 {#each $coWebsites.slice(Math.floor(initialWidth / 300)) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div class="" on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                    <div on:click={() => setActiveCowebsite(coWebsite.getId())}>
                         <CoWebsiteTab
                             on:tabMounted={handleTabMounted}
                             on:tabUnmounted={handleTabDestroyed}
@@ -293,9 +302,9 @@
                     </div>
                 {/each}
             {:else}
-                {#each $coWebsites.slice(Math.floor(initialWidth / 200)) as coWebsite (coWebsite.getId())}
+                {#each $coWebsites.slice(Math.floor(initialWidth / 195)) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div class="" on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                    <div on:click={() => setActiveCowebsite(coWebsite.getId())}>
                         <CoWebsiteTab
                             on:tabMounted={handleTabMounted}
                             on:tabUnmounted={handleTabDestroyed}
@@ -337,13 +346,11 @@
     />
 </div>
 
-<!-- transition:fly={{ duration: 750, y: -1000 }} Pour la transition en vertical -->
 <style>
     /* Voir pour utiliser les container queries ou les medias queries pour le responsive */
     .padding {
         padding-bottom: 76px;
     }
-
     .tab-drop-down {
         margin-top: 8px;
         padding-top: -48px;
@@ -376,6 +383,10 @@
             width: 200px;
             height: auto;
             border-radius: 8px;
+        }
+
+        #dropdown {
+            width: 195px;
         }
     }
 </style>

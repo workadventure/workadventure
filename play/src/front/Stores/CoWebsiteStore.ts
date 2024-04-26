@@ -1,9 +1,7 @@
 import { get, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { Subject } from "rxjs";
-import { BBBCoWebsite } from "../WebRtc/CoWebsite/BBBCoWebsite";
-import { inExternalServiceStore } from "../Stores/MyMediaStore";
-import { JitsiCoWebsite } from "../WebRtc/CoWebsite/JitsiCoWebsite";
+
 
 
 export function createCoWebsiteStore() {
@@ -41,37 +39,19 @@ export function createCoWebsiteStore() {
     };
 }
 
-
-
 export const coWebsites = createCoWebsiteStore();
 
-
-let screenWakeRelease: (() => Promise<void>) | undefined;
 export class CoWebsiteManager {
 
-
-
-//Fichier App.svelte dans component
     private _onResize: Subject<void> = new Subject();
     public onResize = this._onResize.asObservable();
 
 
-//Méthode pour ajout et retrait au store
     public addCoWebsiteToStore(coWebsite: CoWebsite) {
         coWebsites.add(coWebsite);
     }
 
     public removeCoWebsiteToStore(coWebsite: CoWebsite) {
-        if (coWebsite instanceof BBBCoWebsite || coWebsite instanceof JitsiCoWebsite)
-            try {
-                if (screenWakeRelease) {
-                    screenWakeRelease();
-                    screenWakeRelease = undefined;
-                }
-                inExternalServiceStore.set(false);
-            } catch (e) {
-                console.error("Screen Wake off not successfully!", e);
-            }
         coWebsites.remove(coWebsite);
     }
 
