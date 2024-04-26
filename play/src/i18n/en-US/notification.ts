@@ -20,6 +20,7 @@ const notification: BaseTranslation = {
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
     },
+    addNewTag: "add a new tag: '{tag}'",
 };
 
 export default notification;
