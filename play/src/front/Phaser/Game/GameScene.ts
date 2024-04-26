@@ -593,7 +593,7 @@ export class GameScene extends DirtyScene {
             this.Map,
             this.Terrains
         );
-        const entitiesInitializedPromise = this.gameMapFrontWrapper.initialize();
+        this.gameMapFrontWrapper.initialize();
         for (const layer of this.gameMapFrontWrapper.getFlatLayers()) {
             if (layer.type === "tilelayer") {
                 const exitSceneUrl = this.getExitSceneUrl(layer);
@@ -801,7 +801,7 @@ export class GameScene extends DirtyScene {
             this.connectionAnswerPromiseDeferred.promise as Promise<unknown>,
             ...scriptPromises,
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
-            entitiesInitializedPromise,
+            this.gameMapFrontWrapper.initializedPromise,
         ])
             .then(() => {
                 this.initUserPermissionsOnEntity();

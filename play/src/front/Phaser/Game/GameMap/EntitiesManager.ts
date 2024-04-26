@@ -149,10 +149,12 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         }
 
         this.entities.set(entityId, entity);
+        this.scene.markDirty();
+
+        await this.scene.sceneReadyToStartPromise;
         if (entity.isActivatable()) {
             this.activatableEntities.push(entity);
         }
-        this.scene.markDirty();
         return entity;
     }
 
