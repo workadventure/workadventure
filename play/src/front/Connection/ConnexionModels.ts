@@ -26,6 +26,7 @@ export interface MessageUserJoined {
     userUuid: string;
     outlineColor: number | undefined;
     variables: Map<string, unknown>;
+    nameHidden: boolean;
 }
 
 export interface PositionInterface {

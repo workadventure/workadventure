@@ -16,6 +16,7 @@ export type PlayerDetailsUpdate = {
         outlineColor: boolean;
         showVoiceIndicator: boolean;
         availabilityStatus: boolean;
+        nameHidden: boolean;
     };
 };
 
@@ -52,6 +53,7 @@ export class RemotePlayersRepository {
                     availabilityStatus: true,
                     outlineColor: true,
                     showVoiceIndicator: true,
+                    nameHidden: false,
                 },
                 player,
             });
@@ -105,6 +107,7 @@ export class RemotePlayersRepository {
                     availabilityStatus: false,
                     outlineColor: false,
                     showVoiceIndicator: false,
+                    nameHidden: false,
                 },
                 player,
             };
@@ -126,6 +129,10 @@ export class RemotePlayersRepository {
         if (details.showVoiceIndicator !== undefined) {
             player.showVoiceIndicator = details.showVoiceIndicator;
             updateStruct.updated.showVoiceIndicator = true;
+        }
+        if (details.hideName !== undefined) {
+            player.nameHidden = details.hideName;
+            updateStruct.updated.nameHidden = true;
         }
         if (details.availabilityStatus !== 0) {
             player.availabilityStatus = details.availabilityStatus;

@@ -328,6 +328,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         }
     }
 
+    //updateTexture is used to change the texture of the character
+
     private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
         return this.scene.plugins.get("rexOutlinePipeline") as unknown as OutlinePipelinePlugin | undefined;
     }
