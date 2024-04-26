@@ -23,6 +23,7 @@
     import Chat from "./Chat/Chat.svelte";
     import MapEditor from "./MapEditor/MapEditor.svelte";
     import RefreshPrompt from "./RefreshPrompt.svelte";
+    import SelectCharacterCustomizeScene from "./SelectCharacter/SelectCharacterCustomizeScene.svelte";
 
     export let game: Game;
 
@@ -48,6 +49,10 @@
 {:else if $selectCharacterSceneVisibleStore}
     <div>
         <SelectCharacterScene {game} />
+    </div>
+{:else if $selectCharacterCustomizeSceneVisibleStore}
+    <div>
+        <SelectCharacterCustomizeScene {game} />
     </div>
 {:else if $selectCompanionSceneVisibleStore}
     <div>

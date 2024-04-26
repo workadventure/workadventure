@@ -11,7 +11,10 @@
     import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
     import { LoginScene, LoginSceneName } from "../../Phaser/Login/LoginScene";
     import { loginSceneVisibleStore } from "../../Stores/LoginSceneStore";
-    import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
+    import {
+        selectCharacterCustomizeSceneVisibleStore,
+        selectCharacterSceneVisibleStore,
+    } from "../../Stores/SelectCharacterStore";
     import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { EnableCameraScene, EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
@@ -24,6 +27,7 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
+    import { CustomizeScene, CustomizeSceneName } from "../../Phaser/Login/CustomizeScene";
 
     function disableMenuStores() {
         menuVisiblilityStore.set(false);
@@ -44,8 +48,15 @@
 
     function openEditSkinScene() {
         disableMenuStores();
-        selectCharacterSceneVisibleStore.set(true);
-        gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
+
+        const gameScene = gameManager.getCurrentGameScene();
+        if (gameScene.CurrentPlayer.sprites.size > 1) {
+            selectCharacterCustomizeSceneVisibleStore.set(true);
+            gameManager.leaveGame(CustomizeSceneName, new CustomizeScene());
+        } else {
+            selectCharacterSceneVisibleStore.set(true);
+            gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
+        }
     }
 
     function logOut() {
