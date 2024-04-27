@@ -24,7 +24,10 @@ import { Room } from "../../../Connection/Room";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
 import { chatZoneLiveStore } from "../../../Stores/ChatStore";
+/**
+ * @DEPRECATED - This is the old way to show trigger message
 import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
+*/
 import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
 import { currentLiveStreamingNameStore } from "../../../Stores/MegaphoneStore";
 import { notificationPlayingStore } from "../../../Stores/NotificationStore";
@@ -301,6 +304,17 @@ export class AreasPropertiesListener {
                 if (message === undefined) {
                     message = get(LL).trigger.newTab();
                 }
+
+                // Create callback and play text message
+                const callback = () => {
+                    scriptUtils.openTab(property.link as string), this.scene.CurrentPlayer.destroyText();
+                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                };
+                this.scene.CurrentPlayer.playText(`${message}`, -1);
+                this.scene.userInputManager?.addSpaceEventListener(callback);
+
+                /**
+                 * @DEPRECATED - This is the old way to show trigger message
                 layoutManagerActionStore.addAction({
                     uuid: actionId,
                     type: "message",
@@ -308,6 +322,7 @@ export class AreasPropertiesListener {
                     callback: () => scriptUtils.openTab(property.link as string),
                     userInputManager: this.scene.userInputManager,
                 });
+                */
             } else {
                 scriptUtils.openTab(property.link);
             }
@@ -332,6 +347,17 @@ export class AreasPropertiesListener {
 
             this.coWebsitesActionTriggers.set(property.id, actionId);
 
+            // Create callback and play text message
+            const callback = () => {
+                this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+                this.scene.CurrentPlayer.destroyText();
+                this.scene.userInputManager.removeSpaceEventListener(callback);
+            };
+            this.scene.CurrentPlayer.playText(`${message}`, -1);
+            this.scene.userInputManager?.addSpaceEventListener(callback);
+
+            /**
+             * @DEPRECATED - This is the old way to show trigger message
             layoutManagerActionStore.addAction({
                 uuid: actionId,
                 type: "message",
@@ -339,6 +365,7 @@ export class AreasPropertiesListener {
                 callback: () => this.openCoWebsiteFunction(property, coWebsiteOpen, actionId),
                 userInputManager: this.scene.userInputManager,
             });
+             */
         } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
             const coWebsite = new SimpleCoWebsite(
                 new URL(property.link ?? "", this.scene.mapUrlFile),
@@ -435,7 +462,11 @@ export class AreasPropertiesListener {
 
             analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
+            this.scene.CurrentPlayer.destroyText();
+            /**
+             * @DEPRECATED - This is the old way to show trigger message
             layoutManagerActionStore.removeAction("jitsi");
+            */
         };
 
         const jitsiTriggerValue = property.trigger;
@@ -445,6 +476,18 @@ export class AreasPropertiesListener {
             if (message === undefined) {
                 message = get(LL).trigger.jitsiRoom();
             }
+
+            // Create callback and play text message
+            const callback = () => {
+                openJitsiRoomFunction().catch((e) => console.error(e));
+                this.scene.CurrentPlayer.destroyText();
+                this.scene.userInputManager.removeSpaceEventListener(callback);
+            };
+            this.scene.CurrentPlayer.playText(`${message}`, -1);
+            this.scene.userInputManager?.addSpaceEventListener(callback);
+
+            /**
+             * @DEPRECATED - This is the old way to show trigger message
             layoutManagerActionStore.addAction({
                 uuid: "jitsi",
                 type: "message",
@@ -454,6 +497,7 @@ export class AreasPropertiesListener {
                 },
                 userInputManager: this.scene.userInputManager,
             });
+             */
         } else {
             openJitsiRoomFunction().catch((e) => console.error(e));
         }
@@ -524,13 +568,16 @@ export class AreasPropertiesListener {
             return;
         }
 
-        const actionStore = get(layoutManagerActionStore);
         const actionTriggerUuid = this.coWebsitesActionTriggers.get(property.id);
-
         if (!actionTriggerUuid) {
             return;
         }
 
+        this.scene.CurrentPlayer.destroyText();
+
+        /**
+        * @DEPRECATED - This is the old way to show trigger message
+        const actionStore = get(layoutManagerActionStore);
         const action =
             actionStore && actionStore.length > 0
                 ? actionStore.find((action) => action.uuid === actionTriggerUuid)
@@ -539,6 +586,7 @@ export class AreasPropertiesListener {
         if (action) {
             layoutManagerActionStore.removeAction(actionTriggerUuid);
         }
+        */
 
         this.coWebsitesActionTriggers.delete(property.id);
     }
@@ -565,7 +613,11 @@ export class AreasPropertiesListener {
     }
 
     private handleJitsiRoomPropertyOnLeave(property: JitsiRoomPropertyData): void {
+        this.scene.CurrentPlayer.destroyText();
+        /**
+         * @DEPRECATED - This is the old way to show trigger message
         layoutManagerActionStore.removeAction("jitsi");
+        */
         coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
             if (coWebsite instanceof JitsiCoWebsite) {
                 coWebsiteManager.closeCoWebsite(coWebsite);
@@ -613,7 +665,11 @@ export class AreasPropertiesListener {
             console.error("Error during loading a co-website: " + coWebsite.getUrl());
         });
 
+        this.scene.CurrentPlayer.destroyText();
+        /**
+         * @DEPRECATED - This is the old way to show trigger message
         layoutManagerActionStore.removeAction(actionId);
+        */
     }
 
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {

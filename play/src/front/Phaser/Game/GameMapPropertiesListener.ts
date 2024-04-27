@@ -59,6 +59,18 @@ export class GameMapPropertiesListener {
                     if (message === undefined) {
                         message = get(LL).trigger.newTab();
                     }
+
+                    // Create callback and play text message
+                    const callback = () => {
+                        scriptUtils.openTab(newValue);
+                        this.scene.CurrentPlayer.destroyText();
+                        this.scene.userInputManager.removeSpaceEventListener(callback);
+                    };
+                    this.scene.CurrentPlayer.playText(`${message}`, -1);
+                    this.scene.userInputManager?.addSpaceEventListener(callback);
+
+                    /**
+                     * @DEPRECATED - This is the old way to show trigger message
                     layoutManagerActionStore.addAction({
                         uuid: "openTab",
                         type: "message",
@@ -66,6 +78,7 @@ export class GameMapPropertiesListener {
                         callback: () => scriptUtils.openTab(newValue),
                         userInputManager: this.scene.userInputManager,
                     });
+                    */
                 } else {
                     scriptUtils.openTab(newValue);
                 }
@@ -186,6 +199,18 @@ export class GameMapPropertiesListener {
                 if (message === undefined) {
                     message = get(LL).trigger.jitsiRoom();
                 }
+
+                // Create callback and play text message
+                const callback = () => {
+                    openJitsiRoomFunction().catch((e) => console.error(e));
+                    this.scene.CurrentPlayer.destroyText();
+                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                };
+                this.scene.CurrentPlayer.playText(`${message}`, -1);
+                this.scene.userInputManager?.addSpaceEventListener(callback);
+
+                /**
+                 * @DEPRECATED - This is the old way to show trigger message
                 layoutManagerActionStore.addAction({
                     uuid: "jitsi",
                     type: "message",
@@ -195,6 +220,7 @@ export class GameMapPropertiesListener {
                     },
                     userInputManager: this.scene.userInputManager,
                 });
+                 */
             } else {
                 openJitsiRoomFunction().catch((e) => console.error(e));
             }
@@ -484,6 +510,17 @@ export class GameMapPropertiesListener {
 
             this.coWebsitesActionTriggerByPlace.set(this.getIdFromPlace(place), actionId);
 
+            // Create callback and play text message
+            const callback = () => {
+                openCoWebsiteFunction();
+                this.scene.CurrentPlayer.destroyText();
+                this.scene.userInputManager.removeSpaceEventListener(callback);
+            };
+            this.scene.CurrentPlayer.playText(`${websiteTriggerMessageProperty}`, -1);
+            this.scene.userInputManager?.addSpaceEventListener(callback);
+
+            /**
+             * @DEPRECATED - This is the old way to show trigger message
             layoutManagerActionStore.addAction({
                 uuid: actionId,
                 type: "message",
@@ -491,6 +528,7 @@ export class GameMapPropertiesListener {
                 callback: () => openCoWebsiteFunction(),
                 userInputManager: this.scene.userInputManager,
             });
+            */
         } else if (websiteTriggerProperty === ON_ICON_TRIGGER_BUTTON) {
             const coWebsite = new SimpleCoWebsite(
                 new URL(openWebsiteProperty ?? "", this.scene.mapUrlFile),

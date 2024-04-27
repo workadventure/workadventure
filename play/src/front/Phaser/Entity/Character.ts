@@ -468,7 +468,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.createStartTransition(emoteY);
     }
 
-    playText(text: string) {
+    playText(text: string, duration = 10000) {
         this.cancelPreviousText();
         const textY = -50;
         const span = document.createElement("span");
@@ -509,7 +509,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         );
         this.text.setAlpha(0);
         this.add(this.text);
-        this.createStartTextTransition(textY);
+        this.createStartTextTransition(textY, duration);
     }
 
     private createStartTransition(emoteY: number) {
@@ -527,7 +527,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    private createStartTextTransition(textY: number) {
+    private createStartTextTransition(textY: number, duration: number) {
         this.textTween = this.scene?.tweens.add({
             targets: this.text,
             props: {
@@ -537,9 +537,11 @@ export abstract class Character extends Container implements OutlineableInterfac
             ease: "Power2",
             duration: 1000,
             onComplete: () => {
+                console.log("duration", duration);
+                if (duration < 1) return;
                 setTimeout(() => {
                     this.destroyText();
-                }, 10000);
+                }, duration);
             },
         });
     }
