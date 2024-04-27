@@ -51,7 +51,7 @@ export class GameMapPropertiesListener {
         // Website on new tab
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
-                this.scene.CurrentPlayer.destroyText();
+                this.scene.CurrentPlayer.destroyText("openTab");
                 const callback = this.actionTriggerCallback.get("openTab");
                 if (callback) {
                     this.scene.userInputManager.removeSpaceEventListener(callback);
@@ -74,11 +74,11 @@ export class GameMapPropertiesListener {
                     // Create callback and play text message
                     const callback = () => {
                         scriptUtils.openTab(newValue);
-                        this.scene.CurrentPlayer.destroyText();
+                        this.scene.CurrentPlayer.destroyText("openTab");
                         this.scene.userInputManager.removeSpaceEventListener(callback);
                         this.actionTriggerCallback.delete("openTab");
                     };
-                    this.scene.CurrentPlayer.playText(`${message}`, -1, callback);
+                    this.scene.CurrentPlayer.playText("openTab", `${message}`, -1, callback);
                     this.scene.userInputManager?.addSpaceEventListener(callback);
                     this.actionTriggerCallback.set("openTab", callback);
 
@@ -101,7 +101,7 @@ export class GameMapPropertiesListener {
         // Jitsi room
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.JITSI_ROOM, (newValue, oldValue, allProps) => {
             if (newValue === undefined || newValue !== oldValue) {
-                this.scene.CurrentPlayer.destroyText();
+                this.scene.CurrentPlayer.destroyText("jitsi");
                 const callback = this.actionTriggerCallback.get("jitsi");
                 if (callback) {
                     this.scene.userInputManager.removeSpaceEventListener(callback);
@@ -211,7 +211,7 @@ export class GameMapPropertiesListener {
 
                 analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
-                this.scene.CurrentPlayer.destroyText();
+                this.scene.CurrentPlayer.destroyText("jitsi");
                 const callback = this.actionTriggerCallback.get("jitsi");
                 if (callback) {
                     this.scene.userInputManager.removeSpaceEventListener(callback);
@@ -234,11 +234,11 @@ export class GameMapPropertiesListener {
                 // Create callback and play text message
                 const callback = () => {
                     openJitsiRoomFunction().catch((e) => console.error(e));
-                    this.scene.CurrentPlayer.destroyText();
+                    this.scene.CurrentPlayer.destroyText("jitsi");
                     this.scene.userInputManager.removeSpaceEventListener(callback);
                     this.actionTriggerCallback.delete("jitsi");
                 };
-                this.scene.CurrentPlayer.playText(`${message}`, -1, callback);
+                this.scene.CurrentPlayer.playText("jitsi", `${message}`, -1, callback);
                 this.scene.userInputManager?.addSpaceEventListener(callback);
                 this.actionTriggerCallback.set("jitsi", callback);
 
@@ -261,7 +261,7 @@ export class GameMapPropertiesListener {
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
             if (newValue === undefined || newValue !== oldValue) {
-                this.scene.CurrentPlayer.destroyText();
+                this.scene.CurrentPlayer.destroyText("bbbMeeting");
                 const callback = this.actionTriggerCallback.get("bbbMeeting");
                 if (callback) {
                     this.scene.userInputManager.removeSpaceEventListener(callback);
@@ -519,7 +519,7 @@ export class GameMapPropertiesListener {
                 console.error("Error during loading a co-website: " + coWebsite.getUrl());
             });
 
-            this.scene.CurrentPlayer.destroyText();
+            this.scene.CurrentPlayer.destroyText(actionId);
             const callback = this.actionTriggerCallback.get(actionId);
             if (callback) {
                 this.scene.userInputManager.removeSpaceEventListener(callback);
@@ -564,11 +564,11 @@ export class GameMapPropertiesListener {
             // Create callback and play text message
             const callback = () => {
                 openCoWebsiteFunction();
-                this.scene.CurrentPlayer.destroyText();
+                this.scene.CurrentPlayer.destroyText(actionId);
                 this.scene.userInputManager.removeSpaceEventListener(callback);
                 this.actionTriggerCallback.delete(actionId);
             };
-            this.scene.CurrentPlayer.playText(`${websiteTriggerMessageProperty}`, -1, callback);
+            this.scene.CurrentPlayer.playText(actionId, `${websiteTriggerMessageProperty}`, -1, callback);
             this.scene.userInputManager?.addSpaceEventListener(callback);
             this.actionTriggerCallback.set(actionId, callback);
             /**
@@ -751,7 +751,7 @@ export class GameMapPropertiesListener {
             return;
         }
 
-        this.scene.CurrentPlayer.destroyText();
+        this.scene.CurrentPlayer.destroyText(actionTriggerUuid);
         const callback = this.actionTriggerCallback.get(actionTriggerUuid);
         if (callback) {
             this.scene.userInputManager.removeSpaceEventListener(callback);

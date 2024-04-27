@@ -309,11 +309,11 @@ export class AreasPropertiesListener {
 
                 // Create callback and play text message
                 const callback = () => {
-                    scriptUtils.openTab(property.link as string), this.scene.CurrentPlayer.destroyText();
+                    scriptUtils.openTab(property.link as string), this.scene.CurrentPlayer.destroyText(actionId);
                     this.scene.userInputManager.removeSpaceEventListener(callback);
                     this.actionTriggerCallback.delete(actionId);
                 };
-                this.scene.CurrentPlayer.playText(`${message}`, -1, callback);
+                this.scene.CurrentPlayer.playText(actionId, `${message}`, -1, callback);
                 this.scene.userInputManager?.addSpaceEventListener(callback);
                 this.actionTriggerCallback.set(actionId, callback);
 
@@ -354,11 +354,11 @@ export class AreasPropertiesListener {
             // Create callback and play text message
             const callback = () => {
                 this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
-                this.scene.CurrentPlayer.destroyText();
+                this.scene.CurrentPlayer.destroyText(actionId);
                 this.scene.userInputManager.removeSpaceEventListener(callback);
                 this.actionTriggerCallback.delete(actionId);
             };
-            this.scene.CurrentPlayer.playText(`${message}`, -1, callback);
+            this.scene.CurrentPlayer.playText(actionId, `${message}`, -1, callback);
             this.scene.userInputManager?.addSpaceEventListener(callback);
             this.actionTriggerCallback.set(actionId, callback);
 
@@ -468,7 +468,7 @@ export class AreasPropertiesListener {
 
             analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
-            this.scene.CurrentPlayer.destroyText();
+            this.scene.CurrentPlayer.destroyText("jitsi");
             const callback = this.actionTriggerCallback.get("jitsi");
             if (callback) {
                 this.scene.userInputManager.removeSpaceEventListener(callback);
@@ -491,11 +491,11 @@ export class AreasPropertiesListener {
             // Create callback and play text message
             const callback = () => {
                 openJitsiRoomFunction().catch((e) => console.error(e));
-                this.scene.CurrentPlayer.destroyText();
+                this.scene.CurrentPlayer.destroyText("jitsi");
                 this.scene.userInputManager.removeSpaceEventListener(callback);
                 this.actionTriggerCallback.delete("jitsi");
             };
-            this.scene.CurrentPlayer.playText(`${message}`, -1, callback);
+            this.scene.CurrentPlayer.playText("jitsi", `${message}`, -1, callback);
             this.scene.userInputManager?.addSpaceEventListener(callback);
             this.actionTriggerCallback.set("jitsi", callback);
 
@@ -586,7 +586,7 @@ export class AreasPropertiesListener {
             return;
         }
 
-        this.scene.CurrentPlayer.destroyText();
+        this.scene.CurrentPlayer.destroyText(actionTriggerUuid);
         const callback = this.actionTriggerCallback.get(actionTriggerUuid);
         if (callback) {
             this.scene.userInputManager.removeSpaceEventListener(callback);
@@ -631,7 +631,7 @@ export class AreasPropertiesListener {
     }
 
     private handleJitsiRoomPropertyOnLeave(property: JitsiRoomPropertyData): void {
-        this.scene.CurrentPlayer.destroyText();
+        this.scene.CurrentPlayer.destroyText("jitsi");
         const callback = this.actionTriggerCallback.get("jitsi");
         if (callback) {
             this.scene.userInputManager.removeSpaceEventListener(callback);
@@ -688,7 +688,7 @@ export class AreasPropertiesListener {
             console.error("Error during loading a co-website: " + coWebsite.getUrl());
         });
 
-        this.scene.CurrentPlayer.destroyText();
+        this.scene.CurrentPlayer.destroyText(actionId);
         const callback = this.actionTriggerCallback.get(actionId);
         if (callback) {
             this.scene.userInputManager.removeSpaceEventListener(callback);

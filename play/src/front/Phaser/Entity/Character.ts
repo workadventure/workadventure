@@ -48,8 +48,8 @@ export abstract class Character extends Container implements OutlineableInterfac
     public companion?: Companion;
     private emote: Phaser.GameObjects.DOMElement | null = null;
     private emoteTween: Phaser.Tweens.Tween | null = null;
-    private text: Phaser.GameObjects.DOMElement | null = null;
-    private textTween: Phaser.Tweens.Tween | null = null;
+    private texts: Map<string, Phaser.GameObjects.DOMElement> = new Map();
+    private textsToBuild = new Map();
     private timeoutDestroyText: NodeJS.Timeout | null = null;
     scene: GameScene;
     private readonly _pictureStore: Writable<string | undefined>;
@@ -469,9 +469,25 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.createStartTransition(emoteY);
     }
 
-    playText(text: string, duration = 10000, callback = () => this.destroyText()) {
-        this.cancelPreviousText();
-        const textY = -50;
+    playText(
+        id: string,
+        text: string,
+        duration = 10000,
+        callback = () => this.destroyText(id),
+        createStackAnimation = true
+    ) {
+        if (this.texts.has(id)) {
+            this.destroyText(id);
+        }
+        this.textsToBuild.set(id, { text, duration, callback });
+
+        // If there is already one text created, we don't need to create a stack animation
+        if (this.texts.size == 1 && createStackAnimation) {
+            this.createStackAnimationForMultiText();
+            return;
+        }
+
+        const textY = -50 + this.texts.size * +2;
         const span = document.createElement("span");
 
         // Create SVG white triangle with border radius and add the text "space"
@@ -502,16 +518,17 @@ export abstract class Character extends Container implements OutlineableInterfac
         span.innerHTML = text.replace(get(LL).trigger.spaceKeyboard(), svg.outerHTML);
         span.addEventListener("click", callback);
 
-        this.text = new DOMElement(
+        const textDomElement = new DOMElement(
             this.scene,
             -1,
-            -30,
+            -30 + this.texts.size * +2,
             span,
-            "z-index:10; background-color: #00000080; color: #ffffff; padding: 5px; border-radius: 5px; font-size: 9px; cursor: pointer;"
+            `z-index:10; background-color: #00000080; color: #ffffff; padding: 5px; border-radius: 5px; font-size: 9px; cursor: pointer; backdrop-filter: blur(8px);`
         );
-        this.text.setAlpha(0);
-        this.add(this.text);
-        this.createStartTextTransition(textY, duration);
+        textDomElement.setAlpha(0);
+        this.add(textDomElement);
+        this.texts.set(id, textDomElement);
+        this.createStartTextTransition(id, textDomElement, textY, duration);
     }
 
     private createStartTransition(emoteY: number) {
@@ -529,10 +546,15 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    private createStartTextTransition(textY: number, duration: number) {
+    private createStartTextTransition(
+        id: string,
+        text: Phaser.GameObjects.DOMElement,
+        textY: number,
+        duration: number
+    ) {
         if (this.timeoutDestroyText) clearTimeout(this.timeoutDestroyText);
-        this.textTween = this.scene?.tweens.add({
-            targets: this.text,
+        this.scene?.tweens.add({
+            targets: text,
             props: {
                 alpha: 1,
                 y: textY,
@@ -542,7 +564,7 @@ export abstract class Character extends Container implements OutlineableInterfac
             onComplete: () => {
                 if (duration < 1) return;
                 this.timeoutDestroyText = setTimeout(() => {
-                    this.destroyText();
+                    this.destroyText(id);
                 }, duration);
             },
         });
@@ -612,16 +634,27 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.emote = null;
     }
 
-    private cancelPreviousText() {
-        if (!this.text) return;
-
-        this.textTween?.remove();
-        this.destroyText();
+    destroyText(id: string) {
+        const text = this.texts.get(id);
+        text?.destroy();
+        this.texts.delete(id);
+        this.textsToBuild.delete(id);
     }
 
-    destroyText() {
-        this.text?.destroy();
-        this.text = null;
+    private createStackAnimationForMultiText() {
+        // Destroy all texts and recreate them
+        this.texts.forEach((text, id) => {
+            // Destroy and remove the text from the map
+            text.destroy();
+            this.texts.delete(id);
+        });
+
+        // Recreate all texts in the correct order (from the biggest length to the smallest)
+        Array.from(this.textsToBuild.entries())
+            .sort((a, b) => a[1].text.length - b[1].text.length)
+            .forEach(([id, { text, duration, callback }]) => {
+                this.playText(id, text, duration, callback, false);
+            });
     }
 
     public get pictureStore(): PictureStore {
