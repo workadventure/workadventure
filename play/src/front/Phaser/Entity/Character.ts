@@ -23,6 +23,7 @@ import { passStatusToOnlineWhenUserIsInSetableStatus } from "../../Rules/StatusR
 import { gameManager } from "../Game/GameManager";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
+import LL from "../../../i18n/i18n-svelte";
 import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -47,6 +48,8 @@ export abstract class Character extends Container implements OutlineableInterfac
     public companion?: Companion;
     private emote: Phaser.GameObjects.DOMElement | null = null;
     private emoteTween: Phaser.Tweens.Tween | null = null;
+    private text: Phaser.GameObjects.DOMElement | null = null;
+    private textTween: Phaser.Tweens.Tween | null = null;
     scene: GameScene;
     private readonly _pictureStore: Writable<string | undefined>;
     protected readonly outlineColorStore = createColorStore();
@@ -466,8 +469,8 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     playText(text: string) {
-        this.cancelPreviousEmote();
-        const emoteY = -50;
+        this.cancelPreviousText();
+        const textY = -50;
         const span = document.createElement("span");
 
         // Create SVG white triangle with border radius and add the text "space"
@@ -495,18 +498,18 @@ export abstract class Character extends Container implements OutlineableInterfac
         textElement.style.fontWeight = "bold";
         textElement.textContent = "SPACE";
         svg.appendChild(textElement);
-        span.innerHTML = text.replace("[SPACE]", svg.outerHTML);
+        span.innerHTML = text.replace(get(LL).trigger.spaceKeyboard(), svg.outerHTML);
 
-        this.emote = new DOMElement(
+        this.text = new DOMElement(
             this.scene,
             -1,
             -30,
             span,
             "z-index:10; background-color: #00000080; color: #ffffff; padding: 5px; border-radius: 5px; font-size: 9px;"
         );
-        this.emote.setAlpha(0);
-        this.add(this.emote);
-        this.createStartTextTransition(emoteY);
+        this.text.setAlpha(0);
+        this.add(this.text);
+        this.createStartTextTransition(textY);
     }
 
     private createStartTransition(emoteY: number) {
@@ -524,18 +527,18 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    private createStartTextTransition(emoteY: number) {
-        this.emoteTween = this.scene?.tweens.add({
-            targets: this.emote,
+    private createStartTextTransition(textY: number) {
+        this.textTween = this.scene?.tweens.add({
+            targets: this.text,
             props: {
                 alpha: 1,
-                y: emoteY,
+                y: textY,
             },
             ease: "Power2",
             duration: 1000,
             onComplete: () => {
                 setTimeout(() => {
-                    this.destroyEmote();
+                    this.destroyText();
                 }, 10000);
             },
         });
@@ -593,16 +596,28 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.scene.refreshSceneForOutline();
     }
 
-    cancelPreviousEmote() {
+    private cancelPreviousEmote() {
         if (!this.emote) return;
 
         this.emoteTween?.remove();
         this.destroyEmote();
     }
 
-    destroyEmote() {
+    private destroyEmote() {
         this.emote?.destroy();
         this.emote = null;
+    }
+
+    private cancelPreviousText() {
+        if (!this.text) return;
+
+        this.textTween?.remove();
+        this.destroyText();
+    }
+
+    destroyText() {
+        this.text?.destroy();
+        this.text = null;
     }
 
     public get pictureStore(): PictureStore {
