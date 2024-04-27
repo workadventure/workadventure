@@ -51,6 +51,8 @@ export class AreasPropertiesListener {
     private openedCoWebsites = new Map<string, OpenCoWebsite>();
     private coWebsitesActionTriggers = new Map<string, string>();
 
+    private actionTriggerCallback: Map<string, () => void> = new Map<string, () => void>();
+
     constructor(scene: GameScene) {
         this.scene = scene;
     }
@@ -309,9 +311,11 @@ export class AreasPropertiesListener {
                 const callback = () => {
                     scriptUtils.openTab(property.link as string), this.scene.CurrentPlayer.destroyText();
                     this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.actionTriggerCallback.delete(actionId);
                 };
-                this.scene.CurrentPlayer.playText(`${message}`, -1);
+                this.scene.CurrentPlayer.playText(`${message}`, -1, callback);
                 this.scene.userInputManager?.addSpaceEventListener(callback);
+                this.actionTriggerCallback.set(actionId, callback);
 
                 /**
                  * @DEPRECATED - This is the old way to show trigger message
@@ -352,9 +356,11 @@ export class AreasPropertiesListener {
                 this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
                 this.scene.CurrentPlayer.destroyText();
                 this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.actionTriggerCallback.delete(actionId);
             };
-            this.scene.CurrentPlayer.playText(`${message}`, -1);
+            this.scene.CurrentPlayer.playText(`${message}`, -1, callback);
             this.scene.userInputManager?.addSpaceEventListener(callback);
+            this.actionTriggerCallback.set(actionId, callback);
 
             /**
              * @DEPRECATED - This is the old way to show trigger message
@@ -463,6 +469,11 @@ export class AreasPropertiesListener {
             analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
             this.scene.CurrentPlayer.destroyText();
+            const callback = this.actionTriggerCallback.get("jitsi");
+            if (callback) {
+                this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.actionTriggerCallback.delete("jitsi");
+            }
             /**
              * @DEPRECATED - This is the old way to show trigger message
             layoutManagerActionStore.removeAction("jitsi");
@@ -482,9 +493,11 @@ export class AreasPropertiesListener {
                 openJitsiRoomFunction().catch((e) => console.error(e));
                 this.scene.CurrentPlayer.destroyText();
                 this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.actionTriggerCallback.delete("jitsi");
             };
-            this.scene.CurrentPlayer.playText(`${message}`, -1);
+            this.scene.CurrentPlayer.playText(`${message}`, -1, callback);
             this.scene.userInputManager?.addSpaceEventListener(callback);
+            this.actionTriggerCallback.set("jitsi", callback);
 
             /**
              * @DEPRECATED - This is the old way to show trigger message
@@ -574,6 +587,11 @@ export class AreasPropertiesListener {
         }
 
         this.scene.CurrentPlayer.destroyText();
+        const callback = this.actionTriggerCallback.get(actionTriggerUuid);
+        if (callback) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.actionTriggerCallback.delete(actionTriggerUuid);
+        }
 
         /**
         * @DEPRECATED - This is the old way to show trigger message
@@ -614,6 +632,11 @@ export class AreasPropertiesListener {
 
     private handleJitsiRoomPropertyOnLeave(property: JitsiRoomPropertyData): void {
         this.scene.CurrentPlayer.destroyText();
+        const callback = this.actionTriggerCallback.get("jitsi");
+        if (callback) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.actionTriggerCallback.delete("jitsi");
+        }
         /**
          * @DEPRECATED - This is the old way to show trigger message
         layoutManagerActionStore.removeAction("jitsi");
@@ -666,6 +689,11 @@ export class AreasPropertiesListener {
         });
 
         this.scene.CurrentPlayer.destroyText();
+        const callback = this.actionTriggerCallback.get(actionId);
+        if (callback) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.actionTriggerCallback.delete(actionId);
+        }
         /**
          * @DEPRECATED - This is the old way to show trigger message
         layoutManagerActionStore.removeAction(actionId);

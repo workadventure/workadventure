@@ -50,6 +50,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     private emoteTween: Phaser.Tweens.Tween | null = null;
     private text: Phaser.GameObjects.DOMElement | null = null;
     private textTween: Phaser.Tweens.Tween | null = null;
+    private timeoutDestroyText: NodeJS.Timeout | null = null;
     scene: GameScene;
     private readonly _pictureStore: Writable<string | undefined>;
     protected readonly outlineColorStore = createColorStore();
@@ -468,7 +469,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.createStartTransition(emoteY);
     }
 
-    playText(text: string, duration = 10000) {
+    playText(text: string, duration = 10000, callback = () => this.destroyText()) {
         this.cancelPreviousText();
         const textY = -50;
         const span = document.createElement("span");
@@ -499,13 +500,14 @@ export abstract class Character extends Container implements OutlineableInterfac
         textElement.textContent = "SPACE";
         svg.appendChild(textElement);
         span.innerHTML = text.replace(get(LL).trigger.spaceKeyboard(), svg.outerHTML);
+        span.addEventListener("click", callback);
 
         this.text = new DOMElement(
             this.scene,
             -1,
             -30,
             span,
-            "z-index:10; background-color: #00000080; color: #ffffff; padding: 5px; border-radius: 5px; font-size: 9px;"
+            "z-index:10; background-color: #00000080; color: #ffffff; padding: 5px; border-radius: 5px; font-size: 9px; cursor: pointer;"
         );
         this.text.setAlpha(0);
         this.add(this.text);
@@ -528,6 +530,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     private createStartTextTransition(textY: number, duration: number) {
+        if (this.timeoutDestroyText) clearTimeout(this.timeoutDestroyText);
         this.textTween = this.scene?.tweens.add({
             targets: this.text,
             props: {
@@ -537,9 +540,8 @@ export abstract class Character extends Container implements OutlineableInterfac
             ease: "Power2",
             duration: 1000,
             onComplete: () => {
-                console.log("duration", duration);
                 if (duration < 1) return;
-                setTimeout(() => {
+                this.timeoutDestroyText = setTimeout(() => {
                     this.destroyText();
                 }, duration);
             },

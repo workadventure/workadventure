@@ -247,6 +247,10 @@ export class UserInputManager {
         return eventsMap;
     }
 
+    handleActivableEntity() {
+        this.userInputHandler.handleActivableEntity();
+    }
+
     addSpaceEventListener(callback: () => void) {
         this.userInputHandler.addSpaceEventListener(callback);
     }

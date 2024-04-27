@@ -83,7 +83,9 @@ export class ActivatablesManager {
         this.selectedActivatableObjectByDistance = newNearestObject;
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
             this.selectedActivatableObjectByDistance?.characterCloseByOutline(this.outlineColor);
-            this.currentPlayer.playText(get(LL).trigger.object());
+            this.currentPlayer.playText(get(LL).trigger.object(), 10000, () => {
+                this.currentPlayer.scene.userInputManager.handleActivableEntity();
+            });
         }
     }
 

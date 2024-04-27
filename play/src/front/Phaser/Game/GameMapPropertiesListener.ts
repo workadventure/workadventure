@@ -41,6 +41,8 @@ export class GameMapPropertiesListener {
     private coWebsitesOpenByPlace = new Map<string, OpenCoWebsite>();
     private coWebsitesActionTriggerByPlace = new Map<string, string>();
 
+    private actionTriggerCallback = new Map<string, () => void>();
+
     constructor(private scene: GameScene, private gameMapFrontWrapper: GameMapFrontWrapper) {
         this.areasPropertiesListener = new AreasPropertiesListener(scene);
     }
@@ -49,7 +51,16 @@ export class GameMapPropertiesListener {
         // Website on new tab
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
+                this.scene.CurrentPlayer.destroyText();
+                const callback = this.actionTriggerCallback.get("openTab");
+                if (callback) {
+                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.actionTriggerCallback.delete("openTab");
+                }
+                /**
+                 * @DEPRECATED - This is the old way to show trigger message
                 layoutManagerActionStore.removeAction("openTab");
+                */
             }
             if (typeof newValue == "string" && newValue.length) {
                 const openWebsiteTriggerValue = allProps.get(GameMapProperties.OPEN_WEBSITE_TRIGGER);
@@ -65,9 +76,11 @@ export class GameMapPropertiesListener {
                         scriptUtils.openTab(newValue);
                         this.scene.CurrentPlayer.destroyText();
                         this.scene.userInputManager.removeSpaceEventListener(callback);
+                        this.actionTriggerCallback.delete("openTab");
                     };
-                    this.scene.CurrentPlayer.playText(`${message}`, -1);
+                    this.scene.CurrentPlayer.playText(`${message}`, -1, callback);
                     this.scene.userInputManager?.addSpaceEventListener(callback);
+                    this.actionTriggerCallback.set("openTab", callback);
 
                     /**
                      * @DEPRECATED - This is the old way to show trigger message
@@ -88,7 +101,16 @@ export class GameMapPropertiesListener {
         // Jitsi room
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.JITSI_ROOM, (newValue, oldValue, allProps) => {
             if (newValue === undefined || newValue !== oldValue) {
+                this.scene.CurrentPlayer.destroyText();
+                const callback = this.actionTriggerCallback.get("jitsi");
+                if (callback) {
+                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.actionTriggerCallback.delete("jitsi");
+                }
+                /**
+                 * @DEPRECATED - This is the old way to show trigger message
                 layoutManagerActionStore.removeAction("jitsi");
+                */
                 coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
                     if (coWebsite instanceof JitsiCoWebsite) {
                         coWebsiteManager.closeCoWebsite(coWebsite);
@@ -189,7 +211,16 @@ export class GameMapPropertiesListener {
 
                 analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
+                this.scene.CurrentPlayer.destroyText();
+                const callback = this.actionTriggerCallback.get("jitsi");
+                if (callback) {
+                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.actionTriggerCallback.delete("jitsi");
+                }
+                /**
+                 * @DEPRECATED - This is the old way to show trigger message
                 layoutManagerActionStore.removeAction("jitsi");
+                */
             };
 
             const jitsiTriggerValue = allProps.get(GameMapProperties.JITSI_TRIGGER);
@@ -205,9 +236,11 @@ export class GameMapPropertiesListener {
                     openJitsiRoomFunction().catch((e) => console.error(e));
                     this.scene.CurrentPlayer.destroyText();
                     this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.actionTriggerCallback.delete("jitsi");
                 };
-                this.scene.CurrentPlayer.playText(`${message}`, -1);
+                this.scene.CurrentPlayer.playText(`${message}`, -1, callback);
                 this.scene.userInputManager?.addSpaceEventListener(callback);
+                this.actionTriggerCallback.set("jitsi", callback);
 
                 /**
                  * @DEPRECATED - This is the old way to show trigger message
@@ -228,7 +261,16 @@ export class GameMapPropertiesListener {
 
         this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
             if (newValue === undefined || newValue !== oldValue) {
+                this.scene.CurrentPlayer.destroyText();
+                const callback = this.actionTriggerCallback.get("bbbMeeting");
+                if (callback) {
+                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.actionTriggerCallback.delete("bbbMeeting");
+                }
+                /**
+                 * @DEPRECATED - This is the old way to show trigger message
                 layoutManagerActionStore.removeAction("bbbMeeting");
+                */
                 inBbbStore.set(false);
                 bbbFactory.setStopped(true);
                 bbbFactory.stop();
@@ -477,7 +519,16 @@ export class GameMapPropertiesListener {
                 console.error("Error during loading a co-website: " + coWebsite.getUrl());
             });
 
+            this.scene.CurrentPlayer.destroyText();
+            const callback = this.actionTriggerCallback.get(actionId);
+            if (callback) {
+                this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.actionTriggerCallback.delete(actionId);
+            }
+            /**
+             * @DEPRECATED - This is the old way to show trigger message
             layoutManagerActionStore.removeAction(actionId);
+            */
         };
 
         const openCoWebsiteFunction = () => {
@@ -515,10 +566,11 @@ export class GameMapPropertiesListener {
                 openCoWebsiteFunction();
                 this.scene.CurrentPlayer.destroyText();
                 this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.actionTriggerCallback.delete(actionId);
             };
-            this.scene.CurrentPlayer.playText(`${websiteTriggerMessageProperty}`, -1);
+            this.scene.CurrentPlayer.playText(`${websiteTriggerMessageProperty}`, -1, callback);
             this.scene.userInputManager?.addSpaceEventListener(callback);
-
+            this.actionTriggerCallback.set(actionId, callback);
             /**
              * @DEPRECATED - This is the old way to show trigger message
             layoutManagerActionStore.addAction({
@@ -693,13 +745,22 @@ export class GameMapPropertiesListener {
             return;
         }
 
-        const actionStore = get(layoutManagerActionStore);
         const actionTriggerUuid = this.coWebsitesActionTriggerByPlace.get(this.getIdFromPlace(place));
 
         if (!actionTriggerUuid) {
             return;
         }
 
+        this.scene.CurrentPlayer.destroyText();
+        const callback = this.actionTriggerCallback.get(actionTriggerUuid);
+        if (callback) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.actionTriggerCallback.delete(actionTriggerUuid);
+        }
+
+        /**
+         * @DEPRECATED - This is the old way to show trigger message
+        const actionStore = get(layoutManagerActionStore);
         const action =
             actionStore && actionStore.length > 0
                 ? actionStore.find((action) => action.uuid === actionTriggerUuid)
@@ -708,6 +769,7 @@ export class GameMapPropertiesListener {
         if (action) {
             layoutManagerActionStore.removeAction(actionTriggerUuid);
         }
+        */
 
         this.coWebsitesActionTriggerByPlace.delete(this.getIdFromPlace(place));
     }
