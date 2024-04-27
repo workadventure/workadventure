@@ -1,9 +1,9 @@
 import { MathUtils } from "@workadventure/math-utils";
+import { get } from "svelte/store";
 import { isOutlineable } from "../../Utils/CustomTypeGuards";
 import type { Player } from "../Player/Player";
-import type { ActivatableInterface } from "./ActivatableInterface";
-import { get } from "svelte/store";
 import LL from "../../../i18n/i18n-svelte";
+import type { ActivatableInterface } from "./ActivatableInterface";
 
 export class ActivatablesManager {
     // The item that can be selected by pressing the space key.
