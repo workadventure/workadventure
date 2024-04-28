@@ -516,6 +516,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         textElement.textContent = "SPACE";
         svg.appendChild(textElement);
         span.innerHTML = text.replace(get(LL).trigger.spaceKeyboard(), svg.outerHTML);
+        span.id = `spanText-${id}`;
+        span.classList.add("characterTriggerAction");
         span.addEventListener("click", callback);
 
         const textDomElement = new DOMElement(

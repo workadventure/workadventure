@@ -19,6 +19,7 @@ import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
 import { GameScene } from "../Game/GameScene";
 import { OutlineableInterface } from "../Game/OutlineableInterface";
+import { clear } from "console";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",
@@ -42,6 +43,8 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
 
     private activatable!: boolean;
     private oldPosition: { x: number; y: number };
+
+    private updatePropertyActivableTimeOut: NodeJS.Timeout | undefined;
 
     constructor(scene: GameScene, public readonly entityId: string, data: WAMEntityData, prefab: EntityPrefab) {
         super(scene, data.x, data.y, prefab.imagePath);
@@ -238,6 +241,16 @@ export class Entity extends Phaser.GameObjects.Image implements ActivatableInter
             merge(property, changes);
         }
         this.emit(EntityEvent.Updated, this.appendId({ properties: this.entityData.properties }));
+
+        // Update activatable status
+        if (this.updatePropertyActivableTimeOut) clearTimeout(this.updatePropertyActivableTimeOut);
+        this.updatePropertyActivableTimeOut = setTimeout(() => {
+            this.activatable = this.hasAnyPropertiesSet();
+            if (this.activatable) {
+                this.setInteractive({ pixelPerfect: true, cursor: "pointer" });
+                this.scene.input.setDraggable(this);
+            }
+        }, 500);
     }
 
     public deleteProperty(id: string): boolean {
