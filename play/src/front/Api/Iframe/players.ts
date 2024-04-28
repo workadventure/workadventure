@@ -4,30 +4,31 @@ import type { AddPlayerEvent } from "../Events/AddPlayerEvent";
 import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import type { RemotePlayerInterface, RemotePlayerMoved } from "./Players/RemotePlayer";
-import { RemotePlayer, remotePlayers } from "./Players/RemotePlayer";
+import { RemotePlayer } from "./Players/RemotePlayer";
+import {PublicPlayerState} from "./PublicPlayerState";
 
-export interface PlayerVariableChanged {
-    player: RemotePlayer;
-    value: unknown;
+export interface PlayerVariableChanged<V, T extends {[key: string]: unknown}> {
+    player: RemotePlayer<T>;
+    value: V;
 }
 
-const sharedPlayersVariableStream = new Map<string, Subject<PlayerVariableChanged>>();
-const _newRemotePlayersStream = new Subject<RemotePlayer>();
-const newRemotePlayersStream = _newRemotePlayersStream.asObservable();
-const _removeRemotePlayersStream = new Subject<RemotePlayer>();
-const removeRemotePlayersStream = _removeRemotePlayersStream.asObservable();
-const _playersMovedStream = new Subject<RemotePlayerMoved>();
-const playersMovedStream = _playersMovedStream.asObservable();
-
-export class WorkadventurePlayersCommands extends IframeApiContribution<WorkadventurePlayersCommands> {
+export class WorkadventurePlayersCommands<T extends {[key: string]: unknown}> extends IframeApiContribution<WorkadventurePlayersCommands<T>> {
     private trackingPlayers = false;
     private trackingMovement = false;
+    private sharedPlayersVariableStream: { [key in keyof T ]?: Subject<PlayerVariableChanged<T[key], T>>|undefined } = {};
+    private remotePlayers = new Map<number, RemotePlayer<T>>();
+    private _newRemotePlayersStream = new Subject<RemotePlayer<T>>();
+    private newRemotePlayersStream = this._newRemotePlayersStream.asObservable();
+    private _removeRemotePlayersStream = new Subject<RemotePlayer<T>>();
+    private removeRemotePlayersStream = this._removeRemotePlayersStream.asObservable();
+    private _playersMovedStream = new Subject<RemotePlayerMoved<T>>();
+    private playersMovedStream = this._playersMovedStream.asObservable();
 
     callbacks = [
         apiCallback({
             type: "setSharedPlayerVariable",
             callback: (payloadData) => {
-                const remotePlayer = remotePlayers.get(payloadData.playerId);
+                const remotePlayer = this.remotePlayers.get(payloadData.playerId);
                 if (remotePlayer === undefined) {
                     console.warn(
                         'Received a variable message for a player that isn\'t connected. Did you forget to call "WA.players.configureTracking()"?. Ignoring.',
@@ -36,12 +37,18 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
                     return;
                 }
 
-                remotePlayer.setVariable(payloadData.key, payloadData.value);
-                const stream = sharedPlayersVariableStream.get(payloadData.key);
+                // So far, we have no way to check at runtime the type of the value, so we cast it to any
+                // In an ideal world, the map and the script would share a common schema (for instance with https://github.com/sinclairzx81/typebox)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                remotePlayer.setVariable(payloadData.key, payloadData.value as any);
+                const stream = this.sharedPlayersVariableStream[payloadData.key];
                 if (stream) {
                     stream.next({
                         player: remotePlayer,
-                        value: payloadData.value,
+                        // So far, we have no way to check at runtime the type of the value, so we cast it to any
+                        // In an ideal world, the map and the script would share a common schema (for instance with https://github.com/sinclairzx81/typebox)
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        value: payloadData.value as any,
                     });
                 }
             },
@@ -55,12 +62,12 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
         apiCallback({
             type: "removeRemotePlayer",
             callback: (userId) => {
-                const remotePlayer = remotePlayers.get(userId);
+                const remotePlayer = this.remotePlayers.get(userId);
                 if (remotePlayer === undefined) {
                     console.warn("Could not find remote player to delete: ", userId);
                 } else {
-                    remotePlayers.delete(userId);
-                    _removeRemotePlayersStream.next(remotePlayer);
+                    this.remotePlayers.delete(userId);
+                    this._removeRemotePlayersStream.next(remotePlayer);
                     remotePlayer.destroy();
                 }
             },
@@ -68,7 +75,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
         apiCallback({
             type: "remotePlayerChanged",
             callback: (event) => {
-                const remotePlayer = remotePlayers.get(event.playerId);
+                const remotePlayer = this.remotePlayers.get(event.playerId);
                 if (remotePlayer === undefined) {
                     console.warn("Could not find remote player with ID : ", event.playerId);
                     return;
@@ -78,7 +85,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
                     const oldPosition = remotePlayer.position;
                     remotePlayer.position = event.position;
 
-                    _playersMovedStream.next({
+                    this._playersMovedStream.next({
                         player: remotePlayer,
                         newPosition: event.position,
                         oldPosition,
@@ -90,9 +97,9 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
     ];
 
     private registerRemotePlayer(event: AddPlayerEvent): void {
-        const remotePlayer = new RemotePlayer(event);
-        remotePlayers.set(event.playerId, remotePlayer);
-        _newRemotePlayersStream.next(remotePlayer);
+        const remotePlayer = new RemotePlayer<T>(event);
+        this.remotePlayers.set(event.playerId, remotePlayer);
+        this._newRemotePlayersStream.next(remotePlayer);
     }
 
     /**
@@ -143,11 +150,11 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      *
      * If you are looking to listen for variable changes of only one player, look at `RemotePlayer.onVariableChange` instead.
      */
-    public onVariableChange(variableName: string): Observable<PlayerVariableChanged> {
-        let stream = sharedPlayersVariableStream.get(variableName);
+    public onVariableChange<K extends keyof T>(variableName: K): Observable<PlayerVariableChanged<T[K], T>> {
+        let stream = this.sharedPlayersVariableStream[variableName];
         if (!stream) {
-            stream = new Subject<PlayerVariableChanged>();
-            sharedPlayersVariableStream.set(variableName, stream);
+            stream = new Subject<PlayerVariableChanged<T[K], T>>();
+            this.sharedPlayersVariableStream[variableName] = stream;
         }
         return stream.asObservable();
     }
@@ -165,13 +172,13 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      * WA.players.onPlayerEnters.subscribe((remotePlayer) => { doStuff(); });
      * ```
      */
-    public get onPlayerEnters(): Observable<RemotePlayerInterface> {
+    public get onPlayerEnters(): Observable<RemotePlayerInterface<T>> {
         if (!this.trackingPlayers) {
             throw new Error(
                 "Cannot call WA.players.onPlayerEnters. You forgot to call WA.players.configureTracking() first."
             );
         }
-        return newRemotePlayersStream;
+        return this.newRemotePlayersStream;
     }
 
     /**
@@ -187,13 +194,13 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      * WA.players.onPlayerLeaves.subscribe((remotePlayer) => { doCleanupStuff(); });
      * ```
      */
-    public get onPlayerLeaves(): Observable<RemotePlayerInterface> {
+    public get onPlayerLeaves(): Observable<RemotePlayerInterface<T>> {
         if (!this.trackingPlayers) {
             throw new Error(
                 "Cannot call WA.players.onPlayerLeaves. You forgot to call WA.players.configureTracking() first."
             );
         }
-        return removeRemotePlayersStream;
+        return this.removeRemotePlayersStream;
     }
 
     /**
@@ -207,13 +214,13 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      * WA.players.onPlayerMoves.subscribe(({ player, newPosition, oldPosition }) => { doStuff(); });
      * ```
      */
-    public get onPlayerMoves(): Observable<RemotePlayerMoved> {
+    public get onPlayerMoves(): Observable<RemotePlayerMoved<T>> {
         if (!this.trackingMovement) {
             throw new Error(
                 "Cannot call WA.players.onPlayerMoves(). You forgot to call WA.players.configureTracking() first."
             );
         }
-        return playersMovedStream;
+        return this.playersMovedStream;
     }
 
     /**
@@ -222,8 +229,8 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      *
      * Note: if the same user is connected twice, it will be considered as 2 different players with 2 different IDs.
      */
-    public get(id: number): RemotePlayerInterface | undefined {
-        return remotePlayers.get(id);
+    public get(id: number): RemotePlayerInterface<T> | undefined {
+        return this.remotePlayers.get(id);
     }
 
     /**
@@ -231,9 +238,9 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      * The list only contains the players in the same zone as the current player (where zone ~= viewport).
      * {@link https://workadventu.re/map-building/api-players.md#getting-a-list-of-players-around-me | Website documentation}
      */
-    public list(): IterableIterator<RemotePlayerInterface> {
-        return remotePlayers.values();
+    public list(): IterableIterator<RemotePlayerInterface<T>> {
+        return this.remotePlayers.values();
     }
 }
 
-export default new WorkadventurePlayersCommands();
+export default new WorkadventurePlayersCommands<PublicPlayerState>();
