@@ -14,7 +14,20 @@ test.use({
   baseURL: map_storage_url,
 });
 
-test.describe("Map editor interacting with object", () => {
+test.describe("Map editor interacting with object @oidc", () => {
+
+    test.beforeEach(
+        "Ignore tests on mobilechromium because map editor not available for mobile devices",
+        ({}, {project}) => {
+            //Map Editor not available on mobile
+            if (project.name === "mobilechromium") {
+                //eslint-disable-next-line playwright/no-skipped-test
+                test.skip();
+                return;
+            }
+        }
+    );
+
     test("Success to interact with area", async ({page, browser, request, browserName}) => {
         // Go to the map
         await resetWamMaps(request);
