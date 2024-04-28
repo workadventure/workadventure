@@ -19,7 +19,6 @@ import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { ActivatableInterface } from "../Game/ActivatableInterface";
 import { GameScene } from "../Game/GameScene";
 import { OutlineableInterface } from "../Game/OutlineableInterface";
-import { clear } from "console";
 
 export enum EntityEvent {
     Moved = "EntityEvent:Moved",

@@ -1,15 +1,11 @@
-import {expect, test, webkit} from "@playwright/test";
+import {expect, test} from "@playwright/test";
 import Map from "./utils/map";
 import AreaEditor from "./utils/map-editor/areaEditor";
-import ConfigureMyRoom from "./utils/map-editor/configureMyRoom";
 import EntityEditor from "./utils/map-editor/entityEditor";
-import Exploration from "./utils/map-editor/exploration";
-import Megaphone from "./utils/map-editor/megaphone";
 import {resetWamMaps} from "./utils/map-editor/uploader";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
-import {hideNoCamera, login} from "./utils/roles";
-import {evaluateScript} from "./utils/scripting";
+import {login} from "./utils/roles";
 import {map_storage_url} from "./utils/urls";
 import {oidcAdminTagLogin} from "./utils/oidc";
 
