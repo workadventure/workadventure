@@ -3,8 +3,7 @@ import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events
 import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import { playerState } from "./playerState";
-import type { WorkadventureProximityMeetingCommands } from "./Player/ProximityMeeting";
-import proximityMeeting from "./Player/ProximityMeeting";
+import { WorkadventureProximityMeetingCommands } from "./Player/ProximityMeeting";
 
 const moveStream = new Subject<HasPlayerMovedEvent>();
 
@@ -50,8 +49,9 @@ export const setIsLogged = (_isLogged: boolean | undefined) => {
     isLogged = _isLogged === true;
 };
 
-export class WorkadventurePlayerCommands extends IframeApiContribution<WorkadventurePlayerCommands> {
+export class WorkadventurePlayerCommands<PublicState extends {[key: string]: unknown}> extends IframeApiContribution<WorkadventurePlayerCommands<PublicState>> {
     readonly state = playerState;
+    private _proximityMeeting: WorkadventureProximityMeetingCommands<PublicState>|undefined;
 
     callbacks = [
         apiCallback({
@@ -264,8 +264,11 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         });
     }
 
-    get proximityMeeting(): WorkadventureProximityMeetingCommands {
-        return proximityMeeting;
+    get proximityMeeting(): WorkadventureProximityMeetingCommands<PublicState> {
+        if (this._proximityMeeting === undefined) {
+            this._proximityMeeting = new WorkadventureProximityMeetingCommands<PublicState>();
+        }
+        return this._proximityMeeting;
     }
 
     /**
