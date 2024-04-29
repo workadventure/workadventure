@@ -72,9 +72,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     // Are we yet arrived to targetZoomModifier?
     private targetReachInProgress = false;
     // The target zoom we should reach. Each step, we get closer to this target.
-    private targetZoomModifier;
+    private targetZoomModifier: number | undefined;
     private targetDirection: "zoom_out" | "zoom_in" | undefined;
-    private cameraSpeed = 1;
+    private cameraZoomSpeed = 1;
     private _resistanceStartZoomLevel = 0.6;
     private _resistanceEndZoomLevel = 0.3;
     // The resistance strength is the speed at which the camera will go back to the resistance start zoom level.
@@ -85,6 +85,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     // The date when the resistance wall was broken
     private wallDownDate = 0;
     private resistanceZoneEnterDate = 0;
+    private cameraSpeed: { x: number; y: number } | undefined;
 
     constructor(
         private scene: GameScene,
@@ -127,7 +128,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             this.mapSize.height
         );
         this.waScaleManager.maxZoomOut = targetZoomModifier;
-        this.targetZoomModifier = this.waScaleManager.zoomModifier;
+        this.targetZoomModifier = undefined;
     }
 
     public destroy(): void {
@@ -213,7 +214,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         }
         this.stopPan();
         this.camera.pan(focusOn.x, focusOn.y, duration, Easing.SineEaseOut, true, (camera, progress, x, y) => {
-            this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
+            if (zoomModifierChange) {
+                this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
+            }
             if (progress === 1) {
                 // NOTE: Making sure the last action will be centering after zoom change
                 this.camera.centerOn(focusOn.x, focusOn.y);
@@ -305,6 +308,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
      * (tries to put the character in the center of the remaining space if there is a discussion going on.
      */
     public updateCameraOffset(box: Box, instant = false): void {
+        if (this.cameraMode !== CameraMode.Follow) {
+            return;
+        }
         const xCenter = (box.xEnd - box.xStart) / 2 + box.xStart;
         const yCenter = (box.yEnd - box.yStart) / 2 + box.yStart;
 
@@ -417,6 +423,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 if (!focusOn) {
                     return;
                 }
+
                 this.camera.centerOn(focusOn.x, focusOn.y);
 
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
@@ -443,6 +450,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.cameraLocked = false;
         this.stopFollow();
         this.setCameraMode(CameraMode.Exploration);
+
+        this.camera.setFollowOffset(0, 0);
 
         this.camera.setBounds(
             -this.mapSize.width,
@@ -481,14 +490,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         );
     }
 
-    public panTo(scrollX: number, scrollY: number, duration: number): void {
-        this.stopPan();
-        this.camera.pan(scrollX, scrollY, duration, Easing.SineEaseOut, true, () => {
-            this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
-        });
-    }
-
-    public stopPan(): void {
+    private stopPan(): void {
         this.camera.panEffect.reset();
     }
 
@@ -591,30 +593,53 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     private animate(time: number, delta: number): void {
-        let targetZoomModifier;
-        if (this.targetDirection === "zoom_in") {
-            targetZoomModifier = this.targetZoomModifier * 1.01;
-        } else {
-            targetZoomModifier = this.targetZoomModifier / 1.01;
+        if (this.targetZoomModifier !== undefined) {
+            let targetZoomModifier;
+            if (this.targetDirection === "zoom_in") {
+                targetZoomModifier = this.targetZoomModifier * 1.01;
+            } else {
+                targetZoomModifier = this.targetZoomModifier / 1.01;
+            }
+
+            let newZoom =
+                this.waScaleManager.zoomModifier +
+                (((targetZoomModifier - this.waScaleManager.zoomModifier) * delta) / 100) * this.cameraZoomSpeed;
+
+            if (this.targetDirection === "zoom_in" && newZoom > this.targetZoomModifier) {
+                newZoom = this.targetZoomModifier;
+                this.targetZoomModifier = undefined;
+            } else if (this.targetDirection === "zoom_out" && newZoom <= this.targetZoomModifier) {
+                newZoom = this.targetZoomModifier;
+                this.targetZoomModifier = undefined;
+            }
+
+            //waScaleManager.handleZoomByFactor(newZoom, this.camera);
+            waScaleManager.handleZoom(newZoom, this.camera);
         }
 
-        let newZoom =
-            this.waScaleManager.zoomModifier +
-            (((targetZoomModifier - this.waScaleManager.zoomModifier) * delta) / 100) * this.cameraSpeed;
+        // Let's move the camera according to the speed
+        if (this.cameraSpeed) {
+            const cameraCenter = {
+                x: this.camera.worldView.x + this.camera.worldView.width / 2,
+                y: this.camera.worldView.y + this.camera.worldView.height / 2,
+            };
+            const newX = cameraCenter.x + (this.cameraSpeed.x * delta) / 500;
+            const newY = cameraCenter.y + (this.cameraSpeed.y * delta) / 500;
+            this.camera.centerOn(newX, newY);
+            // Now, let's slow down the camera a bit
+            this.cameraSpeed.x *= 1 - delta / 300;
+            this.cameraSpeed.y *= 1 - delta / 300;
+            if (Math.pow(this.cameraSpeed.x, 2) + Math.pow(this.cameraSpeed.y, 2) < 20) {
+                this.cameraSpeed = undefined;
+            }
+        }
 
-        if (this.targetDirection === "zoom_in" && newZoom > this.targetZoomModifier) {
-            newZoom = this.targetZoomModifier;
+        if (this.cameraSpeed === undefined && this.targetZoomModifier === undefined) {
             this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.animateCallback);
             this.targetReachInProgress = false;
         }
-        if (this.targetDirection === "zoom_out" && newZoom <= this.targetZoomModifier) {
-            newZoom = this.targetZoomModifier;
-            this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.animateCallback);
-            this.targetReachInProgress = false;
-        }
 
-        //waScaleManager.handleZoomByFactor(newZoom, this.camera);
-        waScaleManager.handleZoom(newZoom, this.camera);
+        this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
     }
 
     private resistZoomCallback: ((time: number, delta: number) => void) | undefined;
@@ -641,16 +666,16 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 this.wallDownDate = 0;
                 this.resistanceZoneEnterDate = 0;
                 debugZoom("We passed through resistance zone. Resistance wall is back up");
-                console.log("this._resistanceStartZoomLevel", this._resistanceStartZoomLevel);
-                console.log("this._resistanceEndZoomLevel", this._resistanceEndZoomLevel);
-                console.log("this.waScaleManager.zoomModifier", this.waScaleManager.zoomModifier);
+                debugZoom("this._resistanceStartZoomLevel", this._resistanceStartZoomLevel);
+                debugZoom("this._resistanceEndZoomLevel", this._resistanceEndZoomLevel);
+                debugZoom("this.waScaleManager.zoomModifier", this.waScaleManager.zoomModifier);
             } else {
                 this.wallDownDate = Date.now();
                 this.resistanceZoneEnterDate = 0;
                 debugZoom("Resistance wall is broken because we left the resistance zone");
-                console.log("this._resistanceStartZoomLevel", this._resistanceStartZoomLevel);
-                console.log("this._resistanceEndZoomLevel", this._resistanceEndZoomLevel);
-                console.log("this.waScaleManager.zoomModifier", this.waScaleManager.zoomModifier);
+                debugZoom("this._resistanceStartZoomLevel", this._resistanceStartZoomLevel);
+                debugZoom("this._resistanceEndZoomLevel", this._resistanceEndZoomLevel);
+                debugZoom("this.waScaleManager.zoomModifier", this.waScaleManager.zoomModifier);
             }
 
             return;
@@ -662,18 +687,14 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             this._resistanceStartZoomLevel - (this._resistanceEndZoomLevel - this._resistanceStartZoomLevel) * 0.1;
 
         const newZoom =
-            this.targetZoomModifier +
-            (((targetZoom - this.targetZoomModifier) * delta) / 250) * this._resistanceStrength;
+            (this.targetZoomModifier ?? this.waScaleManager.zoomModifier) +
+            (((targetZoom - (this.targetZoomModifier ?? this.waScaleManager.zoomModifier)) * delta) / 250) *
+                this._resistanceStrength;
         //this.targetZoomModifier = newZoom;
 
         this.animateToZoomLevel(newZoom);
 
         // If the wall is not broken and we spent more than 2 seconds in the resistance zone, let's break the wall.
-        console.log(
-            "this.resistanceZoneEnterDate",
-            this.resistanceZoneEnterDate,
-            Date.now() - this.resistanceZoneEnterDate
-        );
         if (this.wallDownDate === 0 && Date.now() - this.resistanceZoneEnterDate > 2000) {
             this.wallDownDate = Date.now();
             debugZoom("Resistance wall is broken because we spent 2 seconds in the resistance zone");
@@ -731,8 +752,27 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     emit(event: string | symbol, ...args: unknown[]): boolean {
-        // If the camera is defined on Exploration mode, the camaera manager events will be not emitted
-        if (event === CameraManagerEvent.CameraUpdate && CameraMode.Exploration === this.cameraMode) false;
+        // If the camera is defined on Exploration mode, the camera manager events will be not emitted
+        if (event === CameraManagerEvent.CameraUpdate && CameraMode.Exploration === this.cameraMode) return false;
         return super.emit(event, ...args);
+    }
+
+    setSpeed(speed: { x: number; y: number }) {
+        this.cameraSpeed = speed;
+        if (!this.targetReachInProgress) {
+            this.targetReachInProgress = true;
+            this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.animateCallback);
+        }
+    }
+
+    stopSpeed() {
+        this.cameraSpeed = undefined;
+    }
+
+    scrollCamera(x: number, y: number): void {
+        this.camera.scrollX += x;
+        this.camera.scrollY += y;
+        this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
+        this.scene.markDirty();
     }
 }
