@@ -49,9 +49,7 @@ export const setIsLogged = (_isLogged: boolean | undefined) => {
     isLogged = _isLogged === true;
 };
 
-export class WorkadventurePlayerCommands<PublicState extends { [key: string]: unknown }> extends IframeApiContribution<
-    WorkadventurePlayerCommands<PublicState>
-> {
+export class WorkadventurePlayerCommands extends IframeApiContribution<WorkadventurePlayerCommands> {
     readonly state = playerState;
     private _proximityMeeting: WorkadventureProximityMeetingCommands | undefined;
 
