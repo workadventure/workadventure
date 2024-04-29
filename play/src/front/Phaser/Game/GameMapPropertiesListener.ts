@@ -21,6 +21,7 @@ import { LL } from "../../../i18n/i18n-svelte";
 import { inJitsiStore, inBbbStore, silentStore, inOpenWebsite, isSpeakerStore } from "../../Stores/MediaStore";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { currentLiveStreamingNameStore } from "../../Stores/MegaphoneStore";
+import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { analyticsClient } from "./../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
@@ -68,7 +69,9 @@ export class GameMapPropertiesListener {
                 if (forceTrigger || openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     let message = allProps.get(GameMapProperties.OPEN_WEBSITE_TRIGGER_MESSAGE);
                     if (message === undefined) {
-                        message = get(LL).trigger.newTab();
+                        message = isMediaBreakpointUp("md")
+                            ? get(LL).trigger.newTab()
+                            : get(LL).trigger.mobile.newTab();
                     }
 
                     // Create callback and play text message
@@ -228,7 +231,9 @@ export class GameMapPropertiesListener {
             if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                 let message = allProps.get(GameMapProperties.JITSI_TRIGGER_MESSAGE);
                 if (message === undefined) {
-                    message = get(LL).trigger.jitsiRoom();
+                    message = isMediaBreakpointUp("md")
+                        ? get(LL).trigger.jitsiRoom()
+                        : get(LL).trigger.mobile.jitsiRoom();
                 }
 
                 // Create callback and play text message
@@ -556,7 +561,9 @@ export class GameMapPropertiesListener {
 
         if (localUserStore.getForceCowebsiteTrigger() || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
             if (!websiteTriggerMessageProperty) {
-                websiteTriggerMessageProperty = get(LL).trigger.cowebsite();
+                websiteTriggerMessageProperty = isMediaBreakpointUp("md")
+                    ? get(LL).trigger.cowebsite()
+                    : get(LL).trigger.mobile.cowebsite();
             }
 
             this.coWebsitesActionTriggerByPlace.set(this.getIdFromPlace(place), actionId);

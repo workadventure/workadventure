@@ -41,6 +41,7 @@ import { OpenCoWebsite } from "../GameMapPropertiesListener";
 import { GameScene } from "../GameScene";
 import { mapEditorAskToClaimPersonalAreaStore } from "../../../Stores/MapEditorStore";
 import { requestVisitCardsStore } from "../../../Stores/GameStore";
+import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -304,7 +305,7 @@ export class AreasPropertiesListener {
                 this.coWebsitesActionTriggers.set(property.id, actionId);
                 let message = property.triggerMessage;
                 if (message === undefined) {
-                    message = get(LL).trigger.newTab();
+                    message = isMediaBreakpointUp("md") ? get(LL).trigger.newTab() : get(LL).trigger.mobile.newTab();
                 }
 
                 // Create callback and play text message
@@ -346,7 +347,7 @@ export class AreasPropertiesListener {
         if (localUserStore.getForceCowebsiteTrigger() || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
             let message = property.triggerMessage;
             if (!message) {
-                message = get(LL).trigger.cowebsite();
+                message = isMediaBreakpointUp("md") ? get(LL).trigger.cowebsite() : get(LL).trigger.mobile.cowebsite();
             }
 
             this.coWebsitesActionTriggers.set(property.id, actionId);
@@ -485,7 +486,7 @@ export class AreasPropertiesListener {
         if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
             let message = property.triggerMessage;
             if (message === undefined) {
-                message = get(LL).trigger.jitsiRoom();
+                message = isMediaBreakpointUp("md") ? get(LL).trigger.jitsiRoom() : get(LL).trigger.mobile.jitsiRoom();
             }
 
             // Create callback and play text message

@@ -3,6 +3,7 @@ import { get } from "svelte/store";
 import { isOutlineable } from "../../Utils/CustomTypeGuards";
 import type { Player } from "../Player/Player";
 import LL from "../../../i18n/i18n-svelte";
+import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import type { ActivatableInterface } from "./ActivatableInterface";
 
 export class ActivatablesManager {
@@ -83,9 +84,14 @@ export class ActivatablesManager {
         this.selectedActivatableObjectByDistance = newNearestObject;
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
             this.selectedActivatableObjectByDistance?.characterCloseByOutline(this.outlineColor);
-            this.currentPlayer.playText("object", get(LL).trigger.object(), 10000, () => {
-                this.currentPlayer.scene.userInputManager.handleActivableEntity();
-            });
+            this.currentPlayer.playText(
+                "object",
+                isMediaBreakpointUp("md") ? get(LL).trigger.object() : get(LL).trigger.mobile.object(),
+                10000,
+                () => {
+                    this.currentPlayer.scene.userInputManager.handleActivableEntity();
+                }
+            );
         }
     }
 
