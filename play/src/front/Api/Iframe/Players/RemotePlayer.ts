@@ -4,8 +4,9 @@ import type { AddPlayerEvent } from "../../Events/AddPlayerEvent";
 import type { PlayerPosition } from "../../Events/PlayerPosition";
 import { ActionsMenuAction } from "../ui";
 import { queryWorkadventure, sendToWorkadventure } from "../IframeApiContribution";
+import { PublicPlayerState, ReadOnlyPublicPlayerState } from "../PublicPlayerState";
 
-export interface RemotePlayerInterface<T extends {[key: string]: unknown}> {
+export interface RemotePlayerInterface {
     /**
      * A unique ID for this player. Each character on the map has a unique ID
      */
@@ -37,7 +38,7 @@ export interface RemotePlayerInterface<T extends {[key: string]: unknown}> {
     /**
      * An object storing players variables
      */
-    readonly state: ReadOnlyState<T & { onVariableChange(key: string): Observable<unknown> }>;
+    readonly state: ReadOnlyPublicPlayerState;
 
     /**
      * Send an event to the player.
@@ -46,18 +47,16 @@ export interface RemotePlayerInterface<T extends {[key: string]: unknown}> {
     sendEvent(key: string, value: unknown): Promise<void>;
 }
 
-export type ReadOnlyState<T extends {[key: string]: unknown, onVariableChange(key: string): Observable<unknown>}> = { onVariableChange(key: string): Observable<unknown> } & Readonly<Omit<T, "onVariableChange">>;
-
-export class RemotePlayer<T extends {[key: string]: unknown}> implements RemotePlayerInterface<T> {
+export class RemotePlayer implements RemotePlayerInterface {
     private _playerId: number;
     private _name: string;
     private _userUuid: string;
     private _availabilityStatus: string;
     private _outlineColor: number | undefined;
     private _position: PlayerPosition;
-    private _variables: { [key in keyof T ]?: T[key] } = {};
-    private _variablesSubjects: { [key in keyof T ]?: Subject<T[key]> } = {};
-    public readonly state: ReadOnlyState<T>;
+    private _variables: { [key in keyof PublicPlayerState]?: PublicPlayerState[key] } = {};
+    private _variablesSubjects: { [key in keyof PublicPlayerState]?: Subject<PublicPlayerState[key]> } = {};
+    public readonly state: ReadOnlyPublicPlayerState;
     private actions: Map<string, ActionsMenuAction> = new Map<string, ActionsMenuAction>();
 
     public constructor(addPlayerEvent: AddPlayerEvent) {
@@ -74,10 +73,10 @@ export class RemotePlayer<T extends {[key: string]: unknown}> implements RemoteP
         const variables = this._variables;
         this.state = new Proxy(
             {
-                onVariableChange<K extends keyof T>(key: K): Observable<T[K]> {
+                onVariableChange<K extends keyof PublicPlayerState>(key: K): Observable<PublicPlayerState[K]> {
                     let subject = variableSubjects[key];
                     if (subject === undefined) {
-                        subject = new Subject<T[K]>();
+                        subject = new Subject<PublicPlayerState[K]>();
                         variableSubjects[key] = subject;
                     }
                     return subject.asObservable();
@@ -138,11 +137,11 @@ export class RemotePlayer<T extends {[key: string]: unknown}> implements RemoteP
     public destroy() {
         this._position$.complete();
         for (const subject of Object.values(this._variablesSubjects)) {
-            subject.complete();
+            subject?.complete();
         }
     }
 
-    public setVariable<K extends keyof T>(name: K, value: T[K]): void {
+    public setVariable<K extends keyof PublicPlayerState>(name: K, value: PublicPlayerState[K]): void {
         this._variables[name] = value;
         const observable = this._variablesSubjects[name];
         if (observable) {
@@ -187,8 +186,8 @@ export class RemotePlayer<T extends {[key: string]: unknown}> implements RemoteP
     }
 }
 
-export interface RemotePlayerMoved<T extends {[key: string]: unknown}> {
-    player: RemotePlayerInterface<T>;
+export interface RemotePlayerMoved {
+    player: RemotePlayerInterface;
     newPosition: PlayerPosition;
     oldPosition: PlayerPosition;
 }

@@ -49,9 +49,11 @@ export const setIsLogged = (_isLogged: boolean | undefined) => {
     isLogged = _isLogged === true;
 };
 
-export class WorkadventurePlayerCommands<PublicState extends {[key: string]: unknown}> extends IframeApiContribution<WorkadventurePlayerCommands<PublicState>> {
+export class WorkadventurePlayerCommands<PublicState extends { [key: string]: unknown }> extends IframeApiContribution<
+    WorkadventurePlayerCommands<PublicState>
+> {
     readonly state = playerState;
-    private _proximityMeeting: WorkadventureProximityMeetingCommands<PublicState>|undefined;
+    private _proximityMeeting: WorkadventureProximityMeetingCommands | undefined;
 
     callbacks = [
         apiCallback({
@@ -264,9 +266,9 @@ export class WorkadventurePlayerCommands<PublicState extends {[key: string]: unk
         });
     }
 
-    get proximityMeeting(): WorkadventureProximityMeetingCommands<PublicState> {
+    get proximityMeeting(): WorkadventureProximityMeetingCommands {
         if (this._proximityMeeting === undefined) {
-            this._proximityMeeting = new WorkadventureProximityMeetingCommands<PublicState>();
+            this._proximityMeeting = new WorkadventureProximityMeetingCommands();
         }
         return this._proximityMeeting;
     }
