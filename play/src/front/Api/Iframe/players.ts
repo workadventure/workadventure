@@ -5,23 +5,25 @@ import { IframeApiContribution, queryWorkadventure } from "./IframeApiContributi
 import { apiCallback } from "./registeredCallbacks";
 import type { RemotePlayerInterface, RemotePlayerMoved } from "./Players/RemotePlayer";
 import { RemotePlayer } from "./Players/RemotePlayer";
-import {PublicPlayerState} from "./PublicPlayerState";
+import { PublicPlayerState } from "./PublicPlayerState";
 
-export interface PlayerVariableChanged<V, T extends {[key: string]: unknown}> {
-    player: RemotePlayer<T>;
+export interface PlayerVariableChanged<V> {
+    player: RemotePlayer;
     value: V;
 }
 
-export class WorkadventurePlayersCommands<T extends {[key: string]: unknown}> extends IframeApiContribution<WorkadventurePlayersCommands<T>> {
+export class WorkadventurePlayersCommands extends IframeApiContribution<WorkadventurePlayersCommands> {
     private trackingPlayers = false;
     private trackingMovement = false;
-    private sharedPlayersVariableStream: { [key in keyof T ]?: Subject<PlayerVariableChanged<T[key], T>>|undefined } = {};
-    private remotePlayers = new Map<number, RemotePlayer<T>>();
-    private _newRemotePlayersStream = new Subject<RemotePlayer<T>>();
+    private sharedPlayersVariableStream: {
+        [key in keyof PublicPlayerState]?: Subject<PlayerVariableChanged<PublicPlayerState[key]>> | undefined;
+    } = {};
+    private remotePlayers = new Map<number, RemotePlayer>();
+    private _newRemotePlayersStream = new Subject<RemotePlayer>();
     private newRemotePlayersStream = this._newRemotePlayersStream.asObservable();
-    private _removeRemotePlayersStream = new Subject<RemotePlayer<T>>();
+    private _removeRemotePlayersStream = new Subject<RemotePlayer>();
     private removeRemotePlayersStream = this._removeRemotePlayersStream.asObservable();
-    private _playersMovedStream = new Subject<RemotePlayerMoved<T>>();
+    private _playersMovedStream = new Subject<RemotePlayerMoved>();
     private playersMovedStream = this._playersMovedStream.asObservable();
 
     callbacks = [
@@ -97,7 +99,7 @@ export class WorkadventurePlayersCommands<T extends {[key: string]: unknown}> ex
     ];
 
     private registerRemotePlayer(event: AddPlayerEvent): void {
-        const remotePlayer = new RemotePlayer<T>(event);
+        const remotePlayer = new RemotePlayer(event);
         this.remotePlayers.set(event.playerId, remotePlayer);
         this._newRemotePlayersStream.next(remotePlayer);
     }
@@ -150,10 +152,12 @@ export class WorkadventurePlayersCommands<T extends {[key: string]: unknown}> ex
      *
      * If you are looking to listen for variable changes of only one player, look at `RemotePlayer.onVariableChange` instead.
      */
-    public onVariableChange<K extends keyof T>(variableName: K): Observable<PlayerVariableChanged<T[K], T>> {
+    public onVariableChange<K extends keyof PublicPlayerState>(
+        variableName: K
+    ): Observable<PlayerVariableChanged<PublicPlayerState[K]>> {
         let stream = this.sharedPlayersVariableStream[variableName];
         if (!stream) {
-            stream = new Subject<PlayerVariableChanged<T[K], T>>();
+            stream = new Subject<PlayerVariableChanged<PublicPlayerState[K]>>();
             this.sharedPlayersVariableStream[variableName] = stream;
         }
         return stream.asObservable();
@@ -172,7 +176,7 @@ export class WorkadventurePlayersCommands<T extends {[key: string]: unknown}> ex
      * WA.players.onPlayerEnters.subscribe((remotePlayer) => { doStuff(); });
      * ```
      */
-    public get onPlayerEnters(): Observable<RemotePlayerInterface<T>> {
+    public get onPlayerEnters(): Observable<RemotePlayerInterface> {
         if (!this.trackingPlayers) {
             throw new Error(
                 "Cannot call WA.players.onPlayerEnters. You forgot to call WA.players.configureTracking() first."
@@ -194,7 +198,7 @@ export class WorkadventurePlayersCommands<T extends {[key: string]: unknown}> ex
      * WA.players.onPlayerLeaves.subscribe((remotePlayer) => { doCleanupStuff(); });
      * ```
      */
-    public get onPlayerLeaves(): Observable<RemotePlayerInterface<T>> {
+    public get onPlayerLeaves(): Observable<RemotePlayerInterface> {
         if (!this.trackingPlayers) {
             throw new Error(
                 "Cannot call WA.players.onPlayerLeaves. You forgot to call WA.players.configureTracking() first."
@@ -214,7 +218,7 @@ export class WorkadventurePlayersCommands<T extends {[key: string]: unknown}> ex
      * WA.players.onPlayerMoves.subscribe(({ player, newPosition, oldPosition }) => { doStuff(); });
      * ```
      */
-    public get onPlayerMoves(): Observable<RemotePlayerMoved<T>> {
+    public get onPlayerMoves(): Observable<RemotePlayerMoved> {
         if (!this.trackingMovement) {
             throw new Error(
                 "Cannot call WA.players.onPlayerMoves(). You forgot to call WA.players.configureTracking() first."
@@ -229,7 +233,7 @@ export class WorkadventurePlayersCommands<T extends {[key: string]: unknown}> ex
      *
      * Note: if the same user is connected twice, it will be considered as 2 different players with 2 different IDs.
      */
-    public get(id: number): RemotePlayerInterface<T> | undefined {
+    public get(id: number): RemotePlayerInterface | undefined {
         return this.remotePlayers.get(id);
     }
 
@@ -238,9 +242,9 @@ export class WorkadventurePlayersCommands<T extends {[key: string]: unknown}> ex
      * The list only contains the players in the same zone as the current player (where zone ~= viewport).
      * {@link https://workadventu.re/map-building/api-players.md#getting-a-list-of-players-around-me | Website documentation}
      */
-    public list(): IterableIterator<RemotePlayerInterface<T>> {
+    public list(): IterableIterator<RemotePlayerInterface> {
         return this.remotePlayers.values();
     }
 }
 
-export default new WorkadventurePlayersCommands<PublicPlayerState>();
+export default new WorkadventurePlayersCommands();

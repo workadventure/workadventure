@@ -5,7 +5,7 @@ import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribut
 import { apiCallback } from "./registeredCallbacks";
 import { RemotePlayerInterface } from "./Players/RemotePlayer";
 import players from "./players";
-import {PublicPlayerState} from "./PublicPlayerState";
+import { PublicPlayerState } from "./PublicPlayerState";
 
 const chatStream = new Subject<UserInputChatEvent>();
 
@@ -13,7 +13,9 @@ export interface OnChatMessageOptions {
     scope: "local" | "bubble";
 }
 
-export class WorkadventureChatCommands<PublicState extends {[key: string]: unknown}> extends IframeApiContribution<WorkadventureChatCommands<PublicState>> {
+export class WorkadventureChatCommands<PublicState extends { [key: string]: unknown }> extends IframeApiContribution<
+    WorkadventureChatCommands<PublicState>
+> {
     callbacks = [
         apiCallback({
             callback: (event: UserInputChatEvent) => {
@@ -125,7 +127,7 @@ export class WorkadventureChatCommands<PublicState extends {[key: string]: unkno
     onChatMessage(
         callback: (
             message: string,
-            event: { authorId: number | undefined; author: RemotePlayerInterface<PublicState> | undefined }
+            event: { authorId: number | undefined; author: RemotePlayerInterface | undefined }
         ) => void,
         options?: OnChatMessageOptions
     ): Subscription {

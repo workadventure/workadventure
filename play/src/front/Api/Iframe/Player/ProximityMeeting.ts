@@ -6,13 +6,13 @@ import { IframeApiContribution, queryWorkadventure } from "../IframeApiContribut
 import { RemotePlayer } from "../Players/RemotePlayer";
 import { apiCallback } from "../registeredCallbacks";
 
-export class WorkadventureProximityMeetingCommands<T extends {[key: string]: unknown}> extends IframeApiContribution<WorkadventureProximityMeetingCommands<T>> {
-    private joinStream: Subject<RemotePlayer<T>[]>|undefined;
-    private participantJoinStream: Subject<RemotePlayer<T>>|undefined;
-    private participantLeaveStream: Subject<RemotePlayer<T>>|undefined;
-    private followedStream: Subject<RemotePlayer<T>>|undefined;
-    private unfollowedStream: Subject<RemotePlayer<T>>|undefined;
-    private leaveStream: Subject<void>|undefined;
+export class WorkadventureProximityMeetingCommands extends IframeApiContribution<WorkadventureProximityMeetingCommands> {
+    private joinStream: Subject<RemotePlayer[]> | undefined;
+    private participantJoinStream: Subject<RemotePlayer> | undefined;
+    private participantLeaveStream: Subject<RemotePlayer> | undefined;
+    private followedStream: Subject<RemotePlayer> | undefined;
+    private unfollowedStream: Subject<RemotePlayer> | undefined;
+    private leaveStream: Subject<void> | undefined;
 
     callbacks = [
         apiCallback({
@@ -59,9 +59,9 @@ export class WorkadventureProximityMeetingCommands<T extends {[key: string]: unk
      *
      * @returns {Subject<RemotePlayer[]>} Observable who return the joined users
      */
-    onJoin(): Subject<RemotePlayer<T>[]> {
+    onJoin(): Subject<RemotePlayer[]> {
         if (this.joinStream === undefined) {
-            this.joinStream = new Subject<RemotePlayer<T>[]>();
+            this.joinStream = new Subject<RemotePlayer[]>();
         }
         return this.joinStream;
     }
@@ -72,9 +72,9 @@ export class WorkadventureProximityMeetingCommands<T extends {[key: string]: unk
      *
      * @returns {Subject<RemotePlayer>} Observable who return the joined user
      */
-    onParticipantJoin(): Subject<RemotePlayer<T>> {
+    onParticipantJoin(): Subject<RemotePlayer> {
         if (this.participantJoinStream === undefined) {
-            this.participantJoinStream = new Subject<RemotePlayer<T>>();
+            this.participantJoinStream = new Subject<RemotePlayer>();
         }
         return this.participantJoinStream;
     }
@@ -85,9 +85,9 @@ export class WorkadventureProximityMeetingCommands<T extends {[key: string]: unk
      *
      * @returns {Subject<RemotePlayer>} Observable who return the left user
      */
-    onParticipantLeave(): Subject<RemotePlayer<T>> {
+    onParticipantLeave(): Subject<RemotePlayer> {
         if (this.participantLeaveStream === undefined) {
-            this.participantLeaveStream = new Subject<RemotePlayer<T>>();
+            this.participantLeaveStream = new Subject<RemotePlayer>();
         }
         return this.participantLeaveStream;
     }
@@ -137,9 +137,9 @@ export class WorkadventureProximityMeetingCommands<T extends {[key: string]: unk
     /**
      * Triggered when a player starts following us.
      */
-    onFollowed(): Subject<RemotePlayer<T>> {
+    onFollowed(): Subject<RemotePlayer> {
         if (this.followedStream === undefined) {
-            this.followedStream = new Subject<RemotePlayer<T>>();
+            this.followedStream = new Subject<RemotePlayer>();
         }
         return this.followedStream;
     }
@@ -147,9 +147,9 @@ export class WorkadventureProximityMeetingCommands<T extends {[key: string]: unk
     /**
      * Triggered when a player stops following us.
      */
-    onUnfollowed(): Subject<RemotePlayer<T>> {
+    onUnfollowed(): Subject<RemotePlayer> {
         if (this.unfollowedStream === undefined) {
-            this.unfollowedStream = new Subject<RemotePlayer<T>>();
+            this.unfollowedStream = new Subject<RemotePlayer>();
         }
         return this.unfollowedStream;
     }

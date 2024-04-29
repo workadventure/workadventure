@@ -1,4 +1,3 @@
-import {ZodObject} from "zod";
 import { queryWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import { AbstractWorkadventureStateCommands } from "./AbstractState";
@@ -37,14 +36,6 @@ export class WorkadventureStateCommands extends AbstractWorkadventureStateComman
                 value,
             },
         });
-    }
-
-    /**
-     * Build a Typesafe version of the state object.
-     * Types are checked using the Zod object passed in parameter.
-     */
-    buildValidatedState(zodObject: ZodObject): any {
-        return zodObject.parse(state);
     }
 }
 
