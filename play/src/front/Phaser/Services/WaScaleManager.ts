@@ -143,7 +143,6 @@ export class WaScaleManager {
             x: camera.worldView.x + camera.worldView.width / 2,
             y: camera.worldView.y + camera.worldView.height / 2,
         };
-
         /*if (zoomFactor > 1 && this.zoomModifier * zoomFactor - this.zoomModifier > 0.1)
             this.setZoomModifier(this.zoomModifier * 1.1, camera);
         else if (zoomFactor < 1 && this.zoomModifier - this.zoomModifier * zoomFactor > 0.1)
@@ -152,10 +151,6 @@ export class WaScaleManager {
         this.setZoomModifier(zoomLevel, camera);
 
         camera.centerOn(cameraCenter.x, cameraCenter.y);
-
-        if (this.focusTarget) {
-            this.game.events.emit(WaScaleManagerEvent.RefreshFocusOnTarget, this.focusTarget);
-        }
     }
 
     public getFocusTarget(): WaScaleManagerFocusTarget | undefined {

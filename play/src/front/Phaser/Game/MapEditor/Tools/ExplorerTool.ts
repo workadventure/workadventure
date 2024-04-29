@@ -50,8 +50,6 @@ export class ExplorerTool implements MapEditorTool {
     };
     private keyUpHandler = (event: KeyboardEvent) => {
         // Define new zone to zoom
-        if (this.downIsPressed || this.upIsPressed || this.leftIsPressed || this.rightIsPressed)
-            this.doDefineZoomToCenterCameraPosition();
         if (event.key === "ArrowDown" || event.key === "s") {
             this.downIsPressed = false;
         }
@@ -84,17 +82,14 @@ export class ExplorerTool implements MapEditorTool {
 
         this.explorationMouseIsActive = true;
         this.scene.input.setDefaultCursor("grabbing");
-        this.scene.getCameraManager().stopPan();
+        this.scene.getCameraManager().stopSpeed();
     };
     private pointerMoveHandler = (pointer: Phaser.Input.Pointer) => {
         if (!this.explorationMouseIsActive) return;
-        this.scene.cameras.main.scrollX -= pointer.x - pointer.prevPosition.x;
-        this.scene.cameras.main.scrollY -= pointer.y - pointer.prevPosition.y;
 
-        // Define new zone to zoom
-        this.doDefineZoomToCenterCameraPosition();
-
-        this.scene.markDirty();
+        this.scene
+            .getCameraManager()
+            .scrollCamera(pointer.prevPosition.x - pointer.x, pointer.prevPosition.y - pointer.y);
     };
     private pointerUpHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
         this.scene.input.setDefaultCursor("grab");
@@ -109,14 +104,7 @@ export class ExplorerTool implements MapEditorTool {
         // The velocity will be null if the cursor is no longer above the game when the button is released
         if (pointer.velocity) {
             // Let's compute the remaining velocity
-            const camera = this.scene.cameras.main;
-            this.scene
-                .getCameraManager()
-                .panTo(
-                    camera.scrollX + camera.width / 2 - pointer.velocity.x * 10,
-                    camera.scrollY + camera.height / 2 - pointer.velocity.y * 10,
-                    Math.sqrt((pointer.velocity.length() * 20) / 1000) * 1000
-                );
+            this.scene.getCameraManager().setSpeed({ x: -pointer.velocity.x * 10, y: -pointer.velocity.y * 10 });
         }
 
         this.scene.markDirty();
@@ -140,22 +128,19 @@ export class ExplorerTool implements MapEditorTool {
     public update(time: number, dt: number): void {
         const factorToMove = 10 * (1 / waScaleManager.zoomModifier);
         if (this.downIsPressed) {
-            this.scene.cameras.main.scrollY += factorToMove;
+            this.scene.getCameraManager().scrollCamera(0, factorToMove);
         }
         if (this.upIsPressed) {
-            this.scene.cameras.main.scrollY -= factorToMove;
+            this.scene.getCameraManager().scrollCamera(0, -factorToMove);
         }
         if (this.leftIsPressed) {
-            this.scene.cameras.main.scrollX -= factorToMove;
+            this.scene.getCameraManager().scrollCamera(-factorToMove, 0);
         }
         if (this.rightIsPressed) {
-            this.scene.cameras.main.scrollX += factorToMove;
+            this.scene.getCameraManager().scrollCamera(factorToMove, 0);
         }
 
         get(mapExplorationAreasStore)?.forEach((preview) => preview.update(time, dt));
-
-        // Dirty the scene to update the camera position if it has changed
-        if (this.downIsPressed || this.upIsPressed || this.leftIsPressed || this.rightIsPressed) this.scene.markDirty();
     }
 
     public clear(): void {
@@ -279,9 +264,6 @@ export class ExplorerTool implements MapEditorTool {
 
         // Mark the scene as dirty
         this.scene.markDirty();
-
-        // Define new zone to zoom
-        this.defineZoomToCenterCameraPosition();
 
         // Create flash animation
         this.scene.cameras.main.flash();
