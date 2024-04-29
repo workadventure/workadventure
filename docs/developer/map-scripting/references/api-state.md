@@ -106,3 +106,40 @@ const subscription = WA.state.onVariableChange('config').subscribe((value) => {
 // Later:
 subscription.unsubscribe();
 ```
+
+## Typing variables
+
+If you are using Typescript, by default, the type of variables is `unknown`. This is for security purpose, as we don't know
+the type of the variable.
+
+Internally, we define an interface named `RoomState` that contains the type of all room variables.
+
+The default declaration of `RoomState` is:
+
+```typescript
+interface RoomState {
+    [key: string]: unknown;
+}
+```
+
+However, Typescript allows third party module to merge their own types with existing ones. This means that you can define your own
+`RoomState` interface in your code, and it will be merged with the default one. You will need to use this syntax in your code:
+
+```typescript
+declare module "@workadventure/iframe-api-typings" {
+    interface RoomState {
+        someVariable: string,
+        anotherVariable: number,
+    }
+}
+```
+
+This will allow you to access `WA.state.someVariable` and `WA.state.anotherVariable` with the correct types.
+
+:::caution
+Merging your own declaration of `RoomState` will give you type checking at compile time and autocompletion in your IDE.
+However, as it is customary with Typescript, it will not do any actual type checking at runtime. Do not forget that
+room variables can be set by anyone with proper rights. This means that even if Typescript tells you that `WA.state.someVariable`
+is a string, it could be a number at runtime. The only way to be sure of the type of a variable is to check it at runtime
+using type guards or a type checking library like Zod.
+:::

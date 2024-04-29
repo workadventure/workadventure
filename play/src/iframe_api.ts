@@ -62,6 +62,9 @@ export type {
     SendLocalChatMessageOptions,
     SendBubbleChatMessageOptions,
 } from "../../libs/shared-utils/src/Events/ChatEvent";
+export type { RoomState } from "./front/Api/Iframe/RoomState";
+export type { PrivatePlayerState } from "./front/Api/Iframe/PrivatePlayerState";
+export type { PublicPlayerState } from "./front/Api/Iframe/PublicPlayerState";
 
 const globalState = createState();
 
