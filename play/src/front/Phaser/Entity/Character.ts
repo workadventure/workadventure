@@ -21,9 +21,9 @@ import { SpeakerIcon } from "../Components/SpeakerIcon";
 import { MegaphoneIcon } from "../Components/MegaphoneIcon";
 import { passStatusToOnlineWhenUserIsInSetableStatus } from "../../Rules/StatusRules/statusChangerFunctions";
 import { gameManager } from "../Game/GameManager";
-import LL from "../../../i18n/i18n-svelte";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
+import { SpeechDomElement } from "./SpeechDomElement";
 import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -487,50 +487,12 @@ export abstract class Character extends Container implements OutlineableInterfac
             return;
         }
 
-        const textY = -50 + this.texts.size * +2;
-        const span = document.createElement("span");
-
-        // Create SVG white triangle with border radius and add the text "space"
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute("width", "20");
-        svg.setAttribute("height", "10");
-        svg.setAttribute("viewBox", "0 0 20 10");
-        svg.style.marginRight = "2px";
-        svg.style.marginLeft = "2px";
-        svg.style.fill = "white";
-        svg.style.borderRadius = "2px";
-        svg.style.border = "1px solid white";
-        svg.style.padding = "2px";
-        svg.style.boxSizing = "border-box";
-        svg.style.backgroundColor = "white";
-
-        // Create text element
-        const textElement = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        textElement.setAttribute("x", "50%");
-        textElement.setAttribute("y", "50%");
-        textElement.setAttribute("text-anchor", "middle");
-        textElement.setAttribute("dominant-baseline", "middle");
-        textElement.style.fontSize = "10px";
-        textElement.style.fill = "black";
-        textElement.style.fontWeight = "bold";
-        textElement.textContent = "SPACE";
-        svg.appendChild(textElement);
-        span.innerHTML = text.replace(get(LL).trigger.spaceKeyboard(), svg.outerHTML);
-        span.id = `spanText-${id}`;
-        span.classList.add("characterTriggerAction");
-        span.addEventListener("click", callback);
-
-        const textDomElement = new DOMElement(
-            this.scene,
-            -1,
-            -30 + this.texts.size * +2,
-            span,
-            `z-index:10; background-color: #00000080; color: #ffffff; padding: 5px; border-radius: 5px; font-size: 9px; cursor: pointer; backdrop-filter: blur(8px);`
-        );
-        textDomElement.setAlpha(0);
-        this.add(textDomElement);
-        this.texts.set(id, textDomElement);
-        this.createStartTextTransition(id, textDomElement, textY, duration);
+        const speechDomElement = new SpeechDomElement(id, text, this.scene, -1, -30 + this.texts.size * 2, callback);
+        this.add(speechDomElement);
+        this.texts.set(id, speechDomElement);
+        speechDomElement.play(-1, -50 + this.texts.size * 2, duration, (id) => {
+            this.destroyText(id);
+        });
     }
 
     private createStartTransition(emoteY: number) {
@@ -544,30 +506,6 @@ export abstract class Character extends Container implements OutlineableInterfac
             duration: 500,
             onComplete: () => {
                 this.startPulseTransition(emoteY);
-            },
-        });
-    }
-
-    private createStartTextTransition(
-        id: string,
-        text: Phaser.GameObjects.DOMElement,
-        textY: number,
-        duration: number
-    ) {
-        if (this.timeoutDestroyText) clearTimeout(this.timeoutDestroyText);
-        this.scene?.tweens.add({
-            targets: text,
-            props: {
-                alpha: 1,
-                y: textY,
-            },
-            ease: "Power2",
-            duration: 1000,
-            onComplete: () => {
-                if (duration < 1) return;
-                this.timeoutDestroyText = setTimeout(() => {
-                    this.destroyText(id);
-                }, duration);
             },
         });
     }

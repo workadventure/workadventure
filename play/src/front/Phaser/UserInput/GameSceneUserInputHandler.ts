@@ -112,7 +112,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         const activatable = activatableManager.getSelectedActivatableObject();
         if (activatable && activatable.isActivatable() && activatableManager.isSelectingByDistanceEnabled()) {
             activatable.activate();
-            this.gameScene.CurrentPlayer.destroyText("object");
+            activatable.destroyText("object");
         }
     }
 

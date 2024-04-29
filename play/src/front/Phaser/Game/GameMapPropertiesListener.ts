@@ -70,8 +70,8 @@ export class GameMapPropertiesListener {
                     let message = allProps.get(GameMapProperties.OPEN_WEBSITE_TRIGGER_MESSAGE);
                     if (message === undefined) {
                         message = isMediaBreakpointUp("md")
-                            ? get(LL).trigger.newTab()
-                            : get(LL).trigger.mobile.newTab();
+                            ? get(LL).trigger.mobile.newTab()
+                            : get(LL).trigger.newTab();
                     }
 
                     // Create callback and play text message
@@ -232,8 +232,8 @@ export class GameMapPropertiesListener {
                 let message = allProps.get(GameMapProperties.JITSI_TRIGGER_MESSAGE);
                 if (message === undefined) {
                     message = isMediaBreakpointUp("md")
-                        ? get(LL).trigger.jitsiRoom()
-                        : get(LL).trigger.mobile.jitsiRoom();
+                        ? get(LL).trigger.mobile.jitsiRoom()
+                        : get(LL).trigger.jitsiRoom();
                 }
 
                 // Create callback and play text message
@@ -562,8 +562,8 @@ export class GameMapPropertiesListener {
         if (localUserStore.getForceCowebsiteTrigger() || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
             if (!websiteTriggerMessageProperty) {
                 websiteTriggerMessageProperty = isMediaBreakpointUp("md")
-                    ? get(LL).trigger.cowebsite()
-                    : get(LL).trigger.mobile.cowebsite();
+                    ? get(LL).trigger.mobile.cowebsite()
+                    : get(LL).trigger.cowebsite();
             }
 
             this.coWebsitesActionTriggerByPlace.set(this.getIdFromPlace(place), actionId);

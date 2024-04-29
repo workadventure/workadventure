@@ -117,4 +117,12 @@ export class ActionableItem implements ActivatableInterface {
             callback(state, parameters);
         }
     }
+
+    public playText(id: string, text: string, duration?: number, callback?: () => void): void {
+        // TODO: Implement
+    }
+
+    public destroyText(id: string): void {
+        // TODO: Implement
+    }
 }

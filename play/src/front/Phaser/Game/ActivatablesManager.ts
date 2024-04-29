@@ -79,14 +79,14 @@ export class ActivatablesManager {
         }
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
             this.selectedActivatableObjectByDistance?.characterFarAwayOutline();
-            this.currentPlayer.destroyText("object");
+            this.selectedActivatableObjectByDistance.destroyText("object");
         }
         this.selectedActivatableObjectByDistance = newNearestObject;
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
             this.selectedActivatableObjectByDistance?.characterCloseByOutline(this.outlineColor);
-            this.currentPlayer.playText(
+            this.selectedActivatableObjectByDistance.playText(
                 "object",
-                isMediaBreakpointUp("md") ? get(LL).trigger.object() : get(LL).trigger.mobile.object(),
+                isMediaBreakpointUp("md") ? get(LL).trigger.mobile.object() : get(LL).trigger.object(),
                 10000,
                 () => {
                     this.currentPlayer.scene.userInputManager.handleActivableEntity();
