@@ -104,4 +104,12 @@
         </div>
     </div>
 </div>
+
 <!-- style={$emoteMenuSubStore ? "padding-top:96px;" : ""} -->
+<style>
+    @media (max-width: 768px) {
+        #embedScreensContainer {
+            display: block;
+        }
+    }
+</style>

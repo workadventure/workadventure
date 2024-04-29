@@ -273,4 +273,8 @@
     .popupwrapper:nth-child(13) {
         display: none;
     }
+
+    #main-layout {
+        container-type: size;
+    }
 </style>

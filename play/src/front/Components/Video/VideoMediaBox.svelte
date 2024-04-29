@@ -29,6 +29,7 @@
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
     import ActionMediaBox from "./ActionMediaBox.svelte";
+    import { on } from "node:events";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
     // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
@@ -57,6 +58,7 @@
     let videoElement: HTMLVideoElementExt;
     let minimized = isMediaBreakpointOnly("md");
     let noVideoTimeout: ReturnType<typeof setTimeout> | undefined;
+    let otherCamWidth: number;
 
     let destroyed = false;
     let currentDeviceId: string | undefined;
@@ -67,12 +69,15 @@
 
     let aspectRatio = 1;
 
-    let videoContainerTest;
+    let totalOtherCamWidth: number;
 
     const debug = Debug("VideoMediaBox");
 
     function getSize() {
-        videoContainerTest = document.getElementsByClassName("video-container").offsetWidth;
+        otherCamWidth = (document.getElementsByClassName("video-container")[0] as HTMLElement)?.offsetWidth;
+        console.log("JE SUIS DANS GETSIZE", otherCamWidth, typeof otherCamWidth);
+        totalOtherCamWidth += otherCamWidth;
+        console.log("HELLO", totalOtherCamWidth, typeof totalOtherCamWidth);
     }
 
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
@@ -96,6 +101,7 @@
     let sinkIdPromise = CancelablePromise.resolve();
 
     onMount(() => {
+        // getSize();
         resizeObserver.observe(videoContainer);
 
         unsubscribeChangeOutput = speakerSelectedStore.subscribe((deviceId) => {
@@ -292,7 +298,10 @@
         {#if videoEnabled}
             {#if displayNoVideoWarning}
                 <div
-                    class="absolute w-full h-full top-0 left-0 flex justify-center items-center bg-danger/50 text-white"
+                    class="absolute w-full h-full top-0 left-0 flex justify-center items-center bg-danger/50 text-white {$constraintStore &&
+                    $constraintStore.audio !== false
+                        ? 'bg-contrast/80 border-8 border-solid bg-indigo-400 rounded-lg'
+                        : ''}"
                 >
                     <div class="text-center">
                         <svg

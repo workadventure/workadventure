@@ -43,9 +43,9 @@
     });
 
     function getWidthOfCam() {
-        // camWidth = document.getElementById("width")?.offsetWidth;
-        camWidth = document.getElementById("width");
+        camWidth = (document.getElementsByClassName("width")[0] as HTMLElement)?.offsetWidth;
         console.log("TTTEEEESSSSTTTTTT", camWidth);
+        // Me donne Undefined
     }
 
     onDestroy(() => {
@@ -54,6 +54,13 @@
             dispatch("camUnmounted");
         }
     });
+
+    // function addStyleSpeaker() {
+    //     if ($constraintStore && $constraintStore.audio !== false) {
+
+    //     }
+    // }
+
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
 </script>
 
@@ -125,7 +132,7 @@
     </div>
 {:else}
     <div
-        class="media-container  {isHightlighted ? 'hightlighted mr-6' : 'flex h-full aspect-ratio'}"
+        class="media-container {isHightlighted ? 'hightlighted mr-6' : 'flex h-full aspect-ratio'}"
         class:clickable={isClickable}
         class:mozaic-full-width={mozaicSolo}
         class:mozaic-duo={mozaicDuo}
@@ -150,6 +157,5 @@
 
     .width {
         width: 350px;
-        background-color: red;
     }
 </style>

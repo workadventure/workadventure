@@ -11,11 +11,10 @@
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
 
-    let widthWindow: number;
+    let widthWindow: number | undefined;
     let totalCamWidth = 0;
     let camWidthOther = 350;
     let camWidth = 350;
-    let divWith;
 
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
@@ -58,75 +57,81 @@
         widthWindow = window.innerWidth;
         console.log("width", widthWindow);
         handleCamMounted();
-        getWidth();
+        // getWidth();
     });
 
     onDestroy(() => {
-        handleCamDestroy();
+        // handleCamDestroy();
     });
 
     // Idée pour le responsive de cams
 
     // Calculer la taille de la div de toutes les cam donc de grid flow col
     // Si cette taille est supérieur a celle de l'écran alors on stack la camera en dessous
-    //
+    // Comment faire pour stacker les cams en dessous ? Iterer sur les cams et prendre la derniere ?
+    // Ou alors mettre max 4 sur en display flex et en ensuite créer une autre ligne pour le 4 autres ??
 
-    function getWidth() {
-        divWith = document.getElementById("presentation-layout")?.offsetWidth;
-        console.log("GET WIDTH OF PRESENTATION LAYOUT", divWith);
-    }
+    // function getWidth() {
+    //     widthWindow = document.getElementById("presentation-layout")?.offsetWidth;
+    //     console.log("GET WIDTH OF PRESENTATION LAYOUT", widthWindow);
+    // }
 
     function handleCamMounted() {
         totalCamWidth += camWidth;
         totalCamWidth += camWidthOther;
-        console.log("totalCamWidth", totalCamWidth);
+        // console.log("totalCamWidth", totalCamWidth);
+        stackCam();
     }
 
     function handleCamDestroy() {
         totalCamWidth -= camWidth;
-        console.log("totalCamWidth", totalCamWidth);
+        // console.log("totalCamWidth", totalCamWidth);
+        stackCam();
     }
 
-    // function stackCam() {
-    //     if (totalCamWidth > widthWindow) {
-    //         return true;
-    //     }
-    //     return false;
-    // }
+    function stackCam() {
+        if (totalCamWidth > window.screen.width) {
+            // console.log("TAILLE CAM TROP GRANDE");
+            return true;
+        }
+        // console.log("TAILLE CAM CA PASSE");
+        return false;
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias}>
     {#if displayFullMedias}
+        <!-- Div pour le responsive avec display full media-->
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div id="full-medias" class="z-[300] relative mx-auto top-8 h-1/2 overflow-y-auto h-full">
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}
-                {#if $streamableCollectionStore.size > 0}
+                {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
                     <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
                 {/if}
-                {#if $myCameraStore && $proximityMeetingStore === true}
+                <!-- {#if $myCameraStore && $proximityMeetingStore === true}
                     <MyCamera />
-                {/if}
+                {/if} -->
                 {#if $myJitsiCameraStore}
                     <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
                 {/if}
             </div>
         {/if}
     {:else}
+        <!-- Div pour l'affichage de toutes les camera (other cam : cameContainer / my cam : MyCamera'-->
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div class="grid grid-flow-col gap-x-4 justify-center container-cam">
+            <div class="grid grid-flow-col gap-x-4 justify-center test-media">
                 {#if $jitsiLoadingStore}
                     <Loading />
                 {/if}
-                {#if $streamableCollectionStore.size > 0}
+                {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
                     <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
                 {/if}
-                {#if $myCameraStore}
-                    <!-- && !$megaphoneEnabledStore TODO HUGO -->
+                <!-- {#if $myCameraStore && $proximityMeetingStore === true}
                     <MyCamera />
-                {/if}
+                {/if} -->
                 {#if $myJitsiCameraStore}
                     <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
                 {/if}

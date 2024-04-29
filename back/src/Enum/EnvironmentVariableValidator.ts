@@ -26,7 +26,7 @@ export const EnvironmentVariables = z.object({
     TURN_STATIC_AUTH_SECRET: z.string().optional().transform(emptyStringToUndefined),
     MAX_PER_GROUP: PositiveIntAsString.optional()
         .or(z.string().max(0))
-        .transform((val) => toNumber(val, 4)),
+        .transform((val) => toNumber(val, 5)),
     REDIS_HOST: z.string().optional().transform(emptyStringToUndefined),
     REDIS_PORT: PositiveIntAsString.optional().transform((val) => toNumber(val, 6379)),
     REDIS_PASSWORD: z.string().optional().transform(emptyStringToUndefined),
