@@ -97,6 +97,9 @@ export class GameMapFrontWrapper {
     private enterDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
     private leaveDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
 
+    private enterDynamicMapEditorAreaCallbacks = Array<DynamicAreaChangeCallback>();
+    private leaveDynamicMapEditorAreaCallbacks = Array<DynamicAreaChangeCallback>();
+
     /**
      * Firing on map change, containing newest collision grid array
      */
