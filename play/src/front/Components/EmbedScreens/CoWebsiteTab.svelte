@@ -176,7 +176,8 @@
 
     @media (max-width: 768px) {
         .tab {
-            width: 195px;
+            width: 200px;
+            padding-right: 1.5rem;
         }
     }
 </style>

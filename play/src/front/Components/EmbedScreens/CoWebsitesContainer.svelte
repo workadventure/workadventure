@@ -13,9 +13,7 @@
     import { max, min } from "lodash";
     import { ArrowDownIcon } from "svelte-feather-icons";
     import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
-    import { draggable } from "@neodrag/svelte";
 
-    // let coWebsite: JitsiCoWebsite | SimpleCoWebsite | BBBCoWebsite;
     let activeCowebsite = $coWebsites[0];
     let showDropdown = false;
     let tabBar: HTMLElement;
@@ -32,11 +30,9 @@
     let totalTabsWidth = 0;
     let initialWidth: number;
     const widthTab = 300;
-    const widthTabResponsive = 195;
+    const widthTabResponsive = 150;
     let vertical: boolean;
 
-    // POur le resize cela drag mais toute la fenetre, a voir si je peux fixer l'iframe sur la gauche ?
-    // Pour passer l'objet, probleme avec active cowebsite je compare comment avec l'ID ?
     onMount(() => {
         mediaQuery.addEventListener("change", (e: any) => handleTabletChange(e));
         handleTabletChange(mediaQuery);
@@ -277,7 +273,7 @@
                     </div>
                 {/each}
             {:else}
-                {#each $coWebsites.slice(0, Math.floor(initialWidth / 195)) as coWebsite (coWebsite.getId())}
+                {#each $coWebsites.slice(0, Math.floor(initialWidth / 150)) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div on:click={() => setActiveCowebsite(coWebsite)}>
                         <CoWebsiteTab
@@ -319,7 +315,7 @@
                     </div>
                 {/each}
             {:else}
-                {#each $coWebsites.slice(Math.floor(initialWidth / 195)) as coWebsite (coWebsite.getId())}
+                {#each $coWebsites.slice(Math.floor(initialWidth / 150)) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div on:click={() => setActiveCowebsite(coWebsite)}>
                         <CoWebsiteTab
@@ -402,7 +398,7 @@
         }
 
         #dropdown {
-            width: 195px;
+            width: 200px;
         }
     }
 </style>
