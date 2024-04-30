@@ -3437,7 +3437,7 @@ ${escapedMessage}
         // Calculate the zoom factor
         //const zoomFactor = 1 - velocity * 0.1;
 
-        // Explanation of the formula: to Zoom x 2, we need a delta of 300
+        // Explanation of the formula: to Zoom x 2, we need a delta of 200
         let zoomFactor = Math.exp((-deltaY * Math.log(2)) / 200);
 
         // Sometimes, deltaY can be really high (this happens when the browser is lagging for 1 second or so)
