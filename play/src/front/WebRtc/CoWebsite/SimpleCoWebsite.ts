@@ -6,7 +6,6 @@ import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
 export class SimpleCoWebsite implements CoWebsite {
     protected id: string;
     protected url: URL;
-    // protected state: Writable<CoWebsiteState>;
     protected iframe?: HTMLIFrameElement;
     protected loadIframe?: CancelablePromise<HTMLIFrameElement>;
     protected allowApi?: boolean;
@@ -45,5 +44,9 @@ export class SimpleCoWebsite implements CoWebsite {
 
     isClosable(): boolean {
         return this.closable;
+    }
+
+    getAllowPolicy(): string | undefined {
+        return this.allowPolicy;
     }
 }

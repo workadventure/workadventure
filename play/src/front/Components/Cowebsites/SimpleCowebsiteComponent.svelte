@@ -23,7 +23,7 @@
 <iframe
     src={actualCowebsite.getUrl().toString()}
     frameborder="0"
-    allow="fullscreen"
+    allow={actualCowebsite.getAllowPolicy()}
     title="Cowebsite"
     class="pixel bg-white h-full w-full z-index-0"
 />

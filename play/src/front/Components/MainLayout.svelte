@@ -9,6 +9,7 @@
     import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
+    import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import {
         showLimitRoomModalStore,
         modalVisibilityStore,
@@ -49,18 +50,29 @@
     import Popup from "./Modal/Popup.svelte";
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
+    import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
 
     let mainLayout: HTMLDivElement;
     // export let message: string;
 
     let isMobile = isMediaBreakpointUp("md");
     const resizeObserver = new ResizeObserver(() => {
-        let isMobile = isMediaBreakpointUp("md");
+        isMobile = isMediaBreakpointUp("md");
     });
 
     onMount(() => {
         resizeObserver.observe(mainLayout);
         // ...
+    });
+
+    function calcMainLayout() {
+        const mainLayout = document.getElementById("main-layout");
+        if (mainLayout) {
+        }
+    }
+
+    onMount(() => {
+        calcMainLayout();
     });
 </script>
 
@@ -76,11 +88,9 @@
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
     {/if}
 
-    <!-- <aside id="main-layout-left-aside"> -->
-    <!-- {#if $coWebsites.length > 0}
-            <CoWebsitesContainer vertical={isMobile} />
-        {/if} -->
-    <!-- </aside> -->
+    <!-- <aside id="main-layout-left-aside">
+        <CoWebsitesContainer vertical={isMobile} />
+    </aside> -->
 
     <section id="main-layout-main" class="pb-0 pointer-events-none">
         <Lazy
@@ -138,9 +148,9 @@
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
         {/if}
 
-        <!-- {#if $hasEmbedScreen}
+        {#if $hasEmbedScreen}
             <EmbedScreensContainer />
-        {/if} -->
+        {/if}
 
         {#if $uiWebsitesStore}
             <UiWebsiteContainer />
@@ -261,5 +271,10 @@
     .popupwrapper:nth-child(12),
     .popupwrapper:nth-child(13) {
         display: none;
+    }
+
+    .main-layout {
+        container-type: size;
+        container-name: layout;
     }
 </style>

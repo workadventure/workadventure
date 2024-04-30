@@ -12,8 +12,11 @@
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
     import { max, min } from "lodash";
     import { ArrowDownIcon } from "svelte-feather-icons";
+    import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
+    import { draggable } from "@neodrag/svelte";
 
-    let activeCowebsite = $coWebsites[0].getId();
+    // let coWebsite: JitsiCoWebsite | SimpleCoWebsite | BBBCoWebsite;
+    let activeCowebsite = $coWebsites[0];
     let showDropdown = false;
     let tabBar: HTMLElement;
     let showArrow = false;
@@ -32,6 +35,8 @@
     const widthTabResponsive = 195;
     let vertical: boolean;
 
+    // POur le resize cela drag mais toute la fenetre, a voir si je peux fixer l'iframe sur la gauche ?
+    // Pour passer l'objet, probleme avec active cowebsite je compare comment avec l'ID ?
     onMount(() => {
         mediaQuery.addEventListener("change", (e: any) => handleTabletChange(e));
         handleTabletChange(mediaQuery);
@@ -50,7 +55,6 @@
     function resizeDesktop() {
         initialWidth = parseInt(getComputedStyle(container).width);
         startWidthContainer = parseInt(getComputedStyle(container).width);
-
         const handleMouseDown = (e: { clientX: number }) => {
             startX = e.clientX;
             startWidthContainer = parseInt(getComputedStyle(container).width);
@@ -58,22 +62,18 @@
             document.addEventListener("mouseup", handleMouseUp);
         };
         resizeBar.addEventListener("mousedown", handleMouseDown);
-
         const handleMouseMove = (e: { clientX: number }) => {
             widthContainer = startWidthContainer - (e.clientX - startX);
             container.style.width = widthContainer + "px";
             initialWidth = parseInt(getComputedStyle(container).width);
-
             const maxWidth = min([widthContainer, window.innerWidth - 350]);
             container.style.width = maxWidth + "px";
         };
-
         const handleMouseUp = () => {
             appearDropdown();
             document.removeEventListener("mousemove", handleMouseMove);
             document.removeEventListener("mouseup", handleMouseUp);
         };
-
         return () => {
             resizeBar.removeEventListener("mousedown", handleMouseDown);
             document.removeEventListener("mousemove", handleMouseMove);
@@ -153,13 +153,12 @@
         }
     }
 
-    const setActiveCowebsite = (coWebsiteId: string) => {
-        activeCowebsite = coWebsiteId;
+    const setActiveCowebsite = (coWebsite: CoWebsite) => {
+        activeCowebsite = coWebsite;
         showDropdown = false;
     };
-
     const subscription = coWebsites.subscribe((arr) => {
-        activeCowebsite = arr[arr.length - 1]?.getId();
+        activeCowebsite = arr[arr.length - 1];
     });
 
     function toggleFullScreen() {
@@ -221,12 +220,30 @@
             document.body.removeChild(div);
         }
     }
+
+    function getWidthPercentage() {
+        if (activeCowebsite.getWidthPercent()) {
+            let widthPercent = activeCowebsite.getWidthPercent();
+            const classWidth = document.createElement("style") as HTMLStyleElement;
+            classWidth.textContent = `.width-container { width: ${widthPercent}% }`;
+            return classWidth;
+        }
+        return "w-6/12";
+    }
+
+    function getPanelClass() {
+        const widthPercentage = getWidthPercentage();
+        return `${widthPercentage} h-full absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500] left_panel`;
+    }
+
+    let panelClass = getPanelClass();
 </script>
 
+<!-- svelte-ignore missing-declaration -->
+<!-- use:draggable={{ axis: "x" }} -->
+
 <div
-    class={vertical
-        ? "w-1/2 h-full absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500] left_panel responsive-container"
-        : "w-1/2 h-full absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500] left_panel flex-col padding"}
+    class={vertical ? `${panelClass} responsive-container` : `${panelClass} flex-col padding`}
     id="cowebsites-container"
     bind:this={container}
     in:fly|local={vertical ? { duration: 750, y: -1000 } : { duration: 750, x: 1000 }}
@@ -248,13 +265,13 @@
             {#if !vertical}
                 {#each $coWebsites.slice(0, Math.floor(initialWidth / 300)) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                    <div on:click={() => setActiveCowebsite(coWebsite)}>
                         <CoWebsiteTab
                             on:tabMounted={handleTabMounted}
                             on:tabUnmounted={handleTabDestroyed}
                             {coWebsite}
                             isLoading={true}
-                            active={activeCowebsite === coWebsite.getId().toString()}
+                            active={activeCowebsite === coWebsite}
                             on:close={() => coWebsites.remove(coWebsite)}
                         />
                     </div>
@@ -262,13 +279,13 @@
             {:else}
                 {#each $coWebsites.slice(0, Math.floor(initialWidth / 195)) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                    <div on:click={() => setActiveCowebsite(coWebsite)}>
                         <CoWebsiteTab
                             on:tabMounted={handleTabMounted}
                             on:tabUnmounted={handleTabDestroyed}
                             {coWebsite}
                             isLoading={true}
-                            active={activeCowebsite === coWebsite.getId().toString()}
+                            active={activeCowebsite === coWebsite}
                             on:close={() => coWebsites.remove(coWebsite)}
                         />
                     </div>
@@ -290,13 +307,13 @@
             {#if !vertical}
                 {#each $coWebsites.slice(Math.floor(initialWidth / 300)) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                    <div on:click={() => setActiveCowebsite(coWebsite)}>
                         <CoWebsiteTab
                             on:tabMounted={handleTabMounted}
                             on:tabUnmounted={handleTabDestroyed}
                             {coWebsite}
                             isLoading={true}
-                            active={activeCowebsite === coWebsite.getId().toString()}
+                            active={activeCowebsite === coWebsite}
                             on:close={() => coWebsites.remove(coWebsite)}
                         />
                     </div>
@@ -304,13 +321,13 @@
             {:else}
                 {#each $coWebsites.slice(Math.floor(initialWidth / 195)) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <div on:click={() => setActiveCowebsite(coWebsite.getId())}>
+                    <div on:click={() => setActiveCowebsite(coWebsite)}>
                         <CoWebsiteTab
                             on:tabMounted={handleTabMounted}
                             on:tabUnmounted={handleTabDestroyed}
                             {coWebsite}
                             isLoading={true}
-                            active={activeCowebsite === coWebsite.getId().toString()}
+                            active={activeCowebsite === coWebsite}
                             on:close={() => coWebsites.remove(coWebsite)}
                         />
                     </div>
@@ -320,17 +337,17 @@
     </div>
 
     <div class={vertical ? "h-full ml-3 responsive-website" : "h-full object-contain ml-3"}>
-        {#each $coWebsites as coWebsite (coWebsite.getId())}
-            {#if activeCowebsite === coWebsite.getId()}
-                {#if coWebsite instanceof JitsiCoWebsite}
-                    <JitsiCowebsiteComponent actualCowebsite={coWebsite} />
-                {:else if coWebsite instanceof BBBCoWebsite}
-                    <BigBlueButtonCowebsiteComponent actualCowebsite={coWebsite} />
-                {:else if coWebsite instanceof SimpleCoWebsite}
-                    <SimpleCowebsiteComponent actualCowebsite={coWebsite} />
-                {/if}
-            {/if}
-        {/each}
+        {#if activeCowebsite instanceof JitsiCoWebsite}
+            <JitsiCowebsiteComponent actualCowebsite={$coWebsites.find((coWebsite) => coWebsite === activeCowebsite)} />
+        {:else if activeCowebsite instanceof BBBCoWebsite}
+            <BigBlueButtonCowebsiteComponent
+                actualCowebsite={$coWebsites.find((coWebsite) => coWebsite === activeCowebsite)}
+            />
+        {:else if activeCowebsite instanceof SimpleCoWebsite}
+            <SimpleCowebsiteComponent
+                actualCowebsite={$coWebsites.find((coWebsite) => coWebsite === activeCowebsite)}
+            />
+        {/if}
     </div>
 
     <div
@@ -347,7 +364,6 @@
 </div>
 
 <style>
-    /* Voir pour utiliser les container queries ou les medias queries pour le responsive */
     .padding {
         padding-bottom: 76px;
     }

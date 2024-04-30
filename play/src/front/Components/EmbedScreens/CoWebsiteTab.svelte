@@ -13,7 +13,6 @@
 
     export let coWebsite: CoWebsite;
     export let isLoading = false;
-    export let isClosable = true;
     export let active = false;
 
     let isDuplicable = true;
@@ -32,10 +31,8 @@
 
     onMount(async () => {
         if (isJitsi) {
-            isClosable = true;
             isDuplicable = true;
         } else if (isBBB) {
-            isClosable = true;
             isDuplicable = true;
         } else {
             alt = coWebsite.getUrl().hostname;
@@ -44,7 +41,6 @@
                 .toString()
                 .replace(/.+\/\/|www.|\..+/g, "");
             cowebsiteName = cowebsiteName.charAt(0).toUpperCase() + cowebsiteName.slice(1);
-            isClosable = true;
             isDuplicable = true;
         }
         dispatch("tabMounted");
@@ -100,7 +96,7 @@
         </div>
     {/if}
 
-    <div class="flex justify-between items-center w-full">
+    <div class="flex justify-around items-center w-full">
         <div class="p-2 text-ellipsis overflow-hidden">
             <div
                 class="bold leading-3 text-ellipsis pb-1 pt-1 max-w-[150px] whitespace-nowrap overflow-hidden {active
@@ -154,9 +150,9 @@
                         : 'stroke-white fill-transparent'}"
                 />
             </div>
-            {#if isClosable}
+            {#if coWebsite.isClosable() === true}
                 <div
-                    class="group hover:bg-contrast mr-8 transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
+                    class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center"
                     on:click={closeTab}
                 >
                     <XIcon

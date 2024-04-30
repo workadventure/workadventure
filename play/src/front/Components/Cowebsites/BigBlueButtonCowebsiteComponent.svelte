@@ -35,7 +35,7 @@
 <iframe
     src={actualCowebsite.getUrl().toString()}
     frameborder="0"
-    allow="fullscreen, microphone, camera, display-capture, clipboard-read, clipboard-write, screen-wake-lock"
-    title="Cowebsite"
+    allow={actualCowebsite.getAllowPolicy()}
+    title="Big Blue Button Meeting"
     class="pixel bg-white h-full w-full z-index-0"
 />

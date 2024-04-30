@@ -16,6 +16,7 @@
     import { inExternalServiceStore } from "../../Stores/MyMediaStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
+    import CancelablePromise from "cancelable-promise";
 
     export let actualCowebsite: JitsiCoWebsite;
     let domain = actualCowebsite.getDomain();
@@ -25,6 +26,7 @@
     let jwt: string | undefined;
     let jitsiApi: JitsiApi;
     let screenWakeRelease: (() => Promise<void>) | undefined;
+    let jistiMeetLoadedPromise: CancelablePromise<void>;
 
     const onDominantSpeakerChanged = (data: { id: string }) => {
         if (jitsiApi) {
@@ -74,7 +76,7 @@
                     },
                 };
 
-                const jistiMeetLoadedPromise = new Promise<void>((resolve) => {
+                jistiMeetLoadedPromise = new CancelablePromise<void>((resolve, cancel) => {
                     options.onload = () => {
                         resolve();
                     };
@@ -133,6 +135,8 @@
     });
 
     onDestroy(() => {
+        jistiMeetLoadedPromise.cancel();
+
         if (jitsiApi) {
             jitsiApi.removeListener("audioMuteStatusChanged", onAudioChange);
             jitsiApi.removeListener("videoMuteStatusChanged", onVideoChange);
