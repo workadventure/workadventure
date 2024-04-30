@@ -29,6 +29,11 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 const playerNameY = -25;
 const interactiveRadius = 25;
 
+export const CHARACTER_BODY_WIDTH = 16;
+export const CHARACTER_BODY_HEIGHT = 16;
+export const CHARACTER_BODY_OFFSET_X = 0;
+export const CHARACTER_BODY_OFFSET_Y = 8;
+
 export abstract class Character extends Container implements OutlineableInterface {
     private bubble: SpeechBubble | null = null;
     private playerNameText: Text | undefined;
@@ -201,9 +206,9 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.scene.physics.world.enableBody(this);
         this.getBody().setImmovable(true);
         this.getBody().setCollideWorldBounds(true);
-        this.setSize(16, 16);
-        this.getBody().setSize(16, 16); //edit the hitbox to better match the character model
-        this.getBody().setOffset(0, 8);
+        this.setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT);
+        this.getBody().setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT); //edit the hitbox to better match the character model
+        this.getBody().setOffset(CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y);
         this.setDepth(0);
     }
 
