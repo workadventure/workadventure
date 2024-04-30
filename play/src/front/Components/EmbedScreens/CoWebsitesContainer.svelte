@@ -334,15 +334,11 @@
 
     <div class={vertical ? "h-full ml-3 responsive-website" : "h-full object-contain ml-3"}>
         {#if activeCowebsite instanceof JitsiCoWebsite}
-            <JitsiCowebsiteComponent actualCowebsite={$coWebsites.find((coWebsite) => coWebsite === activeCowebsite)} />
+            <JitsiCowebsiteComponent actualCowebsite={activeCowebsite} />
         {:else if activeCowebsite instanceof BBBCoWebsite}
-            <BigBlueButtonCowebsiteComponent
-                actualCowebsite={$coWebsites.find((coWebsite) => coWebsite === activeCowebsite)}
-            />
+            <BigBlueButtonCowebsiteComponent actualCowebsite={activeCowebsite} />
         {:else if activeCowebsite instanceof SimpleCoWebsite}
-            <SimpleCowebsiteComponent
-                actualCowebsite={$coWebsites.find((coWebsite) => coWebsite === activeCowebsite)}
-            />
+            <SimpleCowebsiteComponent actualCowebsite={activeCowebsite} />
         {/if}
     </div>
 

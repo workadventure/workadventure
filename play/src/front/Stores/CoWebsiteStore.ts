@@ -66,10 +66,10 @@ export class CoWebsiteManager {
     }
 
 
-    public getCoWebsiteById(coWebsiteId: string): CoWebsite | undefined {
+    public getCoWebsiteById(coWebsiteId: string): CoWebsite {
         return get(coWebsites).find((coWebsite: CoWebsite) => {
             return coWebsite.getId() === coWebsiteId;
-        });
+        })!;
     }
 
 
