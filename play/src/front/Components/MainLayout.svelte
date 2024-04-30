@@ -262,13 +262,4 @@
     .popupwrapper:nth-child(13) {
         display: none;
     }
-
-    .main-layout {
-        container-type: size;
-        container-name: layout;
-    }
-
-    // #main-layout {
-    //     container-type: size;
-    // }
 </style>
