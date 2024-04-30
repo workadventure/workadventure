@@ -86,6 +86,14 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private wallDownDate = 0;
     private resistanceZoneEnterDate = 0;
     private cameraSpeed: { x: number; y: number } | undefined;
+    // If set to false, the resistance wall will never be active
+    private enableResistanceWall = false;
+    private resistanceRadiusAroundWoka: number | undefined;
+    private player: Player | undefined;
+    // When in exploration mode, the camera can be moved by less than a pixel. camera.scrollX and camera.scrollY are rounded.
+    // We need to keep track of the exact subpixel position in order to be able to move the camera with the mouse
+    // when the scene is extremely zoomed.
+    private floatScroll: { x: number; y: number } | undefined;
 
     constructor(
         private scene: GameScene,
@@ -452,6 +460,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.setCameraMode(CameraMode.Exploration);
 
         this.camera.setFollowOffset(0, 0);
+        this.floatScroll = { x: this.camera.scrollX, y: this.camera.scrollY };
 
         this.camera.setBounds(
             -this.mapSize.width,
@@ -516,7 +525,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
      * we break the wall for 10 seconds.
      */
     public zoomByFactor(zoomFactor: number, smooth: boolean): void {
-        const wallBroken = Date.now() - this.wallDownDate < 10000;
+        const wallBroken = Date.now() - this.wallDownDate < 10000 || this.enableResistanceWall === false;
         if (
             this.isBetween(
                 this.waScaleManager.zoomModifier,
@@ -565,7 +574,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 this.waScaleManager.zoomModifier,
                 this._resistanceStartZoomLevel,
                 this._resistanceEndZoomLevel
-            )
+            ) &&
+            this.isCameraWithinWokaRadius()
         ) {
             if (!this.resistZoomCallback) {
                 this.resistZoomCallback = this.resistZoom.bind(this);
@@ -573,6 +583,20 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 this.resistanceZoneEnterDate = Date.now();
             }
         }
+    }
+
+    private isCameraWithinWokaRadius(): boolean {
+        if (this.resistanceRadiusAroundWoka === undefined || !this.player) {
+            return true;
+        }
+        const cameraCenter = {
+            x: this.camera.worldView.x + this.camera.worldView.width / 2,
+            y: this.camera.worldView.y + this.camera.worldView.height / 2,
+        };
+        const distance = Math.sqrt(
+            Math.pow(cameraCenter.x - this.player.x, 2) + Math.pow(cameraCenter.y - this.player.y, 2)
+        );
+        return distance < this.resistanceRadiusAroundWoka;
     }
 
     /**
@@ -615,20 +639,19 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
             //waScaleManager.handleZoomByFactor(newZoom, this.camera);
             waScaleManager.handleZoom(newZoom, this.camera);
+            if (this.waScaleManager.isMaximumZoomInReached) {
+                this.targetZoomModifier = undefined;
+            }
         }
 
         // Let's move the camera according to the speed
         if (this.cameraSpeed) {
-            const cameraCenter = {
-                x: this.camera.worldView.x + this.camera.worldView.width / 2,
-                y: this.camera.worldView.y + this.camera.worldView.height / 2,
-            };
-            const newX = cameraCenter.x + (this.cameraSpeed.x * delta) / 500;
-            const newY = cameraCenter.y + (this.cameraSpeed.y * delta) / 500;
-            this.camera.centerOn(newX, newY);
+            this.camera.scrollX += (this.cameraSpeed.x * delta) / 400;
+            this.camera.scrollY += (this.cameraSpeed.y * delta) / 400;
+
             // Now, let's slow down the camera a bit
-            this.cameraSpeed.x *= 1 - delta / 300;
-            this.cameraSpeed.y *= 1 - delta / 300;
+            this.cameraSpeed.x *= 1 - delta / 500;
+            this.cameraSpeed.y *= 1 - delta / 500;
             if (Math.pow(this.cameraSpeed.x, 2) + Math.pow(this.cameraSpeed.y, 2) < 20) {
                 this.cameraSpeed = undefined;
             }
@@ -722,16 +745,31 @@ export class CameraManager extends Phaser.Events.EventEmitter {
      * If the resistance zone is overcome, the callback will be called.
      *
      * There can be only one resistance zone at a time.
+     *
+     * @param startZoomLevel
+     * @param endZoomLevel
+     * @param strength
+     * @param callback
+     * @param enableResistanceWall
+     * @param resistanceRadiusAroundWoka If set, the resistance is enabled ONLY if the camera is within this radius around the woka
+     * @param player
      */
     public setResistanceZone(
         startZoomLevel: number,
         endZoomLevel: number,
         strength: number,
-        callback: () => void
+        callback: () => void,
+        enableResistanceWall: boolean,
+        resistanceRadiusAroundWoka: number | undefined,
+        player: Player
     ): void {
         this._resistanceStartZoomLevel = startZoomLevel;
         this._resistanceEndZoomLevel = endZoomLevel;
         this._resistanceStrength = strength;
+        this.enableResistanceWall = enableResistanceWall;
+        this.resistanceRadiusAroundWoka = resistanceRadiusAroundWoka;
+        this.player = player;
+
         this.resistanceCallback = callback;
     }
 
@@ -770,8 +808,42 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     scrollCamera(x: number, y: number): void {
+        /*if (this.floatScroll === undefined) {
+            console.warn("Float scroll is undefined. This should not happen.");
+            this.floatScroll = { x: this.camera.scrollX, y: this.camera.scrollY };
+        }
+        console.log(this.floatScroll.x, this.camera.scrollX, this.camera.worldView.x, this.floatScroll.y, this.camera.scrollY)
+        //if (Math.floor(this.floatScroll.x) != this.camera.scrollX || Math.floor(this.floatScroll.y) != this.camera.scrollY) {
+        if (Math.abs(Math.floor(this.floatScroll.x) - this.camera.scrollX) > 2 || Math.abs(Math.floor(this.floatScroll.y) - this.camera.scrollY) > 2) {
+            console.log("Reset float scroll");
+            // The camera was moved by some action. Maybe a zoom out, etc... Let's reset the float scroll.
+            this.floatScroll = { x: this.camera.scrollX, y: this.camera.scrollY };
+        }
+        this.floatScroll.x += x;
+        this.floatScroll.y += y;
+        //this.camera.scrollX = Math.floor(this.floatScroll.x);
+        //this.camera.scrollY = Math.floor(this.floatScroll.y);
+        this.camera.setScroll(Math.floor(this.floatScroll.x), Math.floor(this.floatScroll.y));
+        console.log("Setting scrollX to ", this.camera.scrollX);*/
+
+        /*if (this.floatScroll === undefined) {
+            console.warn("Float scroll is undefined. This should not happen.");
+            this.floatScroll = { x: this.camera.midPoint.x, y: this.camera.midPoint.y };
+        }
+        console.log(this.floatScroll.x, this.camera.midPoint.x, this.camera.worldView.x, this.floatScroll.y, this.camera.midPoint.y)
+        //if (Math.floor(this.floatScroll.x) != this.camera.midPoint.x || Math.floor(this.floatScroll.y) != this.camera.midPoint.y) {
+        if (Math.abs(Math.floor(this.floatScroll.x) - this.camera.midPoint.x) > 2 || Math.abs(Math.floor(this.floatScroll.y) - this.camera.midPoint.y) > 2) {
+            console.log("Reset float scroll");
+            // The camera was moved by some action. Maybe a zoom out, etc... Let's reset the float scroll.
+            this.floatScroll = { x: this.camera.midPoint.x, y: this.camera.midPoint.y };
+        }
+        this.floatScroll.x += x;
+        this.floatScroll.y += y;
+
+        this.camera.centerOn(this.floatScroll.x, this.floatScroll.y);*/
         this.camera.scrollX += x;
         this.camera.scrollY += y;
+
         this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
         this.scene.markDirty();
     }

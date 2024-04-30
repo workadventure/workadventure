@@ -3563,16 +3563,32 @@ ${escapedMessage}
     }
 
     private configureResistanceToZoomOut(): void {
-        this.cameraManager.setResistanceZone(0.6, 0.3, 1, () => {
-            mapEditorModeStore.switchMode(true);
-            this.mapEditorModeManager.equipTool(EditorToolName.ExploreTheRoom);
-        });
+        this.cameraManager.setResistanceZone(
+            0.6,
+            0.3,
+            1,
+            () => {
+                mapEditorModeStore.switchMode(true);
+                this.mapEditorModeManager.equipTool(EditorToolName.ExploreTheRoom);
+            },
+            true,
+            undefined,
+            this.CurrentPlayer
+        );
     }
 
     private configureResistanceToZoomIn(): void {
-        this.cameraManager.setResistanceZone(0.3, 0.6, 1, () => {
-            mapEditorModeStore.switchMode(false);
-        });
+        this.cameraManager.setResistanceZone(
+            0.3,
+            0.6,
+            1,
+            () => {
+                mapEditorModeStore.switchMode(false);
+            },
+            false,
+            300,
+            this.CurrentPlayer
+        );
     }
 
     private disableCameraResistance(): void {
