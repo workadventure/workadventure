@@ -403,6 +403,14 @@ export const isIframeResponseEvent = z.union([
         data: isEnterLeaveEvent,
     }),
     z.object({
+        type: z.literal("enterMapEditorAreaEvent"),
+        data: isChangeAreaEvent,
+    }),
+    z.object({
+        type: z.literal("leaveMapEditorAreaEvent"),
+        data: isChangeAreaEvent,
+    }),
+    z.object({
         type: z.literal("enterLayerEvent"),
         data: isChangeLayerEvent,
     }),

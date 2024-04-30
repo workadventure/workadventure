@@ -823,6 +823,23 @@ class IframeListener {
         });
     }
 
+    sendEnterMapEditorAreaEvent(areaName: string) {
+        this.postMessage({
+            type: "enterMapEditorAreaEvent",
+            data: {
+                name: areaName,
+            } as ChangeAreaEvent,
+        });
+    }
+    sendLeaveMapEditorAreaEvent(areaName: string) {
+        this.postMessage({
+            type: "leaveMapEditorAreaEvent",
+            data: {
+                name: areaName,
+            } as ChangeAreaEvent,
+        });
+    }
+
     hasPlayerMoved(event: HasPlayerMovedInterface) {
         if (this.sendPlayerMove) {
             this.postMessage({
