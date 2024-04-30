@@ -86,7 +86,7 @@
         <img
             src={CloseImg}
             class="tw-h-4 tw-ml-4 tw-pointer-events-auto tw-cursor-pointer"
-            alt="Map Editor mode activated"
+            alt={$LL.mapEditor.sideBar.closeMapEditor()}
             on:click|preventDefault={() => switchTool(EditorToolName.CloseMapEditor)}
         />
     </div>

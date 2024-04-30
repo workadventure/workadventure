@@ -90,10 +90,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private enableResistanceWall = false;
     private resistanceRadiusAroundWoka: number | undefined;
     private player: Player | undefined;
-    // When in exploration mode, the camera can be moved by less than a pixel. camera.scrollX and camera.scrollY are rounded.
-    // We need to keep track of the exact subpixel position in order to be able to move the camera with the mouse
-    // when the scene is extremely zoomed.
-    private floatScroll: { x: number; y: number } | undefined;
+
+    // The point of the scene the explorer mode is focusing on.
+    private explorerFocusOn: { x: number; y: number } = { x: 0, y: 0 };
 
     constructor(
         private scene: GameScene,
@@ -119,7 +118,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             if (isOpened) {
                 this.camera.setBounds(0, 0, this.mapSize.width * 2, this.mapSize.height);
             } else {
-                this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
+                // We set the bounds back after a call to start following the player
+                //this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
             }
         });
 
@@ -243,21 +243,25 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     public move(moveEvents: ActiveEventList): void {
         let sendViewportUpdate = false;
         if (moveEvents.get(UserInputEvent.MoveUp)) {
-            this.camera.scrollY -= this.EDITOR_MODE_SCROLL_SPEED;
+            this.explorerFocusOn.y -= this.EDITOR_MODE_SCROLL_SPEED;
+            this.explorerFocusOn.y = Clamp(this.explorerFocusOn.y, 0, this.mapSize.height);
             this.scene.markDirty();
             sendViewportUpdate = true;
         } else if (moveEvents.get(UserInputEvent.MoveDown)) {
-            this.camera.scrollY += this.EDITOR_MODE_SCROLL_SPEED;
+            this.explorerFocusOn.y += this.EDITOR_MODE_SCROLL_SPEED;
+            this.explorerFocusOn.y = Clamp(this.explorerFocusOn.y, 0, this.mapSize.height);
             this.scene.markDirty();
             sendViewportUpdate = true;
         }
 
         if (moveEvents.get(UserInputEvent.MoveLeft)) {
-            this.camera.scrollX -= this.EDITOR_MODE_SCROLL_SPEED;
+            this.explorerFocusOn.x -= this.EDITOR_MODE_SCROLL_SPEED;
+            this.explorerFocusOn.x = Clamp(this.explorerFocusOn.x, 0, this.mapSize.width);
             this.scene.markDirty();
             sendViewportUpdate = true;
         } else if (moveEvents.get(UserInputEvent.MoveRight)) {
-            this.camera.scrollX += this.EDITOR_MODE_SCROLL_SPEED;
+            this.explorerFocusOn.x += this.EDITOR_MODE_SCROLL_SPEED;
+            this.explorerFocusOn.x = Clamp(this.explorerFocusOn.x, 0, this.mapSize.width);
             this.scene.markDirty();
             sendViewportUpdate = true;
         }
@@ -273,9 +277,10 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         if (duration === 0) {
             this.camera.startFollow(player, true);
             this.scene.markDirty();
+            this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
             return;
         }
-        const oldPos = { x: this.camera.scrollX, y: this.camera.scrollY };
+        const oldPos = { ...this.explorerFocusOn };
         const startZoomModifier = this.waScaleManager.zoomModifier;
         this.animationInProgress = true;
         this.startFollowTween = this.scene.tweens.addCounter({
@@ -287,20 +292,22 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 if (!this.playerToFollow) {
                     return;
                 }
-                const shiftX =
-                    (this.playerToFollow.x - this.camera.worldView.width * 0.5 - oldPos.x) * tween.getValue();
-                const shiftY =
-                    (this.playerToFollow.y - this.camera.worldView.height * 0.5 - oldPos.y) * tween.getValue();
-                this.camera.setScroll(oldPos.x + shiftX, oldPos.y + shiftY);
+                const shiftX = (this.playerToFollow.x - oldPos.x) * tween.getValue();
+                const shiftY = (this.playerToFollow.y - oldPos.y) * tween.getValue();
+                this.explorerFocusOn.x = oldPos.x + shiftX;
+                this.explorerFocusOn.y = oldPos.y + shiftY;
+                //this.camera.setScroll(oldPos.x + shiftX, oldPos.y + shiftY);
                 if (targetZoomLevel !== undefined) {
                     this.waScaleManager.zoomModifier =
                         (targetZoomLevel - startZoomModifier) * tween.getValue() + startZoomModifier;
                 }
+
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             },
             onComplete: () => {
                 this.camera.startFollow(player, true);
                 this.animationInProgress = false;
+                this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
             },
         });
     }
@@ -456,11 +463,10 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     // Create function to define the camera on exploration mode. The camera can be moved anywhere on the map. The camera is not locked on the player. The camera can be zoomed in and out. The camera can be moved with the mouse. The camera can be moved with the keyboard. The camera can be moved with the touchpad.
     public setExplorationMode(): void {
         this.cameraLocked = false;
-        this.stopFollow();
+        //this.stopFollow();
         this.setCameraMode(CameraMode.Exploration);
 
         this.camera.setFollowOffset(0, 0);
-        this.floatScroll = { x: this.camera.scrollX, y: this.camera.scrollY };
 
         this.camera.setBounds(
             -this.mapSize.width,
@@ -469,6 +475,12 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             this.mapSize.height * 3,
             false
         );
+
+        this.explorerFocusOn = {
+            x: this.camera.scrollX + this.camera.width / 2,
+            y: this.camera.scrollY + this.camera.height / 2,
+        };
+        this.camera.startFollow(this.explorerFocusOn, true);
 
         // Center the camera on the player
         //this.scene.cameras.main.centerOn(this.scene.CurrentPlayer.x, this.scene.CurrentPlayer.y);
@@ -554,7 +566,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         }
 
         if (!smooth) {
-            waScaleManager.handleZoom(this.waScaleManager.zoomModifier * zoomFactor, this.camera);
+            waScaleManager.setZoomModifier(this.waScaleManager.zoomModifier * zoomFactor, this.camera);
         } else {
             this.animateToZoomLevel(this.waScaleManager.zoomModifier * zoomFactor);
         }
@@ -617,6 +629,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     private animate(time: number, delta: number): void {
+        if (this.animationInProgress) {
+            return;
+        }
         if (this.targetZoomModifier !== undefined) {
             let targetZoomModifier;
             if (this.targetDirection === "zoom_in") {
@@ -637,17 +652,22 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 this.targetZoomModifier = undefined;
             }
 
-            //waScaleManager.handleZoomByFactor(newZoom, this.camera);
-            waScaleManager.handleZoom(newZoom, this.camera);
+            waScaleManager.setZoomModifier(newZoom, this.camera);
             if (this.waScaleManager.isMaximumZoomInReached) {
+                this.targetZoomModifier = undefined;
+            }
+            if (this.waScaleManager.isMaximumZoomOutReached) {
                 this.targetZoomModifier = undefined;
             }
         }
 
         // Let's move the camera according to the speed
         if (this.cameraSpeed) {
-            this.camera.scrollX += (this.cameraSpeed.x * delta) / 400;
-            this.camera.scrollY += (this.cameraSpeed.y * delta) / 400;
+            this.explorerFocusOn.x += (this.cameraSpeed.x * delta) / 400;
+            this.explorerFocusOn.y += (this.cameraSpeed.y * delta) / 400;
+
+            this.explorerFocusOn.x = Clamp(this.explorerFocusOn.x, 0, this.mapSize.width);
+            this.explorerFocusOn.y = Clamp(this.explorerFocusOn.y, 0, this.mapSize.height);
 
             // Now, let's slow down the camera a bit
             this.cameraSpeed.x *= 1 - delta / 500;
@@ -667,6 +687,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     private resistZoomCallback: ((time: number, delta: number) => void) | undefined;
     private resistZoom(time: number, delta: number): void {
+        if (this.animationInProgress) {
+            return;
+        }
         // If we are out of resistance zone, let's stop the resistance.
         if (
             !this.isBetween(
@@ -808,41 +831,11 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     scrollCamera(x: number, y: number): void {
-        /*if (this.floatScroll === undefined) {
-            console.warn("Float scroll is undefined. This should not happen.");
-            this.floatScroll = { x: this.camera.scrollX, y: this.camera.scrollY };
-        }
-        console.log(this.floatScroll.x, this.camera.scrollX, this.camera.worldView.x, this.floatScroll.y, this.camera.scrollY)
-        //if (Math.floor(this.floatScroll.x) != this.camera.scrollX || Math.floor(this.floatScroll.y) != this.camera.scrollY) {
-        if (Math.abs(Math.floor(this.floatScroll.x) - this.camera.scrollX) > 2 || Math.abs(Math.floor(this.floatScroll.y) - this.camera.scrollY) > 2) {
-            console.log("Reset float scroll");
-            // The camera was moved by some action. Maybe a zoom out, etc... Let's reset the float scroll.
-            this.floatScroll = { x: this.camera.scrollX, y: this.camera.scrollY };
-        }
-        this.floatScroll.x += x;
-        this.floatScroll.y += y;
-        //this.camera.scrollX = Math.floor(this.floatScroll.x);
-        //this.camera.scrollY = Math.floor(this.floatScroll.y);
-        this.camera.setScroll(Math.floor(this.floatScroll.x), Math.floor(this.floatScroll.y));
-        console.log("Setting scrollX to ", this.camera.scrollX);*/
+        this.explorerFocusOn.x += x;
+        this.explorerFocusOn.y += y;
 
-        /*if (this.floatScroll === undefined) {
-            console.warn("Float scroll is undefined. This should not happen.");
-            this.floatScroll = { x: this.camera.midPoint.x, y: this.camera.midPoint.y };
-        }
-        console.log(this.floatScroll.x, this.camera.midPoint.x, this.camera.worldView.x, this.floatScroll.y, this.camera.midPoint.y)
-        //if (Math.floor(this.floatScroll.x) != this.camera.midPoint.x || Math.floor(this.floatScroll.y) != this.camera.midPoint.y) {
-        if (Math.abs(Math.floor(this.floatScroll.x) - this.camera.midPoint.x) > 2 || Math.abs(Math.floor(this.floatScroll.y) - this.camera.midPoint.y) > 2) {
-            console.log("Reset float scroll");
-            // The camera was moved by some action. Maybe a zoom out, etc... Let's reset the float scroll.
-            this.floatScroll = { x: this.camera.midPoint.x, y: this.camera.midPoint.y };
-        }
-        this.floatScroll.x += x;
-        this.floatScroll.y += y;
-
-        this.camera.centerOn(this.floatScroll.x, this.floatScroll.y);*/
-        this.camera.scrollX += x;
-        this.camera.scrollY += y;
+        this.explorerFocusOn.x = Clamp(this.explorerFocusOn.x, 0, this.mapSize.width);
+        this.explorerFocusOn.y = Clamp(this.explorerFocusOn.y, 0, this.mapSize.height);
 
         this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
         this.scene.markDirty();
