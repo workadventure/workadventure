@@ -58,6 +58,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     private restoreZoomTween?: Phaser.Tweens.Tween;
     private startFollowTween?: Phaser.Tweens.Tween;
+    private zoomOutTween?: Phaser.Tweens.Tween;
 
     private playerToFollow?: Player;
     private cameraLocked: boolean;
@@ -283,6 +284,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         const oldPos = { ...this.explorerFocusOn };
         const startZoomModifier = this.waScaleManager.zoomModifier;
         this.animationInProgress = true;
+        this.zoomOutTween?.stop();
         this.startFollowTween = this.scene.tweens.addCounter({
             from: 0,
             to: 1,
@@ -296,7 +298,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 const shiftY = (this.playerToFollow.y - oldPos.y) * tween.getValue();
                 this.explorerFocusOn.x = oldPos.x + shiftX;
                 this.explorerFocusOn.y = oldPos.y + shiftY;
-                //this.camera.setScroll(oldPos.x + shiftX, oldPos.y + shiftY);
                 if (targetZoomLevel !== undefined) {
                     this.waScaleManager.zoomModifier =
                         (targetZoomLevel - startZoomModifier) * tween.getValue() + startZoomModifier;
@@ -496,19 +497,25 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             this.mapSize.height
         );
 
-        this.stopPan();
-        this.camera.pan(
-            this.mapSize.width / 2,
-            this.mapSize.height / 2,
-            1000,
-            Easing.SineEaseOut,
-            true,
-            (camera, progress, x, y) => {
+        const oldPos = { ...this.explorerFocusOn };
+
+        this.startFollowTween?.stop();
+        this.zoomOutTween = this.scene.tweens.addCounter({
+            from: 0,
+            to: 1,
+            duration: 1000,
+            ease: Easing.SineEaseOut,
+            onUpdate: (tween: Phaser.Tweens.Tween) => {
+                const shiftX = (this.mapSize.width / 2 - oldPos.x) * tween.getValue();
+                const shiftY = (this.mapSize.height / 2 - oldPos.y) * tween.getValue();
+                this.explorerFocusOn.x = oldPos.x + shiftX;
+                this.explorerFocusOn.y = oldPos.y + shiftY;
                 this.waScaleManager.zoomModifier =
-                    (targetZoomModifier - currentZoomModifier) * progress + currentZoomModifier;
+                    (targetZoomModifier - currentZoomModifier) * tween.getValue() + currentZoomModifier;
+
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
-            }
-        );
+            },
+        });
     }
 
     private stopPan(): void {
