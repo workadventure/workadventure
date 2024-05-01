@@ -92,6 +92,7 @@ import {
     mapEditorActivated,
     mapManagerActivated,
     menuVisiblilityStore,
+    roomListActivated,
     screenSharingActivatedStore,
     SubMenusInterface,
     subMenusStore,
@@ -2652,6 +2653,12 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.inviteUserButtonStream.subscribe((isActivated: boolean) => {
                 inviteUserActivated.set(isActivated);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.roomListButtonStream.subscribe((isActivated: boolean) => {
+                roomListActivated.set(isActivated);
             })
         );
 
