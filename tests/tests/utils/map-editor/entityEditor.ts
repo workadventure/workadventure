@@ -43,6 +43,21 @@ class EntityEditor {
     });
   }
 
+  async moveAndRightClick(page: Page, x: number, y: number) {
+    await page.evaluate(async () => {
+      await window.e2eHooks.waitForNextFrame();
+      await window.e2eHooks.waitForNextFrame();
+    });
+    await page.mouse.move(x, y);
+    await page.mouse.move(x, y);
+    await page.mouse.down({ button: "right" });
+    await page.mouse.up({ button: "right" });
+    await page.evaluate(async () => {
+      await window.e2eHooks.waitForNextFrame();
+      await window.e2eHooks.waitForNextFrame();
+    });
+  }
+
   async clearEntitySelection(page: Page) {
     await page.getByTestId("clearEntitySelection").click();
     await expect(page.getByTestId("clearEntitySelection")).toHaveCount(0);
@@ -90,6 +105,10 @@ class EntityEditor {
 
   async removeEntity(page: Page) {
     await page.getByTestId("removeEntity").click();
+  }
+
+  async setOpenLinkProperty(page: Page, link: string) {
+    await page.locator(".map-editor .sidebar .properties-container input#tabLink").fill(link);
   }
 
   getTestAssetName() {

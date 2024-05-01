@@ -65,6 +65,11 @@ export class UpdateEntityFrontCommand extends UpdateEntityCommand implements Fro
         }
         const { x: oldX, y: oldY } = entity.getOldPosition();
         entity?.updateEntity(config);
+        // If the entity is activable, and not in the activatable entities array of the entity manager,
+        // we add it to the array
+        if (entity.isActivatable() && !this.entitiesManager.getActivatableEntities().includes(entity)) {
+            this.entitiesManager.getActivatableEntities().push(entity);
+        }
         this.updateCollisionGrid(entity, oldX, oldY);
         this.scene.markDirty();
     }

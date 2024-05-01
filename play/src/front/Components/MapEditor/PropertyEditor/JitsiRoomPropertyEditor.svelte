@@ -7,6 +7,7 @@
 
     export let property: JitsiRoomPropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
+    export let triggerOptionActivated = true;
     let optionAdvancedActivated = false;
 
     const dispatch = createEventDispatcher();
@@ -112,31 +113,34 @@
                     />
                 </div>
             {/if}
-            <div>
-                <label class="tw-m-0" for="trigger">{$LL.mapEditor.properties.jitsiProperties.trigger()}</label>
-                <select
-                    id="trigger"
-                    class=" tw-m-0 tw-w-full"
-                    bind:value={property.trigger}
-                    on:change={onTriggerValueChange}
-                >
-                    <option value={undefined}
-                        >{$LL.mapEditor.properties.jitsiProperties.triggerShowImmediately()}</option
+            {#if triggerOptionActivated}
+                <div>
+                    <label class="tw-m-0" for="trigger">{$LL.mapEditor.properties.jitsiProperties.trigger()}</label>
+                    <select
+                        id="trigger"
+                        class=" tw-m-0 tw-w-full"
+                        bind:value={property.trigger}
+                        on:change={onTriggerValueChange}
                     >
-                    <option value="onicon">{$LL.mapEditor.properties.jitsiProperties.triggerOnClick()}</option>
-                    <option value="onaction">{$LL.mapEditor.properties.jitsiProperties.triggerOnAction()}</option>
-                </select>
-            </div>
-            {#if triggerOnActionChoosen}
-                <div class="value-input">
-                    <label for="triggerMessage">{$LL.mapEditor.properties.jitsiProperties.triggerMessage()}</label>
-                    <input
-                        id="triggerMessage"
-                        type="text"
-                        bind:value={property.triggerMessage}
-                        on:change={onValueChange}
-                    />
+                        <option value={undefined}
+                            >{$LL.mapEditor.properties.jitsiProperties.triggerShowImmediately()}</option
+                        >
+                        <option value="onicon">{$LL.mapEditor.properties.jitsiProperties.triggerOnClick()}</option>
+                        <option value="onaction">{$LL.mapEditor.properties.jitsiProperties.triggerOnAction()}</option>
+                    </select>
                 </div>
+
+                {#if triggerOnActionChoosen}
+                    <div class="value-input">
+                        <label for="triggerMessage">{$LL.mapEditor.properties.jitsiProperties.triggerMessage()}</label>
+                        <input
+                            id="triggerMessage"
+                            type="text"
+                            bind:value={property.triggerMessage}
+                            on:change={onValueChange}
+                        />
+                    </div>
+                {/if}
             {/if}
             <button
                 on:click={() => {
