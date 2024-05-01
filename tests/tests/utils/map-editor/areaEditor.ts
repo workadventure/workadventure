@@ -87,6 +87,11 @@ class AreaEditor {
     }
   }
 
+  async setOpenLinkProperty(page: Page, link: string, option = "Show immediately on enter") {
+    await page.locator(".map-editor .sidebar .properties-container select#trigger").selectOption({ label: option });
+    await page.locator(".map-editor .sidebar .properties-container input#tabLink").fill(link);
+  }
+
   private async fullFillAreaRight(locator: Locator, right: string) {
     await locator.click();
     await locator.fill(right);

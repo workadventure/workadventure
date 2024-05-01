@@ -23,6 +23,7 @@ import { passStatusToOnlineWhenUserIsInSetableStatus } from "../../Rules/StatusR
 import { gameManager } from "../Game/GameManager";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
+import { SpeechDomElement } from "./SpeechDomElement";
 import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -47,6 +48,9 @@ export abstract class Character extends Container implements OutlineableInterfac
     public companion?: Companion;
     private emote: Phaser.GameObjects.DOMElement | null = null;
     private emoteTween: Phaser.Tweens.Tween | null = null;
+    private texts: Map<string, Phaser.GameObjects.DOMElement> = new Map();
+    private textsToBuild = new Map();
+    private timeoutDestroyText: NodeJS.Timeout | null = null;
     scene: GameScene;
     private readonly _pictureStore: Writable<string | undefined>;
     protected readonly outlineColorStore = createColorStore();
@@ -465,6 +469,32 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.createStartTransition(emoteY);
     }
 
+    playText(
+        id: string,
+        text: string,
+        duration = 10000,
+        callback = () => this.destroyText(id),
+        createStackAnimation = true
+    ) {
+        if (this.texts.has(id)) {
+            this.destroyText(id);
+        }
+        this.textsToBuild.set(id, { text, duration, callback });
+
+        // If there is already one text created, we don't need to create a stack animation
+        if (this.texts.size == 1 && createStackAnimation) {
+            this.createStackAnimationForMultiText();
+            return;
+        }
+
+        const speechDomElement = new SpeechDomElement(id, text, this.scene, -1, -30 + this.texts.size * 2, callback);
+        this.add(speechDomElement);
+        this.texts.set(id, speechDomElement);
+        speechDomElement.play(-1, -50 + this.texts.size * 2, duration, (id) => {
+            this.destroyText(id);
+        });
+    }
+
     private createStartTransition(emoteY: number) {
         this.emoteTween = this.scene?.tweens.add({
             targets: this.emote,
@@ -532,7 +562,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.scene.refreshSceneForOutline();
     }
 
-    cancelPreviousEmote() {
+    private cancelPreviousEmote() {
         if (!this.emote) return;
 
         this.emoteTween?.remove();
@@ -542,6 +572,29 @@ export abstract class Character extends Container implements OutlineableInterfac
     private destroyEmote() {
         this.emote?.destroy();
         this.emote = null;
+    }
+
+    destroyText(id: string) {
+        const text = this.texts.get(id);
+        text?.destroy();
+        this.texts.delete(id);
+        this.textsToBuild.delete(id);
+    }
+
+    private createStackAnimationForMultiText() {
+        // Destroy all texts and recreate them
+        this.texts.forEach((text, id) => {
+            // Destroy and remove the text from the map
+            text.destroy();
+            this.texts.delete(id);
+        });
+
+        // Recreate all texts in the correct order (from the biggest length to the smallest)
+        Array.from(this.textsToBuild.entries())
+            .sort((a, b) => a[1].text.length - b[1].text.length)
+            .forEach(([id, { text, duration, callback }]) => {
+                this.playText(id, text, duration, callback, false);
+            });
     }
 
     public get pictureStore(): PictureStore {

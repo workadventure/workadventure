@@ -99,11 +99,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         switch (event.key) {
             // SPACE
             case " ": {
-                const activatableManager = this.gameScene.getActivatablesManager();
-                const activatable = activatableManager.getSelectedActivatableObject();
-                if (activatable && activatable.isActivatable() && activatableManager.isSelectingByDistanceEnabled()) {
-                    activatable.activate();
-                }
+                this.handleActivableEntity();
                 break;
             }
             default: {
@@ -111,6 +107,15 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             }
         }
         return event;
+    }
+
+    public handleActivableEntity() {
+        const activatableManager = this.gameScene.getActivatablesManager();
+        const activatable = activatableManager.getSelectedActivatableObject();
+        if (activatable && activatable.isActivatable() && activatableManager.isSelectingByDistanceEnabled()) {
+            activatable.activate();
+            activatable.destroyText("object");
+        }
     }
 
     public addSpaceEventListener(callback: () => void): void {

@@ -387,6 +387,7 @@
                 {#if property.type === "jitsiRoomProperty"}
                     <JitsiRoomPropertyEditor
                         {property}
+                        triggerOptionActivated={false}
                         on:close={() => {
                             onDeleteProperty(property.id);
                         }}
@@ -403,6 +404,7 @@
                 {:else if property.type === "openWebsite"}
                     <OpenWebsitePropertyEditor
                         {property}
+                        triggerOptionActivated={false}
                         on:close={() => {
                             onDeleteProperty(property.id);
                         }}
