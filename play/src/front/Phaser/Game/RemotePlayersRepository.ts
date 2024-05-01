@@ -5,6 +5,7 @@ import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { iframeListener } from "../../Api/IframeListener";
 import { RoomConnection } from "../../Connection/RoomConnection";
 import { debugAddPlayer, debugRemovePlayer } from "../../Utils/Debuggers";
+import { CharacterTexture } from "../../Connection/LocalUser";
 
 interface RemotePlayerData extends MessageUserJoined {
     showVoiceIndicator: boolean;
@@ -16,6 +17,8 @@ export type PlayerDetailsUpdate = {
         outlineColor: boolean;
         showVoiceIndicator: boolean;
         availabilityStatus: boolean;
+        nameHidden: boolean;
+        setTexture: boolean;
     };
 };
 
@@ -52,6 +55,8 @@ export class RemotePlayersRepository {
                     availabilityStatus: true,
                     outlineColor: true,
                     showVoiceIndicator: true,
+                    nameHidden: false,
+                    setTexture: false,
                 },
                 player,
             });
@@ -105,6 +110,8 @@ export class RemotePlayersRepository {
                     availabilityStatus: false,
                     outlineColor: false,
                     showVoiceIndicator: false,
+                    nameHidden: false,
+                    setTexture: false,
                 },
                 player,
             };
@@ -126,6 +133,14 @@ export class RemotePlayersRepository {
         if (details.showVoiceIndicator !== undefined) {
             player.showVoiceIndicator = details.showVoiceIndicator;
             updateStruct.updated.showVoiceIndicator = true;
+        }
+        if (details.hideName !== undefined) {
+            player.nameHidden = details.hideName;
+            updateStruct.updated.nameHidden = true;
+        }
+        if (details.setPlayerTexture !== undefined) {
+            player.setTexture = details.setTexture;
+            updateStruct.updated.setTexture = details.setTexture;
         }
         if (details.availabilityStatus !== 0) {
             player.availabilityStatus = details.availabilityStatus;

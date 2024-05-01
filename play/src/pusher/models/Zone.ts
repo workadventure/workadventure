@@ -23,6 +23,7 @@ import { apiClientRepository } from "../services/ApiClientRepository";
 import type { PositionDispatcher } from "../models/PositionDispatcher";
 import { Socket } from "../services/SocketManager";
 import { CustomJsonReplacerInterface } from "./CustomJsonReplacerInterface";
+import { boolean } from "zod";
 
 const debug = Debug("zone");
 
@@ -49,8 +50,9 @@ export class UserDescriptor {
         private availabilityStatus: AvailabilityStatus,
         private visitCardUrl: string | null,
         private variables: { [key: string]: string },
-        private companionTexture?: CompanionTextureMessage,
-        private outlineColor?: number
+        private companionTexture: CompanionTextureMessage | undefined,
+        private outlineColor: number | undefined,
+        private nameHidden: boolean
     ) {
         if (!Number.isInteger(this.userId)) {
             throw new Error("UserDescriptor.userId is not an integer: " + this.userId);
@@ -73,7 +75,8 @@ export class UserDescriptor {
             message.visitCardUrl,
             message.variables,
             message.companionTexture,
-            message.hasOutline ? message.outlineColor : undefined
+            message.hasOutline ? message.outlineColor : undefined,
+            message.nameHidden
         );
     }
 
@@ -118,6 +121,8 @@ export class UserDescriptor {
             outlineColor: this.outlineColor ?? 0, // FIXME: improve the typing
             hasOutline: this.outlineColor !== undefined,
             variables: this.variables,
+            nameHidden: this.nameHidden,
+            setTexture: this.setTexture,
         };
 
         return userJoinedMessage;

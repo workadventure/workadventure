@@ -91,6 +91,7 @@ message SetPlayerDetailsMessage {
   google.protobuf.BoolValue showVoiceIndicator = 5;
   AvailabilityStatus availabilityStatus = 6;
   SetPlayerVariableMessage setVariable = 7;
+  google.protobuf.BoolValue hideName = 8;
 }
 
 message UserMovesMessage {
@@ -584,7 +585,8 @@ message UserJoinedMessage {
   bool hasOutline = 10;
   AvailabilityStatus availabilityStatus = 11;
   map<string, string> variables = 12;
-}
+  bool nameHidden = 13;
+  }
 
 message UserLeftMessage {
   int32 userId = 1;
@@ -861,6 +863,8 @@ message UserJoinedZoneMessage {
   bool hasOutline = 11;
   AvailabilityStatus availabilityStatus = 12;
   map<string, string> variables = 13;
+  bool nameHidden = 14;
+  string[string] setPlayerTexture = 15;
 }
 
 message UserLeftZoneMessage {

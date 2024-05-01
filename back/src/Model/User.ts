@@ -52,8 +52,9 @@ export class User implements Movable, CustomJsonReplacerInterface {
         private outlineColor?: number,
         private voiceIndicatorShown?: boolean,
         public readonly activatedInviteUser?: boolean,
-        public readonly applications?: ApplicationMessage[]
-    ) {
+        public readonly applications?: ApplicationMessage[],
+        private nameHidden?: boolean
+        ) {
         this.listenedZones = new Set<Zone>();
 
         this.positionNotifier.enter(this);
@@ -81,7 +82,9 @@ export class User implements Movable, CustomJsonReplacerInterface {
         outlineColor?: number,
         voiceIndicatorShown?: boolean,
         activatedInviteUser?: boolean,
-        applications?: ApplicationMessage[]
+        applications?: ApplicationMessage[],
+        isNameHidden?: boolean,
+        setPlayerTexture?: string[]
     ): Promise<User> {
         const playersVariablesRepository = await getPlayersVariablesRepository();
         const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository, isLogged);
@@ -108,7 +111,9 @@ export class User implements Movable, CustomJsonReplacerInterface {
             outlineColor,
             voiceIndicatorShown,
             activatedInviteUser,
-            applications
+            applications,
+            isNameHidden,
+            setPlayerTexture
         );
     }
 
@@ -120,6 +125,14 @@ export class User implements Movable, CustomJsonReplacerInterface {
         const oldPosition = this.position;
         this.position = position;
         this.positionNotifier.updatePosition(this, position, oldPosition);
+    }
+
+    get isNameHidden(): boolean {
+        return this.nameHidden ?? false;
+    }
+
+    get playerTexture(): string[] {
+        return this.setPlayerTexture ?? [];
     }
 
     public addFollower(follower: User): void {
@@ -222,6 +235,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
             this.outlineColor = details.outlineColor;
         }
         this.voiceIndicatorShown = details.showVoiceIndicator;
+        this.nameHidden = details.hideName;
+        this.setPlayerTexture = details.setPlayerTexture;
 
         const availabilityStatus = details.availabilityStatus;
         if (availabilityStatus && availabilityStatus !== this.availabilityStatus) {

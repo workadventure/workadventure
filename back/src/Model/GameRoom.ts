@@ -256,7 +256,8 @@ export class GameRoom implements BrothersFinder {
             undefined,
             undefined,
             joinRoomMessage.activatedInviteUser,
-            joinRoomMessage.applications
+            joinRoomMessage.applications,
+            false
         );
         this.nextUserId++;
         this.users.set(user.id, user);

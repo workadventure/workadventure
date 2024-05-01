@@ -1144,6 +1144,16 @@ export class GameScene extends DirtyScene {
         if (update.updated.availabilityStatus) {
             character.setAvailabilityStatus(update.player.availabilityStatus);
         }
+        if (update.updated.nameHidden) {
+            if (update.player.nameHidden) {
+                character.hideName();
+            } else {
+                character.showName();
+            }
+        }
+        if (update.updated.setTexture) {
+            character.setPlayerTextures(update.player.setTexture);
+        }
         if (update.updated.outlineColor) {
             if (update.player.outlineColor === undefined) {
                 character.removeApiOutlineColor();
@@ -3004,6 +3014,24 @@ ${escapedMessage}
         iframeListener.registerAnswerer("playSoundInBubble", async (message) => {
             const soundUrl = new URL(message.url, this.mapUrlFile);
             await this.simplePeer.dispatchSound(soundUrl);
+        });
+
+        iframeListener.registerAnswerer("hideName", () => {
+            this.CurrentPlayer.hideName();
+            this.connection?.emitPlayerHideName(true);
+        });
+
+        iframeListener.registerAnswerer("restoreName", () => {
+            this.CurrentPlayer.showName();
+            this.connection?.emitPlayerHideName(false);
+        });
+
+        iframeListener.registerAnswerer("setPlayerTextures", (textureUrls) => {
+            this.CurrentPlayer.setPlayerTextures(lazyLoadPlayerCharacterTextures(this.superLoad,textureUrls.map((url) => { return {
+                id: url,
+                url: url,
+            }})));
+            this.connection?.emitPlayerTextures(textureUrls);
         });
     }
 

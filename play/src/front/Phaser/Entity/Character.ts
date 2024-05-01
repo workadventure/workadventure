@@ -336,6 +336,28 @@ export abstract class Character extends Container implements OutlineableInterfac
         }
     }
 
+    //updateTexture is used to change the texture of the character
+    public setPlayerTextures(textures: CancelablePromise<string[]>) {
+        if (this.texturePromise) {
+            this.texturePromise.cancel();
+        }
+        this.texturePromise = textures
+            .then((textures) => {
+                this.sprites.forEach((sprite, key) => {
+                    sprite.destroy();
+                    this.sprites.delete(key);
+                });
+                this.addTextures(textures);
+                this.textureLoadedDeferred.resolve();
+            })
+            .catch(() => {
+                this.textureLoadedDeferred.reject();
+            })
+            .finally(() => {
+                this.texturePromise = undefined;
+            });
+    }
+
     private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
         return this.scene.plugins.get("rexOutlinePipeline") as unknown as OutlinePipelinePlugin | undefined;
     }
@@ -648,5 +670,21 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     public get lastDirection(): PositionMessage_Direction {
         return this._lastDirection;
+    }
+
+    public hideName(): void {
+        this.playerNameText?.setVisible(false);
+        this.statusDot.visible = false;
+        this.scene.markDirty();
+    }
+
+    public showName(): void {
+        this.playerNameText?.setVisible(true);
+        this.statusDot.visible = true;
+        this.scene.markDirty();
+    }
+
+    public setTexture(url:string): void {
+        this.setPlayerTextures(lazyLoadPlayerCharacterTextures(this.scene.superLoad, [{id: url, url: url}]));
     }
 }

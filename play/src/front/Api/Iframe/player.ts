@@ -298,6 +298,27 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
             data: undefined,
         });
     }
+
+    public hideName(): Promise<void> {
+        return queryWorkadventure({
+            type: "hideName",
+            data: undefined,
+        });
+    }
+
+    public showName(): Promise<void> {
+        return queryWorkadventure({
+            type: "restoreName",
+            data: undefined,
+        });
+    }
+
+    public setTextures(textureUrls:string[]): Promise<void> {
+        return queryWorkadventure({
+            type: "setPlayerTextures",
+            data: textureUrls,
+        });
+    }
 }
 
 export type Position = {
