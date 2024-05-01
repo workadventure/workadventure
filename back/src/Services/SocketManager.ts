@@ -450,6 +450,7 @@ export class SocketManager {
             availabilityStatus: user.getAvailabilityStatus(),
             characterTextures: user.characterTextures,
             position: ProtobufUtils.toPositionMessage(user.getPosition()),
+            nameHidden: user.isNameHidden
         };
         if (fromZone) {
             userJoinedZoneMessage.fromZone = SocketManager.toProtoZone(fromZone);

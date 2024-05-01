@@ -805,6 +805,18 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitPlayerHideName(hide: boolean): void {
+        const message = SetPlayerDetailsMessageTsProto.fromPartial({
+            hideName: hide,
+        });
+        this.send({
+            message: {
+                $case: "setPlayerDetailsMessage",
+                setPlayerDetailsMessage: message,
+            },
+        });
+    }
+
     public emitPlayerStatusChange(availabilityStatus: AvailabilityStatus): void {
         const message = SetPlayerDetailsMessageTsProto.fromPartial({
             availabilityStatus,
@@ -1774,6 +1786,7 @@ export class RoomConnection implements RoomConnection {
             userUuid: message.userUuid,
             outlineColor: message.hasOutline ? message.outlineColor : undefined,
             variables: variables,
+            nameHidden: message.nameHidden,
         };
     }
 

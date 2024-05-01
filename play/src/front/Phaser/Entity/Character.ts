@@ -336,6 +336,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         }
     }
 
+    //updateTexture is used to change the texture of the character
+
     private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
         return this.scene.plugins.get("rexOutlinePipeline") as unknown as OutlinePipelinePlugin | undefined;
     }
@@ -648,5 +650,17 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     public get lastDirection(): PositionMessage_Direction {
         return this._lastDirection;
+    }
+
+    public hideName(): void {
+        this.playerNameText?.setVisible(false);
+        this.statusDot.visible = false;
+        this.scene.markDirty();
+    }
+
+    public showName(): void {
+        this.playerNameText?.setVisible(true);
+        this.statusDot.visible = true;
+        this.scene.markDirty();
     }
 }

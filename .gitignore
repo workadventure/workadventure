@@ -8,6 +8,10 @@ maps/yarn.lock
 maps/dist/computer.js
 maps/dist/computer.js.map
 node_modules
+
+package-lock.json
+package.json
+
 _
 *.code-workspace
 /install.lock
