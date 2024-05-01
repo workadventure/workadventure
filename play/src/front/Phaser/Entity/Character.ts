@@ -650,8 +650,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         return this._lastDirection;
     }
 
-    public handlePlayerTextCallback(){
-        for(const [id, text] of this.texts){
+    public handlePlayerTextCallback() {
+        for (const [, text] of this.texts) {
             (text as SpeechDomElement).callback();
         }
     }
