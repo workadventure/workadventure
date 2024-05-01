@@ -598,7 +598,15 @@ export const iframeQueryMapTypeGuards = {
         query: isTriggerActionMessageEvent,
         answer: z.undefined(),
     },
+    triggerPlayerMessage: {
+        query: isTriggerActionMessageEvent,
+        answer: z.undefined(),
+    },
     removeActionMessage: {
+        query: isMessageReferenceEvent,
+        answer: z.undefined(),
+    },
+    removePlayerMessage: {
         query: isMessageReferenceEvent,
         answer: z.undefined(),
     },
