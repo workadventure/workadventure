@@ -116,6 +116,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             activatable.activate();
             activatable.destroyText("object");
         }
+        this.gameScene.CurrentPlayer.handlePlayerTextCallback();
     }
 
     public addSpaceEventListener(callback: () => void): void {
