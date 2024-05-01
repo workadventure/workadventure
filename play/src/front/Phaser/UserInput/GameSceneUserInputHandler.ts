@@ -80,7 +80,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         this.gameScene.getMapEditorModeManager()?.handleKeyDownEvent(event);
         switch (event.code) {
             case "KeyE": {
-                if(get(mapManagerActivated) == false) return event;
+                if (get(mapManagerActivated) == false) return event;
                 mapEditorModeStore.switchMode(!get(mapEditorModeStore));
                 break;
             }
@@ -116,7 +116,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             activatable.activate();
             activatable.destroyText("object");
         }
-        this.gameScene.CurrentPlayer.handlePlayerTextCallback();
+        this.gameScene.CurrentPlayer.handlePressSpacePlayerTextCallback();
     }
 
     public addSpaceEventListener(callback: () => void): void {
