@@ -69,8 +69,8 @@
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- grid-flow-col grid-flow-col -->
     <!-- {#if $streamableCollectionStore.size < 3} -->
-    <div class="container-cam">
-        <div class="all-cameras all-cameras overflow-visible content-center flex gap-x-4 justify-center">
+    <div class="container-cam relative">
+        <div class="all-cameras overflow-visible content-center flex gap-x-4 justify-center">
             {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
                 {#if !highlightedEmbedScreen || highlightedEmbedScreen.type !== "streamable" || (highlightedEmbedScreen.type === "streamable" && highlightedEmbedScreen.embed !== peer)}
                     {#key uniqueId}
@@ -104,10 +104,24 @@
     /* display: flex;
   flex-wrap: wrap; */
     @container (max-width: 767px) {
+        .container-cam {
+        }
+
         .all-cameras {
-            flex-direction: column;
-            align-items: center;
+            margin-top: 100%;
+            margin-left: 100%;
             scale: 0.5;
+            bottom: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .unique-cam-other,
+        .unique-mycam {
+            align-self: flex-end;
+            margin-top: auto;
         }
     }
 
@@ -137,7 +151,7 @@
 
     @container (min-width: 1920px) {
         .all-cameras {
-            scale: 1.2;
+            scale: 1;
         }
     }
 </style>

@@ -141,38 +141,33 @@
         <!-- Div pour la personne qui reçoit le partage d'écran -->
 
         <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
-            <div id="">
-                {#if $highlightedEmbedScreen}
-                    {#if $highlightedEmbedScreen.type === "streamable"}
-                        {#key $highlightedEmbedScreen.embed.uniqueId}
-                            <MediaBox
-                                isHightlighted={true}
-                                isClickable={true}
-                                streamable={$highlightedEmbedScreen.embed}
+            {#if $highlightedEmbedScreen}
+                {#if $highlightedEmbedScreen.type === "streamable"}
+                    {#key $highlightedEmbedScreen.embed.uniqueId}
+                        <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen.embed} />
+                    {/key}
+                {:else if $highlightedEmbedScreen.type === "cowebsite"}
+                    {#key $highlightedEmbedScreen.embed.getId()}
+                        <div class="highlighted-cowebsite-container">
+                            <div
+                                id={"cowebsite-slot-" + $highlightedEmbedScreen.embed.getId()}
+                                class="highlighted-cowebsite"
                             />
-                        {/key}
-                    {:else if $highlightedEmbedScreen.type === "cowebsite"}
-                        {#key $highlightedEmbedScreen.embed.getId()}
-                            <div class="highlighted-cowebsite-container">
-                                <div
-                                    id={"cowebsite-slot-" + $highlightedEmbedScreen.embed.getId()}
-                                    class="highlighted-cowebsite"
-                                />
-                                <div class="actions">
-                                    {#if $highlightedEmbedScreen.embed.isClosable()}
-                                        <button
-                                            type="button"
-                                            class="close-window top-right-btn"
-                                            on:click={closeCoWebsite}
-                                        />
-                                    {/if}
-                                </div>
+                            <div class="actions">
+                                {#if $highlightedEmbedScreen.embed.isClosable()}
+                                    <button
+                                        type="button"
+                                        class="close-window top-right-btn"
+                                        on:click={closeCoWebsite}
+                                    />
+                                {/if}
                             </div>
-                        {/key}
-                    {/if}
+                        </div>
+                    {/key}
                 {/if}
-            </div>
+            {/if}
         </div>
+
         <!-- TODO HUGO Commented Why ?
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div
@@ -254,6 +249,16 @@
     @include media-breakpoint-only(md) {
         #embed-left-block {
             flex: 0 0 65%;
+        }
+    }
+
+    @include media-breakpoint-up(sm) {
+        #presentation-layout {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 9999; // ajustez ceci si nécessaire pour qu'il soit au-dessus de tout autre contenu
         }
     }
 </style>

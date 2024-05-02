@@ -91,16 +91,16 @@
     <!-- Si le streamable est un partage d'écran de la part d'un autre utilisateur !-->
 {:else if streamable instanceof ScreenSharingPeer}
     <div
-        class="media-container flex justify-center {isHightlighted ? 'hightlighted bg-yellow-500' : 'flex bg-pink-500'}
+        class="media-container flex justify-center h-full w-full hidden{isHightlighted
+            ? 'hightlighted bg-yellow-500'
+            : 'flex bg-pink-500'}
             media-box-shape-color"
         class:clickable={isClickable}
         class:mozaic-duo={mozaicDuo}
         class:mozaic-full-width={mozaicSolo}
         class:mozaic-quarter={mozaicQuarter}
     >
-        <div class="{isHightlighted ? '' : ''} height flex screen-blocker">
-            <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
-        </div>
+        <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
     </div>
 
     <!-- Si le streamable est une vidéo de l'utilisateur-->
@@ -131,6 +131,7 @@
         </div>
     </div>
 {:else}
+    <!-- Div pour celui qui partage son écran avec partage d'écran en petit-->
     <div
         class="media-container {isHightlighted ? 'hightlighted mr-6' : 'flex h-full aspect-ratio'}"
         class:clickable={isClickable}

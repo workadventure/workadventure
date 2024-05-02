@@ -30,7 +30,7 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="video-container screen-sharing">
+<div class="video-container w-full h-full screen-sharing">
     {#if $statusStore === "connecting"}
         <div class="connecting-spinner" />
     {/if}
@@ -38,31 +38,31 @@
         <div class="rtc-error" />
     {/if}
     {#if $streamStore !== null}
-        <video use:srcObject={$streamStore} autoplay playsinline class="height mx-auto rounded" muted />
-        <div
-            class="nametag-screenshare-container container-end flex media-box-camera-on-size video-on-responsive-height"
-        >
-            <i class="flex">
-                <span
-                    style="background-color: {backGroundColor}; color: {textColor};"
-                    class="nametag-text nametag-shape pr-3 pl-2 h-3 max-h-8">{name}</span
-                >
-            </i>
-        </div>
+        <video
+            use:srcObject={$streamStore}
+            autoplay
+            playsinline
+            class="w-full h-full mx-auto rounded object-cover"
+            muted
+        />
+        <i class="flex">
+            <span
+                style="background-color: {backGroundColor}; color: {textColor};"
+                class="nametag-text nametag-shape pr-3 pl-2 h-3 max-h-8">{name}</span
+            >
+        </i>
     {/if}
-    <div
-        class="report-ban-screenshare-container flex video-on-responsive-height media-box-camera-on-position media-box-screensharing-size
-        z-[600] flex opacity-0 translate-x-0 transition-all"
-    >
-        <BanReportBox {peer} />
-    </div>
+
+    <BanReportBox {peer} />
 </div>
 
 <!-- on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)} -->
-<style>
-    .height {
-        height: 75vh;
-        width: 100%;
-        margin-top: -10%;
-    }
-</style>
+
+<!-- nametag-screenshare-container container-end flex media-box-camera-on-size -->
+<!-- For DIV above i-->
+
+<!-- <div
+        class="report-ban-screenshare-container flex video-on-responsive-height media-box-camera-on-position media-box-screensharing-size
+        z-[600] flex opacity-0 translate-x-0 transition-all"
+    > -->
+<!-- For div above BAN REPORT -->
