@@ -128,12 +128,12 @@
                 });
             </script>
         {{/logRocketId}}
-        
+
         {{#googleDrivePickerClientId}}
             <script type="text/javascript">
                 window.pickerInited = false;
                 window.gisInited = false;
-            
+
                 /**
                  * Callback after api.js is loaded.
                  */
@@ -149,7 +149,7 @@
                     await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
                     pickerInited = true;
                 }
-            
+
                 /**
                  * Callback after Google Identity Services are loaded.
                  */
@@ -165,6 +165,7 @@
     <body id="body" style="margin: 0;background-color:rgb(27, 42, 65);">
         <input type="hidden" id="authToken" value="{{ authToken }}" name="authToken">
         <div id="app"></div>
+        <!-- <script type="module" src="/src/cowebsite.ts"></script> -->
         <script type="module" src="/src/svelte.ts"></script>
     </body>
 </html>

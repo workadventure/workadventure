@@ -7,5 +7,4 @@ import { HtmlUtils } from "./front/WebRtc/HtmlUtils";
 const app = new App({
     target: HtmlUtils.getElementByIdOrFail("app"),
 });
-
-export default app;
+ export default app;

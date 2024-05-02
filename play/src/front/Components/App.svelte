@@ -188,18 +188,68 @@
         iframeListener.init();
         desktopApi.init();
     });
+
+    // $: resizeScreen();
+
+    // function resizeScreen() {
+    //     mainContainer = document.querySelector(".main-container");
+    //     console.log(mainContainer);
+    //     // for (let test in mainContainers) {
+    //     //     console.log(test, "TEST");
+    //     // }
+
+    //     // let mainContainer = document.getElementsByClassName("main-container");
+    //     // console.log(mainContainer[0], "TESSSST");
+    //     if ($coWebsites.length > 0) {
+    //         if(mainContainer) {
+    //             mainContainer.style.width = "50%";
+    //         }
+    //     } else {
+    //         if(mainContainer) {
+    //             mainContainer.style.width = "100%";
+    //         }
+    //     }
+    // }
+
+    // $: cowebsites = $coWebsites;
 </script>
 
-<div class="bg-contrast h-screen w-screen absolute z-[2]" />
-<div class="bg-contrast h-screen w-screen absolute z-[2]" />
-<div class="main-container z-10 relative">
-    <!-- Create the editor container -->
+<!-- <div class="bg-contrast h-screen w-screen absolute z-[2]" />
+<div class="bg-contrast h-screen w-screen absolute z-[2]" /> -->
+
+<!-- <div class="cowebsite">
+</div> -->
+
+<!-- <div class="main-container z-10">
+    <div class="">
+        {#if $coWebsites.length > 0}
+            <CoWebsitesContainer />
+        {/if}
+    </div>
+
     <GameOverlay {game} />
     <div id="game" bind:this={gameDiv} class="absolute top-0 -z-10" />
+</div> -->
+
+<div class="main-container flex z-10">
+    <div class="game-container">
+        <div id="game" bind:this={gameDiv} class="fixed top-0 -z-10" />
+        <GameOverlay {game} />
+    </div>
     {#if $coWebsites.length > 0}
-        <CoWebsitesContainer />
+        <div class="co-websites-container">
+            <CoWebsitesContainer />
+        </div>
     {/if}
+    <!-- Create the editor container -->
 </div>
 
 <style lang="scss">
+    .co-websites-container {
+        flex: 1;
+    }
+
+    .game-container {
+        flex: 1;
+    }
 </style>

@@ -204,7 +204,7 @@
         div.style.position = "absolute";
         div.style.top = "0";
         div.style.left = "0";
-        div.style.zIndex = "1000";
+        div.style.zIndex = "1800";
         document.body.appendChild(div);
 
         window.addEventListener("mouseup", removeDivForResize);
