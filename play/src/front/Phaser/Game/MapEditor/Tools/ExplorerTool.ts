@@ -181,7 +181,6 @@ export class ExplorerTool implements MapEditorTool {
         cameraManager.startFollowPlayer(this.scene.CurrentPlayer, 1000, targetZoom);
 
         // Restore entities
-        this.entitiesManager.removeAllEntitiesPointedToEditColor();
         this.removeAllAreasPreviewPointedToEditColor();
 
         // Restore cursor
@@ -257,7 +256,6 @@ export class ExplorerTool implements MapEditorTool {
 
         // Make all entities interactive
         this.entitiesManager.makeAllEntitiesInteractive();
-        this.entitiesManager.setAllEntitiesPointedToEditColor(0x000000);
         this.setAllAreasPreviewPointedToEditColor();
 
         this.scene.playSound("audio-cloud");
@@ -273,12 +271,6 @@ export class ExplorerTool implements MapEditorTool {
         /*setTimeout(() => {
             this.scene.zoomByFactor(1, 1);
         }, 200);*/
-
-        // Create subscribe to entities store
-        this.mapExplorationEntitiesSubscribe = mapExplorationEntitiesStore.subscribe((entities) => {
-            this.entitiesManager.setAllEntitiesPointedToEditColor(0x000000);
-            this.scene.markDirty();
-        });
     }
     public destroy(): void {
         this.clear();
