@@ -7,13 +7,6 @@ import {
 import { removePlayerMessage } from "../../Events/Ui/TriggerPlayerMessageEvent";
 import { queryWorkadventure } from "../IframeApiContribution";
 import type { PlayerMessageOptions } from "../ui";
-function uuidv4() {
-    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-        const r = (Math.random() * 16) | 0,
-            v = c === "x" ? r : (r & 0x3) | 0x8;
-        return v.toString(16);
-    });
-}
 
 export class PlayerMessage {
     public readonly uuid: string;
@@ -22,7 +15,7 @@ export class PlayerMessage {
     private readonly callback: () => void;
 
     constructor(playerMessageOptions: PlayerMessageOptions, private onRemove: () => void) {
-        this.uuid = uuidv4();
+        this.uuid = window.crypto.randomUUID();
         this.message = playerMessageOptions.message;
         this.type = playerMessageOptions.type ?? "message";
         this.callback = playerMessageOptions.callback;
