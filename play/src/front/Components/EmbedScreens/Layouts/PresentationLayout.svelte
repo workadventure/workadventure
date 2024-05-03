@@ -53,10 +53,10 @@
     });
 
     onMount(() => {
-        resizeObserver.observe(layoutDom);
-        widthWindow = window.innerWidth;
-        console.log("width", widthWindow);
-        handleCamMounted();
+        // resizeObserver.observe(layoutDom);
+        // widthWindow = window.innerWidth;
+        // console.log("width", widthWindow);
+        // handleCamMounted();
         // getWidth();
     });
 
@@ -235,7 +235,7 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            z-index: 9999; // ajustez ceci si nécessaire pour qu'il soit au-dessus de tout autre contenu
+            z-index: 9999;
         }
     }
 </style>

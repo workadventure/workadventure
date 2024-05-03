@@ -30,7 +30,7 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="video-container w-full h-full screen-sharing">
+<div class="video-container w-full h-full relative screen-sharing">
     {#if $statusStore === "connecting"}
         <div class="connecting-spinner" />
     {/if}

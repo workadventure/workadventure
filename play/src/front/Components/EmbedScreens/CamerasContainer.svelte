@@ -104,9 +104,6 @@
     /* display: flex;
   flex-wrap: wrap; */
     @container (max-width: 767px) {
-        .container-cam {
-        }
-
         .all-cameras {
             margin-top: 100%;
             margin-left: 100%;

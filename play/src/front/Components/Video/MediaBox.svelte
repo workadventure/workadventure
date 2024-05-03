@@ -91,8 +91,8 @@
     <!-- Si le streamable est un partage d'écran de la part d'un autre utilisateur !-->
 {:else if streamable instanceof ScreenSharingPeer}
     <div
-        class="media-container flex justify-center h-full w-full
-            media-box-shape-color"
+        class="media-container justify-center h-full w-full
+            media-box-shape-color receiving-sharing"
         class:clickable={isClickable}
         class:mozaic-duo={mozaicDuo}
         class:mozaic-full-width={mozaicSolo}
@@ -100,6 +100,19 @@
     >
         <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
     </div>
+
+    <!-- Test pour m'inspirer de ces props css pour le mode mobile de celui qui recoit le partage mais en mode display block et non flex -->
+    <!-- <div
+        class="media-container {isHightlighted ? 'hightlighted mr-6' : 'flex h-full aspect-ratio'}"
+        class:clickable={isClickable}
+        class:mozaic-full-width={mozaicSolo}
+        class:mozaic-duo={mozaicDuo}
+        class:mozaic-quarter={mozaicQuarter}
+    >
+        <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'}   w-full h-full flex screen-blocker">
+            <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
+        </div>
+    </div> -->
 
     <!-- Si le streamable est une vidéo de l'utilisateur-->
 {:else if streamable instanceof JitsiTrackStreamWrapper}
@@ -146,6 +159,12 @@
 <style lang="scss">
     @import "../../style/breakpoints.scss";
 
+    @include media-breakpoint-up(sm) {
+        .receiving-sharing {
+            display: block;
+            scale: 5;
+        }
+    }
     //Classes factorizing tailwind's ones are defined in video-ui.scss
 
     .media-container {
