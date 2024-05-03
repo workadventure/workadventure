@@ -1,6 +1,7 @@
 import { get, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { Subject } from "rxjs";
+import { waScaleManager } from "../Phaser/Services/WaScaleManager";
 
 
 
@@ -46,13 +47,20 @@ export class CoWebsiteManager {
     private _onResize: Subject<void> = new Subject();
     public onResize = this._onResize.asObservable();
 
+    public fire(): void {
+        this._onResize.next();
+        waScaleManager.applyNewSize();
+        waScaleManager.refreshFocusOnTarget();
+    }
 
     public addCoWebsiteToStore(coWebsite: CoWebsite) {
         coWebsites.add(coWebsite);
+        this.fire()
     }
 
     public removeCoWebsiteToStore(coWebsite: CoWebsite) {
         coWebsites.remove(coWebsite);
+        this.fire()
     }
 
 

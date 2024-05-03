@@ -27,6 +27,7 @@
     let gameDiv: HTMLDivElement;
 
     onMount(() => {
+        console.log("JE SUIS DANS LE ONMOUNT DE L'APP.SVELTE");
         if (SENTRY_DSN_FRONT != undefined) {
             try {
                 const sentryOptions: Sentry.BrowserOptions = {
@@ -166,7 +167,9 @@
         const canvas = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
 
         if (canvas) {
+            console.log(canvas, "CANVAS");
             canvas.addEventListener("click", function () {
+                console.log("je suis dans la focntion du click event");
                 if (document.activeElement instanceof HTMLElement) {
                     document.activeElement.blur();
                 }
@@ -174,16 +177,19 @@
         }
 
         window.addEventListener("resize", function () {
+            console.log("je suis dans le resize du window add event listener");
             waScaleManager.applyNewSize();
             waScaleManager.refreshFocusOnTarget();
         });
 
-        // coWebsiteManager.onResize is a singleton. No need to unsubscribe.
-        //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
         coWebsiteManager.onResize.subscribe(() => {
+            console.log("je suis dans le suscribe du cowebsite manager");
             waScaleManager.applyNewSize();
             waScaleManager.refreshFocusOnTarget();
         });
+        // }
+        // coWebsiteManager.onResize is a singleton. No need to unsubscribe.
+        //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
 
         iframeListener.init();
         desktopApi.init();
@@ -214,41 +220,22 @@
     // $: cowebsites = $coWebsites;
 </script>
 
-<!-- <div class="bg-contrast h-screen w-screen absolute z-[2]" />
-<div class="bg-contrast h-screen w-screen absolute z-[2]" /> -->
-
-<!-- <div class="cowebsite">
-</div> -->
-
-<!-- <div class="main-container z-10">
-    <div class="">
+<div class="main-container flex z-10">
+    <div class="game-container flex-1">
+        <div id="game" bind:this={gameDiv} class="fixed top-0 z-1000" />
+        <GameOverlay {game} />
+    </div>
+    <div class="co-websites-container">
         {#if $coWebsites.length > 0}
             <CoWebsitesContainer />
         {/if}
     </div>
-
-    <GameOverlay {game} />
-    <div id="game" bind:this={gameDiv} class="absolute top-0 -z-10" />
-</div> -->
-
-<div class="main-container flex z-10">
-    <div class="game-container">
-        <div id="game" bind:this={gameDiv} class="fixed top-0 -z-10" />
-        <GameOverlay {game} />
-    </div>
-    {#if $coWebsites.length > 0}
-        <div class="co-websites-container">
-            <CoWebsitesContainer />
-        </div>
-    {/if}
-    <!-- Create the editor container -->
 </div>
 
 <style lang="scss">
     .co-websites-container {
         flex: 1;
     }
-
     .game-container {
         flex: 1;
     }

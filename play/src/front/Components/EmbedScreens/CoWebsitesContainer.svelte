@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { onMount } from "svelte";
-    import { coWebsites } from "../../Stores/CoWebsiteStore";
+    import { coWebsiteManager, coWebsites } from "../../Stores/CoWebsiteStore";
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
     import SimpleCowebsiteComponent from "../Cowebsites/SimpleCowebsiteComponent.svelte";
@@ -13,6 +13,7 @@
     import { max, min } from "lodash";
     import { ArrowDownIcon } from "svelte-feather-icons";
     import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
+    import { waScaleManager } from "../../Phaser/Services/WaScaleManager";
 
     let activeCowebsite = $coWebsites[0];
     let showDropdown = false;
@@ -64,6 +65,7 @@
             initialWidth = parseInt(getComputedStyle(container).width);
             const maxWidth = min([widthContainer, window.innerWidth - 350]);
             container.style.width = maxWidth + "px";
+            coWebsiteManager.fire();
         };
         const handleMouseUp = () => {
             appearDropdown();
@@ -75,6 +77,7 @@
             document.removeEventListener("mousemove", handleMouseMove);
             document.removeEventListener("mouseup", handleMouseUp);
         };
+        return;
     }
 
     function resizeMobile() {

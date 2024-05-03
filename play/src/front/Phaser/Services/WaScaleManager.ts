@@ -37,6 +37,7 @@ export class WaScaleManager {
             return;
         }
         const { width, height } = coWebsiteManager.getGameSize();
+        console.log("TAILLE ECRAN", width, height)
         const devicePixelRatio = window.devicePixelRatio ?? 1;
         const { game: gameSize, real: realSize } = this.hdpiManager.getOptimalGameSize({
             width: width * devicePixelRatio,
