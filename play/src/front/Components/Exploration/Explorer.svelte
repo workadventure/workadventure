@@ -90,7 +90,7 @@
 
     function highlightEntity(entity: Entity) {
         entity.setPointedToEditColor(0xf9e82d);
-        gameManager.getCurrentGameScene().getCameraManager().goToEntity(entity);
+        gameManager.getCurrentGameScene().getCameraManager().centerCameraOn(entity);
         // Use explorer tool to define the zoom to center camera position
         (
             gameManager.getCurrentGameScene().getMapEditorModeManager().currentlyActiveTool as ExplorerTool
@@ -105,7 +105,7 @@
     }
     function highlightArea(area: AreaPreview) {
         area.setStrokeStyle(2, 0xf9e82d);
-        gameManager.getCurrentGameScene().getCameraManager().goToAreaPreviex(area);
+        gameManager.getCurrentGameScene().getCameraManager().centerCameraOn(area);
         // Use explorer tool to define the zoom to center camera position
         (
             gameManager.getCurrentGameScene().getMapEditorModeManager().currentlyActiveTool as ExplorerTool
