@@ -91,9 +91,7 @@
     <!-- Si le streamable est un partage d'écran de la part d'un autre utilisateur !-->
 {:else if streamable instanceof ScreenSharingPeer}
     <div
-        class="media-container flex justify-center h-full w-full hidden{isHightlighted
-            ? 'hightlighted bg-yellow-500'
-            : 'flex bg-pink-500'}
+        class="media-container flex justify-center h-full w-full
             media-box-shape-color"
         class:clickable={isClickable}
         class:mozaic-duo={mozaicDuo}

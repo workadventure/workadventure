@@ -101,74 +101,51 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias}>
-    {#if displayFullMedias}
-        <!-- Div pour le responsive avec display full media-->
-        {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div id="full-medias" class="z-[300] relative mx-auto top-8 h-1/2 overflow-y-auto h-full">
-                {#if $jitsiLoadingStore}
-                    <Loading />
-                {/if}
-                {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
-                    <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
-                {/if}
-                <!-- {#if $myCameraStore && $proximityMeetingStore === true}
+    <!-- Div pour l'affichage de toutes les camera (other cam : cameContainer / my cam : MyCamera'-->
+    {#if $streamableCollectionStore.size > 0 || $myCameraStore}
+        <div class="grid grid-flow-col gap-x-4 justify-center test-media">
+            {#if $jitsiLoadingStore}
+                <Loading />
+            {/if}
+            {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
+                <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
+            {/if}
+            <!-- {#if $myCameraStore && $proximityMeetingStore === true}
                     <MyCamera />
                 {/if} -->
-                {#if $myJitsiCameraStore}
-                    <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
-                {/if}
-            </div>
-        {/if}
-    {:else}
-        <!-- Div pour l'affichage de toutes les camera (other cam : cameContainer / my cam : MyCamera'-->
-        {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div class="grid grid-flow-col gap-x-4 justify-center test-media">
-                {#if $jitsiLoadingStore}
-                    <Loading />
-                {/if}
-                {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
-                    <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
-                {/if}
-                <!-- {#if $myCameraStore && $proximityMeetingStore === true}
-                    <MyCamera />
-                {/if} -->
-                {#if $myJitsiCameraStore}
-                    <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
-                {/if}
-            </div>
-        {/if}
-
-        <!-- Div pour la personne qui reçoit le partage d'écran -->
-
-        <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
-            {#if $highlightedEmbedScreen}
-                {#if $highlightedEmbedScreen.type === "streamable"}
-                    {#key $highlightedEmbedScreen.embed.uniqueId}
-                        <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen.embed} />
-                    {/key}
-                {:else if $highlightedEmbedScreen.type === "cowebsite"}
-                    {#key $highlightedEmbedScreen.embed.getId()}
-                        <div class="highlighted-cowebsite-container">
-                            <div
-                                id={"cowebsite-slot-" + $highlightedEmbedScreen.embed.getId()}
-                                class="highlighted-cowebsite"
-                            />
-                            <div class="actions">
-                                {#if $highlightedEmbedScreen.embed.isClosable()}
-                                    <button
-                                        type="button"
-                                        class="close-window top-right-btn"
-                                        on:click={closeCoWebsite}
-                                    />
-                                {/if}
-                            </div>
-                        </div>
-                    {/key}
-                {/if}
+            {#if $myJitsiCameraStore}
+                <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
             {/if}
         </div>
+    {/if}
 
-        <!-- TODO HUGO Commented Why ?
+    <!-- Div pour la personne qui reçoit le partage d'écran -->
+
+    <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
+        {#if $highlightedEmbedScreen}
+            {#if $highlightedEmbedScreen.type === "streamable"}
+                {#key $highlightedEmbedScreen.embed.uniqueId}
+                    <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen.embed} />
+                {/key}
+            {:else if $highlightedEmbedScreen.type === "cowebsite"}
+                {#key $highlightedEmbedScreen.embed.getId()}
+                    <div class="highlighted-cowebsite-container">
+                        <div
+                            id={"cowebsite-slot-" + $highlightedEmbedScreen.embed.getId()}
+                            class="highlighted-cowebsite"
+                        />
+                        <div class="actions">
+                            {#if $highlightedEmbedScreen.embed.isClosable()}
+                                <button type="button" class="close-window top-right-btn" on:click={closeCoWebsite} />
+                            {/if}
+                        </div>
+                    </div>
+                {/key}
+            {/if}
+        {/if}
+    </div>
+
+    <!-- TODO HUGO Commented Why ?
         {#if $streamableCollectionStore.size > 0 || $myCameraStore}
             <div
                 class="relative self-end z-[300] bottom-6 md:bottom-4 max-w-[25%] w-full"
@@ -189,7 +166,7 @@
             </div>
         {/if}
         -->
-    {/if}
+    <!-- {/if} -->
 </div>
 
 <style lang="scss">
