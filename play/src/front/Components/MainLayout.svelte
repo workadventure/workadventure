@@ -51,7 +51,7 @@
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
-    import CoWebsitesContainer from "../Components/EmbedScreens/CoWebsitesContainer.svelte";
+    // import CoWebsitesContainer from "../Components/EmbedScreens/CoWebsitesContainer.svelte";
 
     let mainLayout: HTMLDivElement;
     // export let message: string;

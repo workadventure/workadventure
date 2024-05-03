@@ -232,7 +232,7 @@
 
     function getPanelClass() {
         const widthPercentage = getWidthPercentage();
-        return `${widthPercentage} h-full absolute right-0 top-0 bg-contrast/50 backdrop-blur z-[1500] left_panel`;
+        return `${widthPercentage} h-full absolute right-0 top-0 bg-contrast/50 backdrop-blur left_panel`;
     }
 
     let panelClass = getPanelClass();
@@ -294,7 +294,7 @@
 
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
-            class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer z-2000"
+            class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
             on:click={toggleFullScreen}
         >
             <FullScreenIcon />
