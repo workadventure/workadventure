@@ -92,6 +92,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     // The point of the scene the explorer mode is focusing on.
     private explorerFocusOn: { x: number; y: number } = { x: 0, y: 0 };
+    // If set, the camera will move toward this target.
+    private explorerFocusOnTarget: { x: number; y: number; zoom: number } | undefined;
+    private focusTargetSpeed = 0.2;
 
     constructor(
         private scene: GameScene,
@@ -521,14 +524,16 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     public centerCameraOn(position: { x: number; y: number }): void {
-        this.explorerFocusOn.x = position.x;
-        this.explorerFocusOn.y = position.y;
+        this.explorerFocusOnTarget = {
+            ...position,
+            zoom: this.waScaleManager.zoomModifier,
+        };
 
         if (this.waScaleManager.zoomModifier < this._resistanceEndZoomLevel) {
-            this.waScaleManager.zoomModifier = this._resistanceEndZoomLevel;
+            this.explorerFocusOnTarget.zoom = this._resistanceEndZoomLevel;
         }
 
-        this.scene.markDirty();
+        this.startAnimation();
     }
 
     /**
@@ -629,6 +634,10 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private animateToZoomLevel(targetZoomModifier: number): void {
         this.targetZoomModifier = targetZoomModifier;
         this.targetDirection = this.targetZoomModifier > this.waScaleManager.zoomModifier ? "zoom_in" : "zoom_out";
+        this.startAnimation();
+    }
+
+    private startAnimation() {
         if (!this.targetReachInProgress) {
             this.targetReachInProgress = true;
             this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.animateCallback);
@@ -684,7 +693,36 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             }
         }
 
-        if (this.cameraSpeed === undefined && this.targetZoomModifier === undefined) {
+        if (this.explorerFocusOnTarget) {
+            let newZoom =
+                this.waScaleManager.zoomModifier +
+                (((this.explorerFocusOnTarget.zoom - this.waScaleManager.zoomModifier) * delta) / 100) *
+                    this.focusTargetSpeed;
+
+            let x =
+                this.explorerFocusOn.x +
+                (((this.explorerFocusOnTarget.x - this.explorerFocusOn.x) * delta) / 100) * this.focusTargetSpeed;
+            let y =
+                this.explorerFocusOn.y +
+                (((this.explorerFocusOnTarget.y - this.explorerFocusOn.y) * delta) / 100) * this.focusTargetSpeed;
+
+            if (Math.abs(this.explorerFocusOnTarget.x - x) < 1 && Math.abs(this.explorerFocusOnTarget.y - y) < 1) {
+                x = this.explorerFocusOnTarget.x;
+                y = this.explorerFocusOnTarget.y;
+                newZoom = this.explorerFocusOnTarget.zoom;
+                this.explorerFocusOnTarget = undefined;
+            }
+
+            waScaleManager.zoomModifier = newZoom;
+            this.explorerFocusOn.x = x;
+            this.explorerFocusOn.y = y;
+        }
+
+        if (
+            this.cameraSpeed === undefined &&
+            this.targetZoomModifier === undefined &&
+            this.explorerFocusOnTarget === undefined
+        ) {
             this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.animateCallback);
             this.targetReachInProgress = false;
         }
@@ -827,10 +865,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     setSpeed(speed: { x: number; y: number }) {
         this.cameraSpeed = speed;
-        if (!this.targetReachInProgress) {
-            this.targetReachInProgress = true;
-            this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.animateCallback);
-        }
+        this.startAnimation();
     }
 
     stopSpeed() {
