@@ -5,8 +5,6 @@ import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { HdpiManager } from "./HdpiManager";
 import ScaleManager = Phaser.Scale.ScaleManager;
 
-export const INITIAL_ZOOM_OUT_EXPLORER_MODE = 1;
-
 export enum WaScaleManagerEvent {
     RefreshFocusOnTarget = "wa-scale-manager:refresh-focus-on-target",
 }
@@ -54,6 +52,10 @@ export class WaScaleManager {
             this.scaleManager.setZoom(this.actualZoom);
             camera?.setZoom(1);
         } else {
+            if (this.scaleManager.width !== realSize.width || this.scaleManager.height !== realSize.height) {
+                this.scaleManager.resize(realSize.width, realSize.height);
+            }
+
             const zoom =
                 this.hdpiManager.zoomModifier * this.hdpiManager.getOptimalZoomLevel(realSize.width * realSize.height);
             this.scaleManager.setZoom(this.actualZoom);
@@ -136,18 +138,6 @@ export class WaScaleManager {
         this.applyNewSize(camera);
     }
 
-    public handleZoomByFactor(zoomFactor: number, camera: Phaser.Cameras.Scene2D.Camera): void {
-        if (zoomFactor > 1 && this.zoomModifier * zoomFactor - this.zoomModifier > 0.1)
-            this.setZoomModifier(this.zoomModifier * 1.1, camera);
-        else if (zoomFactor < 1 && this.zoomModifier - this.zoomModifier * zoomFactor > 0.1)
-            this.setZoomModifier(this.zoomModifier / 1.1, camera);
-        else this.setZoomModifier(this.zoomModifier * zoomFactor, camera);
-
-        if (this.focusTarget) {
-            this.game.events.emit(WaScaleManagerEvent.RefreshFocusOnTarget, this.focusTarget);
-        }
-    }
-
     public getFocusTarget(): WaScaleManagerFocusTarget | undefined {
         return this.focusTarget;
     }
@@ -183,8 +173,12 @@ export class WaScaleManager {
         return this.hdpiManager.maxZoomOut;
     }
 
-    public get isMaximumZoomReached(): boolean {
+    public get isMaximumZoomOutReached(): boolean {
         return this.hdpiManager.isMaximumZoomReached;
+    }
+
+    public get isMaximumZoomInReached(): boolean {
+        return this.hdpiManager.isMaximumZoomInReached;
     }
 }
 

@@ -319,7 +319,12 @@ class LocalAdmin implements AdminInterface {
                 }
                 const wamUrl = new URL(path, publicMapStorageUrl).toString();
                 const name = value?.metadata?.name ?? path;
-                mapDescriptions.push({ name, roomUrl: "/~/" + path, wamUrl });
+                mapDescriptions.push({
+                    name,
+                    roomUrl: "/~/" + path,
+                    wamUrl,
+                    ...value?.metadata,
+                });
             }
             return mapDescriptions;
         }

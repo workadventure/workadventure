@@ -99,14 +99,14 @@
             {#if $isFetching}
                 <h3>{$LL.mapEditor.listRoom.isFetching()}</h3>
             {/if}
-            {#if !$isFetching && $roomListFiltered.size == 0}
+            {#if !$isFetching && $roomListFiltered.size === 0}
                 <h3>{$LL.mapEditor.listRoom.noRoomFound()}</h3>
             {/if}
             {#each Array.from($roomListFiltered) as [roomUrl, roomData] (roomUrl)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div
                     id={roomUrl}
-                    class:active={currentRoomUrl == roomData.roomUrl}
+                    class:active={currentRoomUrl === new URL(roomData.roomUrl, window.location.href).toString()}
                     class="room-card tw-flex tw-flex-col tw-items-center tw-justify-center tw-cursor-pointer tw-rounded-xl tw-m-12 tw-p-12"
                     on:click={() => clickRoom(roomData.roomUrl, roomData.name)}
                 >
@@ -114,6 +114,9 @@
                         class="tw-pointer-events-none tw-rounded-full tw-h-56 tw-w-56 tw-mb-3"
                         src={roomData.thumbnail ?? defaultMapImg}
                         alt={roomData.name}
+                        on:error={function () {
+                            this.src = defaultMapImg;
+                        }}
                     />
                     <span class="tw-pointer-events-none tw-text-2xl tw-font-bold tw-m-0">{roomData.name}</span>
                     {#if roomData.areasSearchable || roomData.entitiesSearchable}
@@ -137,6 +140,7 @@
 
 <style lang="scss">
     .room-card {
+        transition: transform 0.15s ease-in-out;
         &.active {
             background-color: rgb(86 234 255 / 0.3);
         }

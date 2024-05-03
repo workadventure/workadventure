@@ -5,16 +5,15 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import { mapEditorSelectedToolStore, mapEditorVisibilityStore } from "../../Stores/MapEditorStore";
-    // import FloorToolImg from "../images/icon-tool-floor.png";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { mapEditorActivated, mapEditorActivatedForThematics } from "../../Stores/MenuStore";
     import Tooltip from "../Util/Tooltip.svelte";
     import AreaToolImg from "../images/icon-tool-area.png";
     import CloseImg from "../images/close.png";
     import ConfigureImg from "../images/configure.svg";
-    import ExplorerImg from "../images/explorer.svg";
     import EntityToolImg from "../images/icon-tool-entity.svg";
     import TrashImg from "../images/trash.svg";
+    import MagnifyingGlassSvg from "../images/loupe.svg";
 
     const gameScene = gameManager.getCurrentGameScene();
 
@@ -22,7 +21,7 @@
 
     availableTools.push({
         toolName: EditorToolName.ExploreTheRoom,
-        img: ExplorerImg,
+        img: MagnifyingGlassSvg,
         tooltiptext: $LL.mapEditor.sideBar.exploreTheRoom(),
     });
 
@@ -99,7 +98,7 @@
         <img
             src={CloseImg}
             class="tw-h-4 tw-ml-4 tw-pointer-events-auto tw-cursor-pointer"
-            alt="Map Editor mode activated"
+            alt={$LL.mapEditor.sideBar.closeMapEditor()}
             on:click|preventDefault={() => switchTool(EditorToolName.CloseMapEditor)}
         />
     </div>
