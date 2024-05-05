@@ -649,4 +649,10 @@ export abstract class Character extends Container implements OutlineableInterfac
     public get lastDirection(): PositionMessage_Direction {
         return this._lastDirection;
     }
+
+    public handlePressSpacePlayerTextCallback() {
+        for (const [, text] of this.texts) {
+            (text as SpeechDomElement).callback();
+        }
+    }
 }

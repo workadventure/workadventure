@@ -92,6 +92,7 @@ import {
     mapEditorActivated,
     mapManagerActivated,
     menuVisiblilityStore,
+    roomListActivated,
     screenSharingActivatedStore,
     SubMenusInterface,
     subMenusStore,
@@ -966,7 +967,9 @@ export class GameScene extends DirtyScene {
         iframeListener.unregisterAnswerer("loadTileset");
         iframeListener.unregisterAnswerer("getMapData");
         iframeListener.unregisterAnswerer("triggerActionMessage");
+        iframeListener.unregisterAnswerer("triggerPlayerMessage");
         iframeListener.unregisterAnswerer("removeActionMessage");
+        iframeListener.unregisterAnswerer("removePlayerMessage");
         iframeListener.unregisterAnswerer("openCoWebsite");
         iframeListener.unregisterAnswerer("getCoWebsites");
         iframeListener.unregisterAnswerer("setPlayerOutline");
@@ -2656,6 +2659,12 @@ ${escapedMessage}
             })
         );
 
+        this.iframeSubscriptionList.push(
+            iframeListener.roomListButtonStream.subscribe((isActivated: boolean) => {
+                roomListActivated.set(isActivated);
+            })
+        );
+
         iframeListener.registerAnswerer("openCoWebsite", async (openCoWebsite, source) => {
             if (!source) {
                 throw new Error("Unknown query source");
@@ -2896,6 +2905,13 @@ ${escapedMessage}
             })
         );
 
+        iframeListener.registerAnswerer("triggerPlayerMessage", (message) =>
+            this.CurrentPlayer.playText(message.uuid, message.message, undefined, () => {
+                this.CurrentPlayer.destroyText(message.uuid);
+                iframeListener.sendActionMessageTriggered(message.uuid);
+            })
+        );
+
         iframeListener.registerAnswerer("setVariable", (event, source) => {
             // TODO: "setVariable" message has a useless "target"
             // TODO: "setVariable" message has a useless "target"
@@ -2927,6 +2943,10 @@ ${escapedMessage}
 
         iframeListener.registerAnswerer("removeActionMessage", (message) => {
             layoutManagerActionStore.removeAction(message.uuid);
+        });
+
+        iframeListener.registerAnswerer("removePlayerMessage", (message) => {
+            this.CurrentPlayer.destroyText(message.uuid);
         });
 
         iframeListener.registerAnswerer("setPlayerOutline", (message) => {

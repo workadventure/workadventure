@@ -87,6 +87,7 @@ export const mapManagerActivated = writable(true);
 export const screenSharingActivatedStore = writable(true);
 export const mapEditorActivatedForCurrentArea = writable(false);
 export const mapEditorActivatedForThematics = writable(true);
+export const roomListActivated = writable(true);
 
 function createSubMenusStore() {
     const store = writable<MenuItem[]>([

@@ -6,6 +6,7 @@ import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandle
 import type { GameScene } from "../Game/GameScene";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { isActivatable } from "../Game/ActivatableInterface";
+import { mapManagerActivated } from "../../Stores/MenuStore";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
@@ -79,6 +80,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         this.gameScene.getMapEditorModeManager()?.handleKeyDownEvent(event);
         switch (event.code) {
             case "KeyE": {
+                if (get(mapManagerActivated) == false) return event;
                 mapEditorModeStore.switchMode(!get(mapEditorModeStore));
                 break;
             }
@@ -114,6 +116,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             activatable.activate();
             activatable.destroyText("object");
         }
+        this.gameScene.CurrentPlayer.handlePressSpacePlayerTextCallback();
     }
 
     public addSpaceEventListener(callback: () => void): void {

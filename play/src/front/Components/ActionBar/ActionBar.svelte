@@ -67,6 +67,7 @@
         addActionButtonActionBarEvent,
         mapManagerActivated,
         screenSharingActivatedStore,
+        roomListActivated,
     } from "../../Stores/MenuStore";
     import {
         emoteDataStore,
@@ -895,24 +896,31 @@
                 {/if}
             </div>
 
-            <div class="bottom-action-section tw-flex tw-flex-initial">
-                <!-- TODO button hep -->
-                <!-- Room list button -->
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openedRoomList()}
-                    on:click={showRoomList}
-                    class="bottom-action-button"
-                >
-                    <Tooltip text={$LL.actionbar.roomList()} />
+            {#if $roomListActivated}
+                <div class="bottom-action-section tw-flex tw-flex-initial">
+                    <!-- TODO button hep -->
+                    <!-- Room list button -->
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.openedRoomList()}
+                        on:click={showRoomList}
+                        class="bottom-action-button"
+                    >
+                        <Tooltip text={$LL.actionbar.roomList()} />
 
-                    <button id="roomListIcon" class:border-top-light={$roomListVisibilityStore}>
-                        <!-- svelte-ignore a11y-img-redundant-alt -->
-                        <img draggable="false" src={worldImg} style="padding: 2px" alt="Image for room list modal" />
-                    </button>
+                        <button id="roomListIcon" class:border-top-light={$roomListVisibilityStore}>
+                            <!-- svelte-ignore a11y-img-redundant-alt -->
+                            <img
+                                draggable="false"
+                                src={worldImg}
+                                style="padding: 2px"
+                                alt="Image for room list modal"
+                            />
+                        </button>
+                    </div>
                 </div>
-            </div>
+            {/if}
 
             {#if $addActionButtonActionBarEvent.length > 0}
                 <div class="bottom-action-section tw-flex tw-flex-initial">

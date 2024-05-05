@@ -361,6 +361,14 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("restoreInviteUserButton"),
         data: z.undefined(),
     }),
+    z.object({
+        type: z.literal("disableRoomList"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restoreRoomList"),
+        data: z.undefined(),
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;
@@ -590,7 +598,15 @@ export const iframeQueryMapTypeGuards = {
         query: isTriggerActionMessageEvent,
         answer: z.undefined(),
     },
+    triggerPlayerMessage: {
+        query: isTriggerActionMessageEvent,
+        answer: z.undefined(),
+    },
     removeActionMessage: {
+        query: isMessageReferenceEvent,
+        answer: z.undefined(),
+    },
+    removePlayerMessage: {
         query: isMessageReferenceEvent,
         answer: z.undefined(),
     },
