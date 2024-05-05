@@ -1,5 +1,6 @@
 import { MathUtils } from "@workadventure/math-utils";
 import * as EasyStar from "easystarjs";
+import { CHARACTER_BODY_HEIGHT, CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y } from "../Phaser/Entity/Character";
 
 export enum PathTileType {
     Walkable = 0,
@@ -41,10 +42,44 @@ export class PathfindingManager {
             // Replace the first element of the path with the actual start position
             path[0] = { x: start.x, y: start.y + this.tileDimensions.height * 0.5 }; // We need to add half of the tile height to get the bottom center of the tile as long as the player origin is centered
             if (result.isExactTarget) {
-                path[path.length - 1] = { x: end.x, y: end.y };
+                // Let's put back the exact position.
+                // Actually, we are not targeting always the absolutely exact pixel-perfect position.
+                // Indeed, we want the hitbox of the sprite to be completely inside the tile.
+                // Otherwise, the hitbox of the sprite could overflow a collide tile, so the player could use
+                // his keyboard to move the sprite inside the wall.
+                path[path.length - 1] = this.fitBodyWithinTile(
+                    end.x,
+                    end.y,
+                    this.tileDimensions.width,
+                    this.tileDimensions.height
+                );
             }
         }
         return path;
+    }
+
+    private fitBodyWithinTile(x: number, y: number, tileWidth: number, tileHeight: number): { x: number; y: number } {
+        const xMod = x % tileWidth;
+        const yMod = y % tileHeight;
+
+        if (yMod < CHARACTER_BODY_HEIGHT / 2 + CHARACTER_BODY_OFFSET_Y) {
+            y -= yMod;
+            y += CHARACTER_BODY_HEIGHT / 2 + CHARACTER_BODY_OFFSET_Y;
+        }
+        if (xMod < CHARACTER_BODY_HEIGHT / 2 + CHARACTER_BODY_OFFSET_X) {
+            x -= xMod;
+            x += CHARACTER_BODY_HEIGHT / 2 + CHARACTER_BODY_OFFSET_X;
+        }
+        if (yMod > tileHeight - CHARACTER_BODY_HEIGHT / 2 + CHARACTER_BODY_OFFSET_Y) {
+            y -= yMod;
+            y += tileHeight - CHARACTER_BODY_HEIGHT / 2 + CHARACTER_BODY_OFFSET_Y;
+        }
+        if (xMod > tileWidth - CHARACTER_BODY_HEIGHT / 2 + CHARACTER_BODY_OFFSET_X) {
+            x -= xMod;
+            x += tileWidth - CHARACTER_BODY_HEIGHT / 2 + CHARACTER_BODY_OFFSET_X;
+        }
+
+        return { x, y };
     }
 
     private async findPath(

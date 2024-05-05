@@ -14,6 +14,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         exploreTheRoom: "Explorer le salon",
         closeMapEditor: "Fermer l'éditeur de carte",
         mapManagerActivated: "Gestionnaire de carte activé",
+        mapExplorerActivated: "Survol de la carte",
         exploreTheRoomActivated: "Exploration de la carte activée",
         areaEditorActivated: "Édition de zone activée",
         entityEditorActivated: "Édition d'objets activée",
@@ -307,10 +308,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         title: "Explorateur de carte",
         description:
             "Permet d'explorer la salle. Vous pourrez vous déplacer dans la salle et interagir avec les objets. Deux modes sont disponibles : 'Exploration' et 'Recherche'. Le mode 'Recherche' vous proposera de rechercher ou de filtrer les entités et les zones de la salle. Le mode 'Exploration' vous permettra de vous déplacer librement dans la salle.",
-        explorationModeTitle: "Mode exploration",
-        explorationModeDescription: "Naviguer dans la carte et interagir avec les entités et les zones 🚶‍♂️",
-        searchModeTitle: "Mode recherche",
-        searchModeDescription: "Rechercher ou filtrer les entités et les zones dans la carte 🧐",
         noEntitiesFound: "Aucune entité trouvée dans la carte 🙅‍♂️",
         entitiesFound: "Entités trouvées",
         noAreasFound: "Aucune zone trouvée dans la carte 🙅‍♀️",
@@ -321,14 +318,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             moveToEntity: "Aller à l'entité {name}",
             moveToArea: "Aller à la zone {name}",
             errorMovingToObject: "L'objet n'est pas accessible pour le moment 🚫",
-        },
-        popup: {
-            title: "Est-ce que tu veux continuer avec le Map Explorer ? 🤔",
-            content:
-                "Le mode exploreur permet de visualiser la carte, trouver des objets et des zones. Il existe 2 systèmes dans le mode exploreur, le système d'exploration libre ou le système de recherche d'objets et de zone. La vidéo ci-dessus vous montre comment utiliser le mode exploreur 💪",
-            notAskAgain: "Ne plus demander",
-            close: "Fermer",
-            continue: "Continuer",
         },
     },
     listRoom: {

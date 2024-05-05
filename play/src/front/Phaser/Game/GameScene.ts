@@ -130,7 +130,7 @@ import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInt
 import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
 import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
-import { modalPopupVisibilityStore, modalVisibilityStore } from "../../Stores/ModalStore";
+import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
     mapEditorModeStore,
@@ -138,9 +138,10 @@ import {
     mapEditorWamSettingsEditorToolCurrentMenuItemStore,
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
     mapExplorationModeStore,
+    cameraResistanceModeStore,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
-import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer } from "../../Utils/Debuggers";
+import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
 import { checkCoturnServer } from "../../Components/Video/utils";
 import { BroadcastService } from "../../Streaming/BroadcastService";
 import { liveStreamingEnabledStore, megaphoneCanBeUsedStore } from "../../Stores/MegaphoneStore";
@@ -180,7 +181,7 @@ import { IframeEventDispatcher } from "./IframeEventDispatcher";
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { EntitiesCollectionsManager } from "./MapEditor/EntitiesCollectionsManager";
-import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
+import { DEPTH_BUBBLE_CHAT_SPRITE, DEPTH_WHITE_MASK } from "./DepthIndexes";
 import { ScriptingEventsManager } from "./ScriptingEventsManager";
 import { faviconManager } from "./../../WebRtc/FaviconManager";
 import { FollowManager } from "./FollowManager";
@@ -192,6 +193,7 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import Clamp = Phaser.Math.Clamp;
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -263,6 +265,7 @@ export class GameScene extends DirtyScene {
     private refreshPromptStoreStoreUnsubscriber!: Unsubscriber;
     private mapExplorationStoreUnsubscriber!: Unsubscriber;
     private modalVisibilityStoreUnsubscriber!: Unsubscriber;
+    private cameraResistanceModeStoreUnsubscriber!: Unsubscriber;
     private unsubscribers: Unsubscriber[] = [];
     private entityPermissions: EntityPermissions | undefined;
     private entityPermissionsDeferred: Deferred<EntityPermissions> = new Deferred();
@@ -690,9 +693,27 @@ export class GameScene extends DirtyScene {
 
         this.cameraManager = new CameraManager(
             this,
-            { x: this.Map.widthInPixels, y: this.Map.heightInPixels },
+            { width: this.Map.widthInPixels, height: this.Map.heightInPixels },
             waScaleManager
         );
+        this.configureResistanceToZoomOut();
+
+        this.cameraResistanceModeStoreUnsubscriber = cameraResistanceModeStore.subscribe((resistanceMode) => {
+            switch (resistanceMode) {
+                case "resist_zoom_in":
+                    this.configureResistanceToZoomIn();
+                    break;
+                case "resist_zoom_out":
+                    this.configureResistanceToZoomOut();
+                    break;
+                case "no_resistance":
+                    this.disableCameraResistance();
+                    break;
+                default: {
+                    const _exhaustiveCheck: never = resistanceMode;
+                }
+            }
+        });
 
         this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
 
@@ -959,6 +980,7 @@ export class GameScene extends DirtyScene {
         this.jitsiParticipantsCountStoreUnsubscriber?.();
         this.availabilityStatusStoreUnsubscriber?.();
         this.mapExplorationStoreUnsubscriber?.();
+        this.cameraResistanceModeStoreUnsubscriber?.();
         for (const unsubscriber of this.unsubscribers) {
             unsubscriber();
         }
@@ -989,6 +1011,7 @@ export class GameScene extends DirtyScene {
         this.playersEventDispatcher.cleanup();
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
+        this.followManager?.close();
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
@@ -1012,7 +1035,6 @@ export class GameScene extends DirtyScene {
             this.hideTimeout = undefined;
         }
     }
-
     /**
      * @param time
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
@@ -1194,34 +1216,6 @@ export class GameScene extends DirtyScene {
                 this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
             }
         });
-    }
-
-    zoomByFactor(zoomFactor: number, velocity?: number) {
-        if (this.cameraManager.isZoomLocked()) {
-            return;
-        }
-        // If the zoom modifier is over the max zoom out, we propose to the user to switch to the explorer mode
-        // Rule: if the velocity is over 1, we could imagine that the user force to switch on the explorer mode
-        if (
-            velocity &&
-            velocity > 2 &&
-            zoomFactor < 1 &&
-            waScaleManager.isMaximumZoomReached &&
-            !get(mapEditorModeStore)
-        ) {
-            const askAgainPopup = localStorage.getItem("notAskAgainPopupExplorerMode");
-            if (askAgainPopup == undefined || localStorage.getItem("notAskAgainPopupExplorerMode") === "false") {
-                modalPopupVisibilityStore.set(true);
-            } else {
-                const matEditoreModeState = get(mapEditorModeStore);
-                analyticsClient.toggleMapEditor(!matEditoreModeState);
-                mapEditorModeStore.switchMode(!matEditoreModeState);
-                this.mapEditorModeManager.equipTool(EditorToolName.ExploreTheRoom);
-            }
-            return;
-        }
-
-        waScaleManager.handleZoomByFactor(zoomFactor, this.cameras.main);
     }
 
     public createSuccessorGameScene(autostart: boolean, reconnecting: boolean) {
@@ -3602,11 +3596,105 @@ ${escapedMessage}
         });
     }
 
+    handleMouseWheel(deltaY: number) {
+        // Calculate the velocity of the zoom
+        //const velocity = deltaY / 30;
+
+        // Calculate the zoom factor
+        //const zoomFactor = 1 - velocity * 0.1;
+
+        // Explanation of the formula: to Zoom x 2, we need a delta of 200
+        let zoomFactor = Math.exp((-deltaY * Math.log(2)) / 200);
+
+        // Sometimes, deltaY can be really high (this happens when the browser is lagging for 1 second or so)
+        // Let's clamp the value to avoid zooming too much
+        zoomFactor = Clamp(zoomFactor, 0.5, 2);
+
+        debugZoom("DeltaY: ", deltaY, "Zoom factor", zoomFactor);
+
+        // Apply the zoom
+        this.zoomByFactor(zoomFactor, true);
+    }
+
+    zoomByFactor(zoomFactor: number, smooth: boolean) {
+        if (this.cameraManager.isZoomLocked()) {
+            return;
+        }
+
+        this.cameraManager.zoomByFactor(zoomFactor, smooth);
+    }
+
     get room(): Room {
         return this._room;
     }
 
     get sceneReadyToStartPromise(): Promise<void> {
         return this.sceneReadyToStartDeferred.promise;
+    }
+
+    private whiteMask: Phaser.GameObjects.Graphics | undefined;
+
+    /**
+     * Applies a white mask on top of the screen with the given alpha value.
+     * Useful for the zoom out resistance effect.
+     */
+    public applyWhiteMask(alpha: number): void {
+        if (!this.whiteMask) {
+            this.whiteMask = this.add.graphics();
+        }
+
+        this.whiteMask.clear();
+        this.whiteMask.fillStyle(0xffffff, alpha);
+        const camera = this.cameras.main;
+        //this.whiteMask.fillRect(camera.scrollX, camera.scrollY, camera.width, camera.height);
+        // Let's apply some margin because in the zoom process, the camera will move
+        this.whiteMask.fillRect(
+            camera.scrollX - camera.width * 0.5,
+            camera.scrollY - camera.height * 0.5,
+            camera.width * 2,
+            camera.height * 2
+        );
+        this.whiteMask.setDepth(DEPTH_WHITE_MASK);
+    }
+
+    public removeWhiteMask(): void {
+        if (!this.whiteMask) {
+            return;
+        }
+        this.whiteMask.destroy();
+        this.whiteMask = undefined;
+    }
+
+    private configureResistanceToZoomOut(): void {
+        this.cameraManager.setResistanceZone(
+            0.6,
+            0.3,
+            1,
+            () => {
+                mapEditorModeStore.switchMode(true);
+                this.mapEditorModeManager.equipTool(EditorToolName.ExploreTheRoom);
+            },
+            true,
+            undefined,
+            this.CurrentPlayer
+        );
+    }
+
+    private configureResistanceToZoomIn(): void {
+        this.cameraManager.setResistanceZone(
+            0.3,
+            0.6,
+            1,
+            () => {
+                mapEditorModeStore.switchMode(false);
+            },
+            false,
+            300,
+            this.CurrentPlayer
+        );
+    }
+
+    private disableCameraResistance(): void {
+        this.cameraManager.disableResistanceZone();
     }
 }

@@ -19,7 +19,6 @@
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
     import {
-        modalPopupVisibilityStore,
         modalVisibilityStore,
         roomListVisibilityStore,
         showLimitRoomModalStore,
@@ -72,7 +71,6 @@
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import ClaimPersonalAreaDialogBox from "./MapEditor/ClaimPersonalAreaDialogBox.svelte";
-    import MapExplorerPopup from "./Modal/MapExplorerPopup.svelte";
     import MainModal from "./Modal/MainModal.svelte";
 
     let mainLayout: HTMLDivElement;
@@ -89,7 +87,7 @@
 
 <!-- Components ordered by z-index -->
 <div id="main-layout" class={[...$coWebsites.values()].length === 0 ? "not-cowebsite" : ""} bind:this={mainLayout}>
-    {#if $modalVisibilityStore || $modalPopupVisibilityStore}
+    {#if $modalVisibilityStore}
         <div class="tw-bg-black/60 tw-w-full tw-h-full tw-fixed tw-left-0 tw-right-0" />
     {/if}
 
@@ -193,9 +191,6 @@
             <ObjectDetails />
         {/if}
 
-        {#if $modalPopupVisibilityStore}
-            <MapExplorerPopup />
-        {/if}
         {#if $roomListVisibilityStore}
             <MapList />
         {/if}

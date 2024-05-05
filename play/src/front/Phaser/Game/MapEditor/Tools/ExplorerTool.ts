@@ -17,7 +17,7 @@ import { Entity } from "../../../ECS/Entity";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { EntitiesManager } from "../../GameMap/EntitiesManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
-import { INITIAL_ZOOM_OUT_EXPLORER_MODE, waScaleManager } from "../../../Services/WaScaleManager";
+import { waScaleManager } from "../../../Services/WaScaleManager";
 import { MapEditorTool } from "./MapEditorTool";
 
 const logger = debug("explorer-tool");
@@ -50,8 +50,6 @@ export class ExplorerTool implements MapEditorTool {
     };
     private keyUpHandler = (event: KeyboardEvent) => {
         // Define new zone to zoom
-        if (this.downIsPressed || this.upIsPressed || this.leftIsPressed || this.rightIsPressed)
-            this.defineZoomToCenterCameraPosition();
         if (event.key === "ArrowDown" || event.key === "s") {
             this.downIsPressed = false;
         }
@@ -73,25 +71,25 @@ export class ExplorerTool implements MapEditorTool {
         deltaY: number,
         deltaZ: number
     ) => {
-        // Calculate the velocity of the scroll
-        const velocity = deltaY / 53;
-        const zoomFactor = 1 - velocity * 0.1;
-        // Restore camera mode
-        this.scene.zoomByFactor(zoomFactor, velocity);
+        this.scene.handleMouseWheel(deltaY);
     };
     private pointerDownHandler = (pointer: Phaser.Input.Pointer) => {
+        // The motion factor is used to smooth out the velocity of the camera.
+        // By default, the 0.2 value is too low and if we release the pointer when the mouse is not moving but has
+        // moved 0.1 second before, the camera will continue to move.
+        // 0.35 seems a more sensible default.
+        pointer.motionFactor = 0.35;
+
         this.explorationMouseIsActive = true;
         this.scene.input.setDefaultCursor("grabbing");
+        this.scene.getCameraManager().stopSpeed();
     };
     private pointerMoveHandler = (pointer: Phaser.Input.Pointer) => {
         if (!this.explorationMouseIsActive) return;
-        this.scene.cameras.main.scrollX -= pointer.velocity.x / 10;
-        this.scene.cameras.main.scrollY -= pointer.velocity.y / 10;
 
-        // Define new zone to zoom
-        this.defineZoomToCenterCameraPosition();
-
-        this.scene.markDirty();
+        this.scene
+            .getCameraManager()
+            .scrollCamera(pointer.prevPosition.x - pointer.x, pointer.prevPosition.y - pointer.y);
     };
     private pointerUpHandler = (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
         this.scene.input.setDefaultCursor("grab");
@@ -103,8 +101,15 @@ export class ExplorerTool implements MapEditorTool {
                 mapExplorationObjectSelectedStore.set(gameObject);
         }
 
+        // The velocity will be null if the cursor is no longer above the game when the button is released
+        if (pointer.velocity) {
+            // Let's compute the remaining velocity
+            this.scene.getCameraManager().setSpeed({ x: -pointer.velocity.x * 10, y: -pointer.velocity.y * 10 });
+        }
+
         this.scene.markDirty();
     };
+
     private pointerOverHandler = (gameObject: AreaPreview) => {
         if (gameObject.strokeColor === 0xf9e82d) return;
         gameObject.setStrokeStyle(2, 0xf9e82d);
@@ -123,22 +128,19 @@ export class ExplorerTool implements MapEditorTool {
     public update(time: number, dt: number): void {
         const factorToMove = 10 * (1 / waScaleManager.zoomModifier);
         if (this.downIsPressed) {
-            this.scene.cameras.main.scrollY += factorToMove;
+            this.scene.getCameraManager().scrollCamera(0, factorToMove);
         }
         if (this.upIsPressed) {
-            this.scene.cameras.main.scrollY -= factorToMove;
+            this.scene.getCameraManager().scrollCamera(0, -factorToMove);
         }
         if (this.leftIsPressed) {
-            this.scene.cameras.main.scrollX -= factorToMove;
+            this.scene.getCameraManager().scrollCamera(-factorToMove, 0);
         }
         if (this.rightIsPressed) {
-            this.scene.cameras.main.scrollX += factorToMove;
+            this.scene.getCameraManager().scrollCamera(factorToMove, 0);
         }
 
         get(mapExplorationAreasStore)?.forEach((preview) => preview.update(time, dt));
-
-        // Dirty the scene to update the camera position if it has changed
-        if (this.downIsPressed || this.upIsPressed || this.leftIsPressed || this.rightIsPressed) this.scene.markDirty();
     }
 
     public clear(): void {
@@ -159,23 +161,36 @@ export class ExplorerTool implements MapEditorTool {
 
         // Restore focus target
         waScaleManager.setFocusTarget(undefined);
+
+        const cameraManager = this.scene.getCameraManager();
+
+        let targetZoom = undefined;
+        // If the current zoom level is above the resistance level, we need to zoom back in.
+        // This happens when we close the explorer mode via a button.
+        // If we close by zooming in, there is no need to override the zoom level.
+        if (waScaleManager.zoomModifier < cameraManager.resistanceEndZoomLevel) {
+            targetZoom = this.zoomLevelBeforeExplorerMode;
+
+            if (targetZoom === undefined || targetZoom < cameraManager.resistanceEndZoomLevel) {
+                // In case we zoomed out with the mouse, but we closed
+                targetZoom = cameraManager.resistanceEndZoomLevel;
+            }
+        }
+
         // Restore camera mode
-        this.scene
-            .getCameraManager()
-            .startFollowPlayer(this.scene.CurrentPlayer, 1000, this.zoomLevelBeforeExplorerMode);
+        cameraManager.startFollowPlayer(this.scene.CurrentPlayer, 1000, targetZoom);
 
         // Restore entities
-        this.entitiesManager.removeAllEntitiesPointedToEditColor();
         this.removeAllAreasPreviewPointedToEditColor();
 
         // Restore cursor
         this.scene.input.setDefaultCursor("auto");
 
         // Restore zoom factor
-        if (waScaleManager.zoomModifier < INITIAL_ZOOM_OUT_EXPLORER_MODE) this.scene.zoomByFactor(3);
+        //if (waScaleManager.zoomModifier < INITIAL_ZOOM_OUT_EXPLORER_MODE) this.scene.zoomByFactor(3);
 
         // Define initial zoom max
-        waScaleManager.maxZoomOut = INITIAL_ZOOM_OUT_EXPLORER_MODE;
+        //waScaleManager.maxZoomOut = INITIAL_ZOOM_OUT_EXPLORER_MODE;
 
         // Mark the scene as dirty
         this.scene.markDirty();
@@ -195,7 +210,7 @@ export class ExplorerTool implements MapEditorTool {
 
         // Active store of map exploration mode
         mapExplorationModeStore.set(true);
-        mapEditorVisibilityStore.set(true);
+        mapEditorVisibilityStore.set(false);
 
         const entitySearchableMap = new Map<string, Entity>();
         gameManager
@@ -231,9 +246,16 @@ export class ExplorerTool implements MapEditorTool {
 
         this.zoomLevelBeforeExplorerMode = waScaleManager.zoomModifier;
 
+        const cameraManager = this.scene.getCameraManager();
+        // If the current zoom level is below the resistance level, we need to zoom out.
+        // This happens when we open the explorer mode via a button.
+        // If we open the explorer by zooming out, there is no need to perform the initial zoom out.
+        if (waScaleManager.zoomModifier > cameraManager.resistanceEndZoomLevel) {
+            cameraManager.triggerMaxZoomOutAnimation();
+        }
+
         // Make all entities interactive
         this.entitiesManager.makeAllEntitiesInteractive();
-        this.entitiesManager.setAllEntitiesPointedToEditColor(0x000000);
         this.setAllAreasPreviewPointedToEditColor();
 
         this.scene.playSound("audio-cloud");
@@ -241,23 +263,14 @@ export class ExplorerTool implements MapEditorTool {
         // Mark the scene as dirty
         this.scene.markDirty();
 
-        // Define new zone to zoom
-        this.defineZoomToCenterCameraPosition();
-
         // Create flash animation
         this.scene.cameras.main.flash();
 
         // Use zoom factor to refresh the camera position
         // FIXME: delete this timeout when the camera position will be updated in the same time
-        setTimeout(() => {
+        /*setTimeout(() => {
             this.scene.zoomByFactor(1, 1);
-        }, 200);
-
-        // Create subscribe to entities store
-        this.mapExplorationEntitiesSubscribe = mapExplorationEntitiesStore.subscribe((entities) => {
-            this.entitiesManager.setAllEntitiesPointedToEditColor(0x000000);
-            this.scene.markDirty();
-        });
+        }, 200);*/
     }
     public destroy(): void {
         this.clear();
@@ -324,21 +337,23 @@ export class ExplorerTool implements MapEditorTool {
     private defineZoomToCenterCameraPositionTimeOut?: NodeJS.Timeout;
     public defineZoomToCenterCameraPosition() {
         if (this.defineZoomToCenterCameraPositionTimeOut) clearTimeout(this.defineZoomToCenterCameraPositionTimeOut);
-        // FIXME from the svelte component, the udate isn't dispatch in totaly at the same time after to move the camera
+        // FIXME from the svelte component, the update isn't dispatch in totally at the same time after to move the camera
         this.defineZoomToCenterCameraPositionTimeOut = setTimeout(() => {
-            const cameraCenterXToZoom =
-                this.scene.cameras.main.worldView.x + this.scene.cameras.main.worldView.width / 2;
-            const cameraCenterYToZoom =
-                this.scene.cameras.main.worldView.y + this.scene.cameras.main.worldView.height / 2;
-            if (
-                cameraCenterXToZoom != this.lastCameraCenterXToZoom ||
-                cameraCenterYToZoom != this.lastCameraCenterYToZoom
-            ) {
-                waScaleManager.setFocusTarget({ x: cameraCenterXToZoom, y: cameraCenterYToZoom });
-                this.lastCameraCenterXToZoom = cameraCenterXToZoom;
-                this.lastCameraCenterYToZoom = cameraCenterYToZoom;
-            }
+            this.doDefineZoomToCenterCameraPosition();
             this.defineZoomToCenterCameraPositionTimeOut = undefined;
         }, 0);
+    }
+
+    private doDefineZoomToCenterCameraPosition() {
+        const cameraCenterXToZoom = this.scene.cameras.main.worldView.x + this.scene.cameras.main.worldView.width / 2;
+        const cameraCenterYToZoom = this.scene.cameras.main.worldView.y + this.scene.cameras.main.worldView.height / 2;
+        if (
+            cameraCenterXToZoom != this.lastCameraCenterXToZoom ||
+            cameraCenterYToZoom != this.lastCameraCenterYToZoom
+        ) {
+            waScaleManager.setFocusTarget({ x: cameraCenterXToZoom, y: cameraCenterYToZoom });
+            this.lastCameraCenterXToZoom = cameraCenterXToZoom;
+            this.lastCameraCenterYToZoom = cameraCenterYToZoom;
+        }
     }
 }

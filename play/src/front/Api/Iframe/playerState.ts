@@ -1,8 +1,12 @@
 import { queryWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import { AbstractWorkadventureStateCommands } from "./AbstractState";
+import { PrivatePlayerState } from "./PrivatePlayerState";
+import { PublicPlayerState } from "./PublicPlayerState";
 
-export class WorkadventurePlayerStateCommands extends AbstractWorkadventureStateCommands {
+type PlayerState = PublicPlayerState & PrivatePlayerState;
+
+export class WorkadventurePlayerStateCommands extends AbstractWorkadventureStateCommands<PlayerState> {
     public constructor() {
         super();
     }
@@ -16,9 +20,9 @@ export class WorkadventurePlayerStateCommands extends AbstractWorkadventureState
         }),
     ];
 
-    saveVariable(
-        key: string,
-        value: unknown,
+    saveVariable<K extends keyof PlayerState & string>(
+        key: K,
+        value: PlayerState[K],
         options?: {
             public?: boolean;
             persist?: boolean;
@@ -33,10 +37,10 @@ export class WorkadventurePlayerStateCommands extends AbstractWorkadventureState
             throw new Error("A variable that has a 'world' scope must be persisted with 'persist = true'");
         }
 
-        this.variables.set(key, value);
+        this.variables[key] = value;
 
         // Let's trigger the variable change locally:
-        const subscriber = this.variableSubscribers.get(key);
+        const subscriber = this.variableSubscribers[key];
         if (subscriber) {
             subscriber.next(value);
         }
@@ -74,4 +78,4 @@ export const playerState = new Proxy(new WorkadventurePlayerStateCommands(), {
         }
         return target.hasVariable(p.toString());
     },
-}) as WorkadventurePlayerStateCommands & { [key: string]: unknown };
+}) as WorkadventurePlayerStateCommands & PlayerState;

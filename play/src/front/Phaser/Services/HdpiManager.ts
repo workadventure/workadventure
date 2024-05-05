@@ -7,6 +7,7 @@ export class HdpiManager {
     private _zoomModifier = 1;
     private _maxZoomOut = 1;
     private _optimalZoomLevel = 1;
+    private _maxZoomInReached = false;
 
     /**
      *
@@ -25,6 +26,7 @@ export class HdpiManager {
      * @param realPixelScreenSize
      */
     public getOptimalGameSize(realPixelScreenSize: Size): { game: Size; real: Size } {
+        this._maxZoomInReached = false;
         const realPixelNumber = realPixelScreenSize.width * realPixelScreenSize.height;
         // If the screen has not a definition small enough to match the minimum number of pixels we want to display,
         // let's make the canvas the size of the screen (in real pixels)
@@ -58,6 +60,7 @@ export class HdpiManager {
 
         // Let's ensure we display a minimum of pixels, even if crazily zoomed in.
         if (gameWidth * gameHeight < this.absoluteMinPixelNumber) {
+            this._maxZoomInReached = true;
             const minGameHeight = Math.sqrt(
                 (this.absoluteMinPixelNumber * realPixelScreenSize.height) / realPixelScreenSize.width
             );
@@ -119,5 +122,9 @@ export class HdpiManager {
 
     public get isMaximumZoomReached(): boolean {
         return this._optimalZoomLevel * this._zoomModifier <= this._maxZoomOut;
+    }
+
+    public get isMaximumZoomInReached(): boolean {
+        return this._maxZoomInReached;
     }
 }

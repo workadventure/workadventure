@@ -1,8 +1,9 @@
 import { queryWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import { AbstractWorkadventureStateCommands } from "./AbstractState";
+import { RoomState } from "./RoomState";
 
-export class WorkadventureStateCommands extends AbstractWorkadventureStateCommands {
+export class WorkadventureStateCommands extends AbstractWorkadventureStateCommands<RoomState> {
     public constructor() {
         super();
     }
@@ -16,14 +17,15 @@ export class WorkadventureStateCommands extends AbstractWorkadventureStateComman
         }),
     ];
 
-    saveVariable(key: string, value: unknown): Promise<void> {
-        if (this.variables.get(key) === value) {
+    saveVariable<K extends keyof RoomState & string>(key: K, value: RoomState[K]): Promise<void> {
+        // Let's not save anything if the value has not changed (and if it is a primitive type)
+        if (this.variables[key] === value && typeof value !== "object") {
             return Promise.resolve();
         }
 
-        this.variables.set(key, value);
+        this.variables[key] = value;
 
-        const subscriber = this.variableSubscribers.get(key);
+        const subscriber = this.variableSubscribers[key];
         if (subscriber) {
             subscriber.next(value);
         }
@@ -38,8 +40,7 @@ export class WorkadventureStateCommands extends AbstractWorkadventureStateComman
     }
 }
 
-// TODO: rework this function to be able to create a WorkadventurePlayerStateCommands too! (something like: "wrapInProxy")
-export function createState(): WorkadventureStateCommands & { [key: string]: unknown } {
+export function createState(): WorkadventureStateCommands & RoomState {
     return new Proxy(new WorkadventureStateCommands(), {
         get(target: WorkadventureStateCommands, p: PropertyKey, receiver: unknown): unknown {
             if (p in target) {
@@ -59,5 +60,5 @@ export function createState(): WorkadventureStateCommands & { [key: string]: unk
             }
             return target.hasVariable(p.toString());
         },
-    }) as WorkadventureStateCommands & { [key: string]: unknown };
+    }) as WorkadventureStateCommands & RoomState;
 }

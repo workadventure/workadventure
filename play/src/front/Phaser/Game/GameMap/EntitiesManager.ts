@@ -387,12 +387,8 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
         entity.on(Phaser.Input.Events.POINTER_OUT, () => {
             this.pointerOutEntitySubject.next(entity);
             if (get(mapEditorModeStore)) {
-                if (this.isEntityEditorToolActive()) {
+                if (this.isEntityEditorToolActive() || this.isExplorerToolActive()) {
                     entity.removePointedToEditColor();
-                    this.scene.markDirty();
-                }
-                if (this.isExplorerToolActive()) {
-                    entity.setPointedToEditColor(0x000000);
                     this.scene.markDirty();
                 }
             }
@@ -501,16 +497,5 @@ export class EntitiesManager extends Phaser.Events.EventEmitter {
 
     public close() {
         this.actionsMenuStoreUnsubscriber();
-    }
-
-    public setAllEntitiesPointedToEditColor(color: number) {
-        for (const entity of this.entities.values()) {
-            entity.setPointedToEditColor(color);
-        }
-    }
-    public removeAllEntitiesPointedToEditColor() {
-        for (const entity of this.entities.values()) {
-            entity.removePointedToEditColor();
-        }
     }
 }

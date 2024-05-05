@@ -361,6 +361,52 @@ if they are in the same room. So far, there is a limitation preventing brothers 
 they are in different rooms in the same world.
 
 
+### Typing player variables
+
+If you are using Typescript, by default, the type of player variables is `unknown`. This is for security purpose, as we don't know
+the type of the variable.
+
+Internally, we define two interfaces named `PublicPlayerState` and `PrivatePlayerState` that contains the type of all player variables.
+`PublicPlayerState` contains the state of all public variables (variables that are shared with other players) and `PrivatePlayerState` 
+contains the state of all private variables (variables that are only accessible by the current player).
+
+The default declaration of `PublicPlayerState` and `PrivatePlayerState` is:
+
+```typescript
+interface PublicPlayerState {
+    [key: string]: unknown;
+}
+
+interface PrivatePlayerState {
+  [key: string]: unknown;
+}
+```
+
+Typescript allows third party module to merge their own types with existing ones. This means that you can define your own
+`PublicPlayerState` and `PrivatePlayerState` interfaces in your code, and it will be merged with the default one. You will need to use this syntax in your code:
+
+```typescript
+declare module "@workadventure/iframe-api-typings" {
+    interface PublicPlayerState {
+        someVariable: string,
+        anotherVariable: number,
+    }
+
+  interface PrivatePlayerState {
+    someSecret: string[],
+  }
+}
+```
+
+This will allow you to access `WA.player.state.someVariable` and `WA.player.state.someSecret` with the correct types.
+
+:::caution
+Merging your own declaration of `PublicPlayerState` and `PrivatePlayerState` will give you type checking at compile time and autocompletion in your IDE.
+However, as it is customary with Typescript, it will not do any actual type checking at runtime. Do not forget that
+player variables can be set by any player. This means that even if Typescript tells you that `WA.player.state.someVariable`
+is a string, it could be a number at runtime. The only way to be sure of the type of a variable is to check it at runtime
+using type guards or a type checking library like Zod.
+:::
 
 
 

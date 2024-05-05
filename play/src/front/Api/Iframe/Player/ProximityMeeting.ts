@@ -6,49 +6,49 @@ import { IframeApiContribution, queryWorkadventure } from "../IframeApiContribut
 import { RemotePlayer } from "../Players/RemotePlayer";
 import { apiCallback } from "../registeredCallbacks";
 
-let joinStream: Subject<RemotePlayer[]>;
-let participantJoinStream: Subject<RemotePlayer>;
-let participantLeaveStream: Subject<RemotePlayer>;
-let followedStream: Subject<RemotePlayer>;
-let unfollowedStream: Subject<RemotePlayer>;
-let leaveStream: Subject<void>;
-
 export class WorkadventureProximityMeetingCommands extends IframeApiContribution<WorkadventureProximityMeetingCommands> {
+    private joinStream: Subject<RemotePlayer[]> | undefined;
+    private participantJoinStream: Subject<RemotePlayer> | undefined;
+    private participantLeaveStream: Subject<RemotePlayer> | undefined;
+    private followedStream: Subject<RemotePlayer> | undefined;
+    private unfollowedStream: Subject<RemotePlayer> | undefined;
+    private leaveStream: Subject<void> | undefined;
+
     callbacks = [
         apiCallback({
             type: "joinProximityMeetingEvent",
             callback: (payloadData: JoinProximityMeetingEvent) => {
-                joinStream?.next(payloadData.users.map((user) => new RemotePlayer(user)));
+                this.joinStream?.next(payloadData.users.map((user) => new RemotePlayer(user)));
             },
         }),
         apiCallback({
             type: "participantJoinProximityMeetingEvent",
             callback: (payloadData: ParticipantProximityMeetingEvent) => {
-                participantJoinStream?.next(new RemotePlayer(payloadData.user));
+                this.participantJoinStream?.next(new RemotePlayer(payloadData.user));
             },
         }),
         apiCallback({
             type: "participantLeaveProximityMeetingEvent",
             callback: (payloadData: ParticipantProximityMeetingEvent) => {
-                participantLeaveStream?.next(new RemotePlayer(payloadData.user));
+                this.participantLeaveStream?.next(new RemotePlayer(payloadData.user));
             },
         }),
         apiCallback({
             type: "leaveProximityMeetingEvent",
             callback: () => {
-                leaveStream?.next();
+                this.leaveStream?.next();
             },
         }),
         apiCallback({
             type: "onFollowed",
             callback: (payloadData: ParticipantProximityMeetingEvent) => {
-                followedStream?.next(new RemotePlayer(payloadData.user));
+                this.followedStream?.next(new RemotePlayer(payloadData.user));
             },
         }),
         apiCallback({
             type: "onUnfollowed",
             callback: (payloadData: ParticipantProximityMeetingEvent) => {
-                unfollowedStream?.next(new RemotePlayer(payloadData.user));
+                this.unfollowedStream?.next(new RemotePlayer(payloadData.user));
             },
         }),
     ];
@@ -60,10 +60,10 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
      * @returns {Subject<RemotePlayer[]>} Observable who return the joined users
      */
     onJoin(): Subject<RemotePlayer[]> {
-        if (joinStream === undefined) {
-            joinStream = new Subject<RemotePlayer[]>();
+        if (this.joinStream === undefined) {
+            this.joinStream = new Subject<RemotePlayer[]>();
         }
-        return joinStream;
+        return this.joinStream;
     }
 
     /**
@@ -73,10 +73,10 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
      * @returns {Subject<RemotePlayer>} Observable who return the joined user
      */
     onParticipantJoin(): Subject<RemotePlayer> {
-        if (participantJoinStream === undefined) {
-            participantJoinStream = new Subject<RemotePlayer>();
+        if (this.participantJoinStream === undefined) {
+            this.participantJoinStream = new Subject<RemotePlayer>();
         }
-        return participantJoinStream;
+        return this.participantJoinStream;
     }
 
     /**
@@ -86,10 +86,10 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
      * @returns {Subject<RemotePlayer>} Observable who return the left user
      */
     onParticipantLeave(): Subject<RemotePlayer> {
-        if (participantLeaveStream === undefined) {
-            participantLeaveStream = new Subject<RemotePlayer>();
+        if (this.participantLeaveStream === undefined) {
+            this.participantLeaveStream = new Subject<RemotePlayer>();
         }
-        return participantLeaveStream;
+        return this.participantLeaveStream;
     }
 
     /**
@@ -97,10 +97,10 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
      * {@link https://docs.workadventu.re/developer/map-scripting/references/api-player/#detecting-when-the-user-entersleaves-a-meeting | Website documentation}
      */
     onLeave(): Subject<void> {
-        if (leaveStream === undefined) {
-            leaveStream = new Subject<void>();
+        if (this.leaveStream === undefined) {
+            this.leaveStream = new Subject<void>();
         }
-        return leaveStream;
+        return this.leaveStream;
     }
 
     /**
@@ -138,21 +138,19 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
      * Triggered when a player starts following us.
      */
     onFollowed(): Subject<RemotePlayer> {
-        if (followedStream === undefined) {
-            followedStream = new Subject<RemotePlayer>();
+        if (this.followedStream === undefined) {
+            this.followedStream = new Subject<RemotePlayer>();
         }
-        return followedStream;
+        return this.followedStream;
     }
 
     /**
      * Triggered when a player stops following us.
      */
     onUnfollowed(): Subject<RemotePlayer> {
-        if (unfollowedStream === undefined) {
-            unfollowedStream = new Subject<RemotePlayer>();
+        if (this.unfollowedStream === undefined) {
+            this.unfollowedStream = new Subject<RemotePlayer>();
         }
-        return unfollowedStream;
+        return this.unfollowedStream;
     }
 }
-
-export default new WorkadventureProximityMeetingCommands();
