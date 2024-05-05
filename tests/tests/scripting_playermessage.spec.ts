@@ -4,7 +4,22 @@ import {publicTestMapUrl} from "./utils/urls";
 import { evaluateScript } from './utils/scripting';
 
 test.describe('Scripting player message function', () => {
+
+    test.beforeEach(
+        "Ignore tests on webkit because of issue with camera and microphone",
+        ({ browserName }) => {
+          //WebKit has issue with camera
+          if (browserName === "webkit") {
+            //eslint-disable-next-line playwright/no-skipped-test
+            test.skip();
+            return;
+          }
+        }
+      );
+
     test('play text on the head of user and remove it', async ({ page, browser}, { project }) => {
+
+        
         await page.goto(
             publicTestMapUrl("tests/E2E/empty.json", "scripting_follow")
         );
