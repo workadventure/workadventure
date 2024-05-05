@@ -1741,7 +1741,7 @@ export class GameScene extends DirtyScene {
         this.iframeSubscriptionList.push(
             iframeListener.openPopupStream.subscribe((openPopupEvent) => {
                 let objectLayerSquare: ITiledMapObject;
-                const targetObjectData = this.getObjectLayerData(openPopupEvent.targetObject);
+                const targetObjectData = this.gameMapFrontWrapper.findObject(openPopupEvent.targetObject);
                 if (targetObjectData !== undefined) {
                     objectLayerSquare = targetObjectData;
                 } else {
@@ -3359,19 +3359,6 @@ ${escapedMessage}
             right: camera.scrollX + camera.width + margin,
             bottom: camera.scrollY + camera.height + margin,
         });
-    }
-
-    private getObjectLayerData(objectName: string): ITiledMapObject | undefined {
-        for (const layer of this.mapFile.layers) {
-            if (layer.type === "objectgroup" && layer.name === "floorLayer") {
-                for (const object of layer.objects) {
-                    if (object.name === objectName) {
-                        return object;
-                    }
-                }
-            }
-        }
-        return undefined;
     }
 
     public reposition(instant = false): void {
