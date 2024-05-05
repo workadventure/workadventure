@@ -247,6 +247,10 @@ export class UserInputManager {
         return eventsMap;
     }
 
+    handleActivableEntity() {
+        this.userInputHandler.handleActivableEntity();
+    }
+
     addSpaceEventListener(callback: () => void) {
         this.userInputHandler.addSpaceEventListener(callback);
     }
@@ -260,6 +264,20 @@ export class UserInputManager {
         this.joystick = undefined;
     }
 
+    private isMoveKey(keyCode: number): boolean {
+        return [
+            Phaser.Input.Keyboard.KeyCodes.Z,
+            Phaser.Input.Keyboard.KeyCodes.W,
+            Phaser.Input.Keyboard.KeyCodes.Q,
+            Phaser.Input.Keyboard.KeyCodes.A,
+            Phaser.Input.Keyboard.KeyCodes.S,
+            Phaser.Input.Keyboard.KeyCodes.D,
+            Phaser.Input.Keyboard.KeyCodes.UP,
+            Phaser.Input.Keyboard.KeyCodes.LEFT,
+            Phaser.Input.Keyboard.KeyCodes.DOWN,
+            Phaser.Input.Keyboard.KeyCodes.RIGHT,
+        ].includes(keyCode);
+    }
     private bindInputEventHandlers() {
         this.scene.input.on(
             Phaser.Input.Events.POINTER_WHEEL,

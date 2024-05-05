@@ -162,6 +162,22 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
     restoreInviteButton(): void {
         sendToWorkadventure({ type: "restoreInviteUserButton", data: undefined });
     }
+
+    /**
+     * Disable invite button.
+     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-room-list | Website documentation}
+     */
+    disableRoomList(): void {
+        sendToWorkadventure({ type: "disableRoomList", data: undefined });
+    }
+
+    /**
+     * Restore invite button.
+     * {@link https://workadventu.re/map-building/api-controls.md#disabling--restoring-room-list | Website documentation}
+     */
+    restoreRoomList(): void {
+        sendToWorkadventure({ type: "restoreRoomList", data: undefined });
+    }
 }
 
 export default new WorkadventureControlsCommands();

@@ -28,11 +28,11 @@ class Megaphone {
 
     async megaphoneAddNewRights(page: Page, tag = 'test') {
         await page.locator(".map-editor .configure-my-room .content .input-tags .value-container input").fill(tag);
-        await page.getByText(`Add new : ${tag.toLocaleUpperCase()}`).click();
+        await page.getByText(`add a new tag: '${tag.toLowerCase()}'`).click();
     }
 
     async megaphoneRemoveRights(page: Page, tag = 'test') {
-        await page.locator(".map-editor .configure-my-room .content .value-container .multi-item", {hasText: tag.toLocaleUpperCase()}).locator('.multi-item-clear').click();
+        await page.locator(".map-editor .configure-my-room .content .value-container .multi-item", {hasText: tag.toLowerCase()}).locator('.multi-item-clear').click();
     }
 
     async megaphoneSave(page: Page) {

@@ -1,4 +1,3 @@
-import { get } from "svelte/store";
 import {
     AreaData,
     AreaDataProperties,
@@ -7,32 +6,42 @@ import {
     JitsiRoomPropertyData,
     ListenerMegaphonePropertyData,
     OpenWebsitePropertyData,
+    PersonalAreaAccessClaimMode,
+    PersonalAreaPropertyData,
     PlayAudioPropertyData,
     SpeakerMegaphonePropertyData,
 } from "@workadventure/map-editor";
-import { Jitsi } from "@workadventure/shared-utils";
 import { getSpeakerMegaphoneAreaName } from "@workadventure/map-editor/src/Utils";
+import { Jitsi } from "@workadventure/shared-utils";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import { OpenCoWebsite } from "../GameMapPropertiesListener";
-import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
-import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
-import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
-import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
-import { analyticsClient } from "../../../Administration/AnalyticsClient";
-import { localUserStore } from "../../../Connection/LocalUserStore";
-import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
+import { get } from "svelte/store";
 import { LL } from "../../../../i18n/i18n-svelte";
-import { GameScene } from "../GameScene";
-import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
-import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
-import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
-import { scriptUtils } from "../../../Api/ScriptUtils";
-import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
-import { currentLiveStreamingNameStore } from "../../../Stores/MegaphoneStore";
-import { gameManager } from "../GameManager";
+import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { iframeListener } from "../../../Api/IframeListener";
-import { chatZoneLiveStore } from "../../../Stores/ChatStore";
+import { scriptUtils } from "../../../Api/ScriptUtils";
+import { localUserStore } from "../../../Connection/LocalUserStore";
 import { Room } from "../../../Connection/Room";
+import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../../Enum/EnvironmentVariable";
+import { audioManagerFileStore, audioManagerVisibilityStore } from "../../../Stores/AudioManagerStore";
+import { chatZoneLiveStore } from "../../../Stores/ChatStore";
+/**
+ * @DEPRECATED - This is the old way to show trigger message
+import { layoutManagerActionStore } from "../../../Stores/LayoutManagerStore";
+*/
+import { inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../../Stores/MediaStore";
+import { currentLiveStreamingNameStore } from "../../../Stores/MegaphoneStore";
+import { notificationPlayingStore } from "../../../Stores/NotificationStore";
+import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
+import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
+import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
+import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
+import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../../WebRtc/LayoutManager";
+import { gameManager } from "../GameManager";
+import { OpenCoWebsite } from "../GameMapPropertiesListener";
+import { GameScene } from "../GameScene";
+import { mapEditorAskToClaimPersonalAreaStore } from "../../../Stores/MapEditorStore";
+import { requestVisitCardsStore } from "../../../Stores/GameStore";
+import { isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
 
 export class AreasPropertiesListener {
     private scene: GameScene;
@@ -42,6 +51,8 @@ export class AreasPropertiesListener {
      */
     private openedCoWebsites = new Map<string, OpenCoWebsite>();
     private coWebsitesActionTriggers = new Map<string, string>();
+
+    private actionTriggerCallback: Map<string, () => void> = new Map<string, () => void>();
 
     constructor(scene: GameScene) {
         this.scene = scene;
@@ -54,6 +65,11 @@ export class AreasPropertiesListener {
 
             if (!area.properties) {
                 continue;
+            }
+
+            // Add new notification to show at the user that he entered a new area
+            if (area.name && area.name !== "") {
+                notificationPlayingStore.playNotification(area.name, "icon-tool-area.png");
             }
             for (const property of area.properties) {
                 this.addPropertyFilter(property, area);
@@ -151,6 +167,11 @@ export class AreasPropertiesListener {
                 this.handleExitPropertyOnEnter(url);
                 break;
             }
+            case "personalAreaPropertyData": {
+                this.handlePersonalAreaPropertyOnEnter(property, area);
+
+                break;
+            }
             default: {
                 break;
             }
@@ -206,6 +227,12 @@ export class AreasPropertiesListener {
                 this.handleExitPropertyOnEnter(url);
                 break;
             }
+            case "personalAreaPropertyData": {
+                newProperty = newProperty as typeof oldProperty;
+                this.handlePersonalAreaPropertyOnLeave();
+                this.handlePersonalAreaPropertyOnEnter(newProperty, area);
+                break;
+            }
             case "silent":
             default: {
                 break;
@@ -243,6 +270,10 @@ export class AreasPropertiesListener {
                 this.handleListenerMegaphonePropertyOnLeave(property);
                 break;
             }
+            case "personalAreaPropertyData": {
+                this.handlePersonalAreaPropertyOnLeave();
+                break;
+            }
             default: {
                 break;
             }
@@ -268,8 +299,21 @@ export class AreasPropertiesListener {
                 this.coWebsitesActionTriggers.set(property.id, actionId);
                 let message = property.triggerMessage;
                 if (message === undefined) {
-                    message = get(LL).trigger.newTab();
+                    message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.newTab() : get(LL).trigger.newTab();
                 }
+
+                // Create callback and play text message
+                const callback = () => {
+                    scriptUtils.openTab(property.link as string), this.scene.CurrentPlayer.destroyText(actionId);
+                    this.scene.userInputManager.removeSpaceEventListener(callback);
+                    this.actionTriggerCallback.delete(actionId);
+                };
+                this.scene.CurrentPlayer.playText(actionId, `${message}`, -1, callback);
+                this.scene.userInputManager?.addSpaceEventListener(callback);
+                this.actionTriggerCallback.set(actionId, callback);
+
+                /**
+                 * @DEPRECATED - This is the old way to show trigger message
                 layoutManagerActionStore.addAction({
                     uuid: actionId,
                     type: "message",
@@ -277,6 +321,7 @@ export class AreasPropertiesListener {
                     callback: () => scriptUtils.openTab(property.link as string),
                     userInputManager: this.scene.userInputManager,
                 });
+                */
             } else {
                 scriptUtils.openTab(property.link);
             }
@@ -296,11 +341,24 @@ export class AreasPropertiesListener {
         if (localUserStore.getForceCowebsiteTrigger() || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
             let message = property.triggerMessage;
             if (!message) {
-                message = get(LL).trigger.cowebsite();
+                message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.cowebsite() : get(LL).trigger.cowebsite();
             }
 
             this.coWebsitesActionTriggers.set(property.id, actionId);
 
+            // Create callback and play text message
+            const callback = () => {
+                this.openCoWebsiteFunction(property, coWebsiteOpen, actionId);
+                this.scene.CurrentPlayer.destroyText(actionId);
+                this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.actionTriggerCallback.delete(actionId);
+            };
+            this.scene.CurrentPlayer.playText(actionId, `${message}`, -1, callback);
+            this.scene.userInputManager?.addSpaceEventListener(callback);
+            this.actionTriggerCallback.set(actionId, callback);
+
+            /**
+             * @DEPRECATED - This is the old way to show trigger message
             layoutManagerActionStore.addAction({
                 uuid: actionId,
                 type: "message",
@@ -308,6 +366,7 @@ export class AreasPropertiesListener {
                 callback: () => this.openCoWebsiteFunction(property, coWebsiteOpen, actionId),
                 userInputManager: this.scene.userInputManager,
             });
+             */
         } else if (property.trigger === ON_ICON_TRIGGER_BUTTON) {
             const coWebsite = new SimpleCoWebsite(
                 new URL(property.link ?? "", this.scene.mapUrlFile),
@@ -404,7 +463,16 @@ export class AreasPropertiesListener {
 
             analyticsClient.enteredJitsi(roomName, this.scene.roomUrl);
 
+            this.scene.CurrentPlayer.destroyText("jitsi");
+            const callback = this.actionTriggerCallback.get("jitsi");
+            if (callback) {
+                this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.actionTriggerCallback.delete("jitsi");
+            }
+            /**
+             * @DEPRECATED - This is the old way to show trigger message
             layoutManagerActionStore.removeAction("jitsi");
+            */
         };
 
         const jitsiTriggerValue = property.trigger;
@@ -412,8 +480,22 @@ export class AreasPropertiesListener {
         if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
             let message = property.triggerMessage;
             if (message === undefined) {
-                message = get(LL).trigger.jitsiRoom();
+                message = isMediaBreakpointUp("md") ? get(LL).trigger.mobile.jitsiRoom() : get(LL).trigger.jitsiRoom();
             }
+
+            // Create callback and play text message
+            const callback = () => {
+                openJitsiRoomFunction().catch((e) => console.error(e));
+                this.scene.CurrentPlayer.destroyText("jitsi");
+                this.scene.userInputManager.removeSpaceEventListener(callback);
+                this.actionTriggerCallback.delete("jitsi");
+            };
+            this.scene.CurrentPlayer.playText("jitsi", `${message}`, -1, callback);
+            this.scene.userInputManager?.addSpaceEventListener(callback);
+            this.actionTriggerCallback.set("jitsi", callback);
+
+            /**
+             * @DEPRECATED - This is the old way to show trigger message
             layoutManagerActionStore.addAction({
                 uuid: "jitsi",
                 type: "message",
@@ -423,8 +505,44 @@ export class AreasPropertiesListener {
                 },
                 userInputManager: this.scene.userInputManager,
             });
+             */
         } else {
             openJitsiRoomFunction().catch((e) => console.error(e));
+        }
+    }
+
+    private handlePersonalAreaPropertyOnEnter(property: PersonalAreaPropertyData, areaData: AreaData): void {
+        if (property.ownerId !== null) {
+            this.displayPersonalAreaOwnerVisitCard(property.ownerId);
+        } else if (property.accessClaimMode === PersonalAreaAccessClaimMode.enum.dynamic) {
+            this.displayPersonalAreaClaimDialogBox(property, areaData);
+        }
+    }
+
+    private displayPersonalAreaOwnerVisitCard(ownerId: string) {
+        const connectedUserUUID = localUserStore.getLocalUser()?.uuid;
+        if (connectedUserUUID != ownerId) {
+            const connection = this.scene.connection;
+            if (connection) {
+                connection
+                    .queryMember(ownerId)
+                    .then((member) => {
+                        if (member?.visitCardUrl) {
+                            requestVisitCardsStore.set(member.visitCardUrl);
+                        }
+                    })
+                    .catch((error) => console.error(error));
+            }
+        }
+    }
+
+    private displayPersonalAreaClaimDialogBox(property: PersonalAreaPropertyData, areaData: AreaData) {
+        const userHasAllowedTagToClaimTheArea =
+            localUserStore.isLogged() &&
+            (property.allowedTags.length === 0 ||
+                property.allowedTags.some((tag) => this.scene.connection?.hasTag(tag)));
+        if (userHasAllowedTagToClaimTheArea) {
+            mapEditorAskToClaimPersonalAreaStore.set(areaData);
         }
     }
 
@@ -458,13 +576,21 @@ export class AreasPropertiesListener {
             return;
         }
 
-        const actionStore = get(layoutManagerActionStore);
         const actionTriggerUuid = this.coWebsitesActionTriggers.get(property.id);
-
         if (!actionTriggerUuid) {
             return;
         }
 
+        this.scene.CurrentPlayer.destroyText(actionTriggerUuid);
+        const callback = this.actionTriggerCallback.get(actionTriggerUuid);
+        if (callback) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.actionTriggerCallback.delete(actionTriggerUuid);
+        }
+
+        /**
+        * @DEPRECATED - This is the old way to show trigger message
+        const actionStore = get(layoutManagerActionStore);
         const action =
             actionStore && actionStore.length > 0
                 ? actionStore.find((action) => action.uuid === actionTriggerUuid)
@@ -473,6 +599,7 @@ export class AreasPropertiesListener {
         if (action) {
             layoutManagerActionStore.removeAction(actionTriggerUuid);
         }
+        */
 
         this.coWebsitesActionTriggers.delete(property.id);
     }
@@ -499,13 +626,29 @@ export class AreasPropertiesListener {
     }
 
     private handleJitsiRoomPropertyOnLeave(property: JitsiRoomPropertyData): void {
+        this.scene.CurrentPlayer.destroyText("jitsi");
+        const callback = this.actionTriggerCallback.get("jitsi");
+        if (callback) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.actionTriggerCallback.delete("jitsi");
+        }
+        /**
+         * @DEPRECATED - This is the old way to show trigger message
         layoutManagerActionStore.removeAction("jitsi");
+        */
         coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
             if (coWebsite instanceof JitsiCoWebsite) {
                 coWebsiteManager.closeCoWebsite(coWebsite);
             }
         });
         inJitsiStore.set(false);
+    }
+
+    private handlePersonalAreaPropertyOnLeave(): void {
+        mapEditorAskToClaimPersonalAreaStore.set(undefined);
+        if (get(requestVisitCardsStore)) {
+            requestVisitCardsStore.set(null);
+        }
     }
 
     private openCoWebsiteFunction(
@@ -540,7 +683,16 @@ export class AreasPropertiesListener {
             console.error("Error during loading a co-website: " + coWebsite.getUrl());
         });
 
+        this.scene.CurrentPlayer.destroyText(actionId);
+        const callback = this.actionTriggerCallback.get(actionId);
+        if (callback) {
+            this.scene.userInputManager.removeSpaceEventListener(callback);
+            this.actionTriggerCallback.delete(actionId);
+        }
+        /**
+         * @DEPRECATED - This is the old way to show trigger message
         layoutManagerActionStore.removeAction(actionId);
+        */
     }
 
     private handleSpeakerMegaphonePropertyOnEnter(property: SpeakerMegaphonePropertyData): void {

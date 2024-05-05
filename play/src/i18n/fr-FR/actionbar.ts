@@ -21,6 +21,17 @@ const actionbar: BaseTranslation = {
         speaker: "Speaker",
     },
     app: "Ouvrir / Fermer les applications",
+    listStatusTitle: {
+        enable: "Changer de statut",
+        inMeeting: "Bonne réunion 🤓",
+        inSilentZone: "Profitez de la zone silencieuse 😁",
+    },
+    status: {
+        ONLINE: "En Ligne",
+        BACK_IN_A_MOMENT: "Revient dans un moment",
+        DO_NOT_DISTURB: "Ne pas déranger",
+        BUSY: "Occupé",
+    },
     globalMessage: "Envoyer un message global",
     roomList: "Ouvrir / Fermer la liste des salons",
 };

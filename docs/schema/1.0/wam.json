@@ -199,17 +199,6 @@
                         },
                         "application": {
                           "type": "string",
-                          "enum": [
-                            "website",
-                            "youtube",
-                            "klaxoon",
-                            "googleDrive",
-                            "googleDocs",
-                            "googleSheets",
-                            "googleSlides",
-                            "googleForms",
-                            "eraser"
-                          ],
                           "default": "website"
                         },
                         "poster": {
@@ -217,6 +206,22 @@
                         },
                         "placeholder": {
                           "type": "string"
+                        },
+                        "icon": {
+                          "type": "string"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "regexUrl": {
+                          "type": "string"
+                        },
+                        "targetEmbedableUrl": {
+                          "type": "string"
+                        },
+                        "forceNewTab": {
+                          "type": "boolean",
+                          "default": false
                         }
                       },
                       "required": [
@@ -517,6 +522,88 @@
                       "required": [
                         "id",
                         "type"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/id"
+                        },
+                        "buttonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/buttonLabel"
+                        },
+                        "hideButtonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "type": {
+                          "type": "string",
+                          "const": "restrictedRightsPropertyData"
+                        },
+                        "writeTags": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "default": []
+                        },
+                        "readTags": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "default": []
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/id"
+                        },
+                        "buttonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/buttonLabel"
+                        },
+                        "hideButtonLabel": {
+                          "$ref": "#/definitions/WAMFileFormat/properties/entities/additionalProperties/properties/properties/items/anyOf/0/properties/hideButtonLabel"
+                        },
+                        "type": {
+                          "type": "string",
+                          "const": "personalAreaPropertyData"
+                        },
+                        "accessClaimMode": {
+                          "type": "string",
+                          "enum": [
+                            "dynamic",
+                            "static"
+                          ]
+                        },
+                        "allowedTags": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "default": []
+                        },
+                        "ownerId": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type",
+                        "accessClaimMode",
+                        "ownerId"
                       ],
                       "additionalProperties": false
                     }

@@ -1,13 +1,23 @@
 import axios from "axios";
 
-import { get } from "svelte/store";
+import type { AreaData, AtLeast, EntityDimensions, WAMEntityData } from "@workadventure/map-editor";
 import {
-    apiVersionHash,
+    AddSpaceFilterMessage,
+    AddSpaceUserMessage,
     AnswerMessage,
+    apiVersionHash,
+    ApplicationMessage,
+    AskMutedMessage,
+    AskMutedVideoMessage,
+    AskMuteMicrophoneMessage,
+    AskMuteVideoMessage,
     AvailabilityStatus,
     CharacterTextureMessage,
     ClientToServerMessage as ClientToServerMessageTsProto,
+    CompanionTextureMessage,
+    DeleteCustomEntityMessage,
     EditMapCommandMessage,
+    EmbeddableWebsiteAnswer,
     EmoteEventMessage as EmoteEventMessageTsProto,
     ErrorMessage as ErrorMessageTsProto,
     ErrorScreenMessage as ErrorScreenMessageTsProto,
@@ -16,61 +26,67 @@ import {
     JitsiJwtAnswer,
     JoinBBBMeetingAnswer,
     LeaveMucRoomMessage,
+    MegaphoneSettings,
+    Member,
+    ModifiyWAMMetadataMessage,
+    ModifyCustomEntityMessage,
     MoveToPositionMessage as MoveToPositionMessageProto,
     MucRoomDefinitionMessage,
+    MutedMessage,
+    MutedVideoMessage,
+    MuteMicrophoneEverybodyMessage,
+    MuteMicrophoneMessage,
+    MuteVideoEverybodyMessage,
+    MuteVideoMessage,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     PositionMessage_Direction,
+    QueryMessage,
+    RefreshRoomMessage,
+    RemoveSpaceFilterMessage,
+    RemoveSpaceUserMessage,
+    RoomShortDescription,
     ServerToClientMessage as ServerToClientMessageTsProto,
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     SetPlayerVariableMessage_Scope,
-    QueryMessage,
+    SpaceFilterMessage,
     TokenExpiredMessage,
+    UnwatchSpaceMessage,
+    UpdateSpaceFilterMessage,
+    UpdateSpaceMetadataMessage,
+    UpdateSpaceUserMessage,
+    UpdateWAMSettingsMessage,
+    UploadEntityMessage,
     UserJoinedMessage as UserJoinedMessageTsProto,
     UserLeftMessage as UserLeftMessageTsProto,
     UserMovedMessage as UserMovedMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
+    WatchSpaceMessage,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnectionMessage,
     XmppSettingsMessage,
-    RefreshRoomMessage,
-    AddSpaceFilterMessage,
-    UpdateSpaceFilterMessage,
-    RemoveSpaceFilterMessage,
-    UpdateSpaceMetadataMessage,
-    AddSpaceUserMessage,
-    UpdateSpaceUserMessage,
-    RemoveSpaceUserMessage,
-    WatchSpaceMessage,
-    SpaceFilterMessage,
-    MegaphoneSettings,
-    UpdateWAMSettingsMessage,
-    UnwatchSpaceMessage,
-    EmbeddableWebsiteAnswer,
-    CompanionTextureMessage,
-    RoomShortDescription,
-    MuteMicrophoneMessage,
-    MuteVideoMessage,
-    MuteMicrophoneEverybodyMessage,
-    MuteVideoEverybodyMessage,
-    MutedMessage,
-    MutedVideoMessage,
-    AskMuteVideoMessage,
-    AskMuteMicrophoneMessage,
-    AskMutedMessage,
-    AskMutedVideoMessage,
-    ModifiyWAMMetadataMessage,
     FollowRequestMessage,
     FollowConfirmationMessage,
     FollowAbortMessage,
 } from "@workadventure/messages";
-import { BehaviorSubject, Subject } from "rxjs";
-import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
-import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
+import { BehaviorSubject, Subject } from "rxjs";
+import { get } from "svelte/store";
+import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
+import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
+import { iframeListener } from "../Api/IframeListener";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
+import { ENABLE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
+import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
+import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
+import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene";
+import { chatZoneLiveStore } from "../Stores/ChatStore";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
+import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
+import { isSpeakerStore } from "../Stores/MediaStore";
+import { currentLiveStreamingNameStore } from "../Stores/MegaphoneStore";
 import {
     inviteUserActivated,
     mapEditorActivated,
@@ -78,22 +94,11 @@ import {
     menuVisiblilityStore,
     warningBannerStore,
 } from "../Stores/MenuStore";
-import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
-import type { WokaTextureDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
-import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
-import { ENABLE_MAP_EDITOR, UPLOADER_URL } from "../Enum/EnvironmentVariable";
-import type { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
-import { iframeListener } from "../Api/IframeListener";
-import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
-import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene";
-import { CompanionTextureDescriptionInterface } from "../Phaser/Companion/CompanionTextures";
-import { currentLiveStreamingNameStore } from "../Stores/MegaphoneStore";
-import { ReceiveEventEvent } from "../Api/Events/ReceiveEventEvent";
-import { isSpeakerStore } from "../Stores/MediaStore";
-import { chatZoneLiveStore } from "../Stores/ChatStore";
-import { connectionManager } from "./ConnectionManager";
+import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
+import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
 import { adminMessagesService } from "./AdminMessagesService";
+import { connectionManager } from "./ConnectionManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
     GroupUsersUpdateMessageInterface,
@@ -109,69 +114,51 @@ import type {
 const manualPingDelay = 100000;
 
 export class RoomConnection implements RoomConnection {
+    private static websocketFactory: null | ((url: string) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     private readonly socket: WebSocket;
     private userId: number | null = null;
-    private static websocketFactory: null | ((url: string) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     private closed = false;
     private tags: string[] = [];
-    private _userRoomToken: string | undefined;
-
+    private canEdit = false;
     private readonly _errorMessageStream = new Subject<ErrorMessageTsProto>();
     public readonly errorMessageStream = this._errorMessageStream.asObservable();
-
     private readonly _errorScreenMessageStream = new Subject<ErrorScreenMessageTsProto>();
     public readonly errorScreenMessageStream = this._errorScreenMessageStream.asObservable();
-
     private readonly _roomJoinedMessageStream = new Subject<{
         connection: RoomConnection;
         room: RoomJoinedMessageInterface;
     }>();
     public readonly roomJoinedMessageStream = this._roomJoinedMessageStream.asObservable();
-
     private readonly _webRtcStartMessageStream = new Subject<UserSimplePeerInterface>();
     public readonly webRtcStartMessageStream = this._webRtcStartMessageStream.asObservable();
-
     private readonly _webRtcSignalToClientMessageStream = new Subject<WebRtcSignalReceivedMessageInterface>();
     public readonly webRtcSignalToClientMessageStream = this._webRtcSignalToClientMessageStream.asObservable();
-
     private readonly _webRtcScreenSharingSignalToClientMessageStream =
         new Subject<WebRtcSignalReceivedMessageInterface>();
     public readonly webRtcScreenSharingSignalToClientMessageStream =
         this._webRtcScreenSharingSignalToClientMessageStream.asObservable();
-
     private readonly _webRtcDisconnectMessageStream = new Subject<WebRtcDisconnectMessageTsProto>();
     public readonly webRtcDisconnectMessageStream = this._webRtcDisconnectMessageStream.asObservable();
-
     private readonly _teleportMessageMessageStream = new Subject<string>();
     public readonly teleportMessageMessageStream = this._teleportMessageMessageStream.asObservable();
-
     private readonly _worldFullMessageStream = new Subject<string | null>();
     public readonly worldFullMessageStream = this._worldFullMessageStream.asObservable();
-
     private readonly _worldConnectionMessageStream = new Subject<WorldConnectionMessage>();
     public readonly worldConnectionMessageStream = this._worldConnectionMessageStream.asObservable();
-
     private readonly _tokenExpiredMessageStream = new Subject<TokenExpiredMessage>();
     public readonly tokenExpiredMessageStream = this._tokenExpiredMessageStream.asObservable();
-
     private readonly _userMovedMessageStream = new Subject<UserMovedMessageTsProto>();
     public readonly userMovedMessageStream = this._userMovedMessageStream.asObservable();
-
     private readonly _groupUpdateMessageStream = new Subject<GroupCreatedUpdatedMessageInterface>();
     public readonly groupUpdateMessageStream = this._groupUpdateMessageStream.asObservable();
-
     private readonly _groupUsersUpdateMessageStream = new Subject<GroupUsersUpdateMessageInterface>();
     public readonly groupUsersUpdateMessageStream = this._groupUsersUpdateMessageStream.asObservable();
-
     private readonly _groupDeleteMessageStream = new Subject<GroupDeleteMessageTsProto>();
     public readonly groupDeleteMessageStream = this._groupDeleteMessageStream.asObservable();
-
     private readonly _userJoinedMessageStream = new Subject<MessageUserJoined>();
     public readonly userJoinedMessageStream = this._userJoinedMessageStream.asObservable();
-
     private readonly _userLeftMessageStream = new Subject<UserLeftMessageTsProto>();
     public readonly userLeftMessageStream = this._userLeftMessageStream.asObservable();
-
     private readonly _refreshRoomMessageStream = new Subject<RefreshRoomMessage>();
     public readonly refreshRoomMessageStream = this._refreshRoomMessageStream.asObservable();
 
@@ -191,32 +178,24 @@ export class RoomConnection implements RoomConnection {
         state: unknown;
     }>();
     public readonly itemEventMessageStream = this._itemEventMessageStream.asObservable();
-
     private readonly _emoteEventMessageStream = new Subject<EmoteEventMessageTsProto>();
     public readonly emoteEventMessageStream = this._emoteEventMessageStream.asObservable();
-
     private readonly _variableMessageStream = new Subject<{ name: string; value: unknown }>();
     public readonly variableMessageStream = this._variableMessageStream.asObservable();
-
     private readonly _editMapCommandMessageStream = new Subject<EditMapCommandMessage>();
     public readonly editMapCommandMessageStream = this._editMapCommandMessageStream.asObservable();
-
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
-
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
     private readonly _xmppSettingsMessageStream = new BehaviorSubject<XmppSettingsMessage | undefined>(undefined);
     public readonly xmppSettingsMessageStream = this._xmppSettingsMessageStream.asObservable();
     // If this timeout triggers, we consider the connection is lost (no ping received)
     private timeout: ReturnType<typeof setInterval> | undefined = undefined;
-
     private readonly _moveToPositionMessageStream = new Subject<MoveToPositionMessageProto>();
     public readonly moveToPositionMessageStream = this._moveToPositionMessageStream.asObservable();
-
     private readonly _joinMucRoomMessageStream = new Subject<MucRoomDefinitionMessage>();
     public readonly joinMucRoomMessageStream = this._joinMucRoomMessageStream.asObservable();
-
     private readonly _leaveMucRoomMessageStream = new Subject<LeaveMucRoomMessage>();
     public readonly leaveMucRoomMessageStream = this._leaveMucRoomMessageStream.asObservable();
     private readonly _addSpaceUserMessageStream = new Subject<AddSpaceUserMessage>();
@@ -231,7 +210,6 @@ export class RoomConnection implements RoomConnection {
     public readonly megaphoneSettingsMessageStream = this._megaphoneSettingsMessageStream.asObservable();
     private readonly _receivedEventMessageStream = new Subject<ReceiveEventEvent>();
     public readonly receivedEventMessageStream = this._receivedEventMessageStream.asObservable();
-
     private readonly _muteMicrophoneMessage = new Subject<MuteMicrophoneMessage>();
     public readonly muteMicrophoneMessage = this._muteMicrophoneMessage.asObservable();
     private readonly _muteVideoMessage = new Subject<MuteVideoMessage>();
@@ -252,11 +230,15 @@ export class RoomConnection implements RoomConnection {
     public readonly askMutedMessage = this._askMutedMessage.asObservable();
     private readonly _askMutedVideoMessage = new Subject<AskMutedVideoMessage>();
     public readonly askMutedVideoMessage = this._askMutedVideoMessage.asObservable();
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
-        RoomConnection.websocketFactory = websocketFactory;
-    }
+    private queries = new Map<
+        number,
+        {
+            answerType: string;
+            resolve: (message: Required<AnswerMessage>["answer"]) => void;
+            reject: (e: unknown) => void;
+        }
+    >();
+    private lastQueryId = 0;
 
     /**
      *
@@ -543,15 +525,21 @@ export class RoomConnection implements RoomConnection {
                             ? roomJoinedMessage.activatedInviteUser
                             : true
                     );
-                    mapEditorActivated.set(ENABLE_MAP_EDITOR && (roomJoinedMessage.canEdit || this.isAdmin()));
+                    this.canEdit = roomJoinedMessage.canEdit || this.isAdmin();
+                    mapEditorActivated.set(ENABLE_MAP_EDITOR && this.canEdit);
 
                     // If there are scripts from the admin, run it
+                    const applications: ApplicationMessage[] = [];
                     if (roomJoinedMessage.applications != undefined) {
-                        for (const script of roomJoinedMessage.applications) {
-                            iframeListener.registerScript(script.script).catch((err) => {
+                        roomJoinedMessage.applications.forEach((application, index) => {
+                            if (application.script == undefined) {
+                                applications.push(application);
+                                return;
+                            }
+                            iframeListener.registerScript(application.script).catch((err) => {
                                 console.error("roomJoinedMessage => registerScript => err", err);
                             });
-                        }
+                        });
                     }
 
                     const characterTextures = roomJoinedMessage.characterTextures.map(
@@ -569,6 +557,7 @@ export class RoomConnection implements RoomConnection {
                             commandsToApply,
                             webrtcUserName: roomJoinedMessage.webrtcUserName,
                             webrtcPassword: roomJoinedMessage.webrtcPassword,
+                            applications: applications,
                         } as RoomJoinedMessageInterface,
                     });
 
@@ -767,24 +756,41 @@ export class RoomConnection implements RoomConnection {
         };
     }
 
-    private resetPingTimeout(): void {
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-            this.timeout = undefined;
-        }
-        this.timeout = setTimeout(() => {
-            console.warn("Timeout detected server-side. Is your connection down? Closing connection.");
-            this.socket.close();
-        }, manualPingDelay);
+    private _userRoomToken: string | undefined;
+
+    public get userRoomToken(): string | undefined {
+        return this._userRoomToken;
     }
 
-    private sendPong(): void {
-        this.send({
-            message: {
-                $case: "pingMessage",
-                pingMessage: {},
-            },
-        });
+    get userCanEdit() {
+        return this.canEdit;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
+        RoomConnection.websocketFactory = websocketFactory;
+    }
+
+    /**
+     * Unserializes a string received from the server.
+     * If the value cannot be unserialized, returns undefined and outputs a console error.
+     */
+    public static unserializeVariable(serializedValue: string): unknown {
+        let value: unknown = undefined;
+        if (serializedValue) {
+            try {
+                value = JSON.parse(serializedValue);
+            } catch (e) {
+                console.error(
+                    "Unable to unserialize value received from server for a variable. " +
+                        'Value received: "' +
+                        serializedValue +
+                        '". Error: ',
+                    e
+                );
+            }
+        }
+        return value;
     }
 
     public emitPlayerShowVoiceIndicator(show: boolean): void {
@@ -835,29 +841,6 @@ export class RoomConnection implements RoomConnection {
         this.closed = true;
     }
 
-    private toPositionMessage(
-        x: number,
-        y: number,
-        direction: PositionMessage_Direction,
-        moving: boolean
-    ): PositionMessageTsProto {
-        return {
-            x: Math.floor(x),
-            y: Math.floor(y),
-            moving,
-            direction,
-        };
-    }
-
-    private toViewportMessage(viewport: ViewportInterface): ViewportMessageTsProto {
-        return {
-            left: Math.floor(viewport.left),
-            right: Math.floor(viewport.right),
-            top: Math.floor(viewport.top),
-            bottom: Math.floor(viewport.bottom),
-        };
-    }
-
     public sharePosition(
         x: number,
         y: number,
@@ -891,68 +874,6 @@ export class RoomConnection implements RoomConnection {
                 viewportMessage: this.toViewportMessage(viewport),
             },
         });
-    }
-
-    private mapWokaTextureToResourceDescription(texture: CharacterTextureMessage): WokaTextureDescriptionInterface {
-        return {
-            id: texture.id,
-            url: texture.url,
-        };
-    }
-
-    private mapCompanionTextureToResourceDescription(
-        texture: CompanionTextureMessage
-    ): CompanionTextureDescriptionInterface {
-        return {
-            id: texture.id,
-            url: texture.url,
-        };
-    }
-
-    // TODO: move this to protobuf utils
-    private toMessageUserJoined(message: UserJoinedMessageTsProto): MessageUserJoined {
-        const position = message.position;
-        if (position === undefined) {
-            throw new Error("Invalid JOIN_ROOM message");
-        }
-
-        const characterTextures = message.characterTextures.map(this.mapWokaTextureToResourceDescription.bind(this));
-        const companionTexture = message.companionTexture
-            ? this.mapCompanionTextureToResourceDescription(message.companionTexture)
-            : undefined;
-
-        const variables = new Map<string, unknown>();
-        for (const variable of Object.entries(message.variables)) {
-            variables.set(variable[0], RoomConnection.unserializeVariable(variable[1]));
-        }
-
-        return {
-            userId: message.userId,
-            userJid: message.userJid,
-            name: message.name,
-            characterTextures,
-            visitCardUrl: message.visitCardUrl,
-            position: position,
-            availabilityStatus: message.availabilityStatus,
-            companionTexture,
-            userUuid: message.userUuid,
-            outlineColor: message.hasOutline ? message.outlineColor : undefined,
-            variables: variables,
-        };
-    }
-
-    private toGroupCreatedUpdatedMessage(message: GroupUpdateMessageTsProto): GroupCreatedUpdatedMessageInterface {
-        const position = message.position;
-        if (position === undefined) {
-            throw new Error("Missing position in GROUP_CREATE_UPDATE");
-        }
-
-        return {
-            groupId: message.groupId,
-            position: position,
-            groupSize: message.groupSize,
-            locked: message.locked,
-        };
     }
 
     public onConnectError(callback: (error: Event) => void): void {
@@ -1006,57 +927,6 @@ export class RoomConnection implements RoomConnection {
             }
             callback();
         });
-    }
-
-    /**
-     * Sends a message to all observers: we are not going to send anything anymore on streams.
-     */
-    private completeStreams(): void {
-        this._errorMessageStream.complete();
-        this._errorScreenMessageStream.complete();
-        this._roomJoinedMessageStream.complete();
-        this._webRtcStartMessageStream.complete();
-        this._webRtcSignalToClientMessageStream.complete();
-        this._webRtcScreenSharingSignalToClientMessageStream.complete();
-        this._webRtcDisconnectMessageStream.complete();
-        this._teleportMessageMessageStream.complete();
-        this._worldFullMessageStream.complete();
-        this._worldConnectionMessageStream.complete();
-        this._tokenExpiredMessageStream.complete();
-        this._userMovedMessageStream.complete();
-        this._groupUpdateMessageStream.complete();
-        this._groupUsersUpdateMessageStream.complete();
-        this._groupDeleteMessageStream.complete();
-        this._userJoinedMessageStream.complete();
-        this._userLeftMessageStream.complete();
-        this._refreshRoomMessageStream.complete();
-        this._itemEventMessageStream.complete();
-        this._emoteEventMessageStream.complete();
-        this._variableMessageStream.complete();
-        this._editMapCommandMessageStream.complete();
-        this._playerDetailsUpdatedMessageStream.complete();
-        this._connectionErrorStream.complete();
-        this._xmppSettingsMessageStream.complete();
-        this._moveToPositionMessageStream.complete();
-        this._joinMucRoomMessageStream.complete();
-        this._leaveMucRoomMessageStream.complete();
-        this._addSpaceUserMessageStream.complete();
-        this._updateSpaceUserMessageStream.complete();
-        this._removeSpaceUserMessageStream.complete();
-        this._updateSpaceMetadataMessageStream.complete();
-        this._megaphoneSettingsMessageStream.complete();
-        this._receivedEventMessageStream.complete();
-        this._updateSpaceMetadataMessageStream.complete();
-        this._muteMicrophoneMessage.complete();
-        this._muteVideoMessage.complete();
-        this._muteMicrophoneEverybodyMessage.complete();
-        this._muteVideoEverybodyMessage.complete();
-        this._askMuteVideoMessage.complete();
-        this._askMuteMicrophoneMessage.complete();
-        this._mutedMessage.complete();
-        this._mutedVideoMessage.complete();
-        this._askMutedMessage.complete();
-        this._askMutedVideoMessage.complete();
     }
 
     public getUserId(): number {
@@ -1307,7 +1177,12 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyEntity(commandId: string, entityId: string, config: Partial<WAMEntityData>): void {
+    public emitMapEditorModifyEntity(
+        commandId: string,
+        entityId: string,
+        config: AtLeast<WAMEntityData, "x" | "y">,
+        entityDimensions: EntityDimensions
+    ): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1321,6 +1196,8 @@ export class RoomConnection implements RoomConnection {
                                 id: entityId,
                                 properties: config.properties ?? [],
                                 modifyProperties: config.properties !== undefined,
+                                width: entityDimensions.width,
+                                height: entityDimensions.height,
                             },
                         },
                     },
@@ -1329,7 +1206,12 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorCreateEntity(commandId: string, entityId: string, config: WAMEntityData): void {
+    public emitMapEditorCreateEntity(
+        commandId: string,
+        entityId: string,
+        config: WAMEntityData,
+        entityDimensions: EntityDimensions
+    ): void {
         this.send({
             message: {
                 $case: "editMapCommandMessage",
@@ -1345,6 +1227,8 @@ export class RoomConnection implements RoomConnection {
                                 collectionName: config.prefabRef.collectionName,
                                 prefabId: config.prefabRef.id,
                                 properties: config.properties ?? [],
+                                width: entityDimensions.width,
+                                height: entityDimensions.height,
                             },
                         },
                     },
@@ -1372,6 +1256,23 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitMapEditorUploadEntity(commandId: string, uploadEntityMessage: UploadEntityMessage): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "uploadEntityMessage",
+                            uploadEntityMessage,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
     public emitModifiyWAMMetadataMessage(
         commandId: string,
         modifiyWAMMetadataMessage: ModifiyWAMMetadataMessage
@@ -1392,37 +1293,48 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitMapEditorModifyCustomEntity(
+        commandId: string,
+        modifyCustomEntityMessage: ModifyCustomEntityMessage
+    ): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "modifyCustomEntityMessage",
+                            modifyCustomEntityMessage,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitMapEditorDeleteCustomEntity(
+        commandId: string,
+        deleteCustomEntityMessage: DeleteCustomEntityMessage
+    ): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "deleteCustomEntityMessage",
+                            deleteCustomEntityMessage,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
     public getAllTags(): string[] {
         return this.tags;
-    }
-
-    public get userRoomToken(): string | undefined {
-        return this._userRoomToken;
-    }
-
-    private goToSelectYourWokaScene(): void {
-        menuVisiblilityStore.set(false);
-        menuIconVisiblilityStore.set(false);
-        selectCharacterSceneVisibleStore.set(true);
-        gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
-    }
-
-    private goToSelectYourCompanionScene(): void {
-        menuVisiblilityStore.set(false);
-        menuIconVisiblilityStore.set(false);
-        selectCompanionSceneVisibleStore.set(true);
-        gameManager.leaveGame(SelectCompanionSceneName, new SelectCompanionScene());
-    }
-
-    private send(message: ClientToServerMessageTsProto): void {
-        const bytes = ClientToServerMessageTsProto.encode(message).finish();
-
-        if (this.socket.readyState === WebSocket.CLOSING || this.socket.readyState === WebSocket.CLOSED) {
-            console.warn("Trying to send a message to the server, but the connection is closed. Message: ", message);
-            return;
-        }
-
-        this.socket.send(bytes);
     }
 
     public emitAskPosition(uuid: string, playUri: string) {
@@ -1470,43 +1382,6 @@ export class RoomConnection implements RoomConnection {
         }).finish();
 
         this.socket.send(bytes);
-    }
-
-    private queries = new Map<
-        number,
-        {
-            answerType: string;
-            resolve: (message: Required<AnswerMessage>["answer"]) => void;
-            reject: (e: unknown) => void;
-        }
-    >();
-    private lastQueryId = 0;
-
-    private query<T extends Required<QueryMessage>["query"]>(message: T): Promise<Required<AnswerMessage>["answer"]> {
-        return new Promise<Required<AnswerMessage>["answer"]>((resolve, reject) => {
-            if (!message.$case.endsWith("Query")) {
-                throw new Error("Query types are supposed to be suffixed with Query");
-            }
-            const answerType = message.$case.substring(0, message.$case.length - 5) + "Answer";
-
-            this.queries.set(this.lastQueryId, {
-                answerType,
-                resolve,
-                reject,
-            });
-
-            this.send({
-                message: {
-                    $case: "queryMessage",
-                    queryMessage: {
-                        id: this.lastQueryId,
-                        query: message,
-                    },
-                },
-            });
-
-            this.lastQueryId++;
-        });
     }
 
     public async queryJitsiJwtToken(jitsiRoom: string): Promise<JitsiJwtAnswer> {
@@ -1714,26 +1589,33 @@ export class RoomConnection implements RoomConnection {
         return answer.embeddableWebsiteAnswer;
     }
 
-    /**
-     * Unserializes a string received from the server.
-     * If the value cannot be unserialized, returns undefined and outputs a console error.
-     */
-    public static unserializeVariable(serializedValue: string): unknown {
-        let value: unknown = undefined;
-        if (serializedValue) {
-            try {
-                value = JSON.parse(serializedValue);
-            } catch (e) {
-                console.error(
-                    "Unable to unserialize value received from server for a variable. " +
-                        'Value received: "' +
-                        serializedValue +
-                        '". Error: ',
-                    e
-                );
-            }
+    public async queryMembers(searchText: string): Promise<Member[]> {
+        const answer = await this.query({
+            $case: "searchMemberQuery",
+            searchMemberQuery: {
+                searchText,
+            },
+        });
+        if (answer.$case !== "searchMemberAnswer") {
+            throw new Error("Unexpected answer");
         }
-        return value;
+        return answer.searchMemberAnswer.members;
+    }
+
+    public async queryMember(memberUUID: string): Promise<Member> {
+        const answer = await this.query({
+            $case: "getMemberQuery",
+            getMemberQuery: {
+                uuid: memberUUID,
+            },
+        });
+        if (answer.$case !== "getMemberAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        if (answer.getMemberAnswer.member === undefined) {
+            throw new Error("Member is undefined.");
+        }
+        return answer.getMemberAnswer.member;
     }
 
     public emitMuteParticipantIdSpace(spaceName: string, participantId: string) {
@@ -1801,6 +1683,214 @@ export class RoomConnection implements RoomConnection {
                     spaceName,
                 },
             },
+        });
+    }
+
+    private resetPingTimeout(): void {
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = undefined;
+        }
+        this.timeout = setTimeout(() => {
+            console.warn("Timeout detected server-side. Is your connection down? Closing connection.");
+            this.socket.close();
+        }, manualPingDelay);
+    }
+
+    private sendPong(): void {
+        this.send({
+            message: {
+                $case: "pingMessage",
+                pingMessage: {},
+            },
+        });
+    }
+
+    private toPositionMessage(
+        x: number,
+        y: number,
+        direction: PositionMessage_Direction,
+        moving: boolean
+    ): PositionMessageTsProto {
+        return {
+            x: Math.floor(x),
+            y: Math.floor(y),
+            moving,
+            direction,
+        };
+    }
+
+    private toViewportMessage(viewport: ViewportInterface): ViewportMessageTsProto {
+        return {
+            left: Math.floor(viewport.left),
+            right: Math.floor(viewport.right),
+            top: Math.floor(viewport.top),
+            bottom: Math.floor(viewport.bottom),
+        };
+    }
+
+    private mapWokaTextureToResourceDescription(texture: CharacterTextureMessage): WokaTextureDescriptionInterface {
+        return {
+            id: texture.id,
+            url: texture.url,
+        };
+    }
+
+    private mapCompanionTextureToResourceDescription(
+        texture: CompanionTextureMessage
+    ): CompanionTextureDescriptionInterface {
+        return {
+            id: texture.id,
+            url: texture.url,
+        };
+    }
+
+    // TODO: move this to protobuf utils
+    private toMessageUserJoined(message: UserJoinedMessageTsProto): MessageUserJoined {
+        const position = message.position;
+        if (position === undefined) {
+            throw new Error("Invalid JOIN_ROOM message");
+        }
+
+        const characterTextures = message.characterTextures.map(this.mapWokaTextureToResourceDescription.bind(this));
+        const companionTexture = message.companionTexture
+            ? this.mapCompanionTextureToResourceDescription(message.companionTexture)
+            : undefined;
+
+        const variables = new Map<string, unknown>();
+        for (const variable of Object.entries(message.variables)) {
+            variables.set(variable[0], RoomConnection.unserializeVariable(variable[1]));
+        }
+
+        return {
+            userId: message.userId,
+            userJid: message.userJid,
+            name: message.name,
+            characterTextures,
+            visitCardUrl: message.visitCardUrl,
+            position: position,
+            availabilityStatus: message.availabilityStatus,
+            companionTexture,
+            userUuid: message.userUuid,
+            outlineColor: message.hasOutline ? message.outlineColor : undefined,
+            variables: variables,
+        };
+    }
+
+    private toGroupCreatedUpdatedMessage(message: GroupUpdateMessageTsProto): GroupCreatedUpdatedMessageInterface {
+        const position = message.position;
+        if (position === undefined) {
+            throw new Error("Missing position in GROUP_CREATE_UPDATE");
+        }
+
+        return {
+            groupId: message.groupId,
+            position: position,
+            groupSize: message.groupSize,
+            locked: message.locked,
+        };
+    }
+
+    /**
+     * Sends a message to all observers: we are not going to send anything anymore on streams.
+     */
+    private completeStreams(): void {
+        this._errorMessageStream.complete();
+        this._errorScreenMessageStream.complete();
+        this._roomJoinedMessageStream.complete();
+        this._webRtcStartMessageStream.complete();
+        this._webRtcSignalToClientMessageStream.complete();
+        this._webRtcScreenSharingSignalToClientMessageStream.complete();
+        this._webRtcDisconnectMessageStream.complete();
+        this._teleportMessageMessageStream.complete();
+        this._worldFullMessageStream.complete();
+        this._worldConnectionMessageStream.complete();
+        this._tokenExpiredMessageStream.complete();
+        this._userMovedMessageStream.complete();
+        this._groupUpdateMessageStream.complete();
+        this._groupUsersUpdateMessageStream.complete();
+        this._groupDeleteMessageStream.complete();
+        this._userJoinedMessageStream.complete();
+        this._userLeftMessageStream.complete();
+        this._refreshRoomMessageStream.complete();
+        this._itemEventMessageStream.complete();
+        this._emoteEventMessageStream.complete();
+        this._variableMessageStream.complete();
+        this._editMapCommandMessageStream.complete();
+        this._playerDetailsUpdatedMessageStream.complete();
+        this._connectionErrorStream.complete();
+        this._xmppSettingsMessageStream.complete();
+        this._moveToPositionMessageStream.complete();
+        this._joinMucRoomMessageStream.complete();
+        this._leaveMucRoomMessageStream.complete();
+        this._addSpaceUserMessageStream.complete();
+        this._updateSpaceUserMessageStream.complete();
+        this._removeSpaceUserMessageStream.complete();
+        this._updateSpaceMetadataMessageStream.complete();
+        this._megaphoneSettingsMessageStream.complete();
+        this._receivedEventMessageStream.complete();
+        this._updateSpaceMetadataMessageStream.complete();
+        this._muteMicrophoneMessage.complete();
+        this._muteVideoMessage.complete();
+        this._muteMicrophoneEverybodyMessage.complete();
+        this._muteVideoEverybodyMessage.complete();
+        this._askMuteVideoMessage.complete();
+        this._askMuteMicrophoneMessage.complete();
+        this._mutedMessage.complete();
+        this._mutedVideoMessage.complete();
+        this._askMutedMessage.complete();
+        this._askMutedVideoMessage.complete();
+    }
+
+    private goToSelectYourWokaScene(): void {
+        menuVisiblilityStore.set(false);
+        menuIconVisiblilityStore.set(false);
+        selectCharacterSceneVisibleStore.set(true);
+        gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
+    }
+
+    private goToSelectYourCompanionScene(): void {
+        menuVisiblilityStore.set(false);
+        menuIconVisiblilityStore.set(false);
+        selectCompanionSceneVisibleStore.set(true);
+        gameManager.leaveGame(SelectCompanionSceneName, new SelectCompanionScene());
+    }
+
+    private send(message: ClientToServerMessageTsProto): void {
+        const bytes = ClientToServerMessageTsProto.encode(message).finish();
+
+        if (this.socket.readyState === WebSocket.CLOSING || this.socket.readyState === WebSocket.CLOSED) {
+            console.warn("Trying to send a message to the server, but the connection is closed. Message: ", message);
+            return;
+        }
+
+        this.socket.send(bytes);
+    }
+
+    private query<T extends Required<QueryMessage>["query"]>(message: T): Promise<Required<AnswerMessage>["answer"]> {
+        return new Promise<Required<AnswerMessage>["answer"]>((resolve, reject) => {
+            if (!message.$case.endsWith("Query")) {
+                throw new Error("Query types are supposed to be suffixed with Query");
+            }
+            const answerType = message.$case.substring(0, message.$case.length - 5) + "Answer";
+
+            this.queries.set(this.lastQueryId, {
+                answerType,
+                resolve,
+                reject,
+            });
+
+            this.send({
+                message: {
+                    $case: "queryMessage",
+                    queryMessage: {
+                        id: this.lastQueryId,
+                        query: message,
+                    },
+                },
+            });
+
+            this.lastQueryId++;
         });
     }
 }

@@ -1,6 +1,6 @@
 <script lang="ts">
-    import DrowAreaGif from "../images/draw-area.gif";
-    import { LL } from "../../../i18n/i18n-svelte";
+    import DrowAreaGif from "../../images/draw-area.gif";
+    import { LL } from "../../../../i18n/i18n-svelte";
 </script>
 
 <div class="area-name-container">

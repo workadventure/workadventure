@@ -11,6 +11,8 @@
         YoutubeService,
         EraserService,
         EraserException,
+        ExcalidrawService,
+        ExcalidrawException,
     } from "@workadventure/shared-utils";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -20,15 +22,18 @@
     import googleSheetsSvg from "../../images/applications/icon_google_sheets.svg";
     import googleSlidesSvg from "../../images/applications/icon_google_slides.svg";
     import eraserSvg from "../../images/applications/icon_eraser.svg";
+    import excalidrawSvg from "../../images/applications/icon_excalidraw.svg";
     import pickerSvg from "../../images/applications/picker.svg";
     import { connectionManager } from "../../../Connection/ConnectionManager";
     import { GOOGLE_DRIVE_PICKER_APP_ID, GOOGLE_DRIVE_PICKER_CLIENT_ID } from "../../../Enum/EnvironmentVariable";
     import Tooltip from "../../Util/Tooltip.svelte";
     import InputTags from "../../Input/InputTags.svelte";
+    import { InputTagOption } from "../../Input/InputTagOption";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     export let property: OpenWebsitePropertyData;
     export let triggerOnActionChoosen: boolean = property.trigger === "onaction";
+    export let triggerOptionActivated = true;
     export let icon = "resources/icons/icon_link.png";
     export let isArea = false;
 
@@ -42,10 +47,11 @@
     let embeddable = true;
     let embeddableLoading = false;
     let error = "";
+    let warning = "";
     let oldNewTabValue = property.newTab;
     let linkElement: HTMLInputElement;
     let policy: Option[] | undefined = undefined;
-    let policyOption: Option[] = [
+    let policyOption: InputTagOption[] = [
         { value: "accelerometer", label: "accelerometer", created: undefined },
         { value: "ambient-light-sensor", label: "ambient-light-sensor", created: undefined },
         { value: "autoplay", label: "autoplay", created: undefined },
@@ -103,9 +109,15 @@
             ?.split(";")
             .reduce(
                 (options: Option[], value) =>
-                    value != "" ? [...options, { value, label: value, created: undefined }] : options,
+                    value != ""
+                        ? [...options, { value: value.trim(), label: value.trim(), created: undefined }]
+                        : options,
                 []
             ) as Option[];
+
+        if (property.forceNewTab == true) {
+            property.newTab = true;
+        }
     });
 
     function onTriggerValueChange() {
@@ -142,7 +154,7 @@
                 } else if (property.application == "klaxoon") {
                     property.link = KlaxoonService.getKlaxoonEmbedUrl(
                         new URL(property.link),
-                        connectionManager.currentRoom?.klaxoonToolClientId
+                        connectionManager.klaxoonToolClientId
                     );
                 }
             }
@@ -159,137 +171,222 @@
         // if the link is not a website, we don't need to check if it is embeddable
         embeddableLoading = true;
         error = "";
-        if (property.application == "youtube") {
-            try {
-                const link = await YoutubeService.getYoutubeEmbedUrl(new URL(property.link));
-                embeddable = true;
-                optionAdvancedActivated = false;
-                property.buttonLabel =
-                    YoutubeService.getTitleFromYoutubeUrl(new URL(property.link)) ??
-                    $LL.mapEditor.properties.youtubeProperties.label();
-                property.link = link;
-                property.newTab = oldNewTabValue;
-            } catch (e: unknown) {
-                embeddable = false;
-                error = $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                console.info("Error to check embeddable website", e);
-                property.link = null;
+        warning = "";
+        try {
+            if (property.application == "youtube") {
+                try {
+                    const link = await YoutubeService.getYoutubeEmbedUrl(new URL(property.link));
+                    embeddable = true;
+                    optionAdvancedActivated = false;
+                    property.buttonLabel =
+                        YoutubeService.getTitleFromYoutubeUrl(new URL(property.link)) ??
+                        $LL.mapEditor.properties.youtubeProperties.label();
+                    property.link = link;
+                    property.newTab = oldNewTabValue;
+                } catch (e: unknown) {
+                    embeddable = false;
+                    error = $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                    console.info("Error to check embeddable website", e);
+                    property.link = null;
+                    throw e;
+                } finally {
+                    embeddableLoading = false;
+                    onValueChange();
+                }
             }
 
-            embeddableLoading = false;
-            onValueChange();
-        }
-
-        if (property.application == "googleDocs") {
-            try {
-                const link = GoogleWorkSpaceService.getGoogleDocsEmbedUrl(new URL(property.link as string));
-                embeddable = true;
-                optionAdvancedActivated = false;
-                property.link = link;
-                property.newTab = oldNewTabValue;
-            } catch (e) {
-                embeddable = false;
-                error =
-                    e instanceof GoogleWorkSpaceException.GoogleDocsException
-                        ? $LL.mapEditor.properties.googleDocsProperties.error()
-                        : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                console.info("Error to check embeddable website", e);
-                property.link = null;
+            if (property.application == "googleDocs") {
+                try {
+                    const link = GoogleWorkSpaceService.getGoogleDocsEmbedUrl(new URL(property.link));
+                    embeddable = true;
+                    optionAdvancedActivated = false;
+                    property.link = link;
+                    property.newTab = oldNewTabValue;
+                } catch (e) {
+                    embeddable = false;
+                    error =
+                        e instanceof GoogleWorkSpaceException.GoogleDocsException
+                            ? $LL.mapEditor.properties.googleDocsProperties.error()
+                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                    console.info("Error to check embeddable website", e);
+                    property.link = null;
+                    throw e;
+                } finally {
+                    embeddableLoading = false;
+                    onValueChange();
+                }
             }
-            embeddableLoading = false;
-            onValueChange();
-        }
 
-        if (property.application == "googleSheets") {
-            try {
-                const link = GoogleWorkSpaceService.getGoogleSheetsEmbedUrl(new URL(property.link as string));
-                embeddable = true;
-                optionAdvancedActivated = false;
-                property.link = link;
-                property.newTab = oldNewTabValue;
-            } catch (e) {
-                embeddable = false;
-                error =
-                    e instanceof GoogleWorkSpaceException.GoogleSheetsException
-                        ? $LL.mapEditor.properties.googleSheetsProperties.error()
-                        : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                console.info("Error to check embeddable website", e);
-                property.link = null;
+            if (property.application == "googleSheets") {
+                try {
+                    const link = GoogleWorkSpaceService.getGoogleSheetsEmbedUrl(new URL(property.link));
+                    embeddable = true;
+                    optionAdvancedActivated = false;
+                    property.link = link;
+                    property.newTab = oldNewTabValue;
+                } catch (e) {
+                    embeddable = false;
+                    error =
+                        e instanceof GoogleWorkSpaceException.GoogleSheetsException
+                            ? $LL.mapEditor.properties.googleSheetsProperties.error()
+                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                    console.info("Error to check embeddable website", e);
+                    property.link = null;
+                    throw e;
+                } finally {
+                    embeddableLoading = false;
+                    onValueChange();
+                }
             }
-            embeddableLoading = false;
-            onValueChange();
-        }
 
-        if (property.application == "googleSlides") {
-            try {
-                const link = GoogleWorkSpaceService.getGoogleSlidesEmbedUrl(new URL(property.link as string));
-                embeddable = true;
-                optionAdvancedActivated = false;
-                property.link = link;
-                property.newTab = oldNewTabValue;
-            } catch (e) {
-                embeddable = false;
-                error =
-                    e instanceof GoogleWorkSpaceException.GoogleSlidesException
-                        ? $LL.mapEditor.properties.googleSlidesProperties.error()
-                        : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                console.info("Error to check embeddable website", e);
-                property.link = null;
+            if (property.application == "googleSlides") {
+                try {
+                    const link = GoogleWorkSpaceService.getGoogleSlidesEmbedUrl(new URL(property.link));
+                    embeddable = true;
+                    optionAdvancedActivated = false;
+                    property.link = link;
+                    property.newTab = oldNewTabValue;
+                } catch (e) {
+                    embeddable = false;
+                    error =
+                        e instanceof GoogleWorkSpaceException.GoogleSlidesException
+                            ? $LL.mapEditor.properties.googleSlidesProperties.error()
+                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                    console.info("Error to check embeddable website", e);
+                    property.link = null;
+                    throw e;
+                } finally {
+                    embeddableLoading = false;
+                    onValueChange();
+                }
             }
-            embeddableLoading = false;
-            onValueChange();
-        }
 
-        if (property.application == "klaxoon") {
-            try {
-                const link = KlaxoonService.getKlaxoonEmbedUrl(
-                    new URL(property.link as string),
-                    connectionManager.currentRoom?.klaxoonToolClientId
-                );
-                embeddable = true;
-                optionAdvancedActivated = false;
-                property.link = link;
-                property.newTab = oldNewTabValue;
-            } catch (e) {
-                embeddable = false;
-                error =
-                    e instanceof KlaxoonException.KlaxoonException
-                        ? $LL.mapEditor.properties.klaxoonProperties.error()
-                        : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                console.info("Error to check embeddable website", e);
-                property.link = null;
+            if (property.application == "klaxoon") {
+                try {
+                    const link = KlaxoonService.getKlaxoonEmbedUrl(
+                        new URL(property.link),
+                        connectionManager.klaxoonToolClientId
+                    );
+                    embeddable = true;
+                    optionAdvancedActivated = false;
+                    property.link = link;
+                    property.newTab = oldNewTabValue;
+                } catch (e) {
+                    embeddable = false;
+                    error =
+                        e instanceof KlaxoonException.KlaxoonException
+                            ? $LL.mapEditor.properties.klaxoonProperties.error()
+                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                    console.info("Error to check embeddable website", e);
+                    property.link = null;
+                    throw e;
+                } finally {
+                    embeddableLoading = false;
+                    onValueChange();
+                }
             }
-            embeddableLoading = false;
-            onValueChange();
-        }
 
-        if (property.application == "eraser") {
-            try {
-                EraserService.validateEraserLink(new URL(property.link as string));
-                embeddable = true;
-                optionAdvancedActivated = false;
-                property.newTab = oldNewTabValue;
-            } catch (e) {
-                embeddable = false;
-                error =
-                    e instanceof EraserException.EraserLinkException
-                        ? $LL.mapEditor.properties.eraserProperties.error()
-                        : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
-                console.info("Error to check embeddable website", e);
-                property.link = null;
+            if (property.application == "eraser") {
+                try {
+                    EraserService.validateLink(new URL(property.link));
+                    embeddable = true;
+                    optionAdvancedActivated = false;
+                    property.newTab = oldNewTabValue;
+                } catch (e) {
+                    embeddable = false;
+                    error =
+                        e instanceof EraserException.EraserLinkException
+                            ? $LL.mapEditor.properties.eraserProperties.error()
+                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                    console.info("Error to check embeddable website", e);
+                    property.link = null;
+                    throw e;
+                } finally {
+                    embeddableLoading = false;
+                    onValueChange();
+                }
             }
-            embeddableLoading = false;
-            onValueChange();
-        }
 
-        // allow to check if the link is embeddable
-        checkEmbeddableLink();
+            if (property.application == "excalidraw") {
+                try {
+                    ExcalidrawService.validateLink(new URL(property.link), connectionManager.excalidrawToolDomains);
+                    embeddable = true;
+                    optionAdvancedActivated = false;
+                    property.newTab = oldNewTabValue;
+                } catch (e) {
+                    embeddable = false;
+                    error =
+                        e instanceof ExcalidrawException.ExcalidrawException
+                            ? $LL.mapEditor.properties.excalidrawProperties.error()
+                            : $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                    console.info("Error to check embeddable website", e);
+                    property.link = null;
+                    throw e;
+                } finally {
+                    embeddableLoading = false;
+                    onValueChange();
+                }
+            }
+
+            if (property.regexUrl) {
+                try {
+                    const regexUrl = new URL(property.regexUrl);
+                    const regex = new RegExp(property.regexUrl.replace("?", "[?]"), "g");
+                    if (property.link.indexOf(regexUrl.host) != -1) {
+                        // if property has "targetEmbedableLink" transform the link to embedable link with regex
+                        if (property.targetEmbedableUrl) {
+                            const matches = regex.exec(property.link);
+                            if (matches) {
+                                property.link = property.targetEmbedableUrl.replace(/\$[0-9]+/g, (match) => {
+                                    const index = parseInt(match.substring(1));
+                                    return matches[index] ?? "";
+                                });
+                            }
+                        }
+                    } else if (property.targetEmbedableUrl) {
+                        const url = new URL(property.link);
+                        if (property.targetEmbedableUrl?.indexOf(url.host) == -1) {
+                            // If the link exists but is not the same of embedable link target, their is an error
+                            error = `${$LL.mapEditor.properties.linkProperties.errorEmbeddableLink()} (${
+                                property.regexUrl
+                            })`;
+                            property.link = null;
+                            throw new Error(error);
+                        }
+                    } else {
+                        throw new Error(error);
+                    }
+                    if (property.forceNewTab == true) {
+                        embeddable = false;
+                        optionAdvancedActivated = false;
+                        property.newTab = true;
+                    } else {
+                        embeddable = true;
+                    }
+                } catch (e) {
+                    console.info("Error to check embeddable website", e);
+                    embeddable = false;
+                    error = error ?? $LL.mapEditor.properties.linkProperties.errorInvalidUrl();
+                    property.link = null;
+                    throw e;
+                } finally {
+                    embeddableLoading = false;
+                    onValueChange();
+                }
+            }
+
+            // allow to check if the link is embeddable
+            checkEmbeddableLink();
+        } catch (e) {
+            console.info("Error checking embeddable website", e);
+        }
     }
 
     function checkEmbeddableLink(): void {
+        if (property.forceNewTab) return;
         if (property.link == undefined || !linkElement.checkValidity()) {
             embeddableLoading = false;
-            error = error ? error : $LL.mapEditor.properties.linkProperties.errorInvalidUrl();
+            warning = warning ? warning : $LL.mapEditor.properties.linkProperties.errorInvalidUrl();
             return;
         }
 
@@ -299,7 +396,7 @@
             .then((answer) => {
                 if (answer) {
                     if (answer.message) {
-                        error = answer.message;
+                        warning = answer.message;
                     }
                     if (!answer.state) {
                         throw new Error(answer.message);
@@ -321,9 +418,9 @@
             .catch((e: unknown) => {
                 embeddable = true;
                 if (e instanceof Error) {
-                    error = e.message;
+                    warning = e.message;
                 } else {
-                    error = $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
+                    warning = $LL.mapEditor.properties.linkProperties.errorEmbeddableLink();
                 }
                 console.info("Error checking embeddable website", e);
             })
@@ -345,28 +442,25 @@
 
     function openKlaxoonActivityPicker() {
         if (
-            !connectionManager.currentRoom?.klaxoonToolClientId ||
+            !connectionManager.klaxoonToolClientId ||
             property.type !== "openWebsite" ||
             property.application !== "klaxoon"
         ) {
             console.info("openKlaxoonActivityPicker: app is not a klaxoon app");
             return;
         }
-        KlaxoonService.openKlaxoonActivityPicker(
-            connectionManager.currentRoom?.klaxoonToolClientId,
-            (payload: KlaxoonEvent) => {
-                property.link = KlaxoonService.getKlaxoonEmbedUrl(
-                    new URL(payload.url),
-                    connectionManager.currentRoom?.klaxoonToolClientId
-                );
-                property.poster = payload.imageUrl ?? undefined;
-                property.buttonLabel = payload.title ?? undefined;
-                // check if the link is embeddable
-                checkWebsiteProperty().catch((e) => {
-                    console.error("Error checking embeddable website", e);
-                });
-            }
-        );
+        KlaxoonService.openKlaxoonActivityPicker(connectionManager.klaxoonToolClientId, (payload: KlaxoonEvent) => {
+            property.link = KlaxoonService.getKlaxoonEmbedUrl(
+                new URL(payload.url),
+                connectionManager.klaxoonToolClientId
+            );
+            property.poster = payload.imageUrl ?? undefined;
+            property.buttonLabel = payload.title ?? undefined;
+            // check if the link is embeddable
+            checkWebsiteProperty().catch((e) => {
+                console.error("Error checking embeddable website", e);
+            });
+        });
     }
 
     function openPicker() {
@@ -490,9 +584,19 @@
         {:else if property.application === "eraser"}
             <img class="tw-w-6 tw-mr-1" src={eraserSvg} alt={$LL.mapEditor.properties.eraserProperties.description()} />
             {$LL.mapEditor.properties.eraserProperties.label()}
-        {:else}
+        {:else if property.application === "excalidraw"}
+            <img
+                class="tw-w-6 tw-mr-1"
+                src={excalidrawSvg}
+                alt={$LL.mapEditor.properties.eraserProperties.description()}
+            />
+            {$LL.mapEditor.properties.eraserProperties.label()}
+        {:else if property.application === "website"}
             <img class="tw-w-6 tw-mr-1" src={icon} alt={$LL.mapEditor.properties.linkProperties.description()} />
             {$LL.mapEditor.properties.linkProperties.label()}
+        {:else}
+            <img class="tw-w-6 tw-mr-1" src={property.icon} alt={property.label} />
+            {property.label}
         {/if}
     </span>
     <span slot="content">
@@ -553,10 +657,13 @@
                 {/if}
             </div>
             {#if error !== ""}
-                <span class="err tw-text-pop-red tw-text-xs tw-italic tw-mt-1">{error}</span>
+                <span class="err tw-text-danger-900 tw-text-xs tw-italic tw-mt-1">{error}</span>
+            {/if}
+            {#if warning !== ""}
+                <span class="err tw-text-warning-900 tw-text-xs tw-italic tw-mt-1">{warning}</span>
             {/if}
             {#if !embeddable && error === ""}
-                <span class="err tw-text-warning tw-text-xs tw-italic tw-mt-1"
+                <span class="err tw-text-warning-900 tw-text-xs tw-italic tw-mt-1"
                     ><AlertTriangleIcon size="12" />
                     {$LL.mapEditor.properties.linkProperties.messageNotEmbeddableLink()}.
                     <a
@@ -577,30 +684,41 @@
             <input id="advancedOption" type="checkbox" class="input-switch" bind:checked={optionAdvancedActivated} />
         </div>
         <div class:active={optionAdvancedActivated} class="advanced-option tw-px-2">
-            {#if triggerOnActionChoosen}
-                <div class="value-input tw-flex tw-flex-col">
-                    <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
+            {#if triggerOptionActivated}
+                {#if triggerOnActionChoosen}
+                    <div class="value-input tw-flex tw-flex-col">
+                        <label for="triggerMessage">{$LL.mapEditor.properties.linkProperties.triggerMessage()}</label>
+                        <input
+                            id="triggerMessage"
+                            type="text"
+                            bind:value={property.triggerMessage}
+                            on:change={onValueChange}
+                        />
+                    </div>
+                {/if}
+                <div class="value-switch">
+                    <label for="newTab">{$LL.mapEditor.properties.linkProperties.newTabLabel()}</label>
                     <input
-                        id="triggerMessage"
-                        type="text"
-                        bind:value={property.triggerMessage}
-                        on:change={onValueChange}
+                        id="newTab"
+                        type="checkbox"
+                        class="input-switch"
+                        bind:checked={property.newTab}
+                        on:change={onNewTabValueChange}
+                        disabled={property.forceNewTab}
                     />
                 </div>
             {/if}
-            <div class="value-switch">
-                <label for="newTab">{$LL.mapEditor.properties.linkProperties.newTabLabel()}</label>
-                <input
-                    id="newTab"
-                    type="checkbox"
-                    class="input-switch"
-                    bind:checked={property.newTab}
-                    on:change={onNewTabValueChange}
-                />
-            </div>
+            {#if property.forceNewTab == true}
+                <div class="tw-mb-3">
+                    <span class="err tw-text-warning-900 tw-text-xs tw-italic">
+                        <AlertTriangleIcon size="12" />
+                        {$LL.mapEditor.properties.linkProperties.forcedInNewTab()}
+                    </span>
+                </div>
+            {/if}
             {#if !embeddable && !property.newTab}
                 <div class="tw-mb-3">
-                    <span class="err tw-text-orange tw-text-xs tw-italic"
+                    <span class="err tw-text-warning-900 tw-text-xs tw-italic"
                         ><AlertTriangleIcon size="12" />
                         {$LL.mapEditor.properties.linkProperties.warningEmbeddableLink()}.
                         <a
@@ -667,20 +785,25 @@
         margin-bottom: 0.5em;
         margin-top: 0.5em;
         flex-direction: column;
+
         label {
             min-width: fit-content;
             margin-right: 0.5em;
         }
+
         input {
             flex-grow: 1;
             min-width: 0;
         }
+
         * {
             margin-bottom: 0;
         }
     }
+
     .advanced-option {
         display: none;
+
         &.active {
             display: block;
         }

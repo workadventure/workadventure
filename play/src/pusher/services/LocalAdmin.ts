@@ -5,6 +5,7 @@ import type {
     AdminApiData,
     ErrorApiData,
     CompanionDetail,
+    MemberData,
 } from "@workadventure/messages";
 import { Capabilities, OpidWokaNamePolicy } from "@workadventure/messages";
 import axios from "axios";
@@ -22,13 +23,13 @@ import {
     INTERNAL_MAP_STORAGE_URL,
     MAP_EDITOR_ALLOWED_USERS,
     KLAXOON_ENABLED,
-    KLAXOON_CLIENT_ID,
     YOUTUBE_ENABLED,
     GOOGLE_DRIVE_ENABLED,
     GOOGLE_DOCS_ENABLED,
     GOOGLE_SHEETS_ENABLED,
     GOOGLE_SLIDES_ENABLED,
     ERASER_ENABLED,
+    EXCALIDRAW_ENABLED,
 } from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
 import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
@@ -48,12 +49,12 @@ class LocalAdmin implements AdminInterface {
         ipAddress: string,
         characterTextureIds: string[],
         companionTextureId?: string,
-        locale?: string
+        locale?: string,
+        tags?: string[]
     ): Promise<FetchMemberDataByUuidResponse> {
         let canEdit = false;
         const roomUrl = new URL(playUri);
         const match = /\/~\/(.+)/.exec(roomUrl.pathname);
-
         if (
             match &&
             ENABLE_MAP_EDITOR &&
@@ -83,11 +84,109 @@ class LocalAdmin implements AdminInterface {
             }
         }
 
+        if (tags) {
+            if (tags?.includes("admin") || tags?.includes("editor")) {
+                canEdit = true;
+            }
+        }
+
+        const applications = [];
+        if (KLAXOON_ENABLED) {
+            applications.push({
+                name: "Klaxoon",
+                doc: "https://klaxoon.com",
+                image: "https://static.klaxoon.com/favicon.ico",
+                description: "Klaxoon (Brainstorming, Quiz, Survey)",
+                enabled: true,
+                default: true,
+                forceNewTab: false,
+                allowAPI: false,
+            });
+        }
+        if (YOUTUBE_ENABLED) {
+            applications.push({
+                name: "Youtube",
+                doc: "https://youtube.com",
+                image: "https://www.youtube.com/favicon.ico",
+                description: "Youtube (Video sharing)",
+                enabled: true,
+                default: true,
+                forceNewTab: false,
+                allowAPI: false,
+            });
+        }
+        if (GOOGLE_DRIVE_ENABLED) {
+            applications.push({
+                name: "Google Drive",
+                doc: "https://drive.google.com",
+                description: "Google Drive (Docs, Sheets, Slides)",
+                enabled: true,
+                default: true,
+                forceNewTab: false,
+                allowAPI: false,
+            });
+        }
+        if (GOOGLE_DOCS_ENABLED) {
+            applications.push({
+                name: "Google Docs",
+                doc: "https://docs.google.com",
+                description: "Google Docs (Word Processor)",
+                enabled: true,
+                default: true,
+                forceNewTab: false,
+                allowAPI: false,
+            });
+        }
+        if (GOOGLE_SHEETS_ENABLED) {
+            applications.push({
+                name: "Google Sheets",
+                doc: "https://sheets.google.com",
+                description: "Google Sheets (Spreadsheet)",
+                enabled: true,
+                default: true,
+                forceNewTab: false,
+                allowAPI: false,
+            });
+        }
+        if (GOOGLE_SLIDES_ENABLED) {
+            applications.push({
+                name: "Google Slides",
+                doc: "https://slides.google.com",
+                description: "Google Slides (Presentation)",
+                enabled: true,
+                default: true,
+                forceNewTab: false,
+                allowAPI: false,
+            });
+        }
+        if (ERASER_ENABLED) {
+            applications.push({
+                name: "Eraser",
+                doc: "https://workadventu.re",
+                description: "Eraser (White board)",
+                enabled: true,
+                default: true,
+                forceNewTab: false,
+                allowAPI: false,
+            });
+        }
+        if (EXCALIDRAW_ENABLED) {
+            applications.push({
+                name: "Excalidraw",
+                doc: "https://excalidraw.com",
+                description: "Excalidraw (White board)",
+                enabled: true,
+                default: true,
+                forceNewTab: false,
+                allowAPI: false,
+            });
+        }
+
         return {
             status: "ok",
             email: userIdentifier,
             userUuid: userIdentifier,
-            tags: [],
+            tags: tags ?? [],
             messages: [],
             visitCardUrl: null,
             isCharacterTexturesValid,
@@ -98,6 +197,7 @@ class LocalAdmin implements AdminInterface {
             mucRooms,
             activatedInviteUser: true,
             canEdit,
+            applications,
         };
     }
 
@@ -166,14 +266,6 @@ class LocalAdmin implements AdminInterface {
             enableChatUpload: ENABLE_CHAT_UPLOAD,
             enableChatOnlineList: ENABLE_CHAT_ONLINE_LIST,
             enableChatDisconnectedList: ENABLE_CHAT_DISCONNECTED_LIST,
-            klaxoonToolActivated: KLAXOON_ENABLED,
-            klaxoonToolClientId: KLAXOON_CLIENT_ID,
-            youtubeToolActivated: YOUTUBE_ENABLED,
-            googleDriveToolActivated: GOOGLE_DRIVE_ENABLED,
-            googleDocsToolActivated: GOOGLE_DOCS_ENABLED,
-            googleSheetsToolActivated: GOOGLE_SHEETS_ENABLED,
-            googleSlidesToolActivated: GOOGLE_SLIDES_ENABLED,
-            eraserToolActivated: ERASER_ENABLED,
             metatags: {
                 ...MetaTagsDefaultValue,
             },
@@ -281,6 +373,14 @@ class LocalAdmin implements AdminInterface {
             "api/woka/list": "v1",
             "api/companion/list": "v1",
         });
+    }
+
+    searchMembers(roomUrl: string, searchText: string): Promise<MemberData[]> {
+        return Promise.reject(new Error("No admin backoffice set!"));
+    }
+
+    getMember(memberUUID: string): Promise<MemberData> {
+        return Promise.reject(new Error("No admin backoffice set!"));
     }
 }
 

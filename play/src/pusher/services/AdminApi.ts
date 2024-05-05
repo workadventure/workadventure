@@ -1,6 +1,6 @@
 import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
-import type { AdminApiData, MapDetailsData, RoomRedirect } from "@workadventure/messages";
+import type { AdminApiData, MapDetailsData, MemberData, RoomRedirect } from "@workadventure/messages";
 import {
     Capabilities,
     CompanionDetail,
@@ -348,7 +348,8 @@ class AdminApi implements AdminInterface {
         ipAddress: string,
         characterTextureIds: string[],
         companionTextureId?: string,
-        locale?: string
+        locale?: string,
+        tags?: string[]
     ): Promise<FetchMemberDataByUuidResponse> {
         try {
             /**
@@ -698,7 +699,13 @@ class AdminApi implements AdminInterface {
          *                     type: string
          *                     description: Name of a room
          *                     example: "My office"
-         *                   url:
+         *                     required: true
+         *                   roomUrl:
+         *                     type: string
+         *                     description: URL of a room
+         *                     example: "http://example.com/@/teamSlug/worldSlug/room2Slug"
+         *                     required: true
+         *                   wamUrl:
          *                     type: string
          *                     description: URL of a room
          *                     example: "http://example.com/@/teamSlug/worldSlug/room2Slug"
@@ -982,6 +989,66 @@ class AdminApi implements AdminInterface {
             );
         }
         return;
+    }
+
+    /**
+     * @openapi
+     * /api/members:
+     *   get:
+     *     description: Search members from search term.
+     *     tags:
+     *      - Admin endpoint
+     *     parameters:
+     *      - name: "playUri"
+     *        in: "request"
+     *        required: true
+     *        type: "string"
+     *        description: The room url
+     *      - name: "searchText"
+     *        in: "request"
+     *        description: search text use for user search (name, email, etc)
+     *        required: true
+     *        type: "string"
+     *     responses:
+     *       200:
+     *        description: Member list or empty list.
+     *        schema:
+     *            $ref: '#/definitions/MemberData'
+     */
+    async searchMembers(playUri: string | null, searchText: string): Promise<MemberData[]> {
+        const response = await axios.get<MemberData[]>(ADMIN_API_URL + "/api/members", {
+            params: { playUri, searchText },
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        });
+        return response.data ? response.data : [];
+    }
+
+    /**
+     * @openapi
+     * /members/{memberUUID}:
+     *   get:
+     *     description: Get member by UUID
+     *     tags:
+     *      - Admin endpoint
+     *     parameters:
+     *      - name: "memberUUID"
+     *        in: "path"
+     *        required: true
+     *        type: "string"
+     *        description: The member UUID
+     *     responses:
+     *       200:
+     *        description: Member list or empty list.
+     *        schema:
+     *            $ref: '#/definitions/MemberData'
+     *        404:
+     *        description: No member found.
+     */
+    async getMember(memberUUID: string): Promise<MemberData> {
+        const response = await axios.get<MemberData>(`${ADMIN_API_URL}/api/members/${memberUUID}`, {
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        });
+        return response.data;
     }
 }
 

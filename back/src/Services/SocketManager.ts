@@ -790,6 +790,12 @@ export class SocketManager {
                     // Nothing to do, the message will never be received in the back
                     break;
                 }
+                case "searchMemberQuery": {
+                    break;
+                }
+                case "getMemberQuery": {
+                    break;
+                }
                 default: {
                     const _exhaustiveCheck: never = queryCase;
                 }
@@ -1439,12 +1445,14 @@ export class SocketManager {
             space.addUser(pusher, addSpaceUserMessage.user);
         }
     }
+
     handleUpdateSpaceUserMessage(pusher: SpacesWatcher, updateSpaceUserMessage: UpdateSpaceUserMessage) {
         const space = this.spaces.get(updateSpaceUserMessage.spaceName);
         if (space && updateSpaceUserMessage.user) {
             space.updateUser(pusher, updateSpaceUserMessage.user);
         }
     }
+
     handleRemoveSpaceUserMessage(pusher: SpacesWatcher, removeSpaceUserMessage: RemoveSpaceUserMessage) {
         const space = this.spaces.get(removeSpaceUserMessage.spaceName);
         if (space) {

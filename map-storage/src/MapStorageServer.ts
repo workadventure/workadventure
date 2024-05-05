@@ -1,4 +1,5 @@
 import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
+import * as Sentry from "@sentry/node";
 import {
     AreaData,
     AtLeast,
@@ -9,9 +10,12 @@ import {
     EntityDataProperties,
     UpdateAreaCommand,
     UpdateEntityCommand,
+    UpdateWAMMetadataCommand,
     UpdateWAMSettingCommand,
     WAMEntityData,
-    UpdateWAMMetadataCommand,
+    EntityPermissions,
+    EntityCoordinates,
+    EntityDimensions,
 } from "@workadventure/map-editor";
 import {
     EditMapCommandMessage,
@@ -21,9 +25,12 @@ import {
     PingMessage,
     UpdateMapToNewestWithKeyMessage,
 } from "@workadventure/messages";
-import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
 import { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
-import * as Sentry from "@sentry/node";
+import { MapStorageServer } from "@workadventure/messages/src/ts-proto-generated/services";
+import { DeleteCustomEntityMapStorageCommand } from "./Commands/DeleteCustomEntityMapStorageCommand";
+import { ModifyCustomEntityMapStorageCommand } from "./Commands/ModifyCustomEntityMapStorageCommand";
+import { UploadEntityMapStorageCommand } from "./Commands/UploadEntityMapStorageCommand";
+import { entitiesManager } from "./EntitiesManager";
 import { mapsManager } from "./MapsManager";
 import { mapPathUsingDomainWithPrefix } from "./Services/PathMapper";
 
@@ -104,6 +111,13 @@ const mapStorageServer: MapStorageServer = {
 
             const gameMap = await mapsManager.getOrLoadGameMap(mapKey);
 
+            const { connectedUserTags, userCanEdit, userUUID } = call.request;
+
+            const gameMapAreas = gameMap.getGameMapAreas();
+            const entityCommandPermissions = gameMapAreas
+                ? new EntityPermissions(gameMapAreas, connectedUserTags, userCanEdit, userUUID)
+                : undefined;
+
             const editMapMessage = editMapCommandMessage.editMapMessage.message;
             const commandId = editMapCommandMessage.id;
             switch (editMapMessage.$case) {
@@ -162,6 +176,14 @@ const mapStorageServer: MapStorageServer = {
                     }
                     const entity = gameMap.getGameMapEntities()?.getEntity(message.id);
                     if (entity) {
+                        const { x, y, width, height } = message;
+                        if (
+                            entityCommandPermissions &&
+                            !entityCommandPermissions.canEdit(getEntityCenterCoordinates({ x, y }, { width, height }))
+                        ) {
+                            Sentry.captureException("User is not allowed to modify the entity on map");
+                            break;
+                        }
                         await mapsManager.executeCommand(
                             mapKey,
                             mapUrl.host,
@@ -174,6 +196,14 @@ const mapStorageServer: MapStorageServer = {
                 }
                 case "createEntityMessage": {
                     const message = editMapMessage.createEntityMessage;
+                    const { x, y, width, height } = message;
+                    if (
+                        entityCommandPermissions &&
+                        !entityCommandPermissions.canEdit(getEntityCenterCoordinates({ x, y }, { width, height }))
+                    ) {
+                        Sentry.captureException("User is not allowed to create entity on map");
+                        break;
+                    }
                     await mapsManager.executeCommand(
                         mapKey,
                         mapUrl.host,
@@ -200,6 +230,27 @@ const mapStorageServer: MapStorageServer = {
                         mapKey,
                         mapUrl.host,
                         new DeleteEntityCommand(gameMap, message.id, commandId)
+                    );
+                    break;
+                }
+                case "uploadEntityMessage": {
+                    const uploadEntityMessage = editMapMessage.uploadEntityMessage;
+                    await entitiesManager.executeCommand(
+                        new UploadEntityMapStorageCommand(uploadEntityMessage, mapUrl.hostname)
+                    );
+                    break;
+                }
+                case "modifyCustomEntityMessage": {
+                    const modifyCustomEntityMessage = editMapMessage.modifyCustomEntityMessage;
+                    await entitiesManager.executeCommand(
+                        new ModifyCustomEntityMapStorageCommand(modifyCustomEntityMessage, mapUrl.hostname)
+                    );
+                    break;
+                }
+                case "deleteCustomEntityMessage": {
+                    const deleteCustomEntityMessage = editMapMessage.deleteCustomEntityMessage;
+                    await entitiesManager.executeCommand(
+                        new DeleteCustomEntityMapStorageCommand(deleteCustomEntityMessage, gameMap, mapUrl.hostname)
                     );
                     break;
                 }
@@ -267,6 +318,13 @@ function getMessageFromError(error: unknown): string {
     } else {
         return "Unknown error";
     }
+}
+
+function getEntityCenterCoordinates(entityCoordinates: EntityCoordinates, entityDimensions: EntityDimensions) {
+    return {
+        x: entityCoordinates.x + entityDimensions.width * 0.5,
+        y: entityCoordinates.y + entityDimensions.height * 0.5,
+    };
 }
 
 export { mapStorageServer };

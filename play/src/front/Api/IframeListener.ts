@@ -207,6 +207,9 @@ class IframeListener {
     private readonly _inviteUserButtonStream: Subject<boolean> = new Subject();
     public readonly inviteUserButtonStream = this._inviteUserButtonStream.asObservable();
 
+    private readonly _roomListStream: Subject<boolean> = new Subject();
+    public readonly roomListButtonStream = this._roomListStream.asObservable();
+
     private readonly iframes = new Map<HTMLIFrameElement, string | undefined>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -526,6 +529,10 @@ class IframeListener {
                         this._inviteUserButtonStream.next(false);
                     } else if (iframeEvent.type == "restoreInviteUserButton") {
                         this._inviteUserButtonStream.next(true);
+                    } else if (iframeEvent.type == "disableRoomList") {
+                        this._roomListStream.next(false);
+                    } else if (iframeEvent.type == "restoreRoomList") {
+                        this._roomListStream.next(true);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;

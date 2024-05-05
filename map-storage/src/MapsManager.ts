@@ -99,7 +99,6 @@ class MapsManager {
         const wam = WAMFileFormat.parse(JSON.parse(file));
 
         const gameMap = new GameMap(this.getMockITiledMap(), wam);
-        gameMap.initialize();
         this.loadedMaps.set(key, gameMap);
 
         return gameMap;

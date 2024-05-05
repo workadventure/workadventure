@@ -9,12 +9,7 @@
     import InputTags from "../../Input/InputTags.svelte";
     import { UpdateWAMMetadataFrontCommand } from "../../../Phaser/Game/MapEditor/Commands/WAM/UpdateWAMMetadataFrontCommand";
     import ButtonState from "../../Input/ButtonState.svelte";
-
-    type Option = {
-        value: string;
-        label: string;
-        created: undefined | boolean;
-    };
+    import { InputTagOption } from "../../Input/InputTagOption";
 
     let dynamicStrings = {
         error: {
@@ -26,8 +21,8 @@
     let description = "";
     let thumbnail = "";
     let copyright = "";
-    let tags: Option[] = [];
-    let _tag: Option[] = [
+    let tags: InputTagOption[] = [];
+    let _tag: InputTagOption[] = [
         {
             value: "member",
             label: "member",
@@ -92,16 +87,25 @@
         onKeyPress={() => (dynamicStrings.error.name = false)}
         error={dynamicStrings.error.name}
     />
-    <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.settings.room.helps.description()}</p>
+    <p class="help-text">
+        <InfoIcon size="18" />
+        {$LL.mapEditor.settings.room.helps.description()}
+    </p>
     <InputTextArea
         label={$LL.mapEditor.settings.room.inputs.description()}
         placeHolder="MySpace"
         bind:value={description}
         onKeyPress={() => {}}
     />
-    <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.settings.room.helps.tags()}</p>
+    <p class="help-text">
+        <InfoIcon size="18" />
+        {$LL.mapEditor.settings.room.helps.tags()}
+    </p>
     <InputTags label={$LL.mapEditor.settings.room.inputs.tags()} options={_tag} bind:value={tags} />
-    <p class="help-text"><InfoIcon size="18" /> {$LL.mapEditor.settings.room.helps.copyright()}</p>
+    <p class="help-text">
+        <InfoIcon size="18" />
+        {$LL.mapEditor.settings.room.helps.copyright()}
+    </p>
     <InputTextArea
         label={$LL.mapEditor.settings.room.inputs.copyright()}
         placeHolder="MySpace"

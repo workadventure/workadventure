@@ -7,8 +7,14 @@ export const AuthTokenData = z.object({
     accessToken: z.string().optional(),
     username: z.string().optional(),
     locale: z.string().optional(),
+    tags: z.string().array().optional(),
 });
 export type AuthTokenData = z.infer<typeof AuthTokenData>;
+
+export const AccessTokenData = z.object({
+    tags: z.string().array().optional(),
+});
+export type AccessTokenData = z.infer<typeof AccessTokenData>;
 
 export const AdminSocketTokenData = z.object({
     authorizedRoomIds: z.string().array(), //the list of rooms the client is authorized to read from.
@@ -27,8 +33,14 @@ export class JWTTokenManager {
         return AdminSocketTokenData.parse(verifiedToken);
     }
 
-    public createAuthToken(identifier: string, accessToken?: string, username?: string, locale?: string): string {
-        return Jwt.sign({ identifier, accessToken, username, locale }, SECRET_KEY, { expiresIn: "30d" });
+    public createAuthToken(
+        identifier: string,
+        accessToken?: string,
+        username?: string,
+        locale?: string,
+        tags?: string[]
+    ): string {
+        return Jwt.sign({ identifier, accessToken, username, locale, tags }, SECRET_KEY, { expiresIn: "30d" });
     }
 
     public verifyJWTToken(token: string, ignoreExpiration = false): AuthTokenData {

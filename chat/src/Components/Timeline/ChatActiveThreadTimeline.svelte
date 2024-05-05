@@ -14,6 +14,8 @@
         EraserService,
         EraserException,
         ChatMessageTypes,
+        ExcalidrawService,
+        ExcalidrawException,
     } from "@workadventure/shared-utils";
     import {
         chatMessagesStore,
@@ -274,6 +276,17 @@
                 return apps;
             });
         }
+        if (chatConnectionManager.excalidrawToolIsActivated) {
+            applications.update((apps) => {
+                apps.add({
+                    name: "Excalidraw",
+                    icon: "./static/images/applications/excalidraw.svg",
+                    example: "https://excalidraw.com/",
+                    description: $LL.form.application.youtube.description(),
+                });
+                return apps;
+            });
+        }
     });
 
     function needHideHeader(authorName: string, date: Date, i: number) {
@@ -306,7 +319,6 @@
             KlaxoonService.openKlaxoonActivityPicker(
                 chatConnectionManager.klaxoonToolClientId,
                 (event: KlaxoonEvent) => {
-                    console.log("KlaxoonService.openKlaxoonActivityPicker => event", event);
                     // Remove previous app
                     applicationsSelected.update((apps) => {
                         apps.delete(app);
@@ -410,10 +422,22 @@
                 break;
             case "Eraser":
                 try {
-                    EraserService.validateEraserLink(new URL(app.link));
+                    EraserService.validateLink(new URL(app.link));
                 } catch (err) {
                     if (err instanceof EraserException.EraserLinkException) {
                         app.error = $LL.form.application.eraser.error();
+                    } else {
+                        app.error = $LL.form.application.weblink.error();
+                    }
+                    app.link = undefined;
+                }
+                break;
+            case "Excalidraw":
+                try {
+                    ExcalidrawService.validateLink(new URL(app.link), chatConnectionManager.excalidrawToolDomains);
+                } catch (err) {
+                    if (err instanceof ExcalidrawException.ExcalidrawException) {
+                        app.error = $LL.form.application.excalidraw.error();
                     } else {
                         app.error = $LL.form.application.weblink.error();
                     }

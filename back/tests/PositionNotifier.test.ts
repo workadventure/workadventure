@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { describe, expect, it } from "vitest";
 import { AvailabilityStatus } from "@workadventure/messages";
+import { describe, expect, it } from "vitest";
+import { BrothersFinder } from "../src/Model/BrothersFinder";
+import { Movable } from "../src/Model/Movable";
+import { PositionInterface } from "../src/Model/PositionInterface";
 import { PositionNotifier } from "../src/Model/PositionNotifier";
 import { User, UserSocket } from "../src/Model/User";
 import { Zone } from "../src/Model/Zone";
-import { Movable } from "../src/Model/Movable";
-import { PositionInterface } from "../src/Model/PositionInterface";
 import { ZoneSocket } from "../src/RoomManager";
-import { BrothersFinder } from "../src/Model/BrothersFinder";
 
 class VoidBrothersFinder implements BrothersFinder {
     getBrothers(user: User): Iterable<User> {
@@ -54,6 +54,7 @@ describe("PositionNotifier", () => {
             AvailabilityStatus.ONLINE,
             {} as UserSocket,
             [],
+            false,
             null,
             "foo",
             [],
@@ -78,6 +79,7 @@ describe("PositionNotifier", () => {
             AvailabilityStatus.ONLINE,
             {} as UserSocket,
             [],
+            false,
             null,
             "foo",
             [],
@@ -172,6 +174,7 @@ describe("PositionNotifier", () => {
             AvailabilityStatus.ONLINE,
             {} as UserSocket,
             [],
+            false,
             null,
             "foo",
             [],
@@ -196,6 +199,7 @@ describe("PositionNotifier", () => {
             AvailabilityStatus.ONLINE,
             {} as UserSocket,
             [],
+            false,
             null,
             "foo",
             [],

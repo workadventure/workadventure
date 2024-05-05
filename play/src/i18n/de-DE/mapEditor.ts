@@ -9,6 +9,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         trashEditor: "Papierkorb",
         closeMapEditor: "Karte schließen",
         mapManagerActivated: "Kartenmanager aktiviert",
+        exploreTheRoomActivated: "Raum erkunden",
+        areaEditorActivated: "Fläche bearbeiten",
+        entityEditorActivated: "Entität bearbeiten",
+        trashEditorActivated: "Papierkorb aktiviert",
+        configureMyRoomActivated: "Meinen Raum konfigurieren",
     },
     properties: {
         silentProperty: {
@@ -80,6 +85,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             warningEmbeddableLink: "Dieser Link kann nicht eingebettet werden.",
             errorInvalidUrl: 'Ungültige URL. Es muss mit "http://" oder "https://" beginnen.',
             findOutMoreHere: "Hier erfahren Sie mehr",
+            openPickerSelector: "Auswählen",
+            forcedInNewTab: "In neuem Tab öffnen",
         },
         advancedOptions: "Erweiterte Optionen",
         speakerMegaphoneProperties: {

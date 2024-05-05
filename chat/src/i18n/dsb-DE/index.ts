@@ -90,6 +90,11 @@ const dsb_DE: Translation = {
                 description: "Pósćel Eraser-toflu do chata!",
                 error: "Eraser-URL njejo płaśeca",
             },
+            excalidraw: {
+                title: "Excalidraw",
+                description: "Pósćel Excalidraw-toflu do chata!",
+                error: "Excalidraw-URL njejo płaśeca",
+            },
             weblink: {
                 error: "URL njejo płaśeca",
             },

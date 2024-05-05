@@ -1,22 +1,29 @@
-import type { AreaData, AtLeast } from "@workadventure/map-editor";
+import { AreaData, AtLeast } from "@workadventure/map-editor";
+import type { EditMapCommandMessage } from "@workadventure/messages";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
-import type { EditMapCommandMessage } from "@workadventure/messages";
+import { v4 as uuid } from "uuid";
+// eslint-disable-next-line import/no-unresolved
+import { openModal } from "svelte-modals";
 import {
-    MapEditorAreaToolMode,
     mapEditorAreaModeStore,
+    MapEditorAreaToolMode,
     mapEditorSelectedAreaPreviewStore,
 } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
-import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
-import type { GameScene } from "../../GameScene";
-import type { MapEditorModeManager } from "../MapEditorModeManager";
 import { SizeAlteringSquare } from "../../../Components/MapEditor/SizeAlteringSquare";
 import { CopyAreaEventData } from "../../GameMap/EntitiesManager";
-import { UpdateAreaFrontCommand } from "../Commands/Area/UpdateAreaFrontCommand";
-import { DeleteAreaFrontCommand } from "../Commands/Area/DeleteAreaFrontCommand";
+import type { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
+import type { GameScene } from "../../GameScene";
 import { CreateAreaFrontCommand } from "../Commands/Area/CreateAreaFrontCommand";
+import { DeleteAreaFrontCommand } from "../Commands/Area/DeleteAreaFrontCommand";
+import { UpdateAreaFrontCommand } from "../Commands/Area/UpdateAreaFrontCommand";
+import type { MapEditorModeManager } from "../MapEditorModeManager";
+import { Entity } from "../../../ECS/Entity";
+import { DeleteEntityFrontCommand } from "../Commands/Entity/DeleteEntityFrontCommand";
+import ActionPopupOnPersonalAreaWithEntities from "../../../../Components/MapEditor/ActionPopupOnPersonalAreaWithEntities.svelte";
 import { MapEditorTool } from "./MapEditorTool";
+import { TrashEditorTool } from "./TrashEditorTool";
 
 export class AreaEditorTool extends MapEditorTool {
     private scene: GameScene;
@@ -151,13 +158,42 @@ export class AreaEditorTool extends MapEditorTool {
                 const data = editMapCommandMessage.editMapMessage?.message.deleteAreaMessage;
                 // execute command locally
                 await this.mapEditorModeManager.executeCommand(
-                    new DeleteAreaFrontCommand(this.scene.getGameMap(), data.id, commandId, this, false),
-                    false,
-                    false
+                    new DeleteAreaFrontCommand(this.scene.getGameMap(), data.id, commandId, this)
                 );
                 break;
             }
         }
+    }
+
+    public handleDeleteAreaFrontCommandExecution(areaId: string, editorTool?: AreaEditorTool | TrashEditorTool): void {
+        const isPersonalArea = this.getIsPersonalArea(areaId);
+        const deleteAreaCommand = new DeleteAreaFrontCommand(
+            this.scene.getGameMap(),
+            areaId,
+            undefined,
+            editorTool ?? this
+        );
+        if (isPersonalArea) {
+            const entitiesInsideArea = this.getEntitiesInsideArea(areaId);
+            if (entitiesInsideArea.size > 0) {
+                openModal(ActionPopupOnPersonalAreaWithEntities, {
+                    onDeleteEntities: () => this.executeDeletePersonalAreaWithEntities(areaId, deleteAreaCommand, true),
+                    onKeepEntities: () => this.executeDeletePersonalAreaWithEntities(areaId, deleteAreaCommand),
+                    onCancel: () => {},
+                });
+                return;
+            }
+        }
+        this.mapEditorModeManager.executeCommand(deleteAreaCommand).catch((error) => console.error(error));
+    }
+
+    private getIsPersonalArea(areaId: string): boolean {
+        return !!this.scene.getGameMap().getGameMapAreas()?.isPersonalArea(areaId);
+    }
+
+    private getEntitiesInsideArea(areaId: string): Map<string, Entity> {
+        const entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
+        return entitiesManager.getEntitiesInsideArea(areaId);
     }
 
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {}
@@ -174,14 +210,7 @@ export class AreaEditorTool extends MapEditorTool {
                 if (!areaPreview) {
                     break;
                 }
-                this.mapEditorModeManager
-                    .executeCommand(
-                        new DeleteAreaFrontCommand(this.scene.getGameMap(), areaPreview.getId(), undefined, this, true)
-                    )
-                    .then(() => {
-                        this.scene.input.setDefaultCursor("crosshair");
-                    })
-                    .catch((e) => console.error(e));
+                this.handleDeleteAreaFrontCommandExecution(areaPreview.getId());
                 this.changeAreaMode("ADD");
                 break;
             }
@@ -505,7 +534,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private copyArea(data: CopyAreaEventData): void {
-        const id = crypto.randomUUID();
+        const id = uuid();
         this.mapEditorModeManager
             .executeCommand(
                 new CreateAreaFrontCommand(
@@ -529,7 +558,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private createNewArea(x: number, y: number, width: number, height: number): void {
-        const id = crypto.randomUUID();
+        const id = uuid();
         this.mapEditorModeManager
             .executeCommand(
                 new CreateAreaFrontCommand(
@@ -574,6 +603,42 @@ export class AreaEditorTool extends MapEditorTool {
         );
     }
 
+    private executeDeletePersonalAreaWithEntities(
+        areaId: string,
+        deleteAreaCommand: DeleteAreaFrontCommand,
+        removeEntities?: boolean
+    ): void {
+        if (removeEntities) {
+            this.removeAreaEntities(areaId);
+        }
+        this.mapEditorModeManager.executeCommand(deleteAreaCommand).catch((error) => console.error(error));
+    }
+
+    private executeUpdateAreaFrontCommand(
+        newData: AtLeast<AreaData, "id">,
+        oldData: AtLeast<AreaData, "id"> | undefined,
+        removeEntities?: boolean
+    ): void {
+        const gameMap = this.scene.getGameMap();
+        if (removeEntities) {
+            this.removeAreaEntities(newData.id);
+        }
+        this.mapEditorModeManager
+            .executeCommand(new UpdateAreaFrontCommand(gameMap, newData, undefined, oldData, this))
+            .catch((error) => console.error(error));
+    }
+
+    private removeAreaEntities(areaId: string): void {
+        const gameMap = this.scene.getGameMap();
+        const entitiesManager = this.scene.getGameMapFrontWrapper().getEntitiesManager();
+        const entitiesInsideArea = this.getEntitiesInsideArea(areaId);
+        entitiesInsideArea.forEach((_, entityId) => {
+            this.mapEditorModeManager
+                .executeCommand(new DeleteEntityFrontCommand(gameMap, entityId, undefined, entitiesManager))
+                .catch((error) => console.error(error));
+        });
+    }
+
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
         areaPreview.on(AreaPreviewEvent.DragStart, () => {
             this.draggingdArea = true;
@@ -589,26 +654,16 @@ export class AreaEditorTool extends MapEditorTool {
         });
         areaPreview.on(
             AreaPreviewEvent.Updated,
-            (newData: AtLeast<AreaData, "id">, oldData: AtLeast<AreaData, "id"> | undefined) => {
-                this.mapEditorModeManager
-                    .executeCommand(
-                        new UpdateAreaFrontCommand(this.scene.getGameMap(), newData, undefined, oldData, this)
-                    )
-                    .catch((e) => console.error(e));
+            (
+                newData: AtLeast<AreaData, "id">,
+                oldData: AtLeast<AreaData, "id"> | undefined,
+                removeAreaEntities: boolean | undefined
+            ) => {
+                this.executeUpdateAreaFrontCommand(newData, oldData, removeAreaEntities);
             }
         );
         areaPreview.on(AreaPreviewEvent.Delete, () => {
-            this.mapEditorModeManager
-                .executeCommand(
-                    new DeleteAreaFrontCommand(
-                        this.scene.getGameMap(),
-                        areaPreview.getAreaData().id,
-                        undefined,
-                        this,
-                        true
-                    )
-                )
-                .catch((e) => console.error(e));
+            this.handleDeleteAreaFrontCommandExecution(areaPreview.getId());
         });
     }
 

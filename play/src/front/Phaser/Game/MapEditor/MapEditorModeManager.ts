@@ -1,16 +1,19 @@
 import { Command, UpdateWAMSettingCommand } from "@workadventure/map-editor";
-import { Unsubscriber, get } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 import { EditMapCommandMessage } from "@workadventure/messages";
 import pLimit from "p-limit";
 import debug from "debug";
+import merge from "lodash/merge";
 import type { RoomConnection } from "../../../Connection/RoomConnection";
 import type { GameScene } from "../GameScene";
 import {
+    mapEditorAskToClaimPersonalAreaStore,
     mapEditorModeStore,
     mapEditorSelectedToolStore,
     mapEditorVisibilityStore,
 } from "../../../Stores/MapEditorStore";
-import { mapEditorActivated } from "../../../Stores/MenuStore";
+import { mapEditorActivated, mapEditorActivatedForThematics } from "../../../Stores/MenuStore";
+import { localUserStore } from "../../../Connection/LocalUserStore";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import type { MapEditorTool } from "./Tools/MapEditorTool";
 import { FloorEditorTool } from "./Tools/FloorEditorTool";
@@ -21,6 +24,7 @@ import { FrontCommand } from "./Commands/FrontCommand";
 import { TrashEditorTool } from "./Tools/TrashEditorTool";
 import { ExplorerTool } from "./Tools/ExplorerTool";
 import { CloseTool } from "./Tools/CloseTool";
+import { UpdateAreaFrontCommand } from "./Commands/Area/UpdateAreaFrontCommand";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
@@ -89,12 +93,14 @@ export class MapEditorModeManager {
 
         this.active = false;
 
+        const areaEditorTool = new AreaEditorTool(this);
+
         this.editorTools = {
-            [EditorToolName.AreaEditor]: new AreaEditorTool(this),
+            [EditorToolName.AreaEditor]: areaEditorTool,
             [EditorToolName.EntityEditor]: new EntityEditorTool(this),
             [EditorToolName.FloorEditor]: new FloorEditorTool(this),
             [EditorToolName.WAMSettingsEditor]: new WAMSettingsEditorTool(this),
-            [EditorToolName.TrashEditor]: new TrashEditorTool(this),
+            [EditorToolName.TrashEditor]: new TrashEditorTool(this, areaEditorTool),
             [EditorToolName.ExploreTheRoom]: new ExplorerTool(this, this.scene),
             [EditorToolName.CloseMapEditor]: new CloseTool(),
         };
@@ -423,7 +429,9 @@ export class MapEditorModeManager {
             }
             this.equipTool(
                 this.lastlyUsedTool ??
-                    (get(mapEditorActivated) ? EditorToolName.EntityEditor : EditorToolName.ExploreTheRoom)
+                    (get(mapEditorActivated) || get(mapEditorActivatedForThematics)
+                        ? EditorToolName.EntityEditor
+                        : EditorToolName.ExploreTheRoom)
             );
         });
     }
@@ -444,5 +452,41 @@ export class MapEditorModeManager {
 
     public getScene(): GameScene {
         return this.scene;
+    }
+
+    public claimPersonalArea() {
+        const areaDataToClaim = get(mapEditorAskToClaimPersonalAreaStore);
+        const userUUID = localUserStore.getLocalUser()?.uuid;
+        if (areaDataToClaim === undefined) {
+            console.error("No area to claim");
+            return;
+        }
+        if (userUUID === undefined) {
+            console.error("Unable to claim the area, your UUID is undefined");
+            return;
+        }
+        const areaPersonalPropertyData = areaDataToClaim.properties.find(
+            (property) => property.type === "personalAreaPropertyData"
+        );
+        if (!areaPersonalPropertyData) {
+            console.error("No area property data");
+            return;
+        }
+
+        const oldAreaData = structuredClone(areaDataToClaim);
+        const property = areaDataToClaim.properties.find((property) => property.type === "personalAreaPropertyData");
+        if (property) {
+            merge(property, { ownerId: userUUID });
+        }
+
+        this.executeCommand(
+            new UpdateAreaFrontCommand(
+                this.getScene().getGameMap(),
+                areaDataToClaim,
+                undefined,
+                oldAreaData,
+                this.editorTools.AreaEditor as AreaEditorTool
+            )
+        ).catch((error) => console.error(error));
     }
 }

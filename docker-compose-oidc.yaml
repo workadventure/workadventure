@@ -7,7 +7,8 @@ services:
       OPID_CLIENT_ID: authorization-code-client-id
       OPID_CLIENT_SECRET: authorization-code-client-secret
       OPID_CLIENT_ISSUER: http://oidc.workadventure.localhost
-
+      OPID_SCOPE: profile openid email tags-scope
+      MAP_EDITOR_ALLOWED_USERS: noUserAllowed
   chat:
     environment:
       ENABLE_OPENID: 1
@@ -37,13 +38,16 @@ services:
           "AutomaticRedirectAfterSignOut": true
         }
       API_SCOPES_INLINE: |
-        - Name: some-app-scope-1
-        - Name: some-app-scope-2
+        - Name: tags
+          UserClaims:
+            - tags-scope
       API_RESOURCES_INLINE: |
         - Name: some-app
           Scopes:
             - some-app-scope-1
-            - some-app-scope-2
+            - tags-scope
+          UserClaims:
+            - tags
       USERS_CONFIGURATION_INLINE: |
         [
           {
@@ -53,25 +57,49 @@ services:
             "Claims": [
               {
                 "Type": "name",
-                "Value": "John Doe"
+                "Value": "John Doe",
+                "ValueType": "string",
               },
               {
                 "Type": "email",
-                "Value": "john.doe@example.com"
+                "Value": "john.doe@example.com",
+                "ValueType": "string"
               },
               {
-                "Type": "some-api-resource-claim",
-                "Value": "Sam's Api Resource Custom Claim"
+                "Type": "tags",
+                "Value": "[\"admin\"]",
+                "ValueType": "json"
               },
-              {
-                "Type": "some-api-scope-claim",
-                "Value": "Sam's Api Scope Custom Claim"
-              },
-              {
-                "Type": "some-identity-resource-claim",
-                "Value": "Sam's Identity Resource Custom Claim"
-              }
             ]
+          },
+          {
+            "SubjectId":"2",
+            "Username":"User2",
+            "Password":"pwd",
+            "Claims": [
+              {
+                "Type": "name",
+                "Value": "Alice Doe",
+                "ValueType": "string",
+              },
+              {
+                "Type": "email",
+                "Value": "alice.doe@example.com",
+                "ValueType": "string"
+              },
+              {
+                "Type": "tags",
+                "Value": "[\"member\"]",
+                "ValueType": "json"
+              },
+            ]
+          }
+        ]
+      IDENTITY_RESOURCES_INLINE: |
+        [
+          {
+            "Name": "tags-scope",
+            "ClaimTypes": ["tags"]
           }
         ]
       CLIENTS_CONFIGURATION_PATH: /tmp/config/clients-config.json

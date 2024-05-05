@@ -1,17 +1,18 @@
 <script lang="ts">
+    import { createEventDispatcher } from "svelte";
     import Select from "svelte-select";
+    import LL from "../../../i18n/i18n-svelte";
+    import { InputTagOption } from "./InputTagOption";
 
-    type Option = {
-        value: string;
-        label: string;
-        created: undefined | boolean;
-    };
+    const dispatch = createEventDispatcher();
+
     export let label: string;
-    export let value: Option[];
-    export let options: Option[];
+    export let value: InputTagOption[] | undefined;
+    export let options: InputTagOption[] = [];
     export let onFocus = () => {};
     export let onBlur = () => {};
     export let handleChange = () => {};
+    export let testId: string | undefined = undefined;
 
     let filterText = "";
 
@@ -19,7 +20,7 @@
         if (value?.find((i) => i.label === filterText)) return;
         if (e.detail.length === 0 && filterText.length > 0) {
             const prev = options.filter((i) => !i.created);
-            options = [...prev, { value: filterText, label: filterText.toLocaleUpperCase(), created: true }];
+            options = [...prev, { value: filterText, label: filterText.toLowerCase(), created: true }];
         }
     }
 
@@ -28,7 +29,7 @@
             delete i.created;
             return { ...i, label: i.label.toLowerCase() };
         });
-        handleChange();
+        dispatch("change", value);
     }
 </script>
 
@@ -52,10 +53,11 @@
         showChevron={true}
         --icons-color="var(--brand-blue)"
         --text-color="var(--brand-blue)"
+        listAutoWidth={false}
+        inputAttributes={{ "data-testid": testId }}
     >
         <div slot="item" let:item>
-            {item.created ? "Add new : " : ""}
-            {item.label}
+            {item.created ? $LL.notification.addNewTag({ tag: item.label.toLowerCase() }) : item.label}
         </div>
     </Select>
 </div>

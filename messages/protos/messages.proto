@@ -15,6 +15,9 @@ enum AvailabilityStatus {
   BBB = 5;
   DENY_PROXIMITY_MEETING = 6;
   SPEAKER = 7;
+  BUSY = 8;
+  DO_NOT_DISTURB = 9;
+  BACK_IN_A_MOMENT = 10;
 }
 
 message PositionMessage {
@@ -49,7 +52,17 @@ message CharacterTextureMessage {
 
 message ApplicationMessage {
   string name = 1;
-  string script = 2;
+  optional string script = 2;
+  optional string doc = 3;
+  optional string description = 4;
+  optional string image = 5;
+  optional bool enabled = 6;
+  optional string regexUrl = 7;
+  optional string targetUrl = 8;
+  optional bool default = 9;
+  optional bool forceNewTab = 10;
+  optional bool allowAPI = 11;
+  optional string policy = 12;
 }
 
 message CompanionTextureMessage {
@@ -145,7 +158,10 @@ message EditMapMessage {
     DeleteEntityMessage deleteEntityMessage = 6;
     UpdateWAMSettingsMessage updateWAMSettingsMessage = 7;
     ErrorCommandMessage errorCommandMessage = 8;
-    ModifiyWAMMetadataMessage modifiyWAMMetadataMessage = 9;
+    UploadEntityMessage uploadEntityMessage = 9;
+    ModifyCustomEntityMessage modifyCustomEntityMessage = 10;
+    DeleteCustomEntityMessage deleteCustomEntityMessage = 11;
+    ModifiyWAMMetadataMessage modifiyWAMMetadataMessage = 12;
   }
 }
 
@@ -178,6 +194,9 @@ message EditMapCommandsArrayMessage {
 message EditMapCommandWithKeyMessage {
   string mapKey = 1;
   EditMapCommandMessage editMapCommandMessage = 2;
+  repeated string connectedUserTags = 3;
+  bool userCanEdit = 4;
+  string userUUID = 5;
 }
 
 message ModifyAreaMessage {
@@ -213,19 +232,58 @@ message CreateEntityMessage {
   string prefabId = 5;
   repeated google.protobuf.Value properties = 6;
   optional string name = 7;
+  uint32 width = 8;
+  uint32 height = 9;
 }
 
 message DeleteEntityMessage {
   string id = 1;
 }
 
+message CollisionGridRow {
+  repeated uint32 row = 1;
+}
+
+enum CustomEntityDirection {
+  Up = 0;
+  Right = 1;
+  Down = 2;
+  Left = 3;
+}
+
+message UploadEntityMessage {
+  bytes file = 1;
+  string id = 2;
+  string name = 3;
+  repeated string tags = 4;
+  string imagePath = 5;
+  CustomEntityDirection direction = 6;
+  string color = 7;
+  optional google.protobuf.Value collisionGrid = 8;
+  optional int32 depthOffset = 9;
+}
+
+message ModifyCustomEntityMessage {
+  string id = 1;
+  string name = 2;
+  repeated string tags = 3;
+  optional google.protobuf.Value collisionGrid = 4;
+  optional int32 depthOffset = 5;
+}
+
+message DeleteCustomEntityMessage {
+  string id = 1;
+}
+
 message ModifyEntityMessage {
   string id = 1;
-  optional uint32 x = 2;
-  optional uint32 y = 3;
+  uint32 x = 2;
+  uint32 y = 3;
   repeated google.protobuf.Value properties = 4;
   optional bool modifyProperties = 5;
   optional string name = 6;
+  uint32 width = 7;
+  uint32 height = 8;
 }
 
 message ClientToServerMessage {
@@ -344,6 +402,8 @@ message QueryMessage {
     EmbeddableWebsiteQuery embeddableWebsiteQuery = 4;
     RoomsFromSameWorldQuery roomsFromSameWorldQuery = 5;
     SendEventQuery sendEventQuery = 6;
+    SearchMemberQuery searchMemberQuery = 7;
+    GetMemberQuery getMemberQuery = 8;
   }
 }
 
@@ -375,6 +435,14 @@ message SendEventQuery {
   repeated int32 targetUserIds = 3;
 }
 
+message SearchMemberQuery {
+  string searchText = 1;
+}
+
+message GetMemberQuery {
+  string uuid = 1;
+}
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
@@ -385,6 +453,8 @@ message AnswerMessage {
     EmbeddableWebsiteAnswer embeddableWebsiteAnswer = 6;
     RoomsFromSameWorldAnswer roomsFromSameWorldAnswer = 7;
     SendEventAnswer sendEventAnswer = 8;
+    SearchMemberAnswer searchMemberAnswer = 9;
+    GetMemberAnswer getMemberAnswer = 10;
   }
 }
 
@@ -425,6 +495,21 @@ message RoomsFromSameWorldAnswer {
 }
 
 message SendEventAnswer {
+}
+
+message SearchMemberAnswer {
+  repeated Member members = 1;
+}
+
+message GetMemberAnswer {
+  Member member = 1;
+}
+
+message Member {
+  string id = 1;
+  optional string name = 2;
+  optional string email = 3;
+  optional string visitCardUrl = 4;
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/

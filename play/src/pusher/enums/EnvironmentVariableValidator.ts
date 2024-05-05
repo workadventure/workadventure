@@ -89,6 +89,7 @@ export const EnvironmentVariables = z.object({
     FALLBACK_LOCALE: z.string().optional(),
     CHAT_URL: AbsoluteOrRelativeUrl,
     OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy.optional(),
+    OPID_TAGS_CLAIM: z.string().optional(),
     ENABLE_REPORT_ISSUES_MENU: BoolAsString.optional().transform((val) => toBool(val, false)),
     REPORT_ISSUES_URL: z.string().url().optional().or(z.literal("")),
     LOGROCKET_ID: z.string().optional(),
@@ -127,6 +128,11 @@ export const EnvironmentVariables = z.object({
     GOOGLE_SHEETS_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
     GOOGLE_SLIDES_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
     ERASER_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
+    EXCALIDRAW_ENABLED: BoolAsString.optional().transform((val) => toBool(val, false)),
+    EXCALIDRAW_DOMAINS: z
+        .string()
+        .optional()
+        .transform((val) => toArray(val)),
     EMBEDDED_DOMAINS_WHITELIST: z
         .string()
         .optional()

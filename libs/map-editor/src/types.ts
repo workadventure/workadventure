@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CustomEntityDirection } from "@workadventure/messages";
 
 export type AtLeast<T, K extends keyof T> = Partial<T> & Pick<T, K>;
 
@@ -78,21 +79,14 @@ export const OpenWebsitePropertyData = PropertyBase.extend({
         .default("fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture")
         .optional(),
     position: z.number().optional(),
-    application: z
-        .union([
-            z.literal("website"),
-            z.literal("youtube"),
-            z.literal("klaxoon"),
-            z.literal("googleDrive"),
-            z.literal("googleDocs"),
-            z.literal("googleSheets"),
-            z.literal("googleSlides"),
-            z.literal("googleForms"),
-            z.literal("eraser"),
-        ])
-        .default("website"),
+    application: z.string().default("website"),
     poster: z.string().optional(),
     placeholder: z.string().optional(),
+    icon: z.string().optional(),
+    label: z.string().optional(),
+    regexUrl: z.string().optional(),
+    targetEmbedableUrl: z.string().optional(),
+    forceNewTab: z.boolean().optional().default(false),
 });
 
 export const SpeakerMegaphonePropertyData = PropertyBase.extend({
@@ -119,6 +113,20 @@ export const AreaDescriptionPropertyData = PropertyBase.extend({
     searchable: z.boolean().default(false),
 });
 
+export const RestrictedRightsPropertyData = PropertyBase.extend({
+    type: z.literal("restrictedRightsPropertyData"),
+    writeTags: z.array(z.string()).default([]),
+    readTags: z.array(z.string()).default([]),
+});
+
+export const PersonalAreaAccessClaimMode = z.enum(["dynamic", "static"]);
+
+export const PersonalAreaPropertyData = PropertyBase.extend({
+    type: z.literal("personalAreaPropertyData"),
+    accessClaimMode: PersonalAreaAccessClaimMode,
+    allowedTags: z.array(z.string()).default([]),
+    ownerId: z.string().nullable(), //Proto handle null here. If something goes wrong with personal area, this may be the issue
+});
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,
@@ -130,6 +138,8 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     SpeakerMegaphonePropertyData,
     ListenerMegaphonePropertyData,
     AreaDescriptionPropertyData,
+    RestrictedRightsPropertyData,
+    PersonalAreaPropertyData,
 ]);
 
 export const AreaDataProperties = z.array(AreaDataProperty);
@@ -161,19 +171,24 @@ export const EntityDataProperty = z.discriminatedUnion("type", [
 
 export const EntityDataProperties = z.array(EntityDataProperty);
 
+export const CollisionGrid = z.array(z.array(z.number()));
+
 export const EntityRawPrefab = z.object({
+    id: z.string(),
     name: z.string(),
     tags: z.array(z.string()),
     imagePath: z.string(),
     direction: z.enum(["Left", "Up", "Down", "Right"]),
     color: z.string(),
-    collisionGrid: z.array(z.array(z.number())).optional(),
+    collisionGrid: CollisionGrid.optional(),
     depthOffset: z.number().optional(),
 });
 
+export const EntityPrefabType = z.union([z.literal("Default"), z.literal("Custom")]);
+
 export const EntityPrefab = EntityRawPrefab.extend({
     collectionName: z.string(),
-    id: z.string(),
+    type: EntityPrefabType,
 });
 
 export const EntityPrefabRef = z.object({
@@ -187,6 +202,13 @@ export const EntityCollection = z.object({
     collection: z.array(EntityPrefab),
 });
 
+export const EntityCollectionRaw = z.object({
+    collectionName: z.string(),
+    tags: z.array(z.string()),
+    collection: z.array(EntityRawPrefab),
+    version: z.string().optional(),
+});
+
 // TODO: get rid of this type and use only WAMEntityData
 export const EntityData = z.object({
     id: z.string(),
@@ -196,6 +218,16 @@ export const EntityData = z.object({
     properties: EntityDataProperties.optional(),
     prefab: EntityRawPrefab,
     prefabRef: EntityPrefabRef,
+});
+
+export const EntityDimensions = z.object({
+    width: z.number(),
+    height: z.number(),
+});
+
+export const EntityCoordinates = z.object({
+    x: z.number(),
+    y: z.number(),
 });
 
 export const WAMEntityData = EntityData.omit({ prefab: true, id: true });
@@ -281,22 +313,17 @@ export const MapsCacheFileFormat = z.object({
 
 export type EntityRawPrefab = z.infer<typeof EntityRawPrefab>;
 export type EntityPrefab = z.infer<typeof EntityPrefab>;
+export type EntityPrefabType = z.infer<typeof EntityPrefabType>;
 export type EntityCollection = z.infer<typeof EntityCollection>;
+export type EntityCollectionRaw = z.infer<typeof EntityCollectionRaw>;
 export type CollectionUrl = z.infer<typeof CollectionUrl>;
+export type CollisionGrid = z.infer<typeof CollisionGrid>;
 export type EntityData = z.infer<typeof EntityData>;
+export type EntityDimensions = z.infer<typeof EntityDimensions>;
+export type EntityCoordinates = z.infer<typeof EntityCoordinates>;
 export type EntityDataProperties = z.infer<typeof EntityDataProperties>;
 export type EntityDataProperty = z.infer<typeof EntityDataProperty>;
 export type EntityDataPropertiesKeys = "jitsiRoomProperty" | "playAudio" | "openWebsite";
-export type OpenWebsiteTypePropertiesKeys =
-    | "website"
-    | "youtube"
-    | "klaxoon"
-    | "googleDrive"
-    | "googleDocs"
-    | "googleSheets"
-    | "googleSlides"
-    | "googleForms"
-    | "eraser";
 export type AreaCoordinates = z.infer<typeof AreaCoordinates>;
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
@@ -319,6 +346,9 @@ export type SpeakerMegaphonePropertyData = z.infer<typeof SpeakerMegaphoneProper
 export type ListenerMegaphonePropertyData = z.infer<typeof ListenerMegaphonePropertyData>;
 export type EntityDescriptionPropertyData = z.infer<typeof EntityDescriptionPropertyData>;
 export type AreaDescriptionPropertyData = z.infer<typeof AreaDescriptionPropertyData>;
+export type RestrictedRightsPropertyData = z.infer<typeof RestrictedRightsPropertyData>;
+export type PersonalAreaPropertyData = z.infer<typeof PersonalAreaPropertyData>;
+export type PersonalAreaAccessClaimMode = z.infer<typeof PersonalAreaAccessClaimMode>;
 
 export enum GameMapProperties {
     ALLOW_API = "allowApi",
@@ -368,3 +398,18 @@ export enum GameMapProperties {
     ZONE = "zone",
     ZOOM_MARGIN = "zoomMargin",
 }
+
+export const mapCustomEntityDirectionToDirection = (uploadEntityMessageDirection: CustomEntityDirection) => {
+    switch (uploadEntityMessageDirection) {
+        case CustomEntityDirection.Up:
+            return Direction.Up;
+        case CustomEntityDirection.Right:
+            return Direction.Right;
+        case CustomEntityDirection.Down:
+            return Direction.Down;
+        case CustomEntityDirection.Left:
+            return Direction.Left;
+        default:
+            return Direction.Down;
+    }
+};

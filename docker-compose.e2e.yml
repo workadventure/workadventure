@@ -30,9 +30,10 @@ services:
       STARTUP_COMMAND_3: ""
       STARTUP_COMMAND_4: ""
       STARTUP_COMMAND_5: ""
+      MAP_EDITOR_ALLOWED_USERS: noAllowedUser
+      OPID_SCOPE: profile openid email tags-scope
       # Increasing Woka speed to make tests faster
       WOKA_SPEED: 27
-
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.play.rule=Host(`play.workadventure.localhost`)"

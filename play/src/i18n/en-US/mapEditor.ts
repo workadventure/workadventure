@@ -14,6 +14,11 @@ const mapEditor: BaseTranslation = {
         closeMapEditor: "Close map editor",
         mapManagerActivated: "Map manager activated",
         mapExplorerActivated: "Map overview",
+        exploreTheRoomActivated: "Explore the room activated",
+        areaEditorActivated: "Area editor activated",
+        entityEditorActivated: "Entity editor activated",
+        trashEditorActivated: "Trash editor activated",
+        configureMyRoomActivated: "Configure my room activated",
     },
     properties: {
         silentProperty: {
@@ -89,6 +94,7 @@ const mapEditor: BaseTranslation = {
             errorInvalidUrl: 'Please enter a valid URL (starting with "https://")',
             findOutMoreHere: "Find out more here",
             openPickerSelector: "Open picker selector",
+            forcedInNewTab: "Forced in new tab",
         },
         advancedOptions: "Advanced Options",
         speakerMegaphoneProperties: {
@@ -163,6 +169,38 @@ const mapEditor: BaseTranslation = {
             error: "Please enter a valid Google Drive URL",
             disabled: "Google Drive integration is disabled.",
         },
+        restrictedRightsProperties: {
+            label: "Add rights",
+            rightTitle: "Access / edition rights by user tag",
+            rightDescription:
+                "Rights define who can interact with the area. If you leave it empty, everyone can use it. If you set it, only users who have at least one of these 'tags' can use it.",
+            rightWriteTitle: "Edition rights",
+            rightWriteDescription:
+                "Edition rights define who can modify the area. Users matching one of these tags can create, update or delete an object in the area.",
+            rightReadTitle: "Access rights",
+            rightReadDescription:
+                "Access rights define who can interact with the area. Users matching one of these tags can enter the area and use objects whithin the area.",
+        },
+        personalAreaConfiguration: {
+            label: "Personal area",
+            description:
+                "Users can claim personal areas as their own space. As an administrator, you can set/revoke ownership of an area",
+            accessClaimMode: "Access claim mode",
+            dynamicAccessClaimMode: "Dynamic",
+            staticAccessClaimMode: "Static",
+            dynamicAccessDescription: "Anyone with appropriate user tags can claim the property of the zone.",
+            staticAccessDescription: "Manually define the owner of the zone.",
+            allowedTags: "Allowed user tags",
+            allowedUser: "Allowed user",
+            owner: "Owner",
+            revokeAccess: "Revoke access",
+        },
+        excalidrawProperties: {
+            label: "Open Excalidraw",
+            description: "An open source virtual hand-drawn style whiteboard. Collaborative and end-to-end encrypted.",
+            error: "Please enter a valid Excalidraw URL",
+            disabled: "Excalidraw integration is disabled.",
+        },
     },
     areaEditor: {
         editInstructions: "Click an area to modify its properties.",
@@ -172,12 +210,25 @@ const mapEditor: BaseTranslation = {
         areaDescriptionPlaceholder: "My area is a...",
         areaSerchable: "Searchable in the exploration mode",
         addDescriptionField: "Add description field",
+        actionPopupOnPersonalAreaWithEntities: {
+            title: "Action required",
+            description: "This personal area contains one or more objects. What would you like to do with it/them ?",
+            buttons: {
+                keep: "Keep",
+                remove: "Remove",
+                cancel: "Cancel",
+            },
+        },
     },
     areaEditorInstructions: {
         title: "How it works ?",
         description: "Draw a zone on the map to create a new one.",
     },
     entityEditor: {
+        header: {
+            title: "Add object to your map",
+            description: "Search, upload or select existing object and add it in the map.",
+        },
         title: "Put your object",
         editing: "Editing: {name}",
         itemPicker: {
@@ -198,6 +249,36 @@ const mapEditor: BaseTranslation = {
         objectDescriptionPlaceholder: "My object is a...",
         objectSearchable: "Searchable in the exploration mode",
         addDescriptionField: "Add description field",
+        uploadEntity: {
+            title: "Add your image",
+            description: "Drag and drop or choose your image to add it in the map",
+            dragDrop: "Drag and Drop or",
+            chooseFile: "Choose file",
+            errorOnFileFormat: "File format not supported",
+            errorOnFileNumber: "Multiple file drop is not supported",
+        },
+        images: "Image{{s}}",
+        noImage: "No image",
+        customEntityEditorForm: {
+            imageName: "Image name",
+            tags: "Tags",
+            objectType: "Object type",
+            floatingObject: "Floating object",
+            floatingObjectDescription:
+                "A floating object can be placed freely on the map. Otherwise, it will be aligned on the map grid.",
+            depth: "Depth",
+            groundLevel: "Ground level",
+            custom: "Custom",
+            standing: "Standing",
+        },
+        buttons: {
+            editEntity: "Edit",
+            back: "Back",
+            cancel: "Cancel",
+            delete: "Delete",
+            save: "Save",
+            upload: "Upload",
+        },
     },
     settings: {
         loading: "Loading",
@@ -265,16 +346,7 @@ const mapEditor: BaseTranslation = {
             close: "Close",
             moveToEntity: "Move to entity {name}",
             moveToArea: "Move to area {name}",
-        },
-        popup: {
-            title: "Do you intend to keep using Explorer mode? 🤔",
-            content:
-                "The explorer mode allows you to visualize the map, find objects and areas. There are 2 systems in the explorer mode, the free exploration system or the object and area search system. The video above shows you how to use the explorer mode 💪",
-            notAskAgain: "Do not ask again",
-            close: "Close",
-            continue: "Continue",
-            // Translate previous sentence to english
-            // "The explorer mode allows you to visualize the map, find objects and areas. There are 2 systems in the explorer mode, the free exploration system or the object and area search system. The video above shows you how to use the explorer mode 💪"
+            errorMovingToObject: "The object is not accessible yet 🚫",
         },
     },
     listRoom: {

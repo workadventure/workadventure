@@ -3,8 +3,9 @@
     import { Unsubscriber, writable } from "svelte/store";
     import {
         AreaDataPropertiesKeys,
+        AreaDataProperty,
         EntityDataPropertiesKeys,
-        OpenWebsiteTypePropertiesKeys,
+        EntityDataProperty,
     } from "@workadventure/map-editor";
     import { fly } from "svelte/transition";
     import { mapEditorModeStore, mapExplorationObjectSelectedStore } from "../../Stores/MapEditorStore";
@@ -15,11 +16,12 @@
     import AddPropertyButtonWrapper from "../MapEditor/PropertyEditor/AddPropertyButtonWrapper.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { warningMessageStore } from "../../Stores/ErrorStore";
 
     // Create type for component AddPropertyButton
     type AddPropertyButtonType = {
         property: AreaDataPropertiesKeys | EntityDataPropertiesKeys;
-        subProperty?: OpenWebsiteTypePropertiesKeys;
+        subProperty?: string;
     };
 
     let iconProperties = writable<Map<string, AddPropertyButtonType>>(new Map());
@@ -73,16 +75,27 @@
         let newIconProperties = new Map<string, AddPropertyButtonType>();
         if ($mapExplorationObjectSelectedStore instanceof Entity) {
             for (const value of $mapExplorationObjectSelectedStore.getProperties()) {
-                newIconProperties.set(value.id, { property: value.type as EntityDataPropertiesKeys });
+                newIconProperties.set(value.id, createPropertyData(value));
             }
         }
 
         if ($mapExplorationObjectSelectedStore instanceof AreaPreview) {
             for (const value of $mapExplorationObjectSelectedStore.getAreaData().properties.values()) {
-                newIconProperties.set(value.id, { property: value.type });
+                newIconProperties.set(value.id, createPropertyData(value));
             }
         }
         iconProperties.set(newIconProperties);
+    }
+
+    function createPropertyData(value: EntityDataProperty | AreaDataProperty): AddPropertyButtonType {
+        const property: AddPropertyButtonType = {
+            property: value.type as EntityDataPropertiesKeys,
+            subProperty: undefined,
+        };
+        if (value.type === "openWebsite" && value.application !== undefined) {
+            property.subProperty = value.application;
+        }
+        return property;
     }
 
     function close() {
@@ -106,7 +119,12 @@
                     },
                     true
                 )
-                .catch((error) => console.warn(error));
+                .catch((error) => {
+                    console.warn("Error while moving to the entity or area", error);
+                    warningMessageStore.addWarningMessage($LL.mapEditor.explorer.details.errorMovingToObject(), {
+                        closable: true,
+                    });
+                });
             gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(undefined);
 
             // Close map editor to walk on the entity or zone
@@ -132,7 +150,7 @@
             <img
                 src={$mapExplorationObjectSelectedStore?.getPrefab().imagePath}
                 alt="Object"
-                class="tw-w-32 tw-h-32 tw-mb-4"
+                class="tw-w-32 tw-h-32 tw-mb-4 tw-object-contain"
             />
             <p class="tw-p-0 tw-m-0">
                 {description ?? $LL.mapEditor.explorer.noDescriptionFound()}

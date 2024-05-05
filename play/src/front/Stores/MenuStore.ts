@@ -1,20 +1,20 @@
 import { derived, get, writable } from "svelte/store";
+import type { Translation } from "../../i18n/i18n-types";
+import {
+    AddActionButtonActionBarEvent,
+    AddButtonActionBarEvent,
+    AddClassicButtonActionBarEvent,
+    RemoveButtonActionBarEvent,
+} from "../Api/Events/Ui/ButtonActionBarEvent";
+import { connectionManager } from "../Connection/ConnectionManager";
+import { localUserStore } from "../Connection/LocalUserStore";
+import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import {
     CONTACT_URL,
-    OPID_PROFILE_SCREEN_PROVIDER,
     ENABLE_REPORT_ISSUES_MENU,
+    OPID_PROFILE_SCREEN_PROVIDER,
     REPORT_ISSUES_URL,
 } from "../Enum/EnvironmentVariable";
-import type { Translation } from "../../i18n/i18n-types";
-import { localUserStore } from "../Connection/LocalUserStore";
-import { connectionManager } from "../Connection/ConnectionManager";
-import {
-    AddButtonActionBarEvent,
-    RemoveButtonActionBarEvent,
-    AddClassicButtonActionBarEvent,
-    AddActionButtonActionBarEvent,
-} from "../Api/Events/Ui/ButtonActionBarEvent";
-import { ABSOLUTE_PUSHER_URL } from "../Enum/ComputedConst";
 import { userIsAdminStore } from "./GameStore";
 
 export const menuIconVisiblilityStore = writable(false);
@@ -85,6 +85,9 @@ export const inviteUserActivated = writable(true);
 export const mapEditorActivated = writable(false);
 export const mapManagerActivated = writable(true);
 export const screenSharingActivatedStore = writable(true);
+export const mapEditorActivatedForCurrentArea = writable(false);
+export const mapEditorActivatedForThematics = writable(true);
+export const roomListActivated = writable(true);
 
 function createSubMenusStore() {
     const store = writable<MenuItem[]>([

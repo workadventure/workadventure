@@ -3,7 +3,7 @@ import { writable } from "svelte/store";
 export type Notification = {
     id: string;
     text: string;
-    icon: string;
+    icon?: string;
 };
 
 /**
@@ -14,7 +14,7 @@ function createNotificationStore() {
 
     return {
         subscribe,
-        playNotification: (text: string, icon: string) => {
+        playNotification: (text: string, icon?: string) => {
             update((list) => {
                 list.add({
                     id: crypto.randomUUID(),

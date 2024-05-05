@@ -1,5 +1,6 @@
-import { AreaCoordinates, AreaDataProperties, AreaUpdateCallback, GameMapProperties } from "@workadventure/map-editor";
 import type { AreaChangeCallback, AreaData, AtLeast, GameMap } from "@workadventure/map-editor";
+import { AreaCoordinates, AreaDataProperties, AreaUpdateCallback, GameMapProperties } from "@workadventure/map-editor";
+import { MathUtils } from "@workadventure/math-utils";
 import type {
     ITiledMap,
     ITiledMapLayer,
@@ -10,14 +11,14 @@ import type {
 } from "@workadventure/tiled-map-type-guard";
 import type { Observable } from "rxjs";
 import { Subject } from "rxjs";
-import { MathUtils } from "@workadventure/math-utils";
 import { Deferred } from "ts-deferred";
 import { PathTileType } from "../../../Utils/PathfindingManager";
-import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
-import type { GameScene } from "../GameScene";
 import { Entity } from "../../ECS/Entity";
+import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 import { ITiledPlace } from "../GameMapPropertiesListener";
+import type { GameScene } from "../GameScene";
 import { EntitiesManager } from "./EntitiesManager";
+import { AreasManager } from "./AreasManager";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 
 export type DynamicArea = {
@@ -97,6 +98,8 @@ export class GameMapFrontWrapper {
     private enterDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
     private leaveDynamicAreaCallbacks = Array<DynamicAreaChangeCallback>();
 
+    public areasManager!: AreasManager;
+
     /**
      * Firing on map change, containing newest collision grid array
      */
@@ -124,8 +127,6 @@ export class GameMapFrontWrapper {
         this.existingTileIndex = terrains.length > 0 ? terrains[0].firstgid : -1;
 
         this.entitiesManager = new EntitiesManager(this.scene, this);
-
-        this.gameMap.initialize();
 
         this.updateCollisionGrid(undefined, false);
 
@@ -207,10 +208,39 @@ export class GameMapFrontWrapper {
             // OTHERWISE, delete commands might pass FIRST!
         }
 
-        return Promise.allSettled(addEntityPromises).then(() => {
+        return Promise.allSettled(addEntityPromises).then((promiseResults) => {
+            promiseResults.forEach((result) => {
+                if (result.status === "rejected") {
+                    console.error(result.reason);
+                }
+            });
             this.updateCollisionGrid(this.entitiesCollisionLayer, false);
             this.initializedPromise.resolve();
         });
+    }
+
+    public recomputeEntitiesCollisionGrid() {
+        const entities = this.entitiesManager.getEntities();
+
+        this.entitiesCollisionLayer.fill(-1);
+
+        for (const entity of entities.values()) {
+            const entityCollisionGrid = entity.getCollisionGrid();
+            if (entityCollisionGrid === undefined) {
+                continue;
+            }
+            this.modifyToCollisionsLayer(entity.x, entity.y, entity.name, entityCollisionGrid, false);
+        }
+        this.updateCollisionGrid(this.entitiesCollisionLayer, false);
+    }
+
+    public initializeAreaManager(userConnectedTags: string[], userCanEdit: boolean) {
+        const gameMapAreas = this.getGameMap().getGameMapAreas();
+        if (gameMapAreas !== undefined) {
+            this.areasManager = new AreasManager(this.scene, gameMapAreas, userConnectedTags, userCanEdit);
+        } else {
+            console.error("Unable to load AreasManager because gameMapAreas is undefined");
+        }
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {
@@ -504,7 +534,32 @@ export class GameMapFrontWrapper {
         }
     }
 
-    public canEntityBePlaced(
+    public canEntityBePlacedOnMap(
+        topLeftPos: { x: number; y: number },
+        width: number,
+        height: number,
+        collisionGrid?: number[][],
+        oldTopLeftPos?: { x: number; y: number },
+        ignoreCollisionGrid?: boolean
+    ): boolean {
+        const canEntityBePlaced = this.canEntityBePlaced(
+            topLeftPos,
+            width,
+            height,
+            collisionGrid,
+            oldTopLeftPos,
+            ignoreCollisionGrid
+        );
+
+        const entityCenterCoordinates = {
+            x: Math.ceil(topLeftPos.x + width / 2),
+            y: Math.ceil(topLeftPos.y + height / 2),
+        };
+
+        return canEntityBePlaced && this.scene.getEntityPermissions().canEdit(entityCenterCoordinates);
+    }
+
+    private canEntityBePlaced(
         topLeftPos: { x: number; y: number },
         width: number,
         height: number,
@@ -518,10 +573,12 @@ export class GameMapFrontWrapper {
         if (isOutOfBounds) {
             return false;
         }
+
         // no collision grid means we can place it anywhere on the map
         if (!collisionGrid) {
             return true;
         }
+
         // prevent entity's old position from blocking it when repositioning
         const positionsToIgnore: Map<string, number> = new Map<string, number>();
         const tileDim = this.scene.getGameMapFrontWrapper().getTileDimensions();
@@ -562,6 +619,7 @@ export class GameMapFrontWrapper {
                 }
             }
         }
+
         return true;
     }
 
@@ -747,23 +805,11 @@ export class GameMapFrontWrapper {
         this.dynamicAreas.delete(name);
     }
 
-    public isPlayerInsideArea(id: string): boolean {
-        if (!this.position) {
-            return false;
-        }
-        return this.gameMap.getGameMapAreas()?.isPlayerInsideArea(id, this.position) || false;
-    }
-
     private isPlayerInsideAreaByCoordinates(
         areaCoordinates: { x: number; y: number; width: number; height: number },
         playerPosition: { x: number; y: number }
     ): boolean {
-        return (
-            playerPosition.x >= areaCoordinates.x &&
-            playerPosition.x <= areaCoordinates.x + areaCoordinates.width &&
-            playerPosition.y >= areaCoordinates.y &&
-            playerPosition.y <= areaCoordinates.y + areaCoordinates.height
-        );
+        return this.isInsideAreaByCoordinates(areaCoordinates, playerPosition);
     }
 
     public listenAreaCreation(areaData: AreaData): void {
@@ -774,6 +820,7 @@ export class GameMapFrontWrapper {
         if (this.isPlayerInsideAreaByCoordinates(areaData, this.position)) {
             this.triggerSpecificAreaOnEnter(areaData);
         }
+        this.areasManager.addArea(areaData);
     }
 
     public listenAreaChanges(oldConfig: AtLeast<AreaData, "id">, newConfig: AtLeast<AreaData, "id">): void {
@@ -812,6 +859,7 @@ export class GameMapFrontWrapper {
             this.triggerSpecificAreaOnEnter(area);
             return;
         }
+        this.areasManager.updateArea(newConfig);
     }
 
     public listenAreaDeletion(areaData: AreaData | undefined) {
@@ -823,6 +871,7 @@ export class GameMapFrontWrapper {
         if (this.isPlayerInsideAreaByCoordinates(areaData, this.position)) {
             this.triggerSpecificAreaOnLeave(areaData);
         }
+        this.areasManager.removeArea(areaData.id);
     }
 
     public getMapChangedObservable(): Observable<number[][]> {
@@ -1203,7 +1252,7 @@ export class GameMapFrontWrapper {
         return areasChange;
     }
 
-    private getDynamicAreasOnPosition(position: { x: number; y: number }, offsetY = 16): DynamicArea[] {
+    public getDynamicAreasOnPosition(position: { x: number; y: number }, offsetY = 16): DynamicArea[] {
         const overlappedDynamicAreas: DynamicArea[] = [];
         for (const dynamicArea of this.dynamicAreas.values()) {
             if (
@@ -1235,6 +1284,13 @@ export class GameMapFrontWrapper {
             }
         }
         return properties;
+    }
+
+    public isInsideAreaByCoordinates(
+        areaCoordinates: { x: number; y: number; width: number; height: number },
+        objectCoordinates: { x: number; y: number }
+    ) {
+        return MathUtils.isOverlappingWithRectangle(objectCoordinates, areaCoordinates);
     }
 
     public close() {

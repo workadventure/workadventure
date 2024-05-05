@@ -97,17 +97,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.selectedWoka = null;
         this.selectedCollectionIndex = 0;
         this.collectionKeys = this.playerTextures.getCollectionsKeys();
-        const characterTextures = localUserStore.getCharacterTextures();
-        if (characterTextures) {
-            this.playerTextures.wokaCollections.forEach((collection, index) => {
-                collection.forEach((woka) => {
-                    const wokaCurrentId = characterTextures.find((textureId) => textureId === woka.id);
-                    if (wokaCurrentId) {
-                        this.selectedCollectionIndex = this.collectionKeys.indexOf(index);
-                    }
-                });
-            });
-        }
+
         selectedCollection.set(this.getSelectedCollectionName());
 
         customizeAvailableStore.set(this.isCustomizationAvailable());
@@ -141,6 +131,31 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         if (get(collectionsSizeStore) < 1) {
             this.nextSceneToCustomizeScene();
         }
+
+        const characterTextures = gameManager.getCharacterTextureIds();
+        if (characterTextures) {
+            this.playerTextures.wokaCollections.forEach((collection, index) => {
+                collection.forEach((woka) => {
+                    const wokaCurrentId = characterTextures.find((textureId) => textureId === woka.id);
+                    if (wokaCurrentId) {
+                        // Select collection
+                        this.selectedCollectionIndex = this.collectionKeys.indexOf(index);
+
+                        // Select WOKA
+                        const selectedGridItemIndex = this.playerTextures
+                            .getWokaCollectionTextures(this.getSelectedCollectionName())
+                            .findIndex((texture) => texture.id === wokaCurrentId);
+                        if (selectedGridItemIndex !== -1) {
+                            this.selectedGridItemIndex = selectedGridItemIndex;
+                            const selectedWokaSlot = this.charactersDraggableGrid.getAllItems()[
+                                this.selectedGridItemIndex
+                            ] as WokaSlot;
+                            if (selectedWokaSlot != undefined) this.selectGridItem(selectedWokaSlot);
+                        }
+                    }
+                });
+            });
+        }
     }
 
     public async nextSceneToCameraScene(): Promise<void> {
@@ -166,7 +181,6 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         if (this.selectedWoka !== null && !areCharacterTexturesValid([this.selectedWoka.texture.key])) {
             return;
         }
-        this.selectedWoka = null;
         batchGetUserMediaStore.startBatch();
         myCameraStore.set(false);
         myMicrophoneStore.set(false);

@@ -1,8 +1,9 @@
-import type { EntityPrefab, EntityDataProperties } from "@workadventure/map-editor";
+import type { AreaData, EntityDataProperties, EntityPrefab } from "@workadventure/map-editor";
 import { derived, writable } from "svelte/store";
+import { DeleteCustomEntityMessage, ModifyCustomEntityMessage, UploadEntityMessage } from "@workadventure/messages";
 import type { AreaPreview } from "../Phaser/Components/MapEditor/AreaPreview";
-import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
 import { Entity } from "../Phaser/ECS/Entity";
+import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
 
 type ObjectValues<T> = T[keyof T];
 
@@ -69,6 +70,10 @@ export const mapEditorCopiedEntityDataPropertiesStore = writable<EntityDataPrope
 
 export const mapEditorEntityModeStore = writable<MapEditorEntityToolMode>("ADD");
 
+export const mapEditorEntityUploadEventStore = writable<UploadEntityMessage | undefined>(undefined);
+export const mapEditorModifyCustomEntityEventStore = writable<ModifyCustomEntityMessage | undefined>(undefined);
+export const mapEditorDeleteCustomEntityEventStore = writable<DeleteCustomEntityMessage | undefined>(undefined);
+
 export enum WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM {
     Megaphone = "Megaphone",
     RoomSettings = "Room Settings",
@@ -82,6 +87,7 @@ export const mapExplorationModeStore = writable<boolean>(false);
 export const mapExplorationObjectSelectedStore = writable<Entity | AreaPreview | undefined>(undefined);
 export const mapExplorationEntitiesStore = writable<Map<string, Entity>>(new Map());
 export const mapExplorationAreasStore = writable<Map<string, AreaPreview> | undefined>(new Map());
+export const mapEditorAskToClaimPersonalAreaStore = writable<AreaData | undefined>(undefined);
 
 /**
  * The resistance for the zoom.

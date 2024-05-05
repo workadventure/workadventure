@@ -1,25 +1,27 @@
 <script lang="ts">
     import type { Unsubscriber } from "svelte/store";
-    import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "svelte-feather-icons";
+    import { writable } from "svelte/store";
+    import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "svelte-feather-icons";
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
-    import { writable } from "svelte/store";
     import { Subscription } from "rxjs";
+    import { AvailabilityStatus } from "@workadventure/messages";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
+        availabilityStatusStore,
         cameraListStore,
+        isSpeakerStore,
         microphoneListStore,
-        speakerListStore,
+        requestedCameraDeviceIdStore,
         requestedCameraState,
+        requestedMicrophoneDeviceIdStore,
         requestedMicrophoneState,
         silentStore,
+        speakerListStore,
         speakerSelectedStore,
-        requestedMicrophoneDeviceIdStore,
-        requestedCameraDeviceIdStore,
+        streamingMegaphoneStore,
         usedCameraDeviceIdStore,
         usedMicrophoneDeviceIdStore,
-        streamingMegaphoneStore,
-        isSpeakerStore,
     } from "../../Stores/MediaStore";
     import cameraImg from "../images/camera.png";
     import cameraOffImg from "../images/camera-off.png";
@@ -49,15 +51,15 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatVisibilityStore, chatZoneLiveStore } from "../../Stores/ChatStore";
     import {
-        proximityMeetingStore,
         inExternalServiceStore,
         myCameraStore,
         myMicrophoneStore,
+        proximityMeetingStore,
     } from "../../Stores/MyMediaStore";
     import {
         activeSubMenuStore,
-        menuVisiblilityStore,
         inviteUserActivated,
+        menuVisiblilityStore,
         SubMenusInterface,
         subMenusStore,
         additionnalButtonsMenu,
@@ -65,6 +67,7 @@
         addActionButtonActionBarEvent,
         mapManagerActivated,
         screenSharingActivatedStore,
+        roomListActivated,
     } from "../../Stores/MenuStore";
     import {
         emoteDataStore,
@@ -92,13 +95,15 @@
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
     import { Emoji } from "../../Stores/Utils/emojiSchema";
     import {
-        megaphoneCanBeUsedStore,
         liveStreamingEnabledStore,
+        megaphoneCanBeUsedStore,
         requestedMegaphoneStore,
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
+
+    import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -348,7 +353,7 @@
         chatVisibilityStore.set(false);
     }
 
-    function noDrag() {
+    function noDrag(): boolean {
         return false;
     }
 
@@ -372,6 +377,7 @@
     let subscribers = new Array<Unsubscriber>();
     let chatTotalMessagesSubscription: Subscription | undefined;
     let totalMessagesToSee = writable<number>(0);
+
     onMount(() => {
         chatTotalMessagesSubscription = iframeListener.chatTotalMessagesToSeeStream.subscribe((total) =>
             totalMessagesToSee.set(total)
@@ -404,9 +410,13 @@
 
         roomListVisibilityStore.set(true);
     }
+
+    const onClickOutside = () => {
+        if ($emoteMenuSubStore) emoteMenuSubStore.closeEmoteMenu();
+    };
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window on:keydown={onKeyDown} on:click={onClickOutside} on:touchend={onClickOutside} />
 
 <div
     class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
@@ -534,7 +544,7 @@
 
         <div class="tw-flex tw-flex-row base-section animated tw-flex-wrap tw-justify-center">
             <div class="bottom-action-section tw-flex tw-flex-initial">
-                {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
+                {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore && ![AvailabilityStatus.BUSY, AvailabilityStatus.DO_NOT_DISTURB, AvailabilityStatus.BACK_IN_A_MOMENT].includes($availabilityStatusStore)}
                     {#if $myCameraStore}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div
@@ -549,7 +559,7 @@
                                 class="tooltiptext sm:tw-w-56 md:tw-w-96"
                                 class:border-top-light={$requestedCameraState}
                             >
-                                {#if $requestedCameraState && !$silentStore}
+                                {#if $requestedCameraState}
                                     <img
                                         draggable="false"
                                         src={cameraImg}
@@ -791,7 +801,7 @@
                     {/if}
                 </div>
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div on:click={toggleEmojiPicker} class="bottom-action-button">
+                <div on:click|stopPropagation={toggleEmojiPicker} class="bottom-action-button">
                     <Tooltip text={$LL.actionbar.emoji()} />
 
                     <button class:border-top-light={$emoteMenuSubStore}>
@@ -842,6 +852,11 @@
                         <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
                     </button>
                 </div>
+            </div>
+            <div class="bottom-action-section tw-flex tw-flex-initial">
+                <AvailabilityStatusComponent />
+            </div>
+            <div class="bottom-action-section tw-flex tw-flex-initial">
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div on:dragstart|preventDefault={noDrag} on:click={toggleMapEditorMode} class="bottom-action-button">
                     {#if isMobile || !$mapManagerActivated}
@@ -881,24 +896,31 @@
                 {/if}
             </div>
 
-            <div class="bottom-action-section tw-flex tw-flex-initial">
-                <!-- TODO button hep -->
-                <!-- Room list button -->
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <div
-                    on:dragstart|preventDefault={noDrag}
-                    on:click={() => analyticsClient.openedRoomList()}
-                    on:click={showRoomList}
-                    class="bottom-action-button"
-                >
-                    <Tooltip text={$LL.actionbar.roomList()} />
+            {#if $roomListActivated}
+                <div class="bottom-action-section tw-flex tw-flex-initial">
+                    <!-- TODO button hep -->
+                    <!-- Room list button -->
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={() => analyticsClient.openedRoomList()}
+                        on:click={showRoomList}
+                        class="bottom-action-button"
+                    >
+                        <Tooltip text={$LL.actionbar.roomList()} />
 
-                    <button id="roomListIcon" class:border-top-light={$roomListVisibilityStore}>
-                        <!-- svelte-ignore a11y-img-redundant-alt -->
-                        <img draggable="false" src={worldImg} style="padding: 2px" alt="Image for room list modal" />
-                    </button>
+                        <button id="roomListIcon" class:border-top-light={$roomListVisibilityStore}>
+                            <!-- svelte-ignore a11y-img-redundant-alt -->
+                            <img
+                                draggable="false"
+                                src={worldImg}
+                                style="padding: 2px"
+                                alt="Image for room list modal"
+                            />
+                        </button>
+                    </div>
                 </div>
-            </div>
+            {/if}
 
             {#if $addActionButtonActionBarEvent.length > 0}
                 <div class="bottom-action-section tw-flex tw-flex-initial">
@@ -1038,7 +1060,6 @@
 
 <style lang="scss">
     @import "../../style/breakpoints.scss";
-
     button {
         justify-content: center;
     }

@@ -91,6 +91,11 @@ const de_DE: Translation = {
                 description: "Senden Sie ein Eraser-Board in den Chat!",
                 error: "Die Eraser-URL ist nicht gültig",
             },
+            excalidraw: {
+                title: "Excalidraw",
+                description: "Senden Sie ein Excalidraw-Board in den Chat!",
+                error: "Die Excalidraw-URL ist nicht gültig",
+            },
             weblink: {
                 error: "Die URL ist nicht gültig",
             },

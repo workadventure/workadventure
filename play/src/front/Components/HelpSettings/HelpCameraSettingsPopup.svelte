@@ -24,7 +24,7 @@
 </script>
 
 <form
-    class="helpCameraSettings tw-z-[600] tw-bg-dark-purple tw-rounded tw-text-white tw-self-center tw-p-3 tw-pointer-events-auto tw-flex tw-flex-col tw-m-auto tw-w-full md:tw-w-2/3 2xl:tw-w-1/4 tw-text-sm md:tw-text-base"
+    class="helpCameraSettings tw-z-[600] tw-backdrop-blur-sm tw-bg-dark-purple/80 tw-rounded tw-text-white tw-self-center tw-p-3 tw-pointer-events-auto tw-flex tw-flex-col tw-m-auto tw-w-full md:tw-w-2/3 2xl:tw-w-1/4 tw-text-sm md:tw-text-base"
     style={getBackgroundColor() ? `background-color: ${getBackgroundColor()};` : ""}
     on:submit|preventDefault={close}
     transition:fly={{ y: -50, duration: 500 }}

@@ -1,4 +1,4 @@
-import type HyperExpress from "hyper-express";
+import HyperExpress, { compressors } from "hyper-express";
 import { z } from "zod";
 import {
     apiVersionHash,
@@ -10,6 +10,8 @@ import {
     SpaceFilterMessage,
     SpaceUser,
     CompanionDetail,
+    ServerToClientMessage,
+    AnswerMessage,
 } from "@workadventure/messages";
 import Jwt, { JsonWebTokenError } from "jsonwebtoken";
 import { v4 as uuid } from "uuid";
@@ -334,7 +336,7 @@ export class IoSocketController {
                             status: "ok",
                             email: userIdentifier,
                             userUuid: userIdentifier,
-                            tags: [],
+                            tags: tokenData?.tags ?? [],
                             visitCardUrl: null,
                             isCharacterTexturesValid: true,
                             characterTextures: [],
@@ -361,7 +363,8 @@ export class IoSocketController {
                                     ipAddress,
                                     characterTextureIds,
                                     companionTextureId,
-                                    locale
+                                    locale,
+                                    userData.tags
                                 );
 
                                 if (userData.status === "ok" && !userData.isCharacterTexturesValid) {
@@ -823,28 +826,76 @@ export class IoSocketController {
                             break;
                         }
                         case "queryMessage": {
-                            switch (message.message.queryMessage.query?.$case) {
-                                case "roomTagsQuery": {
-                                    void socketManager.handleRoomTagsQuery(socket, message.message.queryMessage);
-                                    break;
+                            try {
+                                const answerMessage: AnswerMessage = {
+                                    id: message.message.queryMessage.id,
+                                };
+                                switch (message.message.queryMessage.query?.$case) {
+                                    case "roomTagsQuery": {
+                                        void socketManager.handleRoomTagsQuery(socket, message.message.queryMessage);
+                                        break;
+                                    }
+                                    case "embeddableWebsiteQuery": {
+                                        void socketManager.handleEmbeddableWebsiteQuery(
+                                            socket,
+                                            message.message.queryMessage
+                                        );
+                                        break;
+                                    }
+                                    case "roomsFromSameWorldQuery": {
+                                        void socketManager.handleRoomsFromSameWorldQuery(
+                                            socket,
+                                            message.message.queryMessage
+                                        );
+                                        break;
+                                    }
+                                    case "searchMemberQuery": {
+                                        const searchMemberAnswer = await socketManager.handleSearchMemberQuery(
+                                            socket,
+                                            message.message.queryMessage.query.searchMemberQuery
+                                        );
+                                        answerMessage.answer = {
+                                            $case: "searchMemberAnswer",
+                                            searchMemberAnswer: searchMemberAnswer,
+                                        };
+                                        this.sendAnswerMessage(socket, answerMessage);
+                                        break;
+                                    }
+                                    case "getMemberQuery": {
+                                        const getMemberAnswer = await socketManager.handleGetMemberQuery(
+                                            message.message.queryMessage.query.getMemberQuery
+                                        );
+                                        answerMessage.answer = {
+                                            $case: "getMemberAnswer",
+                                            getMemberAnswer,
+                                        };
+                                        this.sendAnswerMessage(socket, answerMessage);
+                                        break;
+                                    }
+                                    default: {
+                                        socketManager.forwardMessageToBack(socket, message.message);
+                                    }
                                 }
-                                case "embeddableWebsiteQuery": {
-                                    void socketManager.handleEmbeddableWebsiteQuery(
-                                        socket,
-                                        message.message.queryMessage
-                                    );
-                                    break;
-                                }
-                                case "roomsFromSameWorldQuery": {
-                                    void socketManager.handleRoomsFromSameWorldQuery(
-                                        socket,
-                                        message.message.queryMessage
-                                    );
-                                    break;
-                                }
-                                default: {
-                                    socketManager.forwardMessageToBack(socket, message.message);
-                                }
+                            } catch (error) {
+                                console.error("An error happened while answering a query:", error);
+                                Sentry.captureException(
+                                    `An error happened while answering a query: ${JSON.stringify(error)}`
+                                );
+                                const answerMessage: AnswerMessage = {
+                                    id: message.message.queryMessage.id,
+                                };
+                                answerMessage.answer = {
+                                    $case: "error",
+                                    error: {
+                                        message:
+                                            error !== null && typeof error === "object"
+                                                ? error.toString()
+                                                : typeof error === "string"
+                                                ? error
+                                                : "Unknown error",
+                                    },
+                                };
+                                this.sendAnswerMessage(socket, answerMessage);
                             }
                             break;
                         }
@@ -863,7 +914,7 @@ export class IoSocketController {
                             break;
                         }
                         case "editMapCommandMessage": {
-                            socketManager.forwardAdminMessageToBack(socket, message.message);
+                            socketManager.forwardMessageToBack(socket, message.message);
                             break;
                         }
                         case "muteParticipantIdMessage": {
@@ -949,5 +1000,17 @@ export class IoSocketController {
                 }
             },
         });
+    }
+
+    private sendAnswerMessage(socket: compressors.WebSocket<SocketData>, answerMessage: AnswerMessage) {
+        socket.send(
+            ServerToClientMessage.encode({
+                message: {
+                    $case: "answerMessage",
+                    answerMessage,
+                },
+            }).finish(),
+            true
+        );
     }
 }
