@@ -16,7 +16,7 @@
 
     let filterText = "";
 
-    function handleFilter(e: { detail: [] }) {
+    function handleFilter() {
         if (value?.find((i) => i.label === filterText)) return;
         if (options?.find((i) => i.label === filterText)) return;
         if (filterText.length > 0) {
