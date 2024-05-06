@@ -15,6 +15,7 @@ const actionbar: BaseTranslation = {
     menu: "Open / Close menu",
     mapEditor: "Open / Close map manager",
     mapEditorMobileLocked: "Map editor is locked on mobile mode",
+    mapEditorLocked: "Map editor is locked 🔐",
     bo: "Open back office",
     subtitle: {
         microphone: "Microphone",
