@@ -2,7 +2,9 @@ import { get, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { Subject } from "rxjs";
 import { waScaleManager } from "../Phaser/Services/WaScaleManager";
+import { HtmlUtils } from "../WebRtc/HtmlUtils";
 
+let gameOverlayDomId = "game-overlay";
 
 
 export function createCoWebsiteStore() {
@@ -44,10 +46,19 @@ export const coWebsites = createCoWebsiteStore();
 
 export class CoWebsiteManager {
 
+    // private cowebsiteDom: HTMLDivElement;
+    // private gameOverlayDom: HTMLDivElement;
+
     private _onResize: Subject<void> = new Subject();
     public onResize = this._onResize.asObservable();
 
+    // constructor() {
+    //     this.cowebsiteDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("cowebsite");
+    //     this.gameOverlayDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("game-overlay");
+    // }
+
     public fire(): void {
+        console.log("je suis dans la fonction fire cowebsite manager")
         this._onResize.next();
         waScaleManager.applyNewSize();
         waScaleManager.refreshFocusOnTarget();
@@ -56,6 +67,7 @@ export class CoWebsiteManager {
     public addCoWebsiteToStore(coWebsite: CoWebsite) {
         coWebsites.add(coWebsite);
         this.fire()
+        console.log("cowebsite add to store")
     }
 
     public removeCoWebsiteToStore(coWebsite: CoWebsite) {

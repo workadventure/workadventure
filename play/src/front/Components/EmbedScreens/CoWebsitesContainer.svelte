@@ -37,6 +37,7 @@
     onMount(() => {
         mediaQuery.addEventListener("change", (e: any) => handleTabletChange(e));
         handleTabletChange(mediaQuery);
+        waScaleManager.applyNewSize();
     });
 
     function handleTabletChange(e: MediaQueryList) {
@@ -232,7 +233,7 @@
 
     function getPanelClass() {
         const widthPercentage = getWidthPercentage();
-        return `${widthPercentage} h-full absolute right-0 top-0 bg-contrast/50 backdrop-blur left_panel`;
+        return `${widthPercentage} h-full right-0 top-0 bg-contrast/50 backdrop-blur left_panel`;
     }
 
     let panelClass = getPanelClass();
@@ -359,6 +360,10 @@
 </div>
 
 <style>
+    .cowebsites-container {
+        display: flex;
+        flex-grow: 1;
+    }
     .padding {
         padding-bottom: 76px;
     }

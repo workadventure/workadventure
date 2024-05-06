@@ -38,49 +38,51 @@
      */
 </script>
 
-<!-- Preload image loader TODO HUGO : Better way ? -->
-<link rel="preload" as="image" href={bgMap} />
-<link rel="preload" as="image" href={defaultLoader} />
+<div class="absolute h-full w-full">
+    <!-- Preload image loader TODO HUGO : Better way ? -->
+    <link rel="preload" as="image" href={bgMap} />
+    <link rel="preload" as="image" href={defaultLoader} />
 
-{#if $loaderVisibleStore}
-    <div class="bg-contrast">
-        <LoaderScene />
-    </div>
-{/if}
-{#if $errorScreenStore !== undefined}
-    <div class="bg-contrast">
-        <ErrorScreen />
-    </div>
-{:else if $errorStore.length > 0}
-    <div class="bg-contrast">
-        <ErrorDialog />
-    </div>
-{:else if $loginSceneVisibleStore}
-    <div class="scrollable">
-        <LoginScene {game} />
-    </div>
-{:else if $selectCharacterSceneVisibleStore}
-    <div>
-        <SelectCharacterScene {game} />
-    </div>
-{:else if $selectCompanionSceneVisibleStore}
-    <div class="bg-contrast">
-        <SelectCompanionScene {game} />
-    </div>
-{:else if $enableCameraSceneVisibilityStore}
-    <div class="scrollable">
-        <EnableCameraScene {game} />
-    </div>
-{:else if $gameSceneIsLoadedStore && !$loaderVisibleStore && !$selectCharacterCustomizeSceneVisibleStore}
-    {#if $refreshPromptStore}
-        <RefreshPrompt />
+    {#if $loaderVisibleStore}
+        <div class="bg-contrast">
+            <LoaderScene />
+        </div>
     {/if}
-    {#key $forceRefreshChatStore}
-        <Chat />
-        {#if $mapEditorModeStore}
-            <MapEditor />
+    {#if $errorScreenStore !== undefined}
+        <div class="bg-contrast">
+            <ErrorScreen />
+        </div>
+    {:else if $errorStore.length > 0}
+        <div class="bg-contrast">
+            <ErrorDialog />
+        </div>
+    {:else if $loginSceneVisibleStore}
+        <div class="scrollable">
+            <LoginScene {game} />
+        </div>
+    {:else if $selectCharacterSceneVisibleStore}
+        <div>
+            <SelectCharacterScene {game} />
+        </div>
+    {:else if $selectCompanionSceneVisibleStore}
+        <div class="bg-contrast">
+            <SelectCompanionScene {game} />
+        </div>
+    {:else if $enableCameraSceneVisibilityStore}
+        <div class="scrollable">
+            <EnableCameraScene {game} />
+        </div>
+    {:else if $gameSceneIsLoadedStore && !$loaderVisibleStore && !$selectCharacterCustomizeSceneVisibleStore}
+        {#if $refreshPromptStore}
+            <RefreshPrompt />
         {/if}
-        <MainLayout />
-        <!--message=""-->
-    {/key}
-{/if}
+        {#key $forceRefreshChatStore}
+            <Chat />
+            {#if $mapEditorModeStore}
+                <MapEditor />
+            {/if}
+            <MainLayout />
+            <!--message=""-->
+        {/key}
+    {/if}
+</div>

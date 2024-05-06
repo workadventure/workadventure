@@ -20,7 +20,7 @@
     import { desktopApi } from "../Api/Desktop";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
-    import { coWebsiteManager, coWebsites } from "../Stores/CoWebsiteStore";
+    import { coWebsiteManager, coWebsiteManager, coWebsites } from "../Stores/CoWebsiteStore";
 
     let WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
     let game: Game;
@@ -169,7 +169,6 @@
         if (canvas) {
             console.log(canvas, "CANVAS");
             canvas.addEventListener("click", function () {
-                console.log("je suis dans la focntion du click event");
                 if (document.activeElement instanceof HTMLElement) {
                     document.activeElement.blur();
                 }
@@ -220,31 +219,113 @@
     // $: cowebsites = $coWebsites;
 </script>
 
-<!-- <div class="bg-contrast h-screen w-screen absolute z-[2]" />
-<div class="bg-contrast h-screen w-screen absolute z-[2]" />
-<div class="main-container z-10 relative">
-    <GameOverlay {game} />
-    <div id="game" bind:this={gameDiv} class="absolute top-0 -z-10" />
-    <GameOverlay {game} />
-    <div id="game" bind:this={gameDiv} class="absolute top-0 -z-10" />
-    <CoWebsitesContainer />
-</div> -->
-
+<!--
 <div class="main-container flex z-10">
-    <div class="game-container flex-1">
-        <div id="game" bind:this={gameDiv} class="fixed top-0 z-1000" />
+    <div class="game-container">
+        <div id="game" bind:this={gameDiv} class="fixed top-0" />
         <GameOverlay {game} />
     </div>
     <div class="co-websites-container">
-        {#if $coWebsites.length > 0}
+
+    </div>
+</div> -->
+
+<!-- <div class="main-container flex z-10 absolute"> -->
+
+<!-- <style lang="scss">
+    .co-websites-container {
+        flex: 1;
+    }
+    .game-container {
+        flex: 1;
+    }
+</style> -->
+
+<!-- <div class="main-container absolute flex w-full h-full">
+    {#if $coWebsites.length > 0}
+        <div class="co-websites-container relative">
             <CoWebsitesContainer />
-        {/if}
+        </div>
+    {/if}
+    <div id="game" bind:this={gameDiv} class="relative top-0">
+        <GameOverlay {game} />
+    </div>
+</div> -->
+<!-- App.svelte -->
+
+<!-- <div class="main-container relative flex w-full h-full">
+    <div id="game" bind:this={gameDiv} class="game-container relative top-0">
+        <GameOverlay {game} />
+    </div>
+    {#if $coWebsites.length > 0}
+        <div class="co-websites-container">
+            <CoWebsitesContainer />
+        </div>
+    {/if}
+</div> -->
+
+<!-- <div class="game-container flex-1">
+    {#if $coWebsites.length > 0}
+        <div class="co-websites-container z-2000 flex-1">
+            <CoWebsitesContainer />
+        </div>
+    {/if}
+    <div id="game" bind:this={gameDiv} class="fixed top-0" />
+    <GameOverlay {game} />
+</div>
+
+ </div> -->
+<!-- <style lang="scss">
+    .game-container {
+        flex-grow: 1;
+    }
+    .co-websites-container {
+        flex-grow: 1;
+    }
+</style> -->
+<!-- <GameOverlay {game} />
+{#if $coWebsites.length > 0}
+    <CoWebsitesContainer />
+{/if}
+
+<div id="game" bind:this={gameDiv} class="top-0" /> -->
+
+<!-- <style lang="scss"> -->
+<!-- // .game-container {
+    //     flex-grow: 1;
+    // }
+    // .co-websites-container {
+    //     flex-grow: 1;
+    // } -->
+<!-- </style> -->
+
+<!-- <div id="game" bind:this={gameDiv} class="game relative">
+    <div id="game-overlay relative">
+        <GameOverlay {game} />
     </div>
 </div>
 
-<style lang="scss">
-    .co-websites-container {
-        flex: 1;
+<div id="cowebsite">
+    {#if $coWebsites.length > 0}
+        <CoWebsitesContainer />
+    {/if}
+</div> -->
+
+<div class="main-container flex absolute h-full w-full">
+    <!-- <div class="relative z-100 h-full w-full"> -->
+    {#if $coWebsites.length > 0}
+        <CoWebsitesContainer />
+    {/if}
+    <!-- </div> -->
+    <div class="game-container">
+        <div id="game" bind:this={gameDiv} class="game absolute" />
+        <GameOverlay {game} />
+    </div>
+</div>
+
+<style>
+    .game {
+        z-index: -100;
     }
     .game-container {
         flex: 1;

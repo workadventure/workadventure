@@ -160,4 +160,4 @@
     });
 </script>
 
-<div bind:this={jitsiContainer} class="w-full h-full" />
+<div bind:this={jitsiContainer} class="absolute w-full h-full" />
