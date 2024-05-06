@@ -6,15 +6,14 @@
     import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
     import { isMediaBreakpointDown, isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
     import { myCameraStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
-    import MyCamera from "../../MyCamera.svelte";
     import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
 
-    let widthWindow: number | undefined;
-    let totalCamWidth = 0;
-    let camWidthOther = 350;
-    let camWidth = 350;
+    // let widthWindow: number | undefined;
+    // let totalCamWidth = 0;
+    // let camWidthOther = 350;
+    // let camWidth = 350;
 
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
@@ -76,48 +75,49 @@
     //     console.log("GET WIDTH OF PRESENTATION LAYOUT", widthWindow);
     // }
 
-    function handleCamMounted() {
-        totalCamWidth += camWidth;
-        totalCamWidth += camWidthOther;
-        // console.log("totalCamWidth", totalCamWidth);
-        stackCam();
-    }
+    // function handleCamMounted() {
+    //     totalCamWidth += camWidth;
+    //     totalCamWidth += camWidthOther;
+    //     // console.log("totalCamWidth", totalCamWidth);
+    //     stackCam();
+    // }
 
-    function handleCamDestroy() {
-        totalCamWidth -= camWidth;
-        // console.log("totalCamWidth", totalCamWidth);
-        stackCam();
-    }
+    // function handleCamDestroy() {
+    //     totalCamWidth -= camWidth;
+    //     // console.log("totalCamWidth", totalCamWidth);
+    //     stackCam();
+    // }
 
-    function stackCam() {
-        if (totalCamWidth > window.screen.width) {
-            // console.log("TAILLE CAM TROP GRANDE");
-            return true;
-        }
-        // console.log("TAILLE CAM CA PASSE");
-        return false;
-    }
+    // function stackCam() {
+    //     if (totalCamWidth > window.screen.width) {
+    //         // console.log("TAILLE CAM TROP GRANDE");
+    //         return true;
+    //     }
+    //     // console.log("TAILLE CAM CA PASSE");
+    //     return false;
+    // }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias}>
     <!-- Div pour l'affichage de toutes les camera (other cam : cameContainer / my cam : MyCamera'-->
-    {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-        <div class="grid grid-flow-col gap-x-4 justify-center test-media">
-            {#if $jitsiLoadingStore}
-                <Loading />
-            {/if}
-            {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
-                <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
-            {/if}
-            <!-- {#if $myCameraStore && $proximityMeetingStore === true}
+    <div class="">
+        {#if $streamableCollectionStore.size > 0 || $myCameraStore}
+            <div class="grid grid-flow-col gap-x-4 justify-center test-media">
+                {#if $jitsiLoadingStore}
+                    <Loading />
+                {/if}
+                {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
+                    <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
+                {/if}
+                <!-- {#if $myCameraStore && $proximityMeetingStore === true}
                     <MyCamera />
                 {/if} -->
-            {#if $myJitsiCameraStore}
-                <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
-            {/if}
-        </div>
-    {/if}
+                {#if $myJitsiCameraStore}
+                    <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
+                {/if}
+            </div>
+        {/if}
+    </div>
 
     <!-- Div pour la personne qui reçoit le partage d'écran -->
 
@@ -169,73 +169,74 @@
     <!-- {/if} -->
 </div>
 
-<style lang="scss">
-    @import "../../../style/breakpoints.scss";
-
+<style>
     #video-container-receive {
         height: 55vh;
         margin-top: 3vh;
     }
-    #presentation-layout {
-        &.full-medias {
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
+
+    #presentation-layout.full-medias {
+        overflow-y: auto;
+        overflow-x: hidden;
     }
 
     #embed-left-block {
         flex-direction: column;
-        // flex: 0 0 75%;
+        /* flex: 0 0 75%; */
         height: 100%;
         width: 75%;
         padding-bottom: 4rem;
     }
 
-    #main-embed-screen {
-        .highlighted-cowebsite {
-            height: 100% !important;
-            width: 100% !important;
-            position: relative;
-
-            &-container {
-                height: 100% !important;
-                width: 96%;
-                background-color: rgba(#000000, 0.6);
-                margin: 0 !important;
-                padding: 0 !important;
-
-                .actions {
-                    z-index: 151;
-                    position: absolute;
-                    width: 100%;
-                    top: 5px;
-                    right: 5px;
-                    display: flex;
-                    flex-direction: row;
-                    justify-content: flex-end;
-                    gap: 2%;
-
-                    button {
-                        pointer-events: all;
-                    }
-                }
-            }
-        }
+    #main-embed-screen .highlighted-cowebsite {
+        height: 100% !important;
+        width: 100% !important;
+        position: relative;
     }
 
-    @include media-breakpoint-only(md) {
+    #main-embed-screen .highlighted-cowebsite-container {
+        height: 100% !important;
+        width: 96%;
+        background-color: rgba(0, 0, 0, 0.6);
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #main-embed-screen .highlighted-cowebsite-container .actions {
+        z-index: 151;
+        position: absolute;
+        width: 100%;
+        top: 5px;
+        right: 5px;
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-end;
+        gap: 2%;
+    }
+
+    #main-embed-screen .highlighted-cowebsite-container .actions button {
+        pointer-events: all;
+    }
+
+    @media (min-width: 768px) {
         #embed-left-block {
             flex: 0 0 65%;
         }
     }
 
-    @include media-breakpoint-up(sm) {
+    @media (min-width: 576px) {
         #presentation-layout {
             position: fixed;
-            bottom: 0;
             left: 0;
             width: 100%;
             z-index: 9999;
+        }
+    }
+
+    @container (max-width: 767px) {
+        .video-container-receive {
+            scale: 0.5;
+            margin-top: 0;
         }
     }
 </style>

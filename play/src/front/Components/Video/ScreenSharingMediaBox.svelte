@@ -2,7 +2,6 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { Color } from "@workadventure/shared-utils";
-    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
 
@@ -29,8 +28,7 @@
     }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="video-container w-full h-full relative screen-sharing">
+<div class="video-container w-full h-full relative screen-sharing ">
     {#if $statusStore === "connecting"}
         <div class="connecting-spinner" />
     {/if}
@@ -42,7 +40,7 @@
             use:srcObject={$streamStore}
             autoplay
             playsinline
-            class="w-full h-full mx-auto rounded object-cover"
+            class="w-full h-full mx-auto rounded object-contain"
             muted
         />
         <i class="flex">
@@ -55,7 +53,6 @@
 
     <BanReportBox {peer} />
 </div>
-
 <!-- on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)} -->
 
 <!-- nametag-screenshare-container container-end flex media-box-camera-on-size -->
@@ -65,4 +62,30 @@
         class="report-ban-screenshare-container flex video-on-responsive-height media-box-camera-on-position media-box-screensharing-size
         z-[600] flex opacity-0 translate-x-0 transition-all"
     > -->
+
 <!-- For div above BAN REPORT -->
+<style>
+    @container (max-width: 767px) {
+        .video-container {
+            scale: 0.5;
+        }
+    }
+
+    @container (min-width: 768px) and (max-width: 1023px) {
+        .video-container {
+            scale: 0.8;
+        }
+    }
+
+    @container (min-width: 1440px) and (max-width: 1919px) {
+        .video-container {
+            scale: 1;
+        }
+    }
+
+    @container (min-width: 1920px) {
+        .video-container {
+            scale: 1;
+        }
+    }
+</style>

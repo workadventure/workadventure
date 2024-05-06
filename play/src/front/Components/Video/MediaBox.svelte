@@ -162,7 +162,6 @@
     @include media-breakpoint-up(sm) {
         .receiving-sharing {
             display: block;
-            scale: 5;
         }
     }
     //Classes factorizing tailwind's ones are defined in video-ui.scss

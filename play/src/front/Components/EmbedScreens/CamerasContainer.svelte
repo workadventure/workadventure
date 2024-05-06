@@ -9,7 +9,7 @@
 
     export let highlightedEmbedScreen: EmbedScreen | undefined;
     export let full = false;
-    $: clickable = !full;
+    // $: clickable = !full;
     let myCam;
     let otherCam;
     // let totalCamWidth = 0;
@@ -65,8 +65,7 @@
 </script>
 
 <!-- svelte-ignore missing-declaration -->
-<aside class:full in:fly|local={{ x: 200, duration: 100 }}>
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
+<aside class:full in:fly|local={{ x: 200, duration: 100 }} class="mobile-height">
     <!-- grid-flow-col grid-flow-col -->
     <!-- {#if $streamableCollectionStore.size < 3} -->
     <div class="container-cam relative">
@@ -104,9 +103,10 @@
     /* display: flex;
   flex-wrap: wrap; */
     @container (max-width: 767px) {
+        .mobile-height {
+            height: 300px;
+        }
         .all-cameras {
-            margin-top: 100%;
-            margin-left: 100%;
             scale: 0.5;
             bottom: 0;
             right: 0;
