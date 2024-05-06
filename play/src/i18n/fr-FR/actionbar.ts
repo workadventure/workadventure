@@ -15,6 +15,7 @@ const actionbar: BaseTranslation = {
     menu: "Ouvrir / Fermer le menu",
     mapEditor: "Ouvrir / Fermer l'éditeur de carte",
     mapEditorMobileLocked: "L'éditeur de carte est verrouillé en mode mobile",
+    mapEditorLocked: "L'éditeur de carte est verrouillé 🔐",
     bo: "Ouvrir le back office",
     subtitle: {
         microphone: "Microphone",
