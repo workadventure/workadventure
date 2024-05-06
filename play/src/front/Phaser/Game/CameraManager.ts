@@ -865,6 +865,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     setSpeed(speed: { x: number; y: number }) {
         this.cameraSpeed = speed;
+        this.explorerFocusOnTarget = undefined;
         this.startAnimation();
     }
 
@@ -878,6 +879,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
         this.explorerFocusOn.x = Clamp(this.explorerFocusOn.x, 0, this.mapSize.width);
         this.explorerFocusOn.y = Clamp(this.explorerFocusOn.y, 0, this.mapSize.height);
+
+        this.explorerFocusOnTarget = undefined;
 
         this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
         this.scene.markDirty();
