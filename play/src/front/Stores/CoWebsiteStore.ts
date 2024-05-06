@@ -59,7 +59,7 @@ export class CoWebsiteManager {
 
     public fire(): void {
         console.log("je suis dans la fonction fire cowebsite manager")
-        this._onResize.next();
+        // this._onResize.next();
         waScaleManager.applyNewSize();
         waScaleManager.refreshFocusOnTarget();
     }

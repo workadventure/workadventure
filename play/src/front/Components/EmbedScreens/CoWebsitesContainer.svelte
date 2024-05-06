@@ -37,7 +37,7 @@
     onMount(() => {
         mediaQuery.addEventListener("change", (e: any) => handleTabletChange(e));
         handleTabletChange(mediaQuery);
-        waScaleManager.applyNewSize();
+        coWebsiteManager.fire();
     });
 
     function handleTabletChange(e: MediaQueryList) {
