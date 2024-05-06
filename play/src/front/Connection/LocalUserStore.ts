@@ -32,6 +32,7 @@ const cameraPrivacySettings = "cameraPrivacySettings";
 const microphonePrivacySettings = "microphonePrivacySettings";
 const emojiFavorite = "emojiFavorite";
 const speakerDeviceId = "speakerDeviceId";
+const requestedStatus = "RequestedStatus";
 
 const JwtAuthToken = z
     .object({
@@ -483,11 +484,11 @@ class LocalUserStore {
     }
 
     getRequestedStatus(): RequestedStatus | null {
-        return requestedStatusFactory.createRequestedStatus(localStorage.getItem("RequestedStatus"));
+        return requestedStatusFactory.createRequestedStatus(localStorage.getItem(requestedStatus));
     }
 
     setRequestedStatus(newStatus: RequestedStatus | null) {
-        localStorage.setItem("RequestedStatus", String(newStatus));
+        localStorage.setItem(requestedStatus, String(newStatus));
     }
 
     getLastNotificationPermissionRequest(): string | null {
