@@ -5,12 +5,12 @@
         namePlayerInBubbleModalStore,
     } from "../../../../Stores/AvailabilityStatusModalsStore";
     import LL from "../../../../../i18n/i18n-svelte";
-    import { passStatusToOnlineWhenUserIsInSetableStatus } from "../../../../Rules/StatusRules/statusChangerFunctions";
+    import { passStatusToOnline } from "../../../../Rules/StatusRules/statusChangerFunctions";
     import ConfirmationModal from "./ConfirmationModal.svelte";
 
     const confirmationModalProps: ConfirmationModalPropsInterface = {
         handleAccept: () => {
-            passStatusToOnlineWhenUserIsInSetableStatus();
+            passStatusToOnline();
             bubbleModalVisibility.close();
         },
         handleClose: () => {
