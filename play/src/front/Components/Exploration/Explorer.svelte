@@ -132,7 +132,7 @@
     }
 </script>
 
-<div class="tw-flex tw-flex-col">
+<div class="mapexplorer tw-flex tw-flex-col tw-overflow-auto">
     <div class="header-container">
         <h3 class="tw-text-l tw-text-left">{$LL.mapEditor.explorer.title()}</h3>
     </div>
@@ -333,5 +333,26 @@
         div:hover {
             background-color: #4156f6;
         }
+    }
+
+    .mapexplorer {
+        scrollbar-width: 20px;
+        scrollbar-color: rgb(0 0 0 / 0.8) rgb(0 0 0 / 0.2);
+    }
+    .mapexplorer::-webkit-scrollbar {
+        width: 20px;
+    }
+    .mapexplorer::-webkit-scrollbar-track {
+        background-color: transparent;
+    }
+    .mapexplorer::-webkit-scrollbar-thumb {
+        background-color: rgb(0 0 0 / 0.5);
+        border-radius: 20px;
+        border: 6px solid transparent;
+        background-clip: content-box;
+        cursor: grab;
+    }
+    .mapexplorer::-webkit-scrollbar-thumb:hover {
+        background-color: rgb(0 0 0 / 1);
     }
 </style>
