@@ -859,8 +859,10 @@
             <div class="bottom-action-section tw-flex tw-flex-initial">
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <div on:dragstart|preventDefault={noDrag} on:click={toggleMapEditorMode} class="bottom-action-button">
-                    {#if isMobile || !$mapManagerActivated}
+                    {#if isMobile}
                         <Tooltip text={$LL.actionbar.mapEditorMobileLocked()} />
+                    {:else if !$mapManagerActivated}
+                        <Tooltip text={$LL.actionbar.mapEditorLocked()} />
                     {:else}
                         <Tooltip text={$LL.actionbar.mapEditor()} />
                     {/if}

@@ -114,6 +114,11 @@ test.describe("Map editor @oidc", () => {
     });
 
     test('Successfully set "SpeakerZone" in the map editor', async ({page, browser, request}) => {
+        // skip the test, speaker zone with Jitsi is deprecated
+        //eslint-disable-next-line playwright/no-skipped-test
+        test.skip();
+        return;
+
         await resetWamMaps(request);
 
         await page.goto(Map.url("empty"));
