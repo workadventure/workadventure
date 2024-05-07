@@ -233,7 +233,7 @@
 
     function getPanelClass() {
         const widthPercentage = getWidthPercentage();
-        return `${widthPercentage} h-full right-0 top-0 bg-contrast/50 backdrop-blur left_panel`;
+        return `${widthPercentage} h-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel`;
     }
 
     let panelClass = getPanelClass();
@@ -243,8 +243,8 @@
 <!-- use:draggable={{ axis: "x" }} -->
 
 <div
-    class={vertical ? `${panelClass} responsive-container` : `${panelClass} flex-col padding`}
     id="cowebsites-container"
+    class={vertical ? `${panelClass} responsive-container` : `${panelClass} flex-col padding`}
     bind:this={container}
     in:fly|local={vertical ? { duration: 750, y: -1000 } : { duration: 750, x: 1000 }}
 >

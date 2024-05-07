@@ -28,6 +28,8 @@
 
     import bgMap from "./images/map-exemple.png";
     import defaultLoader from "./images/Workadventure.gif";
+    import { coWebsites } from "../Stores/CoWebsiteStore";
+    import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
 
     export let game: Game;
 
@@ -38,7 +40,7 @@
      */
 </script>
 
-<div class="absolute h-full w-full">
+<div class="h-full w-full absolute">
     <!-- Preload image loader TODO HUGO : Better way ? -->
     <link rel="preload" as="image" href={bgMap} />
     <link rel="preload" as="image" href={defaultLoader} />
@@ -82,6 +84,17 @@
                 <MapEditor />
             {/if}
             <MainLayout />
+
+            <!-- <div class="test w-full">
+                <div class="main-layout">
+                    <MainLayout />
+                </div>
+                {#if $coWebsites.length > 0}
+                    <div class="cowebsite">
+                        <CoWebsitesContainer />
+                    </div>
+                {/if}
+            </div> -->
             <!--message=""-->
         {/key}
     {/if}
