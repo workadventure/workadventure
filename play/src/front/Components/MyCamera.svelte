@@ -65,7 +65,7 @@
 </script>
 
 <div
-    class="transition-all relative h-full aspect-video w-fit m-auto test {$mediaStreamConstraintsStore.audio
+    class="transition-all relative h-full aspect-video w-fit m-auto {$mediaStreamConstraintsStore.audio
         ? 'border-8 border-solid bg-indigo-400 rounded-lg'
         : ''}"
     bind:this={cameraContainer}

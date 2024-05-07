@@ -68,26 +68,25 @@
 <aside class:full in:fly|local={{ x: 200, duration: 100 }} class="mobile-height">
     <!-- grid-flow-col grid-flow-col -->
     <!-- {#if $streamableCollectionStore.size < 3} -->
-    <div class="container-cam relative">
-        <div class="all-cameras overflow-visible content-center flex gap-x-4 justify-center">
-            {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
-                {#if !highlightedEmbedScreen || highlightedEmbedScreen.type !== "streamable" || (highlightedEmbedScreen.type === "streamable" && highlightedEmbedScreen.embed !== peer)}
-                    {#key uniqueId}
-                        <div id="unique-cam-other">
-                            <MediaBox
-                                streamable={peer}
-                                on:camMounted={camMountedWidth}
-                                on:camUnmounted={camUnmountedWidth}
-                            />
-                        </div>
-                    {/key}
-                {/if}
-            {/each}
-            <div id="unique-mycam ">
-                {#if $myCameraStore}
-                    <MyCamera />
-                {/if}
-            </div>
+
+    <div class="all-cameras overflow-visible content-center flex gap-x-4 justify-center">
+        {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
+            {#if !highlightedEmbedScreen || highlightedEmbedScreen.type !== "streamable" || (highlightedEmbedScreen.type === "streamable" && highlightedEmbedScreen.embed !== peer)}
+                {#key uniqueId}
+                    <div id="unique-cam-other">
+                        <MediaBox
+                            streamable={peer}
+                            on:camMounted={camMountedWidth}
+                            on:camUnmounted={camUnmountedWidth}
+                        />
+                    </div>
+                {/key}
+            {/if}
+        {/each}
+        <div id="unique-mycam ">
+            {#if $myCameraStore}
+                <MyCamera />
+            {/if}
         </div>
     </div>
 

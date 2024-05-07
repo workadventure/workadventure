@@ -298,10 +298,7 @@
         {#if videoEnabled}
             {#if displayNoVideoWarning}
                 <div
-                    class="absolute w-full h-full top-0 left-0 flex justify-center items-center bg-danger/50 text-white {$constraintStore &&
-                    $constraintStore.audio !== false
-                        ? 'bg-contrast/80 border-8 border-solid bg-indigo-400 rounded-lg'
-                        : ''}"
+                    class="absolute w-full h-full top-0 left-0 flex justify-center items-center bg-danger/50 text-white"
                 >
                     <div class="text-center">
                         <svg

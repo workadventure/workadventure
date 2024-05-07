@@ -12,6 +12,7 @@
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
+    import { mediaStreamConstraintsStore } from "../../Stores/MediaStore";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -68,7 +69,9 @@
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
         <div
-            class="transition-all relative h-full aspect-video w-fit"
+            class="transition-all relative h-full aspect-video w-fit {$mediaStreamConstraintsStore.audio
+                ? 'border-8 border-solid bg-indigo-400 rounded-lg'
+                : ''}"
             class:hightlighted={isHightlighted}
             class:mr-6={isHightlighted && videoEnabled}
             class:max-w-sm={isHightlighted && !videoEnabled}

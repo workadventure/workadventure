@@ -28,7 +28,7 @@
     }
 </script>
 
-<div class="video-container w-full h-full relative screen-sharing ">
+<div class="video-container h-full w-full relative screen-sharing ">
     {#if $statusStore === "connecting"}
         <div class="connecting-spinner" />
     {/if}
