@@ -543,7 +543,6 @@ export class JitsiConferenceWrapper {
             const participantId = track.getParticipantId();
             if (!participantId) {
                 console.error("Track has no participantId", track);
-                throw new Error("Track has no participantId");
                 return tracks;
             }
             let jitsiTrackWrapper = tracks.get(participantId);

@@ -374,7 +374,9 @@ export class SocketManager implements ZoneEventListener {
                                     const addSpaceUserMessage = message.message.addSpaceUserMessage;
                                     const space = this.spaces.get(addSpaceUserMessage.spaceName);
                                     if (space && addSpaceUserMessage.user) {
-                                        space.localAddUser(addSpaceUserMessage.user);
+                                        space.addUser(addSpaceUserMessage.user);
+                                        // @deprecated not works with multiple spaces in multiple play service
+                                        // space.localAddUser(addSpaceUserMessage.user);
                                     }
                                     break;
                                 }
@@ -596,6 +598,7 @@ export class SocketManager implements ZoneEventListener {
             //         .setSpacefiltercontainname(new SpaceFilterContainName().setValue("test")),
             // ];
 
+            console.log("SocketManager => handleJoinSpace => isNewSpaceStream", isNewSpaceStream);
             if (!isNewSpaceStream) {
                 space.addUser(socketData.spaceUser);
             } else {
@@ -608,7 +611,9 @@ export class SocketManager implements ZoneEventListener {
                         }),
                     },
                 });
-                space.localAddUser(socketData.spaceUser);
+                space.addUser(socketData.spaceUser);
+                // @deprecated not works with multiple spaces in multiple play service
+                //space.localAddUser(socketData.spaceUser);
             }
         } catch (e) {
             Sentry.captureException(`An error occurred on "join_space" event ${e}`);
