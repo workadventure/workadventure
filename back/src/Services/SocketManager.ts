@@ -786,7 +786,9 @@ export class SocketManager {
                 }
                 case "embeddableWebsiteQuery":
                 case "roomTagsQuery":
-                case "roomsFromSameWorldQuery": {
+                case "roomsFromSameWorldQuery":
+                case "getMemberQuery":
+                case "searchMemberQuery": {
                     // Nothing to do, the message will never be received in the back
                     break;
                 }
