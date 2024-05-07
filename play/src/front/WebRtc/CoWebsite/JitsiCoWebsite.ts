@@ -5,7 +5,7 @@ import { randomDelay } from "@workadventure/shared-utils/src/RandomDelay/RandomD
 import { inExternalServiceStore } from "../../Stores/MyMediaStore";
 import { coWebsiteManager } from "../CoWebsiteManager";
 import { jitsiExternalApiFactory } from "../JitsiExternalApiFactory";
-import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import { inJitsiStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
@@ -293,7 +293,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
             this.loadPromise?.cancel();
             this.destroy();
             inExternalServiceStore.set(false);
-
+            inJitsiStore.set(false);
             return super.unload();
         } catch (e) {
             console.error("Cannot unload Jitsi co-website", e);

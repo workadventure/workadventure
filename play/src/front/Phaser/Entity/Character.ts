@@ -19,7 +19,6 @@ import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
 import { MegaphoneIcon } from "../Components/MegaphoneIcon";
-import { passStatusToOnline } from "../../Rules/StatusRules/statusChangerFunctions";
 import { gameManager } from "../Game/GameManager";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
@@ -391,7 +390,6 @@ export abstract class Character extends Container implements OutlineableInterfac
             }
         }
 
-        passStatusToOnline();
         this.playAnimation(this._lastDirection, true);
         this.setDepth(this.y + 16);
 
@@ -425,7 +423,6 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this._lastDirection = PositionMessage_Direction.DOWN;
             }
         }
-        passStatusToOnline();
         this.playAnimation(this._lastDirection, true);
 
         this.setDepth(this.y + 16);
