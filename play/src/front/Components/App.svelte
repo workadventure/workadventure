@@ -20,7 +20,7 @@
     import { desktopApi } from "../Api/Desktop";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
-    import { coWebsiteManager, coWebsiteManager, coWebsites } from "../Stores/CoWebsiteStore";
+    import { coWebsiteManager, coWebsites } from "../Stores/CoWebsiteStore";
 
     let WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
     let game: Game;
@@ -311,12 +311,12 @@
     {/if}
 </div> -->
 
-<div class="main-container flex absolute h-full w-full">
-    <!-- <div class="relative z-100 h-full w-full"> -->
-    {#if $coWebsites.length > 0}
-        <CoWebsitesContainer />
-    {/if}
-    <!-- </div> -->
+<div class="main-container h-full w-full static">
+    <div class="absolute w-full h-full">
+        {#if $coWebsites.length > 0}
+            <CoWebsitesContainer />
+        {/if}
+    </div>
     <div class="game-container">
         <div id="game" bind:this={gameDiv} class="game absolute" />
         <GameOverlay {game} />
@@ -324,10 +324,4 @@
 </div>
 
 <style>
-    .game {
-        z-index: -100;
-    }
-    .game-container {
-        flex: 1;
-    }
 </style>
