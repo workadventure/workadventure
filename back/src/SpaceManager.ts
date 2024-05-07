@@ -53,7 +53,7 @@ const spaceManager = {
                         break;
                     }
                     case "pongMessage": {
-                        pusher.receivedPong();
+                        pusher.clearPongTimeout();
                         break;
                     }
                     case "kickOffMessage": {
@@ -121,6 +121,7 @@ const spaceManager = {
             })
             .on("end", () => {
                 socketManager.handleUnwatchAllSpaces(pusher);
+                pusher.end();
                 debug("watchSpace => ended %s", pusher.id);
                 call.end();
             });

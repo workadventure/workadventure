@@ -1145,8 +1145,7 @@ message BackToPusherSpaceMessage{
 
 message WatchSpaceMessage{
   string spaceName = 1;
-  SpaceUser user = 2;
-  SpaceFilterMessage spaceFilter = 3;
+  SpaceFilterMessage spaceFilter = 2;
 }
 message UnwatchSpaceMessage{
   string spaceName = 1;
