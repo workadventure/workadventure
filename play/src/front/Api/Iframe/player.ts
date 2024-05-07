@@ -51,7 +51,7 @@ export const setIsLogged = (_isLogged: boolean | undefined) => {
 
 export class WorkadventurePlayerCommands extends IframeApiContribution<WorkadventurePlayerCommands> {
     readonly state = playerState;
-    private _proximityMeeting: WorkadventureProximityMeetingCommands | undefined;
+    private _proximityMeeting: WorkadventureProximityMeetingCommands = new WorkadventureProximityMeetingCommands();
 
     callbacks = [
         apiCallback({
@@ -265,9 +265,6 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     }
 
     get proximityMeeting(): WorkadventureProximityMeetingCommands {
-        if (this._proximityMeeting === undefined) {
-            this._proximityMeeting = new WorkadventureProximityMeetingCommands();
-        }
         return this._proximityMeeting;
     }
 
