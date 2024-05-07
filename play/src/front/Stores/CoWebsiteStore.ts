@@ -2,7 +2,6 @@ import { get, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { Subject } from "rxjs";
 import { waScaleManager } from "../Phaser/Services/WaScaleManager";
-import { HtmlUtils } from "../WebRtc/HtmlUtils";
 
 let gameOverlayDomId = "game-overlay";
 
@@ -46,16 +45,12 @@ export const coWebsites = createCoWebsiteStore();
 
 export class CoWebsiteManager {
 
-    // private cowebsiteDom: HTMLDivElement;
-    // private gameOverlayDom: HTMLDivElement;
-
     private _onResize: Subject<void> = new Subject();
     public onResize = this._onResize.asObservable();
 
-    // constructor() {
-    //     this.cowebsiteDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("cowebsite");
-    //     this.gameOverlayDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("game-overlay");
-    // }
+    get verticalMode(): boolean {
+        return window.innerWidth < window.innerHeight;
+    }
 
     public fire(): void {
         console.log("je suis dans la fonction fire cowebsite manager")
@@ -118,10 +113,17 @@ export class CoWebsiteManager {
     //Fonction dans le fichier WaScaleManager.ts
 
     public getGameSize(): { width: number; height: number } {
-        return {
-            width: window.innerWidth,
-            height: window.innerHeight,
-        };
+        if (!this.verticalMode) {
+            return {
+                width: window.innerWidth - this.width, // chopper la taille du conteneur des cowebsite
+                height: window.innerHeight,
+            };
+        } else {
+            return {
+                width: window.innerWidth,
+                height: window.innerHeight - this.height, // chopper la height du conteneur des cowebsites
+            };
+        }
     }
 
     // Fonction dans la game scene

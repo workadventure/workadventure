@@ -67,13 +67,17 @@ export class WaScaleManager {
 
         // Override bug in canvas resizing in Phaser. Let's resize the canvas ourselves
         const style = this.scaleManager.canvas.style;
+        console.log("STYLE", style)
         style.width = Math.ceil(realSize.width !== 0 ? realSize.width / devicePixelRatio : 0) + "px";
         style.height = Math.ceil(realSize.height !== 0 ? realSize.height / devicePixelRatio : 0) + "px";
 
         // Resize the game element at the same size at the canvas
         const gameStyle = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("game").style;
+        console.log(gameStyle)
         gameStyle.width = style.width;
+        console.log(gameStyle.width)
         gameStyle.height = style.height;
+        console.log(gameStyle.height)
 
         // Note: onResize will be called twice (once here and once in Game.ts), but we have no better way.
         for (const scene of this.game.scene.getScenes(true)) {

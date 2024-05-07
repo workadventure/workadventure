@@ -228,7 +228,7 @@
             classWidth.textContent = `.width-container { width: ${widthPercent}% }`;
             return classWidth;
         }
-        return "w-6/12";
+        return "w-1/2";
     }
 
     function getPanelClass() {
@@ -360,10 +360,6 @@
 </div>
 
 <style>
-    .cowebsites-container {
-        display: flex;
-        flex-grow: 1;
-    }
     .padding {
         padding-bottom: 76px;
     }

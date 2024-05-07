@@ -495,26 +495,62 @@
         position: absolute;
     }
 </style> -->
-
-<div class="main-container">
-    <div id="game" bind:this={gameDiv} class="first-div">
+<!--
+<div class="main-container flex">
+    <div id="game" bind:this={gameDiv} class="game">
         <GameOverlay {game} />
     </div>
-
     {#if $coWebsites.length > 0}
-        <div class="second-div">
+        <div class="cowebsite">
             <CoWebsitesContainer />
         </div>
     {/if}
 </div>
 
 <style>
-    .main-container {
+    .game,
+    .cowebsite {
+        flex: 1;
+        width: 50%;
+    }
+</style> -->
+
+<div class="wrapper">
+    <div class="map-container">
+        <div id="game" bind:this={gameDiv} class="absolute top-0" />
+        <GameOverlay {game} />
+    </div>
+    {#if $coWebsites.length > 0}
+        <div class="cowebsite-container">
+            <div class="cowebsite absolute">
+                <CoWebsitesContainer />
+            </div>
+        </div>
+    {/if}
+</div>
+
+<style>
+    .wrapper {
         display: flex;
+        flex-direction: row;
     }
 
-    .first-div,
-    .second-div {
-        flex-grow: 1;
+    .map-container {
+        flex: 1;
+        position: relative;
+    }
+
+    .cowebsite-container {
+        flex: 1;
+        position: relative;
+    }
+
+    .cowebsite {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 50%;
+        overflow: auto;
     }
 </style>
