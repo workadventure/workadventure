@@ -285,6 +285,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         const oldPos = { ...this.explorerFocusOn };
         const startZoomModifier = this.waScaleManager.zoomModifier;
         this.animationInProgress = true;
+        this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.animateCallback);
+        this.targetReachInProgress = false;
+        this.explorerFocusOnTarget = undefined;
         this.zoomOutTween?.stop();
         this.startFollowTween = this.scene.tweens.addCounter({
             from: 0,
@@ -310,6 +313,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 this.camera.startFollow(player, true);
                 this.animationInProgress = false;
                 this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
+                this.startFollowTween = undefined;
             },
         });
     }
@@ -492,44 +496,29 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     public triggerMaxZoomOutAnimation(): void {
-        const currentZoomModifier = this.waScaleManager.zoomModifier;
         const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(
             this.mapSize.width,
             this.mapSize.height
         );
 
-        const oldPos = { ...this.explorerFocusOn };
-
         this.startFollowTween?.stop();
-        this.zoomOutTween = this.scene.tweens.addCounter({
-            from: 0,
-            to: 1,
-            duration: 1000,
-            ease: Easing.SineEaseOut,
-            onUpdate: (tween: Phaser.Tweens.Tween) => {
-                const shiftX = (this.mapSize.width / 2 - oldPos.x) * tween.getValue();
-                const shiftY = (this.mapSize.height / 2 - oldPos.y) * tween.getValue();
-                this.explorerFocusOn.x = oldPos.x + shiftX;
-                this.explorerFocusOn.y = oldPos.y + shiftY;
-                this.waScaleManager.zoomModifier =
-                    (targetZoomModifier - currentZoomModifier) * tween.getValue() + currentZoomModifier;
+        this.startFollowTween = undefined;
+        this.animationInProgress = false;
 
-                this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
-            },
-        });
+        this.centerCameraOn({ x: this.mapSize.width / 2, y: this.mapSize.height / 2 }, targetZoomModifier);
     }
 
     private stopPan(): void {
         this.camera.panEffect.reset();
     }
 
-    public centerCameraOn(position: { x: number; y: number }): void {
+    public centerCameraOn(position: { x: number; y: number }, zoom?: number): void {
         this.explorerFocusOnTarget = {
             ...position,
-            zoom: this.waScaleManager.zoomModifier,
+            zoom: zoom ?? this.waScaleManager.zoomModifier,
         };
 
-        if (this.waScaleManager.zoomModifier < this._resistanceEndZoomLevel) {
+        if (zoom === undefined && this.waScaleManager.zoomModifier < this._resistanceEndZoomLevel) {
             this.explorerFocusOnTarget.zoom = this._resistanceEndZoomLevel;
         }
 
