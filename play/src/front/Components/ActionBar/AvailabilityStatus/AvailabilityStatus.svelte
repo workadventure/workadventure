@@ -61,7 +61,6 @@
     };
 
     const unsubcribeToAvailabilityStatusStore = availabilityStatusStore.subscribe((newStatus: AvailabilityStatus) => {
-        console.log(AvailabilityStatus[newStatus], statusButtonTooltipText());
         statusChanger.changeStatusTo(newStatus);
         buttonProps = {
             ...buttonProps,

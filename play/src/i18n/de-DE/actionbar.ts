@@ -13,6 +13,7 @@ const actionbar: BaseTranslation = {
     menu: "Menü öffnen / schliessen",
     mapEditor: "Karteneditor öffnen / schließen",
     mapEditorMobileLocked: "Karteneditor ist im mobilen Modus gesperrt",
+    mapEditorLocked: "Karteneditor ist gesperrt 🔐",
     bo: "Backoffice öffnen / schiessen",
     subtitle: {
         microphone: "Mikrofon",
