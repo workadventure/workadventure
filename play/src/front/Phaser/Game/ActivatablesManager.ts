@@ -4,6 +4,7 @@ import { isOutlineable } from "../../Utils/CustomTypeGuards";
 import type { Player } from "../Player/Player";
 import LL from "../../../i18n/i18n-svelte";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+import { RemotePlayer } from "../Entity/RemotePlayer";
 import type { ActivatableInterface } from "./ActivatableInterface";
 
 export class ActivatablesManager {
@@ -84,14 +85,16 @@ export class ActivatablesManager {
         this.selectedActivatableObjectByDistance = newNearestObject;
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
             this.selectedActivatableObjectByDistance?.characterCloseByOutline(this.outlineColor);
-            this.selectedActivatableObjectByDistance.playText(
-                "object",
-                isMediaBreakpointUp("md") ? get(LL).trigger.mobile.object() : get(LL).trigger.object(),
-                10000,
-                () => {
-                    this.currentPlayer.scene.userInputManager.handleActivableEntity();
-                }
-            );
+            if (this.selectedActivatableObjectByDistance instanceof RemotePlayer == false) {
+                this.selectedActivatableObjectByDistance.playText(
+                    "object",
+                    isMediaBreakpointUp("md") ? get(LL).trigger.mobile.object() : get(LL).trigger.object(),
+                    10000,
+                    () => {
+                        this.currentPlayer.scene.userInputManager.handleActivableEntity();
+                    }
+                );
+            }
         }
     }
 
