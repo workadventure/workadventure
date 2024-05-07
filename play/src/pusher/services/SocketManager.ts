@@ -358,7 +358,6 @@ export class SocketManager implements ZoneEventListener {
         try {
             const backId = apiClientRepository.getIndex(spaceName);
             let spaceStreamToPusherPromise = this.spaceStreamsToPusher.get(backId);
-            const isNewSpaceStream = spaceStreamToPusherPromise === undefined;
             if (!spaceStreamToPusherPromise) {
                 spaceStreamToPusherPromise = (async () => {
                     const apiSpaceClient = await apiClientRepository.getSpaceClient(spaceName);
@@ -597,24 +596,16 @@ export class SocketManager implements ZoneEventListener {
             //         .setFiltername(new StringValue().setValue(uuid()))
             //         .setSpacefiltercontainname(new SpaceFilterContainName().setValue("test")),
             // ];
-
-            console.log("SocketManager => handleJoinSpace => isNewSpaceStream", isNewSpaceStream);
-            if (!isNewSpaceStream) {
-                space.addUser(socketData.spaceUser);
-            } else {
-                spaceStreamToPusher.write({
-                    message: {
-                        $case: "watchSpaceMessage",
-                        watchSpaceMessage: WatchSpaceMessage.fromPartial({
-                            spaceName,
-                            user: socketData.spaceUser,
-                        }),
-                    },
-                });
-                space.addUser(socketData.spaceUser);
-                // @deprecated not works with multiple spaces in multiple play service
-                //space.localAddUser(socketData.spaceUser);
-            }
+            spaceStreamToPusher.write({
+                message: {
+                    $case: "watchSpaceMessage",
+                    watchSpaceMessage: WatchSpaceMessage.fromPartial({
+                        spaceName,
+                        user: socketData.spaceUser,
+                    }),
+                },
+            });
+            space.addUser(socketData.spaceUser);
         } catch (e) {
             Sentry.captureException(`An error occurred on "join_space" event ${e}`);
             console.error(`An error occurred on "join_space" event ${e}`);
