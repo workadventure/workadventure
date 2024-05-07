@@ -18,6 +18,7 @@ function createHighlightedEmbedScreenStore() {
     return {
         subscribe,
         highlight: (embedScreen: EmbedScreen) => {
+            console.log("autre vidéo ou partage ecran mais pas cowebsite")
             set(embedScreen);
         },
         removeHighlight: () => {

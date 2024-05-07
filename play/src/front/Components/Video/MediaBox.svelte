@@ -17,9 +17,9 @@
     export let streamable: Streamable;
     export let isHightlighted = false;
     export let isClickable = false;
-    export let mozaicSolo = false;
-    export let mozaicDuo = false;
-    export let mozaicQuarter = false;
+    // export let mozaicSolo = false;
+    // export let mozaicDuo = false;
+    // export let mozaicQuarter = false;
     let camWidth;
 
     const dispatch = createEventDispatcher();
@@ -38,16 +38,14 @@
     onMount(() => {
         gameScene.reposition();
         if (streamable instanceof VideoPeer) {
-            getWidthOfCam();
             dispatch("camMounted");
         }
     });
 
-    function getWidthOfCam() {
-        camWidth = (document.getElementsByClassName("width")[0] as HTMLElement)?.offsetWidth;
-        console.log("TTTEEEESSSSTTTTTT", camWidth);
-        // Me donne Undefined
-    }
+    // function getWidthOfCam() {
+    //     camWidth = (document.getElementsByClassName("width")[0] as HTMLElement)?.offsetWidth;
+    //     console.log("TTTEEEESSSSTTTTTT", camWidth);
+    // }
 
     onDestroy(() => {
         gameScene.reposition();
@@ -79,9 +77,6 @@
             class:m-auto={!isHightlighted && !videoEnabled}
             class:aspect-video={!isHightlighted && !videoEnabled}
             class:clickable={isClickable}
-            class:mozaic-duo={mozaicDuo}
-            class:mozaic-full-width={mozaicSolo}
-            class:mozaic-quarter={mozaicQuarter}
             transition:fly={{ y: 50, duration: 150 }}
         >
             <!-- Video de l'autre personne-->
@@ -97,9 +92,6 @@
         class="media-container justify-center h-full w-full
             media-box-shape-color receiving-sharing"
         class:clickable={isClickable}
-        class:mozaic-duo={mozaicDuo}
-        class:mozaic-full-width={mozaicSolo}
-        class:mozaic-quarter={mozaicQuarter}
     >
         <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
     </div>
@@ -131,9 +123,6 @@
         class:m-auto={!isHightlighted && !streamable.getVideoTrack()}
         class:h-12={!isHightlighted && !streamable.getVideoTrack()}
         class:clickable={isClickable}
-        class:mozaic-full-width={mozaicSolo}
-        class:mozaic-duo={mozaicDuo}
-        class:mozaic-quarter={mozaicQuarter}
     >
         <div
             class="w-full flex screen-blocker"
@@ -149,9 +138,6 @@
     <div
         class="media-container {isHightlighted ? 'hightlighted mr-6' : 'flex h-full aspect-ratio'}"
         class:clickable={isClickable}
-        class:mozaic-full-width={mozaicSolo}
-        class:mozaic-duo={mozaicDuo}
-        class:mozaic-quarter={mozaicQuarter}
     >
         <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'}   w-full h-full flex screen-blocker">
             <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
@@ -159,6 +145,9 @@
     </div>
 {/if}
 
+<!-- class:mozaic-full-width={mozaicSolo}
+        class:mozaic-duo={mozaicDuo}
+        class:mozaic-quarter={mozaicQuarter} -->
 <style lang="scss">
     @import "../../style/breakpoints.scss";
 

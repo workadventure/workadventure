@@ -88,13 +88,13 @@
         ? "group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 items-center pointer-events-auto transition-all pb-7"
         : ""}
 >
-    {#if $embedScreenLayoutStore === LayoutMode.Presentation}
-        <PresentationLayout />
-        <!-- {:else} -->
-        <!-- <MozaicLayout /> -->
-    {/if}
+    <PresentationLayout />
+    <!-- {#if $embedScreenLayoutStore === LayoutMode.Presentation}
+    {:else} -->
+    <!-- <MozaicLayout /> -->
+    <!-- {/if} -->
 
-    <div
+    <!-- <div
         class="group-hover:opacity-100 pointer-events-auto opacity-0 absolute bottom-0 h-4 hover:bg-white/10 w-56 m-auto bg-contrast/80 rounded-full cursor-row-resize transition-all"
     >
         <div
@@ -102,7 +102,7 @@
         >
             <div class="bg-white rounded-lg h-1 w-48" />
         </div>
-    </div>
+    </div> -->
 </div>
 
 <!-- style={$emoteMenuSubStore ? "padding-top:96px;" : ""} -->

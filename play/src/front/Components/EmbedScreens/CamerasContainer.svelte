@@ -12,10 +12,11 @@
     // $: clickable = !full;
     let myCam;
     let otherCam;
+
     // let totalCamWidth = 0;
     // let camWidthOther = 350;
     // let camWidth = 350;
-    // let widthWindow: number | undefined;
+    let widthWindow: number | undefined;
 
     onMount(() => {
         // getWidth();
@@ -28,24 +29,47 @@
     });
 
     function camMountedWidth() {
-        console.log("camMountedWidth");
-        getWidthofCam();
+        widthWindow = document.getElementById("presentation-layout")?.offsetWidth;
+        console.log("WIDTH FEMETRE", widthWindow);
+        let allCams = (document.getElementsByClassName("all-cameras")[0] as HTMLElement)?.offsetWidth;
+        console.log("WIDTH TOUTE LES CAMERAS", allCams);
+        if (widthWindow !== undefined && allCams > widthWindow) {
+            console.log("TAILLE CAM TROP GRANDE");
+            let scale = widthWindow / allCams;
+            console.log(scale);
+            let cameras = document.querySelectorAll(".all-cameras");
+            console.log(cameras);
+            cameras.forEach((camera) => {
+                (camera as HTMLElement).style.transform = `scale(${scale})`;
+                console;
+            });
+        } else {
+            console.log("TAILLE CAM OK");
+        }
     }
 
     function camUnmountedWidth() {
-        console.log("camUnmountedWidth");
+        widthWindow = document.getElementById("presentation-layout")?.offsetWidth;
+        console.log("WIDTH FEMETRE", widthWindow);
+        let allCams = (document.getElementsByClassName("all-cameras")[0] as HTMLElement)?.offsetWidth;
+        console.log("WIDTH TOUTE LES CAMERAS", allCams);
+        if (widthWindow !== undefined && allCams > widthWindow) {
+            console.log("TAILLE CAM TROP GRANDE");
+        } else {
+            console.log("TAILLE CAM OK");
+        }
     }
 
-    function getWidthofCam() {
-        myCam = document.getElementById("unique-mycam")?.offsetWidth;
-        console.log("MA CAMERA WIDTH", myCam);
-        otherCam = document.getElementById("unique-cam-other");
-        console.log(otherCam);
-        console.log(otherCam?.offsetWidth);
-        console.log("OTHER CAMERA WIDTH", otherCam);
-        let allCams = (document.getElementsByClassName("all-cameras")[0] as HTMLElement)?.offsetWidth;
-        console.log("WIDTH ALL CAM = ", allCams, typeof allCams);
-    }
+    // function getWidthofCam() {
+    //     myCam = document.getElementById("unique-mycam")?.offsetWidth;
+    //     console.log("MA CAMERA WIDTH", myCam);
+    //     otherCam = document.getElementById("unique-cam-other");
+    //     console.log(otherCam);
+    //     console.log(otherCam?.offsetWidth);
+    //     console.log("OTHER CAMERA WIDTH", otherCam);
+    //     let allCams = (document.getElementsByClassName("all-cameras")[0] as HTMLElement)?.offsetWidth;
+    //     console.log("WIDTH ALL CAM = ", allCams, typeof allCams);
+    // }
 
     // function getWidthScreen() {
     //     widthWindow = document.getElementById("presentation-layout")?.offsetWidth;
@@ -99,8 +123,11 @@
 
 <!-- isClickable={clickable} -->
 <style>
-    /* display: flex;
-  flex-wrap: wrap; */
+    #unique-cam-other {
+        width: 350px;
+        height: 200px;
+    }
+
     @container (max-width: 767px) {
         .mobile-height {
             height: 300px;
@@ -114,8 +141,8 @@
             align-items: flex-end;
         }
 
-        .unique-cam-other,
-        .unique-mycam {
+        #unique-cam-other,
+        #unique-mycam {
             align-self: flex-end;
             margin-top: auto;
         }
