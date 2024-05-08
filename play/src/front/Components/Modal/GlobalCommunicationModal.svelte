@@ -204,9 +204,18 @@
                             />
                             {$LL.megaphone.modal.liveMessage.title()}
                         </h3>
-                        <button class="light tw-max-w-fit" on:click={activateLiveMessage}
-                            >{$LL.megaphone.modal.liveMessage.button()}</button
-                        >
+                        <!-- 
+                            <button class="light tw-max-w-fit" on:click={activateLiveMessage}
+                            >
+                            {$LL.megaphone.modal.liveMessage.button()}
+                            </button>
+                        -->
+                        <p class="help-text">
+                            <InfoIcon size="18" /> This feature is in maintenance 😱, we will back as soon as possible 💪
+                        </p>
+                        <button class="light tw-max-w-fit" on:click={activateLiveMessage} disabled>
+                            {$LL.megaphone.modal.liveMessage.button()} (coming soon)
+                        </button>
                         <p class="tw-text-white tw-text-sm tw-whitespace-pre-line">
                             {$LL.megaphone.modal.liveMessage.notice()}
                         </p>

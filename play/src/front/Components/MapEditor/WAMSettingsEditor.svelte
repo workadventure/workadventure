@@ -30,6 +30,11 @@
         mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(undefined);
         gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(EditorToolName.EntityEditor);
     }
+
+    function activeMegaphone() {
+        // Comming soon
+        // mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone)
+    }
 </script>
 
 <div class="configure-my-room" in:fly={{ x: 100, duration: 250, delay: 200 }} out:fly={{ x: 100, duration: 200 }}>
@@ -56,12 +61,9 @@
             <li
                 class:selected={$mapEditorWamSettingsEditorToolCurrentMenuItemStore ===
                     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone}
-                on:click={() =>
-                    mapEditorWamSettingsEditorToolCurrentMenuItemStore.set(
-                        WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM.Megaphone
-                    )}
+                on:click={() => activeMegaphone()}
             >
-                <span>Megaphone</span>
+                <span>Megaphone (coming soon)</span>
                 <ChevronRightIcon class={`tw--mr-2`} />
             </li>
         </ul>

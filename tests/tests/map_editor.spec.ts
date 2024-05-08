@@ -17,6 +17,10 @@ test.use({
 })
 test.describe('Map editor', () => {
   test('Successfully set the megaphone feature', async ({ page, browser, request, browserName }, { project }) => {
+    // Skip because the feature is in maintenance
+    //eslint-disable-next-line playwright/no-skipped-test
+    test.skip();
+
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
@@ -523,6 +527,10 @@ test.describe('Map editor', () => {
   });
 
   test('Successfully test global message text and sound feature', async ({ page, browser, request, browserName }, { project }) => {
+    // Skip because the feature is in maintenance
+    //eslint-disable-next-line playwright/no-skipped-test
+    test.skip();
+    
     // Skip test for mobile device
     if(project.name === "mobilechromium") {
       //eslint-disable-next-line playwright/no-skipped-test
