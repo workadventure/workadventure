@@ -1,5 +1,7 @@
 import type { Game } from "../Game/Game";
 import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
+import { getGameSize } from "../../Components/EmbedScreens/CoWebsitesContainer.svelte";
+import widthContainer from "../../Components/EmbedScreens/CoWebsitesContainer.svelte"
 import { ResizableScene } from "../Login/ResizableScene";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { HdpiManager } from "./HdpiManager";

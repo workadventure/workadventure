@@ -3,8 +3,6 @@ import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { Subject } from "rxjs";
 import { waScaleManager } from "../Phaser/Services/WaScaleManager";
 
-let gameOverlayDomId = "game-overlay";
-
 
 export function createCoWebsiteStore() {
     const { subscribe, set, update } = writable<Array<CoWebsite>>([]);
@@ -43,10 +41,13 @@ export function createCoWebsiteStore() {
 
 export const coWebsites = createCoWebsiteStore();
 
+
+export let widthContainerFinal = writable(0);
 export class CoWebsiteManager {
 
     private _onResize: Subject<void> = new Subject();
     public onResize = this._onResize.asObservable();
+
 
     get verticalMode(): boolean {
         return window.innerWidth < window.innerHeight;
@@ -110,21 +111,38 @@ export class CoWebsiteManager {
         });
     }
 
-    //Fonction dans le fichier WaScaleManager.ts
-
     public getGameSize(): { width: number; height: number } {
-        if (!this.verticalMode) {
-            return {
-                width: window.innerWidth - this.width, // chopper la taille du conteneur des cowebsite
-                height: window.innerHeight,
-            };
-        } else {
-            return {
-                width: window.innerWidth,
-                height: window.innerHeight - this.height, // chopper la height du conteneur des cowebsites
-            };
-        }
+        const widthContainerValue = get(widthContainerFinal);
+        console.log("VALEUR DU STORE DANS FICHIER TS", widthContainerValue)
+        return {
+            width: window.innerWidth - widthContainerValue,
+            height: window.innerHeight
+        };
     }
+    // public getGameSize(): { width: number; height: number } {
+    //     return {
+    //         height: window.innerHeight,
+    //         width: window.innerWidth - $widthContainer
+    //     }
+    //     console.log("je suis dans la fonction getGameSIze")
+    //     if (!this.verticalMode) {
+    //         if(this.container) {
+    //             console.log("il y a un container")
+    //             console.log(window.innerWidth - this.container.offsetWidth)
+    //         }
+
+    //         return {
+    //             width: this.container ? window.innerWidth - this.container.offsetWidth : window.innerWidth,
+    //             height: window.innerHeight,
+    //         };
+    //          // chopper la taille du conteneur des cowebsite
+    //     } else {
+    //         return {
+    //             width: window.innerWidth,
+    //             height: this.container ? window.innerHeight - this.container.offsetHeight : window.innerHeight, // chopper la height du conteneur des cowebsites
+    //         };
+    //     }
+
 
     // Fonction dans la game scene
 
@@ -134,6 +152,12 @@ export class CoWebsiteManager {
 
 }
 
+// document.addEventListener("DOMContentLoaded", function() {
+//     const container = document.getElementById("cowebsites-container");
+//     const coWebsiteManager = new CoWebsiteManager(container as HTMLElement);
+// });
+
+// const container = document.getElementById("cowebsites-container"); // Obtenez la référence du conteneur
 
 
-export const coWebsiteManager = new CoWebsiteManager();
+export const coWebsiteManager = new CoWebsiteManager;

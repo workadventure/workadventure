@@ -14,6 +14,8 @@
     import { ArrowDownIcon } from "svelte-feather-icons";
     import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { waScaleManager } from "../../Phaser/Services/WaScaleManager";
+    import { writable } from "svelte/store";
+    import { widthContainerFinal } from "../../Stores/CowebsiteStore";
 
     let activeCowebsite = $coWebsites[0];
     let showDropdown = false;
@@ -25,7 +27,7 @@
     let startY: number;
     let startX: number;
     let startWidthContainer: number;
-    let widthContainer: number;
+    let finalWidth;
     let startHeight: number;
     const mediaQuery = window.matchMedia("(max-width: 768px)");
     let totalTabsWidth = 0;
@@ -37,7 +39,13 @@
     onMount(() => {
         mediaQuery.addEventListener("change", (e: any) => handleTabletChange(e));
         handleTabletChange(mediaQuery);
-        coWebsiteManager.fire();
+        let withOnMount = parseInt(getComputedStyle(container).width);
+        widthContainerFinal.set(withOnMount);
+        widthContainerFinal.subscribe((value) => {
+            console.log("Nouvelle largeur du conteneur :", value);
+        });
+        // getWidthCowebsite();
+        // coWebsiteManager.fire();
     });
 
     function handleTabletChange(e: MediaQueryList) {
@@ -53,6 +61,7 @@
     function resizeDesktop() {
         initialWidth = parseInt(getComputedStyle(container).width);
         startWidthContainer = parseInt(getComputedStyle(container).width);
+
         const handleMouseDown = (e: { clientX: number }) => {
             startX = e.clientX;
             startWidthContainer = parseInt(getComputedStyle(container).width);
@@ -61,12 +70,17 @@
         };
         resizeBar.addEventListener("mousedown", handleMouseDown);
         const handleMouseMove = (e: { clientX: number }) => {
-            widthContainer = startWidthContainer - (e.clientX - startX);
-            container.style.width = widthContainer + "px";
-            initialWidth = parseInt(getComputedStyle(container).width);
-            const maxWidth = min([widthContainer, window.innerWidth - 350]);
-            container.style.width = maxWidth + "px";
-            coWebsiteManager.fire();
+            let newWidth = startWidthContainer - (e.clientX - startX);
+            widthContainerFinal.set(newWidth);
+            finalWidth = newWidth + "px";
+            container.style.width = finalWidth;
+            const maxWidth = Math.min(newWidth, window.innerWidth - 350);
+            if (maxWidth !== newWidth) {
+                container.style.width = maxWidth + "px";
+            }
+            // getGameSize();
+
+            // coWebsiteManager.fire();
         };
         const handleMouseUp = () => {
             appearDropdown();
@@ -74,11 +88,11 @@
             document.removeEventListener("mouseup", handleMouseUp);
         };
         return () => {
+            widthContainerFinal;
             resizeBar.removeEventListener("mousedown", handleMouseDown);
             document.removeEventListener("mousemove", handleMouseMove);
             document.removeEventListener("mouseup", handleMouseUp);
         };
-        return;
     }
 
     function resizeMobile() {
@@ -237,6 +251,13 @@
     }
 
     let panelClass = getPanelClass();
+
+    // export function getGameSize() {
+    //     let width = window.innerWidth - $widthContainer;
+    //     console.log("FINALE WIDTH de la game donc mois cowebsite", width);
+    //     let height = window.innerHeight;
+    //     return { width, height };
+    // }
 </script>
 
 <!-- svelte-ignore missing-declaration -->
@@ -353,6 +374,7 @@
         id="resize-bar"
         bind:this={resizeBar}
         on:mousedown={addDivForResize}
+        on:mouseup={removeDivForResize}
         on:touchstart={addDivForResize}
         on:dragend={removeDivForResize}
         on:touchend={removeDivForResize}
