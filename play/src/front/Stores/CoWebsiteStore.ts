@@ -2,6 +2,7 @@ import { get, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { Subject } from "rxjs";
 import { waScaleManager } from "../Phaser/Services/WaScaleManager";
+import { HtmlUtils } from "../WebRtc/HtmlUtils";
 
 
 export function createCoWebsiteStore() {
@@ -43,10 +44,18 @@ export const coWebsites = createCoWebsiteStore();
 
 
 export let widthContainerFinal = writable(0);
+
+let cowebsiteDiv = 'cowebsites-container';
 export class CoWebsiteManager {
 
     private _onResize: Subject<void> = new Subject();
     public onResize = this._onResize.asObservable();
+
+    private cowebsiteContainer: HTMLDivElement;
+
+    constructor() {
+        this.cowebsiteContainer = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDiv);
+    }
 
 
     get verticalMode(): boolean {
@@ -111,14 +120,32 @@ export class CoWebsiteManager {
         });
     }
 
-    public getGameSize(): { width: number; height: number } {
-        const widthContainerValue = get(widthContainerFinal);
-        console.log("VALEUR DU STORE DANS FICHIER TS", widthContainerValue)
-        return {
-            width: window.innerWidth - widthContainerValue,
-            height: window.innerHeight
-        };
+    get height(): number {
+        return this.cowebsiteContainer.clientHeight;
     }
+
+    get width(): number {
+        return this.cowebsiteContainer.clientWidth;
+    }
+
+
+    public getGameSize(): {width: number, height: number} {
+        console.log("DANS LA FONTION GAME SIZE")
+        console.log("WIDTH FINAL = ",  window.innerWidth - this.width)
+        console.log("HEIGHT FINAL =", this.height)
+        return {
+            width: window.innerWidth - this.width,
+            height: this.height
+        }
+    }
+    // public getGameSize(): { width: number; height: number } {
+    //     const widthContainerValue = get(widthContainerFinal);
+    //     console.log("VALEUR DU STORE DANS FICHIER TS", widthContainerValue)
+    //     return {
+    //         width: window.innerWidth - widthContainerValue,
+    //         height: window.innerHeight
+    //     };
+    // }
     // public getGameSize(): { width: number; height: number } {
     //     return {
     //         height: window.innerHeight,
