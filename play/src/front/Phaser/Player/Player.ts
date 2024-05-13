@@ -10,6 +10,7 @@ import { userMovingStore } from "../../Stores/GameStore";
 import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
 import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 import { visibilityStore } from "../../Stores/VisibilityStore";
+import { passStatusToOnline } from "../../Rules/StatusRules/statusChangerFunctions";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -262,6 +263,16 @@ export class Player extends Character {
 
     private getMovementDirection(xDistance: number, yDistance: number, distance: number): [number, number] {
         return [xDistance / Math.sqrt(distance), yDistance / Math.sqrt(distance)];
+    }
+
+    moveBy(x: number, y: number) {
+        passStatusToOnline();
+        super.moveBy(x, y);
+    }
+
+    moveToPos(x: number, y: number) {
+        passStatusToOnline();
+        super.moveToPos(x, y);
     }
 
     destroy(): void {

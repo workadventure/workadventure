@@ -11,12 +11,10 @@ export type TimedRules = {
 
 const basicStatus: Array<AvailabilityStatus> = [
     AvailabilityStatus.SPEAKER,
-    AvailabilityStatus.JITSI,
     AvailabilityStatus.UNCHANGED,
     AvailabilityStatus.SILENT,
     AvailabilityStatus.AWAY,
     AvailabilityStatus.UNRECOGNIZED,
-    AvailabilityStatus.BBB,
     AvailabilityStatus.DENY_PROXIMITY_MEETING,
 ];
 
