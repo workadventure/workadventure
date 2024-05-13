@@ -4,13 +4,7 @@ import { localStreamStore } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { helpCameraSettingsVisibleStore } from "../Stores/HelpSettingsStore";
 
-import {
-    myCameraBlockedStore,
-    myCameraStore,
-    myMicrophoneBlockedStore,
-    myMicrophoneStore,
-    proximityMeetingStore,
-} from "../Stores/MyMediaStore";
+import {myCameraBlockedStore,myCameraStore,myMicrophoneBlockedStore,myMicrophoneStore,proximityMeetingStore,} from "../Stores/MyMediaStore";
 import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
 import { localUserStore } from "../Connection/LocalUserStore";
@@ -43,6 +37,7 @@ export class MediaManager {
                 // It is ok to not unsubscribe to this store because it is a singleton.
                 // eslint-disable-next-line svelte/no-ignored-unsubscribe
                 localStreamStore.subscribe((result) => {
+                    
                     if (result.type === "error") {
                         if (result.error.name !== MediaStreamConstraintsError.NAME && get(myCameraStore)) {
                             layoutManagerActionStore.addAction({
@@ -61,6 +56,7 @@ export class MediaManager {
                         }, 10000);
                         return;
                     }
+
                 });
 
                 // It is ok to not unsubscribe to this store because it is a singleton.

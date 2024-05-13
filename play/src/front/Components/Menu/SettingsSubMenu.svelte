@@ -5,7 +5,6 @@
     import { displayableLocales, setCurrentLocale } from "../../../i18n/locales";
 
     import infoImg from "../images/info.svg";
-    import { iframeListener } from "../../Api/IframeListener";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {
@@ -102,7 +101,6 @@
 
         if (Notification.permission === "granted") {
             localUserStore.setNotification(notification);
-            iframeListener.sendSettingsToChatIframe();
         } else {
             Notification.requestPermission()
                 .then((response) => {
@@ -112,7 +110,6 @@
                         localUserStore.setNotification(false);
                         notification = false;
                     }
-                    iframeListener.sendSettingsToChatIframe();
                 })
                 .catch((e) => console.error(e));
         }
@@ -120,7 +117,6 @@
 
     function changeChatSounds() {
         localUserStore.setChatSounds(chatSounds);
-        iframeListener.sendSettingsToChatIframe();
     }
 
     function changeForceCowebsiteTrigger() {

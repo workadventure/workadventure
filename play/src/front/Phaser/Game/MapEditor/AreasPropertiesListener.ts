@@ -761,12 +761,16 @@ export class AreasPropertiesListener {
     }
 
     private handleJoinMucRoom(name: string, type: string) {
-        iframeListener.sendJoinMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`, name, type, false);
+        iframeListener
+            .sendJoinMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`, name, type, false)
+            .catch((error) => console.error(error));
         chatZoneLiveStore.set(true);
     }
 
     private handleLeaveMucRoom(name: string) {
-        iframeListener.sendLeaveMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`);
+        iframeListener
+            .sendLeaveMucEventToChatIframe(`${this.scene.roomUrl}/${slugify(name)}`)
+            .catch((error) => console.error(error));
         chatZoneLiveStore.set(false);
     }
 

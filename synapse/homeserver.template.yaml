@@ -1,0 +1,92 @@
+# Configuration file for Synapse.
+#
+# This is a YAML file: see [1] for a quick introduction. Note in particular
+# that *indentation is important*: all the elements of a list or dictionary
+# should have the same indentation.
+#
+# [1] https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html
+#
+# For more information on how to configure Synapse, including a complete accounting of
+# each option, go to docs/usage/configuration/config_documentation.md or
+# https://matrix-org.github.io/synapse/latest/usage/configuration/config_documentation.html
+server_name: "matrix.workadventure.localhost"
+public_baseurl: http://matrix.workadventure.localhost/
+pid_file: /data/homeserver.pid
+listeners:
+- port: 8008
+  tls: false
+  type: http
+  x_forwarded: true
+  resources:
+  - names: [client, federation]
+    compress: false
+database:
+  name: sqlite3
+  args:
+    database: /data/homeserver.db
+log_config: "/data/matrix.workadventure.localhost.log.config"
+media_store_path: /data/media_store
+report_stats: true
+registration_shared_secret: "XJx!`J-;J4Kx!'p>J%[C!G$u8=YP6_4eEV$~Je9#~c>9sPGcDz"
+macaroon_secret_key: "E@=9DoVJg.t:.k:p8uI9*hMOQl~^JF8,rs2ak-evN5eS*pv.jF"
+form_secret: "Xa6T^,-_Ib2,^#Py=;AQ*lI:ex_QCAZQXG#P&RoTxT~2qBFIA:"
+signing_key_path: "/data/matrix.workadventure.localhost.signing.key"
+trusted_key_servers:
+- server_name: "matrix.org"
+suppress_key_server_warning: true
+
+jwt_config:
+  enabled: true
+  secret: "${JWT_SECRET}"
+  algorithm: "HS256"
+  subject_claim: "matrixUserId"
+
+oidc_providers:
+- idp_id: oidc-server-mock
+  idp_name: OIDC Server Mock
+  issuer: "http://oidc.workadventure.localhost"
+  skip_verification: true
+  client_id: "authorization-code-client-id"
+  client_secret: "authorization-code-client-secret"
+  scopes: ["openid", "email", "profile"]
+
+  user_profile_method: "userinfo_endpoint"
+  user_mapping_provider:
+    config:
+      localpart_template: "{{ user.email.split('@')[0] }}"
+      #localpart_template: "{{ user.preferred_username }}"
+      display_name_template: "{{ user.name }}"
+      email_template: "{{ user.email }}"
+#  - idp_id: workadventure-admin
+#    idp_name: WorkAdventure Admin
+#    issuer: "http://member.workadventure.localhost"
+#    skip_verification: true
+#    client_id: "4"
+#    client_secret: "SZL6NhyAyB60kHoB4iwoG0zH6cuItlqFVgHqEIJE"
+#    scopes: ["openid", "email"]
+#
+#    user_profile_method: "userinfo_endpoint"
+#    user_mapping_provider:
+#      config:
+#        localpart_template: "{{ user.email.split('@')[0] }}"
+#        #localpart_template: "{{ user.preferred_username }}"
+#        display_name_template: "{{ user.name }}"
+#        email_template: "{{ user.email }}"
+
+sso:
+  client_whitelist:
+  - http://pusher.workadventure.localhost/
+  - http://play.workadventure.localhost/
+
+
+enable_registration: true
+enable_registration_without_verification: true
+turn_allow_guests: true
+allow_guest_access: true
+
+auto_join_rooms:
+- "#exampleroom:example.com"
+- "#anotherexampleroom:example.com"
+
+autocreate_auto_join_rooms: true
+# vim:ft=yaml

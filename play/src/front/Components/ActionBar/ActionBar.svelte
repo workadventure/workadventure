@@ -1,10 +1,8 @@
 <script lang="ts">
-    import type { Unsubscriber } from "svelte/store";
     import { writable } from "svelte/store";
     import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "svelte-feather-icons";
     import { fly } from "svelte/transition";
-    import { onDestroy, onMount } from "svelte";
-    import { Subscription } from "rxjs";
+    import { onMount } from "svelte";
     import { AvailabilityStatus } from "@workadventure/messages";
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
     import {
@@ -21,7 +19,7 @@
         speakerSelectedStore,
         streamingMegaphoneStore,
         usedCameraDeviceIdStore,
-        usedMicrophoneDeviceIdStore,
+        usedMicrophoneDeviceIdStore
     } from "../../Stores/MediaStore";
     import cameraImg from "../images/camera.png";
     import cameraOffImg from "../images/camera-off.png";
@@ -54,20 +52,20 @@
         inExternalServiceStore,
         myCameraStore,
         myMicrophoneStore,
-        proximityMeetingStore,
+        proximityMeetingStore
     } from "../../Stores/MyMediaStore";
     import {
         activeSubMenuStore,
-        inviteUserActivated,
-        menuVisiblilityStore,
-        SubMenusInterface,
-        subMenusStore,
-        additionnalButtonsMenu,
-        addClassicButtonActionBarEvent,
         addActionButtonActionBarEvent,
+        addClassicButtonActionBarEvent,
+        additionnalButtonsMenu,
+        inviteUserActivated,
         mapManagerActivated,
-        screenSharingActivatedStore,
+        menuVisiblilityStore,
         roomListActivated,
+        screenSharingActivatedStore,
+        SubMenusInterface,
+        subMenusStore
     } from "../../Stores/MenuStore";
     import {
         emoteDataStore,
@@ -75,7 +73,7 @@
         emoteMenuStore,
         emoteMenuSubCurrentEmojiSelectedStore,
         emoteMenuSubStore,
-        emoteStore,
+        emoteStore
     } from "../../Stores/EmoteStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
@@ -88,8 +86,8 @@
     import {
         modalIframeStore,
         modalVisibilityStore,
-        showModalGlobalComminucationVisibilityStore,
         roomListVisibilityStore,
+        showModalGlobalComminucationVisibilityStore
     } from "../../Stores/ModalStore";
     import { userHasAccessToBackOfficeStore } from "../../Stores/GameStore";
     import { AddButtonActionBarEvent } from "../../Api/Events/Ui/ButtonActionBarEvent";
@@ -97,12 +95,11 @@
     import {
         liveStreamingEnabledStore,
         megaphoneCanBeUsedStore,
-        requestedMegaphoneStore,
+        requestedMegaphoneStore
     } from "../../Stores/MegaphoneStore";
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
-
     import AvailabilityStatusComponent from "./AvailabilityStatus/AvailabilityStatus.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -172,6 +169,7 @@
             menuVisiblilityStore.set(false);
             activeSubMenuStore.activateByIndex(0);
         }
+
         chatVisibilityStore.set(!$chatVisibilityStore);
     }
 
@@ -374,21 +372,13 @@
         speakerSelectedStore.set(deviceId);
     }
 
-    let subscribers = new Array<Unsubscriber>();
-    let chatTotalMessagesSubscription: Subscription | undefined;
     let totalMessagesToSee = writable<number>(0);
 
     onMount(() => {
-        chatTotalMessagesSubscription = iframeListener.chatTotalMessagesToSeeStream.subscribe((total) =>
-            totalMessagesToSee.set(total)
-        );
         resizeObserver.observe(mainHtmlDiv);
     });
 
-    onDestroy(() => {
-        subscribers.map((subscriber) => subscriber());
-        chatTotalMessagesSubscription?.unsubscribe();
-    });
+
 
     function buttonActionBarTrigger(id: string) {
         const button = $additionnalButtonsMenu.get(id) as AddButtonActionBarEvent;

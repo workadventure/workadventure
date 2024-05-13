@@ -19,6 +19,7 @@ export class UploadEntityFrontCommand extends UploadEntityCommand implements Fro
     emitEvent(roomConnection: RoomConnection): void {
         roomConnection.emitMapEditorUploadEntity(this.commandId, this.uploadEntityMessage);
     }
+    
     execute(): Promise<void> {
         const customEntityCollectionUrl = gameManager.getCurrentGameScene().getCustomEntityCollectionUrl();
         try {

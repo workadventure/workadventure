@@ -52,7 +52,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
         private outlineColor?: number,
         private voiceIndicatorShown?: boolean,
         public readonly activatedInviteUser?: boolean,
-        public readonly applications?: ApplicationMessage[]
+        public readonly applications?: ApplicationMessage[],
+        public readonly chatID?: string
     ) {
         this.listenedZones = new Set<Zone>();
 
@@ -81,7 +82,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
         outlineColor?: number,
         voiceIndicatorShown?: boolean,
         activatedInviteUser?: boolean,
-        applications?: ApplicationMessage[]
+        applications?: ApplicationMessage[],
+        chatID?:string
     ): Promise<User> {
         const playersVariablesRepository = await getPlayersVariablesRepository();
         const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository, isLogged);
@@ -108,7 +110,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
             outlineColor,
             voiceIndicatorShown,
             activatedInviteUser,
-            applications
+            applications,
+            chatID
         );
     }
 
@@ -308,6 +311,8 @@ export class User implements Movable, CustomJsonReplacerInterface {
                         );
                     });
 
+                
+            
                 // Let's dispatch the message to the user.
                 brother.emitInBatch({
                     message: {

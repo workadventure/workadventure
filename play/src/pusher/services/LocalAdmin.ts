@@ -1,11 +1,11 @@
 import path from "path";
 import type {
-    MapDetailsData,
-    RoomRedirect,
     AdminApiData,
-    ErrorApiData,
     CompanionDetail,
+    ErrorApiData,
+    MapDetailsData,
     MemberData,
+    RoomRedirect,
 } from "@workadventure/messages";
 import { Capabilities, OpidWokaNamePolicy } from "@workadventure/messages";
 import axios from "axios";
@@ -13,26 +13,27 @@ import { MapsCacheFileFormat } from "@workadventure/map-editor";
 import {
     DISABLE_ANONYMOUS,
     ENABLE_CHAT,
+    ENABLE_CHAT_DISCONNECTED_LIST,
+    ENABLE_CHAT_ONLINE_LIST,
     ENABLE_CHAT_UPLOAD,
     ENABLE_MAP_EDITOR,
-    PUBLIC_MAP_STORAGE_URL,
-    START_ROOM_URL,
-    OPID_WOKA_NAME_POLICY,
-    ENABLE_CHAT_ONLINE_LIST,
-    ENABLE_CHAT_DISCONNECTED_LIST,
-    INTERNAL_MAP_STORAGE_URL,
-    MAP_EDITOR_ALLOWED_USERS,
-    KLAXOON_ENABLED,
-    YOUTUBE_ENABLED,
-    GOOGLE_DRIVE_ENABLED,
+    ERASER_ENABLED,
     GOOGLE_DOCS_ENABLED,
+    GOOGLE_DRIVE_ENABLED,
     GOOGLE_SHEETS_ENABLED,
     GOOGLE_SLIDES_ENABLED,
-    ERASER_ENABLED,
+    INTERNAL_MAP_STORAGE_URL,
+    KLAXOON_CLIENT_ID,
+    KLAXOON_ENABLED,
+    MAP_EDITOR_ALLOWED_USERS,
+    OPID_WOKA_NAME_POLICY,
+    PUBLIC_MAP_STORAGE_URL,
+    START_ROOM_URL,
+    YOUTUBE_ENABLED,
     EXCALIDRAW_ENABLED,
 } from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
-import type { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import type { AdminBannedData, FetchMemberDataByUuidResponse, WorldChatMembersData } from "./AdminApi";
 import { localWokaService } from "./LocalWokaService";
 import { MetaTagsDefaultValue } from "./MetaTagsBuilder";
 import { localCompanionService } from "./LocalCompanionSevice";
@@ -197,6 +198,7 @@ class LocalAdmin implements AdminInterface {
             mucRooms,
             activatedInviteUser: true,
             canEdit,
+            world: "localWorld",
             applications,
         };
     }
@@ -380,6 +382,10 @@ class LocalAdmin implements AdminInterface {
     }
 
     getMember(memberUUID: string): Promise<MemberData> {
+        return Promise.reject(new Error("No admin backoffice set!"));
+    }
+
+    getWorldChatMembers(playUri: string, searchText: string): Promise<WorldChatMembersData> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 }

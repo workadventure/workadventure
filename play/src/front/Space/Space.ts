@@ -1,170 +1,139 @@
-import { PartialSpaceUser, SpaceFilterMessage, SpaceUser } from "@workadventure/messages";
-import { MapStore } from "@workadventure/store-utils";
-import debug from "debug";
-import { Subject, Subscription } from "rxjs";
-import { Readable } from "svelte/store";
-import { z } from "zod";
-import { RoomConnection } from "../Connection/RoomConnection";
-import { CharacterLayerManager } from "../Phaser/Entity/CharacterLayerManager";
+import { ClientToServerMessage, SpaceFilterMessage, UnwatchSpaceMessage, UpdateSpaceMetadataMessage, WatchSpaceMessage } from "@workadventure/messages";
+import { SpaceInterface } from "./SpaceInterface";
+import { SpaceFilterAlreadyExistError, SpaceFilterDoesNotExistError, SpaceNameIsEmptyError } from "./Errors/SpaceError";
+import { SpaceFilter, SpaceFilterInterface } from "./SpaceFilter/SpaceFilter";
 
-export interface SpaceUserExtended extends SpaceUser {
-    wokaPromise: Promise<string> | undefined;
-    getWokaBase64(): Promise<string>;
-    updateSubject: Subject<{
-        newUser: SpaceUserExtended;
-        changes: PartialSpaceUser;
-    }>;
-    roomConnection: RoomConnection;
-    spaceName: string;
-}
+export const WORLD_SPACE_NAME = "allWorldUser";
+export const CONNECTED_USER_FILTER_NAME = 'connected_users';
+export class Space implements SpaceInterface {
+    private readonly name: string;
 
-const spaceLogger = debug("Space");
-export class Space {
-    private readonly _users: MapStore<number, SpaceUserExtended>;
-    private readonly _metadata: MapStore<string, unknown>;
-    private subscribers: Subscription[];
+    constructor(
+        name: string,
+        private metadata = new Map<string, unknown>(),
+        private socket : WebSocket | undefined = undefined,
+        private encoder: {encode: (messageCoded: ClientToServerMessage) => {finish:()=>Uint8Array}},
+        private filters: Map<string, SpaceFilterInterface> = new Map<string, SpaceFilterInterface>(),
+      
+    ) {
+        if (name === "") throw new SpaceNameIsEmptyError();
+        this.name = name;
 
-    constructor(private connection: RoomConnection, readonly name: string, private spaceFilter: SpaceFilterMessage) {
-        this._users = new MapStore<number, SpaceUserExtended>();
-        this._metadata = new MapStore<string, unknown>();
-        this.subscribers = [];
-        this.subscribers.push(
-            this.connection.addSpaceUserMessageStream.subscribe((message) => {
-                spaceLogger(`Space => ${this.name} => addSpaceUserMessageStream`, message);
-                const user = message.user;
-                if (message.spaceName === name && message.filterName === spaceFilter.filterName && user !== undefined) {
-                    this._users.set(user.id, this.extendSpaceUser(user));
-                }
-            })
+        this.userJoinSpace();
+    }
+
+    getName(): string {
+        return this.name;
+    }
+    getMetadata(): Map<string, unknown> {
+        return this.metadata;
+    }
+    setMetadata(metadata: Map<string, unknown>): void {
+        metadata.forEach((value, key) => {
+            this.metadata.set(key, value);
+        });
+    }
+
+    watch(filterName: string): SpaceFilterInterface {
+        if (this.filters.has(filterName)) throw new SpaceFilterAlreadyExistError(this.name, filterName);
+        const newFilter: SpaceFilterInterface = new SpaceFilter(
+            filterName,
+            this.name,
+            undefined,
+            (message : ClientToServerMessage)=>{this.send(message)}
         );
-        this.subscribers.push(
-            this.connection.updateSpaceUserMessageStream.subscribe((message) => {
-                spaceLogger(`Space => ${this.name} => updateSpaceUserMessageStream`, message);
-                const partialUser = message.user;
-                if (
-                    message.spaceName === name &&
-                    message.filterName === spaceFilter.filterName &&
-                    partialUser !== undefined
-                ) {
-                    const user = this._users.get(partialUser.id);
-                    if (user !== undefined) {
-                        if (partialUser.name !== undefined) {
-                            user.name = partialUser.name;
-                        }
-                        if (partialUser.playUri !== undefined) {
-                            user.playUri = partialUser.playUri;
-                        }
-                        if (partialUser.color !== undefined) {
-                            user.color = partialUser.color;
-                        }
-                        if (partialUser.characterTextures !== undefined) {
-                            user.characterTextures = partialUser.characterTextures;
-                        }
-                        if (partialUser.isLogged !== undefined) {
-                            user.isLogged = partialUser.isLogged;
-                        }
-                        if (partialUser.availabilityStatus !== undefined) {
-                            user.availabilityStatus = partialUser.availabilityStatus;
-                        }
-                        if (partialUser.roomName !== undefined) {
-                            user.roomName = partialUser.roomName;
-                        }
-                        if (partialUser.visitCardUrl !== undefined) {
-                            user.visitCardUrl = partialUser.visitCardUrl;
-                        }
-                        if (partialUser.tags !== undefined) {
-                            user.tags = partialUser.tags;
-                        }
-                        if (partialUser.microphoneState !== undefined) {
-                            user.microphoneState = partialUser.microphoneState;
-                        }
-                        if (partialUser.cameraState !== undefined) {
-                            user.cameraState = partialUser.cameraState;
-                        }
-                        if (partialUser.megaphoneState !== undefined) {
-                            user.megaphoneState = partialUser.megaphoneState;
-                        }
-                        if (partialUser.screenSharingState !== undefined) {
-                            user.screenSharingState = partialUser.screenSharingState;
-                        }
-                        if (partialUser.jitsiParticipantId !== undefined) {
-                            user.jitsiParticipantId = partialUser.jitsiParticipantId;
-                        }
-                        if (partialUser.uuid !== undefined) {
-                            user.uuid = partialUser.uuid;
-                        }
-                        user.updateSubject.next({
-                            newUser: user,
-                            changes: partialUser,
-                        });
-                        this._users.set(partialUser.id, user);
-                    }
-                }
-            })
-        );
-        this.subscribers.push(
-            this.connection.removeSpaceUserMessageStream.subscribe((message) => {
-                spaceLogger(`Space => ${this.name} => removeSpaceUserMessageStream`, message);
-                if (message.spaceName === name && message.filterName === spaceFilter.filterName) {
-                    const user = this._users.get(message.userId);
-                    if (user !== undefined) {
-                        user.updateSubject.complete();
-                        this._users.delete(message.userId);
-                    }
-                }
-            })
-        );
-        this.subscribers.push(
-            this.connection.updateSpaceMetadataMessageStream.subscribe((message) => {
-                spaceLogger(`Space => ${this.name} => updateSpaceMetadataMessageStream`, message);
-                const isMetadata = z.record(z.string(), z.unknown()).safeParse(JSON.parse(message.metadata));
-                if (!isMetadata.success) {
-                    console.error("Error while parsing metadata", isMetadata.error);
-                    return;
-                }
-
-                if (message.spaceName === name) {
-                    for (const [key, value] of Object.entries(isMetadata.data)) {
-                        this._metadata.set(key, value);
-                    }
-                }
-            })
-        );
+        this.filters.set(newFilter.getName(), newFilter);
+        return newFilter;
+    }
+    getAllSpacesFilter(): SpaceFilterInterface[] {
+        return Array.from(this.filters.values());
     }
 
-    public destroy() {
-        spaceLogger(`Space => ${this.name} => destroying`);
-        this.subscribers.forEach((subscriber) => subscriber.unsubscribe());
+    getSpaceFilter(filterName: string): SpaceFilterInterface {
+        const spaceFilter = this.filters.get(filterName);
+        if (!spaceFilter) {
+            throw new Error("Something went wrong with filterName");
+        }
+        return spaceFilter;
     }
 
-    get users(): Readable<Map<number, SpaceUserExtended>> {
-        return this._users;
+    spaceFilterExist(filterName:string) : boolean {
+       return this.filters.has(filterName);
     }
 
-    get metadata(): Readable<Map<string, unknown>> {
-        return this._metadata;
+    stopWatching(filterName: string) {
+        const filter: SpaceFilterInterface | undefined = this.filters.get(filterName);
+        if (!filter) throw new SpaceFilterDoesNotExistError(this.name, filterName);
+        filter.destroy();
+        this.filters.delete(filterName);
     }
 
-    get isEmpty() {
-        return this._users.size === 0;
-    }
-
-    private extendSpaceUser(user: SpaceUser): SpaceUserExtended {
-        return {
-            ...user,
-            wokaPromise: undefined,
-            getWokaBase64(): Promise<string> {
-                if (this.wokaPromise === undefined) {
-                    this.wokaPromise = CharacterLayerManager.wokaBase64(user.characterTextures);
-                }
-                return this.wokaPromise;
+    private userLeaveSpace(){
+        this.send({
+            message: {
+                $case: "unwatchSpaceMessage",
+                unwatchSpaceMessage: UnwatchSpaceMessage.fromPartial({
+                    spaceName : this.name,
+                }),
             },
-            updateSubject: new Subject<{
-                newUser: SpaceUserExtended;
-                changes: PartialSpaceUser;
-            }>(),
-            roomConnection: this.connection,
-            spaceName: this.name,
+        });
+    }
+
+    private userJoinSpace(){
+        const spaceFilter: SpaceFilterMessage = {
+            filterName: "",
+            spaceName : this.name,
+            filter: undefined,
         };
+        this.send({
+            message: {
+                $case: "watchSpaceMessage",
+                watchSpaceMessage: WatchSpaceMessage.fromPartial({
+                    spaceName : this.name,
+                    spaceFilter,
+                }),
+            },
+        });
+    
+    }
+
+    private updateSpaceMetadata(metadata: Map<string, unknown>){
+        const metadataMap = Object.fromEntries(metadata);
+        this.send({
+            message: {
+                $case: "updateSpaceMetadataMessage",
+                updateSpaceMetadataMessage: UpdateSpaceMetadataMessage.fromPartial({
+                    spaceName : this.name,
+                    metadata: JSON.stringify(metadataMap),
+                }),
+            },
+        });
+    }
+
+    emitJitsiParticipantId(participantId: string){
+        this.send({
+            message: {
+                $case: "jitsiParticipantIdSpaceMessage",
+                jitsiParticipantIdSpaceMessage: {
+                    spaceName : this.name,
+                    value: participantId,
+                },
+            },
+        });
+    }
+
+    private send(message : ClientToServerMessage): void {
+        const bytes = this.encoder.encode(message).finish();
+        if(!this.socket)return;
+        if (this.socket.readyState === WebSocket.CLOSING || this.socket.readyState === WebSocket.CLOSED) {
+            console.warn("Trying to send a message to the server, but the connection is closed. Message: ", message);
+            return;
+        }
+
+        this.socket.send(bytes);
+    }
+
+    destroy() {
+        if (this.socket) this.userLeaveSpace();
     }
 }

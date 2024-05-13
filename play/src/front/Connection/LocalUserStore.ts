@@ -4,7 +4,7 @@ import { arrayEmoji, Emoji } from "../Stores/Utils/emojiSchema";
 import { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { requestedStatusFactory } from "../Rules/StatusRules/StatusFactory/RequestedStatusFactory";
 import type { LocalUser } from "./LocalUser";
-import { areCharacterTexturesValid, isUserNameValid } from "./LocalUser";
+import { areCharacterTexturesValid, isUserNameValid } from "./LocalUserUtils";
 
 const playerNameKey = "playerName";
 const selectedPlayerKey = "selectedPlayer";
@@ -32,6 +32,12 @@ const cameraPrivacySettings = "cameraPrivacySettings";
 const microphonePrivacySettings = "microphonePrivacySettings";
 const emojiFavorite = "emojiFavorite";
 const speakerDeviceId = "speakerDeviceId";
+const matrixUserId = "matrixUserId";
+const matrixAccessToken = "matrixAccessToken";
+const matrixAccessTokenExpireDate = "matrixAccessTokenExpireDate";
+const matrixRefreshToken = "matrixRefreshToken";
+const matrixDeviceId = "matrixDeviceId";
+const matrixLoginToken = "matrixLoginToken";
 const requestedStatus = "RequestedStatus";
 
 const JwtAuthToken = z
@@ -496,6 +502,87 @@ class LocalUserStore {
     }
     setLastNotificationPermissionRequest() {
         localStorage.setItem("lastNotificationPermissionRequest", new Date().toString());
+    }
+
+    setMatrixUserId(value: string | null) {
+        if (value !== null) {
+            localStorage.setItem(matrixUserId, value);
+        } else {
+            localStorage.removeItem(matrixUserId);
+        }
+    }
+
+    getMatrixUserId(): string | null {
+        return localStorage.getItem(matrixUserId);
+    }
+
+    setMatrixAccessToken(value: string | null) {
+        if (value !== null) {
+            localStorage.setItem(matrixAccessToken, value);
+        } else {
+            localStorage.removeItem(matrixAccessToken);
+        }
+    }
+
+    getMatrixAccessToken(): string | null {
+        return localStorage.getItem(matrixAccessToken);
+    }
+
+    setMatrixAccessTokenExpireDate(value: Date | null) {
+        if (value !== null) {
+            localStorage.setItem(matrixAccessTokenExpireDate, value.toString());
+        } else {
+            localStorage.removeItem(matrixAccessTokenExpireDate);
+        }
+    }
+
+    getMatrixAccessTokenExpireDate(): Date | null {
+        const value = localStorage.getItem(matrixAccessTokenExpireDate);
+        if (value === null) {
+            return null;
+        }
+        return new Date(value);
+    }
+
+    setMatrixRefreshToken(value: string | null) {
+        if (value !== null) {
+            localStorage.setItem(matrixRefreshToken, value);
+        } else {
+            localStorage.removeItem(matrixRefreshToken);
+        }
+    }
+
+    getMatrixRefreshToken(): string | null {
+        return localStorage.getItem(matrixRefreshToken);
+    }
+
+    setMatrixDeviceId(value: string | null, userUuid: string) {
+        if (value !== null) {
+            localStorage.setItem(matrixDeviceId + "_" + userUuid, value);
+        } else {
+            localStorage.removeItem(matrixDeviceId + "_" + userUuid);
+        }
+    }
+
+    getMatrixDeviceId(userUuid: string): string | null {
+        return localStorage.getItem(matrixDeviceId + "_" + userUuid);
+    }
+
+    setMatrixLoginToken(value: string | null) {
+        if (value !== null) {
+            localStorage.setItem(matrixLoginToken, value);
+        } else {
+            localStorage.removeItem(matrixLoginToken);
+        }
+    }
+
+    getMatrixLoginToken() {
+        return localStorage.getItem(matrixLoginToken);
+    }
+
+    //TODO : Remove duplicate code (getMatrixUserId) and change matrix id to chatID in localStorage
+    getChatId(): string | null {
+        return localStorage.getItem(matrixUserId);
     }
 }
 

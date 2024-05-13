@@ -50,6 +50,18 @@ export const MeSuccessResponse = extendApi(
                 "True if the companion texture is valid, false if we need to redirect the user to the companion selection page.",
             example: true,
         }),
+        matrixUserId: extendApi(z.string().nullable().optional(), {
+            description:
+                "The matrix user id of the user.", // Note: do we need this with OpenID Connect?
+        }),
+        matrixServerUrl: extendApi(z.string().nullable().optional(), {
+            description:
+                "The matrix server url for this user.",
+        }),
+        /*isMatrixRegistered: extendApi(z.boolean(), {
+            description:
+                "???",
+        }),*/
     }),
     {
         description:
