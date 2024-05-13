@@ -1,6 +1,9 @@
 import CancelablePromise from "cancelable-promise";
 import type { Scene } from "phaser";
+import Debug from "debug";
 import Texture = Phaser.Textures.Texture;
+
+const debug = Debug("SuperLoad");
 
 /**
  * A wrapper around Phaser LoaderPlugin. Each method returns a (cancelable) Promise that resolves as soon as
@@ -150,7 +153,7 @@ export class SuperLoaderPlugin {
                 if (immediateCallback) {
                     immediateCallback(key, type, data);
                 }
-                console.info("Resolve done for ", url);
+                debug("Resolve done for ", url);
             };
 
             cancel(() => {
