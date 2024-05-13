@@ -16,3 +16,5 @@ _
 # Helm
 # Chart dependencies
 **/charts/*.tgz
+
+synapse/homeserver.log*

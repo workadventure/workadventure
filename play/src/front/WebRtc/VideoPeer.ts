@@ -8,7 +8,6 @@ import { playersStore } from "../Stores/PlayersStore";
 import {
     chatMessagesService,
     newChatMessageSubject,
-    newChatMessageWritingStatusSubject,
     writingStatusMessageStore,
 } from "../Stores/ChatStore";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
@@ -19,6 +18,7 @@ import { TrackStreamWrapperInterface } from "../Streaming/Contract/TrackStreamWr
 import { TrackInterface } from "../Streaming/Contract/TrackInterface";
 import { showReportScreenStore } from "../Stores/ShowReportScreenStore";
 import { RemotePlayerData } from "../Phaser/Game/RemotePlayersRepository";
+import { iframeListener } from "../Api/IframeListener";
 import type { ConstraintMessage, ObtainedMediaStreamConstraints } from "./P2PMessages/ConstraintMessage";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { blackListManager } from "./BlackListManager";
@@ -162,7 +162,7 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
                 );
             });
 
-            this.newWritingStatusMessageSubscription = newChatMessageWritingStatusSubject.subscribe((status) => {
+            this.newWritingStatusMessageSubscription = iframeListener.newChatMessageWritingStatusStream.subscribe((status) => {
                 if (status === undefined) {
                     return;
                 }

@@ -26,7 +26,6 @@ export interface FrontConfigurationInterface {
     DISABLE_ANONYMOUS: boolean;
     ENABLE_OPENID: boolean;
     OPID_PROFILE_SCREEN_PROVIDER: string | undefined;
-    CHAT_URL: string | undefined;
     ENABLE_CHAT_UPLOAD: boolean;
     FALLBACK_LOCALE: string | undefined;
     OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy | undefined;
@@ -59,4 +58,8 @@ export interface FrontConfigurationInterface {
     EXCALIDRAW_ENABLED: boolean;
     EXCALIDRAW_DOMAINS: string[];
     CARDS_ENABLED: boolean;
+    EMBEDLY_KEY: string | undefined;
+    EJABBERD_DOMAIN: string | undefined;
+    EJABBERD_WS_URI: string | undefined;
+    MATRIX_PUBLIC_URI : string | undefined;
 }

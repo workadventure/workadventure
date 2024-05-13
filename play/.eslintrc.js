@@ -64,7 +64,6 @@ module.exports = {
         "no-promise-executor-return": "error",
         "require-atomic-updates": "error",
         "prefer-promise-reject-errors": "error",
-
         "rxjs/no-ignored-subscription": "error",
 
         "svelte/require-each-key": "error",

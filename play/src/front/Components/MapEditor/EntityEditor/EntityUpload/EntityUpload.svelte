@@ -8,6 +8,8 @@
     import { mapEditorEntityUploadEventStore } from "../../../../Stores/MapEditorStore";
     import CustomEntityEditionForm from "../CustomEntityEditionForm/CustomEntityEditionForm.svelte";
 
+
+
     let files: FileList | undefined = undefined;
     let dropZoneRef: HTMLDivElement;
     let customEntityToUpload: EntityPrefab | undefined = undefined;

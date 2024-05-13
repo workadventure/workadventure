@@ -1,11 +1,11 @@
 // eslint-disable-next-line import/no-unresolved
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
-import { Readable, Unsubscriber, writable, Writable, readable } from "svelte/store";
+import { Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
 import { Subscription } from "rxjs";
 import { SoundMeter } from "../../Phaser/Components/SoundMeter";
-import { SpaceUserExtended } from "../../Space/Space";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import { TrackWrapper } from "../Common/TrackWrapper";
+import { SpaceUserExtended } from "../../Space/SpaceFilter/SpaceFilter";
 import { JitsiTrackStreamWrapper } from "./JitsiTrackStreamWrapper";
 
 export class JitsiTrackWrapper implements TrackWrapper {
@@ -239,28 +239,22 @@ export class JitsiTrackWrapper implements TrackWrapper {
     }
 
     public kickoff() {
-        this.spaceUser?.roomConnection?.emitKickOffUserMessage(this.spaceUser.id.toString(), this.spaceUser?.spaceName);
+        this.spaceUser?.emitter?.emitKickOffUserMessage();
     }
 
     public muteMicrophoneEverybody() {
-        this.spaceUser?.roomConnection?.emitMuteEveryBodySpace(this.spaceUser?.spaceName);
+        this.spaceUser?.emitter?.emitMuteEveryBodySpace();
     }
 
     public muteVideoEverybody() {
-        this.spaceUser?.roomConnection?.emitMuteVideoEveryBodySpace(this.spaceUser?.spaceName);
+        this.spaceUser?.emitter?.emitMuteVideoEveryBodySpace();
     }
 
     public muteMicrophonePartcipant() {
-        this.spaceUser?.roomConnection?.emitMuteParticipantIdSpace(
-            this.spaceUser?.spaceName,
-            this.spaceUser.id.toString()
-        );
+        this.spaceUser?.emitter?.emitMuteParticipantIdSpace();
     }
 
     public muteVideoParticipant() {
-        this.spaceUser?.roomConnection?.emitMuteVideoParticipantIdSpace(
-            this.spaceUser?.spaceName,
-            this.spaceUser.id.toString()
-        );
+        this.spaceUser?.emitter?.emitMuteVideoParticipantIdSpace();
     }
 }

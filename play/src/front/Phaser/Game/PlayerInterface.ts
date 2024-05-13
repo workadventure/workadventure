@@ -3,6 +3,7 @@ import { CompanionTextureDescriptionInterface } from "../Companion/CompanionText
 import type { WokaTextureDescriptionInterface } from "../Entity/PlayerTextures";
 
 export interface PlayerInterface {
+    //jid: any;
     userId: number;
     userJid: string;
     name: string;

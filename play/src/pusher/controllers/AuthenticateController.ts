@@ -1,14 +1,15 @@
 import { v4 } from "uuid";
-import { RegisterData, MeResponse, MeRequest } from "@workadventure/messages";
+import { MeRequest, MeResponse, RegisterData } from "@workadventure/messages";
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
 import { JsonWebTokenError } from "jsonwebtoken";
 import { AuthTokenData, jwtTokenManager } from "../services/JWTTokenManager";
 import { openIDClient } from "../services/OpenIDClient";
-import { DISABLE_ANONYMOUS, FRONT_URL } from "../enums/EnvironmentVariable";
+import { DISABLE_ANONYMOUS, FRONT_URL, MATRIX_PUBLIC_URI, PUSHER_URL } from "../enums/EnvironmentVariable";
 import { adminService } from "../services/AdminService";
 import { validateQuery } from "../services/QueryValidator";
 import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService";
+import { matrixProvider } from "../services/MatrixProvider";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class AuthenticateController extends BaseHttpController {
@@ -16,6 +17,7 @@ export class AuthenticateController extends BaseHttpController {
         this.openIDLogin();
         this.me();
         this.openIDCallback();
+        this.matrixCallback();
         this.logoutCallback();
         this.register();
         this.anonymLogin();
@@ -135,7 +137,7 @@ export class AuthenticateController extends BaseHttpController {
             if (query === undefined) {
                 return;
             }
-            const { token, playUri, localStorageCompanionTextureId } = query;
+            const { token, playUri, localStorageCompanionTextureId, chatID } = query;
             let localStorageCharacterTextureIds = query["localStorageCharacterTextureIds[]"];
             if (typeof localStorageCharacterTextureIds === "string") {
                 localStorageCharacterTextureIds = [localStorageCharacterTextureIds];
@@ -153,7 +155,8 @@ export class AuthenticateController extends BaseHttpController {
                     localStorageCharacterTextureIds ?? [],
                     localStorageCompanionTextureId,
                     req.header("accept-language"),
-                    authTokenData.tags
+                    authTokenData.tags,
+                    chatID
                 );
 
                 if (resUserData.status === "error") {
@@ -173,6 +176,8 @@ export class AuthenticateController extends BaseHttpController {
                             locale: authTokenData?.locale,
                             // TODO: replace ... with each property
                             ...resUserData,
+                            matrixUserId: authTokenData?.matrixUserId,
+                            matrixServerUrl: MATRIX_PUBLIC_URI,
                         } satisfies MeResponse);
                     });
                     return;
@@ -185,6 +190,8 @@ export class AuthenticateController extends BaseHttpController {
                             username: authTokenData?.username,
                             authToken: token,
                             locale: authTokenData?.locale,
+                            matrixUserId: authTokenData?.matrixUserId,
+                            matrixServerUrl: MATRIX_PUBLIC_URI,
                             // TODO: replace ... with each property
                             ...resUserData,
                             ...resCheckTokenAuth,
@@ -270,13 +277,77 @@ export class AuthenticateController extends BaseHttpController {
                 userInfo?.access_token,
                 userInfo?.username,
                 userInfo?.locale,
-                userInfo?.tags
+                userInfo?.tags,
+                email ? matrixProvider.getBareMatrixIdFromEmail(email) : undefined
             );
+
+            // If Matrix is configured, we need to get an access token for the Synapse server
+            if (MATRIX_PUBLIC_URI) {
+                // TODO: check Matrix server login parameters to be sure we can connect
+
+                const matrixCallbackUrl = new URL("/matrix-callback", PUSHER_URL).toString();
+                const matrixRedirectUrl = new URL("/_matrix/client/r0/login/sso/redirect", MATRIX_PUBLIC_URI);
+                matrixRedirectUrl.searchParams.append("redirectUrl", matrixCallbackUrl);
+
+                res.atomic(() => {
+                    // Let's save temporarily the auth token temporarily in a cookie to get it back when we are redirected by the Matrix server
+                    res.cookie("authToken", authToken, undefined, {
+                        httpOnly: true, // dont let browser javascript access cookie ever
+                        secure: req.secure, // only use cookie over https
+                    });
+                    res.redirect(matrixRedirectUrl.toString());
+                });
+                return;
+            }
 
             res.atomic(() => {
                 res.clearCookie("playUri");
                 // FIXME: possibly redirect to Admin instead.
                 res.redirect(playUri + "?token=" + encodeURIComponent(authToken));
+            });
+            return;
+        });
+    }
+
+    private matrixCallback(): void {
+        /**
+         * @openapi
+         * /matrix-callback:
+         *   get:
+         *     description: This endpoint is meant to be called by the Matrix server (Synapse) after the OpenID provider connected to Synapse handles a login attempt. Synapse redirects the browser to this endpoint.
+         *     parameters:
+         *      - name: "loginToken"
+         *        in: "query"
+         *        description: "A unique token that can be exchanged for a Matrix authentication token"
+         *        required: true
+         *        type: "string"
+         *     responses:
+         *       302:
+         *         description: Redirects to play once authentication is done.
+         */
+        this.app.get("/matrix-callback", (req, res) => {
+            const playUri = req.cookies.playUri;
+            if (!playUri) {
+                throw new Error("Missing playUri in cookies");
+            }
+            const authToken = req.cookies.authToken;
+            if (!authToken) {
+                throw new Error("Missing authToken in cookies");
+            }
+
+            const query = validateQuery(req, res, z.object({ loginToken: z.string() }));
+            if (query === undefined) {
+                return;
+            }
+
+            res.atomic(() => {
+                res.clearCookie("playUri");
+                res.clearCookie("authToken");
+                const playUri = new URL(req.cookies.playUri);
+                playUri.searchParams.append("matrixLoginToken", query.loginToken);
+                playUri.searchParams.append("token", authToken);
+
+                res.redirect(playUri.toString());
             });
             return;
         });
@@ -352,8 +423,16 @@ export class AuthenticateController extends BaseHttpController {
             const email = data.email;
             const roomUrl = data.roomUrl;
             const mapUrlStart = data.mapUrlStart;
+            const matrixUserId = email ? matrixProvider.getBareMatrixIdFromEmail(email) : undefined;
 
-            const authToken = jwtTokenManager.createAuthToken(email || userUuid);
+            const authToken = jwtTokenManager.createAuthToken(
+                email || userUuid,
+                undefined,
+                undefined,
+                undefined,
+                [],
+                matrixUserId
+            );
 
             res.atomic(() => {
                 res.json({

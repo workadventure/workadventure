@@ -1,10 +1,12 @@
 <script lang="ts">
+
     export let colorHex: string;
     export let position: "absolute" | "relative";
     export let cursorType: "auto" | "pointer" = "auto";
+    export let componentClass: string = "";
 </script>
 
-<div class="tw-relative tw-cursor-{cursorType}" style="--color:{colorHex}">
+<div class="tw-relative tw-cursor-{cursorType} {componentClass}" style="--color:{colorHex}">
     <div
         class="tw-h-5 tw-w-5 tw-bg-green  tw-cursor-{cursorType}  {position === 'absolute'
             ? `tw-${position} tw--top-8 tw--left-4`

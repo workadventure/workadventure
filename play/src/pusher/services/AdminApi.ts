@@ -1,6 +1,6 @@
 import type { AxiosResponse } from "axios";
 import axios, { isAxiosError } from "axios";
-import type { AdminApiData, MapDetailsData, MemberData, RoomRedirect } from "@workadventure/messages";
+import type { AdminApiData, ChatMemberData, MapDetailsData, MemberData, RoomRedirect } from "@workadventure/messages";
 import {
     Capabilities,
     CompanionDetail,
@@ -33,6 +33,11 @@ import { ShortMapDescriptionList } from "./ShortMapDescription";
 export interface AdminBannedData {
     is_banned: boolean;
     message: string;
+}
+
+export interface WorldChatMembersData {
+    total: number;
+    members: ChatMemberData[];
 }
 
 export const isFetchMemberDataByUuidSuccessResponse = z.object({
@@ -105,13 +110,25 @@ export const isFetchMemberDataByUuidSuccessResponse = z.object({
     canEdit: extendApi(z.boolean().nullable().optional(), {
         description: "True if the user can edit the map",
     }),
+    world: extendApi(z.string(), {
+        description: "name of the world",
+    }),
+    chatID: extendApi(z.string().optional(), {
+        description: "ChatId of user",
+    }),
 });
 
+export const isFetchWorldChatMembers = z.object({
+    total: z.number().positive(),
+    members: z.array(isFetchMemberDataByUuidSuccessResponse),
+});
 export type FetchMemberDataByUuidSuccessResponse = z.infer<typeof isFetchMemberDataByUuidSuccessResponse>;
 
 export const isFetchMemberDataByUuidResponse = z.union([isFetchMemberDataByUuidSuccessResponse, ErrorApiData]);
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
+
+export type FetchWorldChatMembers = z.infer<typeof isFetchWorldChatMembers>;
 
 class AdminApi implements AdminInterface {
     private capabilities: Capabilities = {};
@@ -349,7 +366,8 @@ class AdminApi implements AdminInterface {
         characterTextureIds: string[],
         companionTextureId?: string,
         locale?: string,
-        tags?: string[]
+        tags?: string[],
+        chatID? : string
     ): Promise<FetchMemberDataByUuidResponse> {
         try {
             /**
@@ -414,7 +432,8 @@ class AdminApi implements AdminInterface {
                     characterTextureIds,
                     companionTextureId,
                     accessToken,
-                    isLogged: accessToken ? "1" : "0", // deprecated, use accessToken instead
+                    isLogged: accessToken ? "1" : "0", // deprecated, use accessToken instead,
+                    chatID
                 },
                 headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
             });
@@ -991,6 +1010,21 @@ class AdminApi implements AdminInterface {
         return;
     }
 
+    //TODO : @openapi doc
+    async getWorldChatMembers(playUri: string, searchText = ""): Promise<WorldChatMembersData> {
+        const response = await axios.get<WorldChatMembersData>(`${ADMIN_API_URL}/api/chat/members`, {
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            params: {
+                playUri,
+                searchText,
+            },
+        });
+        return {
+            total: response.data.total,
+            members: response.data.members,
+        };
+    }
+
     /**
      * @openapi
      * /api/members:
@@ -1049,6 +1083,15 @@ class AdminApi implements AdminInterface {
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
         });
         return response.data;
+    }
+
+    updateChatId(userIdentifier: string, chatId: string): void {
+        axios.put(`${ADMIN_API_URL}/api/members/${userIdentifier}/chatId`,{
+            chatId,
+            userIdentifier
+        }, {
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        });
     }
 }
 

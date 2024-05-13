@@ -113,6 +113,11 @@ message BanPlayerMessage {
   string banUserName = 2;
 }
 
+message UpdateChatIdMessage {
+  string email = 1;
+  string chatId = 2;
+}
+
 message EmotePromptMessage {
   string emote = 2;
 }
@@ -324,6 +329,7 @@ message ClientToServerMessage {
     MuteVideoParticipantIdMessage muteVideoParticipantIdMessage = 39;
     MuteVideoEveryBodyParticipantMessage muteVideoEveryBodyParticipantMessage = 40;
     BanPlayerMessage banPlayerMessage = 41;
+    UpdateChatIdMessage updateChatIdMessage = 42;
   }
 }
 
@@ -405,6 +411,7 @@ message QueryMessage {
     SearchMemberQuery searchMemberQuery = 7;
     GetMemberQuery getMemberQuery = 8;
     TurnCredentialsQuery turnCredentialsQuery = 9;
+    ChatMembersQuery chatMembersQuery = 10;
   }
 }
 
@@ -447,6 +454,10 @@ message GetMemberQuery {
 message TurnCredentialsQuery {
 }
 
+message ChatMembersQuery {
+  string searchText = 1;
+}
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
@@ -460,6 +471,7 @@ message AnswerMessage {
     SearchMemberAnswer searchMemberAnswer = 9;
     GetMemberAnswer getMemberAnswer = 10;
     TurnCredentialsAnswer turnCredentialsAnswer = 11;
+    ChatMembersAnswer chatMembersAnswer = 12;
   }
 }
 
@@ -510,6 +522,11 @@ message GetMemberAnswer {
   Member member = 1;
 }
 
+message ChatMembersAnswer {
+  int64 total = 1;
+  repeated ChatMember members = 2;
+}
+
 message Member {
   string id = 1;
   optional string name = 2;
@@ -520,6 +537,14 @@ message Member {
 message TurnCredentialsAnswer {
   optional string webRtcUser = 1;
   optional string webRtcPassword = 2;
+}
+
+message ChatMember {
+  string uuid = 1;
+  optional string wokaName = 2;
+  optional string email = 3;
+  optional string chatId = 4;
+  repeated string tags = 5;
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/
@@ -855,6 +880,7 @@ message JoinRoomMessage {
   string userJid = 15;
   google.protobuf.StringValue lastCommandId = 16;
   bool canEdit = 17;
+  google.protobuf.StringValue chatID = 18;
 }
 
 message UserJoinedZoneMessage {
@@ -1106,6 +1132,14 @@ message XmppSettingsMessage{
   string jabberId = 4;
   string jabberPassword = 5;
 }
+
+message BanUserByUuidMessage{
+  string playUri = 1;
+  string uuidToBan = 2;
+  string name = 3;
+  string message = 4;
+  string byUserEmail = 5;
+}
 /*********************************************************************************
  * End Chat Messages
  *********************************************************************************/
@@ -1179,6 +1213,7 @@ message SpaceUser{
   bool megaphoneState = 14; // used
   google.protobuf.StringValue jitsiParticipantId = 15; // used
   string uuid = 16; // used
+  google.protobuf.StringValue chatID = 17; // used
 }
 
 message PartialSpaceUser{
@@ -1198,6 +1233,7 @@ message PartialSpaceUser{
   google.protobuf.BoolValue megaphoneState = 14;
   google.protobuf.StringValue jitsiParticipantId = 15;
   string uuid = 16;
+  google.protobuf.StringValue chatID = 17;
 }
 
 message AddSpaceUserMessage{

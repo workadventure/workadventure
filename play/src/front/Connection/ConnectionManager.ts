@@ -188,6 +188,21 @@ class ConnectionManager {
             urlParams.delete("token");
         }
 
+        let matrixLoginToken = urlParams.get("matrixLoginToken");
+        // get token injected by post method from pusher
+        if (matrixLoginToken == undefined) {
+            const input = HtmlUtils.getElementByIdOrFail<HTMLInputElement>("matrixLoginToken");
+            if (input.value != undefined && input.value != "") {
+                matrixLoginToken = input.value;
+            }
+        }
+
+        if (matrixLoginToken != undefined) {
+            localUserStore.setMatrixLoginToken(matrixLoginToken);
+            //clean token of url
+            urlParams.delete("matrixLoginToken");
+        }
+
         if (this.connexionType === GameConnexionTypes.login) {
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
             const redirect = this.loadOpenIDScreen();
@@ -386,6 +401,14 @@ class ConnectionManager {
             localUserStore.saveUser(this.localUser);
             localUserStore.setAuthToken(this.authToken);
         }
+        this.anonymousMatrixLogin();
+    }
+
+    private anonymousMatrixLogin() {
+        localUserStore.setMatrixLoginToken(null);
+        localUserStore.setMatrixUserId(null);
+        localUserStore.setMatrixAccessToken(null);
+        localUserStore.setMatrixRefreshToken(null);
     }
 
     public initBenchmark(): void {
@@ -590,10 +613,14 @@ class ConnectionManager {
                     playUri,
                     localStorageCharacterTextureIds: localUserStore.getCharacterTextures() ?? undefined,
                     localStorageCompanionTextureId: localUserStore.getCompanionTextureId() ?? undefined,
+                    chatID: localUserStore.getChatId() ?? undefined,
                 },
             })
             .then((res) => {
                 return res.data;
+            })
+            .catch((err) => {
+                throw err;
             });
 
         const response = MeResponse.parse(data);
@@ -602,12 +629,19 @@ class ConnectionManager {
             return response;
         }
 
-        const { authToken, userUuid, email, username, locale, visitCardUrl } = response;
+        const { authToken, userUuid, email, username, locale, visitCardUrl, matrixUserId } = response;
 
         localUserStore.setAuthToken(authToken);
-        this.localUser = new LocalUser(userUuid, email);
+        this.localUser = new LocalUser(userUuid, email, matrixUserId /*, isMatrixRegistered*/);
         localUserStore.saveUser(this.localUser);
         this.authToken = authToken;
+
+        /*
+        if (matrixServerUrl) {
+            setMatrixServerDetails(matrixServerUrl);
+        } else {
+            noMatrixServerUrl();
+        }*/
 
         if (visitCardUrl) {
             gameManager.setVisitCardUrl(visitCardUrl);

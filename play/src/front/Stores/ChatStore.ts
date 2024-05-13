@@ -5,6 +5,9 @@ import * as Sentry from "@sentry/svelte";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { iframeListener } from "../Api/IframeListener";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
+import { mucRoomsStore } from "../Chat/Stores/MucRoomsStore";
+import { User } from "../Chat/Xmpp/AbstractRoom";
+import { chatMessagesStore } from "../Chat/Stores/ChatStore";
 import { playersStore } from "./PlayersStore";
 
 export const chatZoneLiveStore = writable(false);
@@ -14,9 +17,6 @@ export const chatInputFocusStore = writable(false);
 
 export const _newChatMessageSubject = new Subject<string>();
 export const newChatMessageSubject = _newChatMessageSubject.asObservable();
-
-export const _newChatMessageWritingStatusSubject = new Subject<number>();
-export const newChatMessageWritingStatusSubject = _newChatMessageWritingStatusSubject.asObservable();
 
 // Call "forceRefresh" to force the refresh of the chat iframe.
 function createForceRefreshChatStore() {
@@ -100,20 +100,28 @@ export const chatMessagesService = {
         const author = getAuthorFromCache(authorId);
         // Let's remove the author from the cache now that he is out
         authorsCache.delete(authorId);
-
-        /* @deprecated with new chat service */
-        iframeListener.sendComingUserToChatIframe({
-            type: ChatMessageTypes.userOutcoming,
-            author: {
-                name: author.name,
-                active: true,
-                isMe: false,
-                jid: author.userJid,
-                isMember: false,
-                color: author.color ?? undefined,
-            },
-            date: new Date(),
-        });
+        const mucRoomDefault = mucRoomsStore.getDefaultRoom();
+        let userData: User;
+        if (mucRoomDefault && author.jid !== "fake") {
+            let userDataDefaultMucRoom = mucRoomDefault.getUserByJid(
+                author.jid
+            );
+            if (userDataDefaultMucRoom === undefined) {
+                // Something went wrong while fetching user data from the default MucRoom.
+                // Let's try a fallback.
+                userDataDefaultMucRoom = {
+                    name: "Unknown",
+                    active: true,
+                    jid: author.jid,
+                    isMe: false,
+                    isMember: false,
+                };
+            }
+            userData = userDataDefaultMucRoom;
+        } else {
+            userData = author;
+        }
+        chatMessagesStore.addOutcomingUser(userData);
 
         //end of writing message
         writingStatusMessageStore.addWritingStatus(authorId, ChatMessageTypes.userStopWriting);
@@ -206,6 +214,7 @@ export const chatMessagesService = {
     },
 };
 
+/*
 function createChatSubMenuVisibilityStore() {
     const { subscribe, update } = writable<string>("");
 
@@ -220,7 +229,8 @@ function createChatSubMenuVisibilityStore() {
     };
 }
 
-export const chatSubMenuVisibilityStore = createChatSubMenuVisibilityStore();
 
+export const chatSubMenuVisibilityStore = createChatSubMenuVisibilityStore();
+*/
 export const wokaDefinedStore = writable<boolean>(false);
 export const iframeLoadedStore = writable<boolean>(false);

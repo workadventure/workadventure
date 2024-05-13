@@ -67,4 +67,6 @@ export type SocketData = {
     microphoneState?: boolean;
     screenSharingState?: boolean;
     megaphoneState?: boolean;
+    chatID?:string;
+    world : string
 };

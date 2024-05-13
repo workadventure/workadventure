@@ -18,11 +18,11 @@ import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connection/Room";
 import { LL } from "../../../i18n/i18n-svelte";
-import { inJitsiStore, inBbbStore, silentStore, inOpenWebsite, isSpeakerStore } from "../../Stores/MediaStore";
+import { inBbbStore, inJitsiStore, inOpenWebsite, isSpeakerStore, silentStore } from "../../Stores/MediaStore";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
 import { currentLiveStreamingNameStore } from "../../Stores/MegaphoneStore";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-import { analyticsClient } from "./../../Administration/AnalyticsClient";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import type { GameScene } from "./GameScene";
 import { AreasPropertiesListener } from "./MapEditor/AreasPropertiesListener";
@@ -373,11 +373,13 @@ export class GameMapPropertiesListener {
             const playUri = this.scene.roomUrl + "/";
 
             if (oldValue !== undefined) {
-                iframeListener.sendLeaveMucEventToChatIframe(playUri + oldValue);
+                iframeListener.sendLeaveMucEventToChatIframe(playUri + oldValue).catch((error) => console.error(error));
                 chatZoneLiveStore.set(false);
             }
             if (newValue !== undefined) {
-                iframeListener.sendJoinMucEventToChatIframe(playUri + newValue, newValue.toString(), "live", false);
+                iframeListener
+                    .sendJoinMucEventToChatIframe(playUri + newValue, newValue.toString(), "live", false)
+                    .catch((error) => console.error(error));
                 chatZoneLiveStore.set(true);
             }
         });

@@ -7,6 +7,7 @@ import { adminToken } from "../middlewares/AdminToken";
 import { validatePostQuery } from "../services/QueryValidator";
 import { BaseHttpController } from "./BaseHttpController";
 
+
 export class AdminController extends BaseHttpController {
     routes(): void {
         this.receiveGlobalMessagePrompt();

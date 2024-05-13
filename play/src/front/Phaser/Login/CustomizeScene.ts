@@ -8,7 +8,6 @@ import { WokaBodyPartOrder, CustomWokaPreviewer, WokaBodyPart } from "../Compone
 import type { WokaBodyPartSlotConfig } from "../Components/CustomizeWoka/WokaBodyPartSlot";
 import { WokaBodyPartSlot } from "../Components/CustomizeWoka/WokaBodyPartSlot";
 import { Button } from "../Components/Ui/Button";
-import { areCharacterTexturesValid } from "../../Connection/LocalUser";
 import type { WokaTextureDescriptionInterface } from "../Entity/PlayerTextures";
 import { Loader } from "../Components/Loader";
 import { localUserStore } from "../../Connection/LocalUserStore";
@@ -23,6 +22,7 @@ import { connectionManager } from "../../Connection/ConnectionManager";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { EnableCameraSceneName } from "./EnableCameraScene";
+import { areCharacterTexturesValid } from "../../Connection/LocalUserUtils";
 
 export const CustomizeSceneName = "CustomizeScene";
 
