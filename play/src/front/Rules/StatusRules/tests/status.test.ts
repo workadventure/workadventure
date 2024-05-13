@@ -13,8 +13,8 @@ describe("Verify Rules Transition", () => {
         { actualStatus: AvailabilityStatus.ONLINE, futureStatus: AvailabilityStatus.BACK_IN_A_MOMENT, result: true },
         { actualStatus: AvailabilityStatus.ONLINE, futureStatus: AvailabilityStatus.ONLINE, result: true },
         { actualStatus: AvailabilityStatus.BUSY, futureStatus: AvailabilityStatus.DO_NOT_DISTURB, result: true },
-        { actualStatus: AvailabilityStatus.BUSY, futureStatus: AvailabilityStatus.JITSI, result: false },
-        { actualStatus: AvailabilityStatus.JITSI, futureStatus: AvailabilityStatus.BUSY, result: false },
+        { actualStatus: AvailabilityStatus.BUSY, futureStatus: AvailabilityStatus.JITSI, result: true },
+        { actualStatus: AvailabilityStatus.JITSI, futureStatus: AvailabilityStatus.BUSY, result: true },
     ])(
         "change status $actualStatus to status $futureStatus to be $result  ",
         ({

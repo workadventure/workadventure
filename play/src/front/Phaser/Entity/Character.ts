@@ -387,7 +387,6 @@ export abstract class Character extends Container implements OutlineableInterfac
             }
         }
 
-        passStatusToOnline();
         this.playAnimation(this._lastDirection, true);
         this.setDepth(this.y + 16);
 
@@ -421,7 +420,6 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this._lastDirection = PositionMessage_Direction.DOWN;
             }
         }
-        passStatusToOnline();
         this.playAnimation(this._lastDirection, true);
 
         this.setDepth(this.y + 16);

@@ -2,6 +2,7 @@ import type CancelablePromise from "cancelable-promise";
 import { inExternalServiceStore } from "../../Stores/MyMediaStore";
 import { screenWakeLock } from "../../Utils/ScreenWakeLock";
 import { coWebsiteManager } from "../CoWebsiteManager";
+import { inBbbStore } from "../../Stores/MediaStore";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 
 export class BBBCoWebsite extends SimpleCoWebsite {
@@ -36,6 +37,7 @@ export class BBBCoWebsite extends SimpleCoWebsite {
                 .catch((error) => console.error(error));
         }
         inExternalServiceStore.set(false);
+        inBbbStore.set(false);
 
         return super.unload();
     }
