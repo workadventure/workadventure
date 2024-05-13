@@ -18,6 +18,8 @@ export async function executeUpdateWAMSettings(
         .executeCommand(
             new UpdateWAMSettingFrontCommand(wamFile, {
                 message: updateWAMSettingsMessage,
-            })
+            }),
+            true,
+            false
         );
 }

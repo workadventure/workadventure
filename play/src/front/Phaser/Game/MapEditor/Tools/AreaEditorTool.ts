@@ -124,7 +124,7 @@ export class AreaEditorTool extends MapEditorTool {
             case "modifyAreaMessage": {
                 const data = editMapCommandMessage.editMapMessage?.message.modifyAreaMessage;
                 // execute command locally
-                await this.mapEditorModeManager.executeLocalCommand(
+                await this.mapEditorModeManager.executeCommand(
                     new UpdateAreaFrontCommand(
                         this.scene.getGameMap(),
                         {
@@ -134,7 +134,9 @@ export class AreaEditorTool extends MapEditorTool {
                         commandId,
                         undefined,
                         this
-                    )
+                    ),
+                    false,
+                    false
                 );
                 break;
             }
@@ -145,15 +147,17 @@ export class AreaEditorTool extends MapEditorTool {
                     visible: true,
                 };
                 // execute command locally
-                await this.mapEditorModeManager.executeLocalCommand(
-                    new CreateAreaFrontCommand(this.scene.getGameMap(), config, commandId, this, false)
+                await this.mapEditorModeManager.executeCommand(
+                    new CreateAreaFrontCommand(this.scene.getGameMap(), config, commandId, this, false),
+                    false,
+                    false
                 );
                 break;
             }
             case "deleteAreaMessage": {
                 const data = editMapCommandMessage.editMapMessage?.message.deleteAreaMessage;
                 // execute command locally
-                await this.mapEditorModeManager.executeLocalCommand(
+                await this.mapEditorModeManager.executeCommand(
                     new DeleteAreaFrontCommand(this.scene.getGameMap(), data.id, commandId, this)
                 );
                 break;

@@ -48,7 +48,11 @@ export class WAMSettingsEditorTool extends MapEditorTool {
             }
 
             // execute command locally
-            await this.mapEditorModeManager.executeLocalCommand(new UpdateWAMSettingFrontCommand(wam, data, commandId));
+            await this.mapEditorModeManager.executeCommand(
+                new UpdateWAMSettingFrontCommand(wam, data, commandId),
+                false,
+                false
+            );
         }
         return Promise.resolve();
     }
