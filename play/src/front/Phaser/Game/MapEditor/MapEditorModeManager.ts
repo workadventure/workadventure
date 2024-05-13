@@ -120,31 +120,22 @@ export class MapEditorModeManager {
     private currentRunningCommand: Promise<void>;
 
     /**
-     * Creates new Command object from given command config and executes it, both local and from the back.
+     * Creates new Command object from given command config and executes it
      * @param command what to execute
-     * @param emitMapEditorUpdate Should the command be emitted further to the game room? Default true.
-     * (for example if command came from the back)
-     * @param addToLocalCommandsHistory Should the command be added to the local commands history to be used in undo/redo mechanism? Default true.
+     *
      */
     public async executeCommand(
-        command: Command & FrontCommandInterface,
-        emitMapEditorUpdate = true,
-        addToLocalCommandsHistory = true
+        command: (Command & FrontCommandInterface) | (Command & FrontCommandInterface & UpdateWAMSettingCommand)
     ): Promise<void> {
         await this.isReverting;
         // Commands are throttled. Only one at a time.
         return (this.currentRunningCommand = this.currentRunningCommand.then(async () => {
             const delay = 0;
             try {
-                // We do an execution instantly so there will be no lag from user's perspective
                 await command.execute();
+                this.emitMapEditorUpdate(command, delay);
 
-                if (emitMapEditorUpdate) {
-                    this.emitMapEditorUpdate(command, delay);
-                }
-
-                // FIXME: why the exception here regarding UpdateWAMSettingCommand ?
-                if (addToLocalCommandsHistory && !(command instanceof UpdateWAMSettingCommand)) {
+                if (!(command instanceof UpdateWAMSettingCommand)) {
                     // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
                     if (this.currentCommandIndex !== this.localCommandsHistory.length - 1) {
                         this.localCommandsHistory.splice(this.currentCommandIndex + 1);
@@ -157,10 +148,23 @@ export class MapEditorModeManager {
 
                 this.scene.getGameMap().updateLastCommandIdProperty(command.commandId);
                 return;
-                //return true;
             } catch (error) {
                 logger(error);
-                //return false;
+                return;
+            }
+        }));
+    }
+
+    public async executeLocalCommand(command: Command & FrontCommandInterface): Promise<void> {
+        await this.isReverting;
+        // Commands are throttled. Only one at a time.
+        return (this.currentRunningCommand = this.currentRunningCommand.then(async () => {
+            try {
+                await command.execute();
+                this.scene.getGameMap().updateLastCommandIdProperty(command.commandId);
+                return;
+            } catch (error) {
+                logger(error);
                 return;
             }
         }));
