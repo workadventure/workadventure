@@ -13,6 +13,7 @@ import {
     AskMuteVideoMessage,
     AvailabilityStatus,
     CharacterTextureMessage,
+    ChatMembersAnswer,
     ClientToServerMessage as ClientToServerMessageTsProto,
     CompanionTextureMessage,
     DeleteCustomEntityMessage,
@@ -21,6 +22,9 @@ import {
     EmoteEventMessage as EmoteEventMessageTsProto,
     ErrorMessage as ErrorMessageTsProto,
     ErrorScreenMessage as ErrorScreenMessageTsProto,
+    FollowAbortMessage,
+    FollowConfirmationMessage,
+    FollowRequestMessage,
     GroupDeleteMessage as GroupDeleteMessageTsProto,
     GroupUpdateMessage as GroupUpdateMessageTsProto,
     JitsiJwtAnswer,
@@ -65,9 +69,6 @@ import {
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnectionMessage,
     XmppSettingsMessage,
-    FollowRequestMessage,
-    FollowConfirmationMessage,
-    FollowAbortMessage,
     TurnCredentialsAnswer,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
@@ -110,13 +111,14 @@ import type {
     ViewportInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
+import { localUserStore } from "./LocalUserStore";
 
 // This must be greater than IoSocketController's PING_INTERVAL
 const manualPingDelay = 100000;
 
 export class RoomConnection implements RoomConnection {
     private static websocketFactory: null | ((url: string) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
-    private readonly socket: WebSocket;
+    public readonly socket: WebSocket;
     private userId: number | null = null;
     private closed = false;
     private tags: string[] = [];
@@ -292,6 +294,8 @@ export class RoomConnection implements RoomConnection {
             url += "&lastCommandId=" + lastCommandId;
         }
         url += "&version=" + apiVersionHash;
+        url += "&chatID=" + localUserStore.getChatId();
+        url += "&roomName=" + gameManager.currentStartedRoom.roomName;
 
         if (RoomConnection.websocketFactory) {
             this.socket = RoomConnection.websocketFactory(url);
@@ -443,7 +447,8 @@ export class RoomConnection implements RoomConnection {
                                 currentLiveStreamingNameStore.set(undefined);
                                 const scene = gameManager.getCurrentGameScene();
                                 scene.broadcastService.leaveSpace(subMessage.kickOffMessage.spaceName);
-                                iframeListener.sendLeaveMucEventToChatIframe(`${scene.roomUrl}/${slugify(name)}`);
+
+                                void iframeListener.sendLeaveMucEventToChatIframe(`${scene.roomUrl}/${slugify(name)}`);
                                 chatZoneLiveStore.set(false);
                                 break;
                             }
@@ -1339,7 +1344,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitAskPosition(uuid: string, playUri: string) {
-        const bytes = ClientToServerMessageTsProto.encode({
+        this.send({
             message: {
                 $case: "askPositionMessage",
                 askPositionMessage: {
@@ -1347,42 +1352,34 @@ export class RoomConnection implements RoomConnection {
                     playUri,
                 },
             },
-        }).finish();
-
-        this.socket.send(bytes);
+        });
     }
 
     public emitAddSpaceFilter(filter: AddSpaceFilterMessage) {
-        const bytes = ClientToServerMessageTsProto.encode({
+        this.send({
             message: {
                 $case: "addSpaceFilterMessage",
                 addSpaceFilterMessage: filter,
             },
-        }).finish();
-
-        this.socket.send(bytes);
+        });
     }
 
     public emitUpdateSpaceFilter(filter: UpdateSpaceFilterMessage) {
-        const bytes = ClientToServerMessageTsProto.encode({
+        this.send({
             message: {
                 $case: "updateSpaceFilterMessage",
                 updateSpaceFilterMessage: filter,
             },
-        }).finish();
-
-        this.socket.send(bytes);
+        });
     }
 
     public emitRemoveSpaceFilter(filter: RemoveSpaceFilterMessage) {
-        const bytes = ClientToServerMessageTsProto.encode({
+        this.send({
             message: {
                 $case: "removeSpaceFilterMessage",
                 removeSpaceFilterMessage: filter,
             },
-        }).finish();
-
-        this.socket.send(bytes);
+        });
     }
 
     public async queryJitsiJwtToken(jitsiRoom: string): Promise<JitsiJwtAnswer> {
@@ -1472,6 +1469,23 @@ export class RoomConnection implements RoomConnection {
                 $case: "spaceFilterLiveStreaming",
                 spaceFilterLiveStreaming: {},
             },
+        };
+        this.send({
+            message: {
+                $case: "watchSpaceMessage",
+                watchSpaceMessage: WatchSpaceMessage.fromPartial({
+                    spaceName,
+                    spaceFilter,
+                }),
+            },
+        });
+        return spaceFilter;
+    }
+    public emitUserJoinSpace(spaceName: string) {
+        const spaceFilter: SpaceFilterMessage = {
+            filterName: "",
+            spaceName,
+            filter: undefined,
         };
         this.send({
             message: {
@@ -1628,6 +1642,32 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Member is undefined.");
         }
         return answer.getMemberAnswer.member;
+    }
+
+    public async queryChatMembers(searchText: string): Promise<ChatMembersAnswer> {
+        const answer = await this.query({
+            $case: "chatMembersQuery",
+            chatMembersQuery: {
+                searchText,
+            },
+        });
+        if (answer.$case !== "chatMembersAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.chatMembersAnswer;
+    }
+
+    public emitUpdateChatId(email: string, chatId: string) {
+        if (chatId && email)
+            this.send({
+                message: {
+                    $case: "updateChatIdMessage",
+                    updateChatIdMessage: {
+                        email,
+                        chatId,
+                    },
+                },
+            });
     }
 
     public emitMuteParticipantIdSpace(spaceName: string, participantId: string) {

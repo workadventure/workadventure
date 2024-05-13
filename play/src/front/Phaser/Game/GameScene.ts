@@ -21,8 +21,8 @@ import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@w
 import {
     ENTITIES_FOLDER_PATH_NO_PREFIX,
     ENTITY_COLLECTION_FILE,
-    EntityPrefabType,
     EntityPermissions,
+    EntityPrefabType,
     GameMap,
     GameMapProperties,
     WAMFileFormat,
@@ -43,6 +43,7 @@ import {
     DEBUG_MODE,
     ENABLE_MAP_EDITOR,
     ENABLE_OPENID,
+    MATRIX_PUBLIC_URI,
     MAX_PER_GROUP,
     POSITION_DELAY,
     PUBLIC_MAP_STORAGE_PREFIX,
@@ -113,19 +114,13 @@ import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStor
 import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
-import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
-import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
+
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import type { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
-import {
-    _newChatMessageSubject,
-    _newChatMessageWritingStatusSubject,
-    chatVisibilityStore,
-    forceRefreshChatStore,
-} from "../../Stores/ChatStore";
+import { _newChatMessageSubject, chatVisibilityStore, forceRefreshChatStore } from "../../Stores/ChatStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
@@ -136,9 +131,9 @@ import {
     mapEditorModeStore,
     mapEditorSelectedToolStore,
     mapEditorWamSettingsEditorToolCurrentMenuItemStore,
-    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
     mapExplorationModeStore,
     cameraResistanceModeStore,
+    WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
 import { debugAddPlayer, debugRemovePlayer, debugUpdatePlayer, debugZoom } from "../../Utils/Debuggers";
@@ -155,6 +150,14 @@ import { askDialogStore } from "../../Stores/MeetingStore";
 import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChangerFunctions";
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
+import { getCoWebSite, openCoWebSite } from "../../Chat/Utils";
+import { chatConnectionManager } from "../../Chat/Connection/ChatConnectionManager";
+import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
+import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
+import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/SocketSpaceWatcher";
+import { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
+import { MatrixChatConnection } from "../../Chat/Connection/Matrix/MatrixChatConnection";
+import { MatrixClientWrapper } from "../../Chat/Connection/Matrix/MatrixClientWrapper";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -173,7 +176,6 @@ import { ActivatablesManager } from "./ActivatablesManager";
 import type { AddPlayerInterface } from "./AddPlayerInterface";
 import type { CameraManagerEventCameraUpdateData } from "./CameraManager";
 import { CameraManager, CameraManagerEvent } from "./CameraManager";
-
 import { EditorToolName, MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
 import type { PlayerDetailsUpdate } from "./RemotePlayersRepository";
 import { RemotePlayersRepository } from "./RemotePlayersRepository";
@@ -320,6 +322,7 @@ export class GameScene extends DirtyScene {
         this.currentCompanionTextureResolve = resolve;
         this.currentCompanionTextureReject = reject;
     });
+    public chatConnection!: ChatConnectionInterface;
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
 
@@ -529,6 +532,33 @@ export class GameScene extends DirtyScene {
 
     //hook create scene
     create(): void {
+        /*getMatrixClient()
+            .then(async (clientResult) => {
+                if (isSuccess(clientResult)) {
+                    const client = clientResult.value;
+                    const rooms = await client.getJoinedRooms();
+                    console.warn("rooms", rooms);
+                    console.warn("user id", client.getUserId());
+
+                    client.on("Room.timeline", (event, room, toStartOfTimeline, removed, data) => {
+                        console.warn("Room.timeline", event, room, toStartOfTimeline, removed, data);
+                    });
+
+                    client.on("RoomState.events", (event, state) => {
+                        console.warn("RoomState.events", event, state);
+                    });
+                } else {
+                    if (clientResult.error.type === "no-matrix-credentials") {
+                        console.warn("no matrix credentials");
+                    } else if (clientResult.error.type === "no-matrix-server") {
+                        console.warn("NO MATRIX SERVER CONFIGURED");
+                    } else {
+                        console.error("matrix error", clientResult.error.error);
+                    }
+                }
+            })
+            .catch((e) => console.error(e));*/
+
         this.input.topOnly = false;
         this.preloading = false;
         this.cleanupDone = false;
@@ -1011,7 +1041,11 @@ export class GameScene extends DirtyScene {
         this.playersEventDispatcher.cleanup();
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
+        this.chatConnection?.destroy();
         this.followManager?.close();
+
+        LocalSpaceProviderSingleton.getInstance().destroy();
+
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
@@ -1484,6 +1518,23 @@ export class GameScene extends DirtyScene {
                     }
                 }
 
+                if (this.connection) {
+                    //We need to add an env parameter to switch between chat services
+                    this.chatConnection = new MatrixChatConnection(
+                        this.connection,
+                        new MatrixClientWrapper(MATRIX_PUBLIC_URI,localUserStore)
+                    );
+
+                    const chatId = localUserStore.getChatId();
+                    const email: string | null = localUserStore.getLocalUser()?.email || null;
+                    if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
+                }
+
+                const spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
+                StreamSpaceWatcherSingleton.getInstance(onConnect.connection.socket);
+
+                spaceProvider.add(WORLD_SPACE_NAME).watch(CONNECTED_USER_FILTER_NAME);
+
                 this.tryOpenMapEditorWithToolEditorParameter();
 
                 this.subscribeToStores();
@@ -1627,7 +1678,7 @@ export class GameScene extends DirtyScene {
                 // The joinMucRoomMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.joinMucRoomMessageStream.subscribe((mucRoomDefinitionMessage) => {
-                    iframeListener.sendJoinMucEventToChatIframe(
+                    void iframeListener.sendJoinMucEventToChatIframe(
                         mucRoomDefinitionMessage.url,
                         mucRoomDefinitionMessage.name,
                         mucRoomDefinitionMessage.type,
@@ -1638,7 +1689,7 @@ export class GameScene extends DirtyScene {
                 // The leaveMucRoomMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.leaveMucRoomMessageStream.subscribe((leaveMucRoomMessage) => {
-                    iframeListener.sendLeaveMucEventToChatIframe(leaveMucRoomMessage.url);
+                    void iframeListener.sendLeaveMucEventToChatIframe(leaveMucRoomMessage.url);
                 });
 
                 // The worldFullMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
@@ -1723,7 +1774,7 @@ export class GameScene extends DirtyScene {
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.xmppSettingsMessageStream.subscribe((xmppSettingsMessage) => {
                     if (xmppSettingsMessage) {
-                        iframeListener.sendXmppSettingsToChatIframe(xmppSettingsMessage);
+                        chatConnectionManager.initXmppSettings(xmppSettingsMessage);
                     }
                 });
 
@@ -2420,12 +2471,15 @@ ${escapedMessage}
                 _newChatMessageSubject.next(text);
             })
         );
-
-        this.iframeSubscriptionList.push(
+        /**
+ *         this.iframeSubscriptionList.push(
             iframeListener.newChatMessageWritingStatusStream.subscribe((status) => {
                 _newChatMessageWritingStatusSubject.next(status);
             })
         );
+ *
+ *
+ */
 
         this.iframeSubscriptionList.push(
             iframeListener.disablePlayerControlStream.subscribe(() => {
@@ -2660,41 +2714,11 @@ ${escapedMessage}
         );
 
         iframeListener.registerAnswerer("openCoWebsite", async (openCoWebsite, source) => {
-            if (!source) {
-                throw new Error("Unknown query source");
-            }
-
-            const url = new URL(openCoWebsite.url, iframeListener.getBaseUrlFromSource(source));
-            const coWebsite: SimpleCoWebsite = new SimpleCoWebsite(
-                url,
-                openCoWebsite.allowApi,
-                openCoWebsite.allowPolicy,
-                openCoWebsite.widthPercent,
-                openCoWebsite.closable
-            );
-
-            coWebsiteManager.addCoWebsiteToStore(coWebsite, openCoWebsite.position);
-
-            if (openCoWebsite.lazy === undefined || !openCoWebsite.lazy) {
-                await coWebsiteManager.loadCoWebsite(coWebsite);
-            }
-
-            // Analytics tracking for co-websites
-            analyticsClient.openedWebsite(url);
-
-            return {
-                id: coWebsite.getId(),
-            };
+            return openCoWebSite(openCoWebsite, source);
         });
 
         iframeListener.registerAnswerer("getCoWebsites", () => {
-            const coWebsites = coWebsiteManager.getCoWebsites();
-
-            return coWebsites.map((coWebsite: CoWebsite) => {
-                return {
-                    id: coWebsite.getId(),
-                };
-            });
+            return getCoWebSite();
         });
 
         iframeListener.registerAnswerer("closeCoWebsite", (coWebsiteId) => {

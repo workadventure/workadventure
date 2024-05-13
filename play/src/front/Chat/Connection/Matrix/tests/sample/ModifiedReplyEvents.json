@@ -1,0 +1,134 @@
+[
+  {
+    "type": "m.room.message",
+    "room_id": "!pXGbNvQZKvYdKcbtPc:matrix.workadventure.localhost",
+    "sender": "@user:matrix.workadventure.localhost",
+    "content": {
+      "msgtype": "m.text",
+      "body": "> <@hello:matrix.workadventure.localhost> test\n\nI don't think so !",
+      "format": "org.matrix.custom.html",
+      "formatted_body": "<mx-reply><blockquote><a href=\"https://matrix.to/#/!pXGbNvQZKvYdKcbtPc:matrix.workadventure.localhost/$MLpR9oVBnRBb6VGBJqU3xDYl0jc083KnGiTLHPz0zDo?via=matrix.workadventure.localhost\">In reply to</a> <a href=\"https://matrix.to/#/@hello:matrix.workadventure.localhost\">@hello:matrix.workadventure.localhost</a><br>test</blockquote></mx-reply>I don't think so !",
+      "m.mentions": {
+        "user_ids": [
+          "@hello:matrix.workadventure.localhost"
+        ]
+      },
+      "m.relates_to": {
+        "m.in_reply_to": {
+          "event_id": "$MLpR9oVBnRBb6VGBJqU3xDYl0jc083KnGiTLHPz0zDo"
+        }
+      }
+    },
+    "origin_server_ts": 1713950182840,
+    "unsigned": {
+      "age": 8537127,
+      "m.relations": {
+        "m.replace": {
+          "type": "m.room.message",
+          "room_id": "!pXGbNvQZKvYdKcbtPc:matrix.workadventure.localhost",
+          "sender": "@user:matrix.workadventure.localhost",
+          "content": {
+            "msgtype": "m.text",
+            "body": " * I don't think so ! And you ? again modified",
+            "m.new_content": {
+              "msgtype": "m.text",
+              "body": "I don't think so ! And you ? again modified",
+              "format": "org.matrix.custom.html",
+              "formatted_body": "I don't think so ! And you ? again modified",
+              "m.mentions": {
+                "user_ids": [
+                  "@hello:matrix.workadventure.localhost"
+                ]
+              }
+            },
+            "format": "org.matrix.custom.html",
+            "formatted_body": " * I don't think so ! And you ? again modified",
+            "m.mentions": {},
+            "m.relates_to": {
+              "rel_type": "m.replace",
+              "event_id": "$LudfkPz7kgux8Z38BELYemphCJEtsFkHXSYqxQ-4-c8"
+            }
+          },
+          "origin_server_ts": 1713953149728,
+          "unsigned": {
+            "age": 5570239
+          },
+          "event_id": "$d85JzsBKRQYLecv9EQiwgdCxN37yeMuIS9MflkkY8Qc",
+          "user_id": "@user:matrix.workadventure.localhost",
+          "age": 5570239
+        }
+      }
+    },
+    "event_id": "$LudfkPz7kgux8Z38BELYemphCJEtsFkHXSYqxQ-4-c8",
+    "user_id": "@user:matrix.workadventure.localhost",
+    "age": 8537127
+  },
+  {
+    "type": "m.room.message",
+    "room_id": "!pXGbNvQZKvYdKcbtPc:matrix.workadventure.localhost",
+    "sender": "@user:matrix.workadventure.localhost",
+    "content": {
+      "msgtype": "m.text",
+      "body": "> <@hello:matrix.workadventure.localhost> test\n\n * I don't think so ! And you ?",
+      "m.new_content": {
+        "msgtype": "m.text",
+        "body": "I don't think so ! And you ?",
+        "format": "org.matrix.custom.html",
+        "formatted_body": "I don't think so ! And you ?",
+        "m.mentions": {
+          "user_ids": [
+            "@hello:matrix.workadventure.localhost"
+          ]
+        }
+      },
+      "format": "org.matrix.custom.html",
+      "formatted_body": "<mx-reply><blockquote><a href=\"https://matrix.to/#/!pXGbNvQZKvYdKcbtPc:matrix.workadventure.localhost/$MLpR9oVBnRBb6VGBJqU3xDYl0jc083KnGiTLHPz0zDo?via=matrix.workadventure.localhost\">In reply to</a> <a href=\"https://matrix.to/#/@hello:matrix.workadventure.localhost\">@hello:matrix.workadventure.localhost</a><br>test</blockquote></mx-reply> * I don't think so ! And you ?",
+      "m.mentions": {},
+      "m.relates_to": {
+        "rel_type": "m.replace",
+        "event_id": "$LudfkPz7kgux8Z38BELYemphCJEtsFkHXSYqxQ-4-c8"
+      }
+    },
+    "origin_server_ts": 1713950210223,
+    "unsigned": {
+      "age": 8509744
+    },
+    "event_id": "$g7lzWgqwskabrjcKfGb4M2LriSHWfwiTgMJCJImvopU",
+    "user_id": "@user:matrix.workadventure.localhost",
+    "age": 8509744
+  },
+  {
+    "type": "m.room.message",
+    "room_id": "!pXGbNvQZKvYdKcbtPc:matrix.workadventure.localhost",
+    "sender": "@user:matrix.workadventure.localhost",
+    "content": {
+      "msgtype": "m.text",
+      "body": " * I don't think so ! And you ? again modified",
+      "m.new_content": {
+        "msgtype": "m.text",
+        "body": "I don't think so ! And you ? again modified",
+        "format": "org.matrix.custom.html",
+        "formatted_body": "I don't think so ! And you ? again modified",
+        "m.mentions": {
+          "user_ids": [
+            "@hello:matrix.workadventure.localhost"
+          ]
+        }
+      },
+      "format": "org.matrix.custom.html",
+      "formatted_body": " * I don't think so ! And you ? again modified",
+      "m.mentions": {},
+      "m.relates_to": {
+        "rel_type": "m.replace",
+        "event_id": "$LudfkPz7kgux8Z38BELYemphCJEtsFkHXSYqxQ-4-c8"
+      }
+    },
+    "origin_server_ts": 1713953149728,
+    "unsigned": {
+      "age": 5570239
+    },
+    "event_id": "$d85JzsBKRQYLecv9EQiwgdCxN37yeMuIS9MflkkY8Qc",
+    "user_id": "@user:matrix.workadventure.localhost",
+    "age": 5570239
+  }
+]

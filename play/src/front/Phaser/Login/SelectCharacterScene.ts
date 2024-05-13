@@ -7,7 +7,7 @@ import { loadAllDefaultModels } from "../Entity/PlayerTexturesLoadingManager";
 import { Loader } from "../Components/Loader";
 import type { WokaTextureDescriptionInterface } from "../Entity/PlayerTextures";
 import { PlayerTextures } from "../Entity/PlayerTextures";
-import { areCharacterTexturesValid } from "../../Connection/LocalUser";
+import { areCharacterTexturesValid } from "../../Connection/LocalUserUtils";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";

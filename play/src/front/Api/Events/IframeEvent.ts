@@ -1,13 +1,14 @@
 import { z } from "zod";
 import {
-    KLAXOON_ACTIVITY_PICKER_EVENT,
     isBanEvent,
+    isChatEvent,
+    isChatMessage,
     isKlaxoonEvent,
     isXmppSettingsMessageEvent,
+    KLAXOON_ACTIVITY_PICKER_EVENT,
 } from "@workadventure/shared-utils";
 import { isStartWritingEvent, isStopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
 import { isUpdateWritingStatusChatListEvent } from "@workadventure/shared-utils/src/Events/UpdateWritingStatusChatListEvent";
-import { isChatEvent, isChatMessage } from "../../../../../libs/shared-utils/src/Events/ChatEvent";
 import { isClosePopupEvent } from "./ClosePopupEvent";
 import { isGoToPageEvent } from "./GoToPageEvent";
 import { isLoadPageEvent } from "./LoadPageEvent";
@@ -37,7 +38,7 @@ import { isAddActionsMenuKeyToRemotePlayerEvent } from "./AddActionsMenuKeyToRem
 import { isRemoveActionsMenuKeyFromRemotePlayerEvent } from "./RemoveActionsMenuKeyFromRemotePlayerEvent";
 import { isSetAreaPropertyEvent } from "./SetAreaPropertyEvent";
 import { isCreateUIWebsiteEvent, isModifyUIWebsiteEvent, isUIWebsiteEvent } from "./Ui/UIWebsiteEvent";
-import { isDynamicAreaEvent, isCreateDynamicAreaEvent } from "./CreateDynamicAreaEvent";
+import { isCreateDynamicAreaEvent, isDynamicAreaEvent } from "./CreateDynamicAreaEvent";
 import { isUserInputChatEvent } from "./UserInputChatEvent";
 import { isEnterLeaveEvent } from "./EnterLeaveEvent";
 import { isChangeLayerEvent } from "./ChangeLayerEvent";
@@ -302,10 +303,6 @@ export const isIframeEventWrapper = z.union([
         data: isRemoveButtonActionBarEvent,
     }),
     z.object({
-        type: z.literal("chatReady"),
-        data: z.undefined(),
-    }),
-    z.object({
         type: z.literal("openBanner"),
         data: isBannerEvent,
     }),
@@ -359,6 +356,10 @@ export const isIframeEventWrapper = z.union([
     }),
     z.object({
         type: z.literal("restoreInviteUserButton"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("chatReady"),
         data: z.undefined(),
     }),
     z.object({

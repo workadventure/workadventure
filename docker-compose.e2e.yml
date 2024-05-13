@@ -39,28 +39,6 @@ services:
       - "traefik.http.routers.play.rule=Host(`play.workadventure.localhost`)"
       - "traefik.http.routers.play.entryPoints=web"
       - "traefik.http.services.play.loadbalancer.server.port=3000"
-
-  chat:
-    image: thecodingmachine/workadventure-chat:${DOCKER_TAG:-develop}
-    build:
-      context: ./
-      dockerfile: chat/Dockerfile
-      cache_from:
-        - thecodingmachine/workadventure-chat:${DOCKER_TAG:-develop}
-      args:
-        BUILDKIT_INLINE_CACHE: 1
-    command: /start_nginx.sh
-    volumes: []
-    environment:
-      STARTUP_COMMAND_2: ""
-      STARTUP_COMMAND_3: ""
-      STARTUP_COMMAND_4: ""
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.chat.rule=Host(`chat.workadventure.localhost`)"
-      - "traefik.http.routers.chat.entryPoints=web"
-      - "traefik.http.services.chat.loadbalancer.server.port=80"
-
   back:
     image: thecodingmachine/workadventure-back:${DOCKER_TAG:-develop}
     build:

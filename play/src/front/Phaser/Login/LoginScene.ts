@@ -3,7 +3,7 @@ import { localUserStore } from "../../Connection/LocalUserStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { gameManager } from "../Game/GameManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { isUserNameTooLong, isUserNameValid } from "../../Connection/LocalUser";
+import { isUserNameTooLong, isUserNameValid } from "../../Connection/LocalUserUtils";
 import { NameNotValidError, NameTooLongError } from "../../Exception/NameError";
 import { ResizableScene } from "./ResizableScene";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";

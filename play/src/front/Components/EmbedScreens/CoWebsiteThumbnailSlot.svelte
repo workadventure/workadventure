@@ -27,7 +27,6 @@
     let cowebsiteName = "";
 
     const mainState = coWebsiteManager.getMainStateSubscriber();
-
     onMount(() => {
         if (isJitsi) {
             icon.src = jitsiIcon;
