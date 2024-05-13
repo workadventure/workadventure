@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import { coWebsiteManager, coWebsites } from "../../Stores/CoWebsiteStore";
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
@@ -13,9 +13,9 @@
     import { max, min } from "lodash";
     import { ArrowDownIcon } from "svelte-feather-icons";
     import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
+    import { widthContainer } from "../../Stores/CoWebsiteStore";
+    import { heightContainer } from "../../Stores/CoWebsiteStore";
     import { waScaleManager } from "../../Phaser/Services/WaScaleManager";
-    import { writable } from "svelte/store";
-    import { widthContainerFinal } from "../../Stores/CowebsiteStore";
 
     let activeCowebsite = $coWebsites[0];
     let showDropdown = false;
@@ -26,8 +26,9 @@
     let resizeBar: HTMLElement;
     let startY: number;
     let startX: number;
-    let startWidthContainer: number;
+    let startWidthContainer: number | undefined;
     let finalWidth;
+    let finalHeight;
     let startHeight: number;
     const mediaQuery = window.matchMedia("(max-width: 768px)");
     let totalTabsWidth = 0;
@@ -35,32 +36,92 @@
     const widthTab = 300;
     const widthTabResponsive = 150;
     let vertical: boolean;
+    let pannelClass = "";
+
+    // let height: number;
+    // let width: number;
+
+    $: widthWithoutCowebsite = $widthContainer;
+
+    $: heightWithoutCowebsite = $heightContainer;
 
     onMount(() => {
+        console.log("je suis dans le on Mount du cowebsite");
         mediaQuery.addEventListener("change", (e: any) => handleTabletChange(e));
         handleTabletChange(mediaQuery);
-        let withOnMount = parseInt(getComputedStyle(container).width);
-        widthContainerFinal.set(withOnMount);
-        widthContainerFinal.subscribe((value) => {
-            console.log("Nouvelle largeur du conteneur :", value);
-        });
-        // getWidthCowebsite();
-        // coWebsiteManager.fire();
+
+        if (!vertical) {
+            let widthOnMount = parseInt(getComputedStyle(container).width);
+            console.log("DANS LE ONMOUNT LA LARGEUR DU COWEBSITE", widthOnMount);
+            widthContainer.set(widthOnMount);
+            widthContainer.subscribe((value) => {
+                console.log("Nouvelle largeur du conteneur :", value);
+            });
+        } else {
+            let heightOnMount = parseInt(getComputedStyle(container).height);
+            console.log("DANS LE ONMOUNT LA HATEUR DU COWEBSITE", heightOnMount);
+            heightContainer.set(heightOnMount);
+            heightContainer.subscribe((value) => {
+                console.log("Nouvelle hauteur du conteneur :", value);
+            });
+        }
+        waScaleManager.applyNewSize();
     });
+
+    onDestroy(() => {
+        heightContainer.set(window.innerHeight);
+        widthContainer.set(window.innerWidth);
+        waScaleManager.applyNewSize();
+    });
+
+    // function getWidthPercentage() {
+    //     if (!vertical) {
+    //         console.log("je suis dans le get pannel size du horizontal");
+    //         if (activeCowebsite.getWidthPercent()) {
+    //             let widthPercent = activeCowebsite.getWidthPercent();
+    //             const classWidth = document.createElement("style") as HTMLStyleElement;
+    //             classWidth.textContent = `.width-container { width: ${widthPercent}% }`;
+    //             return classWidth;
+    //         } else {
+    //             return "w-1/2";
+    //         }
+    //     } else {
+    //         console.log("je suis dans le get pannel size du vertical");
+    //         if (activeCowebsite.getWidthPercent()) {
+    //             let heightPercent = activeCowebsite.getWidthPercent();
+    //             const classHeight = document.createElement("style") as HTMLStyleElement;
+    //             classHeight.textContent = `.height-container { height: ${heightPercent}% }`;
+    //             return classHeight;
+    //         } else {
+    //             return "h-1/2";
+    //         }
+    //     }
+    // }
+
+    // function getPanelClass() {
+    //     const finalSize = getWidthPercentage();
+    //     if (!vertical) {
+    //         return `${finalSize} h-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel`;
+    //     } else {
+    //         return `${finalSize} w-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel`;
+    //     }
+    // }
+    // pannelClass = getPanelClass();
 
     function handleTabletChange(e: MediaQueryList) {
         if (e.matches) {
             vertical = true;
+            console.log(vertical);
             resizeMobile();
         } else {
             vertical = false;
+            console.log(vertical);
             resizeDesktop();
         }
     }
 
     function resizeDesktop() {
-        initialWidth = parseInt(getComputedStyle(container).width);
-        startWidthContainer = parseInt(getComputedStyle(container).width);
+        startWidthContainer = document.getElementById("tabBar")?.offsetWidth;
 
         const handleMouseDown = (e: { clientX: number }) => {
             startX = e.clientX;
@@ -71,13 +132,14 @@
         resizeBar.addEventListener("mousedown", handleMouseDown);
         const handleMouseMove = (e: { clientX: number }) => {
             let newWidth = startWidthContainer - (e.clientX - startX);
-            widthContainerFinal.set(newWidth);
+            widthContainer.set(newWidth);
             finalWidth = newWidth + "px";
             container.style.width = finalWidth;
             const maxWidth = Math.min(newWidth, window.innerWidth - 350);
             if (maxWidth !== newWidth) {
                 container.style.width = maxWidth + "px";
             }
+            waScaleManager.applyNewSize();
             // getGameSize();
 
             // coWebsiteManager.fire();
@@ -88,7 +150,7 @@
             document.removeEventListener("mouseup", handleMouseUp);
         };
         return () => {
-            widthContainerFinal;
+            widthContainer;
             resizeBar.removeEventListener("mousedown", handleMouseDown);
             document.removeEventListener("mousemove", handleMouseMove);
             document.removeEventListener("mouseup", handleMouseUp);
@@ -96,9 +158,6 @@
     }
 
     function resizeMobile() {
-        startWidthContainer = parseInt(getComputedStyle(container).width);
-        initialWidth = parseInt(getComputedStyle(container).width);
-
         function handleMouseDown(e: TouchEvent) {
             let clientY = e.touches[0].clientY;
             startY = clientY;
@@ -111,12 +170,17 @@
 
         function handleMouseMove(e: TouchEvent) {
             let clientY = e.touches[0].clientY;
+            let newHeight = startHeight - (clientY - startY);
+            heightContainer.set(newHeight);
+            finalHeight = newHeight + "px";
+            container.style.height = finalHeight;
             const height = startHeight + (clientY - startY);
             container.style.height = height + "px";
-            const minHeight = max([height, window.innerHeight - 600]);
-            container.style.height = minHeight + "px";
+            // const minHeight = max([height, window.innerHeight - 600]);
+            // container.style.height = minHeight + "px";
             // const maxHeight = min([height, window.innerHeight - 100]);
             // container.style.height = maxHeight + "px";
+            waScaleManager.applyNewSize();
         }
 
         const handleMouseUp = () => {
@@ -135,19 +199,21 @@
     function handleTabMounted() {
         if (!vertical) {
             totalTabsWidth += widthTab;
+            console.log("tab width", widthTab);
+            console.log("total tab width", totalTabsWidth);
             appearDropdown();
         } else {
-            totalTabsWidth += widthTabResponsive;
+            totalTabsWidth -= widthTab;
             appearDropdown();
         }
     }
 
     function handleTabDestroyed() {
         if (vertical) {
-            totalTabsWidth -= widthTabResponsive;
+            totalTabsWidth += widthTabResponsive;
             appearDropdown();
         } else {
-            totalTabsWidth -= widthTab;
+            totalTabsWidth -= widthTabResponsive;
             appearDropdown();
         }
     }
@@ -234,38 +300,17 @@
             document.body.removeChild(div);
         }
     }
-
-    function getWidthPercentage() {
-        if (activeCowebsite.getWidthPercent()) {
-            let widthPercent = activeCowebsite.getWidthPercent();
-            const classWidth = document.createElement("style") as HTMLStyleElement;
-            classWidth.textContent = `.width-container { width: ${widthPercent}% }`;
-            return classWidth;
-        }
-        return "w-1/2";
-    }
-
-    function getPanelClass() {
-        const widthPercentage = getWidthPercentage();
-        return `${widthPercentage} h-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel`;
-    }
-
-    let panelClass = getPanelClass();
-
-    // export function getGameSize() {
-    //     let width = window.innerWidth - $widthContainer;
-    //     console.log("FINALE WIDTH de la game donc mois cowebsite", width);
-    //     let height = window.innerHeight;
-    //     return { width, height };
-    // }
 </script>
 
 <!-- svelte-ignore missing-declaration -->
 <!-- use:draggable={{ axis: "x" }} -->
+<!-- class={vertical ? `${pannelClass} responsive-container` : `${pannelClass} flex-col padding`} -->
 
 <div
     id="cowebsites-container"
-    class={vertical ? `${panelClass} responsive-container` : `${panelClass} flex-col padding`}
+    class={vertical
+        ? "w-full h-1/2 right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel responsive-container"
+        : "h-full w-1/2 right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel flex-col padding"}
     bind:this={container}
     in:fly|local={vertical ? { duration: 750, y: -1000 } : { duration: 750, x: 1000 }}
 >
@@ -394,7 +439,7 @@
     }
 
     @media (max-width: 768px) {
-        .responsive-container {
+        #cowebsites-container {
             width: 100%;
             height: 50%;
             display: flex;

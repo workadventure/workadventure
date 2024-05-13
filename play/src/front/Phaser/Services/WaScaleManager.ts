@@ -1,7 +1,6 @@
 import type { Game } from "../Game/Game";
 import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
-import { getGameSize } from "../../Components/EmbedScreens/CoWebsitesContainer.svelte";
-import widthContainer from "../../Components/EmbedScreens/CoWebsitesContainer.svelte"
+import CoWebsitesContainer from "../../Components/EmbedScreens/CoWebsitesContainer.svelte";
 import { ResizableScene } from "../Login/ResizableScene";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { HdpiManager } from "./HdpiManager";
@@ -40,14 +39,15 @@ export class WaScaleManager {
             return;
         }
         const { width, height } = coWebsiteManager.getGameSize();
-        console.log("TAILLE ECRAN DE LA FENETRE", width, height)
+        console.log("WIDTH DANS WA SCALE MANAGER", width)
+        console.log("HEIGHT DANS WA SCALE MANAGER", height)
+        // console.log("TAILLE ECRAN DE LA FENETRE", width, height)
         const devicePixelRatio = window.devicePixelRatio ?? 1;
-        console.log(devicePixelRatio)
         const { game: gameSize, real: realSize } = this.hdpiManager.getOptimalGameSize({
             width: width * devicePixelRatio,
             height: height * devicePixelRatio,
         });
-        console.log("GAME SIZE:", gameSize, "REAL SIZE:", realSize)
+        // console.log("GAME SIZE:", gameSize, "REAL SIZE:", realSize)
 
 
         if (realSize.width !== 0 && gameSize.width !== 0 && devicePixelRatio !== 0) {
@@ -69,17 +69,16 @@ export class WaScaleManager {
 
         // Override bug in canvas resizing in Phaser. Let's resize the canvas ourselves
         const style = this.scaleManager.canvas.style;
-        console.log("STYLE", style)
         style.width = Math.ceil(realSize.width !== 0 ? realSize.width / devicePixelRatio : 0) + "px";
         style.height = Math.ceil(realSize.height !== 0 ? realSize.height / devicePixelRatio : 0) + "px";
 
         // Resize the game element at the same size at the canvas
         const gameStyle = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("game").style;
-        console.log(gameStyle)
+        // console.log(gameStyle)
         gameStyle.width = style.width;
-        console.log(gameStyle.width)
+        // console.log(gameStyle.width)
         gameStyle.height = style.height;
-        console.log(gameStyle.height)
+        // console.log(gameStyle.height)
 
         // Note: onResize will be called twice (once here and once in Game.ts), but we have no better way.
         for (const scene of this.game.scene.getScenes(true)) {

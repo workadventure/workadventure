@@ -43,6 +43,7 @@
             cowebsiteName = cowebsiteName.charAt(0).toUpperCase() + cowebsiteName.slice(1);
             isDuplicable = true;
         }
+        console.log("TAB MOUNTED");
         dispatch("tabMounted");
     });
 

@@ -167,7 +167,6 @@
         const canvas = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
 
         if (canvas) {
-            console.log(canvas, "CANVAS");
             canvas.addEventListener("click", function () {
                 if (document.activeElement instanceof HTMLElement) {
                     document.activeElement.blur();
@@ -176,13 +175,11 @@
         }
 
         window.addEventListener("resize", function () {
-            console.log("je suis dans le resize du window add event listener");
             waScaleManager.applyNewSize();
             waScaleManager.refreshFocusOnTarget();
         });
 
         coWebsiteManager.onResize.subscribe(() => {
-            console.log("je suis dans le suscribe du cowebsite manager");
             waScaleManager.applyNewSize();
             waScaleManager.refreshFocusOnTarget();
         });
@@ -219,312 +216,15 @@
     // $: cowebsites = $coWebsites;
 </script>
 
-<!--
-<div class="main-container flex z-10">
-    <div class="game-container">
-        <div id="game" bind:this={gameDiv} class="fixed top-0" />
-        <GameOverlay {game} />
-    </div>
-    <div class="co-websites-container">
-
-    </div>
-</div> -->
-
-<!-- <div class="main-container flex z-10 absolute"> -->
-
-<!-- <style lang="scss">
-    .co-websites-container {
-        flex: 1;
-    }
-    .game-container {
-        flex: 1;
-    }
-</style> -->
-
-<!-- <div class="main-container absolute flex w-full h-full">
-    {#if $coWebsites.length > 0}
-        <div class="co-websites-container relative">
-            <CoWebsitesContainer />
-        </div>
-    {/if}
-    <div id="game" bind:this={gameDiv} class="relative top-0">
-        <GameOverlay {game} />
-    </div>
-</div> -->
-<!-- App.svelte -->
-
-<!-- <div class="main-container relative flex w-full h-full">
-    <div id="game" bind:this={gameDiv} class="game-container relative top-0">
-        <GameOverlay {game} />
-    </div>
-    {#if $coWebsites.length > 0}
-        <div class="co-websites-container">
-            <CoWebsitesContainer />
-        </div>
-    {/if}
-</div> -->
-
-<!-- <div class="game-container flex-1">
-    {#if $coWebsites.length > 0}
-        <div class="co-websites-container z-2000 flex-1">
-            <CoWebsitesContainer />
-        </div>
-    {/if}
-    <div id="game" bind:this={gameDiv} class="fixed top-0" />
-    <GameOverlay {game} />
-</div>
-
- </div> -->
-<!-- <style lang="scss">
-    .game-container {
-        flex-grow: 1;
-    }
-    .co-websites-container {
-        flex-grow: 1;
-    }
-</style> -->
-<!-- <GameOverlay {game} />
-{#if $coWebsites.length > 0}
-    <CoWebsitesContainer />
-{/if}
-
-<div id="game" bind:this={gameDiv} class="top-0" /> -->
-
-<!-- <style lang="scss"> -->
-<!-- // .game-container {
-    //     flex-grow: 1;
-    // }
-    // .co-websites-container {
-    //     flex-grow: 1;
-    // } -->
-<!-- </style> -->
-
-<!-- <div id="game" bind:this={gameDiv} class="game relative">
-    <div id="game-overlay relative">
-        <GameOverlay {game} />
-    </div>
-</div>
-
-<div id="cowebsite">
-    {#if $coWebsites.length > 0}
-        <CoWebsitesContainer />
-    {/if}
-</div> -->
-
-<!-- <div class="main-container absolute h-full w-full static">
-    <div class="absolute cowebsite w-full h-full">
-        {#if $coWebsites.length > 0}
-            <CoWebsitesContainer />
-        {/if}
-    </div>
-    <div class="game-container">
-        <div id="game" bind:this={gameDiv} class="game absolute" />
-        <GameOverlay {game} />
-    </div>
-</div>
-
-<style>
-    .cowebsite {
-        z-index: 2000;
-        top: 0;
-        right: 0;
-    }
-</style> -->
-
-<!-- <div class="main-container">
-    <div class="cowebsites">
-        {#if $coWebsites.length > 0}
-            <CoWebsitesContainer />
-        {/if}
-    </div>
-    <div id="game" bind:this={gameDiv} class="">
-        <GameOverlay {game} />
-    </div>
-</div>
-
-<style>
-    /* Styles pour les divs de jeu et de cowebsite */
-    .main-container {
-        display: flex;
-        width: 100%;
-        height: 100%;
-    }
-
-    #game {
-        flex: 1;
-        position: relative;
-    }
-
-    .cowebsites {
-        flex: 1;
-        z-index: 1;
-    }
-</style> -->
-
-<!-- <div class="main-container">
-    <div id="game" bind:this={gameDiv} class="">
-        <GameOverlay {game} />
-    </div>
-    <div class="cowebsites">
-        {#if $coWebsites.length > 0}
-            <CoWebsitesContainer />
-        {/if}
-    </div>
-</div>
-
-<style>
-    /* Styles pour les divs de jeu et de cowebsite */
-    .main-container {
-    }
-
-    .cowebsites {
-        display: inline-block;
-        width: auto;
-        vertical-align: top;
-
-    }
-
-    #game {
-        display: inline-block;
-        flex: 1;
-        position: relative;
-    }
-</style> -->
-
-<!-- <div class="main-container">
-    <div class="cowebsites">
-        {#if $coWebsites.length > 0}
-            <CoWebsitesContainer />
-        {/if}
-    </div>
-    <div id="game" bind:this={gameDiv} class="">
-        <GameOverlay {game} />
-    </div>
-</div>
-
-<style>
-    /* Styles pour les divs de jeu et de cowebsite */
-    .main-container {
-        width: 100%;
-        height: 100%;
-    }
-
-    .cowebsites {
-        display: inline-block;
-        width: auto;
-    }
-
-    #game {
-        display: inline-block;
-        flex: 1;
-        position: relative;
-    }
-</style> -->
-
-<!-- <div class="container">
-    {#if $coWebsites.length > 0}
-        <div class="cowebsites">
-            <CoWebsitesContainer />
-        </div>
-    {/if}
-    <div id="game" bind:this={gameDiv} class="">
-        <GameOverlay {game} />
-    </div>
-</div>
-
-<style>
-    /* Styles pour les divs de jeu et de cowebsite */
-    .container {
-        display: flex; /* Utilisation de flexbox pour organiser les éléments */
-        width: 100%;
-        height: 100%;
-    }
-
-    .cowebsites {
-        flex: 1; /* Utilisation de flex pour occuper 50% de la largeur */
-    }
-
-    #game {
-        flex: 1; /* Utilisation de flex pour occuper 50% de la largeur */
-    }
-</style> -->
-
-<!-- <div class="main-container flex">
-    <div class="game-container">
+<div class="wrapper">
+    <div class="map-container">
         <div id="game" bind:this={gameDiv} class="absolute top-0">
             <GameOverlay {game} />
         </div>
     </div>
-    <div class="co-websites-container">
-        {#if $coWebsites.length > 0}
-            <CoWebsitesContainer />
-        {/if}
-    </div>
-</div> -->
-
-<!-- </div> -->
-<!-- <div id="game" bind:this={gameDiv} class="top-0 game-container">
-    <GameOverlay {game} />
-</div>
-{#if $coWebsites.length > 0}
-    <div class="cowebsite">
-        <CoWebsitesContainer />
-    </div>
-{/if} -->
-
-<!-- <style>
-    .main-container {
-        display: flex;
-    }
-
-    .co-websites-container {
-        flex: 0 0 auto;
-    }
-
-    .game-container {
-        flex: 1;
-    }
-</style> -->
-<!-- <style>
-    .game-container {
-        flex: 1;
-    }
-
-    .cowebsite {
-        flex: 1;
-        position: absolute;
-    }
-</style> -->
-<!--
-<div class="main-container flex">
-    <div id="game" bind:this={gameDiv} class="game">
-        <GameOverlay {game} />
-    </div>
-    {#if $coWebsites.length > 0}
-        <div class="cowebsite">
-            <CoWebsitesContainer />
-        </div>
-    {/if}
-</div>
-
-<style>
-    .game,
-    .cowebsite {
-        flex: 1;
-        width: 50%;
-    }
-</style> -->
-
-<div class="wrapper">
-    <div class="map-container">
-        <div id="game" bind:this={gameDiv} class="absolute top-0" />
-        <GameOverlay {game} />
-    </div>
     {#if $coWebsites.length > 0}
         <div class="cowebsite-container">
-            <div class="cowebsite absolute">
-                <CoWebsitesContainer />
-            </div>
+            <CoWebsitesContainer />
         </div>
     {/if}
 </div>

@@ -67,13 +67,10 @@
     });
 </script>
 
-<!-- {#if $coWebsites.length > 0}
-    <CoWebsitesContainer />
-{/if} -->
 <!-- Components ordered by z-index -->
 <div
     id="main-layout"
-    class="fixed @container/main-layout relative h-screen pointer-events-none {[...$coWebsites.values()].length === 0
+    class="@container/main-layout relative h-screen pointer-events-none {[...$coWebsites.values()].length === 0
         ? 'not-cowebsite'
         : ''}"
     bind:this={mainLayout}

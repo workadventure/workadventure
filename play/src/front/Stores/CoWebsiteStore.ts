@@ -2,7 +2,8 @@ import { get, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { Subject } from "rxjs";
 import { waScaleManager } from "../Phaser/Services/WaScaleManager";
-import { HtmlUtils } from "../WebRtc/HtmlUtils";
+import widthWithoutCowebsite from "../Components/EmbedScreens/CoWebsitesContainer.svelte";
+
 
 
 export function createCoWebsiteStore() {
@@ -43,41 +44,75 @@ export function createCoWebsiteStore() {
 export const coWebsites = createCoWebsiteStore();
 
 
-export let widthContainerFinal = writable(0);
-
-let cowebsiteDiv = 'cowebsites-container';
+export let widthContainer = writable(window.innerWidth);
+export let heightContainer = writable(window.innerHeight);
 export class CoWebsiteManager {
 
     private _onResize: Subject<void> = new Subject();
     public onResize = this._onResize.asObservable();
 
-    private cowebsiteContainer: HTMLDivElement;
-
     constructor() {
-        this.cowebsiteContainer = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDiv);
+        // this.updateDimensions()
     }
-
 
     get verticalMode(): boolean {
         return window.innerWidth < window.innerHeight;
     }
 
-    public fire(): void {
-        console.log("je suis dans la fonction fire cowebsite manager")
-        // this._onResize.next();
-        waScaleManager.applyNewSize();
-        waScaleManager.refreshFocusOnTarget();
+
+    calculateNewWidth() {
+        const currentWidth = get(widthContainer);
+        if (!this.verticalMode && get(coWebsites).length > 0){
+            return window.innerWidth - currentWidth;
+        }
+        return window.innerWidth
     }
+
+    calculateNewHeight() {
+        const currentHeight = get(heightContainer);
+        if(this.verticalMode && get(coWebsites).length > 0) {
+            return window.innerHeight - currentHeight;
+        }
+        return window.innerHeight
+    }
+
+
+
+    public getGameSize(): {height:number, width:number} {
+        const height = this.calculateNewHeight() || 0;
+        const width = this.calculateNewWidth() || 0;
+
+        // console.log("AVANT DE RENTRE DANS APLY NEW SIZE HEIGHT", height)
+        // console.log("AVANT DE RENTRE DANS APLY NEW SIZE WIDTH", width)
+
+        if (height !== undefined) {
+            heightContainer.set(height);
+        }
+        if (width !== undefined) {
+            widthContainer.set(width);
+        }
+
+
+        return {
+            height: height,
+            width: width
+        }
+    }
+
+    // public fire(): void {
+    //     console.log("je suis dans la fonction fire cowebsite manager")
+    //     // this._onResize.next();
+    //     waScaleManager.applyNewSize();
+    //     waScaleManager.refreshFocusOnTarget();
+    // }
 
     public addCoWebsiteToStore(coWebsite: CoWebsite) {
         coWebsites.add(coWebsite);
-        this.fire()
         console.log("cowebsite add to store")
     }
 
     public removeCoWebsiteToStore(coWebsite: CoWebsite) {
         coWebsites.remove(coWebsite);
-        this.fire()
     }
 
 
@@ -120,56 +155,6 @@ export class CoWebsiteManager {
         });
     }
 
-    get height(): number {
-        return this.cowebsiteContainer.clientHeight;
-    }
-
-    get width(): number {
-        return this.cowebsiteContainer.clientWidth;
-    }
-
-
-    public getGameSize(): {width: number, height: number} {
-        console.log("DANS LA FONTION GAME SIZE")
-        console.log("WIDTH FINAL = ",  window.innerWidth - this.width)
-        console.log("HEIGHT FINAL =", this.height)
-        return {
-            width: window.innerWidth - this.width,
-            height: this.height
-        }
-    }
-    // public getGameSize(): { width: number; height: number } {
-    //     const widthContainerValue = get(widthContainerFinal);
-    //     console.log("VALEUR DU STORE DANS FICHIER TS", widthContainerValue)
-    //     return {
-    //         width: window.innerWidth - widthContainerValue,
-    //         height: window.innerHeight
-    //     };
-    // }
-    // public getGameSize(): { width: number; height: number } {
-    //     return {
-    //         height: window.innerHeight,
-    //         width: window.innerWidth - $widthContainer
-    //     }
-    //     console.log("je suis dans la fonction getGameSIze")
-    //     if (!this.verticalMode) {
-    //         if(this.container) {
-    //             console.log("il y a un container")
-    //             console.log(window.innerWidth - this.container.offsetWidth)
-    //         }
-
-    //         return {
-    //             width: this.container ? window.innerWidth - this.container.offsetWidth : window.innerWidth,
-    //             height: window.innerHeight,
-    //         };
-    //          // chopper la taille du conteneur des cowebsite
-    //     } else {
-    //         return {
-    //             width: window.innerWidth,
-    //             height: this.container ? window.innerHeight - this.container.offsetHeight : window.innerHeight, // chopper la height du conteneur des cowebsites
-    //         };
-    //     }
-
 
     // Fonction dans la game scene
 
@@ -178,13 +163,6 @@ export class CoWebsiteManager {
     }
 
 }
-
-// document.addEventListener("DOMContentLoaded", function() {
-//     const container = document.getElementById("cowebsites-container");
-//     const coWebsiteManager = new CoWebsiteManager(container as HTMLElement);
-// });
-
-// const container = document.getElementById("cowebsites-container"); // Obtenez la référence du conteneur
 
 
 export const coWebsiteManager = new CoWebsiteManager;
