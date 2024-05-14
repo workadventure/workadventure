@@ -8,5 +8,6 @@ export interface CoWebsite {
     getIframe(): HTMLIFrameElement | undefined;
     getLoadIframe(): CancelablePromise<HTMLIFrameElement> | undefined;
     getWidthPercent(): number | undefined;
+    getHeightPercent(): number | undefined;
     isClosable(): boolean;
 }

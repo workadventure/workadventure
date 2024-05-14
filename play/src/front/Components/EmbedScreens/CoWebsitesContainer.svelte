@@ -35,11 +35,6 @@
     const widthTab = 300;
     const widthTabResponsive = 220;
     let vertical: boolean;
-    let pannelClass = "";
-
-    $: widthWithoutCowebsite = $widthContainer;
-
-    $: heightWithoutCowebsite = $heightContainer;
 
     onMount(() => {
         mediaQuery.addEventListener("change", (e: any) => handleTabletChange(e));
@@ -59,6 +54,8 @@
             });
         }
 
+        updateDynamicStyles();
+
         setTimeout(() => {
             waScaleManager.applyNewSize();
         }, 500);
@@ -68,41 +65,10 @@
         heightContainer.set(window.innerHeight);
         widthContainer.set(window.innerWidth);
         waScaleManager.applyNewSize();
+        if (styleTag) {
+            document.head.removeChild(styleTag);
+        }
     });
-
-    // function getWidthPercentage() {
-    //     if (!vertical) {
-    //         console.log("je suis dans le get pannel size du horizontal");
-    //         if (activeCowebsite.getWidthPercent()) {
-    //             let widthPercent = activeCowebsite.getWidthPercent();
-    //             const classWidth = document.createElement("style") as HTMLStyleElement;
-    //             classWidth.textContent = `.width-container { width: ${widthPercent}% }`;
-    //             return classWidth;
-    //         } else {
-    //             return "w-1/2";
-    //         }
-    //     } else {
-    //         console.log("je suis dans le get pannel size du vertical");
-    //         if (activeCowebsite.getWidthPercent()) {
-    //             let heightPercent = activeCowebsite.getWidthPercent();
-    //             const classHeight = document.createElement("style") as HTMLStyleElement;
-    //             classHeight.textContent = `.height-container { height: ${heightPercent}% }`;
-    //             return classHeight;
-    //         } else {
-    //             return "h-1/2";
-    //         }
-    //     }
-    // }
-
-    // function getPanelClass() {
-    //     const finalSize = getWidthPercentage();
-    //     if (!vertical) {
-    //         return `${finalSize} h-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel`;
-    //     } else {
-    //         return `${finalSize} w-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel`;
-    //     }
-    // }
-    // pannelClass = getPanelClass();
 
     function handleTabletChange(e: MediaQueryList) {
         if (e.matches) {
@@ -315,17 +281,54 @@
             document.body.removeChild(div);
         }
     }
-</script>
 
-<!-- svelte-ignore missing-declaration -->
-<!-- use:draggable={{ axis: "x" }} -->
-<!-- class={vertical ? `${pannelClass} responsive-container` : `${pannelClass} flex-col padding`} -->
+    let styleTag: HTMLStyleElement;
+
+    function updateDynamicStyles() {
+        let widthPercent = activeCowebsite.getWidthPercent() || 50;
+        let heightPercent = activeCowebsite.getHeightPercent() || 50;
+
+        if (widthPercent < 25) {
+            widthPercent = 25;
+        } else if (widthPercent > 75) {
+            widthPercent = 75;
+        }
+
+        if (heightPercent < 25) {
+            heightPercent = 25;
+        } else if (heightPercent > 75) {
+            heightPercent = 75;
+        }
+
+        const cssVertical = `
+            .height-default-vertical {
+                width: 100%;
+                height: ${heightPercent}%;
+            }`;
+
+        const cssHorizontal = `
+            .width-default-horizontal {
+                height: 100%;
+                width: ${widthPercent}%;
+            }`;
+
+        if (!styleTag) {
+            styleTag = document.createElement("style");
+            document.head.appendChild(styleTag);
+        }
+
+        vertical ? (styleTag.textContent = cssVertical) : (styleTag.textContent = cssHorizontal);
+    }
+
+    $: activeCowebsite, updateDynamicStyles();
+    $: vertical, updateDynamicStyles();
+</script>
 
 <div
     id="cowebsites-container"
     class={vertical
-        ? "w-full h-1/2 right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel responsive-container"
-        : "h-full w-1/2 right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel flex-col padding"}
+        ? "height-default-vertical w-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel responsive-container"
+        : "width-default-horizontal h-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel flex-col padding"}
     bind:this={container}
     in:fly|local={vertical ? { duration: 750, y: -1000 } : { duration: 750, x: 1000 }}
 >

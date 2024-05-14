@@ -22,6 +22,7 @@
 
 <iframe
     src={actualCowebsite.getUrl().toString()}
+    width={actualCowebsite.getWidthPercent()}
     frameborder="0"
     allow={actualCowebsite.getAllowPolicy()}
     title="Cowebsite"

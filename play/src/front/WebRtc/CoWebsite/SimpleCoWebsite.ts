@@ -10,6 +10,7 @@ export class SimpleCoWebsite implements CoWebsite {
     protected allowApi?: boolean;
     protected allowPolicy?: string;
     protected widthPercent?: number;
+    protected heightPercent?: number;
     protected closable: boolean;
 
     constructor(url: URL, allowApi?: boolean, allowPolicy?: string, widthPercent?: number, closable?: boolean) {
@@ -39,6 +40,10 @@ export class SimpleCoWebsite implements CoWebsite {
 
     getWidthPercent(): number | undefined {
         return this.widthPercent;
+    }
+
+    getHeightPercent(): number | undefined {
+        return this.heightPercent;
     }
 
     isClosable(): boolean {

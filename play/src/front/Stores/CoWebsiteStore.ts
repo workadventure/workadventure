@@ -90,11 +90,23 @@ export class CoWebsiteManager {
         }
     }
 
+    // public setWidthPercent(coWebsite: CoWebsite, openingWidth?: number) {
+    //     let newWidth = openingWidth ?? 50;
+    //     if (newWidth > 75) {
+    //         coWebsite.getWidthPercent() = 75;
+    //     } else if (newWidth < 25){
+    //         coWebsite.getWidthPercent() = 25;
+    //     }
+    // this.calculateNewWidth()
+
+    //     coWebsite.getWidthPercent(newWidth);
+    // }
+
 
     public addCoWebsiteToStore(coWebsite: CoWebsite) {
+        coWebsite?.getWidthPercent();
         coWebsites.add(coWebsite);
     }
-
     public removeCoWebsiteToStore(coWebsite: CoWebsite) {
         coWebsites.remove(coWebsite);
     }
@@ -138,7 +150,6 @@ export class CoWebsiteManager {
         return new Promise<void>((resolve, reject) => {
         });
     }
-
 
     // Fonction dans la game scene
 
