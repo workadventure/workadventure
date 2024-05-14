@@ -439,7 +439,10 @@ export class SocketManager implements ZoneEventListener {
                                     spaceStreamToBack.write(pusherToBackMessage);
 
                                     spaceStreamToBack.pingTimeout = setTimeout(() => {
-                                        debug("[space] spaceStreamToBack closed, no ping received", backId);
+                                        console.error("Error spaceStreamToBack timed out for back:", backId);
+                                        Sentry.captureException(
+                                            "Error spaceStreamToBack timed out for back: " + backId
+                                        );
                                         spaceStreamToBack.end();
                                         cleanupSpaceStreamToBack();
                                     }, 1000 * 60);
