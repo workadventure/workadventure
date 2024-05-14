@@ -249,23 +249,11 @@ export class JitsiConferenceWrapper {
                 );
             }
 
-            room.on(JitsiMeetJS.events.conference.TRACK_ADDED, onRemoteTrack);
+            room.on(JitsiMeetJS.events.conference.TRACK_ADDED, (track) => {
+                debug(`remote ${track.type} track added`);
+                onRemoteTrack(track);
+            });
             room.on(JitsiMeetJS.events.conference.TRACK_REMOVED, (track) => {
-                /*
-                if (track.isLocal()) {
-                    jitsiConferenceWrapper._myStreamStore.update((old) => {
-                        if(old){
-                            if(track.isAudioTrack()) {
-                                old.muteAudio();
-                            } else if(track.isVideoTrack()) {
-                                old.muteVideo();
-                            }
-                        }
-                        return old;
-                    });
-                    return;
-                }
-                 */
                 debug(`remote ${track.type} track removed`);
                 jitsiConferenceWrapper.removeRemoteTrack(track);
             });
@@ -543,10 +531,10 @@ export class JitsiConferenceWrapper {
             const participantId = track.getParticipantId();
             if (!participantId) {
                 console.error("Track has no participantId", track);
-                throw new Error("Track has no participantId");
                 return tracks;
             }
             let jitsiTrackWrapper = tracks.get(participantId);
+
             if (!jitsiTrackWrapper) {
                 jitsiTrackWrapper = new JitsiTrackWrapper(participantId, track, this.jitsiRoomName);
                 tracks.set(participantId, jitsiTrackWrapper);

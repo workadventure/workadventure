@@ -145,7 +145,7 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
                     }
                     if (!found) {
                         jitsiBroadcastSpaceLogger(
-                            "joinJitsiConference => No associated spaceUser found for participantId" +
+                            "joinJitsiConference => No associated spaceUser found for participantId: " +
                                 stream.uniqueId +
                                 $users.values()
                         );

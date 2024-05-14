@@ -1400,9 +1400,6 @@ export class SocketManager {
         }
         pusher.watchSpace(space.name);
         space.addWatcher(pusher);
-        if (watchSpaceMessage.user) {
-            space.addUser(pusher, watchSpaceMessage.user);
-        }
     }
 
     handleUnwatchSpaceMessage(pusher: SpacesWatcher, unwatchSpaceMessage: UnwatchSpaceMessage) {
@@ -1417,7 +1414,8 @@ export class SocketManager {
         pusher.spacesWatched.forEach((spaceName) => {
             const space = this.spaces.get(spaceName);
             if (!space) {
-                throw new Error("Cant unwatch space, space not found");
+                console.error("Cant unwatch space, space not found");
+                return;
             }
             this.removeSpaceWatcher(pusher, space);
         });

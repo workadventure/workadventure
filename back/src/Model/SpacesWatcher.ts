@@ -22,7 +22,7 @@ export class SpacesWatcher {
     }
 
     private sendPing() {
-        this.receivedPong();
+        this.clearPongTimeout();
         this.socket.write({
             message: {
                 $case: "pingMessage",
@@ -37,7 +37,7 @@ export class SpacesWatcher {
         }, 1000 * this.timeout);
     }
 
-    public receivedPong() {
+    public clearPongTimeout() {
         if (this.pongTimeout) {
             clearTimeout(this.pongTimeout);
             this.pongTimeout = undefined;
@@ -60,5 +60,10 @@ export class SpacesWatcher {
 
     public write(message: BackToPusherSpaceMessage) {
         this.socket.write(message);
+    }
+
+    public end() {
+        clearInterval(this.pingInterval);
+        this.clearPongTimeout();
     }
 }
