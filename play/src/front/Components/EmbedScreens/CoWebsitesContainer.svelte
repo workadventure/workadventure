@@ -92,14 +92,12 @@
             finalWidth = newWidth + "px";
             container.style.width = finalWidth;
             const maxWidth = Math.min(newWidth, window.innerWidth - 350);
+            widthContainer.set(maxWidth);
             if (maxWidth !== newWidth) {
                 container.style.width = maxWidth + "px";
             }
+            resizeMax(newWidth);
             waScaleManager.applyNewSize();
-
-            // getGameSize();
-
-            // coWebsiteManager.fire();
         };
         const handleMouseUp = () => {
             appearDropdown();
@@ -112,6 +110,26 @@
             document.removeEventListener("mousemove", handleMouseMove);
             document.removeEventListener("mouseup", handleMouseUp);
         };
+    }
+
+    function resizeMax(newValue: number) {
+        if (!vertical) {
+            const maxWidth = window.innerWidth - 350;
+            if (newValue < maxWidth) {
+                widthContainer.set(newValue);
+            } else {
+                container.style.width = `${maxWidth}px`;
+            }
+        } else {
+            const maxHeight = window.innerHeight - 350;
+            console.log("MAX RESIZE DU MOBILE", newValue);
+            console.log("MAX HEIGHT", maxHeight);
+            if (newValue < maxHeight) {
+                heightContainer.set(newValue);
+            } else {
+                container.style.height = `${maxHeight}px`;
+            }
+        }
     }
 
     function resizeMobile() {
@@ -134,8 +152,13 @@
             heightContainer.set(newHeight);
             finalHeight = newHeight + "px";
             container.style.height = finalHeight;
-            const height = startHeight + (clientY - startY);
-            container.style.height = -height + "px";
+            const maxHeight = Math.min(newHeight, window.innerHeight - 350);
+            heightContainer.set(maxHeight);
+            if (maxHeight !== newHeight) {
+                container.style.height = maxHeight + "px";
+            }
+
+            resizeMax(newHeight);
 
             // const totalHeight = document.body.scrollHeight + window.innerHeight;
             // const stopScrollAt75 = totalHeight * 0.75;
@@ -165,6 +188,27 @@
             document.removeEventListener("touchmove", handleMouseMove);
             document.removeEventListener("touchend", handleMouseUp);
         };
+    }
+
+    function addDivForResize() {
+        const div = document.createElement("div");
+        div.id = "resize-overlay";
+        div.style.width = "75%";
+        div.style.height = "100%";
+        div.style.position = "absolute";
+        div.style.top = "0";
+        div.style.right = "0";
+        div.style.zIndex = "1800";
+        document.body.appendChild(div);
+
+        window.addEventListener("mouseup", removeDivForResize);
+    }
+
+    function removeDivForResize() {
+        const div = document.getElementById("resize-overlay");
+        if (div) {
+            document.body.removeChild(div);
+        }
     }
 
     function handleTabMounted() {
@@ -253,27 +297,6 @@
             showResizeBar();
         }
     });
-
-    function addDivForResize() {
-        const div = document.createElement("div");
-        div.id = "resize-overlay";
-        div.style.width = "100%";
-        div.style.height = "100%";
-        div.style.position = "absolute";
-        div.style.top = "0";
-        div.style.left = "0";
-        div.style.zIndex = "1800";
-        document.body.appendChild(div);
-
-        window.addEventListener("mouseup", removeDivForResize);
-    }
-
-    function removeDivForResize() {
-        const div = document.getElementById("resize-overlay");
-        if (div) {
-            document.body.removeChild(div);
-        }
-    }
 
     let styleTag: HTMLStyleElement;
 

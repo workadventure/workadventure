@@ -14,7 +14,6 @@
     import { refreshPromptStore } from "../Stores/RefreshPromptStore";
     import { forceRefreshChatStore } from "../Stores/ChatStore";
     import { loaderVisibleStore } from "../Stores/LoaderStore";
-    import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
     import SelectCharacterScene from "./SelectCharacter/SelectCharacterScene.svelte";
@@ -29,6 +28,7 @@
     import bgMap from "./images/map-exemple.png";
     import defaultLoader from "./images/Workadventure.gif";
     import { onMount } from "svelte";
+    import { EnableCameraScene } from "../Phaser/Login/EnableCameraScene";
 
     export let game: Game;
 

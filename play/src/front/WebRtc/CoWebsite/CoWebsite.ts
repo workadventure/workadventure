@@ -1,7 +1,5 @@
 import type CancelablePromise from "cancelable-promise";
 
-// export type CoWebsiteState = "asleep" | "loading" | "ready";
-
 export interface CoWebsite {
     getId(): string;
     getUrl(): URL;
