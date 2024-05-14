@@ -4,6 +4,7 @@ import {
     IRoomDirectoryOptions,
     MatrixClient,
     MatrixEvent,
+    PendingEventOrdering,
     Room,
     RoomEvent,
     SyncState,
@@ -98,7 +99,12 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on(RoomEvent.Timeline, this.onRoomEventTimeline.bind(this));
 
         await this.client.store.startup();
-        await this.client.startClient({ threadSupport: false });
+        await this.client.initRustCrypto();
+        await this.client.startClient({
+            threadSupport: false,
+            //Detached to prevent using listener on localIdReplaced for each event
+            pendingEventOrdering: PendingEventOrdering.Detached,
+        });
     }
 
     private onClientEventRoom(room: Room) {
