@@ -18,7 +18,6 @@
 
     let activeCowebsite = $coWebsites[0];
     let showDropdown = false;
-    let tabBar: HTMLElement;
     let showArrow = false;
     let cowebsiteContainer = document.getElementById("cowebsites-container");
     let container: HTMLElement;
@@ -341,7 +340,6 @@
 
         <div class="relative">
             <div class="tab-bar flex items-center justify-between overflow-x-auto">
-                <!-- Onglets principaux -->
                 {#if !vertical}
                     {#each $coWebsites.slice(0, Math.floor(initialWidth / 300)) as coWebsite (coWebsite.getId())}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -371,13 +369,9 @@
                         </div>
                     {/each}
                 {/if}
-
-                <!-- Bouton pour afficher le dropdown -->
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
             </div>
         </div>
 
-        <!-- Dropdown pour les onglets supplémentaires -->
         <div
             class="absolute top-0 left-0 mt-12 bg-contrast/80 rounded tab-drop-down {showDropdown ? '' : 'hidden'}"
             id="dropdown-container"
@@ -412,6 +406,8 @@
                 {/each}
             {/if}
         </div>
+
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
             class="aspect-ratio h-10 w-10 rounded flex items-center justify-center hover:bg-white/10 mr-2 cursor-pointer"
             on:click={toggleFullScreen}
