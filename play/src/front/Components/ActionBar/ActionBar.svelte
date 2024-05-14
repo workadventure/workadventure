@@ -1213,6 +1213,7 @@
                     </div>
                 {/if}
                 {#if $mapEditorActivated || $userHasAccessToBackOfficeStore}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div
                         id="action-admin"
                         class="items-center relative transition-all hidden @lg/actions:block"
@@ -1251,6 +1252,7 @@
                             >
                                 <ul class="p-0 m-0">
                                     {#if $mapEditorActivated}
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <li
                                             class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
                                             on:click={() => toggleMapEditorMode()}
@@ -1279,6 +1281,7 @@
                                         </li>
                                     {/if}
                                     {#if $userHasAccessToBackOfficeStore}
+                                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                                         <li
                                             class="group flex px-4 py-2 items-center hover:bg-white/10 transition-all cursor-pointer text-sm font-bold"
                                             on:click={() => openBo()}
