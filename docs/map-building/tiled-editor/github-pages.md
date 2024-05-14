@@ -53,7 +53,7 @@ Some resources regarding Tiled:
 - [Tiled documentation](https://doc.mapeditor.org/en/stable/manual/introduction/)
 - [Tiled video tutorials](https://www.gamefromscratch.com/post/2015/10/14/Tiled-Map-Editor-Tutorial-Series.aspx)
 
-### Testing your map locally
+### Testing your map localy
 
 In order to test your map, you need a web server to host your map. The "map starter kit" comes with a local web server that you can use to test your map.
 
