@@ -1402,9 +1402,6 @@ export class SocketManager {
         }
         pusher.watchSpace(space.name);
         space.addWatcher(pusher);
-        if (watchSpaceMessage.user) {
-            space.addUser(pusher, watchSpaceMessage.user);
-        }
     }
 
     handleUnwatchSpaceMessage(pusher: SpacesWatcher, unwatchSpaceMessage: UnwatchSpaceMessage) {
@@ -1442,12 +1439,14 @@ export class SocketManager {
             space.addUser(pusher, addSpaceUserMessage.user);
         }
     }
+
     handleUpdateSpaceUserMessage(pusher: SpacesWatcher, updateSpaceUserMessage: UpdateSpaceUserMessage) {
         const space = this.spaces.get(updateSpaceUserMessage.spaceName);
         if (space && updateSpaceUserMessage.user) {
             space.updateUser(pusher, updateSpaceUserMessage.user);
         }
     }
+
     handleRemoveSpaceUserMessage(pusher: SpacesWatcher, removeSpaceUserMessage: RemoveSpaceUserMessage) {
         const space = this.spaces.get(removeSpaceUserMessage.spaceName);
         if (space) {

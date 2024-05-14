@@ -82,7 +82,8 @@ export class Space implements CustomJsonReplacerInterface {
         debug(`${this.name} : user add sent ${spaceUser.id}`);
         this.localAddUser(spaceUser);
     }
-    private localAddUser(spaceUser: SpaceUser) {
+
+    public localAddUser(spaceUser: SpaceUser) {
         const user = { ...spaceUser, lowercaseName: spaceUser.name.toLowerCase() };
         this.users.set(spaceUser.id, user);
         debug(`${this.name} : user added ${spaceUser.id}`);
