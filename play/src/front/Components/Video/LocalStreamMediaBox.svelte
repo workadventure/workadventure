@@ -5,6 +5,7 @@
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import { heightCamWrapper } from "../../Stores/EmbedScreensStore";
     import { srcObject } from "./utils";
+    import { createEventDispatcher, onMount } from "svelte";
 
     export let clickable = false;
 
@@ -12,6 +13,12 @@
     let stream = peer.stream;
     export let cssClass: string | undefined;
     let embedScreen: EmbedScreen;
+
+    // const dispatch = createEventDispatcher();
+
+    onMount(() => {
+        console.log("bonjour je suis mon propre partage d'ecran dans local stream media box");
+    });
 
     if (stream) {
         embedScreen = {

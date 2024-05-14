@@ -20,7 +20,6 @@
     // export let mozaicSolo = false;
     // export let mozaicDuo = false;
     // export let mozaicQuarter = false;
-    let camWidth;
 
     const dispatch = createEventDispatcher();
 
@@ -37,9 +36,7 @@
 
     onMount(() => {
         gameScene.reposition();
-        if (streamable instanceof VideoPeer) {
-            dispatch("camMounted");
-        }
+        dispatch("camMounted");
     });
 
     // function getWidthOfCam() {
@@ -49,9 +46,7 @@
 
     onDestroy(() => {
         gameScene.reposition();
-        if (streamable instanceof VideoPeer) {
-            dispatch("camUnmounted");
-        }
+        dispatch("camUnmounted");
     });
 
     // function addStyleSpeaker() {

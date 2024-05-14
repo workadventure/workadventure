@@ -14,7 +14,6 @@
     import JitsiAudioElement from "./JitsiAudioElement.svelte";
     import ActionMediaBox from "./ActionMediaBox.svelte";
 
-
     export let clickable = true;
     export let isHightlighted = false;
     export let peer: JitsiTrackStreamWrapper;
@@ -40,6 +39,7 @@
     let videoTrackUnSuscriber: Unsubscriber;
 
     onMount(() => {
+        console.log("bonjour je suis mon propre partage d'ecran");
         resizeObserver.observe(jitsiMediaBoxHtml);
         videoTrackUnSuscriber = videoTrackStore.subscribe((videoTrack) => {
             if (videoTrack == undefined && isHightlighted) highlightedEmbedScreen.toggleHighlight(embedScreen);
@@ -75,8 +75,8 @@
             <JitsiVideoElement
                 jitsiTrack={$videoTrackStore}
                 isLocal={$videoTrackStore?.isLocal()}
-                isHightlighted={isHightlighted}
-                isMobileFormat={isMobileFormat}
+                {isHightlighted}
+                {isMobileFormat}
             />
         </div>
     {/if}

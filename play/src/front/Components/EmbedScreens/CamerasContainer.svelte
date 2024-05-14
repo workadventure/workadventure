@@ -9,18 +9,17 @@
 
     export let highlightedEmbedScreen: EmbedScreen | undefined;
     export let full = false;
-    // $: clickable = !full;
+    $: clickable = !full;
+
+    let totalCamWidth = 0;
+    let camWidthOther = 350;
+    let camWidth = 350;
+    let widthWindow: number | undefined;
     let myCam;
     let otherCam;
 
-    // let totalCamWidth = 0;
-    // let camWidthOther = 350;
-    // let camWidth = 350;
-    let widthWindow: number | undefined;
-
     onMount(() => {
         // getWidth();
-        // getWidthofCam();
         // handleCamMounted();
     });
 
@@ -29,34 +28,28 @@
     });
 
     function camMountedWidth() {
+        console.log("camMountedWidth !!!!!!!!!!!!!!!!!!!!!!!!!");
         widthWindow = document.getElementById("presentation-layout")?.offsetWidth;
-        console.log("WIDTH FEMETRE", widthWindow);
         let allCams = (document.getElementsByClassName("all-cameras")[0] as HTMLElement)?.offsetWidth;
-        console.log("WIDTH TOUTE LES CAMERAS", allCams);
+        console.log("WIDTH ALL CAM = ", allCams);
         if (widthWindow !== undefined && allCams > widthWindow) {
-            console.log("TAILLE CAM TROP GRANDE");
             let scale = widthWindow / allCams;
-            console.log(scale);
             let cameras = document.querySelectorAll(".all-cameras");
-            console.log(cameras);
             cameras.forEach((camera) => {
                 (camera as HTMLElement).style.transform = `scale(${scale})`;
-                console;
             });
-        } else {
-            console.log("TAILLE CAM OK");
         }
     }
 
     function camUnmountedWidth() {
         widthWindow = document.getElementById("presentation-layout")?.offsetWidth;
-        console.log("WIDTH FEMETRE", widthWindow);
         let allCams = (document.getElementsByClassName("all-cameras")[0] as HTMLElement)?.offsetWidth;
-        console.log("WIDTH TOUTE LES CAMERAS", allCams);
         if (widthWindow !== undefined && allCams > widthWindow) {
-            console.log("TAILLE CAM TROP GRANDE");
-        } else {
-            console.log("TAILLE CAM OK");
+            let scale = widthWindow / allCams;
+            let cameras = document.querySelectorAll(".all-cameras");
+            cameras.forEach((camera) => {
+                (camera as HTMLElement).style.transform = `scale(${scale})`;
+            });
         }
     }
 
