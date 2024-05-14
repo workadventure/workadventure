@@ -190,35 +190,11 @@
         iframeListener.init();
         desktopApi.init();
     });
-
-    // $: resizeScreen();
-
-    // function resizeScreen() {
-    //     mainContainer = document.querySelector(".main-container");
-    //     console.log(mainContainer);
-    //     // for (let test in mainContainers) {
-    //     //     console.log(test, "TEST");
-    //     // }
-
-    //     // let mainContainer = document.getElementsByClassName("main-container");
-    //     // console.log(mainContainer[0], "TESSSST");
-    //     if ($coWebsites.length > 0) {
-    //         if(mainContainer) {
-    //             mainContainer.style.width = "50%";
-    //         }
-    //     } else {
-    //         if(mainContainer) {
-    //             mainContainer.style.width = "100%";
-    //         }
-    //     }
-    // }
-
-    // $: cowebsites = $coWebsites;
 </script>
 
 <div class="wrapper">
     <div class="map-container">
-        <div id="game" bind:this={gameDiv} class="absolute top-0">
+        <div id="game" bind:this={gameDiv}>
             <GameOverlay {game} />
         </div>
     </div>
@@ -231,13 +207,14 @@
 
 <style>
     .wrapper {
-        display: flex;
-        flex-direction: row;
+        position: absolute;
+        height: 100%;
+        width: 100%;
     }
 
     .map-container {
         flex: 1;
-        position: relative;
+        position: fixed;
     }
 
     .cowebsite-container {
@@ -245,12 +222,32 @@
         position: relative;
     }
 
-    .cowebsite {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 50%;
-        overflow: auto;
+    @media (max-width: 768px) {
+        #game {
+            position: relative;
+        }
+        .wrapper {
+            display: flex;
+            flex-direction: column-reverse;
+            width: 100%;
+            height: 100%;
+        }
+
+        .map-container {
+            position: fixed;
+        }
+
+        .cowebsite-container {
+            position: relative;
+        }
+
+        #game {
+            position: relative;
+        }
+
+        .cowebsite-container {
+            width: 100%;
+            height: 50%;
+        }
     }
 </style>

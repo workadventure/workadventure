@@ -29,7 +29,7 @@
 
     const dispatch = createEventDispatcher();
 
-    onMount(async () => {
+    onMount(() => {
         if (isJitsi) {
             isDuplicable = true;
         } else if (isBBB) {
@@ -177,7 +177,7 @@
 
     @media (max-width: 768px) {
         .tab {
-            width: 200px;
+            width: 220px;
             padding-right: 1.5rem;
         }
     }

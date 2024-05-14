@@ -51,7 +51,6 @@
     import MapList from "./Exploration/MapList.svelte";
     import WarningToast from "./WarningContainer/WarningToast.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
-    // import CoWebsitesContainer from "../Components/EmbedScreens/CoWebsitesContainer.svelte";
 
     let mainLayout: HTMLDivElement;
     // export let message: string;
@@ -70,7 +69,7 @@
 <!-- Components ordered by z-index -->
 <div
     id="main-layout"
-    class="@container/main-layout relative h-screen pointer-events-none {[...$coWebsites.values()].length === 0
+    class="@container/main-layout relative h-full pointer-events-none {[...$coWebsites.values()].length === 0
         ? 'not-cowebsite'
         : ''}"
     bind:this={mainLayout}
@@ -78,10 +77,6 @@
     {#if $modalVisibilityStore || $modalPopupVisibilityStore}
         <div class="bg-black/60 w-full h-full fixed left-0 right-0" />
     {/if}
-
-    <!-- <aside id="main-layout-left-aside">
-        <CoWebsitesContainer vertical={isMobile} />
-    </aside> -->
 
     <section id="main-layout-main" class="pb-0 pointer-events-none">
         <Lazy

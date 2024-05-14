@@ -1,8 +1,6 @@
 import { get, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { Subject } from "rxjs";
-import { waScaleManager } from "../Phaser/Services/WaScaleManager";
-import widthWithoutCowebsite from "../Components/EmbedScreens/CoWebsitesContainer.svelte";
 
 
 
@@ -51,9 +49,6 @@ export class CoWebsiteManager {
     private _onResize: Subject<void> = new Subject();
     public onResize = this._onResize.asObservable();
 
-    constructor() {
-        // this.updateDimensions()
-    }
 
     get verticalMode(): boolean {
         return window.innerWidth < window.innerHeight;
@@ -82,9 +77,6 @@ export class CoWebsiteManager {
         const height = this.calculateNewHeight() || 0;
         const width = this.calculateNewWidth() || 0;
 
-        // console.log("AVANT DE RENTRE DANS APLY NEW SIZE HEIGHT", height)
-        // console.log("AVANT DE RENTRE DANS APLY NEW SIZE WIDTH", width)
-
         if (height !== undefined) {
             heightContainer.set(height);
         }
@@ -92,23 +84,15 @@ export class CoWebsiteManager {
             widthContainer.set(width);
         }
 
-
         return {
             height: height,
             width: width
         }
     }
 
-    // public fire(): void {
-    //     console.log("je suis dans la fonction fire cowebsite manager")
-    //     // this._onResize.next();
-    //     waScaleManager.applyNewSize();
-    //     waScaleManager.refreshFocusOnTarget();
-    // }
 
     public addCoWebsiteToStore(coWebsite: CoWebsite) {
         coWebsites.add(coWebsite);
-        console.log("cowebsite add to store")
     }
 
     public removeCoWebsiteToStore(coWebsite: CoWebsite) {

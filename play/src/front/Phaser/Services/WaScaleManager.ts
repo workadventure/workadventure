@@ -1,6 +1,5 @@
 import type { Game } from "../Game/Game";
 import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
-import CoWebsitesContainer from "../../Components/EmbedScreens/CoWebsitesContainer.svelte";
 import { ResizableScene } from "../Login/ResizableScene";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { HdpiManager } from "./HdpiManager";
@@ -47,7 +46,6 @@ export class WaScaleManager {
             width: width * devicePixelRatio,
             height: height * devicePixelRatio,
         });
-        // console.log("GAME SIZE:", gameSize, "REAL SIZE:", realSize)
 
 
         if (realSize.width !== 0 && gameSize.width !== 0 && devicePixelRatio !== 0) {
@@ -74,11 +72,8 @@ export class WaScaleManager {
 
         // Resize the game element at the same size at the canvas
         const gameStyle = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("game").style;
-        // console.log(gameStyle)
         gameStyle.width = style.width;
-        // console.log(gameStyle.width)
         gameStyle.height = style.height;
-        // console.log(gameStyle.height)
 
         // Note: onResize will be called twice (once here and once in Game.ts), but we have no better way.
         for (const scene of this.game.scene.getScenes(true)) {

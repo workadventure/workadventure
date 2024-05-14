@@ -28,10 +28,34 @@
 
     import bgMap from "./images/map-exemple.png";
     import defaultLoader from "./images/Workadventure.gif";
-    import { coWebsites } from "../Stores/CoWebsiteStore";
-    import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
+    import { onMount } from "svelte";
 
     export let game: Game;
+
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    let gameOverlayStyle = document.getElementById("gameoverlay");
+
+    onMount(() => {
+        console.log("GameOverlay mounted");
+        mediaQuery.addEventListener("change", (e: any) => handleTabletChange(e));
+        handleTabletChange(mediaQuery);
+        console.log(gameOverlayStyle);
+    });
+
+    function handleTabletChange(e: MediaQueryList) {
+        console.log(gameOverlayStyle);
+        if (e.matches) {
+            if (gameOverlayStyle) {
+                console.log("Tablet détecté");
+                gameOverlayStyle.style.position = "fixed";
+            }
+        } else {
+            if (gameOverlayStyle) {
+                console.log("Tablet not detected");
+                gameOverlayStyle.style.position = "absolute";
+            }
+        }
+    }
 
     /**
      * When changing map from an exit on the current map, the Chat and the MainLayout are not really destroyed
@@ -40,7 +64,9 @@
      */
 </script>
 
-<div class="h-full w-full absolute">
+<div class="h-full w-full absolute" id="gameoverlay">
+    <!--Voir pour l'enlever juste en responsive-->
+    <!--Voir pour virer la position absolute-->
     <!-- Preload image loader TODO HUGO : Better way ? -->
     <link rel="preload" as="image" href={bgMap} />
     <link rel="preload" as="image" href={defaultLoader} />
@@ -84,18 +110,6 @@
                 <MapEditor />
             {/if}
             <MainLayout />
-
-            <!-- <div class="test w-full">
-                <div class="main-layout">
-                    <MainLayout />
-                </div>
-                {#if $coWebsites.length > 0}
-                    <div class="cowebsite">
-                        <CoWebsitesContainer />
-                    </div>
-                {/if}
-            </div> -->
-            <!--message=""-->
         {/key}
     {/if}
 </div>

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
-    import { coWebsiteManager, coWebsites } from "../../Stores/CoWebsiteStore";
+    import { coWebsites } from "../../Stores/CoWebsiteStore";
     import FullScreenIcon from "../Icons/FullScreenIcon.svelte";
     import JitsiCowebsiteComponent from "../Cowebsites/JistiCowebsiteComponent.svelte";
     import SimpleCowebsiteComponent from "../Cowebsites/SimpleCowebsiteComponent.svelte";
@@ -10,7 +10,6 @@
     import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
     import BigBlueButtonCowebsiteComponent from "../Cowebsites/BigBlueButtonCowebsiteComponent.svelte";
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
-    import { max, min } from "lodash";
     import { ArrowDownIcon } from "svelte-feather-icons";
     import { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { widthContainer } from "../../Stores/CoWebsiteStore";
@@ -26,7 +25,7 @@
     let resizeBar: HTMLElement;
     let startY: number;
     let startX: number;
-    let startWidthContainer: number | undefined;
+    let startWidthContainer: number;
     let finalWidth;
     let finalHeight;
     let startHeight: number;
@@ -34,38 +33,35 @@
     let totalTabsWidth = 0;
     let initialWidth: number;
     const widthTab = 300;
-    const widthTabResponsive = 150;
+    const widthTabResponsive = 220;
     let vertical: boolean;
     let pannelClass = "";
-
-    // let height: number;
-    // let width: number;
 
     $: widthWithoutCowebsite = $widthContainer;
 
     $: heightWithoutCowebsite = $heightContainer;
 
     onMount(() => {
-        console.log("je suis dans le on Mount du cowebsite");
         mediaQuery.addEventListener("change", (e: any) => handleTabletChange(e));
         handleTabletChange(mediaQuery);
 
         if (!vertical) {
             let widthOnMount = parseInt(getComputedStyle(container).width);
-            console.log("DANS LE ONMOUNT LA LARGEUR DU COWEBSITE", widthOnMount);
             widthContainer.set(widthOnMount);
             widthContainer.subscribe((value) => {
                 console.log("Nouvelle largeur du conteneur :", value);
             });
         } else {
             let heightOnMount = parseInt(getComputedStyle(container).height);
-            console.log("DANS LE ONMOUNT LA HATEUR DU COWEBSITE", heightOnMount);
             heightContainer.set(heightOnMount);
             heightContainer.subscribe((value) => {
                 console.log("Nouvelle hauteur du conteneur :", value);
             });
         }
-        waScaleManager.applyNewSize();
+
+        setTimeout(() => {
+            waScaleManager.applyNewSize();
+        }, 500);
     });
 
     onDestroy(() => {
@@ -121,7 +117,8 @@
     }
 
     function resizeDesktop() {
-        startWidthContainer = document.getElementById("tabBar")?.offsetWidth;
+        startWidthContainer = parseInt(getComputedStyle(container).width);
+        initialWidth = parseInt(getComputedStyle(container).width);
 
         const handleMouseDown = (e: { clientX: number }) => {
             startX = e.clientX;
@@ -140,6 +137,7 @@
                 container.style.width = maxWidth + "px";
             }
             waScaleManager.applyNewSize();
+
             // getGameSize();
 
             // coWebsiteManager.fire();
@@ -158,11 +156,14 @@
     }
 
     function resizeMobile() {
+        startWidthContainer = parseInt(getComputedStyle(container).width);
+        initialWidth = parseInt(getComputedStyle(container).width);
+
         function handleMouseDown(e: TouchEvent) {
             let clientY = e.touches[0].clientY;
             startY = clientY;
             startHeight = parseInt(getComputedStyle(container).height);
-            document.addEventListener("touchmove", handleMouseMove);
+            document.addEventListener("touchmove", handleMouseMove, { passive: false });
             document.addEventListener("touchend", handleMouseUp);
         }
 
@@ -175,7 +176,18 @@
             finalHeight = newHeight + "px";
             container.style.height = finalHeight;
             const height = startHeight + (clientY - startY);
-            container.style.height = height + "px";
+            container.style.height = -height + "px";
+
+            // const totalHeight = document.body.scrollHeight + window.innerHeight;
+            // const stopScrollAt75 = totalHeight * 0.75;
+            // console.log("STOP SCROLL AT 75", stopScrollAt75);
+            // console.log("HEIGHT CONTAINER", $heightContainer);
+            // const stopScrollAt25 = totalHeight * 0.25;
+            // console.log("STOP SCROLL AT 25", stopScrollAt25);
+
+            // if ($heightContainer > stopScrollAt75 || $heightContainer < stopScrollAt25) {
+            //     e.preventDefault(); // Prevent scrolling
+            // }
             // const minHeight = max([height, window.innerHeight - 600]);
             // container.style.height = minHeight + "px";
             // const maxHeight = min([height, window.innerHeight - 100]);
@@ -199,8 +211,16 @@
     function handleTabMounted() {
         if (!vertical) {
             totalTabsWidth += widthTab;
-            console.log("tab width", widthTab);
-            console.log("total tab width", totalTabsWidth);
+            appearDropdown();
+        } else {
+            totalTabsWidth += widthTabResponsive;
+            appearDropdown();
+        }
+    }
+
+    function handleTabDestroyed() {
+        if (vertical) {
+            totalTabsWidth -= widthTabResponsive;
             appearDropdown();
         } else {
             totalTabsWidth -= widthTab;
@@ -208,24 +228,19 @@
         }
     }
 
-    function handleTabDestroyed() {
-        if (vertical) {
-            totalTabsWidth += widthTabResponsive;
-            appearDropdown();
-        } else {
-            totalTabsWidth -= widthTabResponsive;
-            appearDropdown();
-        }
-    }
-
     function appearDropdown() {
         let div = document.getElementById("dropdown-container");
+        // let startWidthContainer = parseInt(getComputedStyle(container).width);
+        // console.log("WIDTH OF TAB BAR AT ONMOUNT", startWidthContainer);
+        // console.log("total tabs width", totalTabsWidth);
         if (totalTabsWidth > startWidthContainer) {
+            // console.log("CA PASSE PLUS DU TOUT");
             if (div) {
                 div.classList.remove("hidden");
             }
             showArrow = true;
         } else {
+            // console.log("CA PASSE PASSE PASSE");
             if (div) {
                 div.classList.add("hidden");
             }
@@ -343,7 +358,7 @@
                     </div>
                 {/each}
             {:else}
-                {#each $coWebsites.slice(0, Math.floor(initialWidth / 150)) as coWebsite (coWebsite.getId())}
+                {#each $coWebsites.slice(0, Math.floor(initialWidth / 140)) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div on:click={() => setActiveCowebsite(coWebsite)}>
                         <CoWebsiteTab
@@ -385,7 +400,7 @@
                     </div>
                 {/each}
             {:else}
-                {#each $coWebsites.slice(Math.floor(initialWidth / 150)) as coWebsite (coWebsite.getId())}
+                {#each $coWebsites.slice(Math.floor(initialWidth / 140)) as coWebsite (coWebsite.getId())}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div on:click={() => setActiveCowebsite(coWebsite)}>
                         <CoWebsiteTab
