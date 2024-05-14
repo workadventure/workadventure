@@ -24,7 +24,7 @@
     import MapEditor from "./MapEditor/MapEditor.svelte";
     import RefreshPrompt from "./RefreshPrompt.svelte";
     import LoaderScene from "./Loader/LoaderScene.svelte";
-    import EnableCameraScene from "../Phaser/Login/EnableCameraScene";
+    import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import bgMap from "./images/map-exemple.png";
     import defaultLoader from "./images/Workadventure.gif";
     import { onMount } from "svelte";
