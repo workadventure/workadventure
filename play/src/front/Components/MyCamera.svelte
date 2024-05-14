@@ -21,7 +21,10 @@
     import silentImg from "./images/silent-zone.gif";
 
     import MicOffIcon from "./Icons/MicOffIcon.svelte";
+    import { EmbedScreen, highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 
+    let isHighlighted = false;
+    let embedScreen: EmbedScreen;
     let stream: MediaStream | null;
     let userName = gameManager.getPlayerName();
     let backgroundColor = Color.getColorByString(userName ?? "default");
@@ -56,6 +59,15 @@
         });
     });
 
+    function hightlight() {
+        console.log("JE SUIS DANS LA FONCTION HIGHLIGHT DE MA CAMERA");
+        isHighlighted = !isHighlighted;
+        if (isHighlighted) {
+            highlightedEmbedScreen.toggleHighlight(embedScreen);
+        } else {
+            highlightedEmbedScreen.removeHighlight();
+        }
+    }
     // function addStyleSpeaker() {
     //     let test = document.getElementsByClassName("test")
     //     if ($mediaStreamConstraintsStore.audio) {
@@ -70,6 +82,7 @@
         : ''}"
     bind:this={cameraContainer}
     style={small ? "width:100%" : "height:" + $heightCamWrapper + "px;"}
+    on:click={() => hightlight()}
 >
     <!--If we are in a silent zone-->
     {#if $silentStore}

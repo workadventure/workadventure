@@ -69,16 +69,16 @@
 
     let aspectRatio = 1;
 
-    let totalOtherCamWidth: number;
+    let isHighlighted = false;
 
     const debug = Debug("VideoMediaBox");
 
-    function getSize() {
-        otherCamWidth = (document.getElementsByClassName("video-container")[0] as HTMLElement)?.offsetWidth;
-        console.log("JE SUIS DANS GETSIZE", otherCamWidth, typeof otherCamWidth);
-        totalOtherCamWidth += otherCamWidth;
-        console.log("HELLO", totalOtherCamWidth, typeof totalOtherCamWidth);
-    }
+    // function getSize() {
+    //     otherCamWidth = (document.getElementsByClassName("video-container")[0] as HTMLElement)?.offsetWidth;
+    //     console.log("JE SUIS DANS GETSIZE", otherCamWidth, typeof otherCamWidth);
+    //     totalOtherCamWidth += otherCamWidth;
+    //     console.log("HELLO", totalOtherCamWidth, typeof totalOtherCamWidth);
+    // }
 
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
 
@@ -246,10 +246,22 @@
         }, 1000);
     }
 
+    //Cette fonction permet de mettre en évidence la video des autres utilisateurs ne fonctionn pas pour le moment
+
     function hightlight() {
-        if (!clickable || !videoEnabled) return;
-        highlightedEmbedScreen.toggleHighlight(embedScreen);
+        // if (!clickable || !videoEnabled) return;
+        isHighlighted = !isHighlighted;
+        if (isHighlighted) {
+            highlightedEmbedScreen.toggleHighlight(embedScreen);
+        } else {
+            highlightedEmbedScreen.removeHighlight();
+        }
     }
+    // function hightlight() {
+    //     console.log("JE SUIS DAMS LA FONCTION HIGHLIGHT");
+    //     if (!clickable || !videoEnabled) return;
+    //     highlightedEmbedScreen.toggleHighlight(embedScreen);
+    // }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

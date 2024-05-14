@@ -2,9 +2,8 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { Color } from "@workadventure/shared-utils";
-    import type { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import { highlightedEmbedScreen, type EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
-
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import { srcObject } from "./utils";
     import BanReportBox from "./BanReportBox.svelte";
@@ -17,8 +16,12 @@
     let backGroundColor = Color.getColorByString(peer.userName);
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
+    let isHighlighted = false;
+    // let constraintStore = peer.constraintsStore;
 
     let embedScreen: EmbedScreen;
+
+    $: videoEnabled = $streamStore ? $streamStore.getVideoTracks().length > 0 : false;
 
     if (peer) {
         embedScreen = {
@@ -26,9 +29,19 @@
             embed: peer as unknown as Streamable,
         };
     }
+
+    function hightlight() {
+        isHighlighted = !isHighlighted;
+        if (isHighlighted) {
+            highlightedEmbedScreen.toggleHighlight(embedScreen);
+        } else {
+            highlightedEmbedScreen.removeHighlight();
+        }
+    }
 </script>
 
-<div class="video-container h-full w-full relative screen-sharing ">
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<div class="video-container h-full w-full relative screen-sharing " on:click={() => hightlight()}>
     {#if $statusStore === "connecting"}
         <div class="connecting-spinner" />
     {/if}
