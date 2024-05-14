@@ -479,8 +479,8 @@
             border-radius: 8px;
         }
 
-        #dropdown {
-            width: 200px;
+        #dropdown-container {
+            width: 220px;
         }
     }
 </style>
