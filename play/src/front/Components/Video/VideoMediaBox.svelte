@@ -248,14 +248,9 @@
 
     //Cette fonction permet de mettre en évidence la video des autres utilisateurs ne fonctionn pas pour le moment
 
-    function hightlight() {
+    function highlight() {
         // if (!clickable || !videoEnabled) return;
-        isHighlighted = !isHighlighted;
-        if (isHighlighted) {
-            highlightedEmbedScreen.toggleHighlight(embedScreen);
-        } else {
-            highlightedEmbedScreen.removeHighlight();
-        }
+        highlightedEmbedScreen.toggleHighlight(embedScreen);
     }
     // function hightlight() {
     //     console.log("JE SUIS DAMS LA FONCTION HIGHLIGHT");
@@ -271,7 +266,7 @@
     class:h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
     bind:this={videoContainer}
     on:click={() => analyticsClient.pinMeetingAction()}
-    on:click={() => hightlight()}
+    on:click={() => highlight()}
     style="height:{$heightCamWrapper}px;"
 >
     <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />

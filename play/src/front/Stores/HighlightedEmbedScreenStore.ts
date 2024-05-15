@@ -3,14 +3,10 @@ import { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { Streamable } from "./StreamableCollectionStore";
 
 export type EmbedScreen =
-    | {
-          type: "streamable";
-          embed: Streamable;
-      }
-    | {
-          type: "cowebsite";
-          embed: CoWebsite;
-      };
+    {
+        type: "streamable";
+        embed: Streamable;
+    }
 
 function createHighlightedEmbedScreenStore() {
     const { subscribe, set, update } = writable<EmbedScreen | undefined>(undefined);
@@ -27,9 +23,6 @@ function createHighlightedEmbedScreenStore() {
             update((currentEmbedScreen) =>
                 !currentEmbedScreen ||
                 embedScreen.type !== currentEmbedScreen.type ||
-                (embedScreen.type === "cowebsite" &&
-                    currentEmbedScreen.type === "cowebsite" &&
-                    embedScreen.embed.getId() !== currentEmbedScreen.embed.getId()) ||
                 (embedScreen.type === "streamable" &&
                     currentEmbedScreen.type === "streamable" &&
                     embedScreen.embed.uniqueId !== currentEmbedScreen.embed.uniqueId)

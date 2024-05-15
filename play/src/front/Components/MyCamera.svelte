@@ -62,8 +62,9 @@
     function hightlight() {
         console.log("JE SUIS DANS LA FONCTION HIGHLIGHT DE MA CAMERA");
         isHighlighted = !isHighlighted;
+        console.log("isHighlighted", isHighlighted);
         if (isHighlighted) {
-            highlightedEmbedScreen.toggleHighlight(embedScreen);
+            highlightedEmbedScreen.highlight(embedScreen);
         } else {
             highlightedEmbedScreen.removeHighlight();
         }
@@ -76,6 +77,7 @@
     // }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     class="transition-all relative h-full aspect-video w-fit m-auto {$mediaStreamConstraintsStore.audio
         ? 'border-8 border-solid bg-indigo-400 rounded-lg'
