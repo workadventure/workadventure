@@ -23,12 +23,6 @@
         }
     }
 
-    // afterUpdate(() => {
-    //     if ($highlightedEmbedScreen) {
-    //         coWebsiteManager.resizeAllIframes();
-    //     }
-    // });
-
     let layoutDom: HTMLDivElement;
 
     let displayCoWebsiteContainer = isMediaBreakpointDown("lg");
