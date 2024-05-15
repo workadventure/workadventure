@@ -59,16 +59,6 @@
         });
     });
 
-    function hightlight() {
-        console.log("JE SUIS DANS LA FONCTION HIGHLIGHT DE MA CAMERA");
-        isHighlighted = !isHighlighted;
-        console.log("isHighlighted", isHighlighted);
-        if (isHighlighted) {
-            highlightedEmbedScreen.highlight(embedScreen);
-        } else {
-            highlightedEmbedScreen.removeHighlight();
-        }
-    }
     // function addStyleSpeaker() {
     //     let test = document.getElementsByClassName("test")
     //     if ($mediaStreamConstraintsStore.audio) {
@@ -84,7 +74,6 @@
         : ''}"
     bind:this={cameraContainer}
     style={small ? "width:100%" : "height:" + $heightCamWrapper + "px;"}
-    on:click={() => hightlight()}
 >
     <!--If we are in a silent zone-->
     {#if $silentStore}

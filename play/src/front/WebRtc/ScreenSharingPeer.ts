@@ -86,10 +86,7 @@ export class ScreenSharingPeer extends Peer {
         });
 
         this.on("stream", (stream: MediaStream) => {
-            highlightedEmbedScreen.highlight({
-                type: "streamable",
-                embed: this,
-            });
+            highlightedEmbedScreen.toggleHighlight(this);
             this._streamStore.set(stream);
             this.stream(stream);
         });

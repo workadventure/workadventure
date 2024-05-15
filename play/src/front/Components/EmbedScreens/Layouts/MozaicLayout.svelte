@@ -18,6 +18,7 @@
     onMount(() => {
         resizeObserver.observe(layoutDom);
         highlightedEmbedScreen.removeHighlight();
+        console.log("MOUNTED MOZAIC LAYOUT");
     });
     $: console.log(cardHeight);
 </script>

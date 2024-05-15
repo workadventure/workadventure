@@ -2,11 +2,12 @@
     //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
 
     import { Color } from "@workadventure/shared-utils";
-    import { highlightedEmbedScreen, type EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import { srcObject } from "./utils";
     import BanReportBox from "./BanReportBox.svelte";
+    import { onMount } from "svelte";
 
     export let clickable = false;
 
@@ -19,29 +20,33 @@
     let isHighlighted = false;
     // let constraintStore = peer.constraintsStore;
 
-    let embedScreen: EmbedScreen;
+    let embedScreen: Streamable;
 
     $: videoEnabled = $streamStore ? $streamStore.getVideoTracks().length > 0 : false;
 
     if (peer) {
-        embedScreen = {
-            type: "streamable",
-            embed: peer as unknown as Streamable,
-        };
+        embedScreen = peer as unknown as Streamable;
     }
 
-    function hightlight() {
-        isHighlighted = !isHighlighted;
-        if (isHighlighted) {
-            highlightedEmbedScreen.toggleHighlight(embedScreen);
-        } else {
-            highlightedEmbedScreen.removeHighlight();
-        }
-    }
+    onMount(() => {
+        console.log("MOUNTED SCRREEN SHARING MEDIA BOX");
+        embedScreen = peer;
+        console.log("embedScreen", embedScreen);
+        console.log("statusStore", $statusStore);
+    });
+
+    // function hightlight() {
+    //     isHighlighted = !isHighlighted;
+    //     if (isHighlighted) {
+    //         highlightedEmbedScreen.toggleHighlight(embedScreen);
+    //     } else {
+    //         highlightedEmbedScreen.removeHighlight();
+    //     }
+    // }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="video-container h-full w-full relative screen-sharing " on:click={() => hightlight()}>
+<div class="video-container h-full w-full relative screen-sharing ">
     {#if $statusStore === "connecting"}
         <div class="connecting-spinner" />
     {/if}

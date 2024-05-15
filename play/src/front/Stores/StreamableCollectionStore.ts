@@ -43,7 +43,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
             const addPeer = (peer: Streamable) => {
                 peers.set(peer.uniqueId, peer);
-                // if peer is SreenHaring, change for presentation Layout mode
+                // if peer is SreenSharing, change for presentation Layout mode
                 if (peer instanceof ScreenSharingPeer) {
                     embedScreenLayoutStore.set(LayoutMode.Presentation);
                 }
@@ -74,7 +74,7 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
             const $highlightedEmbedScreen = get(highlightedEmbedScreen);
 
-            if ($highlightedEmbedScreen?.type === "streamable" && !peers.has($highlightedEmbedScreen.embed.uniqueId)) {
+            if ($highlightedEmbedScreen && !peers.has($highlightedEmbedScreen.uniqueId)) {
                 highlightedEmbedScreen.removeHighlight();
             }
 

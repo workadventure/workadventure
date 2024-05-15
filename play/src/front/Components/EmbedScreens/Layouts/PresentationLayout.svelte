@@ -15,87 +15,41 @@
     // let camWidthOther = 350;
     // let camWidth = 350;
 
-    function closeCoWebsite() {
-        if ($highlightedEmbedScreen?.type === "cowebsite") {
-            /* if the co-website is closable, would like we to close it instead of unloading it?
-            if ($highlightedEmbedScreen.embed.isClosable()) {
-                coWebsiteManager.closeCoWebsite($highlightedEmbedScreen.embed);
-            }*/
-            coWebsiteManager.unloadCoWebsite($highlightedEmbedScreen.embed).catch((err) => {
-                console.error("Cannot unload co-website", err);
-            });
-        }
-    }
+    // function closeCoWebsite() {
+    //     if ($highlightedEmbedScreen?.type === "cowebsite") {
+    //         /* if the co-website is closable, would like we to close it instead of unloading it?
+    //         if ($highlightedEmbedScreen.embed.isClosable()) {
+    //             coWebsiteManager.closeCoWebsite($highlightedEmbedScreen.embed);
+    //         }*/
+    //         coWebsiteManager.unloadCoWebsite($highlightedEmbedScreen.embed).catch((err) => {
+    //             console.error("Cannot unload co-website", err);
+    //         });
+    //     }
+    // }
 
     afterUpdate(() => {
         if ($highlightedEmbedScreen) {
-            coWebsiteManager.resizeAllIframes();
+            // coWebsiteManager.resizeAllIframes();
         }
     });
 
     let layoutDom: HTMLDivElement;
 
-    let displayCoWebsiteContainer = isMediaBreakpointDown("lg");
+    // let displayCoWebsiteContainer = isMediaBreakpointDown("lg");
     let displayFullMedias = isMediaBreakpointUp("md");
 
-    const resizeObserver = new ResizeObserver(() => {
-        displayCoWebsiteContainer = isMediaBreakpointDown("lg");
-        displayFullMedias = isMediaBreakpointUp("md");
+    // const resizeObserver = new ResizeObserver(() => {
+    //     displayCoWebsiteContainer = isMediaBreakpointDown("lg");
+    //     displayFullMedias = isMediaBreakpointUp("md");
 
-        if (!displayCoWebsiteContainer && $highlightedEmbedScreen && $highlightedEmbedScreen.type === "cowebsite") {
-            highlightedEmbedScreen.removeHighlight();
-        }
-
-        if (displayFullMedias) {
-            highlightedEmbedScreen.removeHighlight();
-        }
-    });
-
-    onMount(() => {
-        // resizeObserver.observe(layoutDom);
-        // widthWindow = window.innerWidth;
-        // console.log("width", widthWindow);
-        // handleCamMounted();
-        // getWidth();
-    });
-
-    onDestroy(() => {
-        // handleCamDestroy();
-    });
-
-    // Idée pour le responsive de cams
-
-    // Calculer la taille de la div de toutes les cam donc de grid flow col
-    // Si cette taille est supérieur a celle de l'écran alors on stack la camera en dessous
-    // Comment faire pour stacker les cams en dessous ? Iterer sur les cams et prendre la derniere ?
-    // Ou alors mettre max 4 sur en display flex et en ensuite créer une autre ligne pour le 4 autres ??
-
-    // function getWidth() {
-    //     widthWindow = document.getElementById("presentation-layout")?.offsetWidth;
-    //     console.log("GET WIDTH OF PRESENTATION LAYOUT", widthWindow);
-    // }
-
-    // function handleCamMounted() {
-    //     totalCamWidth += camWidth;
-    //     totalCamWidth += camWidthOther;
-    //     // console.log("totalCamWidth", totalCamWidth);
-    //     stackCam();
-    // }
-
-    // function handleCamDestroy() {
-    //     totalCamWidth -= camWidth;
-    //     // console.log("totalCamWidth", totalCamWidth);
-    //     stackCam();
-    // }
-
-    // function stackCam() {
-    //     if (totalCamWidth > window.screen.width) {
-    //         // console.log("TAILLE CAM TROP GRANDE");
-    //         return true;
+    //     if (!displayCoWebsiteContainer && $highlightedEmbedScreen && $highlightedEmbedScreen.type === "cowebsite") {
+    //         highlightedEmbedScreen.removeHighlight();
     //     }
-    //     // console.log("TAILLE CAM CA PASSE");
-    //     return false;
-    // }
+
+    //     if (displayFullMedias) {
+    //         highlightedEmbedScreen.removeHighlight();
+    //     }
+    // });
 </script>
 
 <div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias}>
@@ -107,11 +61,8 @@
                     <Loading />
                 {/if}
                 {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
-                    <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
+                    <CamerasContainer full={true} />
                 {/if}
-                <!-- {#if $myCameraStore && $proximityMeetingStore === true}
-                    <MyCamera />
-                {/if} -->
                 {#if $myJitsiCameraStore}
                     <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
                 {/if}
@@ -123,25 +74,9 @@
 
     <div id="video-container-receive" class={$highlightedEmbedScreen ? "block" : "hidden"}>
         {#if $highlightedEmbedScreen}
-            {#if $highlightedEmbedScreen.type === "streamable"}
-                {#key $highlightedEmbedScreen.embed.uniqueId}
-                    <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen.embed} />
-                {/key}
-            {:else if $highlightedEmbedScreen.type === "cowebsite"}
-                {#key $highlightedEmbedScreen.embed.getId()}
-                    <div class="highlighted-cowebsite-container">
-                        <div
-                            id={"cowebsite-slot-" + $highlightedEmbedScreen.embed.getId()}
-                            class="highlighted-cowebsite"
-                        />
-                        <div class="actions">
-                            {#if $highlightedEmbedScreen.embed.isClosable()}
-                                <button type="button" class="close-window top-right-btn" on:click={closeCoWebsite} />
-                            {/if}
-                        </div>
-                    </div>
-                {/key}
-            {/if}
+            {#key $highlightedEmbedScreen.uniqueId}
+                <MediaBox isHightlighted={true} isClickable={true} streamable={$highlightedEmbedScreen} />
+            {/key}
         {/if}
     </div>
 
@@ -169,6 +104,7 @@
     <!-- {/if} -->
 </div>
 
+<!-- Props du composant camera container highlightedEmbedScreen={$highlightedEmbedScreen} -->
 <style>
     #video-container-receive {
         height: 55vh;

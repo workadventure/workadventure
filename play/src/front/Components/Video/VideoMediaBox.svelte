@@ -246,12 +246,11 @@
         }, 1000);
     }
 
-    //Cette fonction permet de mettre en évidence la video des autres utilisateurs ne fonctionn pas pour le moment
+    //Cette fonction permet de mettre en évidence la video des autres utilisateurs ne fonctionne pas pour le moment
 
-    function highlight() {
-        // if (!clickable || !videoEnabled) return;
-        highlightedEmbedScreen.toggleHighlight(embedScreen);
-    }
+    // function highlight() {
+    //     highlightedEmbedScreen.toggleHighlight(embedScreen);
+    // }
     // function hightlight() {
     //     console.log("JE SUIS DAMS LA FONCTION HIGHLIGHT");
     //     if (!clickable || !videoEnabled) return;
@@ -266,7 +265,6 @@
     class:h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
     bind:this={videoContainer}
     on:click={() => analyticsClient.pinMeetingAction()}
-    on:click={() => highlight()}
     style="height:{$heightCamWrapper}px;"
 >
     <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />

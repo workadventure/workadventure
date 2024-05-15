@@ -303,68 +303,68 @@ class CoWebsiteManager {
         }
     }
 
-    public resizeAllIframes() {
-        const mainCoWebsite = this.getCoWebsiteByPosition(0);
-        const mainIframe = mainCoWebsite?.getIframe();
-        const highlightEmbed = get(highlightedEmbedScreen);
+    // public resizeAllIframes() {
+    //     const mainCoWebsite = this.getCoWebsiteByPosition(0);
+    //     const mainIframe = mainCoWebsite?.getIframe();
+    //     const highlightEmbed = get(highlightedEmbedScreen);
 
-        get(coWebsites).forEach((coWebsite: CoWebsite) => {
-            const iframe = coWebsite.getIframe();
-            if (!iframe) {
-                return;
-            }
+    //     get(coWebsites).forEach((coWebsite: CoWebsite) => {
+    //         const iframe = coWebsite.getIframe();
+    //         if (!iframe) {
+    //             return;
+    //         }
 
-            const notMain = !mainCoWebsite || (mainCoWebsite && mainIframe && mainIframe.id !== iframe.id);
-            const notHighlighEmbed =
-                !highlightEmbed ||
-                (highlightEmbed &&
-                    (highlightEmbed.type !== "cowebsite" ||
-                        (highlightEmbed.type === "cowebsite" && highlightEmbed.embed.getId() !== coWebsite.getId())));
+    //         const notMain = !mainCoWebsite || (mainCoWebsite && mainIframe && mainIframe.id !== iframe.id);
+    //         const notHighlighEmbed =
+    //             !highlightEmbed ||
+    //             (highlightEmbed &&
+    //                 (highlightEmbed.type !== "cowebsite" ||
+    //                     (highlightEmbed.type === "cowebsite" && highlightEmbed.embed.getId() !== coWebsite.getId())));
 
-            if (iframe.classList.contains("main") && notMain) {
-                iframe.classList.remove("main");
-            }
+    //         if (iframe.classList.contains("main") && notMain) {
+    //             iframe.classList.remove("main");
+    //         }
 
-            if (iframe.classList.contains("highlighted") && notHighlighEmbed) {
-                iframe.classList.remove("highlighted");
-                iframe.classList.add("pixel");
-                iframe.style.top = "-1px";
-                iframe.style.left = "-1px";
-            }
+    //         if (iframe.classList.contains("highlighted") && notHighlighEmbed) {
+    //             iframe.classList.remove("highlighted");
+    //             iframe.classList.add("pixel");
+    //             iframe.style.top = "-1px";
+    //             iframe.style.left = "-1px";
+    //         }
 
-            if (notMain && notHighlighEmbed) {
-                iframe.classList.add("pixel");
-                iframe.style.top = "-1px";
-                iframe.style.left = "-1px";
-            }
+    //         if (notMain && notHighlighEmbed) {
+    //             iframe.classList.add("pixel");
+    //             iframe.style.top = "-1px";
+    //             iframe.style.left = "-1px";
+    //         }
 
-            this.setIframeOffset(coWebsite);
-        });
+    //         this.setIframeOffset(coWebsite);
+    //     });
 
-        if (mainIframe) {
-            mainIframe.classList.add("main");
-            mainIframe.classList.remove("pixel");
-        }
+    //     if (mainIframe) {
+    //         mainIframe.classList.add("main");
+    //         mainIframe.classList.remove("pixel");
+    //     }
 
-        if (highlightEmbed && highlightEmbed.type === "cowebsite") {
-            const highlightEmbedIframe = highlightEmbed.embed.getIframe();
-            if (highlightEmbedIframe) {
-                highlightEmbedIframe.classList.add("highlighted");
-                highlightEmbedIframe.classList.remove("pixel");
-            }
-        }
-    }
+    //     if (highlightEmbed && highlightEmbed.type === "cowebsite") {
+    //         const highlightEmbedIframe = highlightEmbed.embed.getIframe();
+    //         if (highlightEmbedIframe) {
+    //             highlightEmbedIframe.classList.add("highlighted");
+    //             highlightEmbedIframe.classList.remove("pixel");
+    //         }
+    //     }
+    // }
 
-    private removeHighlightCoWebsite(coWebsite: CoWebsite) {
-        const highlighted = get(highlightedEmbedScreen);
+    // private removeHighlightCoWebsite(coWebsite: CoWebsite) {
+    //     const highlighted = get(highlightedEmbedScreen);
 
-        if (highlighted && highlighted.type === "cowebsite" && highlighted.embed.getId() === coWebsite.getId()) {
-            highlightedEmbedScreen.removeHighlight();
-        }
-    }
+    //     if (highlighted && highlighted.type === "cowebsite" && highlighted.embed.getId() === coWebsite.getId()) {
+    //         highlightedEmbedScreen.removeHighlight();
+    //     }
+    // }
 
     private removeCoWebsiteFromStack(coWebsite: CoWebsite, withStack: boolean) {
-        this.removeHighlightCoWebsite(coWebsite);
+        // this.removeHighlightCoWebsite(coWebsite);
         if (withStack) {
             coWebsites.remove(coWebsite);
         }
@@ -400,7 +400,7 @@ class CoWebsiteManager {
             highlightedEmbedScreen.removeHighlight();
         }
 
-        this.resizeAllIframes();
+        // this.resizeAllIframes();
     }
 
     public addCoWebsiteToStore(coWebsite: CoWebsite, position: number | undefined) {
@@ -448,13 +448,10 @@ class CoWebsiteManager {
                         !highlightedEmbed &&
                         this.getCoWebsites().find((searchCoWebsite) => searchCoWebsite.getId() === coWebsite.getId())
                     ) {
-                        highlightedEmbedScreen.toggleHighlight({
-                            type: "cowebsite",
-                            embed: coWebsite,
-                        });
+                        // highlightedEmbedScreen.toggleHighlight(coWebsite);
                     }
                 }
-                this.resizeAllIframes();
+                // this.resizeAllIframes();
             })
             .catch((err) => {
                 console.error("Error on co-website loading => ", err);
@@ -465,7 +462,7 @@ class CoWebsiteManager {
     }
 
     public unloadCoWebsite(coWebsite: CoWebsite): Promise<void> {
-        this.removeHighlightCoWebsite(coWebsite);
+        // this.removeHighlightCoWebsite(coWebsite);
 
         return coWebsite
             .unload()
@@ -476,9 +473,9 @@ class CoWebsiteManager {
                 const mainCoWebsite = this.getMainCoWebsite();
 
                 if (mainCoWebsite) {
-                    this.removeHighlightCoWebsite(mainCoWebsite);
+                    // this.removeHighlightCoWebsite(mainCoWebsite);
                     this.goToMain(mainCoWebsite);
-                    this.resizeAllIframes();
+                    // this.resizeAllIframes();
                 } else {
                     this.closeMain();
                 }
@@ -500,9 +497,9 @@ class CoWebsiteManager {
         const mainCoWebsite = this.getMainCoWebsite();
 
         if (mainCoWebsite) {
-            this.removeHighlightCoWebsite(mainCoWebsite);
+            // this.removeHighlightCoWebsite(mainCoWebsite);
             this.goToMain(mainCoWebsite);
-            this.resizeAllIframes();
+            // this.resizeAllIframes();
         } else {
             this.closeMain();
         }

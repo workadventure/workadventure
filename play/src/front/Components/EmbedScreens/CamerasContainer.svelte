@@ -2,30 +2,16 @@
     import { fly } from "svelte/transition";
     import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MediaBox from "../Video/MediaBox.svelte";
-    import { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import MyCamera from "../MyCamera.svelte";
     import { myCameraStore } from "../../Stores/MyMediaStore";
     import { onDestroy, onMount } from "svelte";
 
-    export let highlightedEmbedScreen: EmbedScreen | undefined;
+    // export let highlightedEmbedScreen: EmbedScreen | undefined;
     export let full = false;
     $: clickable = !full;
 
-    let totalCamWidth = 0;
-    let camWidthOther = 350;
-    let camWidth = 350;
     let widthWindow: number | undefined;
-    let myCam;
-    let otherCam;
-
-    onMount(() => {
-        // getWidth();
-        // handleCamMounted();
-    });
-
-    onDestroy(() => {
-        // handleCamDestroy();
-    });
 
     function camMountedWidth() {
         console.log("camMountedWidth !!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -52,33 +38,6 @@
             });
         }
     }
-
-    // function getWidthofCam() {
-    //     myCam = document.getElementById("unique-mycam")?.offsetWidth;
-    //     console.log("MA CAMERA WIDTH", myCam);
-    //     otherCam = document.getElementById("unique-cam-other");
-    //     console.log(otherCam);
-    //     console.log(otherCam?.offsetWidth);
-    //     console.log("OTHER CAMERA WIDTH", otherCam);
-    //     let allCams = (document.getElementsByClassName("all-cameras")[0] as HTMLElement)?.offsetWidth;
-    //     console.log("WIDTH ALL CAM = ", allCams, typeof allCams);
-    // }
-
-    // function getWidthScreen() {
-    //     widthWindow = document.getElementById("presentation-layout")?.offsetWidth;
-    //     console.log("GET WIDTH OF PRESENTATION LAYOUT", widthWindow);
-    // }
-
-    // function handleCamMounted() {
-    //     totalCamWidth += camWidth;
-    //     totalCamWidth += camWidthOther;
-    //     console.log("totalCamWidth", totalCamWidth);
-    // }
-
-    // function handleCamDestroy() {
-    //     totalCamWidth -= camWidth;
-    //     console.log("totalCamWidth", totalCamWidth);
-    // }
 </script>
 
 <!-- svelte-ignore missing-declaration -->
@@ -88,7 +47,7 @@
 
     <div class="all-cameras overflow-visible content-center flex gap-x-4 justify-center">
         {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
-            {#if !highlightedEmbedScreen || highlightedEmbedScreen.type !== "streamable" || (highlightedEmbedScreen.type === "streamable" && highlightedEmbedScreen.embed !== peer)}
+            {#if !highlightedEmbedScreen || $highlightedEmbedScreen !== peer}
                 {#key uniqueId}
                     <div id="unique-cam-other">
                         <MediaBox
