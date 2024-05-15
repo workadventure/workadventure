@@ -108,7 +108,7 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                     properties: createEntityMessage.properties,
                 };
                 // execute command locally
-                await this.mapEditorModeManager.executeCommand(
+                await this.mapEditorModeManager.executeLocalCommand(
                     new CreateEntityFrontCommand(
                         this.scene.getGameMap(),
                         createEntityMessage.id,
@@ -116,24 +116,20 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         commandId,
                         this.entitiesManager,
                         { width: createEntityMessage.width, height: createEntityMessage.height }
-                    ),
-                    false,
-                    false
+                    )
                 );
                 break;
             }
             case "deleteEntityMessage": {
                 const id = editMapCommandMessage.editMapMessage?.message.deleteEntityMessage.id;
-                await this.mapEditorModeManager.executeCommand(
-                    new DeleteEntityFrontCommand(this.scene.getGameMap(), id, commandId, this.entitiesManager),
-                    false,
-                    false
+                await this.mapEditorModeManager.executeLocalCommand(
+                    new DeleteEntityFrontCommand(this.scene.getGameMap(), id, commandId, this.entitiesManager)
                 );
                 break;
             }
             case "modifyEntityMessage": {
                 const modifyEntityMessage = editMapCommandMessage.editMapMessage?.message.modifyEntityMessage;
-                await this.mapEditorModeManager.executeCommand(
+                await this.mapEditorModeManager.executeLocalCommand(
                     new UpdateEntityFrontCommand(
                         this.scene.getGameMap(),
                         modifyEntityMessage.id,
@@ -147,52 +143,44 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
                         undefined,
                         this.entitiesManager,
                         this.scene
-                    ),
-                    false,
-                    false
+                    )
                 );
                 break;
             }
             case "uploadEntityMessage": {
                 const uploadEntityMessage = editMapCommandMessage.editMapMessage?.message.uploadEntityMessage;
-                await this.mapEditorModeManager.executeCommand(
+                await this.mapEditorModeManager.executeLocalCommand(
                     new UploadEntityFrontCommand(
                         uploadEntityMessage,
                         this.entitiesManager,
                         this.scene.getEntitiesCollectionsManager()
-                    ),
-                    false,
-                    false
+                    )
                 );
                 break;
             }
             case "modifyCustomEntityMessage": {
                 const modifyCustomEntityMessage =
                     editMapCommandMessage.editMapMessage?.message.modifyCustomEntityMessage;
-                await this.mapEditorModeManager.executeCommand(
+                await this.mapEditorModeManager.executeLocalCommand(
                     new ModifyCustomEntityFrontCommand(
                         modifyCustomEntityMessage,
                         this.scene.getEntitiesCollectionsManager(),
                         this.scene.getGameMapFrontWrapper(),
                         this.entitiesManager
-                    ),
-                    false,
-                    false
+                    )
                 );
                 break;
             }
             case "deleteCustomEntityMessage": {
                 const deleteCustomEntityMessage =
                     editMapCommandMessage.editMapMessage?.message.deleteCustomEntityMessage;
-                await this.mapEditorModeManager.executeCommand(
+                await this.mapEditorModeManager.executeLocalCommand(
                     new DeleteCustomEntityFrontCommand(
                         deleteCustomEntityMessage,
                         this.scene.getGameMap(),
                         this.entitiesManager,
                         this.scene.getEntitiesCollectionsManager()
-                    ),
-                    false,
-                    false
+                    )
                 );
                 break;
             }

@@ -35,6 +35,8 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
     readonly space: Space;
     readonly provider = "jitsi";
 
+    private associatedStreamStoreTimeOut: NodeJS.Timeout | undefined;
+
     constructor(
         private roomConnection: RoomConnection,
         spaceName: string,
@@ -114,7 +116,13 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
 
         jitsiBroadcastSpaceLogger("Joining Jitsi conference, jitsiConnection is defined " + roomName);
 
-        const jitsiConference = await JitsiConferenceWrapper.join(certifiedJitsiConnection, roomName);
+        const turnCredentialsAnswer = await this.roomConnection.queryTurnCredentials();
+        console.log("JitsiBroadCastSpace => joinJitsiConference => turnCredentialsAnswer", turnCredentialsAnswer);
+        const jitsiConference = await JitsiConferenceWrapper.join(
+            certifiedJitsiConnection,
+            roomName,
+            turnCredentialsAnswer
+        );
         jitsiConferencesStore.set(roomName, jitsiConference);
 
         if (get(liveStreamingEnabledStore)) {
@@ -123,39 +131,51 @@ export class JitsiBroadcastSpace extends EventTarget implements BroadcastSpace {
             gameManager.getCurrentGameScene().playSound("audio-megaphone");
         }
 
-        const associatedStreamStore: Readable<Map<string, JitsiTrackWrapper>> = derived(
-            [jitsiConference.streamStore, this.space.users],
-            ([$streamStore, $users]) => {
-                const filtered = new Map<string, JitsiTrackWrapper>();
-                for (const [participantId, stream] of $streamStore) {
-                    let found = false;
-                    if (stream.spaceUser !== undefined) {
-                        if ($users.has(stream.spaceUser.id)) {
-                            filtered.set(participantId, stream);
+        // TODO: change me
+        // We need to wait a bit before associating the JitsiTrack with the SpaceUser
+        // Because the spaceUser was not updated with new users yet
+        // This is a workaround to avoid having to wait for the spaceUser to be updated implmented when we correct the Megaphone feature
+        if (this.associatedStreamStoreTimeOut) clearTimeout(this.associatedStreamStoreTimeOut);
+        this.associatedStreamStoreTimeOut = setTimeout(() => {
+            const associatedStreamStore: Readable<Map<string, JitsiTrackWrapper>> = derived(
+                [jitsiConference.streamStore, this.space.users],
+                ([$streamStore, $users]) => {
+                    const filtered = new Map<string, JitsiTrackWrapper>();
+                    for (const [participantId, stream] of $streamStore) {
+                        let found = false;
+                        if (stream.spaceUser !== undefined) {
+                            if ($users.has(stream.spaceUser.id)) {
+                                filtered.set(participantId, stream);
+                            }
+                            continue;
                         }
-                        continue;
-                    }
-                    for (const user of $users.values()) {
-                        if (user.jitsiParticipantId === stream.uniqueId) {
-                            stream.spaceUser = user;
-                            filtered.set(participantId, stream);
-                            found = true;
-                            break;
+                        for (const user of $users.values()) {
+                            if (user.jitsiParticipantId === stream.uniqueId) {
+                                stream.spaceUser = user;
+                                filtered.set(participantId, stream);
+                                found = true;
+                                break;
+                            }
                         }
-                    }
-                    if (!found) {
-                        jitsiBroadcastSpaceLogger(
-                            "joinJitsiConference => No associated spaceUser found for participantId" +
-                                stream.uniqueId +
+                        if (!found) {
+                            console.info(
+                                "No associated spaceUser found for participantId: ",
+                                stream.uniqueId,
                                 $users.values()
-                        );
+                            );
+                            jitsiBroadcastSpaceLogger(
+                                "joinJitsiConference => No associated spaceUser found for participantId: " +
+                                    stream.uniqueId +
+                                    $users.values()
+                            );
+                        }
                     }
+                    return filtered;
                 }
-                return filtered;
-            }
-        );
+            );
+            this.jitsiTracks.forward(associatedStreamStore);
+        }, 1000);
 
-        this.jitsiTracks.forward(associatedStreamStore);
         return jitsiConference;
     }
 

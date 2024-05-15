@@ -19,7 +19,7 @@ import { getPlayerAnimations, PlayerAnimationTypes } from "../Player/Animation";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { SpeakerIcon } from "../Components/SpeakerIcon";
 import { MegaphoneIcon } from "../Components/MegaphoneIcon";
-import { passStatusToOnline } from "../../Rules/StatusRules/statusChangerFunctions";
+
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { SpeechBubble } from "./SpeechBubble";
 import { SpeechDomElement } from "./SpeechDomElement";
@@ -363,71 +363,6 @@ export abstract class Character extends Container implements OutlineableInterfac
             throw new Error("Container does not have arcade body");
         }
         return body;
-    }
-
-    /**
-     * Moves the character by the given speed amount.
-     */
-    moveBy(x: number, y: number) {
-        const body = this.getBody();
-
-        body.setVelocity(x, y);
-
-        if (Math.abs(body.velocity.x) > Math.abs(body.velocity.y)) {
-            if (body.velocity.x < 0) {
-                this._lastDirection = PositionMessage_Direction.LEFT;
-            } else if (body.velocity.x > 0) {
-                this._lastDirection = PositionMessage_Direction.RIGHT;
-            }
-        } else {
-            if (body.velocity.y < 0) {
-                this._lastDirection = PositionMessage_Direction.UP;
-            } else if (body.velocity.y > 0) {
-                this._lastDirection = PositionMessage_Direction.DOWN;
-            }
-        }
-
-        this.playAnimation(this._lastDirection, true);
-        passStatusToOnline();
-        this.setDepth(this.y + 16);
-
-        if (this.companion) {
-            this.companion.setTarget(this.x, this.y, this._lastDirection);
-        }
-    }
-
-    /**
-     * Moves the character to the given position.
-     */
-    moveToPos(x: number, y: number) {
-        const oldX = this.x;
-        const oldY = this.y;
-        this.x = x;
-        this.y = y;
-        // The 1.1 ratio to y is applied here because in path finding mode, the player often moves in diagonal.
-        // In diagonal, the amount of x and y are almost equal. This produces a graphical glitch where on one frame,
-        // the player goes left, and on the next frame, the player goes up. This is because the x and y are almost equal.
-        // To fix this, we apply a ratio of 1.1 to y to make sure that the player goes up/down when the y and x are almost equal.
-        if (Math.abs(x - oldX) > Math.abs((y - oldY) * 1.1)) {
-            if (x < oldX) {
-                this._lastDirection = PositionMessage_Direction.LEFT;
-            } else if (x > oldX) {
-                this._lastDirection = PositionMessage_Direction.RIGHT;
-            }
-        } else {
-            if (y < oldY) {
-                this._lastDirection = PositionMessage_Direction.UP;
-            } else if (y > oldY) {
-                this._lastDirection = PositionMessage_Direction.DOWN;
-            }
-        }
-        this.playAnimation(this._lastDirection, true);
-
-        this.setDepth(this.y + 16);
-
-        if (this.companion) {
-            this.companion.setTarget(this.x, this.y, this._lastDirection);
-        }
     }
 
     stop() {

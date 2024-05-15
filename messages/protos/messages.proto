@@ -404,6 +404,7 @@ message QueryMessage {
     SendEventQuery sendEventQuery = 6;
     SearchMemberQuery searchMemberQuery = 7;
     GetMemberQuery getMemberQuery = 8;
+    TurnCredentialsQuery turnCredentialsQuery = 9;
   }
 }
 
@@ -443,6 +444,9 @@ message GetMemberQuery {
   string uuid = 1;
 }
 
+message TurnCredentialsQuery {
+}
+
 message AnswerMessage {
   int32 id = 1;
   oneof answer {
@@ -455,6 +459,7 @@ message AnswerMessage {
     SendEventAnswer sendEventAnswer = 8;
     SearchMemberAnswer searchMemberAnswer = 9;
     GetMemberAnswer getMemberAnswer = 10;
+    TurnCredentialsAnswer turnCredentialsAnswer = 11;
   }
 }
 
@@ -510,6 +515,11 @@ message Member {
   optional string name = 2;
   optional string email = 3;
   optional string visitCardUrl = 4;
+}
+
+message TurnCredentialsAnswer {
+  optional string webRtcUser = 1;
+  optional string webRtcPassword = 2;
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/
@@ -1145,8 +1155,7 @@ message BackToPusherSpaceMessage{
 
 message WatchSpaceMessage{
   string spaceName = 1;
-  SpaceUser user = 2;
-  SpaceFilterMessage spaceFilter = 3;
+  SpaceFilterMessage spaceFilter = 2;
 }
 message UnwatchSpaceMessage{
   string spaceName = 1;

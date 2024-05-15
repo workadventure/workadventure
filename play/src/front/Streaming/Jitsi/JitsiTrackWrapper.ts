@@ -18,6 +18,8 @@ export class JitsiTrackWrapper implements TrackWrapper {
     private spaceUserUpdateSubscribe: Subscription | undefined;
     public readonly isLocal: boolean;
 
+    private switchScreenSharingTrackTimeout: NodeJS.Timeout | undefined;
+
     constructor(readonly participantId: string, jitsiTrack: JitsiTrack | undefined, readonly jitsiRoomName: string) {
         if (jitsiTrack) {
             this.setJitsiTrack(jitsiTrack);
@@ -75,21 +77,20 @@ export class JitsiTrackWrapper implements TrackWrapper {
     }
 
     setJitsiTrack(jitsiTrack: JitsiTrack, allowOverride = false) {
+        // @deprecated with the new jitsi-lib-meet, the same track can be added multiple times
         // Let's start by suppressing any "echo". setJitsiTrack can be called multiple times for the same track
         // For some reason, Jitsi can trigger the remoteTrack event several times.
-        console.info(
-            "this.cameraTrackWrapper.getVideoTrack()?.getTrack().getSettings() === jitsiTrack.getTrack().getSettings()",
-            this.cameraTrackWrapper.getVideoTrack()?.getTrack().getSettings() === jitsiTrack.getTrack().getSettings()
-        );
-        if (
+        /*if (
             this.cameraTrackWrapper.getAudioTrack() === jitsiTrack ||
             this.cameraTrackWrapper.getVideoTrack() === jitsiTrack ||
             this.screenSharingTrackWrapper.getVideoTrack() === jitsiTrack ||
             this.screenSharingTrackWrapper.getAudioTrack() === jitsiTrack ||
             this.cameraTrackWrapper.getVideoTrack()?.getTrack().getSettings() === jitsiTrack.getTrack().getSettings()
         ) {
+            console.info(`Let's start by suppressing any "echo". setJitsiTrack can be called multiple times for the same track. 
+            For some reason, Jitsi can trigger the remoteTrack event several times.`);
             return;
-        }
+        }*/
 
         if (jitsiTrack.isAudioTrack()) {
             const oldAudioTrack = this.cameraTrackWrapper.getAudioTrack();
@@ -106,10 +107,9 @@ export class JitsiTrackWrapper implements TrackWrapper {
         } else if (jitsiTrack.isVideoTrack()) {
             // The jitsiTrack.getVideoType() return is a lie.
             // Because it comes from Jitsi signaling, it is first evaluated to "video" and can AFTER be changed to "desktop"
-
             if (jitsiTrack.getVideoType() === "desktop") {
                 const oldScreenSharingTrack = this.screenSharingTrackWrapper.getVideoTrack();
-                if (oldScreenSharingTrack !== undefined) {
+                if (oldScreenSharingTrack != undefined) {
                     if (!allowOverride) {
                         throw new Error("A screenSharing track is already defined");
                     } else {
@@ -120,9 +120,38 @@ export class JitsiTrackWrapper implements TrackWrapper {
 
                 // Let's notify the embedded store that a new screen-sharing has started
                 this.highlightScreenSharing();
+
+                // The video track might be a lie! It is maybe a screen sharing track
+                // We need to check the video type after a few seconds and switch the track to "screen sharing" if needed
+                if (this.switchScreenSharingTrackTimeout) clearTimeout(this.switchScreenSharingTrackTimeout);
+                this.switchScreenSharingTrackTimeout = setTimeout(() => {
+                    console.info(
+                        `We need to check the video type after a few seconds and switch the track to "screen sharing" if needed`
+                    );
+                    // TODO: IF A SWITCH IS MADE HERE, THE StreamableCollectionStore will probably not be notified!
+
+                    if (
+                        this.cameraTrackWrapper.getVideoTrack() === jitsiTrack &&
+                        jitsiTrack.getVideoType() === "desktop"
+                    ) {
+                        const oldScreenSharingTrack = this.screenSharingTrackWrapper.getVideoTrack();
+                        if (oldScreenSharingTrack != undefined) {
+                            if (!allowOverride) {
+                                throw new Error("A screenSharing track is already defined");
+                            } else {
+                                oldScreenSharingTrack?.dispose();
+                            }
+                        }
+                        this.screenSharingTrackWrapper.setVideoTrack(jitsiTrack);
+                        this.cameraTrackWrapper.setVideoTrack(undefined);
+
+                        // Let's notify the embedded store that a new screen-sharing has started
+                        this.highlightScreenSharing();
+                    }
+                }, 5000);
             } else {
                 const oldVideoTrack = this.cameraTrackWrapper.getVideoTrack();
-                if (oldVideoTrack !== undefined) {
+                if (oldVideoTrack != undefined) {
                     if (!allowOverride) {
                         // The jitsiTrack.getVideoType() return is a lie.
                         // Because it comes from Jitsi signaling, it is first evaluated to "video" and can AFTER be changed to "desktop"
@@ -139,33 +168,8 @@ export class JitsiTrackWrapper implements TrackWrapper {
                         oldVideoTrack?.dispose();
                     }
                 }
-                if (this.screenSharingTrackWrapper.getVideoTrack() !== jitsiTrack) {
-                    this.cameraTrackWrapper.setVideoTrack(jitsiTrack);
-                }
-                // The video track might be a lie! It is maybe a screen sharing track
-                // We need to check the video type after a few seconds and switch the track to "screen sharing" if needed
-                setTimeout(() => {
-                    // TODO: IF A SWITCH IS MADE HERE, THE StreamableCollectionStore will probably not be notified!
 
-                    if (
-                        this.cameraTrackWrapper.getVideoTrack() === jitsiTrack &&
-                        jitsiTrack.getVideoType() === "desktop"
-                    ) {
-                        const oldScreenSharingTrack = this.screenSharingTrackWrapper.getVideoTrack();
-                        if (oldScreenSharingTrack !== undefined) {
-                            if (!allowOverride) {
-                                throw new Error("A screenSharing track is already defined");
-                            } else {
-                                oldScreenSharingTrack?.dispose();
-                            }
-                        }
-                        this.screenSharingTrackWrapper.setVideoTrack(jitsiTrack);
-                        this.cameraTrackWrapper.setVideoTrack(undefined);
-
-                        // Let's notify the embedded store that a new screen-sharing has started
-                        this.highlightScreenSharing();
-                    }
-                }, 5000);
+                this.cameraTrackWrapper.setVideoTrack(jitsiTrack);
             }
         } else {
             throw new Error("Jitsi Track is neither audio nor video");

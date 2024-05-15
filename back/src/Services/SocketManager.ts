@@ -50,6 +50,7 @@ import {
     MuteVideoMessage,
     MuteMicrophoneEverybodyMessage,
     MuteVideoEverybodyMessage,
+    TurnCredentialsAnswer,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -784,6 +785,14 @@ export class SocketManager {
                     };
                     break;
                 }
+                case "turnCredentialsQuery": {
+                    const answer = this.handleTurnCredentialsQuery(user.id.toString());
+                    answerMessage.answer = {
+                        $case: "turnCredentialsAnswer",
+                        turnCredentialsAnswer: answer,
+                    };
+                    break;
+                }
                 case "embeddableWebsiteQuery":
                 case "roomTagsQuery":
                 case "roomsFromSameWorldQuery": {
@@ -1406,9 +1415,6 @@ export class SocketManager {
         }
         pusher.watchSpace(space.name);
         space.addWatcher(pusher);
-        if (watchSpaceMessage.user) {
-            space.addUser(pusher, watchSpaceMessage.user);
-        }
     }
 
     handleUnwatchSpaceMessage(pusher: SpacesWatcher, unwatchSpaceMessage: UnwatchSpaceMessage) {
@@ -1423,7 +1429,8 @@ export class SocketManager {
         pusher.spacesWatched.forEach((spaceName) => {
             const space = this.spaces.get(spaceName);
             if (!space) {
-                throw new Error("Cant unwatch space, space not found");
+                console.error("Cant unwatch space, space not found");
+                return;
             }
             this.removeSpaceWatcher(pusher, space);
         });
@@ -1557,6 +1564,17 @@ export class SocketManager {
 
     private handleSendEventQuery(gameRoom: GameRoom, user: User, sendEventQuery: SendEventQuery) {
         gameRoom.dispatchEvent(sendEventQuery.name, sendEventQuery.data, user.id, sendEventQuery.targetUserIds);
+    }
+
+    private handleTurnCredentialsQuery(userId: string): TurnCredentialsAnswer {
+        if (TURN_STATIC_AUTH_SECRET) {
+            const { username, password } = this.getTURNCredentials(userId, TURN_STATIC_AUTH_SECRET);
+            return {
+                webRtcUser: username,
+                webRtcPassword: password,
+            };
+        }
+        return {};
     }
 
     async dispatchEvent(roomUrl: string, name: string, value: unknown, targetUserIds: number[]): Promise<void> {

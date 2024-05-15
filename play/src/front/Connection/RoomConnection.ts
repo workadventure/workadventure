@@ -68,6 +68,7 @@ import {
     FollowRequestMessage,
     FollowConfirmationMessage,
     FollowAbortMessage,
+    TurnCredentialsAnswer,
 } from "@workadventure/messages";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { BehaviorSubject, Subject } from "rxjs";
@@ -1395,6 +1396,17 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.jitsiJwtAnswer;
+    }
+
+    public async queryTurnCredentials(): Promise<TurnCredentialsAnswer> {
+        const answer = await this.query({
+            $case: "turnCredentialsQuery",
+            turnCredentialsQuery: {},
+        });
+        if (answer.$case !== "turnCredentialsAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.turnCredentialsAnswer;
     }
 
     public async queryBBBMeetingUrl(

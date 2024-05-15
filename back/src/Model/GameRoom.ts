@@ -234,6 +234,7 @@ export class GameRoom implements BrothersFinder {
         }
         const position = ProtobufUtils.toPointInterface(positionMessage);
 
+        this.nextUserId++;
         const user = await User.create(
             this.nextUserId,
             joinRoomMessage.userUuid,
@@ -258,7 +259,6 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.activatedInviteUser,
             joinRoomMessage.applications
         );
-        this.nextUserId++;
         this.users.set(user.id, user);
         let set = this.usersByUuid.get(user.uuid);
         if (set === undefined) {

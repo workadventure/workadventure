@@ -11,12 +11,10 @@ export type TimedRules = {
 
 const basicStatus: Array<AvailabilityStatus> = [
     AvailabilityStatus.SPEAKER,
-    AvailabilityStatus.JITSI,
     AvailabilityStatus.UNCHANGED,
     AvailabilityStatus.SILENT,
     AvailabilityStatus.AWAY,
     AvailabilityStatus.UNRECOGNIZED,
-    AvailabilityStatus.BBB,
     AvailabilityStatus.DENY_PROXIMITY_MEETING,
 ];
 
@@ -36,8 +34,8 @@ const invalidTransition: Map<AvailabilityStatus, Array<AvailabilityStatus>> = ne
     [AvailabilityStatus.ONLINE, []],
     [AvailabilityStatus.SILENT, [...setableStatus]],
     [AvailabilityStatus.AWAY, [...setableStatus]],
-    [AvailabilityStatus.JITSI, [...setableStatus]],
-    [AvailabilityStatus.BBB, [...setableStatus]],
+    [AvailabilityStatus.JITSI, []],
+    [AvailabilityStatus.BBB, []],
     [AvailabilityStatus.DENY_PROXIMITY_MEETING, [...setableStatus]],
     [AvailabilityStatus.SPEAKER, [...setableStatus]],
     [AvailabilityStatus.BUSY, [...basicStatus]],
