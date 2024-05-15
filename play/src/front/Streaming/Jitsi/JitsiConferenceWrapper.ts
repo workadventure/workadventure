@@ -245,6 +245,7 @@ export class JitsiConferenceWrapper {
                     JitsiMeetJS.events.track.TRACK_AUDIO_LEVEL_CHANGED,
                     audioLevel => debug(`Audio Level remote: ${audioLevel}`));*/
                 track.addEventListener(JitsiMeetJS.events.track.TRACK_MUTE_CHANGED, (event) => {
+                    debug("track state changed");
                     jitsiConferenceWrapper.trackStateChanged(track);
                 });
                 track.addEventListener(JitsiMeetJS.events.track.NO_DATA_FROM_SOURCE, (event) => {
