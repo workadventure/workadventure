@@ -50,6 +50,7 @@ import {
     MuteVideoMessage,
     MuteMicrophoneEverybodyMessage,
     MuteVideoEverybodyMessage,
+    TurnCredentialsAnswer,
 } from "@workadventure/messages";
 import Jwt from "jsonwebtoken";
 import BigbluebuttonJs from "bigbluebutton-js";
@@ -781,6 +782,14 @@ export class SocketManager {
                     answerMessage.answer = {
                         $case: "sendEventAnswer",
                         sendEventAnswer: {},
+                    };
+                    break;
+                }
+                case "turnCredentialsQuery": {
+                    const answer = this.handleTurnCredentialsQuery(user.id.toString());
+                    answerMessage.answer = {
+                        $case: "turnCredentialsAnswer",
+                        turnCredentialsAnswer: answer,
                     };
                     break;
                 }
@@ -1555,6 +1564,17 @@ export class SocketManager {
 
     private handleSendEventQuery(gameRoom: GameRoom, user: User, sendEventQuery: SendEventQuery) {
         gameRoom.dispatchEvent(sendEventQuery.name, sendEventQuery.data, user.id, sendEventQuery.targetUserIds);
+    }
+
+    private handleTurnCredentialsQuery(userId: string): TurnCredentialsAnswer {
+        if (TURN_STATIC_AUTH_SECRET) {
+            const { username, password } = this.getTURNCredentials(userId, TURN_STATIC_AUTH_SECRET);
+            return {
+                webRtcUser: username,
+                webRtcPassword: password,
+            };
+        }
+        return {};
     }
 
     async dispatchEvent(roomUrl: string, name: string, value: unknown, targetUserIds: number[]): Promise<void> {
