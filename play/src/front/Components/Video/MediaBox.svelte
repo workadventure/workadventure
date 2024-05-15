@@ -13,17 +13,10 @@
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
     import { mediaStreamConstraintsStore } from "../../Stores/MediaStore";
-    import { identity } from "lodash";
-    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
     export let isClickable = false;
-    let isHighlighted: boolean;
-    // let embedScreen: Streamable;
-    // export let mozaicSolo = false;
-    // export let mozaicDuo = false;
-    // export let mozaicQuarter = false;
 
     const dispatch = createEventDispatcher();
 
@@ -105,7 +98,6 @@
             transition:fly={{ y: 50, duration: 150 }}
         >
             <!-- Video de l'autre personne-->
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div class="">
                 <VideoMediaBox peer={streamable} clickable={isClickable} />
             </div>
@@ -114,7 +106,6 @@
 
     <!-- Si le streamable est un partage d'écran de la part d'un autre utilisateur !-->
 {:else if streamable instanceof ScreenSharingPeer}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
         class="media-container justify-center h-full w-full
             media-box-shape-color receiving-sharing"
@@ -151,7 +142,6 @@
         class:h-12={!isHightlighted && !streamable.getVideoTrack()}
         class:clickable={isClickable}
     >
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
             class="w-full flex screen-blocker"
             class:mr-6={isHightlighted}
@@ -163,12 +153,11 @@
     </div>
 {:else}
     <!-- Div pour celui qui partage son écran avec partage d'écran en petit-->
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
         class="media-container {isHightlighted ? 'hightlighted mr-6' : 'flex h-full aspect-ratio'}"
         class:clickable={isClickable}
     >
-        <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'}   w-full h-full flex screen-blocker">
+        <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'} rounded-lg w-full h-full flex screen-blocker">
             <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
         </div>
     </div>

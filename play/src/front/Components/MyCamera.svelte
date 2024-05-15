@@ -21,10 +21,7 @@
     import silentImg from "./images/silent-zone.gif";
 
     import MicOffIcon from "./Icons/MicOffIcon.svelte";
-    import { EmbedScreen, highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
 
-    let isHighlighted = false;
-    let embedScreen: EmbedScreen;
     let stream: MediaStream | null;
     let userName = gameManager.getPlayerName();
     let backgroundColor = Color.getColorByString(userName ?? "default");
@@ -67,7 +64,6 @@
     // }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
     class="transition-all relative h-full aspect-video w-fit m-auto {$mediaStreamConstraintsStore.audio
         ? 'border-8 border-solid bg-indigo-400 rounded-lg'

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { get, writable } from "svelte/store";
-    import { EmbedScreen, highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import MoreActionSvg from "../images/ellipsis.svg";
     import MicrophoneCloseSvg from "../images/microphone-close.svg";
     import banUserSvg from "../images/ban-user.svg";
@@ -16,8 +16,9 @@
     import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
     import reportImg from "./images/report.svg";
+    import { Streamable } from "../../Stores/StreamableCollectionStore";
 
-    export let embedScreen: EmbedScreen;
+    export let embedScreen: Streamable;
     export let trackStreamWraper: TrackStreamWrapperInterface;
     export let videoEnabled: boolean;
 
