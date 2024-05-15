@@ -18,6 +18,8 @@ export class JitsiTrackWrapper implements TrackWrapper {
     private spaceUserUpdateSubscribe: Subscription | undefined;
     public readonly isLocal: boolean;
 
+    private switchScreenSharingTrackTimeout: NodeJS.Timeout | undefined;
+
     constructor(readonly participantId: string, jitsiTrack: JitsiTrack | undefined, readonly jitsiRoomName: string) {
         if (jitsiTrack) {
             this.setJitsiTrack(jitsiTrack);
@@ -75,9 +77,10 @@ export class JitsiTrackWrapper implements TrackWrapper {
     }
 
     setJitsiTrack(jitsiTrack: JitsiTrack, allowOverride = false) {
+        // @deprecated with the new jitsi-lib-meet, the same track can be added multiple times
         // Let's start by suppressing any "echo". setJitsiTrack can be called multiple times for the same track
         // For some reason, Jitsi can trigger the remoteTrack event several times.
-        if (
+        /*if (
             this.cameraTrackWrapper.getAudioTrack() === jitsiTrack ||
             this.cameraTrackWrapper.getVideoTrack() === jitsiTrack ||
             this.screenSharingTrackWrapper.getVideoTrack() === jitsiTrack ||
@@ -87,7 +90,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
             console.info(`Let's start by suppressing any "echo". setJitsiTrack can be called multiple times for the same track. 
             For some reason, Jitsi can trigger the remoteTrack event several times.`);
             return;
-        }
+        }*/
 
         if (jitsiTrack.isAudioTrack()) {
             const oldAudioTrack = this.cameraTrackWrapper.getAudioTrack();
@@ -120,7 +123,8 @@ export class JitsiTrackWrapper implements TrackWrapper {
 
                 // The video track might be a lie! It is maybe a screen sharing track
                 // We need to check the video type after a few seconds and switch the track to "screen sharing" if needed
-                setTimeout(() => {
+                if (this.switchScreenSharingTrackTimeout) clearTimeout(this.switchScreenSharingTrackTimeout);
+                this.switchScreenSharingTrackTimeout = setTimeout(() => {
                     console.info(
                         `We need to check the video type after a few seconds and switch the track to "screen sharing" if needed`
                     );
