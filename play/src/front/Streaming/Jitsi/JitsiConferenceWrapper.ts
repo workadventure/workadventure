@@ -11,6 +11,7 @@ import Debug from "debug";
 import JitsiLocalTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiLocalTrack";
 // eslint-disable-next-line import/no-unresolved
 import { JitsiConferenceErrors } from "lib-jitsi-meet/types/hand-crafted/JitsiConferenceErrors";
+import { TurnCredentialsAnswer } from "@workadventure/messages";
 import {
     requestedCameraDeviceIdStore,
     requestedMicrophoneDeviceIdStore,
@@ -25,6 +26,7 @@ import { gameManager } from "../../Phaser/Game/GameManager";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { DeviceBroadcastable } from "../Common/ConferenceWrapper";
 import { notificationPlayingStore } from "../../Stores/NotificationStore";
+import { getIceServersConfig } from "../../Components/Video/utils";
 import { JitsiTrackWrapper } from "./JitsiTrackWrapper";
 import { JitsiLocalTracks } from "./JitsiLocalTracks";
 
@@ -77,10 +79,25 @@ export class JitsiConferenceWrapper {
         });
     }
 
-    public static join(connection: JitsiConnection, jitsiRoomName: string): Promise<JitsiConferenceWrapper> {
+    public static join(
+        connection: JitsiConnection,
+        jitsiRoomName: string,
+        turnCredentials: TurnCredentialsAnswer
+    ): Promise<JitsiConferenceWrapper> {
         return new Promise((resolve, reject) => {
+            const iceTurnServer = getIceServersConfig(turnCredentials);
             const JitsiMeetJS = window.JitsiMeetJS;
-            const room = connection.initJitsiConference(jitsiRoomName, { avgRtpStatsN: 4, channelLastN: 4 });
+            const room = connection.initJitsiConference(jitsiRoomName, {
+                avgRtpStatsN: 4,
+                channelLastN: 4,
+                p2p: {
+                    enable: true,
+                    stunServers: iceTurnServer,
+                    backToP2PDelay: 10000,
+                    //codecPreferenceOrder - Provides a way to set the codec preference on desktop based endpoints.
+                    //mobileCodecPreferenceOrder - Provides a way to set the codec preference on mobile devices, both on RN and mobile browser based endpoints.
+                },
+            });
 
             // To start the conference, we define the minim video quality
             room.setReceiverVideoConstraint(JITSI_MIN_RESOLUTION);
@@ -263,6 +280,9 @@ export class JitsiConferenceWrapper {
             room.on(JitsiMeetJS.events.conference.USER_JOINED, (id) => {
                 debug("user joined: ", id);
                 jitsiConferenceWrapper.addUser(id);
+            });
+            room.on(JitsiMeetJS.events.conference.P2P_STATUS, (status) => {
+                debug("Conference P2P Status: ", status);
             });
             /*room.on(JitsiMeetJS.events.conference.USER_LEFT, onUserLeft);
             room.on(JitsiMeetJS.events.conference.TRACK_MUTE_CHANGED, track => {

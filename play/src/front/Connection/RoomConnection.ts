@@ -63,6 +63,7 @@ import {
     FollowRequestMessage,
     FollowConfirmationMessage,
     FollowAbortMessage,
+    TurnCredentialsAnswer,
 } from "@workadventure/messages";
 import { BehaviorSubject, Subject } from "rxjs";
 import type { AreaData, AtLeast, WAMEntityData } from "@workadventure/map-editor";
@@ -1520,6 +1521,17 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.jitsiJwtAnswer;
+    }
+
+    public async queryTurnCredentials(): Promise<TurnCredentialsAnswer> {
+        const answer = await this.query({
+            $case: "turnCredentialsQuery",
+            turnCredentialsQuery: {},
+        });
+        if (answer.$case !== "turnCredentialsAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.turnCredentialsAnswer;
     }
 
     public async queryBBBMeetingUrl(
