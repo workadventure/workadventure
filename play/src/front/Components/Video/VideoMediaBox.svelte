@@ -7,7 +7,7 @@
     import CancelablePromise from "cancelable-promise";
     import Debug from "debug";
     import { fly } from "svelte/transition";
-    import type { VideoPeer } from "../../WebRtc/VideoPeer";
+    import { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { EmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
@@ -29,8 +29,6 @@
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
     import ActionMediaBox from "./ActionMediaBox.svelte";
-    import { on } from "node:events";
-    import { Stream } from "node:stream";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
     // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
@@ -59,7 +57,6 @@
     let videoElement: HTMLVideoElementExt;
     let minimized = isMediaBreakpointOnly("md");
     let noVideoTimeout: ReturnType<typeof setTimeout> | undefined;
-    let otherCamWidth: number;
 
     let destroyed = false;
     let currentDeviceId: string | undefined;
@@ -249,26 +246,18 @@
 
     //Cette fonction permet de mettre en évidence la video des autres utilisateurs ne fonctionne pas pour le moment
 
-    // function hightlight() {
-    //     console.log("JE SUIS DAMS LA FONCTION HIGHLIGHT");
-    //     if (!clickable || !videoEnabled) return;
-    //     highlightedEmbedScreen.toggleHighlight(embedScreen);
-    // }
-
-    // function addStyleSpeaker() {
-    //     if ($constraintStore && $constraintStore.audio !== false) {
-
-    //     }
-    // }
+    $: isHighlighted = $highlightedEmbedScreen === peer;
 
     function highlight() {
-        highlightedEmbedScreen.toggleHighlight(embedScreen);
+        highlightedEmbedScreen.toggleHighlight(peer);
     }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- class="video-container transition-all relative h-full aspect-video" -->
 <div
-    class="video-container transition-all relative h-full aspect-video"
+    class="video-container transition-all h-full w-full relative aspect-video"
+    class:isHighlighted
     class:video-off={!videoEnabled}
     class:h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
     bind:this={videoContainer}
@@ -435,5 +424,12 @@
         &.object-contain {
             object-fit: contain;
         }
+    }
+
+    .isHighlighted {
+        border: 2px solid blueviolet;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 </style>

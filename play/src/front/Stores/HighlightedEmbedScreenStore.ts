@@ -7,53 +7,22 @@ function createHighlightedEmbedScreenStore() {
 
     return {
         subscribe,
-        highlight: (embedScreen: Streamable) => {
-            set(embedScreen);
-        },
+        // highlight: (embedScreen: Streamable) => {
+        //     set(embedScreen);
+        // },
         removeHighlight: () => {
             set(undefined);
         },
         toggleHighlight: (embedScreen: Streamable) => {
-            update((currentEmbedScreen) =>
-            !currentEmbedScreen ||
-            embedScreen !== currentEmbedScreen ||
-            (embedScreen.uniqueId !== currentEmbedScreen.uniqueId)
-                ? embedScreen
-                : undefined
-            );
+            update((currentEmbedScreen) => {
+                if (!currentEmbedScreen || embedScreen !== currentEmbedScreen || embedScreen.uniqueId !== currentEmbedScreen.uniqueId) {
+                    return embedScreen;
+                } else {
+                    return undefined;
+                }
+            });
         },
     };
 }
 
-
 export const highlightedEmbedScreen = createHighlightedEmbedScreenStore();
-
-
-
-
-
-
-// toggleHighlight: (embedScreen: Streamable) => {
-//     update((currentEmbedScreen) =>
-//         !currentEmbedScreen ||
-//         embedScreen !== currentEmbedScreen ||
-//         (embedScreen.uniqueId !== currentEmbedScreen.uniqueId)
-//             ? embedScreen
-//             : undefined
-//     );
-// },
-
-
-
-
-// MA version
-
-// toggleHighlight: (embedScreen: Streamable) => {
-//     update((currentEmbedScreen) => {
-//         if (!currentEmbedScreen || embedScreen !== currentEmbedScreen || embedScreen.uniqueId !== currentEmbedScreen.uniqueId) {
-//             return embedScreen;
-//         } else {
-//             return undefined;
-//         }
-//     });
-// },

@@ -50,6 +50,11 @@
         resizeObserver.unobserve(jitsiMediaBoxHtml);
         if (videoTrackUnSuscriber) videoTrackUnSuscriber();
     });
+
+    // function highlight() {
+    //     console.log("JE SUIS DANS LA FONCTION HIGHLIGHT PTN LAAAAA");
+    //     highlightedEmbedScreen.toggleHighlight(embedScreen);
+    // }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->

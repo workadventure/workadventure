@@ -54,21 +54,19 @@
 
 <div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias}>
     <!-- Div pour l'affichage de toutes les camera (other cam : cameContainer / my cam : MyCamera'-->
-    <div class="">
-        {#if $streamableCollectionStore.size > 0 || $myCameraStore}
-            <div class="grid grid-flow-col gap-x-4 justify-center test-media">
-                {#if $jitsiLoadingStore}
-                    <Loading />
-                {/if}
-                {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
-                    <CamerasContainer full={true} />
-                {/if}
-                {#if $myJitsiCameraStore}
-                    <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
-                {/if}
-            </div>
-        {/if}
-    </div>
+    {#if $streamableCollectionStore.size > 0 || $myCameraStore}
+        <div class="grid grid-flow-col gap-x-4 justify-center test-media">
+            {#if $jitsiLoadingStore}
+                <Loading />
+            {/if}
+            {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
+                <CamerasContainer full={true} />
+            {/if}
+            {#if $myJitsiCameraStore}
+                <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />
+            {/if}
+        </div>
+    {/if}
 
     <!-- Div pour la personne qui reçoit le partage d'écran -->
 

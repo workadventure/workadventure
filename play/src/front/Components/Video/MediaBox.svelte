@@ -20,7 +20,7 @@
     export let isHightlighted = false;
     export let isClickable = false;
     let isHighlighted: boolean;
-    let embedScreen: Streamable;
+    // let embedScreen: Streamable;
     // export let mozaicSolo = false;
     // export let mozaicDuo = false;
     // export let mozaicQuarter = false;
@@ -74,11 +74,22 @@
     // }
 
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
+
+    function addStyleHighlight() {
+        // if ($highlightedEmbedScreen) {
+        //     isHighlighted = true;
+        //     console.log("isHighlighted", isHighlighted);
+        // } else {
+        //     isHighlighted = false;
+        //     console.log("isNOOTHighlighted", isHighlighted);
+        // }
+    }
 </script>
 
-<!-- Si le streamable est une vidéo d'une autre personne -->
+<!-- Si le streamable est une vidéo d'une autre personne genre college de Jitsi-->
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
             class="transition-all relative h-full aspect-video w-fit {$mediaStreamConstraintsStore.audio
                 ? 'border-8 border-solid bg-indigo-400 rounded-lg'
@@ -90,11 +101,12 @@
             class:m-auto={!isHightlighted && !videoEnabled}
             class:aspect-video={!isHightlighted && !videoEnabled}
             class:clickable={isClickable}
+            on:click={addStyleHighlight}
             transition:fly={{ y: 50, duration: 150 }}
         >
             <!-- Video de l'autre personne-->
             <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <div class="width">
+            <div class="">
                 <VideoMediaBox peer={streamable} clickable={isClickable} />
             </div>
         </div>
@@ -124,7 +136,7 @@
         </div>
     </div> -->
 
-    <!-- Si le streamable est une vidéo de l'utilisateur-->
+    <!-- Si le streamable est une vidéo de l'utilisateur / Je sais pas trop ce que c'est-->
 {:else if streamable instanceof JitsiTrackStreamWrapper}
     <div
         class="media-container media-box-shape-color pointer-events-auto screen-blocker"
@@ -179,9 +191,5 @@
         &.clickable {
             cursor: pointer;
         }
-    }
-
-    .width {
-        width: 350px;
     }
 </style>

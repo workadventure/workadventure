@@ -35,14 +35,6 @@
         console.log("statusStore", $statusStore);
     });
 
-    // function hightlight() {
-    //     isHighlighted = !isHighlighted;
-    //     if (isHighlighted) {
-    //         highlightedEmbedScreen.toggleHighlight(embedScreen);
-    //     } else {
-    //         highlightedEmbedScreen.removeHighlight();
-    //     }
-    // }
     function highlight() {
         highlightedEmbedScreen.toggleHighlight(embedScreen);
     }
