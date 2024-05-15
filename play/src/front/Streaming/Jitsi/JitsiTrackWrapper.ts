@@ -209,7 +209,7 @@ export class JitsiTrackWrapper implements TrackWrapper {
             return;
         }
         // Notifions le magasin intégré qu'un nouveau partage d'écran a commencé
-        highlightedEmbedScreen.toggleHighlight(this.screenSharingTrackWrapper);
+        highlightedEmbedScreen.highlight(this.screenSharingTrackWrapper);
     }
     get volumeStore(): Readable<number[] | undefined> | undefined {
         return this._volumeStore;

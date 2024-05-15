@@ -73,19 +73,6 @@
     //     }
     // }
 
-    function hightlight() {
-        isHighlighted = !isHighlighted;
-        console.log("JE SUIS DANS LA FONCTION HIGHLIGHT DE MEDIA BOX");
-        if (isHightlighted) {
-            console.log("JE SUIS DANS LE TRUE :", $highlightedEmbedScreen);
-            highlightedEmbedScreen.removeHighlight();
-        } else {
-            console.log("JE SUIS DANS LE FALSE :", $highlightedEmbedScreen);
-            highlightedEmbedScreen.setHighlight(embedScreen);
-        }
-        // highlightedEmbedScreen.toggleHighlight(embedScreen);
-    }
-
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
 </script>
 
@@ -107,7 +94,7 @@
         >
             <!-- Video de l'autre personne-->
             <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <div class="width" on:click={() => hightlight()}>
+            <div class="width">
                 <VideoMediaBox peer={streamable} clickable={isClickable} />
             </div>
         </div>
@@ -120,7 +107,6 @@
         class="media-container justify-center h-full w-full
             media-box-shape-color receiving-sharing"
         class:clickable={isClickable}
-        on:click={() => hightlight()}
     >
         <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
     </div>
@@ -159,7 +145,6 @@
             class:mr-6={isHightlighted}
             class:mx-auto={!isHightlighted}
             class:h-[32vw]={isHightlighted && videoEnabled}
-            on:click={() => hightlight()}
         >
             <JitsiMediaBox peer={streamable} clickable={isClickable} />
         </div>
@@ -170,7 +155,6 @@
     <div
         class="media-container {isHightlighted ? 'hightlighted mr-6' : 'flex h-full aspect-ratio'}"
         class:clickable={isClickable}
-        on:click={() => hightlight()}
     >
         <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'}   w-full h-full flex screen-blocker">
             <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />

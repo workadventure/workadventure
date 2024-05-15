@@ -43,10 +43,13 @@
     //         highlightedEmbedScreen.removeHighlight();
     //     }
     // }
+    function highlight() {
+        highlightedEmbedScreen.toggleHighlight(embedScreen);
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="video-container h-full w-full relative screen-sharing ">
+<div class="video-container h-full w-full relative screen-sharing" on:click={highlight}>
     {#if $statusStore === "connecting"}
         <div class="connecting-spinner" />
     {/if}

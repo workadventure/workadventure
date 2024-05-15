@@ -30,6 +30,7 @@
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import { on } from "node:events";
+    import { Stream } from "node:stream";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
     // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
@@ -53,7 +54,7 @@
     let unsubscribeStreamStore: Unsubscriber;
     let unsubscribeConstraintStore: Unsubscriber;
 
-    let embedScreen: EmbedScreen;
+    let embedScreen: Streamable;
     let videoContainer: HTMLDivElement;
     let videoElement: HTMLVideoElementExt;
     let minimized = isMediaBreakpointOnly("md");
@@ -82,12 +83,12 @@
 
     $: videoEnabled = $constraintStore ? $constraintStore.video : false;
 
-    if (peer) {
-        embedScreen = {
-            type: "streamable",
-            embed: peer as unknown as Streamable,
-        };
-    }
+    // if (peer) {
+    //     embedScreen = {
+    //         type: "streamable",
+    //         embed: peer as unknown as Streamable,
+    //     };
+    // }
 
     const resizeObserver = new ResizeObserver(() => {
         minimized = isMediaBreakpointOnly("md");
@@ -248,14 +249,21 @@
 
     //Cette fonction permet de mettre en évidence la video des autres utilisateurs ne fonctionne pas pour le moment
 
-    // function highlight() {
-    //     highlightedEmbedScreen.toggleHighlight(embedScreen);
-    // }
     // function hightlight() {
     //     console.log("JE SUIS DAMS LA FONCTION HIGHLIGHT");
     //     if (!clickable || !videoEnabled) return;
     //     highlightedEmbedScreen.toggleHighlight(embedScreen);
     // }
+
+    // function addStyleSpeaker() {
+    //     if ($constraintStore && $constraintStore.audio !== false) {
+
+    //     }
+    // }
+
+    function highlight() {
+        highlightedEmbedScreen.toggleHighlight(embedScreen);
+    }
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -265,6 +273,7 @@
     class:h-full={$embedScreenLayoutStore === LayoutMode.VideoChat}
     bind:this={videoContainer}
     on:click={() => analyticsClient.pinMeetingAction()}
+    on:click={highlight}
     style="height:{$heightCamWrapper}px;"
 >
     <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
