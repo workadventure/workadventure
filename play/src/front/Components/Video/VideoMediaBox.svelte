@@ -254,6 +254,8 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- class="video-container transition-all relative h-full aspect-video" -->
+
+<!-- Dans la premiere div     style="height:{$heightCamWrapper}px;"-->
 <div
     class="video-container transition-all h-full w-full relative aspect-video"
     class:isHighlighted
@@ -262,7 +264,6 @@
     bind:this={videoContainer}
     on:click={() => analyticsClient.pinMeetingAction()}
     on:click={highlight}
-    style="height:{$heightCamWrapper}px;"
 >
     <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
 
@@ -283,12 +284,13 @@
             <div class="rtc-error" />
         {/if}
         <!-- svelte-ignore a11y-media-has-caption -->
+
+        <!-- Dans la video class:max-h-[230px]={videoEnabled && !isHightlighted}-->
         <video
             bind:this={videoElement}
             class:h-0={!videoEnabled}
             class:w-0={!videoEnabled}
             class:object-contain={minimized || isHightlighted || aspectRatio < 1}
-            class:max-h-[230px]={videoEnabled && !isHightlighted}
             class:max-h-full={videoEnabled && !isHightlighted && $embedScreenLayoutStore === LayoutMode.VideoChat}
             class:max-h-[80vh]={videoEnabled && isHightlighted}
             class:h-full={videoEnabled}

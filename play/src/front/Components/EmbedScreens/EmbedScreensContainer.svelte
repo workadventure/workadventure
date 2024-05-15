@@ -79,13 +79,13 @@
 <div
     id="embedScreensContainer"
     class="{$focusMode
-        ? `group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 items-center pointer-events-auto transition-all pb-7`
-        : `group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 items-center pointer-events-auto transition-all pb-7 bg-contrast/80`}
+        ? `group relative h-full pt-2 @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all`
+        : `group relative h-full pt-2 @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all bg-contrast/80`}
         {$rightMode
-        ? 'group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 items-center pointer-events-auto transition-all pb-7 flex flex-col'
-        : 'group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 items-center pointer-events-auto transition-all pb-7'}"
+        ? 'group relative h-full pt-2 @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all flex flex-col'
+        : 'group relative h-full pt-2 @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all'}"
     style={$lightMode
-        ? "group relative h-full pt-2 @sm/main-layout:pt-20 @xl/main-layout:pt-24 items-center pointer-events-auto transition-all pb-7"
+        ? "group relative h-full pt-2 @sm/main-layout @xl/main-layout items-center pointer-events-auto transition-all"
         : ""}
 >
     <PresentationLayout />

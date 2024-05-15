@@ -54,6 +54,7 @@
 
 <div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias}>
     <!-- Div pour l'affichage de toutes les camera (other cam : cameContainer / my cam : MyCamera'-->
+
     {#if $streamableCollectionStore.size > 0 || $myCameraStore}
         <div class="grid grid-flow-col gap-x-4 justify-center test-media">
             {#if $jitsiLoadingStore}
@@ -105,8 +106,6 @@
 <!-- Props du composant camera container highlightedEmbedScreen={$highlightedEmbedScreen} -->
 <style>
     #video-container-receive {
-        height: 55vh;
-        margin-top: 3vh;
     }
 
     #presentation-layout.full-medias {

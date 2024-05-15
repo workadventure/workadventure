@@ -490,7 +490,7 @@
 {#if !$chatVisibilityStore}
     <ChatOverlay />
 {/if}
-<div class="@container/actions w-full absolute z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu">
+<div class="@container/actions w-full z-[301] bottom-0 sm:top-0 transition-all pointer-events-none bp-menu">
     <div class="flex w-full p-2 space-x-2 @xl/actions:p-4 @xl/actions:space-x-4">
         <div
             class="justify-start flex-1 pointer-events-auto w-32"

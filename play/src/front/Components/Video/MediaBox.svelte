@@ -84,7 +84,7 @@
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div
-            class="transition-all relative h-full aspect-video w-fit {$mediaStreamConstraintsStore.audio
+            class="transition-all relative h-full aspect-video w-full {$mediaStreamConstraintsStore.audio
                 ? 'border-8 border-solid bg-indigo-400 rounded-lg'
                 : ''}"
             class:hightlighted={isHightlighted}
@@ -98,9 +98,8 @@
             transition:fly={{ y: 50, duration: 150 }}
         >
             <!-- Video de l'autre personne-->
-            <div class="">
-                <VideoMediaBox peer={streamable} clickable={isClickable} />
-            </div>
+
+            <VideoMediaBox peer={streamable} clickable={isClickable} />
         </div>
     {/if}
 
