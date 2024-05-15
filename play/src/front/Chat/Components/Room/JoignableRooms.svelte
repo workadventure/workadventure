@@ -5,8 +5,8 @@
     import Avatar from "../Avatar.svelte";
 
     export let room: {
-        id : string,
-        name : string
+        id: string,
+        name: string
     };
     let displayInvitationRoomActions = false;
     const chat = gameManager.getCurrentGameScene().chatConnection;
@@ -15,17 +15,17 @@
         displayInvitationRoomActions = !displayInvitationRoomActions;
     }
 
-    async function joinRoom(){
+    async function joinRoom() {
         const newRoom = await chat.joinRoom(room.id);
         joignableRoom.set([]);
         chatSearchBarValue.set("");
         selectedRoom.set(newRoom);
-        
+
     }
 
     $: chunks = highlightWords({
         text: room.name.match(/\[\d*]/) ? room.name.substring(0, room.name.search(/\[\d*]/)) : room.name,
-        query: $chatSearchBarValue,
+        query: $chatSearchBarValue
     });
 </script>
 
@@ -35,13 +35,14 @@
     <div class="tw-relative">
         <Avatar avatarUrl={null} fallbackFirstLetter={room.name.charAt(0)} />
     </div>
-    {#each chunks as chunk (chunk.key)}
-    <span class={`${chunk.match ? "tw-text-light-blue" : ""}  tw-cursor-default`}>{chunk.text}</span>
-    {/each}
+    <div>
+        {#each chunks as chunk (chunk.key)}
+            <span class:tw-text-light-blue={chunk.match} class="tw-cursor-default">{chunk.text}</span>
+        {/each}
+    </div>
 </div>
 {#if displayInvitationRoomActions}
     <div class="tw-flex">
         <button class="tw-text-blue-300" on:click={()=>joinRoom()}>Join</button>
     </div>
 {/if}
-        
