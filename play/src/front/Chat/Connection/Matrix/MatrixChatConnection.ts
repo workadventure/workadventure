@@ -1,6 +1,9 @@
 import { derived, get, Readable, writable, Writable } from "svelte/store";
 import {
     ClientEvent,
+    EventType,
+    ICreateRoomOpts,
+    ICreateRoomStateEvent,
     IRoomDirectoryOptions,
     MatrixClient,
     MatrixEvent,
@@ -28,10 +31,10 @@ import {
     CreateRoomOptions,
 } from "../ChatConnection";
 import { SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
+import { selectedRoom } from "../../Stores/ChatStore";
 import { MatrixClientWrapperInterface } from "./MatrixClientWrapper";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { chatUserFactory } from "./MatrixChatUser";
-import { selectedRoom } from "../../Stores/ChatStore";
 
 export const defaultWoka =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
@@ -54,13 +57,17 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.roomList = new MapStore<string, MatrixChatRoom>();
 
         this.directRooms = derived(this.roomList, (roomList) => {
-            return Array.from(roomList.values()).filter((room) => !room.isInvited && room.type === "direct");
+            return Array.from(roomList.values()).filter(
+                (room) => room.myMembership === KnownMembership.Join && room.type === "direct"
+            );
         });
         this.invitations = derived(this.roomList, (roomList) => {
-            return Array.from(roomList.values()).filter((room) => room.isInvited);
+            return Array.from(roomList.values()).filter((room) => room.myMembership === KnownMembership.Invite);
         });
         this.rooms = derived(this.roomList, (roomList) => {
-            return Array.from(roomList.values()).filter((room) => !room.isInvited && room.type === "multiple");
+            return Array.from(roomList.values()).filter(
+                (room) => room.myMembership === KnownMembership.Join && room.type === "multiple"
+            );
         });
 
         (async () => {
@@ -91,12 +98,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         });
         this.client.on(ClientEvent.Room, this.onClientEventRoom.bind(this));
         this.client.on(ClientEvent.DeleteRoom, this.onClientEventDeleteRoom.bind(this));
-        // The chat connection is keeping the room list alive, this is why
-        // we register RoomEvent.MyMembership here
-        //This causing a lot of refresh...
-        //this.client.on(RoomEvent.MyMembership, this.onRoomEventMembership.bind(this));
+        this.client.on(RoomEvent.MyMembership, this.onRoomEventMembership.bind(this));
 
-        this.client.on(RoomEvent.Timeline, this.onRoomEventTimeline.bind(this));
+        //TODO find a fix for that
+        //this.client.on(RoomEvent.Timeline, this.onRoomEventTimeline.bind(this));
 
         await this.client.store.startup();
         await this.client.initRustCrypto();
@@ -272,13 +277,34 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     async createRoom(roomOptions?: CreateRoomOptions): Promise<{
         room_id: string;
     }> {
-        return await this.client.createRoom({
+        return await this.client.createRoom(this.mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions));
+    }
+
+    private mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions?: CreateRoomOptions): ICreateRoomOpts {
+        return {
             name: roomOptions?.name,
             visibility: roomOptions?.visibility as Visibility | undefined,
             room_alias_name: roomOptions?.name,
             invite: roomOptions?.invite,
             is_direct: roomOptions?.is_direct,
-        });
+            initial_state: roomOptions ? this.computeInitialState(roomOptions) : undefined,
+        };
+    }
+
+    private computeInitialState(roomOptions: CreateRoomOptions) {
+        const { encrypt, historyVisibility } = roomOptions;
+        const initial_state: ICreateRoomStateEvent[] = [];
+        if (encrypt !== undefined) {
+            initial_state.push({ type: EventType.RoomEncryption, content: { algorithm: "m.megolm.v1.aes-sha2" } });
+        }
+        if (historyVisibility !== undefined) {
+            initial_state.push({
+                type: EventType.RoomHistoryVisibility,
+                content: { history_visibility: roomOptions?.historyVisibility },
+            });
+        }
+
+        return initial_state;
     }
 
     async createDirectRoom(userToInvite: string): Promise<ChatRoom | undefined> {

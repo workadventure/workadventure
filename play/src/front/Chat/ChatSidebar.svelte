@@ -1,11 +1,12 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
+    import { onDestroy } from "svelte";
     import { enableUserInputsStore } from "../Stores/UserInputStore";
     import { mapEditorModeStore } from "../Stores/MapEditorStore";
     import { chatVisibilityStore } from "../Stores/ChatStore";
-    import Chat from "./Components/Chat.svelte";
     import { LocalSpaceProviderSingleton } from "../Space/SpaceProvider/SpaceStore";
     import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../Space/Space";
+    import Chat from "./Components/Chat.svelte";
 
 
     function closeChat() {
@@ -21,7 +22,7 @@
         }
     }
 
-    chatVisibilityStore.subscribe((isVisible : boolean)=>{
+    const chatVisibilityStoreUnsubscriber = chatVisibilityStore.subscribe((isVisible : boolean)=>{
       
       const SpaceProvider = LocalSpaceProviderSingleton.getInstance();
       if(!SpaceProvider)return;
@@ -39,12 +40,16 @@
       } 
     })
 
+    onDestroy(()=>{
+        chatVisibilityStoreUnsubscriber()
+    })
+
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
 {#if $chatVisibilityStore}
     <section id="chat" transition:fly={{ duration: 200,x:-335 }}
-        class="chatWindow tw-overflow-hidden tw-bg-dark-blue/95 tw-p-4">
+        class="chatWindow tw-overflow-hidden tw-bg-contrast/95 tw-backdrop-blur-md tw-p-4">
         <button class="close-window" on:click={closeChat}>&#215;</button>
         <Chat />
     </section>
