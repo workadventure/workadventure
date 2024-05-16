@@ -2,7 +2,7 @@
 sidebar_position: 11
 ---
 
-## Getting started to download your map
+# Getting started to download your map
 
 Start by [creating a GitHub account](https://github.com/join) if you don't already have one.
 

@@ -2,7 +2,7 @@
 sidebar_position: 12
 ---
 
-## Getting started with Github Pages
+# Getting started with Github Pages
 
 Start by [creating a GitHub account](https://github.com/join) if you don't already have one.
 

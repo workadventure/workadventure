@@ -2,7 +2,7 @@
 sidebar_position: 13
 ---
 
-## Getting started with self hosted Map
+# Getting started with self hosted Map
 
 To have your map self hosted you need to follow these steps :
 
