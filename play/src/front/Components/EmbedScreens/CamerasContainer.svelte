@@ -38,6 +38,18 @@
             });
         }
     }
+
+    $: reduceSizeIfScreenShare();
+
+    function reduceSizeIfScreenShare() {
+        if ($highlightedEmbedScreen) {
+            let scale = 0.5;
+            let cameras = document.querySelectorAll(".all-cameras");
+            cameras.forEach((camera) => {
+                (camera as HTMLElement).style.transform = `scale(${scale})`;
+            });
+        }
+    }
 </script>
 
 <!-- svelte-ignore missing-declaration -->
@@ -100,7 +112,7 @@
         }
     }
 
-    @container (min-width: 768px) and (max-width: 1023px) {
+    /* @container (min-width: 768px) and (max-width: 1023px) {
         .all-cameras {
             scale: 0.6;
         }
@@ -128,5 +140,5 @@
         .all-cameras {
             scale: 1;
         }
-    }
+    } */
 </style>

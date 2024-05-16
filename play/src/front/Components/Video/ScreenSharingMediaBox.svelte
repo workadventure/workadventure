@@ -96,9 +96,9 @@
         }
     }
 
-    @container (min-width: 1920px) {
+    /* @container (min-width: 1920px) {
         .video-container {
             scale: 1;
         }
-    }
+    } */
 </style>

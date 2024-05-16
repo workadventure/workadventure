@@ -31,10 +31,10 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!--style="height:{$heightCamWrapper}px"-->
 <div
     class="group/screenshare relative video-container rounded-lg {cssClass ? cssClass : ''}"
     class:hide={!stream}
-    style="height:{$heightCamWrapper}px"
     on:click={highlight}
 >
     {#if stream}

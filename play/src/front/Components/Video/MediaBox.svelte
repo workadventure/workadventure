@@ -34,7 +34,7 @@
     onMount(() => {
         gameScene.reposition();
         dispatch("camMounted");
-        consoleLog();
+
         console.log("MOUNTED MEDIA BOX");
     });
 
@@ -48,17 +48,17 @@
         dispatch("camUnmounted");
     });
 
-    function consoleLog() {
-        if (streamable instanceof VideoPeer) {
-            console.log("Si le streamable est une vidéo d'une autre personne", streamable);
-        } else if (streamable instanceof ScreenSharingPeer) {
-            console.log("Si le streamable est un partage d'écran de la part d'un autre utilisateur !", streamable);
-        } else if (streamable instanceof JitsiTrackStreamWrapper) {
-            console.log("Si le streamable est une vidéo de l'utilisateur", streamable);
-        } else {
-            console.log("Div pour celui qui partage son écran avec partage d'écran en petit", streamable);
-        }
-    }
+    // function consoleLog() {
+    //     if (streamable instanceof VideoPeer) {
+    //         console.log("Si le streamable est une vidéo d'une autre personne", streamable);
+    //     } else if (streamable instanceof ScreenSharingPeer) {
+    //         console.log("Si le streamable est un partage d'écran de la part d'un autre utilisateur !", streamable);
+    //     } else if (streamable instanceof JitsiTrackStreamWrapper) {
+    //         console.log("Si le streamable est une vidéo de l'utilisateur", streamable);
+    //     } else {
+    //         console.log("Div pour celui qui partage son écran avec partage d'écran en petit", streamable);
+    //     }
+    // }
 
     // function addStyleSpeaker() {
     //     if ($constraintStore && $constraintStore.audio !== false) {
@@ -79,6 +79,8 @@
     }
 </script>
 
+<!--class:mr-6={isHightlighted && videoEnabled}-->
+
 <!-- Si le streamable est une vidéo d'une autre personne genre college de Jitsi-->
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
@@ -88,7 +90,6 @@
                 ? 'border-8 border-solid bg-indigo-400 rounded-lg'
                 : ''}"
             class:hightlighted={isHightlighted}
-            class:mr-6={isHightlighted && videoEnabled}
             class:max-w-sm={isHightlighted && !videoEnabled}
             class:mx-auto={isHightlighted && !videoEnabled}
             class:m-auto={!isHightlighted && !videoEnabled}
@@ -153,7 +154,7 @@
 {:else}
     <!-- Div pour celui qui partage son écran avec partage d'écran en petit-->
     <div
-        class="media-container {isHightlighted ? 'hightlighted mr-6' : 'flex h-full aspect-ratio'}"
+        class="media-container {isHightlighted ? 'hightlighted' : 'flex h-full aspect-ratio'}"
         class:clickable={isClickable}
     >
         <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'} rounded-lg w-full h-full flex screen-blocker">
