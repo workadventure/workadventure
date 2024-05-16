@@ -4,6 +4,7 @@
     import { get } from "svelte/store";
     import { ChatRoom } from "../../Connection/ChatConnection";
     import { selectedChatMessageToReply, selectedRoom } from "../../Stores/ChatStore";
+    import LL from "../../../../i18n/i18n-svelte";
     import Message from "./Message.svelte";
     import MessageInput from "./MessageInput.svelte";
 
@@ -14,15 +15,20 @@
     let onScrollTop = false;
 
     async function loadPreviousMessageOnScrollTop() {
+        console.debug("loadPreviousMessageOnScrollTop called")
         while (messageListRef.scrollTop === 0 && get(room.hasPreviousMessage)) {
             // eslint-disable-next-line no-await-in-loop
             await room.loadMorePreviousMessages();
+            console.debug("loadPreviousMessageOnScrollTop loadMorePreviousMessages")
         }
     }
 
     onMount(() => {
         scrollToMessageListBottom();
-        room.loadMorePreviousMessages().catch(error => console.error(error));
+        if(messageListRef){
+            loadPreviousMessageOnScrollTop().catch(error=>console.error(error))
+        }
+
     });
 
     beforeUpdate(()=>{
@@ -40,9 +46,7 @@
             scrollToMessageListBottom();
         }
         if(onScrollTop){
-            if (oldFirstListItem === null) {
-                //nothing to do
-            } else{
+            if(oldFirstListItem !== null){
                 messageListRef.scrollTop = oldFirstListItem.getBoundingClientRect().top - messageListRef.getBoundingClientRect().top;
                 oldFirstListItem.removeAttribute("data-first-li");
             }
@@ -61,9 +65,11 @@
         selectedRoom.set(undefined);
     }
 
-    let messages = room?.messages;
-    let messageReaction = room?.messageReactions;
-    
+    console.debug(room);
+   $: messages = room?.messages;
+   $: messageReaction = room?.messageReactions;
+   console.debug("Messages : ",messages)
+
 </script>
 
 {#if room !== undefined}
@@ -73,7 +79,7 @@
     <ul on:scroll={()=>loadPreviousMessageOnScrollTop()} bind:this={messageListRef}
         class="tw-list-none tw-p-0 tw-flex-1 tw-overflow-auto tw-flex tw-flex-col">
         {#if $messages.length === 0}
-            <p class="tw-self-center tw-text-md tw-text-gray-500">No message</p>
+            <p class="tw-self-center tw-text-md tw-text-gray-500">{$LL.chat.nothingToDisplay()}</p>
         {/if}
         {#each $messages as message (message.id)}
             <li data-event-id={message.id}>

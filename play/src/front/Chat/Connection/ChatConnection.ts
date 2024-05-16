@@ -30,13 +30,14 @@ export interface ChatRoom {
     messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>>;
     sendMessage: (message: string) => void;
     sendFiles: (files: FileList) => Promise<void>;
-    isInvited: boolean;
+    myMembership: string;
     setTimelineAsRead: () => void;
     membersId: string[];
     leaveRoom: () => void;
     joinRoom: () => void;
     hasPreviousMessage: Readable<boolean>;
     loadMorePreviousMessages: () => Promise<void>;
+    isEncrypted: Readable<boolean>;
 }
 
 //Readonly attributes
@@ -65,13 +66,17 @@ export interface ChatMessageReaction {
 
 export type ChatMessageType = "text" | "image" | "file" | "audio" | "video";
 export type ChatMessageContent = { body: string; url: string | undefined };
+export const historyVisibilityOptions = ["world_readable", "joined", "invited"] as const;
+export type historyVisibility = (typeof historyVisibilityOptions)[number];
 
 export interface CreateRoomOptions {
     name?: string;
     visibility?: "private" | "public";
     is_direct?: boolean;
+    historyVisibility?: historyVisibility;
     invite?: string[];
     preset?: "private_chat" | "public_chat" | "trusted_private_chat";
+    encrypt?: boolean;
 }
 
 export type ConnectionStatus = "ONLINE" | "ON_ERROR" | "CONNECTING" | "OFFLINE";
