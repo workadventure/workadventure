@@ -38,48 +38,32 @@
             });
         }
     }
-
-    $: reduceSizeIfScreenShare();
-
-    function reduceSizeIfScreenShare() {
-        if ($highlightedEmbedScreen) {
-            let scale = 0.5;
-            let cameras = document.querySelectorAll(".all-cameras");
-            cameras.forEach((camera) => {
-                (camera as HTMLElement).style.transform = `scale(${scale})`;
-            });
-        }
-    }
 </script>
 
 <!-- svelte-ignore missing-declaration -->
-<aside class:full in:fly|local={{ x: 200, duration: 100 }} class="mobile-height">
-    <!-- grid-flow-col grid-flow-col -->
-    <!-- {#if $streamableCollectionStore.size < 3} -->
+<!-- <aside class:full in:fly|local={{ x: 200, duration: 100 }} class="mobile-height"> -->
+<!-- grid-flow-col grid-flow-col -->
+<!-- {#if $streamableCollectionStore.size < 3} -->
 
-    <div class="all-cameras overflow-visible content-center flex gap-x-4 justify-center">
-        {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
-            {#if !highlightedEmbedScreen || $highlightedEmbedScreen !== peer}
-                {#key uniqueId}
-                    <div id="unique-cam-other">
-                        <MediaBox
-                            streamable={peer}
-                            on:camMounted={camMountedWidth}
-                            on:camUnmounted={camUnmountedWidth}
-                        />
-                    </div>
-                {/key}
-            {/if}
-        {/each}
-        <div id="unique-mycam ">
-            {#if $myCameraStore}
-                <MyCamera />
-            {/if}
-        </div>
+<div class="all-cameras overflow-visible content-center flex gap-x-4 justify-center">
+    {#each [...$streamableCollectionStore] as [uniqueId, peer] (uniqueId)}
+        {#if !highlightedEmbedScreen || $highlightedEmbedScreen !== peer}
+            {#key uniqueId}
+                <div id="unique-cam-other">
+                    <MediaBox streamable={peer} on:camMounted={camMountedWidth} on:camUnmounted={camUnmountedWidth} />
+                </div>
+            {/key}
+        {/if}
+    {/each}
+    <div id="unique-mycam ">
+        {#if $myCameraStore}
+            <MyCamera />
+        {/if}
     </div>
+</div>
 
-    <!-- && !$megaphoneEnabledStore TODO HUGO -->
-</aside>
+<!-- && !$megaphoneEnabledStore TODO HUGO -->
+<!-- </aside> -->
 
 <!-- {$mediaStreamConstraintsStore.audio
     ? 'border-8 border-solid bg-indigo-400 rounded-lg'

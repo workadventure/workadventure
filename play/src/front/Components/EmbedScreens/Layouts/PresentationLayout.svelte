@@ -36,7 +36,7 @@
     let layoutDom: HTMLDivElement;
 
     // let displayCoWebsiteContainer = isMediaBreakpointDown("lg");
-    let displayFullMedias = isMediaBreakpointUp("md");
+    // let displayFullMedias = isMediaBreakpointUp("md");
 
     // const resizeObserver = new ResizeObserver(() => {
     //     displayCoWebsiteContainer = isMediaBreakpointDown("lg");
@@ -50,9 +50,21 @@
     //         highlightedEmbedScreen.removeHighlight();
     //     }
     // });
+
+    $: $highlightedEmbedScreen, reduceSizeIfScreenShare();
+
+    function reduceSizeIfScreenShare() {
+        let containerCam = document.getElementsByClassName("test-media")[0] as HTMLElement;
+        let layout = document.getElementById("presentation-layout") as HTMLElement;
+        if ($highlightedEmbedScreen) {
+            containerCam.style.transform = "scale(0.5)";
+        }
+    }
 </script>
 
-<div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias}>
+<!-- class:full-medias={displayFullMedias} -->
+
+<div id="presentation-layout" bind:this={layoutDom}>
     <!-- Div pour l'affichage de toutes les camera (other cam : cameContainer / my cam : MyCamera'-->
 
     {#if $streamableCollectionStore.size > 0 || $myCameraStore}
@@ -111,6 +123,11 @@
     #presentation-layout.full-medias {
         overflow-y: auto;
         overflow-x: hidden;
+    }
+
+    #presentation-layout {
+        display: flex;
+        flex-direction: column;
     }
 
     #embed-left-block {
