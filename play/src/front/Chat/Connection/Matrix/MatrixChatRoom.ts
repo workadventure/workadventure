@@ -28,12 +28,13 @@ export class MatrixChatRoom implements ChatRoom {
     hasUnreadMessages: Writable<boolean>;
     avatarUrl: string | undefined;
     messages: SearchableArrayStore<string, MatrixChatMessage>;
-    isInvited!: boolean;
+    myMembership: string;
     membersId: string[];
     messageReactions: MapStore<string, MapStore<string, MatrixChatMessageReaction>>;
     hasPreviousMessage: Writable<boolean>;
     timelineWindow: TimelineWindow;
     inMemoryEventsContent: Map<EventId, IContent>;
+    isEncrypted!: Writable<boolean>;
 
     constructor(private matrixRoom: Room) {
         this.id = matrixRoom.roomId;
@@ -44,13 +45,14 @@ export class MatrixChatRoom implements ChatRoom {
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id); //writable(new Map<string, MatrixChatMessage>());
         this.messageReactions = new MapStore<string, MapStore<string, MatrixChatMessageReaction>>();
         this.sendMessage = this.sendMessage.bind(this);
-        this.isInvited = matrixRoom.hasMembershipState(matrixRoom.myUserId, "invite");
+        this.myMembership = matrixRoom.getMyMembership();
         this.membersId = [
             ...matrixRoom.getMembersWithMembership(KnownMembership.Invite).map((member) => member.userId),
             ...matrixRoom.getMembersWithMembership(KnownMembership.Join).map((member) => member.userId),
         ];
         this.hasPreviousMessage = writable(false);
         this.timelineWindow = new TimelineWindow(matrixRoom.client, matrixRoom.getLiveTimeline().getTimelineSet());
+        this.isEncrypted = writable(matrixRoom.hasEncryptionStateEvent());
 
         //Necessary to keep matrix event content for local event deletions after initialization
         this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
@@ -65,17 +67,22 @@ export class MatrixChatRoom implements ChatRoom {
         await this.timelineWindow.load();
         const events = this.timelineWindow.getEvents();
         events.forEach((event) =>
-            this.readEventsToAddMessagesAndReactions(event, this.messages, this.messageReactions)
+            this.readEventsToAddMessagesAndReactions(event, this.messages, this.messageReactions).catch((error) =>
+                console.error(error)
+            )
         );
 
         this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
     }
 
-    private readEventsToAddMessagesAndReactions(
+    private async readEventsToAddMessagesAndReactions(
         event: MatrixEvent,
         messages: MatrixChatMessage[],
         messageReactions: MapStore<string, MapStore<string, MatrixChatMessageReaction>>
     ) {
+        if (event.isEncrypted()) {
+            await this.matrixRoom.client.decryptEventIfNeeded(event);
+        }
         if (event.getType() === "m.room.message" && !this.isEventReplacingExistingOne(event)) {
             messages.push(new MatrixChatMessage(event, this.matrixRoom));
             this.addEventContentInMemory(event);
@@ -104,21 +111,26 @@ export class MatrixChatRoom implements ChatRoom {
             return;
         }
         if (room !== undefined) {
-            this.hasUnreadMessages.set(room.getUnreadNotificationCount() > 0);
-            if (event.getType() === "m.room.message") {
-                if (this.isEventReplacingExistingOne(event)) {
-                    this.handleMessageModification(event);
-                } else {
-                    this.handleNewMessage(event);
+            (async () => {
+                if (event.isEncrypted()) {
+                    await this.matrixRoom.client.decryptEventIfNeeded(event);
                 }
-            }
-            if (event.getType() === "m.reaction") {
-                this.handleNewMessageReaction(event, this.messageReactions);
-            }
-            this.membersId = [
-                ...room.getMembersWithMembership(KnownMembership.Invite).map((member) => member.userId),
-                ...room.getMembersWithMembership(KnownMembership.Join).map((member) => member.userId),
-            ];
+                this.hasUnreadMessages.set(room.getUnreadNotificationCount() > 0);
+                if (event.getType() === "m.room.message") {
+                    if (this.isEventReplacingExistingOne(event)) {
+                        this.handleMessageModification(event);
+                    } else {
+                        this.handleNewMessage(event);
+                    }
+                }
+                if (event.getType() === "m.reaction") {
+                    this.handleNewMessageReaction(event, this.messageReactions);
+                }
+                this.membersId = [
+                    ...room.getMembersWithMembership(KnownMembership.Invite).map((member) => member.userId),
+                    ...room.getMembersWithMembership(KnownMembership.Join).map((member) => member.userId),
+                ];
+            })().catch((error) => console.error(error));
         }
     }
 

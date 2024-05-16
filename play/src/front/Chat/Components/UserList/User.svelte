@@ -1,15 +1,15 @@
 <script lang="ts">
     import { ShieldIcon, UsersIcon } from "svelte-feather-icons";
+    import { AvailabilityStatus } from "@workadventure/messages";
+    import highlightWords from "highlight-words";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { availabilityStatusStore } from "../../../Stores/MediaStore";
     import { getColorHexOfStatus } from "../../../Utils/AvailabilityStatus";
     import { ChatRoom, ChatUser } from "../../Connection/ChatConnection";
-    import UserActionButton from "./UserActionButton.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { AvailabilityStatus } from "@workadventure/messages";
-    import highlightWords from "highlight-words";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
     import { chatSearchBarValue, navChat, selectedRoom } from "../../Stores/ChatStore";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
+    import UserActionButton from "./UserActionButton.svelte";
 
     export let user:ChatUser;
 

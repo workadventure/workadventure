@@ -38,21 +38,21 @@
     {#if message.type !== "text"}
         <a href={$content.url} download={$content.body} class="tw-p-0 tw-m-0 tw-text-white hover:tw-text-white"
            target="_blank">
-            <IconArrowDown size={16} class="hover:tw-cursor-pointer hover:tw-text-cyan-500" />
+            <IconArrowDown size={16} class="hover:tw-cursor-pointer hover:tw-text-secondary" />
         </a>
     {/if}
-    <button class="tw-p-0 tw-m-0 hover:tw-text-cyan-500" on:click={replyToMessage}>
+    <button class="tw-p-0 tw-m-0 hover:tw-text-secondary" on:click={replyToMessage}>
         <IconArrowBackUp size={16} />
     </button>
-    <button class="tw-p-0 tw-m-0 hover:tw-text-cyan-500" on:click={openCloseEmojiPicker}>
+    <button class="tw-p-0 tw-m-0 hover:tw-text-secondary" on:click={openCloseEmojiPicker}>
         <IconMoodSmile size={16} />
     </button>
     {#if isMyMessage && type === "text" }
-        <button class="tw-p-0 tw-m-0 hover:tw-text-cyan-500" on:click={selectMessageToEdit}>
+        <button class="tw-p-0 tw-m-0 hover:tw-text-secondary" on:click={selectMessageToEdit}>
             <IconPencil size={16} />
         </button>
     {/if}
-    <button class="tw-p-0 tw-m-0 hover:tw-text-cyan-500" on:click={removeMessage}>
+    <button class="tw-p-0 tw-m-0 hover:tw-text-secondary" on:click={removeMessage}>
         <IconTrash size={16} />
     </button>
 </div>

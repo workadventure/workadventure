@@ -36,9 +36,9 @@
     />
     <label for="upload" class="tw-p-0 tw-m-0">
         {#if files !== undefined}
-            <IconLoader class="tw-animate-spin" />
+            <IconLoader class="tw-animate-spin" size={18}  />
         {:else}
-            <IconPaperclip class="hover:!tw-cursor-pointer" />
+            <IconPaperclip class="hover:!tw-cursor-pointer" size={18} />
         {/if}
     </label>
 </div>

@@ -160,6 +160,33 @@ const chat: BaseTranslation = {
     anAdmin: "an administrator",
     messageDeletedByYou: "You deleted this message",
     waiting: "Waiting",
+    nothingToDisplay: "Nothing to display",
+    createRoom: {
+        title: "Create new room",
+        name: "Name",
+        visibility: {
+            label: "Visibility",
+            private: "Private",
+            privateDescription: "Only invited guests will be able to find and join the room.",
+            public: "Public",
+            publicDescription: "Anyone can find and join the room.",
+        },
+        e2eEncryption: {
+            label: "Activate end to end encryption",
+            description: "You won't be able to deactivate it later.",
+        },
+        users: "Users",
+        historyVisibility: {
+            label: "Who can read history ?",
+            world_readable: "Anyone",
+            joined: "Members only (since they joined)",
+            invited: "Members only (since they were invited)",
+        },
+        buttons: {
+            create: "Create",
+            cancel: "Cancel",
+        },
+    },
 };
 
 export default chat;

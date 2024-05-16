@@ -8,10 +8,9 @@
 
 {#if $users.size > 0}
     <div on:click={()=>reaction.react()}
-         class="tw-flex tw-flex-row tw-gap-1 tw-p-1 tw-rounded-md tw-border tw-border-solid tw-border-light-purple hover:tw-bg-white/20 hover:tw-cursor-pointer"
-         class:tw-bg-light-purple={$reacted}>
+         class="tw-bg-white/50 tw-flex tw-flex-row tw-gap-1 tw-p-1 tw-rounded-md  hover:tw-bg-white/20 tw-text-white hover:tw-cursor-pointer">
         <p class="tw-text-xxs tw-p-0 tw-m-0 hover:tw-cursor-pointer">{key}</p>
         <p class="tw-text-xxs tw-p-0 tw-m-0 hover:tw-cursor-pointer"
-           class:tw-text-blue-500={$reacted}>{$users.size}</p>
+           class:tw-font-extrabold={$reacted} class:tw-text-secondary={$reacted}>{$users.size}</p>
     </div>
 {/if}

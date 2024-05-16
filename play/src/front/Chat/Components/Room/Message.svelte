@@ -41,14 +41,15 @@
         "video": MessageVideoFile
     };
 
-    let messageRef:HTMLDivElement
+    let messageRef: HTMLDivElement;
 
 </script>
 
 <div id="message" bind:this={messageRef} class={`${isMyMessage && "tw-self-end tw-flex-row-reverse"}`}>
     <div class={`container-grid ${isMyMessage ? "tw-justify-end grid-container-inverted" : "tw-justify-start"}`}>
         <div
-            class={`messageHeader tw-text-gray-500 tw-text-xxs tw-p-0 tw-m-0 tw-flex tw-justify-between ${isMyMessage ? "tw-flex-row-reverse" : ""} tw-items-end`}
+            class="messageHeader tw-text-gray-500 tw-text-xxs tw-p-0 tw-m-0 tw-flex tw-justify-between tw-items-end"
+            class:tw-flex-row-reverse={isMyMessage}
             hidden={isQuotedMessage}>
             <span>{isMyMessage ? "You" : sender?.username}</span>
             <span class={`tw-text-xxxs ${isMyMessage ? "tw-mr-1" : "tw-ml-1" }`}>{date?.toLocaleTimeString($locale, {
@@ -62,7 +63,7 @@
             </div>
         {/if}
 
-        <div class="message tw-bg-brand-blue tw-rounded-md tw-p-2">
+        <div class="message tw-rounded-2xl tw-p-2" class:tw-bg-primary={!isMyMessage} class:tw-bg-secondary={isMyMessage} class:tw-rounded-br-none={isMyMessage} class:tw-rounded-bl-none={!isMyMessage}>
             {#if $isDeleted}
                 <p class="tw-p-0 tw-m-0 tw-text-xs tw-text-gray-500 tw-flex tw-items-center">
                     <IconTrash size={12} /> {$LL.chat.messageDeleted()}</p>
@@ -74,8 +75,8 @@
                 {#if $selectedChatMessageToEdit !== null && $selectedChatMessageToEdit.id === id}
                     <MessageEdition message={$selectedChatMessageToEdit} />
                 {/if}
-                {#if reactions!==undefined}
-                    <MessageReactions reactions={reactions}/>
+                {#if reactions !== undefined}
+                    <MessageReactions reactions={reactions} />
                 {/if}
             {/if}
         </div>
@@ -89,7 +90,7 @@
     {#if !isQuotedMessage && !$isDeleted}
         <div
             class={`options tw-bg-white/30 tw-backdrop-blur-sm tw-p-1 tw-rounded-md ${!isMyMessage ? "tw-left-6" : ""}`}>
-            <MessageOptions messageRef={messageRef}  message={message} />
+            <MessageOptions messageRef={messageRef} message={message} />
         </div>
     {/if}
 </div>
@@ -133,7 +134,9 @@
     }
 
     .avatar {
-        grid-area: avatar
+        grid-area: avatar;
+        display:flex;
+        align-items: flex-end;
     }
 
     .response {
