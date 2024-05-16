@@ -78,7 +78,7 @@
 
 <!-- For div above BAN REPORT -->
 <style>
-    @container (max-width: 767px) {
+    /* @container (max-width: 767px) {
         .video-container {
             scale: 0.5;
         }
@@ -92,9 +92,9 @@
 
     @container (min-width: 1440px) and (max-width: 1919px) {
         .video-container {
-            scale: 1;
+            scale: 0.6;
         }
-    }
+    } */
 
     /* @container (min-width: 1920px) {
         .video-container {

@@ -13,6 +13,7 @@
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
     import { mediaStreamConstraintsStore } from "../../Stores/MediaStore";
+    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -76,6 +77,16 @@
         //     isHighlighted = false;
         //     console.log("isNOOTHighlighted", isHighlighted);
         // }
+    }
+
+    $: $highlightedEmbedScreen, reduceSizeIfScreenShare();
+
+    function reduceSizeIfScreenShare() {
+        let containerCam = document.getElementsByClassName("media-container")[0] as HTMLElement;
+        if ($highlightedEmbedScreen) {
+            console.log("REDUCE SIZE");
+            // containerCam.style.aspectRatio = "2.5";
+        }
     }
 </script>
 
@@ -166,19 +177,50 @@
 <!-- class:mozaic-full-width={mozaicSolo}
         class:mozaic-duo={mozaicDuo}
         class:mozaic-quarter={mozaicQuarter} -->
-<style lang="scss">
-    @import "../../style/breakpoints.scss";
+<style>
+    /* @import "../../style/breakpoints.scss"; */
 
-    @include media-breakpoint-up(sm) {
+    /* @include media-breakpoint-up(sm) {
         .receiving-sharing {
             display: block;
         }
-    }
-    //Classes factorizing tailwind's ones are defined in video-ui.scss
+    } */
+
+    /*Classes factorizing tailwind's ones are defined in video-ui.scss
 
     .media-container {
         &.clickable {
             cursor: pointer;
+        }
+    }*/
+
+    @container (min-width: 768px) and (max-width: 1023px) {
+        .media-container {
+            aspect-ratio: 2.5;
+        }
+    }
+
+    @container (min-width: 1024px) and (max-width: 1279px) {
+        .media-container {
+            aspect-ratio: 2.5;
+        }
+    }
+
+    @container (min-width: 1280px) and (max-width: 1439px) {
+        .media-container {
+            aspect-ratio: 2.5;
+        }
+    }
+
+    @container (min-width: 1440px) and (max-width: 1919px) {
+        .media-container {
+            aspect-ratio: 2.5;
+        }
+    }
+
+    @container (min-width: 1920px) {
+        .media-container {
+            aspect-ratio: 2.5;
         }
     }
 </style>

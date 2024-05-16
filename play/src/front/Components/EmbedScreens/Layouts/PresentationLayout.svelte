@@ -3,8 +3,6 @@
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
-    import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
-    import { isMediaBreakpointDown, isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
     import { myCameraStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import { myJitsiCameraStore, streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import Loading from "../../Video/Loading.svelte";
@@ -55,9 +53,14 @@
 
     function reduceSizeIfScreenShare() {
         let containerCam = document.getElementsByClassName("test-media")[0] as HTMLElement;
-        let layout = document.getElementById("presentation-layout") as HTMLElement;
-        if ($highlightedEmbedScreen) {
-            containerCam.style.transform = "scale(0.5)";
+        if (containerCam) {
+            if ($highlightedEmbedScreen) {
+                containerCam.style.transform = "scale(0.7)";
+                containerCam.style.marginTop = "-35px";
+            } else {
+                containerCam.style.transform = "scale(1)";
+                containerCam.style.marginTop = "0px";
+            }
         }
     }
 </script>
@@ -128,6 +131,10 @@
     #presentation-layout {
         display: flex;
         flex-direction: column;
+    }
+
+    .test-media {
+        margin-bottom: -25px;
     }
 
     #embed-left-block {
