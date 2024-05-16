@@ -1,13 +1,15 @@
 ---
-sidebar_position: 12
-title: Host your Map with Github Pages
+sidebar_position: 13
+title: Host your Map with WorkAdventure
 ---
 
-# Getting started with Github Pages
+# Getting started with self hosted Map
+
+To have your map self hosted you need to follow these steps :
 
 Start by [creating a GitHub account](https://github.com/join) if you don't already have one.
 
-Then, go to the [Github map starter kit repository page](https://github.com/workadventure/map-starter-kit) and click the **"Use this template"** button.
+Go to the [Github map starter kit repository page](https://github.com/workadventure/map-starter-kit) and click the **"Use this template"** button.
 
 ![The "Use this template" button](../images/use_this_template.png)
 
@@ -15,25 +17,47 @@ You will be prompted to enter a repository name for your map.
 
 ![The "create a new repository" page](../images/create_repo.png)
 
-**Make sure to check the "Include all branches" checkbox, otherwise the Github Pages deployment process will not be setup automatically.**
+### Installation
 
-If you miss that step, don't worry, you can always fix that by clicking on the **Settings tab** of your repository and scroll down to the **GitHub Pages** section. Then select the **gh-pages** branch. It might already be selected, but please be sure to click on it nonetheless (otherwise GitHub will not enable GitHub pages).
+This package is designed to help you upload maps from Tiled to the map storage of WorkAdventure or your own server.
 
-:::info
-If you only see a "master" branch and if the **gh-pages** branch does not appear here, simply wait a few minutes and refresh your page. When you created the project, Github Actions triggered a job that is in charge of creating the **gh-pages** branch. Maybe the job is not finished yet.
-:::
+To install this package, use the following command :
 
-![The GitHub pages configuration section](../images/github_pages.png)
+    npm install @workadventure/upload-maps
 
-Wait a few minutes... Github will deploy a new website with the content of the repository. The address of the website is visible in the "GitHub Pages" section.
+In order to use this package run the command in your terminal :
 
-![Your website is ready!](../images/website_address.png)
+    node_modules/.bin/upload-wa-map
 
-Click on the link. You should be redirected directly to WorkAdventure, on your map!
+It will ask you some questions :
+
+1. Your API Key :
+   You can find it on [Your admin acount](https://admin.workadventu.re), you need to log-in and you'll see on the left panel that you can go to Developers tab --> API keys /Zapier. There you can create a new token. (Don't forget to save it !)
+
+2. The URL of your map storage :
+   The map storage is in the same section as the API Key above. There are 3 links be careful to take the `Map-storage API endpoint`, it is the url for uploading map storage
+
+   ![Get your API Key](../images/navigate_admin.png)
+   ![Get your API Key](../images/get_info_key.png)
+
+3. Directoy :
+   You can also add a `directory name` if you want. It will be the folder where all your uploaded files will be stored in.
+   If you leave this blank, there will be no directory.
+
+<!-- 4. Upload Mode :
+   The upload mode is the way you want to host your map. If your following this tutorial it mean you want to be hosted so you need to enter 1 to choose this mode of storage.
+   If you have any doubt about your upload mode you can check here for the others options.
+   [Build your Map with Tiled](index.md) -->
+
+To complete the upload, you need to set your secrets variables in your github repository. You need to set the URL of your map storage and your API Key to push your new release ! You can find here a tutoriel on how to set up your secrets variables in github.
+
+[How to set your secrets in github](https://scribehow.com/shared/Upload_Map__Set_up_secrets_for_in_your_repository__FKsqAsrVQ_SzDavSudb19Q)
+
+After answering these questions, the script will start to upload your directory. To be sure that it worked, you need to see something like this in your terminal : 'Upload done successfully'
+
+Now for every change you only just have to commit and push all your changes ! Just wait a few minutes, and your map will be propagated automatically on your server.
 
 ## Customizing your map
-
-Your map is now up and online, but this is still the demo map from the starter kit. You need to customize it.
 
 ### Loading the map in Tiled
 
@@ -67,14 +91,6 @@ From here, you simply need to click the "Test this map" button to test your map 
 :::warning
 The local web server can only be used to test your map locally. In particular, the link will only work on your computer. You cannot share it with other people.
 :::
-
-### Update your map on GH Pages
-
-:::caution Important
-Before your push on github pages, you need to set up your environment variable in .env file like this : UPLOAD_MODE=GH_PAGES
-:::
-
-After making this change, to update your changes on github Pages, you only need to push.
 
 ## Testing your map
 
