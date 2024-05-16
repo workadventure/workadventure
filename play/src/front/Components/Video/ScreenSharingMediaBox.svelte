@@ -23,7 +23,7 @@
 
     if (peer) {
         embedScreen = {
-            type: "streamable",
+            type: "streamable", //To remove
             embed: peer as unknown as Streamable,
         };
     }
