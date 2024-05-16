@@ -16,7 +16,7 @@ Then click on the Download ZIP button
 
 Make the changes you want in Tiled and to upload you only need to log in to your administrators account, go to the world you want, then click “create a new room”, once there you can go to the Custom section.
 
-Here you'll be asked for the URL of the Json file on your github server. Once you've entered it, just click on create.
+Here you'll be asked for the URL of the Json file on your github server. Once you've entered it, just click on create...
 
 ## Need some help?
 
