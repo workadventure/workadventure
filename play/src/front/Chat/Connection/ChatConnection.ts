@@ -20,6 +20,7 @@ export interface ChatUser {
     spaceId: number | undefined;
 }
 
+export type ChatRoomMembership = "ban" | "join" | "knock" | "leave" | "invite" | string;
 export interface ChatRoom {
     id: string;
     name: Readable<string>;
@@ -30,7 +31,7 @@ export interface ChatRoom {
     messageReactions: MapStore<string, MapStore<string, ChatMessageReaction>>;
     sendMessage: (message: string) => void;
     sendFiles: (files: FileList) => Promise<void>;
-    myMembership: string;
+    myMembership: ChatRoomMembership;
     setTimelineAsRead: () => void;
     membersId: string[];
     leaveRoom: () => void;
@@ -74,7 +75,7 @@ export interface CreateRoomOptions {
     visibility?: "private" | "public";
     is_direct?: boolean;
     historyVisibility?: historyVisibility;
-    invite?: string[];
+    invite?: { value: string; label: string }[];
     preset?: "private_chat" | "public_chat" | "trusted_private_chat";
     encrypt?: boolean;
 }
@@ -104,6 +105,7 @@ export interface ChatConnectionInterface {
     >;
     joinRoom(roomId: string): Promise<ChatRoom | undefined>;
     destroy(): void;
+    searchChatUsers(searchText: string): Promise<{ id: string; name: string | undefined }[] | undefined>;
 }
 
 export type Connection = AtLeast<RoomConnection, "queryChatMembers">;

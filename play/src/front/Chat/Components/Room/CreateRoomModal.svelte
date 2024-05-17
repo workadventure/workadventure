@@ -3,6 +3,7 @@
     import { closeModal } from "svelte-modals";
     import { IconAlertTriangle, IconHelpCircle } from "@tabler/icons-svelte";
     import { get } from "svelte/store";
+    import Select from "svelte-select";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import { CreateRoomOptions, historyVisibility, historyVisibilityOptions } from "../../Connection/ChatConnection";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -11,7 +12,6 @@
     export let isOpen: boolean;
     let createRoomOptions: CreateRoomOptions = { visibility: "public" };
     let createRoomError: string;
-
 
     const chat = gameManager.getCurrentGameScene().chatConnection;
 
@@ -25,8 +25,8 @@
         }
     }
 
-    function getHistoryTranslation(historyVisibilityOption:historyVisibility) {
-        switch(historyVisibilityOption){
+    function getHistoryTranslation(historyVisibilityOption: historyVisibility) {
+        switch (historyVisibilityOption) {
             case "world_readable":
                 return get(LL).chat.createRoom.historyVisibility.world_readable();
             case "invited":
@@ -36,7 +36,19 @@
         }
     }
 
+    async function searchMembers(filterText: string) {
+            try {
+               const chatUsers = await chat.searchChatUsers(filterText)
+               if(chatUsers===undefined){
+                   return []
+               }
+               return chatUsers.map(user=>({value:user.id,label:user.name ?? user.id}))
+            } catch (error) {
+                console.error(error);
+            }
 
+        return [];
+    }
 
 </script>
 
@@ -64,7 +76,7 @@
             {:else if createRoomOptions.visibility === "public"}
                 {$LL.chat.createRoom.visibility.publicDescription()}
             {/if}
-        </p>
+        </p> 
         {#if createRoomOptions.visibility === "private"}
             <div class="tw-pl-1">
                 <input bind:value={createRoomOptions.encrypt} type="checkbox" id="encryptData" />
@@ -76,14 +88,24 @@
             </p>
         {/if}
         <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createRoom.users()}</p>
-        <input
-            class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
-            placeholder="Users"
-            bind:value={createRoomOptions.name} />
+        <Select
+            bind:value={createRoomOptions.invite}
+            multiple
+            class="!tw-border-light-purple tw-border tw-border-solid !tw-bg-contrast !tw-rounded-xl"
+            inputStyles="box-shadow:none !important"
+            --border-focused="2px solid rgb(146 142 187)"
+            --input-color="white"
+            --item-color="black"
+            --item-hover-color="black"
+            --clear-select-color="red"
+            loadOptions={searchMembers}
+            placeholder={$LL.chat.createRoom.users()}
+        />
         <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createRoom.historyVisibility.label()}</p>
         {#each historyVisibilityOptions as historyVisibilityOption (historyVisibilityOption)}
             <label class="tw-m-0">
-                <input bind:group={createRoomOptions.historyVisibility} type="radio" value={historyVisibilityOption} name="historyVisibility" />
+                <input bind:group={createRoomOptions.historyVisibility} type="radio" value={historyVisibilityOption}
+                       name="historyVisibility" />
                 {getHistoryTranslation(historyVisibilityOption)}
             </label>
         {/each}
