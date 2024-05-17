@@ -5,7 +5,7 @@ import { Express, Request } from "express";
 import multer from "multer";
 import pLimit from "p-limit";
 import archiver from "archiver";
-import StreamZip from "node-stream-zip";
+import StreamZip, { ZipEntry } from "node-stream-zip";
 import * as jsonpatch from "fast-json-patch";
 import { MapValidator, OrganizedErrors } from "@workadventure/map-editor/src/GameMap/MapValidator";
 import { WAMFileFormat } from "@workadventure/map-editor";
@@ -15,6 +15,7 @@ import { Operation } from "fast-json-patch";
 import { generateErrorMessage } from "zod-error";
 import * as Sentry from "@sentry/node";
 import bodyParser from "body-parser";
+import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { mapPath } from "../Services/PathMapper";
 import { MAX_UNCOMPRESSED_SIZE } from "../Enum/EnvironmentVariable";
 import { passportAuthenticator } from "../Services/Authentication";
@@ -193,7 +194,7 @@ export class UploadController {
                         promises.push(this.fileSystem.writeFile(zipEntry, key, zip));
                         if (path.extname(key) === ".tmj") {
                             if (!wamFilesNames.includes(path.parse(zipEntry.name).name)) {
-                                promises.push(this.createWAMFileIfMissing(key));
+                                promises.push(this.createWAMFileIfMissing(key, zipEntry, zip));
                             }
                         } else if (path.extname(key) === ".wam") {
                             const wamUrl = `${req.protocol}://${req.hostname}${directory}/${zipEntry.name}`;
@@ -468,17 +469,48 @@ export class UploadController {
         });
     }
 
-    private async createWAMFileIfMissing(tmjKey: string): Promise<void> {
+    private async createWAMFileIfMissing(
+        tmjKey: string,
+        zipEntry: ZipEntry,
+        zip: StreamZip.StreamZipAsync
+    ): Promise<void> {
         const wamPath = tmjKey.slice().replace(".tmj", ".wam");
         if (!(await this.fileSystem.exist(wamPath))) {
+            const tmjString = (await zip.entryData(zipEntry)).toString();
+            // Using "as" instead of Zod because the Zod check was alreadz performed before.
+            const tmjContent = JSON.parse(tmjString) as ITiledMap;
             await this.fileSystem.writeStringAsFile(
                 wamPath,
-                JSON.stringify(this.getFreshWAMFileContent(`./${path.basename(tmjKey)}`), null, 4)
+                JSON.stringify(this.getFreshWAMFileContent(`./${path.basename(tmjKey)}`, tmjContent), null, 4)
             );
         }
     }
 
-    private getFreshWAMFileContent(tmjFilePath: string): WAMFileFormat {
+    private getFreshWAMFileContent(tmjFilePath: string, tmjContent: ITiledMap): WAMFileFormat {
+        const nameProperty = tmjContent.properties?.find((property) => property.name === "mapName");
+        let name: string | undefined;
+        if (nameProperty?.type === "string") {
+            name = nameProperty.value;
+        }
+
+        const descriptionProperty = tmjContent.properties?.find((property) => property.name === "mapDescription");
+        let description: string | undefined;
+        if (descriptionProperty?.type === "string") {
+            description = descriptionProperty.value;
+        }
+
+        const thumbnailProperty = tmjContent.properties?.find((property) => property.name === "mapImage");
+        let thumbnail: string | undefined;
+        if (thumbnailProperty?.type === "string") {
+            thumbnail = thumbnailProperty.value;
+        }
+
+        const copyrightProperty = tmjContent.properties?.find((property) => property.name === "mapCopyright");
+        let copyright: string | undefined;
+        if (copyrightProperty?.type === "string") {
+            copyright = copyrightProperty.value;
+        }
+
         return {
             version: "1.0.0",
             mapUrl: tmjFilePath,
@@ -486,6 +518,12 @@ export class UploadController {
             entities: {},
             entityCollections: [],
             settings: undefined,
+            metadata: {
+                name,
+                description,
+                thumbnail,
+                copyright,
+            },
         };
     }
 
