@@ -78,6 +78,13 @@ export class WaScaleManager {
         this.scaleManager.displaySize.height = realSize.height;
         this.scaleManager.refresh(realSize.width, realSize.height);
 
+        // Resize the game element at the same size at the canvas
+        // By default, the scaleManager.resize() method will change the take the zoom into account in the displaySize.
+        // This is not what we want, we want the displaySize to be the real size of the game.
+        this.scaleManager.displaySize.width = realSize.width;
+        this.scaleManager.displaySize.height = realSize.height;
+        this.scaleManager.refresh(realSize.width, realSize.height);
+
         // Note: onResize will be called twice (once here and once in Game.ts), but we have no better way.
         for (const scene of this.game.scene.getScenes(true)) {
             if (scene instanceof ResizableScene) {

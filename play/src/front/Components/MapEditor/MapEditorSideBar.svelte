@@ -15,8 +15,6 @@
     import TrashImg from "../images/trash.svg";
     import MagnifyingGlassSvg from "../images/loupe.svg";
 
-    const gameScene = gameManager.getCurrentGameScene();
-
     const availableTools: { toolName: EditorToolName; img: string; tooltiptext: LocalizedString }[] = [];
 
     availableTools.push({
@@ -64,7 +62,7 @@
     function switchTool(newTool: EditorToolName) {
         mapEditorVisibilityStore.set(true);
         analyticsClient.openMapEditorTool(newTool);
-        gameScene.getMapEditorModeManager().equipTool(newTool);
+        gameManager.getCurrentGameScene().getMapEditorModeManager().equipTool(newTool);
     }
 </script>
 
