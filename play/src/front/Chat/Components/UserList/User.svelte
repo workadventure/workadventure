@@ -53,7 +53,7 @@
 
         if(!room) return;
 
-        if(room.isInvited)room.joinRoom();
+        if(room.myMembership === "invite")room.joinRoom();
 
         selectedRoom.set(room)
         navChat.set("chat")

@@ -42,6 +42,7 @@ export const defaultColor = "#626262";
 
 type UUID = string;
 type chatId = string;
+
 export class MatrixChatConnection implements ChatConnectionInterface {
     private client!: MatrixClient;
     private readonly roomList: MapStore<string, ChatRoom>;
@@ -285,7 +286,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             name: roomOptions?.name,
             visibility: roomOptions?.visibility as Visibility | undefined,
             room_alias_name: roomOptions?.name,
-            invite: roomOptions?.invite,
+            invite: roomOptions?.invite !== undefined ? roomOptions.invite.map((invitation) => invitation.value) : [],
             is_direct: roomOptions?.is_direct,
             initial_state: roomOptions ? this.computeInitialState(roomOptions) : undefined,
         };
@@ -313,7 +314,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         if (existingDirectRoom) return existingDirectRoom;
 
         const { room_id } = await this.createRoom({
-            invite: [userToInvite],
+            //TODO not clean code
+            invite: [{ value: userToInvite, label: userToInvite }],
             is_direct: true,
             preset: "private_chat",
             visibility: "private",
@@ -368,6 +370,16 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         });
     }
 
+    async searchChatUsers(searchText: string) {
+        try {
+            const searchUserResponse = await this.client.searchUserDirectory({ term: searchText, limit: 20 });
+            return searchUserResponse.results.map((user) => ({ id: user.user_id, name: user.display_name }));
+        } catch (error) {
+            console.error("Unable to search matrix chat user with searchText: ", searchText, error);
+        }
+        return;
+    }
+
     async searchAccesibleRooms(searchText = ""): Promise<
         {
             id: string;
@@ -381,7 +393,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     generic_search_term: searchText,
                 },
             };
-
             this.client
                 .publicRooms(searchOption)
                 .then(({ chunk }) => {
