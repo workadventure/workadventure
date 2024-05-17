@@ -8,11 +8,6 @@
     import Loading from "../../Video/Loading.svelte";
     import { jitsiLoadingStore } from "../../../Streaming/BroadcastService";
 
-    // let widthWindow: number | undefined;
-    // let totalCamWidth = 0;
-    // let camWidthOther = 350;
-    // let camWidth = 350;
-
     // function closeCoWebsite() {
     //     if ($highlightedEmbedScreen?.type === "cowebsite") {
     //         /* if the co-website is closable, would like we to close it instead of unloading it?
