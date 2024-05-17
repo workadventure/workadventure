@@ -30,7 +30,7 @@
         position: absolute;
         width: 668px;
         height: max-content !important;
-        z-index: 425;
+        z-index: 2001;
         word-break: break-all;
         pointer-events: auto;
         color: whitesmoke;
