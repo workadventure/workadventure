@@ -8,12 +8,11 @@
     import type { ObtainedMediaStreamConstraints } from "../../WebRtc/P2PMessages/ConstraintMessage";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { JitsiTrackStreamWrapper } from "../../Streaming/Jitsi/JitsiTrackStreamWrapper";
+    import { mediaStreamConstraintsStore } from "../../Stores/MediaStore";
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import JitsiMediaBox from "./JitsiMediaBox.svelte";
-    import { mediaStreamConstraintsStore } from "../../Stores/MediaStore";
-    import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -79,15 +78,15 @@
         // }
     }
 
-    $: $highlightedEmbedScreen, reduceSizeIfScreenShare();
+    // $: $highlightedEmbedScreen, reduceSizeIfScreenShare();
 
-    function reduceSizeIfScreenShare() {
-        let containerCam = document.getElementsByClassName("media-container")[0] as HTMLElement;
-        if ($highlightedEmbedScreen) {
-            console.log("REDUCE SIZE");
-            // containerCam.style.aspectRatio = "2.5";
-        }
-    }
+    // function reduceSizeIfScreenShare() {
+    //     let containerCam = document.getElementsByClassName("media-container")[0] as HTMLElement;
+    //     if ($highlightedEmbedScreen) {
+    //         console.log("REDUCE SIZE");
+    //         // containerCam.style.aspectRatio = "2.5";
+    //     }
+    // }
 </script>
 
 <!--class:mr-6={isHightlighted && videoEnabled}-->
@@ -118,7 +117,7 @@
     <!-- Si le streamable est un partage d'écran de la part d'un autre utilisateur !-->
 {:else if streamable instanceof ScreenSharingPeer}
     <div
-        class="media-container justify-center h-full w-full
+        class="media-container cam-share-receive justify-center h-full w-full
             media-box-shape-color receiving-sharing"
         class:clickable={isClickable}
     >
@@ -168,7 +167,7 @@
         class="media-container {isHightlighted ? 'hightlighted' : 'flex h-full aspect-ratio'}"
         class:clickable={isClickable}
     >
-        <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'} rounded-lg w-full h-full flex screen-blocker">
+        <div class="{isHightlighted ? 'h-[41vw] mr-6' : 'mx-auto'} w-full h-full flex screen-blocker">
             <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
         </div>
     </div>
@@ -195,31 +194,37 @@
     }*/
 
     @container (min-width: 768px) and (max-width: 1023px) {
-        .media-container {
+        .cam-share-receive {
             aspect-ratio: 2.5;
         }
     }
 
     @container (min-width: 1024px) and (max-width: 1279px) {
-        .media-container {
+        .cam-share-receive {
             aspect-ratio: 2.5;
         }
     }
 
     @container (min-width: 1280px) and (max-width: 1439px) {
-        .media-container {
+        .cam-share-receive {
             aspect-ratio: 2.5;
         }
     }
 
     @container (min-width: 1440px) and (max-width: 1919px) {
-        .media-container {
-            aspect-ratio: 2.5;
+        .cam-share-receive {
+            aspect-ratio: 3.1;
+        }
+
+        .screen-blocker {
+            display: flex;
+            justify-content: center;
+            aspect-ratio: 3.1;
         }
     }
 
     @container (min-width: 1920px) {
-        .media-container {
+        .cam-share-receive {
             aspect-ratio: 2.5;
         }
     }

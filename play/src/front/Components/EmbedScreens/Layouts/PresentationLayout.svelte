@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { afterUpdate, onDestroy, onMount } from "svelte";
+    import { afterUpdate } from "svelte";
     import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
@@ -76,7 +76,7 @@
                 <Loading />
             {/if}
             {#if $streamableCollectionStore.size > 0 && $proximityMeetingStore === true && $myCameraStore}
-                <CamerasContainer full={true} />
+                <CamerasContainer />
             {/if}
             {#if $myJitsiCameraStore}
                 <MediaBox streamable={$myJitsiCameraStore} isClickable={false} />

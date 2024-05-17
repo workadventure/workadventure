@@ -1,15 +1,13 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
     import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MediaBox from "../Video/MediaBox.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import MyCamera from "../MyCamera.svelte";
     import { myCameraStore } from "../../Stores/MyMediaStore";
-    import { onDestroy, onMount } from "svelte";
 
     // export let highlightedEmbedScreen: EmbedScreen | undefined;
-    export let full = false;
-    $: clickable = !full;
+    // export let full = false;
+    // $: clickable = !full;
 
     let widthWindow: number | undefined;
 
@@ -95,34 +93,4 @@
             margin-top: auto;
         }
     }
-
-    /* @container (min-width: 768px) and (max-width: 1023px) {
-        .all-cameras {
-            scale: 0.6;
-        }
-    }
-
-    @container (min-width: 1024px) and (max-width: 1279px) {
-        .all-cameras {
-            scale: 0.7;
-        }
-    }
-
-    @container (min-width: 1280px) and (max-width: 1439px) {
-        .all-cameras {
-            scale: 0.9;
-        }
-    }
-
-    @container (min-width: 1440px) and (max-width: 1919px) {
-        .all-cameras {
-            scale: 1;
-        }
-    }
-
-    @container (min-width: 1920px) {
-        .all-cameras {
-            scale: 1;
-        }
-    } */
 </style>
