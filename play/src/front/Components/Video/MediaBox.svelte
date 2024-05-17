@@ -95,8 +95,9 @@
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- Ne pas mettre ici le media Strea store en condition maissur div niveau en dessous-->
         <div
-            class="transition-all relative h-full aspect-video w-full {$mediaStreamConstraintsStore.audio
+            class="media-container transition-all cam-share-receive justify-center relative h-full w-full {$mediaStreamConstraintsStore.audio
                 ? 'border-8 border-solid bg-indigo-400 rounded-lg'
                 : ''}"
             class:hightlighted={isHightlighted}
@@ -118,7 +119,7 @@
 {:else if streamable instanceof ScreenSharingPeer}
     <div
         class="media-container cam-share-receive justify-center h-full w-full
-            media-box-shape-color receiving-sharing"
+            media-box-shape-color"
         class:clickable={isClickable}
     >
         <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />

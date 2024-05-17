@@ -274,7 +274,7 @@
     <ActionMediaBox {embedScreen} trackStreamWraper={peer} {videoEnabled} />
 
     <div
-        class="aspect-video absolute top-0 left-0 z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur"
+        class="aspect-video absolute z-20 rounded-lg transition-all bg-no-repeat bg-center bg-contrast/80 backdrop-blur"
         style="background-image: url({loaderImg})"
         class:flex-col={videoEnabled}
         class:h-full={videoEnabled}
@@ -308,7 +308,7 @@
         {#if videoEnabled}
             {#if displayNoVideoWarning}
                 <div
-                    class="absolute w-full h-full top-0 left-0 flex justify-center items-center bg-danger/50 text-white"
+                    class="absolute w-full h-full left-0 top-0 flex justify-center items-center bg-danger/50 text-white"
                 >
                     <div class="text-center">
                         <svg
