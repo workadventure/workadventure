@@ -13,7 +13,7 @@
     import { LL } from "../../i18n/i18n-svelte";
     import { inExternalServiceStore } from "../Stores/MyMediaStore";
     import { gameManager } from "../Phaser/Game/GameManager";
-    import { heightCamWrapper } from "../Stores/EmbedScreensStore";
+    import { hasEmbedScreen, heightCamWrapper } from "../Stores/EmbedScreensStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { srcObject } from "./Video/utils";
     import Woka from "./Woka/WokaFromUserId.svelte";
@@ -21,11 +21,53 @@
     import silentImg from "./images/silent-zone.gif";
 
     import MicOffIcon from "./Icons/MicOffIcon.svelte";
+    import { highlightedEmbedScreen } from "../Stores/HighlightedEmbedScreenStore";
+    import ScreenShareIcon from "./Icons/ScreenShareIcon.svelte";
+    import {
+        requestedScreenSharingState,
+        screenSharingLocalMedia,
+        showDesktopCapturerSourcePicker,
+    } from "../Stores/ScreenSharingStore";
+    import { RoomConnection } from "../Connection/RoomConnection";
+    import { screenSharingStreamStore } from "../Stores/PeerStore";
+    import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 
     let stream: MediaStream | null;
     let userName = gameManager.getPlayerName();
     let backgroundColor = Color.getColorByString(userName ?? "default");
     let textColor = Color.getTextColorByBackgroundColor(backgroundColor);
+
+    // Voir pour assigner un userId a un partage d'écran et ensuite si il est egale ai user id j'affiche l'icone
+
+    // $: screenSharingRequesterStoreValue = $screenSharingRequesterStore;
+    // $: requestedScreenSharingStateValue = $requestedScreenSharingState;
+
+    // const unsubscribeScreenSharingRequesterStore = screenSharingRequesterStore.subscribe((value) => {
+    //     $screenSharingRequesterStore = value;
+    // });
+
+    // const unsubscribeRequestedScreenSharingState = requestedScreenSharingState.subscribe((value) => {
+    //     $requestedScreenSharingState = value;
+    // });
+
+    // $: $requestedScreenSharingState = getIdOrNameIfScreenSharing();
+
+    // function getIdOrNameIfScreenSharing() {
+    //     if ($requestedScreenSharingState) {
+    //         return gameManager.getPlayerName();
+    //     }
+    //     return false;
+    // }
+    //     if ($screenSharingRequesterStore === userId) {
+    //         console.log("BONJOUR");
+    //         return true;
+    //     }
+    //     return false;
+
+    // if ($screenSharingRequesterStore) {
+    //     return $gameManager.getPlayerName();
+    // }
+    // return gameManager.getPlayerName();
 
     const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
@@ -105,6 +147,9 @@
                             />
                         </div>
                         {$LL.camera.my.nameTag()}
+                        {#if $screenSharingStreamStore}
+                            <ScreenShareIcon />
+                        {/if}
                     </span>
                 </div>
             </div>

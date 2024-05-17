@@ -79,12 +79,13 @@
             height: 300px;
         }
         .all-cameras {
-            scale: 0.5;
-            bottom: 0;
-            right: 0;
+            position: fixed; /* Position fixed to align relative to the viewport */
+            bottom: 0; /* Align to the bottom */
+            right: 0; /* Align to the right */
             display: flex;
             flex-direction: column;
             align-items: flex-end;
+            scale: 0.5;
         }
 
         #unique-cam-other,

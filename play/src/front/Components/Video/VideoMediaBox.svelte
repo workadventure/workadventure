@@ -16,7 +16,7 @@
     import Woka from "../Woka/WokaFromUserId.svelte";
     import { isMediaBreakpointOnly } from "../../Utils/BreakpointsUtils";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
+    import { requestedCameraState, selectDefaultSpeaker, speakerSelectedStore } from "../../Stores/MediaStore";
     import { embedScreenLayoutStore, heightCamWrapper } from "../../Stores/EmbedScreensStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import loaderImg from "../images/loader.svg";
@@ -28,6 +28,8 @@
     import ChevronDownIcon from "../Icons/ChevronDownIcon.svelte";
     import MessageCircleIcon from "../Icons/MessageCircleIcon.svelte";
     import ActionMediaBox from "./ActionMediaBox.svelte";
+    import { requestedScreenSharingState, screenSharingLocalMedia } from "../../Stores/ScreenSharingStore";
+    import ScreenShareIcon from "../Icons/ScreenShareIcon.svelte";
 
     // Extend the HTMLVideoElement interface to add the setSinkId method.
     // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId
@@ -401,6 +403,9 @@
                                     <!-- trans -->
                                 </div>
                             </div>
+                        {/if}
+                        {#if $screenSharingLocalMedia && $requestedCameraState}
+                            <ScreenShareIcon />
                         {/if}
                     </div>
                 </div>
