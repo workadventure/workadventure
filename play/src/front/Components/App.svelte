@@ -27,7 +27,6 @@
     let gameDiv: HTMLDivElement;
 
     onMount(() => {
-        console.log("JE SUIS DANS LE ONMOUNT DE L'APP.SVELTE");
         if (SENTRY_DSN_FRONT != undefined) {
             try {
                 const sentryOptions: Sentry.BrowserOptions = {
@@ -179,13 +178,12 @@
             waScaleManager.refreshFocusOnTarget();
         });
 
+        // coWebsiteManager.onResize is a singleton. No need to unsubscribe.
+        //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
         coWebsiteManager.onResize.subscribe(() => {
             waScaleManager.applyNewSize();
             waScaleManager.refreshFocusOnTarget();
         });
-        // }
-        // coWebsiteManager.onResize is a singleton. No need to unsubscribe.
-        //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
 
         iframeListener.init();
         desktopApi.init();

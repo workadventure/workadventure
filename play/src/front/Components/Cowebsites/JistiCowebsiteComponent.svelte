@@ -76,7 +76,7 @@
                     },
                 };
 
-                jistiMeetLoadedPromise = new CancelablePromise<void>((resolve, cancel) => {
+                jistiMeetLoadedPromise = new CancelablePromise<void>((resolve) => {
                     options.onload = () => {
                         resolve();
                     };

@@ -51,9 +51,7 @@
 
         updateDynamicStyles();
 
-        setTimeout(() => {
-            waScaleManager.applyNewSize();
-        }, 500);
+        waScaleManager.applyNewSize();
     });
 
     onDestroy(() => {

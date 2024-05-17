@@ -10,6 +10,7 @@
     import jitsiIcon from "../images/jitsi.png";
     import meetingIcon from "../images/meeting.svg";
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
+    import LL from "../../../i18n/i18n-svelte";
 
     export let coWebsite: CoWebsite;
     export let isLoading = false;
@@ -66,6 +67,7 @@
     function copyUrl() {
         url = coWebsite.getUrl().toString();
         navigator.clipboard.writeText(url).catch((e) => console.error(e));
+        // Mettre un composant svelte pour afficher un message de confirmation like popup
         alert("URL copied to clipboard");
     }
 </script>
@@ -106,9 +108,11 @@
             >
                 {#if isLoading}
                     {#if isJitsi}
-                        Jitsi meeting
+                        {$LL.cowebsite.jitsi()}
+                        <!-- {$LL.mapEditor.properties.jitsiProperties.roomNameLabel()} -->
                     {:else if isBBB}
-                        BigBlueButton meeting
+                        {$LL.cowebsite.bigBlueButton()}
+                        <!-- {$LL.mapEditor.properties.bigBlueButtonProperties.roomNameLabel()} -->
                     {:else}
                         {cowebsiteName}
                     {/if}
