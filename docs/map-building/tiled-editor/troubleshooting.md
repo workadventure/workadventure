@@ -13,7 +13,7 @@ Scan the output. Towards the end, you might see a message explaining why your ma
 ## Check web server CORS settings
 
 If you are hosting the map you built on your own web server and if the map does not load, please check that
-[your webserver CORS settings are correctly configured](hosting.md).
+[your webserver CORS settings are correctly configured](publish/hosting.md).
 
 ## Issues embedding a website
 
