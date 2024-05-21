@@ -5,15 +5,22 @@ title: Host your Map with Github Pages
 
 # Getting started with Github Pages
 
+:::caution
+While this was the default recommended way to host your map in the past, we now recommend [hosting your maps on the WorkAdventure server](./wa-hosted) directly.
+It is easier to set up and maintain. However, hosting your maps on Github Pages is still a valid option and will keep being supported.
+:::
+
+<iframe width="100%" height="480" src="https://www.youtube.com/embed/lu1IZgBJJD4" title="Building your map - Create your map" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen></iframe>
+
 Start by [creating a GitHub account](https://github.com/join) if you don't already have one.
 
 Then, go to the [Github map starter kit repository page](https://github.com/workadventure/map-starter-kit) and click the **"Use this template"** button.
 
-![The "Use this template" button](../images/use_this_template.png)
+![The "Use this template" button](../../images/use_this_template.png)
 
 You will be prompted to enter a repository name for your map.
 
-![The "create a new repository" page](../images/create_repo.png)
+![The "create a new repository" page](../../images/create_repo.png)
 
 **Make sure to check the "Include all branches" checkbox, otherwise the Github Pages deployment process will not be setup automatically.**
 
@@ -23,58 +30,22 @@ If you miss that step, don't worry, you can always fix that by clicking on the *
 If you only see a "master" branch and if the **gh-pages** branch does not appear here, simply wait a few minutes and refresh your page. When you created the project, Github Actions triggered a job that is in charge of creating the **gh-pages** branch. Maybe the job is not finished yet.
 :::
 
-![The GitHub pages configuration section](../images/github_pages.png)
+![The GitHub pages configuration section](../../images/github_pages.png)
 
 Wait a few minutes... Github will deploy a new website with the content of the repository. The address of the website is visible in the "GitHub Pages" section.
 
-![Your website is ready!](../images/website_address.png)
+![Your website is ready!](../../images/website_address.png)
 
 Click on the link. You should be redirected directly to WorkAdventure, on your map!
-
-## Customizing your map
-
-Your map is now up and online, but this is still the demo map from the starter kit. You need to customize it.
-
-### Loading the map in Tiled
-
-The sample map is in the file `map.json`. You can load this file in [Tiled](https://www.mapeditor.org/).
-
-Now, it's up to you to edit the map and write your own map.
-
-Some resources regarding Tiled:
-
-- [Tiled documentation](https://doc.mapeditor.org/en/stable/manual/introduction/)
-- [Tiled video tutorials](https://www.gamefromscratch.com/post/2015/10/14/Tiled-Map-Editor-Tutorial-Series.aspx)
-
-### Testing your map locally
-
-In order to test your map, you need a web server to host your map. The "map starter kit" comes with a local web server that you can use to test your map.
-
-In order to start the web server, you will need [Node.JS](https://nodejs.org/en/). When it is downloaded, open your command line and from the directory of the map, run this command:
-
-    $ npm install
-
-This will install the local web server.
-
-    $ npm run start
-
-This command will start the web server and open the welcome page. You should see a page looking like this:
-
-![The welcome page of the "map start kit"](../images/starter_kit_start_screen_gh_pages.png)
-
-From here, you simply need to click the "Test this map" button to test your map in WorkAdventure.
-
-:::warning
-The local web server can only be used to test your map locally. In particular, the link will only work on your computer. You cannot share it with other people.
-:::
 
 ### Update your map on GH Pages
 
 :::caution Important
-Before your push on github pages, you need to set up your environment variable in .env file like this : UPLOAD_MODE=GH_PAGES
+Before your push on GitHub, you need to instruct the CI/CD pipeline you want to deploy to GitHub pages. To do this, 
+set up your environment variable in `.env` file like this : `UPLOAD_MODE=GH_PAGES`
 :::
 
-After making this change, to update your changes on github Pages, you only need to push.
+After making this change, just push to GitHub and your map will be deployed to GitHub Pages.
 
 ## Testing your map
 

@@ -2,15 +2,35 @@
 sidebar_position: 30
 ---
 
-# Hosting your Map
+# Self-Hosting your Map
 
-The [Getting Started](.) page proposes to use a "starter kit" that is relying on GitHub pages for hosting the map. This is a fairly good solution as GitHub pages offers a free and performant hosting.
+:::caution
+There are several ways to host your map. The recommended way is to [host your map on the WorkAdventure server](./wa-hosted) directly.
+You can also host your map on [GitHub Pages](./github-pages). Self-hosting is the most complex option and is only recommended if you have special privacy needs or if you want maximum freedom.
+:::
+
+The ["Host your Map with Github Pages" documentation](./github-pages.md) page proposes to use the "starter kit" that is relying on GitHub pages for hosting the map. This is a fairly good solution as GitHub pages offers a free and performant hosting.
 
 But using GitHub pages is not necessary. You can host your maps on any web server.
 
 :::caution
 If you decide to host your maps on your own web server, you must **configure CORS headers** in your browser to allow access from WorkAdventure.
 :::
+
+## Building your map
+
+This is an optional step. We still highly recommend to "build" your map.
+
+When you start from the "map starter kit", you can build your map by running the following command:
+
+```bash
+npm run build
+```
+
+This will run a process that will optimize your map for WorkAdventure. It will rewrite all the tilesets, removing
+any unused Tiles. If you are using the scripting API, it will also compile and bundle any Typescript file.
+
+The build process will create a `dist` directory that contains the optimized map. It is this `dist` directory that you will need to host on your web server.
 
 ## Configuring CORS headers
 
