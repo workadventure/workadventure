@@ -69,7 +69,7 @@ export class AreasPropertiesListener {
 
             // Add new notification to show at the user that he entered a new area
             if (area.name && area.name !== "") {
-                notificationPlayingStore.playNotification(area.name, "icon-tool-area.png");
+                notificationPlayingStore.playNotification(area.name, "icon-tool-area.png", area.id);
             }
             for (const property of area.properties) {
                 this.addPropertyFilter(property, area);
@@ -123,6 +123,9 @@ export class AreasPropertiesListener {
             if (!area.properties) {
                 continue;
             }
+            // Remove notification for area
+            notificationPlayingStore.removeNotificationById(area.id);
+
             for (const property of area.properties) {
                 this.removePropertyFilter(property);
             }
