@@ -6,7 +6,6 @@ title: Upload your Map to WorkAdventure
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-
 # Upload your Map to WorkAdventure
 
 :::info
@@ -24,27 +23,29 @@ The map starter kit is designed to help you upload maps from your computer to th
 
 In order to use this package run the command in your terminal :
 
-    npm run upload
+```bash
+npm run upload
+```
 
-On the first run, the command will ask you the URL to the server and your API key.
+On the first run, the command will ask you the URL to the server and your API key and if you want to push your map inside a directory or not.
 Where you get this depends on the kind of WorkAdventure server you are using.
 
 <Tabs>
   <TabItem label="SAAS version" value="saas" default>
 
-1. **Your API Key:**  
-   You can find it in [your admin account](https://admin.workadventu.re).  
-   Log in.  
-   In the left panel, click on "Developers" tabn then "API keys / Zapier".
+1. **Your Map Storage API Key:**
+   You can find it in [your admin account](https://admin.workadventu.re).
+   Log in.
+   In the left panel, click on "Developers" tab then "API keys / Zapier".
    There you can create a new token. (Don't forget to save it !)
 
    ![Get your API Key](../../images/navigate_admin.png)
    ![Get your API Key](../../images/get_info_key.png)
 
-2. **The URL of your map storage:**    
+2. **The URL of your map storage:**
    The map storage is in the same section as the API Key above. There are 3 links, be careful to take the `Map-storage API endpoint`, it is the url for uploading files to the map storage service of WorkAdventure.
 
-3. **Directory:**    
+3. **Directory:**
    You can also add a `directory name` if you want. It will be the folder where all your uploaded files will be stored in.
    If you leave this blank, there will be no directory.
 
@@ -60,7 +61,7 @@ Where you get this depends on the kind of WorkAdventure server you are using.
 
 The system administrator that installed the WorkAdventure server should have provided you with an API key.
 
-- For **docker-compose deployements**, it is the value of the `MAP_STORAGE_AUTHENTICATION_TOKEN` environment variable.  
+- For **docker-compose deployements**, it is the value of the `MAP_STORAGE_AUTHENTICATION_TOKEN` environment variable.
   Also, be sure to have the `MAP_STORAGE_ENABLE_BEARER_AUTHENTICATION` set to `"true"` in your `.env` file.
 - For **Helm deployments** , it is the value of the `mapstorage.env.AUTHENTICATION_TOKEN` value in your `values.yaml` file.
   Also, be sure to have the `mapstorage.env.ENABLE_BEARER_AUTHENTICATION` set to `"true"` in your `values.yaml` file.
@@ -80,18 +81,18 @@ If you leave this blank, there will be no directory.
   </TabItem>
 </Tabs>
 
-:::caution Uploading maps overwrites existing files!
+:::caution Uploading maps overwrites existing files !
 When you upload files to the WorkAdventure server, all the files in the directory specified will be removed
 and replaced by your new files. If you keep the "directory" empty, this means that
 all the files in your world will be removed and replaced by your new files.
 :::
 
-After answering these questions, the script will start to upload your directory. To be sure that it worked, you need to see something like this in your terminal : 'Upload done successfully'
+After answering these questions, the script will start to upload your directory. To be sure that it worked, you need to see something like this in your terminal : `Upload done successfully !`
 
 Now for every change you only just have to commit and push all your changes ! Just wait a few minutes, and your map will be propagated automatically on your server.
 
 :::info
-Your settings have been saved in a `.env` file (except the API key that was saved in the `.env.secret` file). Should you need to change them, 
+Your settings have been saved in a `.env` file (except the map storage API key that was saved in the `.env.secret` file). Should you need to change them,
 you can edit these files.
 :::
 
@@ -104,13 +105,13 @@ When you run the `npm run upload` command, the following things happen:
   - the scripts of your map are compiled and bundled. This happens if you developed some specific features on your map using the Scripting API.
     The compilation phase translates files from Typescript to Javascript.
     The bundling phase takes all the Javascript files and merges them into a single file.
-  - The result of the built is written in the `dist` directory.
-  - The content of the `public` directory is copied to the `dist` directory.
+  - the result of the built is written in the `dist` directory.
+  - the content of the `public` directory is copied to the `dist` directory.
 - Then, a ZIP file of the `dist` directory is created and sent to the WorkAdventure "map-storage" server.
   This server is in charge of hosting the map files. When it receives the ZIP file, it unzips it and stores the files
-  in the directory you configured when you first ran the `npm run upload` command.  
+  in the directory you configured when you first ran the `npm run upload` command.
   For each `tmj` file the server finds, it will check if there exists a matching `wam` file. If not, it will create one.
-  `wam` files are used to store any part of the map edited in the inline map editor of WorkAdventure (like the list of objects or areas),.
+  `wam` files are used to store any part of the map edited in the inline map editor of WorkAdventure (like the list of objects or areas,
   the microphone settings, etc...)
 
 :::danger Backup your original files!
@@ -126,7 +127,6 @@ This works well and for small projects, this is probably the best way to go.
 In the next chapter, a more robust way to store and work on your map files: a Git repository.
 :::
 
-
 ## Using Git and a CI/CD pipeline
 
 A great place to store your original files is in a Git repository (like GitHub or Gitlab). If you are a developer, you probably already know
@@ -138,11 +138,11 @@ Git. The Git repository offers the following advantages:
 - you can **revert to a previous version** of the map if you made a mistake
 - you can use a **CI/CD pipeline** (like "GitHub Actions") to automatically upload your map to the WorkAdventure server when you push changes to the repository.
 
-The map starter kit comes with a GitHub Actions workflow that is designed to upload your map to the WorkAdventure server 
+The map starter kit comes with a GitHub Actions workflow that is designed to upload your map to the WorkAdventure server
 when you push changes to the `master` branch of your repository.
 
 :::caution Git is complex
-Git is a powerful tool, but it can be complex to use and is very targeted at developers. If you are not familiar with Git, 
+Git is a powerful tool, but it can be complex to use and is very targeted at developers. If you are not familiar with Git,
 you should probably start with the "command line" solution explained in the previous chapter.
 :::
 
@@ -152,33 +152,32 @@ If you used the command line solution explained in the previous chapter, you wil
 2 files:
 
 - `.env` that contains the URL of the map storage
-- `.env.secret` that contains the API key
+- `.env.secret` that contains the map storage API key
 
 The `.env` file can be commited to your Git repository. However, the `.env.secret` file should **never** be commited.
-Indeed, it contains your API key, and if someone gets access to it, they can upload files to your map storage.
+Indeed, it contains your map storage API key, and if someone gets access to it, they can upload files to your map storage.
 
 Instead, you should use the "secrets" feature of GitHub to store the API key. This way, the API key is not stored in the repository.
 
 <details>
   <summary>Learn how to configure a secret in GitHub</summary>
-  <div>
+    <div>
 
-1. Go to your GitHub repository
-2. Click on the "Settings" tab  
-   ![The settings tab](./images/github-settings.png)
-3. Click on the "Secrets and variables" link in the left panel  
-   ![The secrets link](./images/github-secrets-and-variables.png)
-4. Click on the "Actions" link
-   ![The actions button](./images/github-actions-menu.png)
-5. Finally, click on the "New repository secret" button  
-   ![The new repository secret button](./images/github-new-repo-secret.png)
+<!-- - Go to your GitHub repository
+
+- Click on the "Settings" tab
+  ![The settings tab](./images/github-settings.png)
+- Click on the "Secrets and variables" link in the left panel
+  ![The secrets link](./images/github-secrets-and-variables.png)
+- Click on the "Actions" link
+  ![The actions button](./images/github-actions-menu.png)
+- Finally, click on the "New repository secret" button
+![The new repository secret button](./images/github-new-repo-secret.png) -->
 
   </div>
 </details>
 
-You should create a secret named `API_KEY` and paste your map storage API key there. See the [previous section](#using-the-command-line) to know how to get your API key.
-
-
+You should create a secret named `MAP_STORAGE_API_KEY` and paste your map storage API key there. See the [previous section](#using-the-command-line) to know how to get your API key.
 
 ## Troubleshooting
 
@@ -201,7 +200,9 @@ locally, but act strangely on the server (sound files not playing, HTTP 404 erro
 
 You can trigger a build of your map by running the following command:
 
-    npm run build
+```bash
+npm run build
+```
 
 Do not forget that if you want to put random files in the `dist` directory, you should put them in the `public` directory.
 The content of the `public` directory is copied to the `dist` directory during the build phase.
@@ -217,7 +218,6 @@ Common reasons for the workflow to fail:
 - the URL of the map storage is not set in the secrets of your repository or in the .env file
 - the build of the map failed (Typescript error, etc...)
 - the workflow did not trigger (you are not pushing to the `master` branch, etc...)
-
 
 ## Need some help?
 
