@@ -10,6 +10,7 @@ const login: DeepPartial<Translation["login"]> = {
             notValidError: "Der Name ist ungültig",
         },
     },
+    genericError: "Ein Fehler ist aufgetreten",
     terms: "Wenn du fortfährst, akzeptierst du die {links}.",
     termsOfUse: "Nutzungsbedingungen",
     privacyPolicy: "Datenschutzerklärung",
