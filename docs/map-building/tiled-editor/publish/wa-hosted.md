@@ -30,6 +30,19 @@ npm run upload
 On the first run, the command will ask you the URL to the server and your API key and if you want to push your map inside a directory or not.
 Where you get this depends on the kind of WorkAdventure server you are using.
 
+You can also use it with flags to upload your map but keep in mind that the secret variables will not be saved in .env and .env.secret files.
+This are the differents flags :
+
+- -k for the map storage API KEY
+- -u for the map storage URL
+- -d for the directory
+
+Here is how you can use flags :
+
+```bash
+npm run upload -- -k your-api-key -u your-mapstorage-url -d your-directory
+```
+
 <Tabs>
   <TabItem label="SAAS version" value="saas" default>
 
