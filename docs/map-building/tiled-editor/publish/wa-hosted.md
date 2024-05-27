@@ -27,7 +27,7 @@ In order to use this package run the command in your terminal :
 npm run upload
 ```
 
-On the first run, the command will ask you the URL to the server and your API key and if you want to push your map inside a directory or not.
+On the first run, the command will ask you the URL to the server and your Map Storage API key and if you want to push your map inside a directory or not.
 Where you get this depends on the kind of WorkAdventure server you are using.
 
 You can also use it with flags to upload your map but keep in mind that the secret variables will not be saved in .env and .env.secret files.
@@ -114,14 +114,14 @@ you can edit these files.
 When you run the `npm run upload` command, the following things happen:
 
 - First, your map files are "built". During the build phase:
-  - the tilesets of your map are optimized. Any tile that is not used is removed. This is done to reduce the total size of the map and results in faster loading times.
+  - the tilesets of your map are optimized. Any tile that is not used is removed. This is done to reduce the total size of the map and results in **faster loading times.**
   - the scripts of your map are compiled and bundled. This happens if you developed some specific features on your map using the Scripting API.
     The compilation phase translates files from Typescript to Javascript.
     The bundling phase takes all the Javascript files and merges them into a single file.
   - the result of the built is written in the `dist` directory.
   - the content of the `public` directory is copied to the `dist` directory.
 - Then, a ZIP file of the `dist` directory is created and sent to the WorkAdventure "map-storage" server.
-  This server is in charge of hosting the map files. When it receives the ZIP file, it unzips it and stores the files
+  This server is in charge of **hosting the map files.** When it receives the ZIP file, it unzips it and stores the files
   in the directory you configured when you first ran the `npm run upload` command.
   For each `tmj` file the server finds, it will check if there exists a matching `wam` file. If not, it will create one.
   `wam` files are used to store any part of the map edited in the inline map editor of WorkAdventure (like the list of objects or areas,
