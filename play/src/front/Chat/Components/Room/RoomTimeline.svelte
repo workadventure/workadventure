@@ -15,11 +15,9 @@
     let onScrollTop = false;
 
     async function loadPreviousMessageOnScrollTop() {
-        console.debug("loadPreviousMessageOnScrollTop called")
         while (messageListRef.scrollTop === 0 && get(room.hasPreviousMessage)) {
             // eslint-disable-next-line no-await-in-loop
             await room.loadMorePreviousMessages();
-            console.debug("loadPreviousMessageOnScrollTop loadMorePreviousMessages")
         }
     }
 
@@ -68,7 +66,6 @@
     console.debug(room);
    $: messages = room?.messages;
    $: messageReaction = room?.messageReactions;
-   console.debug("Messages : ",messages)
 
 </script>
 
