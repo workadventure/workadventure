@@ -277,8 +277,6 @@ services:
             ENABLE_BASIC_AUTHENTICATION: "true"
             AUTHENTICATION_USER: "john.doe"
             AUTHENTICATION_PASSWORD: "password"
-            ENABLE_BEARER_AUTHENTICATION: "true"
-            AUTHENTICATION_TOKEN: "1233"
             API_URL: back:50051
             # Sentry integration
             SENTRY_DSN: $SENTRY_DSN_MAPSTORAGE
@@ -363,14 +361,6 @@ services:
             - "traefik.http.routers.icon.rule=Host(`icon.workadventure.localhost`)"
             - "traefik.http.routers.icon.entryPoints=web"
             - "traefik.http.services.icon.loadbalancer.server.port=8080"
-
-    iframely:
-        image: thecodingmachine/workadventure-iframely:v2.2.1
-        labels:
-            - "traefik.enable=true"
-            - "traefik.http.routers.iframely.rule=Host(`iframely.workadventure.localhost`)"
-            - "traefik.http.routers.iframely.entryPoints=web"
-            - "traefik.http.services.iframely.loadbalancer.server.port=8061"
 
     ejabberd:
       image: workadventure/ejabberd:v1
