@@ -1,15 +1,7 @@
 import CancelablePromise from "cancelable-promise";
 import { z } from "zod";
 import { get } from "svelte/store";
-// import { randomDelay } from "@workadventure/shared-utils/src/RandomDelay/RandomDelay";
-// import { inExternalServiceStore } from "../../Stores/MyMediaStore";
-import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
-// import { jitsiExternalApiFactory } from "../JitsiExternalApiFactory";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
-import { jitsiParticipantsCountStore } from "../../Stores/GameStore";
-import { gameManager } from "../../Phaser/Game/GameManager";
-// import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-// import { screenWakeLock } from "../../Utils/ScreenWakeLock";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 
 export const JitsiConfig = z
@@ -153,23 +145,4 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         return this.domain;
     }
 
-    public onParticipantsCountChange(): void {
-        this.updateParticipantsCountStore();
-    }
-
-    public updateParticipantsCountStore(): void {
-        jitsiParticipantsCountStore.set(this.jitsiApi?.getParticipantsInfo().length ?? 0);
-    }
-
-    getCurrentParticipantId(
-        participants: { displayName: string; participantId: string }[]
-    ): string | undefined {
-        const currentPlayerName = gameManager.getPlayerName();
-        for (const participant of participants) {
-            if (participant.displayName === currentPlayerName) {
-                return participant.participantId;
-            }
-        }
-        return;
-    }
 }

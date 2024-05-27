@@ -35,7 +35,6 @@
     let gameOverlayStyle = document.getElementById("gameoverlay");
 
     onMount(() => {
-        console.log("GameOverlay mounted");
         mediaQuery.addEventListener("change", (e: any) => handleTabletChange(e));
         handleTabletChange(mediaQuery);
         console.log(gameOverlayStyle);

@@ -19,7 +19,6 @@
     let activeCowebsite = $coWebsites[0];
     let showDropdown = false;
     let showArrow = false;
-    let cowebsiteContainer = document.getElementById("cowebsites-container");
     let container: HTMLElement;
     let resizeBar: HTMLElement;
     let startY: number;
@@ -34,6 +33,8 @@
     const widthTab = 300;
     const widthTabResponsive = 220;
     let vertical: boolean;
+    let fullScreen = false;
+    let resizeBarHide = false;
 
     onMount(() => {
         mediaQuery.addEventListener("change", (e: any) => handleTabletChange(e));
@@ -112,16 +113,14 @@
 
     function resizeMax(newValue: number) {
         if (!vertical) {
-            const maxWidth = window.innerWidth - 350;
+            const maxWidth = window.innerWidth * 0.75;
             if (newValue < maxWidth) {
                 widthContainer.set(newValue);
             } else {
                 container.style.width = `${maxWidth}px`;
             }
         } else {
-            const maxHeight = window.innerHeight - 350;
-            console.log("MAX RESIZE DU MOBILE", newValue);
-            console.log("MAX HEIGHT", maxHeight);
+            const maxHeight = window.innerHeight * 0.75;
             if (newValue < maxHeight) {
                 heightContainer.set(newValue);
             } else {
@@ -157,21 +156,6 @@
             }
 
             resizeMax(newHeight);
-
-            // const totalHeight = document.body.scrollHeight + window.innerHeight;
-            // const stopScrollAt75 = totalHeight * 0.75;
-            // console.log("STOP SCROLL AT 75", stopScrollAt75);
-            // console.log("HEIGHT CONTAINER", $heightContainer);
-            // const stopScrollAt25 = totalHeight * 0.25;
-            // console.log("STOP SCROLL AT 25", stopScrollAt25);
-
-            // if ($heightContainer > stopScrollAt75 || $heightContainer < stopScrollAt25) {
-            //     e.preventDefault(); // Prevent scrolling
-            // }
-            // const minHeight = max([height, window.innerHeight - 600]);
-            // container.style.height = minHeight + "px";
-            // const maxHeight = min([height, window.innerHeight - 100]);
-            // container.style.height = maxHeight + "px";
             waScaleManager.applyNewSize();
         }
 
@@ -231,17 +215,12 @@
 
     function appearDropdown() {
         let div = document.getElementById("dropdown-container");
-        // let startWidthContainer = parseInt(getComputedStyle(container).width);
-        console.log("WIDTH OF TAB BAR AT ONMOUNT", startWidthContainer);
-        console.log("total tabs width", totalTabsWidth);
         if (totalTabsWidth > startWidthContainer) {
-            console.log("CA PASSE PLUS DU TOUT");
             if (div) {
                 div.classList.remove("hidden");
             }
             showArrow = true;
         } else {
-            console.log("CA PASSE PASSE PASSE");
             if (div) {
                 div.classList.add("hidden");
             }
@@ -258,43 +237,15 @@
     });
 
     function toggleFullScreen() {
-        resizeBar = document.getElementById("resize-bar") as HTMLInputElement;
-        cowebsiteContainer = document.getElementById("cowebsites-container");
-
-        if (!document.fullscreenElement) {
-            if (cowebsiteContainer?.requestFullscreen) {
-                cowebsiteContainer.requestFullscreen().catch((e) => {
-                    console.error(e);
-                });
-                hideResizeBar();
-            }
-        } else if (document.exitFullscreen) {
-            document.exitFullscreen().catch((e) => {
-                console.error(e);
-            });
-            showResizeBar();
+        console.log("toggleFullScreen");
+        if (fullScreen) {
+            resizeBarHide = false;
+            fullScreen = false;
+        } else {
+            resizeBarHide = true;
+            fullScreen = true;
         }
     }
-
-    function hideResizeBar() {
-        const resizeBarInput = resizeBar as HTMLInputElement;
-        resizeBar.style.display = "none";
-        resizeBarInput.disabled = true;
-        resizeBar.style.cursor = "not-allowed";
-    }
-
-    function showResizeBar() {
-        const resizeBarInput = resizeBar as HTMLInputElement;
-        resizeBar.style.display = "block";
-        resizeBarInput.disabled = false;
-        resizeBar.style.cursor = "col-resize";
-    }
-
-    document.addEventListener("fullscreenchange", function () {
-        if (!document.fullscreenElement) {
-            showResizeBar();
-        }
-    });
 
     let styleTag: HTMLStyleElement;
 
@@ -341,8 +292,9 @@
 <div
     id="cowebsites-container"
     class={vertical
-        ? "height-default-vertical w-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel responsive-container"
+        ? "height-default-vertical w-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel responsive-container fullscreen"
         : "width-default-horizontal h-full right-0 top-0 fixed bg-contrast/50 backdrop-blur left_panel flex-col padding"}
+    class:fullscreen={fullScreen}
     bind:this={container}
     in:fly|local={vertical ? { duration: 750, y: -1000 } : { duration: 750, x: 1000 }}
 >
@@ -362,6 +314,7 @@
         <div class="relative">
             <div class="tab-bar flex items-center justify-between overflow-x-auto">
                 {#if !vertical}
+                    <!-- 300 is corresponding to the width of a tab so we calculate to know if it will fit -->
                     {#each $coWebsites.slice(0, Math.floor(initialWidth / 300)) as coWebsite (coWebsite.getId())}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div on:click={() => setActiveCowebsite(coWebsite)}>
@@ -376,6 +329,7 @@
                         </div>
                     {/each}
                 {:else}
+                    <!-- Same thing for mobile -->
                     {#each $coWebsites.slice(0, Math.floor(initialWidth / 220)) as coWebsite (coWebsite.getId())}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div on:click={() => setActiveCowebsite(coWebsite)}>
@@ -451,6 +405,7 @@
         class={vertical
             ? "absolute left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize test-resize responsive-resize-bar"
             : "absolute left-1 top-0 bottom-0 m-auto w-1.5 h-40 bg-white rounded cursor-col-resize test-resize"}
+        class:resize-bar={resizeBarHide}
         id="resize-bar"
         bind:this={resizeBar}
         on:mousedown={addDivForResize}
@@ -462,6 +417,13 @@
 </div>
 
 <style>
+    .resize-bar {
+        display: none;
+    }
+    .fullscreen {
+        width: 100%;
+        background-color: #1b2941;
+    }
     .padding {
         padding-bottom: 76px;
     }

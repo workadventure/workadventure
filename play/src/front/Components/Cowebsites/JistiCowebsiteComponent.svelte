@@ -12,7 +12,7 @@
     import { screenWakeLock } from "../../Utils/ScreenWakeLock";
     import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-    import { userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
+    import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
     import { inExternalServiceStore } from "../../Stores/MyMediaStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { coWebsiteManager } from "../../Stores/CoWebsiteStore";
@@ -30,9 +30,7 @@
 
     const onDominantSpeakerChanged = (data: { id: string }) => {
         if (jitsiApi) {
-            userIsJitsiDominantSpeakerStore.set(
-                data.id === actualCowebsite.getCurrentParticipantId(jitsiApi.getParticipantsInfo())
-            );
+            userIsJitsiDominantSpeakerStore.set(data.id === getCurrentParticipantId(jitsiApi.getParticipantsInfo()));
         }
     };
 
@@ -51,9 +49,25 @@
         }
     };
 
+    function updateParticipantsCountStore() {
+        jitsiParticipantsCountStore.set(this.jitsiApi?.getParticipantsInfo().length ?? 0);
+    }
+
     const onParticipantsCountChange = () => {
-        actualCowebsite.updateParticipantsCountStore();
+        updateParticipantsCountStore();
     };
+
+    function getCurrentParticipantId(
+        participants: { displayName: string; participantId: string }[]
+    ): string | undefined {
+        const currentPlayerName = gameManager.getPlayerName();
+        for (const participant of participants) {
+            if (participant.displayName === currentPlayerName) {
+                return participant.participantId;
+            }
+        }
+        return;
+    }
 
     onMount(() => {
         let cancelled = false;
@@ -160,4 +174,10 @@
     });
 </script>
 
-<div bind:this={jitsiContainer} class="absolute w-full h-full" />
+<div bind:this={jitsiContainer} class="absolute w-full height" />
+
+<style>
+    .height {
+        height: -webkit-fill-available;
+    }
+</style>

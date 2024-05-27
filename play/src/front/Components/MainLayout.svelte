@@ -122,6 +122,10 @@
             <HelpPopUpBlocked />
         {/if}
 
+        {#if $hasEmbedScreen}
+            <EmbedScreensContainer />
+        {/if}
+
         {#if $soundPlayingStore}
             <AudioPlaying url={$soundPlayingStore} />
         {/if}
@@ -132,10 +136,6 @@
 
         {#if $requestVisitCardsStore}
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
-        {/if}
-
-        {#if $hasEmbedScreen}
-            <EmbedScreensContainer />
         {/if}
 
         {#if $uiWebsitesStore}

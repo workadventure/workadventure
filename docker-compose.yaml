@@ -364,6 +364,14 @@ services:
             - "traefik.http.routers.icon.entryPoints=web"
             - "traefik.http.services.icon.loadbalancer.server.port=8080"
 
+    iframely:
+        image: thecodingmachine/workadventure-iframely:v2.2.1
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.iframely.rule=Host(`iframely.workadventure.localhost`)"
+            - "traefik.http.routers.iframely.entryPoints=web"
+            - "traefik.http.services.iframely.loadbalancer.server.port=8061"
+
     ejabberd:
       image: workadventure/ejabberd:v1
       ports:

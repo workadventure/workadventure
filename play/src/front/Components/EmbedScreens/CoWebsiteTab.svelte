@@ -11,6 +11,8 @@
     import meetingIcon from "../images/meeting.svg";
     import LoaderIcon from "../Icons/LoaderIcon.svelte";
     import LL from "../../../i18n/i18n-svelte";
+    import PopUpCopyUrl from "../PopUp/PopUpCopyUrl.svelte";
+    import { popupStore } from "../../Stores/PopupStore";
 
     export let coWebsite: CoWebsite;
     export let isLoading = false;
@@ -44,7 +46,6 @@
             cowebsiteName = cowebsiteName.charAt(0).toUpperCase() + cowebsiteName.slice(1);
             isDuplicable = true;
         }
-        console.log("TAB MOUNTED");
         dispatch("tabMounted");
     });
 
@@ -65,10 +66,12 @@
     }
 
     function copyUrl() {
+        console.log("je suis dans le coyURL et le add popup au store");
         url = coWebsite.getUrl().toString();
         navigator.clipboard.writeText(url).catch((e) => console.error(e));
-        // Mettre un composant svelte pour afficher un message de confirmation like popup
-        alert("URL copied to clipboard");
+        dispatch("copy");
+        popupStore.addPopup(PopUpCopyUrl, {}, "popupCopyUrl");
+        // Afficher un composant svelte pour confirmer la copie
     }
 </script>
 
@@ -88,7 +91,6 @@
         {:else}
             <img src={srcSimpleCowebsite} {alt} class="h-6 w-6 bg-black rounded-lg align-middle" />
         {/if}
-        <!-- <img src={link} alt="icon" id="cowebsiteTabIcon" class="h-6 w-6 flex justify-center align-middle" /> -->
     {:else}
         <div class="h-6 w-6 animate-pulse rounded-sm {active ? 'bg-contrast/10' : 'bg-white/20'}">
             <LoaderIcon
@@ -171,9 +173,6 @@
     </div>
 </div>
 
-<!-- <div class="group hover:bg-contrast transition-all aspect-ratio transition-all h-8 w-8 rounded flex items-center justify-center">
-<SettingsIcon classList="h-4 w-4 aspect-ratio transition-all {active ? 'group-hover:stroke-white stroke-contrast fill-transparent' : 'stroke-white fill-transparent' }" />
-</div> -->
 <style>
     .tab {
         width: 300px;

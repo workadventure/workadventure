@@ -104,7 +104,6 @@
     "@fontsource/roboto-condensed": "^4.5.9",
     "@grpc/grpc-js": "^1.8.12",
     "@joeattardi/emoji-button": "^4.6.2",
-    "@neodrag/svelte": "^2.0.6",
     "@sentry/browser": "^7.48.0",
     "@sentry/node": "^7.48.0",
     "@sentry/svelte": "^7.54.0",
