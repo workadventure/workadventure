@@ -128,11 +128,11 @@ import type { GameStateEvent } from "../../Api/Events/GameStateEvent";
 import { modalVisibilityStore } from "../../Stores/ModalStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import {
+    cameraResistanceModeStore,
     mapEditorModeStore,
     mapEditorSelectedToolStore,
     mapEditorWamSettingsEditorToolCurrentMenuItemStore,
     mapExplorationModeStore,
-    cameraResistanceModeStore,
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
@@ -1041,11 +1041,9 @@ export class GameScene extends DirtyScene {
         this.playersEventDispatcher.cleanup();
         this.playersMovementEventDispatcher.cleanup();
         this.gameMapFrontWrapper?.close();
-        this.chatConnection?.destroy();
         this.followManager?.close();
 
         LocalSpaceProviderSingleton.getInstance().destroy();
-
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
@@ -1522,7 +1520,7 @@ export class GameScene extends DirtyScene {
                     //We need to add an env parameter to switch between chat services
                     this.chatConnection = new MatrixChatConnection(
                         this.connection,
-                        new MatrixClientWrapper(MATRIX_PUBLIC_URI,localUserStore)
+                        new MatrixClientWrapper(MATRIX_PUBLIC_URI, localUserStore)
                     );
 
                     const chatId = localUserStore.getChatId();
