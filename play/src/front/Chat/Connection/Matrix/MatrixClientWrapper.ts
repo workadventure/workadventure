@@ -1,9 +1,25 @@
-import { createClient, ICreateClientOpts, IndexedDBCryptoStore, IndexedDBStore, MatrixClient } from "matrix-js-sdk";
-//import { localUserStore } from "../../../Connection/LocalUserStore";
+import {
+    createClient,
+    ICreateClientOpts,
+    IndexedDBCryptoStore,
+    IndexedDBStore,
+    MatrixClient,
+    SecretStorage,
+} from "matrix-js-sdk";
+import Olm from "@matrix-org/olm";
+import { Buffer } from "buffer/";
 import { LocalUser } from "../../../Connection/LocalUser";
+import { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
+import { openModal } from "svelte-modals";
+import RequestRecoveryKeyDialog from "./RequestRecoveryKeyDialog.svelte";
+
+window.Buffer = Buffer;
+
+global.Olm = Olm;
 
 export interface MatrixClientWrapperInterface {
     initMatrixClient(): Promise<MatrixClient>;
+    cacheSecretStorageKey(keyId: string, key: Uint8Array): void;
 }
 
 export interface MatrixLocalUserStore {
@@ -35,6 +51,10 @@ export interface MatrixLocalUserStore {
 }
 
 export class MatrixClientWrapper implements MatrixClientWrapperInterface {
+    private client!: MatrixClient;
+
+    private secretStorageKeys: Record<string, Uint8Array> = {};
+
     constructor(
         private baseUrl: string,
         private localUserStore: MatrixLocalUserStore,
@@ -47,7 +67,10 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             throw new Error("UserUUID is undefined, this is not supposed to happen.");
         }
 
-        let accessToken: string | null, refreshToken: string | null, matrixUserId: string | null;
+        let accessToken: string | null,
+            refreshToken: string | null,
+            matrixUserId: string | null,
+            matrixDeviceId: string | null;
         const {
             deviceId,
             accessToken: accessTokenFromLocalStorage,
@@ -58,22 +81,27 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         accessToken = accessTokenFromLocalStorage;
         refreshToken = refreshTokenFromLocalStorage;
         matrixUserId = matrixUserIdFromLocalStorage;
+        matrixDeviceId = deviceId;
 
         const oldMatrixUserId: string | null = matrixUserIdFromLocalStorage;
 
         if (matrixLoginToken !== null) {
+            console.warn("retrieveMatrixConnectionDataFromLoginToken");
             const {
                 accessToken: accessTokenFromLoginToken,
                 refreshToken: refreshTokenFromLoginToken,
                 matrixUserId: userIdFromLoginToken,
-            } = await this.retrieveMatrixConnectionDataFromLoginToken(this.baseUrl, matrixLoginToken, deviceId);
+                deviceId,
+            } = await this.retrieveMatrixConnectionDataFromLoginToken(this.baseUrl, matrixLoginToken);
             accessToken = accessTokenFromLoginToken;
             refreshToken = refreshTokenFromLoginToken;
             matrixUserId = userIdFromLoginToken;
+            matrixDeviceId = deviceId;
             this.localUserStore.setMatrixLoginToken(null);
         }
 
         if (accessToken === null && refreshToken === null) {
+            console.warn("registerMatrixGuestUser");
             const {
                 accessToken: accessTokenFromGuestUser,
                 refreshToken: refreshTokenFromGuestUser,
@@ -94,24 +122,29 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             throw new Error("Unable to connect to matrix, matrixUserId is null");
         }
 
-        const { matrixStore, matrixCryptoStore } = this.matrixWebClientStore(matrixUserId, deviceId);
+        const { matrixStore, matrixCryptoStore } = this.matrixWebClientStore(matrixUserId);
         // Now, let's instantiate the Matrix client.
-        const matrixClient = this._createClient({
+        this.client = this._createClient({
             baseUrl: this.baseUrl,
-            deviceId,
+            deviceId: matrixDeviceId,
             userId: matrixUserId,
             accessToken: accessToken,
             refreshToken: refreshToken ?? undefined,
             store: matrixStore,
             cryptoStore: matrixCryptoStore,
+            cryptoCallbacks: {
+                getSecretStorageKey: this.getSecretStorageKey.bind(this),
+                cacheSecretStorageKey: (keyId, keyInfo, key) => {
+                    this.cacheSecretStorageKey(keyId, key);
+                },
+            },
         });
 
         if (oldMatrixUserId !== matrixUserId) {
-            console.log(oldMatrixUserId, matrixUserId);
-            await matrixClient.clearStores();
+            await this.client.clearStores();
         }
 
-        return matrixClient;
+        return this.client;
     }
 
     private retrieveMatrixConnectionDataFromLocalStorage(userId: string): {
@@ -121,14 +154,10 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         matrixUserId: string;
         matrixLoginToken: string;
     } {
-        let deviceId = this.localUserStore.getMatrixDeviceId(userId);
-        if (deviceId === null) {
-            deviceId = this.generateDeviceId();
-            this.localUserStore.setMatrixDeviceId(deviceId, userId);
-        }
         const accessToken = this.localUserStore.getMatrixAccessToken();
         const refreshToken = this.localUserStore.getMatrixRefreshToken();
         const matrixUserId = this.localUserStore.getMatrixUserId();
+        const deviceId = this.localUserStore.getMatrixDeviceId(matrixUserId);
         const matrixLoginToken = this.localUserStore.getMatrixLoginToken();
         return { deviceId, accessToken, refreshToken, matrixUserId, matrixLoginToken };
     }
@@ -149,7 +178,9 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 },
             });
             this.localUserStore.setMatrixUserId(user_id);
-            this.localUserStore.setMatrixAccessToken(access_token ?? null);
+            if (access_token !== undefined) {
+                this.localUserStore.setMatrixAccessToken(access_token);
+            }
             this.localUserStore.setMatrixRefreshToken(refresh_token ?? null);
             client.setGuest(true);
             return { matrixUserId: user_id, accessToken: access_token ?? null, refreshToken: refresh_token ?? null };
@@ -159,7 +190,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         }
     }
 
-    private matrixWebClientStore(matrixUserId: string, deviceId: string) {
+    private matrixWebClientStore(matrixUserId: string) {
         const indexDbStore = new IndexedDBStore({
             indexedDB: globalThis.indexedDB,
             localStorage: globalThis.localStorage,
@@ -168,7 +199,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
         const indexDbCryptoStore = new IndexedDBCryptoStore(
             globalThis.indexedDB,
-            "crypto-store-" + this.baseUrl + "-" + matrixUserId + "-" + deviceId
+            `crypto-store-${this.baseUrl}-${matrixUserId}`
         );
 
         return { matrixStore: indexDbStore, matrixCryptoStore: indexDbCryptoStore };
@@ -176,26 +207,27 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
     private async retrieveMatrixConnectionDataFromLoginToken(
         matrixServerUrl: string,
-        loginToken: string,
-        deviceId: string
+        loginToken: string
     ): Promise<{
         matrixUserId: string;
         accessToken: string;
         refreshToken: string | null;
+        deviceId: string;
     }> {
         const client = this._createClient({
             baseUrl: matrixServerUrl,
         });
 
-        const { user_id, access_token, refresh_token, expires_in_ms } = await client.login("m.login.token", {
+        const { user_id, access_token, refresh_token, expires_in_ms, device_id } = await client.login("m.login.token", {
             token: loginToken,
-            device_id: deviceId,
+            //device_id: deviceId,
             initial_device_display_name: "WorkAdventure",
         });
 
         this.localUserStore.setMatrixUserId(user_id);
         this.localUserStore.setMatrixAccessToken(access_token);
         this.localUserStore.setMatrixRefreshToken(refresh_token ?? null);
+        this.localUserStore.setMatrixDeviceId(device_id, user_id);
         if (expires_in_ms !== undefined) {
             const expireDate = new Date();
             // Add response.expires_in milliseconds to the current date.
@@ -203,21 +235,72 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             this.localUserStore.setMatrixAccessTokenExpireDate(expireDate);
         }
 
+        //Login token has been used, remove it from local storage
+        this.localUserStore.setMatrixLoginToken(null);
+
         // Note: we ignore the device ID returned by the server. We use the one we generated.
         // This will be required in the future when we switch to a Native OpenID Matrix client.
         return {
             matrixUserId: user_id,
             accessToken: access_token,
             refreshToken: refresh_token ?? null,
+            deviceId: device_id,
         };
     }
 
-    private generateDeviceId(): string {
-        const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        let result = "";
-        for (let i = 0; i < 10; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
+    private async getSecretStorageKey({
+        keys,
+    }: {
+        keys: Record<string, SecretStorageKeyDescriptionAesV1>;
+    }): Promise<[string, Uint8Array] | null> {
+        let keyId = await this.client.secretStorage.getDefaultKeyId();
+        let keyInfo!: SecretStorage.SecretStorageKeyDescription;
+        if (keyId) {
+            // use the default SSSS key if set
+            keyInfo = keys[keyId];
+            if (!keyInfo) {
+                // if the default key is not available, pretend the default key
+                // isn't set
+                keyId = null;
+            }
         }
-        return result;
+        if (keyId === null) {
+            const keyInfoEntries = Object.entries(keys);
+            if (keyInfoEntries.length > 1) {
+                throw new Error("Multiple storage key requests not implemented");
+            }
+            [keyId, keyInfo] = keyInfoEntries[0];
+        }
+
+        const crypto = this.client.getCrypto();
+        if (crypto !== undefined) {
+            const sessionBackupPrivateKey = await crypto.getSessionBackupPrivateKey();
+            if (sessionBackupPrivateKey) {
+                return [keyId, sessionBackupPrivateKey];
+            }
+        }
+
+        if (this.secretStorageKeys[keyId]) {
+            console.debug("getCryptoCallbacks from cache");
+            return [keyId, this.secretStorageKeys[keyId]];
+        }
+
+        const key = await new Promise<Uint8Array | null>((resolve, reject) => {
+            openModal(RequestRecoveryKeyDialog, {
+                keyInfo,
+                matrixClient: this.client,
+                onClose: (key: Uint8Array) => resolve(key),
+            });
+        });
+
+        if (key === null) {
+            throw Error("No recovery key provided");
+        }
+        this.cacheSecretStorageKey(keyId, key);
+        return [keyId, key];
+    }
+
+    public cacheSecretStorageKey(keyId: string, key: Uint8Array) {
+        this.secretStorageKeys[keyId] = key;
     }
 }

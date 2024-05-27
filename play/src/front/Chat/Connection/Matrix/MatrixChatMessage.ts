@@ -1,4 +1,4 @@
-import { EventType, IEventRelation, MatrixEvent, Room } from "matrix-js-sdk";
+import { EventType, IEventRelation, MatrixEvent, MatrixEventEvent, Room } from "matrix-js-sdk";
 import { writable, Writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { ChatMessage, ChatMessageContent, ChatMessageType, ChatUser } from "../ChatConnection";
@@ -26,6 +26,10 @@ export class MatrixChatMessage implements ChatMessage {
         this.isQuotedMessage = isQuotedMessage;
         this.isDeleted = writable(this.getIsDeleted());
         this.isModified = writable(this.getIsModified());
+
+        event.on(MatrixEventEvent.Decrypted, (_) => {
+            this.content = this.getMessageContent();
+        });
     }
 
     private getSender() {
@@ -41,6 +45,9 @@ export class MatrixChatMessage implements ChatMessage {
     private getMessageContent(): Writable<ChatMessageContent> {
         const unsigned = this.event.getUnsigned();
         const relation = unsigned["m.relations"];
+        if (this.event.isDecryptionFailure()) {
+            return writable({ body: "failed to decrypt", url: undefined });
+        }
         if (relation) {
             if (relation["m.replace"]) {
                 return writable({ body: relation["m.replace"].content?.["m.new_content"].body, url: undefined });

@@ -148,7 +148,14 @@ class ConnectionManager {
         const redirectUrl = new URL(`${this._currentRoom.opidLogoutRedirectUrl}`, window.location.href);
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
         redirectUrl.searchParams.append("token", tokenTmp ?? "");
-        window.location.assign(redirectUrl);
+
+        gameManager
+            .getCurrentGameScene()
+            .chatConnection.destroy()
+            .catch((error) => {
+                console.error("Chat connection not closed properly : ", error);
+            })
+            .finally(() => window.location.assign(redirectUrl));
     }
 
     /**
