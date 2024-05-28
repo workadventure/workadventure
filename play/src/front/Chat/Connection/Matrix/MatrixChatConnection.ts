@@ -124,11 +124,24 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             console.error("E2EE is not available for this client");
             return;
         }
+        
+        const roomEncryptionEnablePromises : Promise<boolean>[] = [] ; 
+
+        this.client.getRooms().forEach((room)=>{
+            roomEncryptionEnablePromises.push(crypto.isEncryptionEnabledInRoom(room.roomId))
+        })
+        
+        const encryptionStatus : boolean[] = await Promise.all(roomEncryptionEnablePromises);
+
+        if(encryptionStatus.every((status)=>!status)){
+            return; 
+        }
+
         try {
             await crypto.bootstrapCrossSigning({
                 authUploadDeviceSigningKeys: async (makeRequest) => {
                     await makeRequest(null);
-                    /*await new Promise((resolve, reject) => {
+                    /*  await new Promise((resolve, reject) => {
                         let;
                         const interactiveAuth = new InteractiveAuth({
                             matrixClient: this.client,
