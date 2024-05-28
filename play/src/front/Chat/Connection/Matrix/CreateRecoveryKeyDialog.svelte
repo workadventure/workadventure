@@ -4,6 +4,7 @@
     import { CryptoApi } from "matrix-js-sdk";
     import { GeneratedSecretStorageKey } from "matrix-js-sdk/lib/crypto-api";
     import Popup from "../../../Components/Modal/Popup.svelte";
+    import { IconFileDownload} from "@tabler/icons-svelte";
 
     export let isOpen: boolean;
     export let crypto: CryptoApi;
@@ -12,6 +13,7 @@
     let passphraseInput: string | undefined;
     let generatedSecretStorageKey: GeneratedSecretStorageKey | undefined;
     let error = false;
+    $: isPrivateKeyDownloaded = false;
 
     async function generateRecoveryKey(passphrase: string|undefined) {
         if(passphrase === undefined){
@@ -30,6 +32,22 @@
         closeModal();
     }
 
+    function downloadPrivateKeyFile(){
+
+        const a = document.createElement("a");
+        a.href = "data:text/plain;charset=utf-8," + encodeURIComponent(generatedSecretStorageKey?.encodedPrivateKey ?? "");
+
+        //TODO : fileName traduction
+        a.setAttribute("download", "private_key.txt");
+        a.click();
+
+        if(generatedSecretStorageKey?.encodedPrivateKey){
+            navigator.clipboard.writeText(generatedSecretStorageKey.encodedPrivateKey);
+        }
+
+        isPrivateKeyDownloaded = true;
+    }
+
 </script>
 
 <Popup {isOpen}>
@@ -42,7 +60,13 @@
             bind:value={passphraseInput} />
         {#if generatedSecretStorageKey?.encodedPrivateKey}
             <p>This is your private key ! Save if somewhere</p>
-            <p class="tw-text-green-500">{generatedSecretStorageKey.encodedPrivateKey}</p>
+            <div class="tw-flex tw-justify-between">
+                <p class="tw-text-green-500 tw-m-0 tw-content-center">{generatedSecretStorageKey.encodedPrivateKey}</p>
+                <button on:click={downloadPrivateKeyFile}>
+                    <IconFileDownload/>
+                </button>
+            </div>
+
         {/if}
         {#if error}
             <p class="tw-text-red-500">Something went wrong on generateRecoveryKeyFromPassphrase</p>
@@ -58,7 +82,9 @@
             </button>
         {:else}
             <button
+                disabled={!isPrivateKeyDownloaded}
                 class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
+                
                 on:click={closeModalAndContinueToWorkAdventure}>Continue
             </button>
         {/if}
