@@ -64,6 +64,9 @@ export class MatrixChatRoom implements ChatRoom {
     }
 
     private async initMatrixRoomMessagesAndReactions() {
+        if (this.matrixRoom.hasEncryptionStateEvent()) {
+            await this.matrixRoom.decryptAllEvents();
+        }
         await this.timelineWindow.load();
         const events = this.timelineWindow.getEvents();
         events.forEach((event) =>
