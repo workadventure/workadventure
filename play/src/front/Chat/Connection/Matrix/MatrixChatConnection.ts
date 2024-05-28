@@ -450,7 +450,18 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             invite: [{ value: userToInvite, label: userToInvite }],
             is_direct: true,
             preset: "private_chat",
+            preset: "trusted_private_chat",
             visibility: "private",
+        });
+        await this.addDMRoomInAccountData(userToInvite,room_id);
+        
+        //Wait Sync Event before use/update roomList otherwise room not exist in the client
+        await new Promise<void>((resolve, _) => {
+            this.client.once(ClientEvent.Sync, (state) => {
+                if (state === SyncState.Syncing) {
+                    resolve();
+                }
+            });
         });
 
         const room = this.client.getRoom(room_id);
@@ -560,6 +571,10 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
                     const roomAfterSync = this.client.getRoom(roomId);
                     if (!roomAfterSync) return;
+                    const dmInviterId = roomAfterSync.getDMInviter();
+                    if(dmInviterId){
+                        await this.addDMRoomInAccountData(dmInviterId,roomId);
+                    }
 
                     const matrixRoom = new MatrixChatRoom(roomAfterSync);
                     this.roomList.set(roomId, matrixRoom);
@@ -570,6 +585,12 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     rej(error);
                 });
         });
+    }
+    private async addDMRoomInAccountData(userId:string,roomId:string){
+        const directMap: Record<string, string[]> = this.client.getAccountData('m.direct')?.getContent() || {}
+        directMap[userId] = [...(directMap[userId] || []), roomId]
+        await this.client.setAccountData('m.direct', directMap);
+        console.log('addDMRoomInAccountData : ',directMap);
     }
 
     async destroy(): Promise<void> {

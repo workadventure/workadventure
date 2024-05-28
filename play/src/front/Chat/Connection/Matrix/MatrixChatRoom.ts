@@ -40,6 +40,11 @@ export class MatrixChatRoom implements ChatRoom {
         this.id = matrixRoom.roomId;
         this.name = writable(matrixRoom.name);
         this.type = this.getMatrixRoomType();
+        (async ()=>{
+            this.type = await this.getMatrixRoomType();
+            console.log('roomType : ',this.type);
+        })().catch((error)=>console.error(error));
+
         this.hasUnreadMessages = writable(matrixRoom.getUnreadNotificationCount() > 0);
         this.avatarUrl = matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined;
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id); //writable(new Map<string, MatrixChatMessage>());
@@ -329,14 +334,39 @@ export class MatrixChatRoom implements ChatRoom {
         this.matrixRoom.client.leave(this.id).catch((error) => console.error("Unable to leave", error));
     }
 
-    private getMatrixRoomType() {
+    private async getMatrixRoomType(): Promise<"direct" | "multiple"> {
+
+
         const dmInviter = this.matrixRoom.getDMInviter();
-        if (dmInviter !== undefined) {
+        if (dmInviter) {
             return "direct";
         }
-        return this.matrixRoom.getMembers().some((member) => member.getDMInviter() !== undefined)
+
+        const members = this.matrixRoom.getMembers();
+        const isDirectBasedOnInviter = members.some(member => member.getDMInviter() !== undefined);
+        if (isDirectBasedOnInviter) {
+            return "direct";
+        }
+
+
+        if (members.length > 2) {
+            return "multiple";
+        }
+
+        const directRoomsPerUsers = await this.matrixRoom.client.getAccountData('m.direct')?.getContent();
+
+
+        const isDirectBasedOnRoomData = members.some(member => 
+            directRoomsPerUsers && directRoomsPerUsers[member.userId]?.includes(this.id)
+        );
+
+        if (isDirectBasedOnRoomData) {
+            return "direct";
+        }
+
             ? "direct"
-            : "multiple";
+
+        return 'multiple';
     }
 
     async sendFiles(files: FileList) {
