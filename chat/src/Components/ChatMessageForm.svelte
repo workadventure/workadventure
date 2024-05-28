@@ -26,9 +26,10 @@
         KlaxoonException,
         KlaxoonService,
         YoutubeService,
+        defaultWoka,
     } from "@workadventure/shared-utils";
     import { MucRoom } from "../Xmpp/MucRoom";
-    import { defaultWoka, User } from "../Xmpp/AbstractRoom";
+    import { User } from "../Xmpp/AbstractRoom";
     import { LL, locale } from "../i18n/i18n-svelte";
     import {
         selectedMessageToReply,

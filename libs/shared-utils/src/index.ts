@@ -15,3 +15,4 @@ export * as ExcalidrawService from "./Application/ExcalidrawService";
 export * from "./Events/XmppSettingsMessageEvent";
 export * from "./Events/ChatEvent";
 export * from "./Events/BanEvent";
+export * from "./Woka/defaultWoka";
