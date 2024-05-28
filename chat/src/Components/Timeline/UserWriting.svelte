@@ -1,7 +1,7 @@
 <script lang="ts">
     import { fade, fly } from "svelte/transition";
+    import { defaultColor, defaultWoka } from "@workadventure/shared-utils";
     import { MucRoom } from "../../Xmpp/MucRoom";
-    import { defaultColor, defaultWoka } from "../../Xmpp/AbstractRoom";
 
     export let userJid: string | undefined;
     export let userName: string | undefined;
