@@ -50,6 +50,7 @@ type chatId = string;
 export class MatrixChatConnection implements ChatConnectionInterface {
     private client!: MatrixClient;
     private readonly roomList: MapStore<string, ChatRoom>;
+    private initializingEncryption: boolean = false;
     connectionStatus: Writable<ConnectionStatus>;
     directRooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
@@ -133,7 +134,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         
         const encryptionStatus : boolean[] = await Promise.all(roomEncryptionEnablePromises);
 
-        if(encryptionStatus.every((status)=>!status)){
+        if(encryptionStatus.some((status)=>status)){
+            console.warn("skip E2EE bootstrapping",{encryptionStatus});
             return; 
         }
 
@@ -190,6 +192,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 setupNewKeyBackup: keyBackupInfo === null,
                 keyBackupInfo: keyBackupInfo ?? undefined,
             });
+            this.initializingEncryption = true;
         } catch (error) {
             console.error("initClientCryptoConfiguration : ", error);
         }
@@ -231,10 +234,21 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     private onClientEventRoom(room: Room) {
         const { roomId } = room;
         const existingMatrixChatRoom = this.roomList.get(roomId);
-        if (existingMatrixChatRoom === undefined) {
-            const matrixRoom = new MatrixChatRoom(room);
-            this.roomList.set(matrixRoom.id, matrixRoom);
+
+        if (existingMatrixChatRoom !== undefined) {
+            return; 
         }
+
+        const matrixRoom = new MatrixChatRoom(room);
+        this.roomList.set(matrixRoom.id, matrixRoom);
+
+        if(this.initializingEncryption || !matrixRoom.isEncrypted){
+            return; 
+        }
+
+        (async () => {
+            await this.initClientCryptoConfiguration();
+        })
     }
 
     private onClientEventDeleteRoom(roomId: string) {
