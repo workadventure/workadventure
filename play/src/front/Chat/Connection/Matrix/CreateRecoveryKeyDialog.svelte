@@ -2,18 +2,21 @@
 
     import { closeModal } from "svelte-modals";
     import { CryptoApi } from "matrix-js-sdk";
-    import Popup from "phaser3-rex-plugins/plugins/popup";
     import { GeneratedSecretStorageKey } from "matrix-js-sdk/lib/crypto-api";
+    import Popup from "../../../Components/Modal/Popup.svelte";
 
     export let isOpen: boolean;
     export let crypto: CryptoApi;
-    export let processCallback: (generatedSecretStorageKey:GeneratedSecretStorageKey|undefined) => void;
+    export let processCallback: (generatedSecretStorageKey: GeneratedSecretStorageKey | undefined) => void;
 
     let passphraseInput: string | undefined;
     let generatedSecretStorageKey: GeneratedSecretStorageKey | undefined;
     let error = false;
 
-    async function generateRecoveryKey(passphrase: string) {
+    async function generateRecoveryKey(passphrase: string|undefined) {
+        if(passphrase === undefined){
+            return;
+        }
         try {
             generatedSecretStorageKey = await crypto.createRecoveryKeyFromPassphrase(passphrase);
         } catch (e) {
@@ -23,7 +26,7 @@
     }
 
     function closeModalAndContinueToWorkAdventure() {
-        processCallback(generatedSecretStorageKey)
+        processCallback(generatedSecretStorageKey);
         closeModal();
     }
 
@@ -39,14 +42,15 @@
             bind:value={passphraseInput} />
         {#if generatedSecretStorageKey?.encodedPrivateKey}
             <p>This is your private key ! Save if somewhere</p>
-            <p class="tw-text-red-500">{generatedSecretStorageKey.encodedPrivateKey}</p>
+            <p class="tw-text-green-500">{generatedSecretStorageKey.encodedPrivateKey}</p>
         {/if}
         {#if error}
             <p class="tw-text-red-500">Something went wrong on generateRecoveryKeyFromPassphrase</p>
         {/if}
     </div>
     <svelte:fragment slot="action">
-        <button class="tw-flex-1 tw-justify-center" on:click={()=>closeModalAndContinueToWorkAdventure()}>Cancel</button>
+        <button class="tw-flex-1 tw-justify-center" on:click={()=>closeModalAndContinueToWorkAdventure()}>Cancel
+        </button>
         {#if generatedSecretStorageKey === undefined}
             <button disabled={passphraseInput===undefined || passphraseInput?.trim().length===0}
                     class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"

@@ -1,4 +1,4 @@
-import { EventType, IEventRelation, MatrixEvent, MatrixEventEvent, Room } from "matrix-js-sdk";
+import { EventType, IEventRelation, MatrixEvent, MatrixEventEvent, MsgType, RelationType, Room } from "matrix-js-sdk";
 import { writable, Writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { ChatMessage, ChatMessageContent, ChatMessageType, ChatUser } from "../ChatConnection";
@@ -118,9 +118,9 @@ export class MatrixChatMessage implements ChatMessage {
         const editRelation: IEventRelation = { rel_type: "m.replace", event_id: this.id };
         try {
             await this.room.client.sendEvent(this.room.roomId, EventType.RoomMessage, {
-                msgtype: "m.text",
+                msgtype: MsgType.Text,
                 "m.relates_to": editRelation,
-                "m.new_content": { msgtype: "m.text", body: newContent },
+                "m.new_content": { msgtype: MsgType.Text, body: newContent },
                 body: newContent,
             });
         } catch (error) {
@@ -141,7 +141,7 @@ export class MatrixChatMessage implements ChatMessage {
     async addReaction(reaction: string) {
         try {
             await this.room.client.sendEvent(this.room.roomId, EventType.Reaction, {
-                "m.relates_to": { key: reaction, rel_type: "m.annotation", event_id: this.id },
+                "m.relates_to": { key: reaction, rel_type: RelationType.Annotation, event_id: this.id },
             });
         } catch (error) {
             console.error(error);
