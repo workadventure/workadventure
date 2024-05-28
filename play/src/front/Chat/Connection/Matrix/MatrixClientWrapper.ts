@@ -11,7 +11,7 @@ import { Buffer } from "buffer/";
 import { LocalUser } from "../../../Connection/LocalUser";
 import { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
 import { openModal } from "svelte-modals";
-import RequestRecoveryKeyDialog from "./RequestRecoveryKeyDialog.svelte";
+import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 
 window.Buffer = Buffer;
 
@@ -272,21 +272,13 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             [keyId, keyInfo] = keyInfoEntries[0];
         }
 
-        const crypto = this.client.getCrypto();
-        if (crypto !== undefined) {
-            const sessionBackupPrivateKey = await crypto.getSessionBackupPrivateKey();
-            if (sessionBackupPrivateKey) {
-                return [keyId, sessionBackupPrivateKey];
-            }
-        }
-
         if (this.secretStorageKeys[keyId]) {
             console.debug("getCryptoCallbacks from cache");
             return [keyId, this.secretStorageKeys[keyId]];
         }
 
         const key = await new Promise<Uint8Array | null>((resolve, reject) => {
-            openModal(RequestRecoveryKeyDialog, {
+            openModal(AccessSecretStorageDialog, {
                 keyInfo,
                 matrixClient: this.client,
                 onClose: (key: Uint8Array) => resolve(key),
