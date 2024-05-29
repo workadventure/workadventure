@@ -66,7 +66,6 @@
     }
 
     function copyUrl() {
-        console.log("je suis dans le coyURL et le add popup au store");
         url = coWebsite.getUrl().toString();
         navigator.clipboard.writeText(url).catch((e) => console.error(e));
         dispatch("copy");

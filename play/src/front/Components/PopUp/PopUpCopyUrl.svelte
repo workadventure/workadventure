@@ -9,36 +9,14 @@
 
     coWebsites.subscribe(() => {
         isPopupVisible = !isPopupVisible;
-        console.log("cowebsite length woooouhouuuu", $coWebsites.length);
-        console.log("isPopupVisible", isPopupVisible);
         if (!isPopupVisible) {
             popupStore.removePopup("popupCopyUrl");
         }
     });
 
-    // if (isPopupVisible) {
-    //     setTimeout(() => {
-    //         dispatch("close");
-    //     }, 3000);
-    // }
-
     function closeBanner() {
         dispatch("close");
     }
-
-    function displayIfCowebsite() {
-        // console.log("cowebsite length", $coWebsites.length);
-        let popUpCopyUrl = document.getElementById("popup-copyurl");
-        if ($coWebsites.length < 1) {
-            console.log("no cowebsite");
-            if (popUpCopyUrl) {
-                popUpCopyUrl.style.display = "none";
-            }
-        }
-    }
-
-    // $: console.log("cowebsite length", $coWebsites.length);
-    $: isPopupVisible, displayIfCowebsite();
 </script>
 
 <div
