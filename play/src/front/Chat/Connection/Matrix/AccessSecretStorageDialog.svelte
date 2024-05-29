@@ -5,6 +5,7 @@
     import Popup from "../../../Components/Modal/Popup.svelte";
     import { makeInputToKey } from "./MatrixSecurity";
     import { IconEdit, IconKey } from "@tabler/icons-svelte";
+    import LL from "../../../../i18n/i18n-svelte";
 
     export let isOpen: boolean;
     export let keyInfo: SecretStorage.SecretStorageKeyDescription;
@@ -50,26 +51,26 @@
 
 </script>
 <Popup {isOpen}>
-    <h1 slot="title">Chat recovery key required</h1>
+    <h1 slot="title">{$LL.chat.e2ee.accessSecretStorage.title()}</h1>
     <div slot="content" class="tw-flex tw-flex-col">
-        <p>In order to access your older message, you need to enter the recovery key.</p>
+        <p>{$LL.chat.e2ee.accessSecretStorage.description()}</p>
         {#if accessSecretStorageMethod === "passphrase"}
-            <label for="passphrase"><IconEdit/> Passphrase</label>
+            <label for="passphrase"><IconEdit/> {$LL.chat.e2ee.accessSecretStorage.passphrase()}</label>
             <input
                 id="passphrase"
                 type="password"
                 class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
-                placeholder="Enter your passphrase" bind:value={passphraseInput} />
-            <button on:click={changeAccessSecretStorageMethod} class={changeAccessSecretStorageMethodButtonClass}><IconKey/> Use recovery key instead</button>
+                placeholder={`${$LL.chat.e2ee.accessSecretStorage.placeholder()} ${$LL.chat.e2ee.accessSecretStorage.passphrase()}`} bind:value={passphraseInput} />
+            <button on:click={changeAccessSecretStorageMethod} class={changeAccessSecretStorageMethodButtonClass}><IconKey/> {$LL.chat.e2ee.accessSecretStorage.buttons.useRecoveryKey()}</button>
         {:else}
-            <label for="recoveryKey"><IconKey/> Recovery key</label>
+            <label for="recoveryKey"><IconKey/> {$LL.chat.e2ee.accessSecretStorage.recoveryKey()}</label>
             <input
                 id="recoveryKey"
-                placeholder="Enter your recovery key"
+                placeholder={`${$LL.chat.e2ee.accessSecretStorage.placeholder()} ${$LL.chat.e2ee.accessSecretStorage.recoveryKey()}`}
                 type="password"
                 class="tw-w-full tw-rounded-xl tw-text-white placeholder:tw-text-sm tw-px-3 tw-py-2 tw-p tw-border-light-purple tw-border tw-border-solid tw-bg-contrast"
                 bind:value={recoveryKeyInput} />
-            <button on:click={changeAccessSecretStorageMethod} class={changeAccessSecretStorageMethodButtonClass}><IconEdit/> Use passphrase instead</button>
+            <button on:click={changeAccessSecretStorageMethod} class={changeAccessSecretStorageMethodButtonClass}><IconEdit/> {$LL.chat.e2ee.accessSecretStorage.buttons.usePassphrase()}</button>
 
         {/if}
 
@@ -78,10 +79,10 @@
         {/if}
     </div>
     <svelte:fragment slot="action">
-        <button class="tw-flex-1 tw-justify-center" on:click={()=>{onClose(null);closeModal()}}>Cancel</button>
+        <button class="tw-flex-1 tw-justify-center" on:click={()=>{onClose(null);closeModal()}}>{$LL.chat.e2ee.accessSecretStorage.buttons.cancel()}</button>
         <button disabled={confirmInputDisabled}
                 class="disabled:tw-text-gray-400 disabled:tw-bg-gray-500 tw-bg-secondary tw-flex-1 tw-justify-center"
-                on:click={()=>checkAndSubmitRecoveryOrPassphraseIfValid()}>Confirm
+                on:click={()=>checkAndSubmitRecoveryOrPassphraseIfValid()}>{$LL.chat.e2ee.accessSecretStorage.buttons.confirm()}
         </button>
     </svelte:fragment>
 </Popup>

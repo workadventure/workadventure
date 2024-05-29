@@ -187,6 +187,45 @@ const chat: BaseTranslation = {
             cancel: "Cancel",
         },
     },
+    e2ee: {
+        createRecoveryKey: {
+            title: "Chat recovery key creation",
+            description:
+                "In order use end to end encryption in the chat, you need to create a recovery key. Please enter your passphrase bellow, a recovery key will be created.",
+            privateKeyDescription:
+                "This is your private key, save it somewhere to retrieve encrypted discussions after logged out.",
+            error: "Something went wrong on generateRecoveryKeyFromPassphrase",
+            buttons: {
+                generate: "Generate",
+                continue: "Continue",
+                cancel: "Cancel",
+            },
+        },
+        interactiveAuth: {
+            title: "Chat end to end encryption",
+            description:
+                "For security reason, a cross signing key must be uploaded to our server. By confirming your identity, you will save the cross signing key allowing you to read encrypted message from WA and other clients.",
+            buttons: {
+                cancel: "Cancel",
+                continueSSO: "Continue with SSO",
+                finish: "Finish",
+            },
+        },
+        accessSecretStorage: {
+            title: "Chat session verification",
+            description:
+                "In order to verify your session and retrieve historical encrypted message your need to enter your recovery key or passphrase.",
+            passphrase: "Passphrase",
+            recoveryKey: "Recovery key",
+            placeholder: "Enter your",
+            buttons: {
+                cancel: "Cancel",
+                usePassphrase: "Use passphrase instead",
+                useRecoveryKey: "Use recovery key instead",
+                confirm: "Confirm",
+            },
+        },
+    },
 };
 
 export default chat;
