@@ -39,6 +39,7 @@ import { chatUserFactory } from "./MatrixChatUser";
 import CreateRecoveryKeyDialog from "./CreateRecoveryKeyDialog.svelte";
 import { openModal } from "svelte-modals";
 import { GeneratedSecretStorageKey } from "matrix-js-sdk/lib/crypto-api";
+import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";
 
 export const defaultWoka =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
@@ -47,10 +48,15 @@ export const defaultColor = "#626262";
 type UUID = string;
 type chatId = string;
 
+export enum INTERACTIVE_AUTH_PHASE {
+    PRE_AUTH = 1,
+    POST_AUTH,
+}
+
 export class MatrixChatConnection implements ChatConnectionInterface {
     private client!: MatrixClient;
     private readonly roomList: MapStore<string, ChatRoom>;
-    private initializingEncryption: boolean = false;
+    private initializingEncryption = false;
     connectionStatus: Writable<ConnectionStatus>;
     directRooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
@@ -125,46 +131,33 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             console.error("E2EE is not available for this client");
             return;
         }
-        
-        const roomEncryptionEnablePromises : Promise<boolean>[] = [] ; 
 
-        this.client.getRooms().forEach((room)=>{
-            roomEncryptionEnablePromises.push(crypto.isEncryptionEnabledInRoom(room.roomId))
-        })
-        
-        const encryptionStatus : boolean[] = await Promise.all(roomEncryptionEnablePromises);
+        const roomEncryptionEnablePromises: Promise<boolean>[] = [];
 
-        if(encryptionStatus.some((status)=>status)){
-            console.warn("skip E2EE bootstrapping",{encryptionStatus});
-            return; 
+        this.client.getRooms().forEach((room) => {
+            roomEncryptionEnablePromises.push(crypto.isEncryptionEnabledInRoom(room.roomId));
+        });
+
+        const encryptionStatus: boolean[] = await Promise.all(roomEncryptionEnablePromises);
+
+        if (encryptionStatus.some((status) => status)) {
+            console.warn("skip E2EE bootstrapping", { encryptionStatus });
+            return;
         }
 
         try {
             await crypto.bootstrapCrossSigning({
                 authUploadDeviceSigningKeys: async (makeRequest) => {
-                    await makeRequest(null);
-                    /*  await new Promise((resolve, reject) => {
-                        let;
-                        const interactiveAuth = new InteractiveAuth({
+                    const finished = await new Promise<boolean>((resolve) => {
+                        openModal(InteractiveAuthDialog, {
                             matrixClient: this.client,
-                            doRequest(auth: AuthDict | null, background: boolean): Promise<UIAResponse<void>> {
-                                return makeRequest(auth);
-                            },
-                            stateUpdated(nextStage: AuthType | string, status: IStageStatus) {},
-                            requestEmailToken(
-                                email: string,
-                                secret: string,
-                                attempt: number,
-                                session: string
-                            ): Promise<{
-                                sid: string;
-                            }> {
-                                return Promise.reject("Not supposed to be called");
-                            },
-                            supportedStages: [AuthType.Sso],
+                            onFinished: (finished: boolean) => resolve(finished),
+                            makeRequest,
                         });
-                        await interactiveAuth.attemptAuth();
-                    });*/
+                    });
+                    if (!finished) {
+                        throw new Error("Cross-signing key upload auth canceled");
+                    }
                 },
             });
 
@@ -236,19 +229,19 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         const existingMatrixChatRoom = this.roomList.get(roomId);
 
         if (existingMatrixChatRoom !== undefined) {
-            return; 
+            return;
         }
 
         const matrixRoom = new MatrixChatRoom(room);
         this.roomList.set(matrixRoom.id, matrixRoom);
 
-        if(this.initializingEncryption || !matrixRoom.isEncrypted){
-            return; 
+        if (this.initializingEncryption || !matrixRoom.isEncrypted) {
+            return;
         }
 
-        (async () => {
+        async () => {
             await this.initClientCryptoConfiguration();
-        })
+        };
     }
 
     private onClientEventDeleteRoom(roomId: string) {
@@ -453,8 +446,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             preset: "trusted_private_chat",
             visibility: "private",
         });
-        await this.addDMRoomInAccountData(userToInvite,room_id);
-        
+        await this.addDMRoomInAccountData(userToInvite, room_id);
+
         //Wait Sync Event before use/update roomList otherwise room not exist in the client
         await new Promise<void>((resolve, _) => {
             this.client.once(ClientEvent.Sync, (state) => {
@@ -572,8 +565,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     const roomAfterSync = this.client.getRoom(roomId);
                     if (!roomAfterSync) return;
                     const dmInviterId = roomAfterSync.getDMInviter();
-                    if(dmInviterId){
-                        await this.addDMRoomInAccountData(dmInviterId,roomId);
+                    if (dmInviterId) {
+                        await this.addDMRoomInAccountData(dmInviterId, roomId);
                     }
 
                     const matrixRoom = new MatrixChatRoom(roomAfterSync);
@@ -586,11 +579,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 });
         });
     }
-    private async addDMRoomInAccountData(userId:string,roomId:string){
-        const directMap: Record<string, string[]> = this.client.getAccountData('m.direct')?.getContent() || {}
-        directMap[userId] = [...(directMap[userId] || []), roomId]
-        await this.client.setAccountData('m.direct', directMap);
-        console.log('addDMRoomInAccountData : ',directMap);
+    private async addDMRoomInAccountData(userId: string, roomId: string) {
+        const directMap: Record<string, string[]> = this.client.getAccountData("m.direct")?.getContent() || {};
+        directMap[userId] = [...(directMap[userId] || []), roomId];
+        await this.client.setAccountData("m.direct", directMap);
+        console.log("addDMRoomInAccountData : ", directMap);
     }
 
     async destroy(): Promise<void> {
