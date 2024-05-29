@@ -8,9 +8,10 @@ import {
 } from "matrix-js-sdk";
 import Olm from "@matrix-org/olm";
 import { Buffer } from "buffer/";
-import { LocalUser } from "../../../Connection/LocalUser";
 import { SecretStorageKeyDescriptionAesV1 } from "matrix-js-sdk/lib/secret-storage";
+// eslint-disable-next-line import/no-unresolved
 import { openModal } from "svelte-modals";
+import { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 
 window.Buffer = Buffer;
