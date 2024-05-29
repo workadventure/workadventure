@@ -122,9 +122,9 @@
             <HelpPopUpBlocked />
         {/if}
 
-        <!-- {#if $hasEmbedScreen}
+        {#if $hasEmbedScreen}
             <EmbedScreensContainer />
-        {/if} -->
+        {/if}
 
         {#if $soundPlayingStore}
             <AudioPlaying url={$soundPlayingStore} />

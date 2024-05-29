@@ -70,7 +70,6 @@
         navigator.clipboard.writeText(url).catch((e) => console.error(e));
         dispatch("copy");
         popupStore.addPopup(PopUpCopyUrl, {}, "popupCopyUrl");
-        // Afficher un composant svelte pour confirmer la copie
     }
 </script>
 
