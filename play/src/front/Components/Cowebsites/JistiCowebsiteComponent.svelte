@@ -109,7 +109,7 @@
                             .then((release) => (screenWakeRelease = release))
                             .catch((error) => console.error(error));
 
-                        actualCowebsite.updateParticipantsCountStore();
+                        updateParticipantsCountStore();
                     });
 
                     jitsiApi.addListener("audioMuteStatusChanged", onAudioChange);

@@ -3,7 +3,6 @@ import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { Subject } from "rxjs";
 
 
-
 export function createCoWebsiteStore() {
     const { subscribe, set, update } = writable<Array<CoWebsite>>([]);
 
@@ -90,18 +89,6 @@ export class CoWebsiteManager {
         }
     }
 
-    // public setWidthPercent(coWebsite: CoWebsite, openingWidth?: number) {
-    //     let newWidth = openingWidth ?? 50;
-    //     if (newWidth > 75) {
-    //         coWebsite.getWidthPercent() = 75;
-    //     } else if (newWidth < 25){
-    //         coWebsite.getWidthPercent() = 25;
-    //     }
-    // this.calculateNewWidth()
-
-    //     coWebsite.getWidthPercent(newWidth);
-    // }
-
 
     public addCoWebsiteToStore(coWebsite: CoWebsite) {
         coWebsite?.getWidthPercent();
@@ -151,7 +138,6 @@ export class CoWebsiteManager {
         });
     }
 
-    // Fonction dans la game scene
 
     public cleanup(): void {
         this.closeCoWebsites();

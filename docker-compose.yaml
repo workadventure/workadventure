@@ -452,28 +452,3 @@ services:
         healthcheck:
             #disable: true
             timeout: 5s
-
-#  coturn:
-#    image: coturn/coturn:4.5.2
-#    command:
-#      - turnserver
-#      #- -c=/etc/coturn/turnserver.conf
-#      - --log-file=stdout
-#      - --external-ip=$$(detect-external-ip)
-#      - --listening-port=3478
-#      - --min-port=10000
-#      - --max-port=10010
-#      - --tls-listening-port=5349
-#      - --listening-ip=0.0.0.0
-#      - --realm=coturn.workadventure.localhost
-#      - --server-name=coturn.workadventure.localhost
-#      - --lt-cred-mech
-#      # Enable Coturn "REST API" to validate temporary passwords.
-#      #- --use-auth-secret
-#      #- --static-auth-secret=SomeStaticAuthSecret
-#      #- --userdb=/var/lib/turn/turndb
-#      - --user=workadventure:WorkAdventure123
-#      # use real-valid certificate/privatekey files
-#      #- --cert=/root/letsencrypt/fullchain.pem
-#      #- --pkey=/root/letsencrypt/privkey.pem
-#    network_mode: host
