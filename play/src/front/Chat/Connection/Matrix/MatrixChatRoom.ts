@@ -39,7 +39,6 @@ export class MatrixChatRoom implements ChatRoom {
     constructor(private matrixRoom: Room) {
         this.id = matrixRoom.roomId;
         this.name = writable(matrixRoom.name);
-        this.type = this.getMatrixRoomType();
         (async ()=>{
             this.type = await this.getMatrixRoomType();
             console.log('roomType : ',this.type);
@@ -363,8 +362,6 @@ export class MatrixChatRoom implements ChatRoom {
         if (isDirectBasedOnRoomData) {
             return "direct";
         }
-
-            ? "direct"
 
         return 'multiple';
     }
