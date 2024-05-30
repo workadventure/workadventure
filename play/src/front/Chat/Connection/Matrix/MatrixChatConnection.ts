@@ -145,46 +145,49 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             return;
         }
 
+        const keyBackupInfo = await this.client.getKeyBackupVersion();
+        const isCrossSigningReady = await crypto.isCrossSigningReady();
+
         try {
-            await crypto.bootstrapCrossSigning({
-                authUploadDeviceSigningKeys: async (makeRequest) => {
-                    const finished = await new Promise<boolean>((resolve) => {
-                        openModal(InteractiveAuthDialog, {
-                            matrixClient: this.client,
-                            onFinished: (finished: boolean) => resolve(finished),
-                            makeRequest,
+            if (!isCrossSigningReady) {
+                await crypto.bootstrapCrossSigning({
+                    authUploadDeviceSigningKeys: async (makeRequest) => {
+                        const finished = await new Promise<boolean>((resolve) => {
+                            openModal(InteractiveAuthDialog, {
+                                matrixClient: this.client,
+                                onFinished: (finished: boolean) => resolve(finished),
+                                makeRequest,
+                            });
                         });
-                    });
-                    if (!finished) {
-                        throw new Error("Cross-signing key upload auth canceled");
-                    }
-                },
-            });
+                        if (!finished) {
+                            throw new Error("Cross-signing key upload auth canceled");
+                        }
+                    },
+                });
 
-            const keyBackupInfo = await this.client.getKeyBackupVersion();
+                await crypto.bootstrapSecretStorage({
+                    createSecretStorageKey: async () => {
+                        const generatedKey = await new Promise<GeneratedSecretStorageKey | null>((resolve, reject) => {
+                            openModal(CreateRecoveryKeyDialog, {
+                                crypto,
+                                processCallback: (generatedKey: GeneratedSecretStorageKey | null) => {
+                                    if (generatedKey === undefined) {
+                                        reject(new Error("no generated secret storage key"));
+                                    }
+                                    resolve(generatedKey);
+                                },
+                            });
+                        });
+                        if (generatedKey === null) {
+                            throw new Error("createSecretStorageKey : no generated secret storage key");
+                        }
+                        return Promise.resolve(generatedKey);
+                    },
+                    setupNewKeyBackup: keyBackupInfo === null,
+                    keyBackupInfo: keyBackupInfo ?? undefined,
+                });
+            }
             await this.restoreBackupMessages(keyBackupInfo);
-
-            await crypto.bootstrapSecretStorage({
-                createSecretStorageKey: async () => {
-                    const generatedKey = await new Promise<GeneratedSecretStorageKey | null>((resolve, reject) => {
-                        openModal(CreateRecoveryKeyDialog, {
-                            crypto,
-                            processCallback: (generatedKey: GeneratedSecretStorageKey | null) => {
-                                if (generatedKey === undefined) {
-                                    reject(new Error("no generated secret storage key"));
-                                }
-                                resolve(generatedKey);
-                            },
-                        });
-                    });
-                    if (generatedKey === null) {
-                        throw new Error("createSecretStorageKey : no generated secret storage key");
-                    }
-                    return Promise.resolve(generatedKey);
-                },
-                setupNewKeyBackup: keyBackupInfo === null,
-                keyBackupInfo: keyBackupInfo ?? undefined,
-            });
             this.initializingEncryption = true;
         } catch (error) {
             console.error("initClientCryptoConfiguration : ", error);
@@ -579,6 +582,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 });
         });
     }
+
     private async addDMRoomInAccountData(userId: string, roomId: string) {
         const directMap: Record<string, string[]> = this.client.getAccountData("m.direct")?.getContent() || {};
         directMap[userId] = [...(directMap[userId] || []), roomId];
