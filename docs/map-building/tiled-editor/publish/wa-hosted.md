@@ -176,16 +176,16 @@ Instead, you should use the "secrets" feature of GitHub to store the API key. Th
   <summary>Learn how to configure a secret in GitHub</summary>
     <div>
 
-- Go to your GitHub repository
+<!-- - Go to your GitHub repository -->
 
-- Click on the "Settings" tab
+<!-- - Click on the "Settings" tab
   ![The settings tab](./images/github-settings.png)
 - Click on the "Secrets and variables" link in the left panel
   ![The secrets link](./images/github-secrets-and-variables.png)
 - Click on the "Actions" link
   ![The actions button](./images/github-actions-menu.png)
 - Finally, click on the "New repository secret" button
-![The new repository secret button](./images/github-new-repo-secret.png)
+![The new repository secret button](./images/github-new-repo-secret.png) -->
 
   </div>
 </details>
