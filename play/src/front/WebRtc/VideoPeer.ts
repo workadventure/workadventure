@@ -1,15 +1,11 @@
 import { Buffer } from "buffer";
 import type { Subscription } from "rxjs";
-import { Readable, Writable, Unsubscriber, get, readable, writable } from "svelte/store";
+import { get, Readable, readable, Unsubscriber, Writable, writable } from "svelte/store";
 import Peer from "simple-peer/simplepeer.min.js";
 import type { RoomConnection } from "../Connection/RoomConnection";
 import { localStreamStore, videoBandwidthStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
-import {
-    chatMessagesService,
-    newChatMessageSubject,
-    writingStatusMessageStore,
-} from "../Stores/ChatStore";
+import { newChatMessageSubject } from "../Stores/ChatStore";
 import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { gameManager } from "../Phaser/Game/GameManager";
@@ -146,7 +142,7 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
             this._statusStore.set("connected");
 
             this._connected = true;
-            chatMessagesService.addIncomingUser(this.userId);
+            //chatMessagesService.addIncomingUser(this.userId);
 
             this.newMessageSubscription = newChatMessageSubject.subscribe((newMessage) => {
                 if (!newMessage) return;
@@ -160,19 +156,21 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
                 );
             });
 
-            this.newWritingStatusMessageSubscription = iframeListener.newChatMessageWritingStatusStream.subscribe((status) => {
-                if (status === undefined) {
-                    return;
+            this.newWritingStatusMessageSubscription = iframeListener.newChatMessageWritingStatusStream.subscribe(
+                (status) => {
+                    if (status === undefined) {
+                        return;
+                    }
+                    this.write(
+                        new Buffer(
+                            JSON.stringify({
+                                type: "message_status",
+                                message: status,
+                            } as MessageStatusMessage)
+                        )
+                    );
                 }
-                this.write(
-                    new Buffer(
-                        JSON.stringify({
-                            type: "message_status",
-                            message: status,
-                        } as MessageStatusMessage)
-                    )
-                );
-            });
+            );
         });
 
         this.on("data", (chunk: Buffer) => {
@@ -186,13 +184,13 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
                     }
                     case "message": {
                         if (!blackListManager.isBlackListed(this.userUuid)) {
-                            chatMessagesService.addExternalMessage(this.userId, message.message);
+                            //chatMessagesService.addExternalMessage(this.userId, message.message);
                         }
                         break;
                     }
                     case "message_status": {
                         if (!blackListManager.isBlackListed(this.userUuid)) {
-                            writingStatusMessageStore.addWritingStatus(this.userId, message.message);
+                            //writingStatusMessageStore.addWritingStatus(this.userId, message.message);
                         }
                         break;
                     }
@@ -320,7 +318,7 @@ export class VideoPeer extends Peer implements TrackStreamWrapperInterface {
             this.onUnBlockSubscribe.unsubscribe();
             this.newMessageSubscription?.unsubscribe();
             this.newWritingStatusMessageSubscription?.unsubscribe();
-            chatMessagesService.addOutcomingUser(this.userId);
+            //chatMessagesService.addOutcomingUser(this.userId);
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();
             if (this.apparentMediaConstraintStoreSubscribe) this.apparentMediaConstraintStoreSubscribe();
             if (this.volumeStoreSubscribe) this.volumeStoreSubscribe();

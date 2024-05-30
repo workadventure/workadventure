@@ -34,11 +34,11 @@
     } = message;
 
     const messageType: { [key in ChatMessageType]: ComponentType } = {
-        "image": MessageImage,
-        "text": MessageText,
-        "file": MessageFile,
-        "audio": MessageAudioFile,
-        "video": MessageVideoFile
+        "image": MessageImage as ComponentType,
+        "text": MessageText as ComponentType,
+        "file": MessageFile as ComponentType,
+        "audio": MessageAudioFile as ComponentType,
+        "video": MessageVideoFile as ComponentType
     };
 
     let messageRef: HTMLDivElement;

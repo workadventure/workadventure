@@ -1,11 +1,11 @@
 <script lang="ts">
+    import { onMount } from "svelte";
+    import { ChevronUpIcon } from "svelte-feather-icons";
     import { gameManager } from "../../../Phaser/Game/GameManager";
-    import UserList from "./UserList.svelte";
     import { ChatUser } from "../../Connection/ChatConnection";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue, shownRoomListStore } from "../../Stores/ChatStore";
-    import { ChevronUpIcon } from "svelte-feather-icons";
-    import {  onMount } from "svelte";
+    import UserList from "./UserList.svelte";
 
     const chat = gameManager.getCurrentGameScene().chatConnection;
     const DISCONNECTED_LABEL = 'disconnected'; 

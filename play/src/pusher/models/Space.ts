@@ -101,12 +101,12 @@ export class Space implements CustomJsonReplacerInterface {
         this.notifyAll(subMessage, user);
     }
 
-    public updateUser(spaceUser: PartialSpaceUser, world : string) {
+    public updateUser(spaceUser: PartialSpaceUser, world: string) {
         const pusherToBackSpaceMessage: PusherToBackSpaceMessage = {
             message: {
                 $case: "updateSpaceUserMessage",
                 updateSpaceUserMessage: {
-                    spaceName:  `${world}.${this.name}`,
+                    spaceName: `${world}.${this.name}`,
                     user: spaceUser,
                     filterName: undefined,
                 },
@@ -115,7 +115,7 @@ export class Space implements CustomJsonReplacerInterface {
         this.spaceStreamToPusher.write(pusherToBackSpaceMessage);
         this.localUpdateUser(spaceUser, world);
     }
-    public localUpdateUser(spaceUser: PartialSpaceUser, world : string) {
+    public localUpdateUser(spaceUser: PartialSpaceUser, world: string) {
         const user = this.users.get(spaceUser.id);
 
         if (!user) {
@@ -136,7 +136,7 @@ export class Space implements CustomJsonReplacerInterface {
             message: {
                 $case: "updateSpaceUserMessage",
                 updateSpaceUserMessage: {
-                    spaceName:  `${this.name}`,
+                    spaceName: `${this.name}`,
                     user: spaceUser,
                     filterName: undefined,
                 },
@@ -198,7 +198,7 @@ export class Space implements CustomJsonReplacerInterface {
     }
 
     private removeSpaceNamePrefix(spaceName: string, prefix: string): string {
-        return spaceName.replaceAll(`${prefix}.`,'');
+        return spaceName.replaceAll(`${prefix}.`, "");
     }
 
     private notifyAllMetadata(subMessage: SubMessage) {
@@ -230,7 +230,7 @@ export class Space implements CustomJsonReplacerInterface {
                 (spaceFilter) =>
                     this.filterOneUser(spaceFilter, youngUser) || (oldUser && this.filterOneUser(spaceFilter, oldUser))
             );
-            
+
             filtersTargeted.forEach((spaceFilter) => {
                 switch (subMessage.message?.$case) {
                     case "addSpaceUserMessage":
@@ -251,7 +251,7 @@ export class Space implements CustomJsonReplacerInterface {
                         socketData.emitInBatch(subMessage);
                         debug(`${this.name} : user ${youngUser.lowercaseName} remove sent to ${socketData.name}`);
                         break;
-                    case "updateSpaceUserMessage":
+                    case "updateSpaceUserMessage": {
                         subMessage.message.updateSpaceUserMessage.filterName = spaceFilter.filterName;
                         subMessage.message.updateSpaceUserMessage.spaceName = this.removeSpaceNamePrefix(
                             subMessage.message.updateSpaceUserMessage.spaceName,
@@ -267,7 +267,6 @@ export class Space implements CustomJsonReplacerInterface {
                             : false;
 
                         if (!oldUser || (!shouldRemoveUser && !shouldUpdateUser)) {
-   
                             socketData.emitInBatch(subMessage);
                             debug(`${this.name} : user ${youngUser.lowercaseName} update sent to ${socketData.name}`);
                             return;
@@ -283,6 +282,7 @@ export class Space implements CustomJsonReplacerInterface {
                             return;
                         }
                         break;
+                    }
                 }
             });
         });
@@ -416,7 +416,7 @@ export class Space implements CustomJsonReplacerInterface {
         this.notifyMe(watcher, subMessage);
     }
 
-    private notifyMeUpdateUser(watcher: Socket, user: SpaceUserExtended, filterName: string | undefined){
+    private notifyMeUpdateUser(watcher: Socket, user: SpaceUserExtended, filterName: string | undefined) {
         const subMessage: SubMessage = {
             message: {
                 $case: "updateSpaceUserMessage",

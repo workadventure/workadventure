@@ -15,14 +15,14 @@ describe("SpaceProviderInterface implementation", () => {
     describe("SpaceStore", () => {
         describe("SpaceStore Add", () => {
             it("should add a space when ...", () => {
-                const newSpace: SpaceInterface = {
+                const newSpace: Pick<SpaceInterface, "getName"> = {
                     getName(): string {
                         return "space-test";
                     },
                 };
 
                 const spaceStore: SpaceProviderInterface = createSpaceStore();
-                spaceStore.add(newSpace);
+                spaceStore.add(newSpace.getName());
                 expect(get(spaceStore)).toContain(newSpace);
             });
             it("should return a error when you try to add a space who already exist", () => {

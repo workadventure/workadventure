@@ -565,7 +565,7 @@ class LocalUserStore {
     }
 
     getMatrixDeviceId(userUuid: string): string | null {
-        return localStorage.getItem(matrixDeviceId + "_" + userUuid);
+        return localStorage.getItem(matrixDeviceId + "_" + userUuid) ?? "";
     }
 
     setMatrixLoginToken(value: string | null) {

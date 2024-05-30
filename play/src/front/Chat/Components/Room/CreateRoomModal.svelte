@@ -11,17 +11,18 @@
 
     export let isOpen: boolean;
     let createRoomOptions: CreateRoomOptions = { visibility: "public" };
-    let createRoomError: string;
+    let createRoomError=false;
 
     const chat = gameManager.getCurrentGameScene().chatConnection;
 
     async function createNewRoom(createRoomOptions: CreateRoomOptions) {
         try {
+            createRoomError= false;
             await chat.createRoom(createRoomOptions);
             closeModal();
         } catch (error) {
             console.error(error);
-            createRoomError = error.message;
+            createRoomError = true;
         }
     }
 
@@ -56,7 +57,7 @@
 <Popup {isOpen}>
     <h1 slot="title">{$LL.chat.createRoom.title()}</h1>
     <div slot="content" class="tw-w-full tw-flex tw-flex-col tw-gap-2">
-        {#if createRoomError !== undefined}
+        {#if createRoomError}
             <p>Unable to create the room.</p>
         {/if}
         <p class="tw-p-0 tw-m-0 tw-pl-1 tw-font-bold">{$LL.chat.createRoom.name()}</p>
