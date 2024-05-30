@@ -1,4 +1,4 @@
-import { EventType, MatrixEvent, MatrixEventEvent, MsgType, RelationType, Room } from "matrix-js-sdk";
+import { ClientEvent, EventStatus, EventType, IEventRelation, MatrixEvent, MatrixEventEvent, MsgType, RelationType, Room, SyncState } from "matrix-js-sdk";
 import { writable, Writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { ChatMessage, ChatMessageContent, ChatMessageType, ChatUser } from "../ChatConnection";
@@ -138,12 +138,25 @@ export class MatrixChatMessage implements ChatMessage {
     }
 
     async addReaction(reaction: string) {
+
         try {
             await this.room.client.sendEvent(this.room.roomId, EventType.Reaction, {
                 "m.relates_to": { key: reaction, rel_type: RelationType.Annotation, event_id: this.id },
             });
         } catch (error) {
             console.error(error);
+            /*
+                        this.room.getPendingEvents()
+            .filter((ev : MatrixEvent)=> ev.status === EventStatus.NOT_SENT && this.id === ev.getId())
+            .forEach((event)=>{
+                this.room.client.resendEvent(event,this.room)
+                .catch((error)=>{
+                    console.error(error);
+                    this.room.client.cancelPendingEvent(event);
+                });
+            });
+            */
+
         }
     }
 }
