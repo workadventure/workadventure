@@ -1,5 +1,6 @@
 import {
     Direction,
+    EventStatus,
     EventType,
     IContent,
     IRoomTimelineData,
@@ -63,6 +64,14 @@ export class MatrixChatRoom implements ChatRoom {
         })().catch((error) => console.error(error));
 
         this.startHandlingChatRoomEvents();
+
+        this.matrixRoom.getPendingEvents().filter((ev : MatrixEvent)=> ev.status === EventStatus.NOT_SENT).forEach((event)=>{
+            this.matrixRoom.client.resendEvent(event,this.matrixRoom)
+            .catch((error)=>{
+                this.matrixRoom.client.cancelPendingEvent(event);
+                console.error(error);
+            });
+        })
     }
 
     private async initMatrixRoomMessagesAndReactions() {

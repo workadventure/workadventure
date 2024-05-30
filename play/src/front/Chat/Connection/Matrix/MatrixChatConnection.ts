@@ -96,6 +96,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             switch (state) {
                 case SyncState.Prepared:
                     this.connectionStatus.set("ONLINE");
+                    (async () => {
+                        await this.initClientCryptoConfiguration();
+                    })();
                     this.initUserList();
                     break;
                 case SyncState.Error:
@@ -109,9 +112,13 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     break;
             }
         });
-        this.client.on(ClientEvent.Room, this.onClientEventRoom.bind(this));
+        this.client.on(ClientEvent.Room, async (room) => await this.onClientEventRoom(room));
         this.client.on(ClientEvent.DeleteRoom, this.onClientEventDeleteRoom.bind(this));
-        this.client.on(RoomEvent.MyMembership, this.onRoomEventMembership.bind(this));
+        this.client.on(
+            RoomEvent.MyMembership,
+            async (room, membership, prevMembership) =>
+                await this.onRoomEventMembership(room, membership, prevMembership)
+        );
 
         //TODO find a fix for that
         //this.client.on(RoomEvent.Timeline, this.onRoomEventTimeline.bind(this));
@@ -123,10 +130,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             //Detached to prevent using listener on localIdReplaced for each event
             pendingEventOrdering: PendingEventOrdering.Detached,
         });
-        await this.initClientCryptoConfiguration();
+
     }
 
     private async initClientCryptoConfiguration() {
+    
         const crypto = this.client.getCrypto();
         if (crypto === undefined) {
             console.error("E2EE is not available for this client");
@@ -135,16 +143,12 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         const roomEncryptionEnablePromises: Promise<boolean>[] = [];
 
-        this.client.getRooms().forEach((room) => {
-            roomEncryptionEnablePromises.push(crypto.isEncryptionEnabledInRoom(room.roomId));
-        });
-
-        const encryptionStatus: boolean[] = await Promise.all(roomEncryptionEnablePromises);
-
-        if (encryptionStatus.some((status) => status)) {
-            console.warn("skip E2EE bootstrapping", { encryptionStatus });
+        if (this.client.getRooms().every((room) => !room.hasEncryptionStateEvent()) || this.initializingEncryption) {
+            console.warn("skip E2EE bootstrapping");
             return;
         }
+
+        this.initializingEncryption = true;
 
         const keyBackupInfo = await this.client.getKeyBackupVersion();
         const isCrossSigningReady = await crypto.isCrossSigningReady();
@@ -192,6 +196,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             this.initializingEncryption = true;
         } catch (error) {
             console.error("initClientCryptoConfiguration : ", error);
+            this.initializingEncryption = false;
         }
     }
 
@@ -228,36 +233,37 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         }
     }
 
-    private onClientEventRoom(room: Room) {
+    private async onClientEventRoom(room: Room) {
         const { roomId } = room;
         const existingMatrixChatRoom = this.roomList.get(roomId);
 
         if (existingMatrixChatRoom !== undefined) {
+            console.warn("room already exist");
             return;
         }
 
-        const matrixRoom = new MatrixChatRoom(room);
+        const matrixRoom = await new MatrixChatRoom(room);
         this.roomList.set(matrixRoom.id, matrixRoom);
 
-        if (this.initializingEncryption || !matrixRoom.isEncrypted) {
+        if (this.initializingEncryption || !get(matrixRoom.isEncrypted)) {
+            console.warn("skip room encryption");
             return;
         }
 
         async () => {
-            await this.initClientCryptoConfiguration();
-        };
+        await this.initClientCryptoConfiguration();
     }
 
     private onClientEventDeleteRoom(roomId: string) {
         this.roomList.delete(roomId);
     }
 
-    private onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
+    private async onRoomEventMembership(room: Room, membership: string, prevMembership: string | undefined) {
         const { roomId } = room;
         const existingMatrixChatRoom = this.roomList.has(roomId);
         if (membership !== prevMembership && existingMatrixChatRoom) {
             if (membership === KnownMembership.Join) {
-                this.roomList.set(roomId, new MatrixChatRoom(room));
+                this.roomList.set(roomId, await new MatrixChatRoom(room));
                 return;
             }
             if (membership === KnownMembership.Leave || membership === KnownMembership.Ban) {
@@ -268,7 +274,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             }
             if (membership === KnownMembership.Invite) {
                 const inviter = room.getDMInviter();
-                const newRoom = new MatrixChatRoom(room);
+                const newRoom = await new MatrixChatRoom(room);
                 if (
                     inviter &&
                     (this.userDisconnected.has(inviter) ||
@@ -280,11 +286,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 return;
             }
         }
-    }
-
-    private onRoomEventTimeline(event: MatrixEvent, room: Room | undefined) {
-        const roomId = room?.roomId;
-        if (event.getType() === "m.room.member" && roomId) this.roomList.set(roomId, new MatrixChatRoom(room));
     }
 
     private initUserList(): void {
@@ -448,9 +449,11 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             //TODO not clean code
             invite: [{ value: userToInvite, label: userToInvite }],
             is_direct: true,
+            //encrypt: true,
             preset: "trusted_private_chat",
             visibility: "private",
         });
+
         await this.addDMRoomInAccountData(userToInvite, room_id);
 
         //Wait Sync Event before use/update roomList otherwise room not exist in the client
@@ -589,7 +592,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         const directMap: Record<string, string[]> = this.client.getAccountData("m.direct")?.getContent() || {};
         directMap[userId] = [...(directMap[userId] || []), roomId];
         await this.client.setAccountData("m.direct", directMap);
-        console.log("addDMRoomInAccountData : ", directMap);
     }
 
     async destroy(): Promise<void> {
