@@ -1,7 +1,8 @@
 <script lang="ts">
 
-    import { AuthDict, AuthType, InteractiveAuth, IStageStatus, MatrixClient, UIAResponse } from "matrix-js-sdk";
+    import { AuthDict, AuthType, InteractiveAuth, MatrixClient, UIAResponse } from "matrix-js-sdk";
     import { onMount } from "svelte";
+    // eslint-disable-next-line import/no-unresolved
     import { closeModal } from "svelte-modals";
     import Popup from "../../../Components/Modal/Popup.svelte";
     import LL from "../../../../i18n/i18n-svelte";
@@ -19,7 +20,7 @@
 
     const interactiveAuth = new InteractiveAuth({
         matrixClient,
-        doRequest(auth: AuthDict | null, background: boolean): Promise<UIAResponse<void>> {
+        doRequest(auth: AuthDict | null): Promise<UIAResponse<void>> {
             return makeRequest(auth);
         },
         stateUpdated: onPhaseChange,
@@ -31,7 +32,7 @@
         return Promise.reject(new Error("Not supposed to be called"));
     }
 
-    function onPhaseChange(nextStage: AuthType | string, status: IStageStatus) {
+    function onPhaseChange(nextStage: AuthType | string) {
         uiAuthStage = nextStage;
     }
 

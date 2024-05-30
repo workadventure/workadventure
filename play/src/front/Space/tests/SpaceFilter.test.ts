@@ -1,4 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { SpaceUser } from "@workadventure/messages";
+import { get, Writable, writable } from "svelte/store";
+import { AtLeast } from "@workadventure/map-editor";
+import { Filter, SpaceFilter, SpaceFilterInterface, SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
 
 vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
     return {
@@ -8,16 +12,12 @@ vi.mock("../../Phaser/Entity/CharacterLayerManager", () => {
     };
 });
 
-import { SpaceUser } from "@workadventure/messages";
-import { Writable, get, writable } from "svelte/store";
-import { SpaceFilterInterface, SpaceFilter, Filter, SpaceUserExtended } from "../SpaceFilter/SpaceFilter";
-
 describe("SpaceFilter", () => {
     describe("userExist", () => {
         it("should return false if user does not exist", () => {
             const spaceFilterName = "space-filter-name";
             const spaceName = "space-name";
-            const user: SpaceUserExtended = {
+            const user: AtLeast<SpaceUserExtended, "id"> = {
                 id: 0,
                 name: "",
                 playUri: "",
@@ -37,7 +37,7 @@ describe("SpaceFilter", () => {
             };
 
             const userMap: Writable<Map<number, SpaceUserExtended>> = writable(
-                new Map<number, SpaceUserExtended>([[user.id, user]])
+                new Map<number, SpaceUserExtended>([[user.id ?? 0, user as SpaceUserExtended]])
             );
 
             const spaceFilter: SpaceFilterInterface = new SpaceFilter(
@@ -56,7 +56,7 @@ describe("SpaceFilter", () => {
         it("should return true if user exist in list ", () => {
             const spaceFilterName = "space-filter-name";
             const spaceName = "space-name";
-            const user: SpaceUser = {
+            const user: Pick<SpaceUser, "id"> = {
                 id: 0,
             };
 
@@ -69,34 +69,34 @@ describe("SpaceFilter", () => {
     });
     describe("addUser", () => {
         //not throw a error because this function is call when you receive a message by the pusher
-        it("should add user when user is not exist in list  ", () => {
+        it("should add user when user is not exist in list  ", async () => {
             const spaceFilterName = "space-filter-name";
             const spaceName = "space-name";
             const id = 0;
-            const user: SpaceUserExtended = {
+            const user: Pick<SpaceUserExtended, "id"> = {
                 id,
             };
 
             const spaceFilter: SpaceFilterInterface = new SpaceFilter(spaceFilterName, spaceName, undefined, vi.fn());
-            spaceFilter.addUser(user);
+            await spaceFilter.addUser(user as SpaceUserExtended);
             expect(get(spaceFilter.users).has(user.id)).toBeTruthy();
         });
 
-        it("should not overwrite user when you add a new user and he already exist", () => {
+        it("should not overwrite user when you add a new user and he already exist", async () => {
             const spaceFilterName = "space-filter-name";
             const spaceName = "space-name";
             const id = 0;
-            const user: SpaceUserExtended = {
+            const user: Pick<SpaceUserExtended, "id"> = {
                 id,
             };
 
-            const userWithSameID: SpaceUserExtended = {
+            const userWithSameID: Pick<SpaceUserExtended, "id" | "name"> = {
                 id,
                 name: "user-name",
             };
 
             const userMap: Writable<Map<number, SpaceUserExtended>> = writable(
-                new Map<number, SpaceUserExtended>([[user.id, user]])
+                new Map<number, SpaceUserExtended>([[user.id, user as SpaceUserExtended]])
             );
 
             const spaceFilter: SpaceFilterInterface = new SpaceFilter(
@@ -106,7 +106,7 @@ describe("SpaceFilter", () => {
                 vi.fn(),
                 userMap
             );
-            spaceFilter.addUser(userWithSameID);
+            await spaceFilter.addUser(userWithSameID as SpaceUser);
 
             const userInStore = get(spaceFilter.users).get(id);
 
@@ -120,7 +120,7 @@ describe("SpaceFilter", () => {
             const spaceName = "space-name";
             const id = 0;
 
-            const user: SpaceUserExtended = {
+            const user: Pick<SpaceUserExtended, "id" | "name"> = {
                 id,
                 name: "user-1",
             };
@@ -132,7 +132,7 @@ describe("SpaceFilter", () => {
             };
 
             const userMap: Writable<Map<number, SpaceUserExtended>> = writable(
-                new Map<number, SpaceUserExtended>([[user.id, user]])
+                new Map<number, SpaceUserExtended>([[user.id, user as SpaceUserExtended]])
             );
 
             const spaceFilter: SpaceFilterInterface = new SpaceFilter(
@@ -153,7 +153,7 @@ describe("SpaceFilter", () => {
             const spaceName = "space-name";
             const id = 0;
 
-            const user: SpaceUserExtended = {
+            const user: Pick<SpaceUserExtended, "id" | "name"> = {
                 id,
                 name: "user-1",
             };
@@ -170,7 +170,7 @@ describe("SpaceFilter", () => {
                 ...newData,
             };
             const userMap: Writable<Map<number, SpaceUserExtended>> = writable(
-                new Map<number, SpaceUserExtended>([[user.id, user]])
+                new Map<number, SpaceUserExtended>([[user.id, user as SpaceUserExtended]])
             );
 
             const spaceFilter: SpaceFilterInterface = new SpaceFilter(
@@ -193,7 +193,7 @@ describe("SpaceFilter", () => {
             const spaceName = "space-name";
             const id = 0;
 
-            const user: SpaceUserExtended = {
+            const user: Pick<SpaceUserExtended, "id" | "name"> = {
                 id,
                 name: "user-1",
             };
@@ -206,7 +206,7 @@ describe("SpaceFilter", () => {
             };
 
             const userMap: Writable<Map<number, SpaceUserExtended>> = writable(
-                new Map<number, SpaceUserExtended>([[user.id, user]])
+                new Map<number, SpaceUserExtended>([[user.id, user as SpaceUserExtended]])
             );
 
             const spaceFilter: SpaceFilterInterface = new SpaceFilter(
@@ -239,13 +239,12 @@ describe("SpaceFilter", () => {
             const message = {
                 message: {
                     $case: "addSpaceFilterMessage",
-                    addSpaceFilterMessage :{
-                        spaceFilterMessage : {
-                        filterName: spaceFilterName,
-                        spaceName,
-                        }
-
-                    }
+                    addSpaceFilterMessage: {
+                        spaceFilterMessage: {
+                            filterName: spaceFilterName,
+                            spaceName,
+                        },
+                    },
                 },
             };
 
@@ -262,28 +261,20 @@ describe("SpaceFilter", () => {
             const userMap: Writable<Map<number, SpaceUserExtended>> = writable(new Map<number, SpaceUserExtended>([]));
 
             const mockSender = vi.fn();
-            const spaceFilter = new SpaceFilter(
-                spaceFilterName,
-                spaceName,
-                undefined,
-                mockSender,
-                userMap
-            );
+            const spaceFilter = new SpaceFilter(spaceFilterName, spaceName, undefined, mockSender, userMap);
             spaceFilter.destroy();
 
             const message = {
                 message: {
                     $case: "removeSpaceFilterMessage",
-                    removeSpaceFilterMessage :{
-                        spaceFilterMessage : {
-                        filterName: spaceFilterName,
-                        spaceName,
-                        }
-
-                    }
+                    removeSpaceFilterMessage: {
+                        spaceFilterMessage: {
+                            filterName: spaceFilterName,
+                            spaceName,
+                        },
+                    },
                 },
             };
-
 
             // eslint-disable-next-line @typescript-eslint/unbound-method
             expect(mockSender).toHaveBeenCalledTimes(2);
@@ -296,34 +287,26 @@ describe("SpaceFilter", () => {
 
             const userMap: Writable<Map<number, SpaceUserExtended>> = writable(new Map<number, SpaceUserExtended>([]));
 
-
             const newFilter: Filter = {
                 $case: "spaceFilterEverybody",
                 spaceFilterEverybody: {},
             };
 
             const mockSender = vi.fn();
-            const spaceFilter = new SpaceFilter(
-                spaceFilterName,
-                spaceName,
-                undefined,
-                mockSender,
-                userMap
-            );
+            const spaceFilter = new SpaceFilter(spaceFilterName, spaceName, undefined, mockSender, userMap);
 
             spaceFilter.setFilter(newFilter);
 
             const message = {
                 message: {
                     $case: "updateSpaceFilterMessage",
-                    updateSpaceFilterMessage :{
-                        spaceFilterMessage : {
-                        filterName: spaceFilterName,
-                        spaceName,
-                        filter:newFilter
-                        }
-
-                    }
+                    updateSpaceFilterMessage: {
+                        spaceFilterMessage: {
+                            filterName: spaceFilterName,
+                            spaceName,
+                            filter: newFilter,
+                        },
+                    },
                 },
             };
 

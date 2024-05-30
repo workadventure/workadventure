@@ -55,7 +55,6 @@
     </section>
 {/if}
 
-
 <style lang="scss">
   @import "../style/breakpoints.scss";
 

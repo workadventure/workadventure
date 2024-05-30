@@ -5,18 +5,18 @@ import { EMBEDLY_KEY } from "../Enum/EnvironmentVariable";
 
 const webLinkCaches = new Map();
 
-
-
 export enum linkFunction {
     openCowebsite = "open-cowebsite",
     copyLink = "copy-link",
 }
+
 export class WebLink {
     private link: string;
 
     constructor(link: string) {
         this.link = HtmlUtils.htmlDecode(link);
     }
+
     private async rendererFromHtml(url: string, html: string): Promise<string> {
         const elementId = uuid();
         const virtualDom = new DOMParser().parseFromString(html, "text/html");
@@ -39,6 +39,7 @@ export class WebLink {
 
         return iframe.outerHTML;
     }
+
     private imageRendererHtml(id: string, name: string) {
         const image = document.createElement("img");
         image.setAttribute("width", "100%");
@@ -50,6 +51,7 @@ export class WebLink {
 
         return image.outerHTML;
     }
+
     private videoRendererHtml(id: string, name: string, extension: string) {
         const video = document.createElement("video");
         video.setAttribute("width", "100%");
@@ -74,6 +76,7 @@ export class WebLink {
 
         return video.outerHTML;
     }
+
     private audioRendererHtml(id: string, name: string) {
         const audio = document.createElement("video");
         audio.setAttribute("width", "100%");
@@ -88,6 +91,7 @@ export class WebLink {
 
         return audio.outerHTML;
     }
+
     private async cardRenderer(
         title: string,
         description?: string,
@@ -147,6 +151,7 @@ export class WebLink {
 
         return div.outerHTML;
     }
+
     private async getHyperLinkHTMLElement(withEmbedly = true): Promise<HTMLAnchorElement> {
         const link = document.createElement("a");
         link.href = this.link;
@@ -263,7 +268,7 @@ export class WebLink {
         } else if (EraserService.isEraserLink(urlLink)) {
             // Return embedable Google Slides link
             try {
-                EraserService.validateEraserLink(urlLink);
+                EraserService.validateLink(urlLink);
                 return urlLink.toString();
             } catch (err) {
                 console.info("Eraser link is not embedable", err);
@@ -273,7 +278,6 @@ export class WebLink {
         return false;
     }
 }
-
 
 export class HtmlUtils {
     public static getElementByIdOrFail<T extends HTMLElement>(id: string): T {
@@ -373,6 +377,7 @@ export class HtmlUtils {
     private static isHtmlElement<T extends HTMLElement>(elem: HTMLElement | null): elem is T {
         return elem !== null;
     }
+
     public static replaceEmoji(text: string): string {
         return text.replace(emojiRegex, (emoji: string) => {
             emoji = this.htmlDecode(emoji);
@@ -384,18 +389,13 @@ export class HtmlUtils {
         });
     }
 
-
     public static convertEmoji(data: string): string {
         return data.replace(
             /\[e-\w+\]/gu,
             (match) => `${String.fromCodePoint(Number("0x" + match.substring(3, match.length - 1)))}`
         );
     }
-
 }
 
 export const emojiRegex =
     /\p{RI}\p{RI}|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?(\u{200D}\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?)+|\p{EPres}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})/gu;
-
-
-    

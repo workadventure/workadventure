@@ -10,7 +10,6 @@
     export let onCancel: () => void;
     export let submitAuthDict: (auth: AuthDict) => void;
     export let errorText: string | undefined = undefined;
-    export let busy = false;
 
     if (!authSessionId) throw new Error("This UIA flow requires an authSessionId");
 
@@ -18,7 +17,6 @@
     let ssoUrl = matrixClient.getFallbackAuthUrl(AuthType.Sso, authSessionId);
     let popupWindow: Window | null = null;
     let phase = INTERACTIVE_AUTH_PHASE.PRE_AUTH;
-    let attemptFailed = false;
 
     const onReceiveMessage = (event: { data: string, origin: string }) => {
         if (event.data === "authDone" && event.origin === matrixClient.getHomeserverUrl()) {

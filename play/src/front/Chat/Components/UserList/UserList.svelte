@@ -1,8 +1,8 @@
 <script lang="ts">
-    import User from "./User.svelte";
     import { ChatUser } from "../../Connection/ChatConnection";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
+    import User from "./User.svelte";
 
     export let userList : Array<ChatUser> = [];
 

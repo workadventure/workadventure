@@ -4,10 +4,7 @@
     import { chatSearchBarValue, joignableRoom, selectedRoom } from "../../Stores/ChatStore";
     import Avatar from "../Avatar.svelte";
 
-    export let room: {
-        id: string,
-        name: string
-    };
+    export let room:{ id: string; name: string | undefined }
     let displayInvitationRoomActions = false;
     const chat = gameManager.getCurrentGameScene().chatConnection;
 
@@ -24,7 +21,7 @@
     }
 
     $: chunks = highlightWords({
-        text: room.name.match(/\[\d*]/) ? room.name.substring(0, room.name.search(/\[\d*]/)) : room.name,
+        text: room.name?.match(/\[\d*]/) ? room.name?.substring(0, room.name?.search(/\[\d*]/)) : room.name ? room.name : "",
         query: $chatSearchBarValue
     });
 </script>
@@ -33,7 +30,7 @@
     class="tw-text-md tw-flex tw-gap-2 tw-flex-row tw-items-center hover:tw-bg-white hover:tw-bg-opacity-10 hover:tw-rounded-md hover:!tw-cursor-pointer tw-p-1"
     on:click={toggleDisplayInvitationRoomActions}>
     <div class="tw-relative">
-        <Avatar avatarUrl={null} fallbackFirstLetter={room.name.charAt(0)} />
+        <Avatar avatarUrl={null} fallbackFirstLetter={room.name?.charAt(0)} />
     </div>
     <div>
         {#each chunks as chunk (chunk.key)}

@@ -18,19 +18,18 @@ import {
     ENABLE_CHAT_UPLOAD,
     ENABLE_MAP_EDITOR,
     ERASER_ENABLED,
+    EXCALIDRAW_ENABLED,
     GOOGLE_DOCS_ENABLED,
     GOOGLE_DRIVE_ENABLED,
     GOOGLE_SHEETS_ENABLED,
     GOOGLE_SLIDES_ENABLED,
     INTERNAL_MAP_STORAGE_URL,
-    KLAXOON_CLIENT_ID,
     KLAXOON_ENABLED,
     MAP_EDITOR_ALLOWED_USERS,
     OPID_WOKA_NAME_POLICY,
     PUBLIC_MAP_STORAGE_URL,
     START_ROOM_URL,
     YOUTUBE_ENABLED,
-    EXCALIDRAW_ENABLED,
 } from "../enums/EnvironmentVariable";
 import type { AdminInterface } from "./AdminInterface";
 import type { AdminBannedData, FetchMemberDataByUuidResponse, WorldChatMembersData } from "./AdminApi";
@@ -386,6 +385,9 @@ class LocalAdmin implements AdminInterface {
     }
 
     getWorldChatMembers(playUri: string, searchText: string): Promise<WorldChatMembersData> {
+        return Promise.reject(new Error("No admin backoffice set!"));
+    }
+    updateChatId(userIdentifier: string, chatId: string) {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 }

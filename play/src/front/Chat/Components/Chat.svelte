@@ -2,11 +2,11 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
+    import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
+    import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
     import RoomUserList from "./UserList/RoomUserList.svelte";
     import RoomList from "./RoomList.svelte";
     import ChatLoader from "./ChatLoader.svelte";
-    import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
-    import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
 
     const chat = gameManager.getCurrentGameScene().chatConnection;
     const DONE_TYPING_INTERVAL = 2000;

@@ -1,4 +1,4 @@
-import { EventType, MatrixEvent, Room } from "matrix-js-sdk";
+import { EventType, MatrixEvent, RelationType, Room } from "matrix-js-sdk";
 import { MapStore } from "@workadventure/store-utils";
 import { get, writable, Writable } from "svelte/store";
 import { ChatMessageReaction, ChatUser } from "../ChatConnection";
@@ -68,7 +68,7 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
     private async sendMyReaction() {
         try {
             await this.matrixRoom.client.sendEvent(this.matrixRoom.roomId, EventType.Reaction, {
-                "m.relates_to": { event_id: this.messageId, rel_type: "m.annotation", key: this.key },
+                "m.relates_to": { event_id: this.messageId, rel_type: RelationType.Annotation, key: this.key },
             });
         } catch (error) {
             console.error(error);

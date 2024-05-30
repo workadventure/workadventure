@@ -8,13 +8,15 @@ import { scriptUtils } from "../Api/ScriptUtils";
 
 //enlever les events lié au chat dans iframelistener
 
-export const openCoWebSite = async (  url : string ,
+export const openCoWebSite = async (
+    url: string,
     allowApi?: boolean,
     allowPolicy?: string,
     widthPercent?: number,
     position?: number,
     closable?: boolean,
-    lazy?: boolean) =>{
+    lazy?: boolean
+) => {
     if (!url) {
         throw new Error("Unknown query source");
     }
@@ -24,8 +26,7 @@ export const openCoWebSite = async (  url : string ,
         allowApi,
         allowPolicy,
         widthPercent,
-        closable,
-
+        closable
     );
 
     coWebsiteManager.addCoWebsiteToStore(coWebsite, position);
@@ -37,10 +38,9 @@ export const openCoWebSite = async (  url : string ,
     return {
         id: coWebsite.getId(),
     };
-}
+};
 
-
-export const getCoWebSite = () =>{
+export const getCoWebSite = () => {
     const coWebsites = coWebsiteManager.getCoWebsites();
 
     return coWebsites.map((coWebsite: CoWebsite) => {
@@ -48,25 +48,19 @@ export const getCoWebSite = () =>{
             id: coWebsite.getId(),
         };
     });
-}
+};
 
-export const sendRedirectPricing = () =>{
+export const sendRedirectPricing = () => {
     if (connectionManager.currentRoom && connectionManager.currentRoom.pricingUrl) {
         window.location.href = connectionManager.currentRoom.pricingUrl;
     }
-}
+};
 
-export const sendLogin =()=>{
+export const sendLogin = () => {
     analyticsClient.login();
     window.location.href = "/login";
-}
+};
 
-
-
-
-
-
-export const openTab = (url:string) =>{
+export const openTab = (url: string) => {
     scriptUtils.openTab(url);
-}
-
+};

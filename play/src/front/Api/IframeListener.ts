@@ -1,7 +1,6 @@
 import { Subject } from "rxjs";
 import { availabilityStatusToJSON } from "@workadventure/messages";
-import { BanEvent, ChatMessage, ChatMessageTypes, KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
-import { Subscriber } from "svelte/store";
+import { BanEvent, ChatMessage, KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import {
     additionnalButtonsMenu,
@@ -17,10 +16,6 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { bannerStore, requestVisitCardsStore } from "../Stores/GameStore";
 import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
 import { connectionManager } from "../Connection/ConnectionManager";
-import { chatConnectionManager } from "../Chat/Connection/ChatConnectionManager";
-import { mucRoomsStore } from "../Chat/Stores/MucRoomsStore";
-import { newChatMessageSubject } from "../Stores/ChatStore";
-import { chatMessagesStore } from "../Chat/Stores/ChatStore";
 import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
 import type { OpenPopupEvent } from "./Events/OpenPopupEvent";
 import type { OpenTabEvent } from "./Events/OpenTabEvent";
@@ -217,20 +212,12 @@ class IframeListener {
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
 
-    private chatIframe: HTMLIFrameElement | null = null;
-    private chatReady = false;
-
-    private newChatMessageUnsubscriber: Subscriber;
-
     private sendPlayerMove = false;
 
     // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
     private answerers: {
         [str in keyof IframeQueryMap]?: unknown;
     } = {};
-
-    // Note: Message Queue used to store message who can't be sent to the Chat because it's not ready yet
-    private messagesToChatQueue = new Array<IframeResponseEvent>();
 
     public getUIWebsiteIframeIdFromSource(source: MessageEventSource): string | undefined {
         for (const [iframe, id] of this.iframes.entries()) {
@@ -540,10 +527,6 @@ class IframeListener {
             },
             false
         );
-
-        this.newChatMessageUnsubscriber = newChatMessageSubject.subscribe((message) => {
-            this._addPersonnalMessageStream.next(message);
-        });
     }
 
     /**
@@ -558,11 +541,6 @@ class IframeListener {
                 console.error('Could not register "iframeCloseCallbacks". No contentWindow.');
             }
         });
-    }
-
-    registerChatIframe(iframe: HTMLIFrameElement): void {
-        this.registerIframe(iframe);
-        this.chatIframe = iframe;
     }
 
     unregisterIframe(iframe: HTMLIFrameElement): void {
@@ -909,25 +887,25 @@ class IframeListener {
         });
     }
     async sendLeaveMucEventToChatIframe(url: string) {
-        if (!connectionManager.currentRoom) {
+        /*if (!connectionManager.currentRoom) {
             throw new Error("Race condition : Current room is not defined yet");
         } else if (!connectionManager.currentRoom.enableChat) {
             return;
         }
-        (await chatConnectionManager.connectionPromise).leaveMuc(url);
+        (await chatConnectionManager.connectionPromise).leaveMuc(url);*/
     }
 
     async sendJoinMucEventToChatIframe(url: string, name: string, type: string, subscribe: boolean) {
-        if (!connectionManager.currentRoom) {
+        /*if (!connectionManager.currentRoom) {
             throw new Error("Race condition : Current room is not defined yet");
         } else if (!connectionManager.currentRoom.enableChat) {
             return;
         }
-        (await chatConnectionManager.connectionPromise).joinMuc(name, url, type, subscribe);
+        (await chatConnectionManager.connectionPromise).joinMuc(name, url, type, subscribe);*/
     }
 
     sendMessageToChatIframe(chatMessage: ChatMessage) {
-        if (chatMessage.text == undefined) {
+        /*if (chatMessage.text == undefined) {
             return;
         }
         const mucRoomDefault = mucRoomsStore.getDefaultRoom();
@@ -954,7 +932,7 @@ class IframeListener {
             for (const chatMessageText of chatMessage.text) {
                 chatMessagesStore.addPersonalMessage(chatMessageText);
             }
-        }
+        }*/
     }
 
     sendButtonActionBarTriggered(buttonActionBar: AddButtonActionBarEvent): void {
@@ -972,11 +950,11 @@ class IframeListener {
     // end delete >>
 
     /**
-     * Sends the message... to all allowed iframes and not the chat.
+     * Sends the message to all allowed iframes.
      */
     public postMessage(message: IframeResponseEvent, exceptOrigin?: MessageEventSource) {
         for (const iframe of this.iframes.keys()) {
-            if (exceptOrigin === iframe.contentWindow || iframe.src === this.chatIframe?.src) {
+            if (exceptOrigin === iframe.contentWindow) {
                 continue;
             }
             iframe.contentWindow?.postMessage(message, "*");
@@ -1033,14 +1011,7 @@ class IframeListener {
         );
     }
 
-    cleanup() {
-        this.chatReady = false;
-        if (this.chatIframe) {
-            this.unregisterIframe(this.chatIframe);
-            this.chatIframe = null;
-        }
-        this.newChatMessageUnsubscriber();
-    }
+    cleanup() {}
 
     /*dispatchScriptableEventToOtherIframes(
         key: string,
