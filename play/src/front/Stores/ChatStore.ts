@@ -1,6 +1,7 @@
 import { writable } from "svelte/store";
 import { Subject } from "rxjs";
 import { ChatMessageTypes } from "@workadventure/shared-utils";
+import * as Sentry from "@sentry/svelte";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { iframeListener } from "../Api/IframeListener";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
@@ -58,9 +59,28 @@ function createWritingStatusMessageStore() {
 }
 export const writingStatusMessageStore = createWritingStatusMessageStore();
 
+/**
+ * We are storing a cache of authors because when someone leaves the chat, the player might be gone from the playersStore
+ * before the chatMessageService is called to display the "out" message.
+ */
+const authorsCache = new Map<number, PlayerInterface>();
+
+function getAuthorFromCache(authorId: number): PlayerInterface {
+    let author = authorsCache.get(authorId);
+    if (!author) {
+        console.warn("Could not find author in cache. This should never happen. Trying to fetch it from playersStore");
+        Sentry.captureMessage(
+            "Could not find author in cache. This should never happen. Trying to fetch it from playersStore"
+        );
+        author = getAuthor(authorId);
+    }
+    return author;
+}
+
 export const chatMessagesService = {
     addIncomingUser(authorId: number) {
         const author = getAuthor(authorId);
+        authorsCache.set(authorId, author);
 
         /* @deprecated with new chat service */
         iframeListener.sendComingUserToChatIframe({
@@ -77,7 +97,9 @@ export const chatMessagesService = {
         });
     },
     addOutcomingUser(authorId: number) {
-        const author = getAuthor(authorId);
+        const author = getAuthorFromCache(authorId);
+        // Let's remove the author from the cache now that he is out
+        authorsCache.delete(authorId);
 
         /* @deprecated with new chat service */
         iframeListener.sendComingUserToChatIframe({
@@ -104,7 +126,7 @@ export const chatMessagesService = {
      * @param origin The iframe that originated this message (if triggered from the Scripting API), or undefined otherwise.
      */
     addExternalMessage(authorId: number, text: string, origin?: Window) {
-        const author = getAuthor(authorId);
+        const author = getAuthorFromCache(authorId);
 
         //TODO delete it with new XMPP integration
         //send list to chat iframe
@@ -140,7 +162,7 @@ export const chatMessagesService = {
      * @param origin
      */
     startWriting(authorId: number, origin?: Window) {
-        const author = getAuthor(authorId);
+        const author = getAuthorFromCache(authorId);
 
         //send list to chat iframe
         iframeListener.sendMessageToChatIframe({
@@ -166,7 +188,7 @@ export const chatMessagesService = {
      * @param origin
      */
     stopWriting(authorId: number, origin?: Window) {
-        const author = getAuthor(authorId);
+        const author = getAuthorFromCache(authorId);
 
         //send list to chat iframe
         iframeListener.sendMessageToChatIframe({
