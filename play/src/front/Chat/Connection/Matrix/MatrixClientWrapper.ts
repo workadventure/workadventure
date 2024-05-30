@@ -14,6 +14,7 @@ import { openModal } from "svelte-modals";
 import { LocalUser } from "../../../Connection/LocalUser";
 import AccessSecretStorageDialog from "./AccessSecretStorageDialog.svelte";
 
+// @ts-ignore
 window.Buffer = Buffer;
 
 global.Olm = Olm;
@@ -26,15 +27,15 @@ export interface MatrixClientWrapperInterface {
 export interface MatrixLocalUserStore {
     getLocalUser(): LocalUser | null;
 
-    getMatrixDeviceId(userId: string): string;
+    getMatrixDeviceId(userId: string): string | null;
 
-    getMatrixAccessToken(): string;
+    getMatrixAccessToken(): string | null;
 
-    getMatrixRefreshToken(): string;
+    getMatrixRefreshToken(): string | null;
 
-    getMatrixUserId(): string;
+    getMatrixUserId(): string | null;
 
-    getMatrixLoginToken(): string;
+    getMatrixLoginToken(): string | null;
 
     setMatrixDeviceId(deviceId: string, userId: string): void;
 
@@ -48,7 +49,7 @@ export interface MatrixLocalUserStore {
 
     setMatrixAccessTokenExpireDate(AccessTokenExpireDate: Date): void;
 
-    getName(): string;
+    getName(): string | null;
 }
 
 export class MatrixClientWrapper implements MatrixClientWrapperInterface {
@@ -78,7 +79,7 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             refreshToken: refreshTokenFromLocalStorage,
             matrixLoginToken,
             matrixUserId: matrixUserIdFromLocalStorage,
-        } = this.retrieveMatrixConnectionDataFromLocalStorage(userId);
+        } = this.retrieveMatrixConnectionDataFromLocalStorage();
         accessToken = accessTokenFromLocalStorage;
         refreshToken = refreshTokenFromLocalStorage;
         matrixUserId = matrixUserIdFromLocalStorage;
@@ -123,6 +124,11 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             throw new Error("Unable to connect to matrix, matrixUserId is null");
         }
 
+        if (!matrixDeviceId) {
+            console.error("Unable to connect to matrix, matrixDeviceId is null");
+            throw new Error("Unable to connect to matrix, matrixDeviceId is null");
+        }
+
         const { matrixStore, matrixCryptoStore } = this.matrixWebClientStore(matrixUserId);
         // Now, let's instantiate the Matrix client.
         this.client = this._createClient({
@@ -148,17 +154,17 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         return this.client;
     }
 
-    private retrieveMatrixConnectionDataFromLocalStorage(userId: string): {
-        deviceId: string;
-        accessToken: string;
-        refreshToken: string;
-        matrixUserId: string;
-        matrixLoginToken: string;
+    private retrieveMatrixConnectionDataFromLocalStorage(): {
+        deviceId: string | null;
+        accessToken: string | null;
+        refreshToken: string | null;
+        matrixUserId: string | null;
+        matrixLoginToken: string | null;
     } {
         const accessToken = this.localUserStore.getMatrixAccessToken();
         const refreshToken = this.localUserStore.getMatrixRefreshToken();
         const matrixUserId = this.localUserStore.getMatrixUserId();
-        const deviceId = this.localUserStore.getMatrixDeviceId(matrixUserId);
+        const deviceId = matrixUserId ? this.localUserStore.getMatrixDeviceId(matrixUserId) : null;
         const matrixLoginToken = this.localUserStore.getMatrixLoginToken();
         return { deviceId, accessToken, refreshToken, matrixUserId, matrixLoginToken };
     }

@@ -151,7 +151,6 @@ import { hideBubbleConfirmationModal } from "../../Rules/StatusRules/statusChang
 import { statusChanger } from "../../Components/ActionBar/AvailabilityStatus/statusChanger";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { getCoWebSite, openCoWebSite } from "../../Chat/Utils";
-import { chatConnectionManager } from "../../Chat/Connection/ChatConnectionManager";
 import { LocalSpaceProviderSingleton } from "../../Space/SpaceProvider/SpaceStore";
 import { CONNECTED_USER_FILTER_NAME, WORLD_SPACE_NAME } from "../../Space/Space";
 import { StreamSpaceWatcherSingleton } from "../../Space/SpaceWatcher/SocketSpaceWatcher";
@@ -1518,14 +1517,20 @@ export class GameScene extends DirtyScene {
 
                 if (this.connection) {
                     //We need to add an env parameter to switch between chat services
-                    this.chatConnection = new MatrixChatConnection(
-                        this.connection,
-                        new MatrixClientWrapper(MATRIX_PUBLIC_URI, localUserStore)
-                    );
+                    if (MATRIX_PUBLIC_URI === undefined) {
+                        console.error(
+                            "You are using Matrix for the chat but MATRIX_PUBLIC_URI is not defined. Check your env variables."
+                        );
+                    } else {
+                        this.chatConnection = new MatrixChatConnection(
+                            this.connection,
+                            new MatrixClientWrapper(MATRIX_PUBLIC_URI, localUserStore)
+                        );
 
-                    const chatId = localUserStore.getChatId();
-                    const email: string | null = localUserStore.getLocalUser()?.email || null;
-                    if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
+                        const chatId = localUserStore.getChatId();
+                        const email: string | null = localUserStore.getLocalUser()?.email || null;
+                        if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
+                    }
                 }
 
                 const spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
@@ -1772,7 +1777,7 @@ export class GameScene extends DirtyScene {
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.xmppSettingsMessageStream.subscribe((xmppSettingsMessage) => {
                     if (xmppSettingsMessage) {
-                        chatConnectionManager.initXmppSettings(xmppSettingsMessage);
+                        //chatConnectionManager.initXmppSettings(xmppSettingsMessage);
                     }
                 });
 

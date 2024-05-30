@@ -1,34 +1,31 @@
-import { describe, expect, it, vi} from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { MatrixClientWrapper, MatrixClientWrapperInterface, MatrixLocalUserStore } from "../MatrixClientWrapper";
 
 describe("MatrixClientWrapper", () => {
-    
-    describe("initMatrixClient",()=>{
-
-
-        it("should throw a error when localUserStore uuid is undefined or null",()=>{
+    describe("initMatrixClient", () => {
+        it("should throw a error when localUserStore uuid is undefined or null", async () => {
             const mockClient = {
-                login : ()=>{
+                login: () => {
                     return {
-                        user_id :  "", 
-                        access_token : null, 
-                        refresh_token : null, 
-                        expires_in_ms : ""
-                    }
+                        user_id: "",
+                        access_token: null,
+                        refresh_token: null,
+                        expires_in_ms: "",
+                    };
                 },
-                registerGuest : ()=>{
+                registerGuest: () => {
                     Promise.resolve({
                         access_token: null,
-                        refresh_token:null,
-                        user_id:null
-                    })
+                        refresh_token: null,
+                        user_id: null,
+                    });
                     return {
                         access_token: null,
-                        refresh_token:null,
-                        user_id:null
-                    }
+                        refresh_token: null,
+                        user_id: null,
+                    };
                 },
-                setGuest : ()=>{}
+                setGuest: () => {},
             };
 
             const createClient = vi.fn().mockReturnValue(mockClient);
@@ -36,56 +33,59 @@ describe("MatrixClientWrapper", () => {
             const matrixBaseURL = "";
 
             const localUserStoreMock = {
-                getLocalUser : ()=>{
-                    return null
-                }
-            };
-            const matrixClientWrapperInstance : MatrixClientWrapperInterface = new MatrixClientWrapper(matrixBaseURL,localUserStoreMock,createClient);
-
-            expect(matrixClientWrapperInstance.initMatrixClient()).rejects.toThrow()
-        })
-        it("should throw a error when registerGuest throw a error",async ()=>{
-            const mockClient = {
-                login : ()=>{
-                    return {
-                        user_id :  "", 
-                        access_token : null, 
-                        refresh_token : null, 
-                        expires_in_ms : ""
-                    }
+                getLocalUser: () => {
+                    return null;
                 },
-                registerGuest : ()=>{
+            };
+            const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
+                matrixBaseURL,
+                localUserStoreMock,
+                createClient
+            );
+
+            expect(await matrixClientWrapperInstance.initMatrixClient()).rejects.toThrow();
+        });
+        it("should throw a error when registerGuest throw a error", async () => {
+            const mockClient = {
+                login: () => {
+                    return {
+                        user_id: "",
+                        access_token: null,
+                        refresh_token: null,
+                        expires_in_ms: "",
+                    };
+                },
+                registerGuest: () => {
                     Promise.resolve({
                         access_token: null,
-                        refresh_token:null,
-                        user_id:null
-                    })
+                        refresh_token: null,
+                        user_id: null,
+                    });
                     return {
                         access_token: null,
-                        refresh_token:null,
-                        user_id:null
-                    }
+                        refresh_token: null,
+                        user_id: null,
+                    };
                 },
-                setGuest : ()=>{}
+                setGuest: () => {},
             };
 
             const createClient = vi.fn().mockReturnValue(mockClient);
 
             const matrixBaseURL = "testUrl";
 
-            const localUserStoreMock : MatrixLocalUserStore = {
+            const localUserStoreMock: MatrixLocalUserStore = {
                 getLocalUser: vi.fn().mockReturnValue({
                     uuid: "myUuid",
                     email: "",
                     isMatrixRegistered: false,
-                    matrixUserId: ""
-                })
-                ,
+                    matrixUserId: "",
+                }),
                 getMatrixDeviceId: vi.fn().mockReturnValue(null),
                 getMatrixAccessToken: vi.fn().mockReturnValue(null),
                 getMatrixRefreshToken: vi.fn().mockReturnValue(null),
                 getMatrixUserId: vi.fn().mockReturnValue(null),
-                getMatrixLoginToken:vi.fn().mockReturnValue(null),
+                getMatrixLoginToken: vi.fn().mockReturnValue(null),
                 setMatrixDeviceId: vi.fn(),
                 setMatrixLoginToken: function (loginToken: string | null): void {
                     throw new Error("setMatrixLoginToken not implemented.");
@@ -104,54 +104,59 @@ describe("MatrixClientWrapper", () => {
                 },
                 getName: function (): string {
                     throw new Error("getName not implemented.");
-                }
-            };
-            const matrixClientWrapperInstance : MatrixClientWrapperInterface = new MatrixClientWrapper(matrixBaseURL,localUserStoreMock,createClient);
-
-            expect(matrixClientWrapperInstance.initMatrixClient()).rejects.toThrow("Unable to etablish a Matrix Guest connection")
-        })
-        it("should throw a error when matrix access token is null",async ()=>{
-            const mockClient = {
-                login : ()=>{
-                    return {
-                        user_id :  "", 
-                        access_token : null, 
-                        refresh_token : null, 
-                        expires_in_ms : ""
-                    }
                 },
-                registerGuest : ()=>{
+            };
+            const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
+                matrixBaseURL,
+                localUserStoreMock,
+                createClient
+            );
+
+            expect(matrixClientWrapperInstance.initMatrixClient()).rejects.toThrow(
+                "Unable to etablish a Matrix Guest connection"
+            );
+        });
+        it("should throw a error when matrix access token is null", async () => {
+            const mockClient = {
+                login: () => {
+                    return {
+                        user_id: "",
+                        access_token: null,
+                        refresh_token: null,
+                        expires_in_ms: "",
+                    };
+                },
+                registerGuest: () => {
                     Promise.resolve({
                         access_token: null,
-                        refresh_token:null,
-                        user_id:null
-                    })
+                        refresh_token: null,
+                        user_id: null,
+                    });
                     return {
                         access_token: null,
-                        refresh_token:null,
-                        user_id:null
-                    }
+                        refresh_token: null,
+                        user_id: null,
+                    };
                 },
-                setGuest : ()=>{}
+                setGuest: () => {},
             };
 
             const createClient = vi.fn().mockReturnValue(mockClient);
 
             const matrixBaseURL = "testUrl";
 
-            const localUserStoreMock : MatrixLocalUserStore = {
+            const localUserStoreMock: MatrixLocalUserStore = {
                 getLocalUser: vi.fn().mockReturnValue({
                     uuid: "myUuid",
                     email: "",
                     isMatrixRegistered: false,
-                    matrixUserId: ""
-                })
-                ,
+                    matrixUserId: "",
+                }),
                 getMatrixDeviceId: vi.fn().mockReturnValue(null),
                 getMatrixAccessToken: vi.fn().mockReturnValue(null),
                 getMatrixRefreshToken: vi.fn().mockReturnValue(null),
                 getMatrixUserId: vi.fn().mockReturnValue(null),
-                getMatrixLoginToken:vi.fn().mockReturnValue(null),
+                getMatrixLoginToken: vi.fn().mockReturnValue(null),
                 setMatrixDeviceId: vi.fn(),
                 setMatrixLoginToken: function (loginToken: string | null): void {
                     throw new Error("setMatrixLoginToken not implemented.");
@@ -160,50 +165,55 @@ describe("MatrixClientWrapper", () => {
                 setMatrixAccessToken: vi.fn(),
                 setMatrixRefreshToken: vi.fn(),
                 setMatrixAccessTokenExpireDate: vi.fn(),
-                getName:  vi.fn().mockReturnValue(""),
+                getName: vi.fn().mockReturnValue(""),
             };
-            const matrixClientWrapperInstance : MatrixClientWrapperInterface = new MatrixClientWrapper(matrixBaseURL,localUserStoreMock,createClient);
+            const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
+                matrixBaseURL,
+                localUserStoreMock,
+                createClient
+            );
 
-           // matrixClientWrapperInstance.initMatrixClient()
-            expect(matrixClientWrapperInstance.initMatrixClient()).rejects.toThrow("Unable to connect to matrix, access token is null")
-        })
-        it("should throw a error when matrixUserId is null",async ()=>{
+            // matrixClientWrapperInstance.initMatrixClient()
+            expect(matrixClientWrapperInstance.initMatrixClient()).rejects.toThrow(
+                "Unable to connect to matrix, access token is null"
+            );
+        });
+        it("should throw a error when matrixUserId is null", async () => {
             const mockClient = {
-                login : ()=>{
+                login: () => {
                     return {
-                        user_id :  "", 
-                        access_token : null, 
-                        refresh_token : null, 
-                        expires_in_ms : ""
-                    }
+                        user_id: "",
+                        access_token: null,
+                        refresh_token: null,
+                        expires_in_ms: "",
+                    };
                 },
-                registerGuest : ()=>{
+                registerGuest: () => {
                     return {
                         access_token: "accessToken",
-                        refresh_token:null,
-                        user_id:null
-                    }
+                        refresh_token: null,
+                        user_id: null,
+                    };
                 },
-                setGuest : ()=>{}
+                setGuest: () => {},
             };
 
             const createClient = vi.fn().mockReturnValue(mockClient);
 
             const matrixBaseURL = "testUrl";
 
-            const localUserStoreMock : MatrixLocalUserStore = {
+            const localUserStoreMock: MatrixLocalUserStore = {
                 getLocalUser: vi.fn().mockReturnValue({
                     uuid: "myUuid",
                     email: "",
                     isMatrixRegistered: false,
-                    matrixUserId: ""
-                })
-                ,
+                    matrixUserId: "",
+                }),
                 getMatrixDeviceId: vi.fn().mockReturnValue(null),
                 getMatrixAccessToken: vi.fn().mockReturnValue(null),
                 getMatrixRefreshToken: vi.fn().mockReturnValue(null),
                 getMatrixUserId: vi.fn().mockReturnValue(null),
-                getMatrixLoginToken:vi.fn().mockReturnValue(null),
+                getMatrixLoginToken: vi.fn().mockReturnValue(null),
                 setMatrixDeviceId: vi.fn(),
                 setMatrixLoginToken: function (loginToken: string | null): void {
                     throw new Error("setMatrixLoginToken not implemented.");
@@ -212,55 +222,60 @@ describe("MatrixClientWrapper", () => {
                 setMatrixAccessToken: vi.fn(),
                 setMatrixRefreshToken: vi.fn(),
                 setMatrixAccessTokenExpireDate: vi.fn(),
-                getName:  vi.fn().mockReturnValue(""),
+                getName: vi.fn().mockReturnValue(""),
             };
-            const matrixClientWrapperInstance : MatrixClientWrapperInterface = new MatrixClientWrapper(matrixBaseURL,localUserStoreMock,createClient);
+            const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
+                matrixBaseURL,
+                localUserStoreMock,
+                createClient
+            );
 
-           // matrixClientWrapperInstance.initMatrixClient()
-            expect(matrixClientWrapperInstance.initMatrixClient()).rejects.toThrow("Unable to connect to matrix, matrixUserId is null")
-        })
+            // matrixClientWrapperInstance.initMatrixClient()
+            expect(matrixClientWrapperInstance.initMatrixClient()).rejects.toThrow(
+                "Unable to connect to matrix, matrixUserId is null"
+            );
+        });
 
-        it("should Call clearStore when oldMatrixId !== newMatrixI",async ()=>{
+        it("should Call clearStore when oldMatrixId !== newMatrixI", async () => {
             //oldFromLocalStorage
             //newFrom login token or guestAccess
             const spyClearStore = vi.fn();
             const mockClient = {
-                login : ()=>{
+                login: () => {
                     return {
-                        user_id :  "matrixIdFromLogin", 
-                        access_token : null, 
-                        refresh_token : null, 
-                        expires_in_ms : ""
-                    }
+                        user_id: "matrixIdFromLogin",
+                        access_token: null,
+                        refresh_token: null,
+                        expires_in_ms: "",
+                    };
                 },
-                registerGuest : ()=>{
+                registerGuest: () => {
                     return {
                         access_token: "accessToken",
-                        refresh_token:null,
-                        user_id:"matrixIdFromRegisterGuest"
-                    }
+                        refresh_token: null,
+                        user_id: "matrixIdFromRegisterGuest",
+                    };
                 },
-                setGuest : ()=>{},
-                clearStores : spyClearStore
+                setGuest: () => {},
+                clearStores: spyClearStore,
             };
 
             const createClient = vi.fn().mockReturnValue(mockClient);
 
             const matrixBaseURL = "testUrl";
 
-            const localUserStoreMock : MatrixLocalUserStore = {
+            const localUserStoreMock: MatrixLocalUserStore = {
                 getLocalUser: vi.fn().mockReturnValue({
                     uuid: "myUuid",
                     email: "",
                     isMatrixRegistered: false,
-                    matrixUserId: "matrixIdFromLocalUser"
-                })
-                ,
+                    matrixUserId: "matrixIdFromLocalUser",
+                }),
                 getMatrixDeviceId: vi.fn().mockReturnValue(null),
                 getMatrixAccessToken: vi.fn().mockReturnValue(null),
                 getMatrixRefreshToken: vi.fn().mockReturnValue(null),
                 getMatrixUserId: vi.fn().mockReturnValue(null),
-                getMatrixLoginToken:vi.fn().mockReturnValue(null),
+                getMatrixLoginToken: vi.fn().mockReturnValue(null),
                 setMatrixDeviceId: vi.fn(),
                 setMatrixLoginToken: function (loginToken: string | null): void {
                     throw new Error("setMatrixLoginToken not implemented.");
@@ -269,29 +284,29 @@ describe("MatrixClientWrapper", () => {
                 setMatrixAccessToken: vi.fn(),
                 setMatrixRefreshToken: vi.fn(),
                 setMatrixAccessTokenExpireDate: vi.fn(),
-                getName:  vi.fn().mockReturnValue(""),
+                getName: vi.fn().mockReturnValue(""),
             };
 
-            const mock = vi.spyOn(MatrixClientWrapper.prototype as any,'matrixWebClientStore').mockReturnValue({})
-            const matrixClientWrapperInstance : MatrixClientWrapperInterface = new MatrixClientWrapper(matrixBaseURL,localUserStoreMock,createClient);
-            
-            
-            await matrixClientWrapperInstance.initMatrixClient()
-            expect(spyClearStore).toHaveBeenCalledOnce()
+            const mock = vi.spyOn(MatrixClientWrapper.prototype as any, "matrixWebClientStore").mockReturnValue({});
+            const matrixClientWrapperInstance: MatrixClientWrapperInterface = new MatrixClientWrapper(
+                matrixBaseURL,
+                localUserStoreMock,
+                createClient
+            );
 
-        })
+            await matrixClientWrapperInstance.initMatrixClient();
+            expect(spyClearStore).toHaveBeenCalledOnce();
+        });
 
-        it("should call final create client with user Information when user have a matrix account",()=>{
+        it("should call final create client with user Information when user have a matrix account", () => {
             expect(true).toBe(false);
-        })
-        
-        it("should call final create client with new guest account Information when user have not a matrix account",()=>{
+        });
+
+        it("should call final create client with new guest account Information when user have not a matrix account", () => {
             expect(true).toBe(false);
-        })
-    })
+        });
+    });
 });
-
-
 
 /*
     localUserStore {

@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { MoreHorizontalIcon, SlashIcon } from "svelte-feather-icons";
+    import { Readable } from "svelte/store";
     import walk from "../../../../../public/static/svg/walk.svg";
     import teleport from "../../../../../public/static/svg/teleport.svg";
     import businessCard from "../../../../../public/static/svg/business-cards.svg";
@@ -6,9 +8,7 @@
     import { ChatUser } from "../../Connection/ChatConnection";
     import { scriptUtils } from "../../../Api/ScriptUtils";
     import { requestVisitCardsStore } from "../../../Stores/GameStore";
-    import { MoreHorizontalIcon, SlashIcon } from "svelte-feather-icons";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { Readable } from "svelte/store";
     import { localUserStore } from "../../../Connection/LocalUserStore";
 
     export let user : ChatUser; 

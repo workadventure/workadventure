@@ -16,9 +16,9 @@ limitations under the License.
 
 import EventEmitter from "events";
 import { MethodLikeKeys, mocked, MockedObject, PropertyLikeKeys } from "jest-mock";
-import { Feature, ServerSupport } from "matrix-js-sdk/src/feature";
-import { MatrixClient, User } from "matrix-js-sdk/src/matrix";
 import { vi } from "vitest";
+import { MatrixClient, User } from "matrix-js-sdk";
+import { Feature, ServerSupport } from "matrix-js-sdk/lib/feature";
 
 /**
  * Mocked generic class with a real EventEmitter.

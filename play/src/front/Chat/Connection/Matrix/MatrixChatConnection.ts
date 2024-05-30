@@ -23,6 +23,9 @@ import {
 } from "@workadventure/messages";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { KeyBackupInfo } from "matrix-js-sdk/lib/crypto-api/keybackup";
+// eslint-disable-next-line import/no-unresolved
+import { openModal } from "svelte-modals";
+import { GeneratedSecretStorageKey } from "matrix-js-sdk/lib/crypto-api";
 import {
     ChatConnectionInterface,
     ChatRoom,
@@ -37,8 +40,6 @@ import { MatrixClientWrapperInterface } from "./MatrixClientWrapper";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { chatUserFactory } from "./MatrixChatUser";
 import CreateRecoveryKeyDialog from "./CreateRecoveryKeyDialog.svelte";
-import { openModal } from "svelte-modals";
-import { GeneratedSecretStorageKey } from "matrix-js-sdk/lib/crypto-api";
 import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";
 
 export const defaultWoka =
@@ -295,25 +296,27 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 this.userDisconnected.set(user.userId, chatUserFactory(user, this.client));
             });
 
-        this.getWorldChatMembers().then((members) => {
-            members.forEach((member) => {
-                if (member.chatId) {
-                    this.userDisconnected.set(member.chatId, {
-                        availabilityStatus: writable(AvailabilityStatus.UNCHANGED),
-                        avatarUrl: defaultWoka,
-                        id: member.chatId,
-                        roomName: undefined,
-                        playUri: undefined,
-                        username: member.wokaName,
-                        isAdmin: member.tags.includes("admin"),
-                        isMember: member.tags.includes("member"),
-                        uuid: undefined,
-                        color: defaultColor,
-                        spaceId: undefined,
-                    });
-                }
-            });
-        });
+        this.getWorldChatMembers()
+            .then((members) => {
+                members.forEach((member) => {
+                    if (member.chatId) {
+                        this.userDisconnected.set(member.chatId, {
+                            availabilityStatus: writable(AvailabilityStatus.UNCHANGED),
+                            avatarUrl: defaultWoka,
+                            id: member.chatId,
+                            roomName: undefined,
+                            playUri: undefined,
+                            username: member.wokaName,
+                            isAdmin: member.tags.includes("admin"),
+                            isMember: member.tags.includes("member"),
+                            uuid: undefined,
+                            color: defaultColor,
+                            spaceId: undefined,
+                        });
+                    }
+                });
+            })
+            .catch((error) => console.error(error));
     }
 
     updateUserFromSpace(user: PartialSpaceUser): void {
@@ -404,7 +407,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         room_id: string;
     }> {
         if (roomOptions === undefined) {
-            return Promise.reject("CreateRoomOptions is empty");
+            return Promise.reject(new Error("CreateRoomOptions is empty"));
         }
         return await this.client.createRoom(this.mapCreateRoomOptionsToMatrixCreateRoomOptions(roomOptions));
     }
@@ -445,7 +448,6 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             //TODO not clean code
             invite: [{ value: userToInvite, label: userToInvite }],
             is_direct: true,
-            preset: "private_chat",
             preset: "trusted_private_chat",
             visibility: "private",
         });

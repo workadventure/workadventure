@@ -1,5 +1,6 @@
 import {
     Direction,
+    EventType,
     IContent,
     IRoomTimelineData,
     MatrixEvent,
@@ -14,6 +15,7 @@ import { get, Writable, writable } from "svelte/store";
 import { MediaEventContent, MediaEventInfo } from "matrix-js-sdk/lib/@types/media";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
 import { MapStore, SearchableArrayStore } from "@workadventure/store-utils";
+import { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
 import { ChatRoom, ChatRoomMembership } from "../ChatConnection";
 import { selectedChatMessageToReply } from "../../Stores/ChatStore";
 import { MatrixChatMessage } from "./MatrixChatMessage";
@@ -39,11 +41,7 @@ export class MatrixChatRoom implements ChatRoom {
     constructor(private matrixRoom: Room) {
         this.id = matrixRoom.roomId;
         this.name = writable(matrixRoom.name);
-        (async ()=>{
-            this.type = await this.getMatrixRoomType();
-            console.log('roomType : ',this.type);
-        })().catch((error)=>console.error(error));
-
+        this.type = this.getMatrixRoomType();
         this.hasUnreadMessages = writable(matrixRoom.getUnreadNotificationCount() > 0);
         this.avatarUrl = matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined;
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id); //writable(new Map<string, MatrixChatMessage>());
@@ -73,11 +71,11 @@ export class MatrixChatRoom implements ChatRoom {
         }
         await this.timelineWindow.load();
         const events = this.timelineWindow.getEvents();
-        events.forEach((event) =>
+        events.forEach((event) => {
             this.readEventsToAddMessagesAndReactions(event, this.messages, this.messageReactions).catch((error) =>
                 console.error(error)
-            )
-        );
+            );
+        });
 
         this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
     }
@@ -264,11 +262,11 @@ export class MatrixChatRoom implements ChatRoom {
             await this.timelineWindow.paginate(Direction.Backward, 8);
             this.timelineWindow.unpaginate(existingEventsBeforePagination.length, false);
             const tempMatrixChatMessages: MatrixChatMessage[] = [];
-            this.timelineWindow
-                .getEvents()
-                .forEach((event) =>
-                    this.readEventsToAddMessagesAndReactions(event, tempMatrixChatMessages, this.messageReactions)
+            this.timelineWindow.getEvents().forEach((event) => {
+                this.readEventsToAddMessagesAndReactions(event, tempMatrixChatMessages, this.messageReactions).catch(
+                    (error) => console.error(error)
                 );
+            });
             this.messages.unshift(...tempMatrixChatMessages);
             this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
             if (tempMatrixChatMessages.length === 0) {
@@ -312,8 +310,8 @@ export class MatrixChatRoom implements ChatRoom {
             });
     }
 
-    private getMessageContent(message: string): IContent {
-        const content: IContent = { body: message, msgtype: MsgType.Text, formatted_body: message };
+    private getMessageContent(message: string): RoomMessageEventContent {
+        const content: RoomMessageEventContent = { body: message, msgtype: MsgType.Text, formatted_body: message };
         this.applyReplyContentIfReplyTo(content);
         return content;
     }
@@ -333,37 +331,33 @@ export class MatrixChatRoom implements ChatRoom {
         this.matrixRoom.client.leave(this.id).catch((error) => console.error("Unable to leave", error));
     }
 
-    private async getMatrixRoomType(): Promise<"direct" | "multiple"> {
-
-
+    private getMatrixRoomType(): "direct" | "multiple" {
         const dmInviter = this.matrixRoom.getDMInviter();
         if (dmInviter) {
             return "direct";
         }
 
         const members = this.matrixRoom.getMembers();
-        const isDirectBasedOnInviter = members.some(member => member.getDMInviter() !== undefined);
+        const isDirectBasedOnInviter = members.some((member) => member.getDMInviter() !== undefined);
         if (isDirectBasedOnInviter) {
             return "direct";
         }
-
 
         if (members.length > 2) {
             return "multiple";
         }
 
-        const directRoomsPerUsers = await this.matrixRoom.client.getAccountData('m.direct')?.getContent();
+        const directRoomsPerUsers = this.matrixRoom.client.getAccountData(EventType.Direct)?.getContent();
 
-
-        const isDirectBasedOnRoomData = members.some(member => 
-            directRoomsPerUsers && directRoomsPerUsers[member.userId]?.includes(this.id)
+        const isDirectBasedOnRoomData = members.some(
+            (member) => directRoomsPerUsers && directRoomsPerUsers[member.userId]?.includes(this.id)
         );
 
         if (isDirectBasedOnRoomData) {
             return "direct";
         }
 
-        return 'multiple';
+        return "multiple";
     }
 
     async sendFiles(files: FileList) {
@@ -380,6 +374,8 @@ export class MatrixChatRoom implements ChatRoom {
             const content: Omit<MediaEventContent, "info"> & {
                 info: Partial<MediaEventInfo>;
                 formatted_body?: string;
+                "m.new_content"?: never;
+                "m.relates_to"?: never;
             } = {
                 body: file.name,
                 formatted_body: file.name,
@@ -387,7 +383,9 @@ export class MatrixChatRoom implements ChatRoom {
                     size: file.size,
                 },
                 msgtype: this.getMessageTypeFromFile(file),
-                url: uploadResponse.content_uri, // set more specifically later
+                url: uploadResponse.content_uri,
+
+                // set more specifically later
             };
             this.applyReplyContentIfReplyTo(content);
 
