@@ -195,6 +195,7 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import Clamp = Phaser.Math.Clamp;
+import { updateMatrixClientStore } from "../../Chat/Connection/Matrix/MatrixSecurity";
 
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -1517,21 +1518,24 @@ export class GameScene extends DirtyScene {
 
                 if (this.connection) {
                     //We need to add an env parameter to switch between chat services
-                    if (MATRIX_PUBLIC_URI === undefined) {
-                        console.error(
-                            "You are using Matrix for the chat but MATRIX_PUBLIC_URI is not defined. Check your env variables."
-                        );
-                    } else {
-                        this.chatConnection = new MatrixChatConnection(
-                            this.connection,
-                            new MatrixClientWrapper(MATRIX_PUBLIC_URI, localUserStore)
-                        );
+                    const matrixClientWrapper = new MatrixClientWrapper(MATRIX_PUBLIC_URI, localUserStore);
+                    const matrixClientPromise = matrixClientWrapper.initMatrixClient();
+
+                    matrixClientPromise.then((matrixClient) => {
+                        updateMatrixClientStore(matrixClient);
+                    });
+
+                    this.chatConnection = new MatrixChatConnection(
+                        this.connection,
+                        matrixClientPromise
+                    );
+                    
 
                         const chatId = localUserStore.getChatId();
                         const email: string | null = localUserStore.getLocalUser()?.email || null;
                         if (email && chatId) this.connection.emitUpdateChatId(email, chatId);
                     }
-                }
+                
 
                 const spaceProvider = LocalSpaceProviderSingleton.getInstance(onConnect.connection.socket);
                 StreamSpaceWatcherSingleton.getInstance(onConnect.connection.socket);

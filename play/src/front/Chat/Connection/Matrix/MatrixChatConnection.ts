@@ -6,7 +6,6 @@ import {
     ICreateRoomStateEvent,
     IRoomDirectoryOptions,
     MatrixClient,
-    MatrixEvent,
     PendingEventOrdering,
     Room,
     RoomEvent,
@@ -22,10 +21,6 @@ import {
     PartialSpaceUser,
 } from "@workadventure/messages";
 import { KnownMembership } from "matrix-js-sdk/lib/@types/membership";
-import { KeyBackupInfo } from "matrix-js-sdk/lib/crypto-api/keybackup";
-// eslint-disable-next-line import/no-unresolved
-import { openModal } from "svelte-modals";
-import { GeneratedSecretStorageKey } from "matrix-js-sdk/lib/crypto-api";
 import {
     ChatConnectionInterface,
     ChatRoom,
@@ -36,11 +31,9 @@ import {
 } from "../ChatConnection";
 import { SpaceUserExtended } from "../../../Space/SpaceFilter/SpaceFilter";
 import { selectedRoom } from "../../Stores/ChatStore";
-import { MatrixClientWrapperInterface } from "./MatrixClientWrapper";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { chatUserFactory } from "./MatrixChatUser";
-import CreateRecoveryKeyDialog from "./CreateRecoveryKeyDialog.svelte";
-import InteractiveAuthDialog from "./InteractiveAuthDialog.svelte";
+
 
 export const defaultWoka =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
@@ -55,9 +48,9 @@ export enum INTERACTIVE_AUTH_PHASE {
 }
 
 export class MatrixChatConnection implements ChatConnectionInterface {
-    private client!: MatrixClient;
     private readonly roomList: MapStore<string, ChatRoom>;
     private initializingEncryption = false;
+    private client!: MatrixClient;
     connectionStatus: Writable<ConnectionStatus>;
     directRooms: Readable<ChatRoom[]>;
     invitations: Readable<ChatRoom[]>;
@@ -65,7 +58,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
     userConnected: MapStore<UUID, ChatUser> = new MapStore<UUID, ChatUser>();
     userDisconnected: MapStore<chatId, ChatUser> = new MapStore<chatId, ChatUser>();
 
-    constructor(private connection: Connection, private matrixClientWrapper: MatrixClientWrapperInterface) {
+    constructor(private connection: Connection, clientPromise: Promise<MatrixClient>) {
         this.connectionStatus = writable("CONNECTING");
         this.roomList = new MapStore<string, MatrixChatRoom>();
 
@@ -84,7 +77,8 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         });
 
         (async () => {
-            this.client = await matrixClientWrapper.initMatrixClient();
+            this.client = await clientPromise;
+
             await this.startMatrixClient();
         })().catch((error) => {
             console.error(error);
@@ -95,10 +89,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         this.client.on(ClientEvent.Sync, (state) => {
             switch (state) {
                 case SyncState.Prepared:
-                    this.connectionStatus.set("ONLINE");
-                    (async () => {
-                        await this.initClientCryptoConfiguration();
-                    })();
+                    this.connectionStatus.set("ONLINE");    
                     this.initUserList();
                     break;
                 case SyncState.Error:
@@ -120,8 +111,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 await this.onRoomEventMembership(room, membership, prevMembership)
         );
 
-        //TODO find a fix for that
-        //this.client.on(RoomEvent.Timeline, this.onRoomEventTimeline.bind(this));
+
 
         await this.client.store.startup();
         await this.client.initRustCrypto();
@@ -133,105 +123,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
     }
 
-    private async initClientCryptoConfiguration() {
-    
-        const crypto = this.client.getCrypto();
-        if (crypto === undefined) {
-            console.error("E2EE is not available for this client");
-            return;
-        }
 
-        const roomEncryptionEnablePromises: Promise<boolean>[] = [];
-
-        if (this.client.getRooms().every((room) => !room.hasEncryptionStateEvent()) || this.initializingEncryption) {
-            console.warn("skip E2EE bootstrapping");
-            return;
-        }
-
-        this.initializingEncryption = true;
-
-        const keyBackupInfo = await this.client.getKeyBackupVersion();
-        const isCrossSigningReady = await crypto.isCrossSigningReady();
-
-        try {
-            if (!isCrossSigningReady) {
-                await crypto.bootstrapCrossSigning({
-                    authUploadDeviceSigningKeys: async (makeRequest) => {
-                        const finished = await new Promise<boolean>((resolve) => {
-                            openModal(InteractiveAuthDialog, {
-                                matrixClient: this.client,
-                                onFinished: (finished: boolean) => resolve(finished),
-                                makeRequest,
-                            });
-                        });
-                        if (!finished) {
-                            throw new Error("Cross-signing key upload auth canceled");
-                        }
-                    },
-                });
-
-                await crypto.bootstrapSecretStorage({
-                    createSecretStorageKey: async () => {
-                        const generatedKey = await new Promise<GeneratedSecretStorageKey | null>((resolve, reject) => {
-                            openModal(CreateRecoveryKeyDialog, {
-                                crypto,
-                                processCallback: (generatedKey: GeneratedSecretStorageKey | null) => {
-                                    if (generatedKey === undefined) {
-                                        reject(new Error("no generated secret storage key"));
-                                    }
-                                    resolve(generatedKey);
-                                },
-                            });
-                        });
-                        if (generatedKey === null) {
-                            throw new Error("createSecretStorageKey : no generated secret storage key");
-                        }
-                        return Promise.resolve(generatedKey);
-                    },
-                    setupNewKeyBackup: keyBackupInfo === null,
-                    keyBackupInfo: keyBackupInfo ?? undefined,
-                });
-            }
-            await this.restoreBackupMessages(keyBackupInfo);
-            this.initializingEncryption = true;
-        } catch (error) {
-            console.error("initClientCryptoConfiguration : ", error);
-            this.initializingEncryption = false;
-        }
-    }
-
-    private async restoreBackupMessages(keyBackupInfo: KeyBackupInfo | null) {
-        const has4s = await this.client.secretStorage.hasKey();
-        const backupRestored = has4s ? await this.client.isKeyBackupKeyStored() : null;
-
-        if (keyBackupInfo) {
-            console.debug("keyBackupInfo : ", keyBackupInfo);
-            const restoredWithCachedKey = await this.restoreWithCachedKey(keyBackupInfo);
-            if (!restoredWithCachedKey && backupRestored) {
-                await this.restoreWithSecretStorage(keyBackupInfo);
-            }
-        }
-    }
-
-    private async restoreWithCachedKey(keyBackupInfo: KeyBackupInfo) {
-        try {
-            await this.client.restoreKeyBackupWithCache(undefined, undefined, keyBackupInfo);
-            return true;
-        } catch (error) {
-            console.error("Unable to restoreKeyBackupWithCache : ", error);
-            return false;
-        }
-    }
-
-    private async restoreWithSecretStorage(keyBackupInfo: KeyBackupInfo) {
-        try {
-            await this.client.restoreKeyBackupWithSecretStorage(keyBackupInfo);
-            return true;
-        } catch (error) {
-            console.error("Unable to restoreKeyBackupWithCache : ", error);
-            return false;
-        }
-    }
 
     private async onClientEventRoom(room: Room) {
         const { roomId } = room;
@@ -244,15 +136,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
 
         const matrixRoom = await new MatrixChatRoom(room);
         this.roomList.set(matrixRoom.id, matrixRoom);
-
-        if (this.initializingEncryption || !get(matrixRoom.isEncrypted)) {
-            console.warn("skip room encryption");
-            return;
-        }
-
-        async () => {
-        await this.initClientCryptoConfiguration();
-    }
+}
 
     private onClientEventDeleteRoom(roomId: string) {
         this.roomList.delete(roomId);
