@@ -49,7 +49,6 @@ export enum INTERACTIVE_AUTH_PHASE {
 
 export class MatrixChatConnection implements ChatConnectionInterface {
     private readonly roomList: MapStore<string, ChatRoom>;
-    private initializingEncryption = false;
     private client!: MatrixClient;
     connectionStatus: Writable<ConnectionStatus>;
     directRooms: Readable<ChatRoom[]>;
@@ -103,13 +102,9 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                     break;
             }
         });
-        this.client.on(ClientEvent.Room, async (room) => await this.onClientEventRoom(room));
+        this.client.on(ClientEvent.Room,this.onClientEventRoom.bind(this));
         this.client.on(ClientEvent.DeleteRoom, this.onClientEventDeleteRoom.bind(this));
-        this.client.on(
-            RoomEvent.MyMembership,
-            async (room, membership, prevMembership) =>
-                await this.onRoomEventMembership(room, membership, prevMembership)
-        );
+        this.client.on(RoomEvent.MyMembership,this.onRoomEventMembership.bind(this));
 
 
 
@@ -134,7 +129,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
             return;
         }
 
-        const matrixRoom = await new MatrixChatRoom(room);
+        const matrixRoom = new MatrixChatRoom(room);
         this.roomList.set(matrixRoom.id, matrixRoom);
 }
 
@@ -147,7 +142,7 @@ export class MatrixChatConnection implements ChatConnectionInterface {
         const existingMatrixChatRoom = this.roomList.has(roomId);
         if (membership !== prevMembership && existingMatrixChatRoom) {
             if (membership === KnownMembership.Join) {
-                this.roomList.set(roomId, await new MatrixChatRoom(room));
+                this.roomList.set(roomId, new MatrixChatRoom(room));
                 return;
             }
             if (membership === KnownMembership.Leave || membership === KnownMembership.Ban) {
@@ -156,14 +151,16 @@ export class MatrixChatConnection implements ChatConnectionInterface {
                 if (currentRoom && currentRoom === roomId) selectedRoom.set(undefined);
                 return;
             }
+
             if (membership === KnownMembership.Invite) {
                 const inviter = room.getDMInviter();
-                const newRoom = await new MatrixChatRoom(room);
+                const newRoom = new MatrixChatRoom(room);
                 if (
                     inviter &&
                     (this.userDisconnected.has(inviter) ||
                         Array.from(this.userConnected.values()).some((user: ChatUser) => user.id === inviter))
                 ) {
+
                     this.roomList.set(roomId, newRoom);
                     newRoom.joinRoom();
                 }

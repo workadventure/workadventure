@@ -134,14 +134,14 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
         if (!matrixDeviceId) {
             console.error("Unable to connect to matrix, matrixDeviceId is null");
-            // throw new Error("Unable to connect to matrix, matrixDeviceId is null");
+            throw new Error("Unable to connect to matrix, matrixDeviceId is null");
         }
 
         const { matrixStore, matrixCryptoStore } = this.matrixWebClientStore(matrixUserId);
 
         const matrixCreateClientOpts: ICreateClientOpts = {
             baseUrl: this.baseUrl,
-            deviceId: matrixDeviceId || this.generateDeviceId(),
+            deviceId: matrixDeviceId,
             userId: matrixUserId,
             accessToken: accessToken,
             refreshToken: refreshToken ?? undefined,
@@ -162,9 +162,11 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
         this.client.setGuest(this.localUserStore.isGuest());
 
-        if(this.localUserStore.isGuest()){
+        const displayName = this.localUserStore.getName();
+
+        if(this.localUserStore.isGuest() && displayName!== this.client.getUser(matrixUserId)?.displayName){
             //TODO : Change default display name
-            await this.client.setDisplayName(this.localUserStore.getName() || "Guest Name not found");
+            await this.client.setDisplayName(displayName || "Guest");
         }
 
 
@@ -208,7 +210,6 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 
             });
             this.localUserStore.setMatrixUserId(user_id);
-            this.localUserStore.setMatrixDeviceId(device_id, user_id);
             this.localUserStore.setGuest(true);
 
             if (access_token !== undefined) {
