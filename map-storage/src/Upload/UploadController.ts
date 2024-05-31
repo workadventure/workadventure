@@ -16,6 +16,7 @@ import { generateErrorMessage } from "zod-error";
 import * as Sentry from "@sentry/node";
 import bodyParser from "body-parser";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
+import axios from "axios";
 import { mapPath } from "../Services/PathMapper";
 import { ENTITY_COLLECTION_URLS, MAX_UNCOMPRESSED_SIZE, WAM_TEMPLATE_URL } from "../Enum/EnvironmentVariable";
 import { passportAuthenticator } from "../Services/Authentication";
@@ -514,11 +515,8 @@ export class UploadController {
         let wamFile: WAMFileFormat | undefined;
 
         if (WAM_TEMPLATE_URL) {
-            const response = await fetch(WAM_TEMPLATE_URL);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch WAM template: ${response.statusText}`);
-            }
-            wamFile = WAMFileFormat.parse(await response.json());
+            const response = await axios.get(WAM_TEMPLATE_URL);
+            wamFile = WAMFileFormat.parse(response.data);
             wamFile.metadata = {
                 ...wamFile.metadata,
                 name,
