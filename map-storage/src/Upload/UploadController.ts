@@ -482,7 +482,7 @@ export class UploadController {
             const tmjContent = JSON.parse(tmjString) as ITiledMap;
             await this.fileSystem.writeStringAsFile(
                 wamPath,
-                JSON.stringify(this.getFreshWAMFileContent(`./${path.basename(tmjKey)}`, tmjContent), null, 4)
+                JSON.stringify(await this.getFreshWAMFileContent(`./${path.basename(tmjKey)}`, tmjContent), null, 4)
             );
         }
     }
@@ -517,6 +517,7 @@ export class UploadController {
         if (WAM_TEMPLATE_URL) {
             const response = await axios.get(WAM_TEMPLATE_URL);
             wamFile = WAMFileFormat.parse(response.data);
+            wamFile.mapUrl = tmjFilePath;
             wamFile.metadata = {
                 ...wamFile.metadata,
                 name,
@@ -546,7 +547,6 @@ export class UploadController {
         }
         return wamFile;
     }
-
     /**
      * Let's filter out any file starting with "."
      */
