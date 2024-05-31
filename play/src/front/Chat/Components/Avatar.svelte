@@ -2,20 +2,27 @@
     export let avatarUrl: string | null = null;
     export let fallbackFirstLetter = "A";
 
+    console.debug(fallbackFirstLetter)
 
-    const AVATAR_BG_COLORS = ["#e9f2ff", "#faeefb", "#e3f7ed", "#ffecf0", "#ffefe4", "#e3f5f8", "#f1efff", "#e0f8d9"];
-    const AVATAR_TEXT_COLORS = ["#043894", "#671481", "#004933", "#7e0642", "#850000", "#004077", "#4c05b5", "#004b00"];
-    const colorIndex = fallbackFirstLetter.charCodeAt(0) - 97 < AVATAR_BG_COLORS.length ? fallbackFirstLetter.charCodeAt(0) - 97 : 7
-    const defaultTextColor = AVATAR_TEXT_COLORS[colorIndex];
-    const defaultBackgroundColor = AVATAR_BG_COLORS[colorIndex];
+    const colors = ["CB4288","C5458A","BF488C","B94C8D","B34F8F","AD5291","A75593","A15995","9B5C96","955F98","8F629A","89669C","83699E","7D6C9F","776FA1","7173A3","6B76A5","6579A7","5F7CA8","5980AA","5383AC","4D86AE","4789B0","418DB1","3B90B3","3593B5"]
+    function getColorByFirstLetter(str:string) {
+        if (!str) {
+            return 'black'; // Default color for invalid input
+        }
+
+        const indexColor = str.toLowerCase().charCodeAt(0) - 97;
+        console.debug(colors[indexColor])
+
+        return colors[indexColor];
+    }
 
 </script>
 
 {#if avatarUrl}
     <img src={avatarUrl} alt={"User avatar"} class="tw-rounded-full tw-h-6 tw-w-6 tw-object-contain tw-bg-white" />
 {:else}
-    <div class={`tw-rounded-full tw-bg-amber-600 tw-h-6 tw-w-6 tw-text-center tw-uppercase`}
-         style:color={defaultTextColor} style:background-color={defaultBackgroundColor}>
+    <div class={`tw-rounded-full tw-bg-amber-600 tw-h-6 tw-w-6 tw-text-center tw-uppercase tw-text-white`}
+         style:background-color={`#${getColorByFirstLetter(fallbackFirstLetter)}`}>
         {fallbackFirstLetter}
     </div>
 {/if}

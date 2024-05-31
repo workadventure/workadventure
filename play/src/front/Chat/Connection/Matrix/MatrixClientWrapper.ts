@@ -108,10 +108,12 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 accessToken: accessTokenFromGuestUser,
                 refreshToken: refreshTokenFromGuestUser,
                 matrixUserId: matrixUserIdFromGuestUser,
+                device_id,
             } = await this.registerMatrixGuestUser();
             accessToken = accessTokenFromGuestUser;
             refreshToken = refreshTokenFromGuestUser;
             matrixUserId = matrixUserIdFromGuestUser;
+            matrixDeviceId = device_id;
         }
 
         if (!accessToken) {
@@ -173,12 +175,13 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
         matrixUserId: string;
         accessToken: string | null;
         refreshToken: string | null;
+        device_id: string | null;
     }> {
         const client = this._createClient({
             baseUrl: this.baseUrl,
         });
         try {
-            const { access_token, refresh_token, user_id } = await client.registerGuest({
+            const { access_token, refresh_token, user_id, device_id } = await client.registerGuest({
                 body: {
                     initial_device_display_name: this.localUserStore.getName() || "",
                     refresh_token: true,
@@ -189,8 +192,16 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                 this.localUserStore.setMatrixAccessToken(access_token);
             }
             this.localUserStore.setMatrixRefreshToken(refresh_token ?? null);
-            client.setGuest(true);
-            return { matrixUserId: user_id, accessToken: access_token ?? null, refreshToken: refresh_token ?? null };
+            if (device_id !== undefined) {
+                this.localUserStore.setMatrixDeviceId(device_id, user_id);
+            }
+            console.debug(device_id);
+            return {
+                matrixUserId: user_id,
+                accessToken: access_token ?? null,
+                refreshToken: refresh_token ?? null,
+                device_id: device_id ?? null,
+            };
         } catch (error) {
             console.error(error);
             throw new Error("Unable to etablish a Matrix Guest connection");
