@@ -21,6 +21,7 @@ import { ChatRoom, ChatRoomMembership } from "../ChatConnection";
 import { selectedChatMessageToReply } from "../../Stores/ChatStore";
 import { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
+import { initClientCryptoConfiguration } from "./MatrixSecurity";
 
 type EventId = string;
 
@@ -77,6 +78,7 @@ export class MatrixChatRoom implements ChatRoom {
     private async initMatrixRoomMessagesAndReactions() {
         if (this.matrixRoom.hasEncryptionStateEvent()) {
             await this.matrixRoom.decryptAllEvents();
+
         }
         await this.timelineWindow.load();
         const events = this.timelineWindow.getEvents();
@@ -108,20 +110,26 @@ export class MatrixChatRoom implements ChatRoom {
     }
 
     private startHandlingChatRoomEvents() {
-        this.matrixRoom.on(RoomEvent.Timeline, this.onRoomTimeline.bind(this));
+        this.matrixRoom.on(RoomEvent.Timeline,async (event, room, toStartOfTimeline, _ ,data)=> this.onRoomTimeline(event, room, toStartOfTimeline, _ ,data));
         this.matrixRoom.on(RoomEvent.Name, this.onRoomName.bind(this));
         this.matrixRoom.on(RoomEvent.Redaction, this.onRoomRedaction.bind(this));
     }
 
-    private onRoomTimeline(
+    private async onRoomTimeline(
         event: MatrixEvent,
         room: Room | undefined,
         toStartOfTimeline: boolean | undefined,
         _: boolean,
         data: IRoomTimelineData
     ) {
+
+        if(event.getType() === EventType.RoomEncryption) {
+            await initClientCryptoConfiguration();
+        }
+
         //Only get realtime event
         if (toStartOfTimeline || !data || !data.liveEvent) {
+
             return;
         }
         if (room !== undefined) {
