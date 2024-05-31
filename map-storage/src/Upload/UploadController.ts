@@ -16,8 +16,9 @@ import { generateErrorMessage } from "zod-error";
 import * as Sentry from "@sentry/node";
 import bodyParser from "body-parser";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
+import axios from "axios";
 import { mapPath } from "../Services/PathMapper";
-import { MAX_UNCOMPRESSED_SIZE } from "../Enum/EnvironmentVariable";
+import { ENTITY_COLLECTION_URLS, MAX_UNCOMPRESSED_SIZE, WAM_TEMPLATE_URL } from "../Enum/EnvironmentVariable";
 import { passportAuthenticator } from "../Services/Authentication";
 import { uploadDetector } from "../Services/UploadDetector";
 import { MapListService } from "../Services/MapListService";
@@ -481,12 +482,12 @@ export class UploadController {
             const tmjContent = JSON.parse(tmjString) as ITiledMap;
             await this.fileSystem.writeStringAsFile(
                 wamPath,
-                JSON.stringify(this.getFreshWAMFileContent(`./${path.basename(tmjKey)}`, tmjContent), null, 4)
+                JSON.stringify(await this.getFreshWAMFileContent(`./${path.basename(tmjKey)}`, tmjContent), null, 4)
             );
         }
     }
 
-    private getFreshWAMFileContent(tmjFilePath: string, tmjContent: ITiledMap): WAMFileFormat {
+    private async getFreshWAMFileContent(tmjFilePath: string, tmjContent: ITiledMap): Promise<WAMFileFormat> {
         const nameProperty = tmjContent.properties?.find((property) => property.name === "mapName");
         let name: string | undefined;
         if (nameProperty?.type === "string") {
@@ -511,22 +512,41 @@ export class UploadController {
             copyright = copyrightProperty.value;
         }
 
-        return {
-            version: "1.0.0",
-            mapUrl: tmjFilePath,
-            areas: [],
-            entities: {},
-            entityCollections: [],
-            settings: undefined,
-            metadata: {
+        let wamFile: WAMFileFormat | undefined;
+
+        if (WAM_TEMPLATE_URL) {
+            const response = await axios.get(WAM_TEMPLATE_URL);
+            wamFile = WAMFileFormat.parse(response.data);
+            wamFile.mapUrl = tmjFilePath;
+            wamFile.metadata = {
+                ...wamFile.metadata,
                 name,
                 description,
                 thumbnail,
                 copyright,
-            },
-        };
+            };
+        } else {
+            const urls = ENTITY_COLLECTION_URLS?.split(",").filter((url) => url != "") ?? [];
+            wamFile = {
+                version: "1.0.0",
+                mapUrl: tmjFilePath,
+                areas: [],
+                entities: {},
+                entityCollections: urls.map((url) => ({
+                    url,
+                    type: "file",
+                })),
+                settings: undefined,
+                metadata: {
+                    name,
+                    description,
+                    thumbnail,
+                    copyright,
+                },
+            };
+        }
+        return wamFile;
     }
-
     /**
      * Let's filter out any file starting with "."
      */

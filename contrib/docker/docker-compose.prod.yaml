@@ -316,6 +316,7 @@ services:
       SENTRY_ENVIRONMENT: $SENTRY_ENVIRONMENT
       SENTRY_TRACES_SAMPLE_RATE: $SENTRY_TRACES_SAMPLE_RATE
       PATH_PREFIX: "/map-storage"
+      ENTITY_COLLECTION_URLS: "https://${DOMAIN}/collections/FurnitureCollection.json,https://${DOMAIN}/collections/OfficeCollection.json"
     volumes:
       - map-storage-data:/maps
     labels:
