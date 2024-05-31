@@ -34,7 +34,6 @@
     onMount(() => {
         gameScene.reposition();
         dispatch("camMounted");
-
         console.log("MOUNTED MEDIA BOX");
     });
 
@@ -110,7 +109,6 @@
             transition:fly={{ y: 50, duration: 150 }}
         >
             <!-- Video de l'autre personne-->
-
             <VideoMediaBox peer={streamable} clickable={isClickable} />
         </div>
     {/if}
