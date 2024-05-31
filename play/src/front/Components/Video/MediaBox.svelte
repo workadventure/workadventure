@@ -90,7 +90,7 @@
 
 <!--class:mr-6={isHightlighted && videoEnabled}-->
 
-<!-- Si le streamable est une vidéo d'une autre personne genre college de Jitsi-->
+<!-- Si le streamable est une vidéo d'une autre personne genre college de Bulles-->
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore || $statusStore === "error" || $statusStore === "connecting"}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
