@@ -50,6 +50,10 @@ export interface MatrixLocalUserStore {
     setMatrixAccessTokenExpireDate(AccessTokenExpireDate: Date): void;
 
     getName(): string | null;
+
+    isGuest(): boolean;
+
+    setGuest(isGuest: boolean): void;
 }
 
 export class MatrixClientWrapper implements MatrixClientWrapperInterface {
@@ -100,7 +104,9 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
             matrixUserId = userIdFromLoginToken;
             matrixDeviceId = deviceId;
             this.localUserStore.setMatrixLoginToken(null);
+            this.localUserStore.setGuest(false)
         }
+
 
         if (accessToken === null && refreshToken === null) {
             console.warn("registerMatrixGuestUser");
@@ -128,14 +134,14 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
 
         if (!matrixDeviceId) {
             console.error("Unable to connect to matrix, matrixDeviceId is null");
-            throw new Error("Unable to connect to matrix, matrixDeviceId is null");
+            // throw new Error("Unable to connect to matrix, matrixDeviceId is null");
         }
 
         const { matrixStore, matrixCryptoStore } = this.matrixWebClientStore(matrixUserId);
-        // Now, let's instantiate the Matrix client.
-        this.client = this._createClient({
+
+        const matrixCreateClientOpts: ICreateClientOpts = {
             baseUrl: this.baseUrl,
-            deviceId: matrixDeviceId,
+            deviceId: matrixDeviceId || this.generateDeviceId(),
             userId: matrixUserId,
             accessToken: accessToken,
             refreshToken: refreshToken ?? undefined,
@@ -147,7 +153,20 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                     this.cacheSecretStorageKey(keyId, key);
                 },
             },
-        });
+        };
+
+  
+
+        // Now, let's instantiate the Matrix client.
+        this.client = this._createClient(matrixCreateClientOpts);
+
+        this.client.setGuest(this.localUserStore.isGuest());
+
+        if(this.localUserStore.isGuest()){
+            //TODO : Change default display name
+            await this.client.setDisplayName(this.localUserStore.getName() || "Guest Name not found");
+        }
+
 
         if (oldMatrixUserId !== matrixUserId) {
             await this.client.clearStores();
@@ -186,8 +205,12 @@ export class MatrixClientWrapper implements MatrixClientWrapperInterface {
                     initial_device_display_name: this.localUserStore.getName() || "",
                     refresh_token: true,
                 },
+                
             });
             this.localUserStore.setMatrixUserId(user_id);
+            this.localUserStore.setMatrixDeviceId(device_id, user_id);
+            this.localUserStore.setGuest(true);
+
             if (access_token !== undefined) {
                 this.localUserStore.setMatrixAccessToken(access_token);
             }
