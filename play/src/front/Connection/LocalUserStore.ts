@@ -39,6 +39,7 @@ const matrixRefreshToken = "matrixRefreshToken";
 const matrixDeviceId = "matrixDeviceId";
 const matrixLoginToken = "matrixLoginToken";
 const requestedStatus = "RequestedStatus";
+const matrixGuest = "matrixGuest";
 
 const JwtAuthToken = z
     .object({
@@ -583,6 +584,14 @@ class LocalUserStore {
     //TODO : Remove duplicate code (getMatrixUserId) and change matrix id to chatID in localStorage
     getChatId(): string | null {
         return localStorage.getItem(matrixUserId);
+    }
+
+    isGuest(): boolean {
+        return localStorage.getItem(matrixGuest) === "true";
+    }
+
+    setGuest(isGuest: boolean): void {
+        localStorage.setItem(matrixGuest, isGuest.toString());
     }
 }
 
