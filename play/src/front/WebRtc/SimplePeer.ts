@@ -188,7 +188,7 @@ export class SimplePeer {
             mediaManager.createNotification(name, NotificationType.discussion);
         }
 
-        analyticsClient.addNewParticipant();
+        analyticsClient.addNewParticipant(peer.uniqueId, user.userId, uuid);
         peerStore.addPeer(user.userId, peer);
         return peer;
     }
