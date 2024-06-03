@@ -17,8 +17,7 @@
     let backGroundColor = Color.getColorByString(peer.userName);
     let textColor = Color.getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
-    let isHighlighted = false;
-    let changIcon = false;
+    let changeIcon = true;
     // let constraintStore = peer.constraintsStore;
 
     let embedScreen: Streamable;
@@ -30,17 +29,14 @@
     }
 
     onMount(() => {
-        console.log("MOUNTED SCRREEN SHARING MEDIA BOX");
         embedScreen = peer;
-        console.log("embedScreen", embedScreen);
-        console.log("statusStore", $statusStore);
     });
 
     function highlight() {
         highlightedEmbedScreen.toggleHighlight(embedScreen);
     }
 
-    $: changIcon = $highlightedEmbedScreen === embedScreen;
+    $: changeIcon = $highlightedEmbedScreen === embedScreen;
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -60,7 +56,7 @@
             muted
         />
         <div
-            class={changIcon
+            class={changeIcon
                 ? "hidden"
                 : "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 pointer-events-none"}
         >
@@ -89,7 +85,7 @@
         </div>
 
         <div
-            class={changIcon
+            class={changeIcon
                 ? "absolute top-0 bottom-0 right-0 left-0 m-auto h-14 w-14 z-20 p-4 rounded-full aspect-ratio bg-contrast/50 backdrop-blur transition-all opacity-0 group-hover/screenshare:opacity-100 pointer-events-none"
                 : "hidden"}
         >
