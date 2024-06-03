@@ -33,7 +33,7 @@ describe("StreamSpaceWatcher", () => {
     it("should subscribe to all stream when you create StreamSpaceWatcher", () => {
         const mockSocket: WebSocket = {
             addEventListener: vi.fn(),
-        };
+        } ;
 
         const decoder: { decode: (messageCoded: Uint8Array) => ServerToClientMessage } = {
             decode: vi.fn(),
@@ -45,7 +45,8 @@ describe("StreamSpaceWatcher", () => {
             exist: vi.fn(),
             get: vi.fn(),
             getAll: vi.fn(),
-        };
+            destroy : vi.fn()
+        } ;
 
         new StreamSpaceWatcher(SpaceProvider, mockSocket, decoder);
 
@@ -58,13 +59,14 @@ describe("StreamSpaceWatcher", () => {
 
         await serverSocket.connected;
 
+        
         const addSpaceUserMessage: AddSpaceUserMessage = {
             spaceName: "space-name",
             filterName: "filter-name",
             user: {
                 id: 1,
             },
-        };
+        } as AddSpaceUserMessage;
 
         const message: MessageEvent = {
             data: {
@@ -82,7 +84,7 @@ describe("StreamSpaceWatcher", () => {
                     },
                 },
             },
-        };
+        } as MessageEvent;
 
         const decoder: { decode: (messageCoded: Uint8Array) => ServerToClientMessage } = {
             decode: vi.fn().mockImplementation((obj) => message.data),
@@ -90,16 +92,17 @@ describe("StreamSpaceWatcher", () => {
 
         const mockSpaceFilter: SpaceFilterInterface = {
             addUser: vi.fn(),
-        };
+        }as unknown as SpaceFilterInterface ;
         const mockSpace: SpaceInterface = {
             getSpaceFilter: vi.fn().mockImplementation(() => mockSpaceFilter),
-        };
+        } as unknown as SpaceInterface;
         const spaceProvider: SpaceProviderInterface = {
             add: vi.fn(),
             delete: vi.fn(),
             exist: vi.fn(),
             get: vi.fn().mockImplementation(() => mockSpace),
             getAll: vi.fn(),
+            destroy: vi.fn()
         };
 
         new StreamSpaceWatcher(spaceProvider, mockSocket, decoder);
@@ -149,7 +152,7 @@ describe("StreamSpaceWatcher", () => {
                     },
                 },
             },
-        };
+        } as MessageEvent;
 
         const decoder: { decode: (messageCoded: Uint8Array) => ServerToClientMessage } = {
             decode: vi.fn().mockImplementation((obj) => message.data),
@@ -157,16 +160,19 @@ describe("StreamSpaceWatcher", () => {
 
         const mockSpaceFilter: SpaceFilterInterface = {
             removeUser: vi.fn(),
-        };
+        } as unknown as SpaceFilterInterface;
+
         const mockSpace: SpaceInterface = {
             getSpaceFilter: vi.fn().mockImplementation(() => mockSpaceFilter),
-        };
+        } as unknown as SpaceInterface;
+
         const spaceProvider: SpaceProviderInterface = {
             add: vi.fn(),
             delete: vi.fn(),
             exist: vi.fn(),
             get: vi.fn().mockImplementation(() => mockSpace),
             getAll: vi.fn(),
+            destroy: vi.fn()
         };
 
         new StreamSpaceWatcher(spaceProvider, mockSocket, decoder);
@@ -201,7 +207,7 @@ describe("StreamSpaceWatcher", () => {
             user: {
                 id: 1,
             },
-        };
+        } as UpdateSpaceUserMessage;
 
         const message: MessageEvent = {
             data: {
@@ -219,7 +225,7 @@ describe("StreamSpaceWatcher", () => {
                     },
                 },
             },
-        };
+        } as MessageEvent;
 
         const decoder: { decode: (messageCoded: Uint8Array) => ServerToClientMessage } = {
             decode: vi.fn().mockImplementation((obj) => message.data),
@@ -227,16 +233,19 @@ describe("StreamSpaceWatcher", () => {
 
         const mockSpaceFilter: SpaceFilterInterface = {
             updateUserData: vi.fn(),
-        };
+        } as unknown as SpaceFilterInterface;
+
         const mockSpace: SpaceInterface = {
             getSpaceFilter: vi.fn().mockImplementation(() => mockSpaceFilter),
-        };
+        } as unknown as SpaceInterface;
+
         const spaceProvider: SpaceProviderInterface = {
             add: vi.fn(),
             delete: vi.fn(),
             exist: vi.fn(),
             get: vi.fn().mockImplementation(() => mockSpace),
             getAll: vi.fn(),
+            destroy: vi.fn()
         };
 
         new StreamSpaceWatcher(spaceProvider, mockSocket, decoder);
@@ -291,7 +300,7 @@ describe("StreamSpaceWatcher", () => {
                     },
                 },
             },
-        };
+        } as MessageEvent;
 
         const decoder: { decode: (messageCoded: Uint8Array) => ServerToClientMessage } = {
             decode: vi.fn().mockImplementation((obj) => message.data),
@@ -299,13 +308,14 @@ describe("StreamSpaceWatcher", () => {
 
         const mockSpace: SpaceInterface = {
             setMetadata: vi.fn(),
-        };
+        } as unknown as SpaceInterface;
         const spaceProvider: SpaceProviderInterface = {
             add: vi.fn(),
             delete: vi.fn(),
             exist: vi.fn(),
             get: vi.fn().mockImplementation(() => mockSpace),
             getAll: vi.fn(),
+            destroy: vi.fn()
         };
 
         new StreamSpaceWatcher(spaceProvider, mockSocket, decoder);
